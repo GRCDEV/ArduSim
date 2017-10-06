@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="libs/org.mavlink.library.jar"/>
+	<classpathentry kind="lib" path="libs/org.mavlink.util-1.00.jar"/>
+	<classpathentry kind="lib" path="libs/kryo-4.0.0.jar" sourcepath="libs/kryo-4.0.0-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CollisionSimulator/libs/kryo-4.0.0-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/minlog-1.3.0.jar"/>
+	<classpathentry kind="lib" path="libs/asm-5.0.4.jar"/>
+	<classpathentry kind="lib" path="libs/objenesis-2.2.jar"/>
+	<classpathentry kind="lib" path="libs/reflectasm-1.11.3.jar"/>
+	<classpathentry kind="lib" path="libs/ganymed-ssh2-build210.jar" sourcepath="libs/ganymed/src">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/home/grc/workspace/CollisionSimulator/libs/ganymed/javadoc/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/javatuples/javatuples-1.2.jar" sourcepath="libs/javatuples/javatuples-1.2-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CollisionSimulator/libs/javatuples/javatuples-1.2-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/RXTXcomm.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
