@@ -113,15 +113,6 @@ public class Main {
 			});
 		}
 		
-		// Configuration feedback
-		SimTools.println(Text.CAP_IN_USE + " " + Param.selectedProtocol.getName());
-		if (!Param.IS_REAL_UAV) {
-			SimTools.println(Text.WIRELESS_MODEL_IN_USE + " " + Param.selectedWirelessModel.getName());
-			if (Param.windSpeed != 0.0) {
-				SimTools.println(Text.SIMULATED_WIND_SPEED + " " + Param.windSpeed);
-			}
-		}
-
 		// 4. Data structures initializing
 		Tools.initializeDataStructures();
 		if (Param.simulationIsMissionBased) {
@@ -160,6 +151,14 @@ public class Main {
 				MissionHelper.loadMissionResources();
 			} else {
 				SwarmHelper.loadSwarmResources();
+			}
+		}
+		// Configuration feedback
+		SimTools.println(Text.CAP_IN_USE + " " + Param.selectedProtocol.getName());
+		if (!Param.IS_REAL_UAV) {
+			SimTools.println(Text.WIRELESS_MODEL_IN_USE + " " + Param.selectedWirelessModel.getName());
+			if (Param.windSpeed != 0.0) {
+				SimTools.println(Text.SIMULATED_WIND_SPEED + " " + Param.windSpeed);
 			}
 		}
 
