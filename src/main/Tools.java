@@ -699,7 +699,7 @@ public class Tools {
 	/** Detects if all the UAVs have finished the experiment (they are all on the ground, with engines not armed). */
 	public static boolean isTestFinished() {
 		boolean allFinished = true;
-		for (int i = 0; i < Param.numUAVs && allFinished; i++) {
+		for (int i = 0; i < Param.numUAVs; i++) {
 			Mode mode = UAVParam.flightMode.get(i);
 			if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
 				if (Param.testEndTime[i] == 0) {
