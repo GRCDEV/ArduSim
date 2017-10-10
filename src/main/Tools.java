@@ -46,10 +46,10 @@ import sim.gui.MainWindow;
 import sim.logic.GPSStartThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavLogic.UAVControllerThread;
-import uavLogic.UAVParam;
-import uavLogic.UAVParam.ControllerParam;
-import uavLogic.UAVParam.Mode;
+import uavController.UAVControllerThread;
+import uavController.UAVParam;
+import uavController.UAVParam.ControllerParam;
+import uavController.UAVParam.Mode;
 import sim.logic.InitialConfigurationThread;
 
 /** This class contains general tools used by the simulator. */
@@ -75,7 +75,7 @@ public class Tools {
 			}
 			List<Waypoint>[] missions = MissionHelper.loadXMLMissionsFile(files[0]);
 			if (missions != null && missions.length>0) {
-				SimTools.println(Text.MISSION_XML_SELECTED + "\n" + files[0].getName());
+				SimTools.println(Text.MISSION_XML_SELECTED + " " + files[0].getName());
 				return missions[0];
 			}
 		}
@@ -386,6 +386,7 @@ public class Tools {
 					commandLine.add("--defaults");
 					commandLine.add(SimParam.paramPath);
 				}
+				
 				ProcessBuilder pb = new ProcessBuilder(commandLine);
 				if (Param.runningOperatingSystem == Param.OS_LINUX) {
 					pb.directory(new File((new File(SimParam.sitlPath)).getParentFile(),SimParam.TEMP_FOLDER_PREFIX + i));
@@ -668,6 +669,7 @@ public class Tools {
 	
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, retrieves controller configuration, loads missions, etc. */
 	public static void sendBasicConfiguration() {
+		
 		MissionHelper.log(Text.SEND_MISSION);
 		// All UAVs configured on a different thread, but the first
 		InitialConfigurationThread[] threads = null;

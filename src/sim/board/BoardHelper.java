@@ -32,7 +32,7 @@ import sim.gui.MainWindow;
 import sim.logic.InitialConfigurationThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class contains methods used to show information on the board of the main window. */
 

@@ -15,7 +15,7 @@ import main.Param.SimulatorState;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 import sim.logic.SimParam;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision. */
 

@@ -36,7 +36,7 @@ import main.Param.WirelessModel;
 import sim.board.BoardParam;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 import main.Text;
 
 /** This class generates the panel with the general configuration parameters shown in the configuration dialog. */

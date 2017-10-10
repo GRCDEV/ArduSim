@@ -3,7 +3,7 @@ package sim.logic;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import api.API;
-import uavLogic.UAVParam.ControllerParam;
+import uavController.UAVParam.ControllerParam;
 
 /** This class forces all UAVs to send their current location, asynchronously. */
 

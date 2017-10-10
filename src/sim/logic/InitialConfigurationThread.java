@@ -6,8 +6,8 @@ import api.API;
 import api.MissionHelper;
 import api.SwarmHelper;
 import main.Param;
-import uavLogic.UAVParam;
-import uavLogic.UAVParam.ControllerParam;
+import uavController.UAVParam;
+import uavController.UAVParam.ControllerParam;
 
 /** This class sends the initial configuration to all UAVs, asynchronously. */
 

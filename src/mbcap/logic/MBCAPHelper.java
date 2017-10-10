@@ -30,7 +30,7 @@ import mbcap.pojo.Beacon;
 import mbcap.pojo.PointTime;
 import mbcap.pojo.ProgressState;
 import sim.logic.SimParam;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class contains exclusively static methods used by the MBCAP protocol. */
 

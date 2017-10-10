@@ -1,4 +1,4 @@
-package uavLogic;
+package uavController;
 
 import java.awt.geom.Point2D;
 import java.io.DataInputStream;
@@ -54,7 +54,7 @@ import main.Param.SimulatorState;
 import main.Text;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavLogic.UAVParam.Mode;
+import uavController.UAVParam.Mode;
 
 /** This class implements the communication with the UAV, whether it is real or simulated.
  * <p>The thread applies the communications finite state machine needed to support the MAVLink protocol.
@@ -230,7 +230,8 @@ public class UAVControllerThread extends Thread {
 			isStarting = false;
 
 			Point2D.Double locationUTM = new Point2D.Double();
-			UTMCoordinates locationUTMauxiliary = GUIHelper.geoToUTM(message.lat * 0.0000001, message.lon * 0.0000001);
+			Point2D.Double locationGeo = new Point2D.Double(message.lon * 0.0000001, message.lat * 0.0000001);
+			UTMCoordinates locationUTMauxiliary = GUIHelper.geoToUTM(locationGeo.y, locationGeo.x);	// Latitude = x
 			// The first time a coordinate set is received, we store the planet region where the UAVs are flying
 			if (SimParam.zone < 0) {
 				SimParam.zone = locationUTMauxiliary.Zone;
@@ -246,8 +247,8 @@ public class UAVControllerThread extends Thread {
 			// Global horizontal speed estimation
 			double speed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
 			// Update the UAV data, including the acceleration calculus
-			UAVParam.uavCurrentData[numUAV].update(time, locationUTM, z, message.relative_alt * 0.001, speed);
-			// Update several lists to draw the real path and to log data to file
+			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed);
+			// Send location to GUI to draw the UAV path and to log data
 			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z, heading, speed,
 					Param.simStatus == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] == 0)); // UAV under test
 		}

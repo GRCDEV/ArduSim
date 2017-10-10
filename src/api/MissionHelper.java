@@ -43,8 +43,8 @@ import sim.board.BoardPanel;
 import sim.board.BoardParam;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavLogic.UAVParam;
-import uavLogic.UAVParam.Mode;
+import uavController.UAVParam;
+import uavController.UAVParam.Mode;
 import mbcap.logic.MBCAPText;
 
 /** This class consists exclusively of static methods that allow to launch threads, and set specific configuration for mission based protocols.
@@ -351,37 +351,36 @@ public class MissionHelper {
 	public static Pair<GeoCoordinates, Double>[] getMissionStartingLocation() {
 		Pair<GeoCoordinates, Double>[] startingLocations = new Pair[Param.numUAVs];
 		double heading = 0.0;
-		Waypoint wp1, wp2;
-		wp1 = wp2 = null;
-		int wp1pos;
-		wp1pos = 0;
-		boolean wpFound;
+		Waypoint waypoint1, waypoint2;
+		waypoint1 = waypoint2 = null;
+		int waypoint1pos = 0;
+		boolean waypointFound;
 		UTMCoordinates p1UTM, p2UTM;
 		double incX, incY;
 		for (int i = 0; i < Param.numUAVs; i++) {
 			if (UAVParam.missionGeoLoaded != null && UAVParam.missionGeoLoaded[i] != null) {
-				wpFound = false;
-				for (int j=0; j<UAVParam.missionGeoLoaded[i].size() && !wpFound; j++) {
-					wp1 = UAVParam.missionGeoLoaded[i].get(j);
-					if (wp1.getLatitude()!=0 || wp1.getLongitude()!=0) {
-						wp1pos = j;
-						wpFound = true;
+				waypointFound = false;
+				for (int j=0; j<UAVParam.missionGeoLoaded[i].size() && !waypointFound; j++) {
+					waypoint1 = UAVParam.missionGeoLoaded[i].get(j);
+					if (waypoint1.getLatitude()!=0 || waypoint1.getLongitude()!=0) {
+						waypoint1pos = j;
+						waypointFound = true;
 					}
 				}
-				if (!wpFound) {
+				if (!waypointFound) {
 					GUIHelper.exit(Text.UAVS_START_ERROR_6 + " " + Param.id[i]);
 				}
-				wpFound = false;
-				for (int j=wp1pos+1; j<UAVParam.missionGeoLoaded[i].size() && !wpFound; j++) {
-					wp2 = UAVParam.missionGeoLoaded[i].get(j);
-					if (wp2.getLatitude()!=0 || wp2.getLongitude()!=0) {
-						wpFound = true;
+				waypointFound = false;
+				for (int j=waypoint1pos+1; j<UAVParam.missionGeoLoaded[i].size() && !waypointFound; j++) {
+					waypoint2 = UAVParam.missionGeoLoaded[i].get(j);
+					if (waypoint2.getLatitude()!=0 || waypoint2.getLongitude()!=0) {
+						waypointFound = true;
 					}
 				}
-				if (wpFound) {
+				if (waypointFound) {
 					// We only can set a heading if at least two points with valid coordinates are found
-					p1UTM = GUIHelper.geoToUTM(wp1.getLatitude(), wp1.getLongitude());
-					p2UTM = GUIHelper.geoToUTM(wp2.getLatitude(), wp2.getLongitude());
+					p1UTM = GUIHelper.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
+					p2UTM = GUIHelper.geoToUTM(waypoint2.getLatitude(), waypoint2.getLongitude());
 					incX = p2UTM.Easting - p1UTM.Easting;
 					incY = p2UTM.Northing - p1UTM.Northing;
 					if (incX != 0 || incY != 0) {
@@ -402,7 +401,7 @@ public class MissionHelper {
 				// Assuming that all UAVs have a mission loaded
 				GUIHelper.exit(Text.APP_NAME + ": " + Text.UAVS_START_ERROR_5 + " " + Param.id[i] + ".");
 			}
-			startingLocations[i] = Pair.with(new GeoCoordinates(wp1.getLatitude(), wp1.getLongitude()), heading);
+			startingLocations[i] = Pair.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
 		}
 		return startingLocations;
 	}
@@ -415,8 +414,8 @@ public class MissionHelper {
 		// Erases, sends and retrieves the planned mission. Blocking procedure
 		if (API.clearMission(numUAV)
 				&& API.sendMission(numUAV, UAVParam.missionGeoLoaded[numUAV])
-				&& API.getWPList(numUAV)
-				&& API.setCurrentWP(numUAV, 0)) {
+				&& API.getMission(numUAV)
+				&& API.setCurrentWaypoint(numUAV, 0)) {
 			MissionHelper.simplifyMission(numUAV);
 			Param.numMissionUAVs.incrementAndGet();
 			if (!Param.IS_REAL_UAV) {
@@ -429,7 +428,7 @@ public class MissionHelper {
 	
 	/** Creates the simplified mission shown on screen, and forces view to rescale.
 	 * <p>Do not modify this method. */
-	private static void simplifyMission(int numUAV) {
+	public static void simplifyMission(int numUAV) {
 		List<WaypointSimplified> missionUTMSimplified = new ArrayList<WaypointSimplified>();
 	
 		// Hypothesis:

@@ -1,7 +1,7 @@
 package main;
 
 import sim.board.BoardParam;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class contains text descriptions used on the application and on the simulator GUI. */
 
@@ -118,7 +118,7 @@ public class Text {
 	public static final String SITL_UP = "SITL instance is up.";
 	public static final String CONTROLLERS_STARTED = "UAVs controllers started...";
 	public static final String GPS_OK = "GPS fix acquired...";
-	public static final String SEND_MISSION = "Setting missions...";
+	public static final String SEND_MISSION = "Setting missions if needed...";
 	public static final String WAITING_FOR_USER = "Waiting for user interaction.";
 	public static final String TAKING_OFF = "Take off in progress...";
 	public static final String TEST_START = "Test started...";
@@ -186,7 +186,7 @@ public class Text {
 	public static final String UAV_OUT_OF_SCREEN_ERROR = "A UAV came out of the screen.";
 	public static final String SIMPLIFYING_WAYPOINT_LIST_ERROR = "A back home waypoint was found but home is not defined.\n"
 			+ "Error simplifying the waypoint list of the UAV ";
-	public static final String UAVS_START_ERROR_1 = "failed starting the virtual UAVs";
+	public static final String UAVS_START_ERROR_1 = "failed starting the virtual UAVs.\nIs another instance of " + Text.APP_NAME + " already running?.";
 	public static final String UAVS_START_ERROR_2 = "It was not possible to create temporal folders in:";
 	public static final String UAVS_START_ERROR_3 = Text.APP_NAME + " for Windows requires Cygwin:";
 	public static final String UAVS_START_CYGWIN_ERROR = "Cygwin not found.";

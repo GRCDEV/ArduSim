@@ -23,7 +23,7 @@ import sim.gui.ProgressDialog;
 import sim.gui.ResultsDialog;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class contains the main method and the chronological logic followed by the whole application. */
 

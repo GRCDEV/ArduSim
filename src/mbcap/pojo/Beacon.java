@@ -15,7 +15,7 @@ import main.Param;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.logic.MBCAPHelper;
 import mbcap.logic.MBCAPParam;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class generates and updates the beacons sent by MBCAP protocol to detect risks of collision.
  * <p>It also allows to convert the object to MAVLink message and viceversa. */

@@ -13,7 +13,7 @@ import api.MissionHelper;
 import api.pojo.Point3D;
 import main.Param;
 import mbcap.pojo.Beacon;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class receives data packets and stores them for later analysis of risk of collision.
  * <p>It also simulates broadcast and checks if there is a collision when using the simulator. */

@@ -32,7 +32,7 @@ import sim.board.BoardParam;
 import sim.gui.ConfigDialogPanel;
 import sim.gui.MainWindow;
 import sim.gui.ProgressDialogPanel;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class contains method used internally by the application for its own profit. */
 

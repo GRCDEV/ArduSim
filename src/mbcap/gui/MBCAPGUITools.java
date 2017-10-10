@@ -26,7 +26,7 @@ import sim.board.BoardPanel;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
 import sim.logic.SimParam;
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class contains exclusively static methods used by the GUI. */
 

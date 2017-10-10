@@ -4,22 +4,24 @@ import java.awt.geom.Point2D;
 
 import org.javatuples.Quintet;
 
-import uavLogic.UAVParam;
+import uavController.UAVParam;
 
 /** This class generates and object that contains the most recent information received from the UAV. */
 
 public class UAVCurrentData {
 
-	private long time;				// (ns) Local time when the location was retrieved from the UAV
-	private Point2D.Double location;		// (m) X,Y UTM coordinates
-	private double z, zRelative;	// (m) Altitude
-	private double speed;			// (m/s) Currrent speed
-	private double acceleration;	// (m/s^2) Current acceleration
+	private long time;					// (ns) Local time when the location was retrieved from the UAV
+	private Point2D.Double locationGeo;	// (degrees) longitude,latitude coordinates (x=longitude)
+	private Point2D.Double locationUTM;	// (m) X,Y UTM coordinates
+	private double z, zRelative;		// (m) Altitude
+	private double speed;				// (m/s) Currrent speed
+	private double acceleration;		// (m/s^2) Current acceleration
 
 	/** Updates the UAV object data. */
-	public synchronized void update(long time, Point2D.Double location, double z,
+	public synchronized void update(long time, Point2D.Double locationGeo, Point2D.Double locationUTM, double z,
 			double zRelative, double speed) {
-		this.location = location;
+		this.locationGeo = locationGeo;
+		this.locationUTM = locationUTM;
 		this.z = z;
 		this.zRelative = zRelative;
 
@@ -51,13 +53,20 @@ public class UAVCurrentData {
 	 * <p>double. Speed.
 	 * <p>double. Acceleration. */
 	public synchronized Quintet<Long, java.awt.geom.Point2D.Double, Double, Double, Double> getData() {
-		return Quintet.with(this.time, this.location, this.z, this.speed, this.acceleration);
+		return Quintet.with(this.time, this.locationUTM, this.z, this.speed, this.acceleration);
 	}
 
-	/** Returns the current position (x,y). */
+	/** Returns the current location in UTM coordinates (x,y). */
 	public synchronized Point2D.Double getUTMLocation() {
-		if (location == null) return location;
-		else return new Point2D.Double(this.location.x, this.location.y);
+		if (locationUTM == null) return locationUTM;
+		else return new Point2D.Double(this.locationUTM.x, this.locationUTM.y);
+	}
+	
+	/** Returns the current location in Geographic coordinates.
+	 * <p>x=longitude, y=latitude. */
+	public synchronized Point2D.Double getGeoLocation() {
+		if (locationGeo == null) return locationGeo;
+		else return new Point2D.Double(this.locationGeo.x, this.locationGeo.y);
 	}
 
 	/** Returns the current relative altitude (m). */

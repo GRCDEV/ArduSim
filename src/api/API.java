@@ -8,8 +8,8 @@ import api.pojo.Waypoint;
 import main.Text;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavLogic.UAVParam;
-import uavLogic.UAVParam.ControllerParam;
+import uavController.UAVParam;
+import uavController.UAVParam.ControllerParam;
 
 /** This class contains exclusively static methods to control the UAV "numUAV" in the arrays included in the application. */
 
@@ -118,7 +118,7 @@ public class API {
 	}
 
 	/** API: Modifies the current waypoint of the mission stored on the UAV. */
-	public static boolean setCurrentWP(int numUAV, int currentWP) {
+	public static boolean setCurrentWaypoint(int numUAV, int currentWP) {
 		UAVParam.newCurrentWaypoint[numUAV] = currentWP;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_CURRENT_WP);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -277,7 +277,7 @@ public class API {
 	/** API: Retrieves the mission stored on the UAV.
 	 * <p>New value available on UAVParam.currentGeoMission[numUAV].
 	 * <p>Simplified version of the mission in UTM coordinates available on UAVParam.missionUTMSimplified[numUAV]. */
-	public static boolean getWPList(int numUAV) {
+	public static boolean getMission(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_REQUEST_WP_LIST) {

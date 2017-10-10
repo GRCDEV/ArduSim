@@ -54,7 +54,7 @@ public class GUIHelper {
 	}
 
 	/** Transforms UTM coordinates to Geographic coordinates. 
-	 *  <p>Example: Tools.UTMToGeo(35, R, 312915.84, 4451481.33).
+	 *  <p>Example: Tools.UTMToGeo(312915.84, 4451481.33).
 	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, in order to get the zone and the letter of the UTM projection, available on GUIParam.zone and GUIParam.letter. */
 	public static GeoCoordinates UTMToGeo(double Easting, double Northing) {
 		double latitude;
@@ -113,6 +113,11 @@ public class GUIHelper {
 			Northing = Northing + 10000000;
 		Northing = Math.round(Northing * 100) * 0.01;
 	
+		if (SimParam.zone < 0) {
+			SimParam.zone = Zone;
+			SimParam.letter = Letter;
+		}
+		
 		return new UTMCoordinates(Easting, Northing, Zone, Letter);
 	}
 

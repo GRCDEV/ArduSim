@@ -14,8 +14,8 @@ import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
 import sim.logic.SimParam;
-import uavLogic.UAVParam;
-import uavLogic.UAVParam.Mode;
+import uavController.UAVParam;
+import uavController.UAVParam.Mode;
 
 /** This class implements the collision risk check finite state machine. */
 
