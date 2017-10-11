@@ -474,6 +474,7 @@ public class BoardHelper {
 		FontMetrics metrics = g.getFontMetrics();
 		if (BoardParam.map!=null) {
 			Point2D.Double locationPX;
+			// Draw images
 			for (int i=0; i<BoardParam.map.length; i++) {
 				if (BoardParam.map[i] != null) {
 					for (int j=0; j<BoardParam.map[i].length; j++) {
@@ -489,14 +490,22 @@ public class BoardHelper {
 								trans.scale(BoardParam.map[i][j].xScale,
 										BoardParam.map[i][j].yScale);
 								g.drawImage(BoardParam.map[i][j].img, trans, p);
-							} else {
-								if (BoardParam.mapDownloadErrorText[i][j] != null) {
-									// Draw download error message
-									locationPX = BoardHelper.locatePoint(BoardParam.map[i][j].centerX, BoardParam.map[i][j].centerY);
-									g.drawString(BoardParam.mapDownloadErrorText[i][j],
-											(int)locationPX.x - metrics.stringWidth(BoardParam.mapDownloadErrorText[i][j])/2,
-											(int)locationPX.y - metrics.getHeight()/2 + metrics.getAscent());
-								}
+							}
+						}
+					}
+				}
+			}
+			// Draw error messages
+			for (int i=0; i<BoardParam.map.length; i++) {
+				if (BoardParam.map[i] != null) {
+					for (int j=0; j<BoardParam.map[i].length; j++) {
+						if (BoardParam.map[i][j] != null) {
+							if (BoardParam.map[i][j].img!=null && BoardParam.mapDownloadErrorText[i][j] != null) {
+								// Draw download error message
+								locationPX = BoardHelper.locatePoint(BoardParam.map[i][j].centerX, BoardParam.map[i][j].centerY);
+								g.drawString(BoardParam.mapDownloadErrorText[i][j],
+										(int)locationPX.x - metrics.stringWidth(BoardParam.mapDownloadErrorText[i][j])/2,
+										(int)locationPX.y - metrics.getHeight()/2 + metrics.getAscent());
 							}
 						}
 					}

@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import api.pojo.GeoCoordinates;
+import api.pojo.Point3D;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.ProgressState;
 
@@ -47,8 +48,6 @@ public class MBCAPParam {
 	public static final int DISTANCES_SIZE = 20; // Initial distances list size, used to calculate the predicted points
 	// Parameter to decide whether the predicted path must be projected over the theoretical mission or not.
 	public static AtomicIntegerArray projectPath;		// 1 means project, 0 means do not project
-	// Parameter to decide if the UAV acceleration must be applied or not
-	public static AtomicIntegerArray useAcceleration;	// 1 means use it, 0 means do not use it
 
 	// Collision detection parameters
 	public static long collisionCheckPeriod = 500000000l; // (ns) Between two checks
@@ -66,6 +65,9 @@ public class MBCAPParam {
 	public static AtomicReferenceArray<Beacon> selfBeacon;
 	// Beacons transmitted by the broker to the CollisionDetector
 	public static Map<Long, Beacon>[] beacons;
+	// Parameters that store the point where the collision risk is detected
+	public static Map<Long, Point3D>[] impactLocationUTM;
+	public static Map<Long, Point2D.Double>[] impactLocationPX;
 	
 	// Parameters related to the actions undertaken when a collision risk takes place
 	public static double safePlaceDistance = 20; // (m) Minimum safety distance to the other UAV path
@@ -75,9 +77,9 @@ public class MBCAPParam {
 	public static GeoCoordinates[] targetPointGeo;	// Safety position to move towards (Mercator coordinates)
 
 	public static long standStillTimeout = 5 * 1000000000l; // (ns) Timeout while the UAV stands still
-	public static long passingTimeout = 3 * 1000000000l; // (ns) Timeout when the UAV starts the overtaking of other UAV before checking if it was successful
+	public static long passingTimeout = 3 * 1000000000l; // (ns) Timeout when the UAV starts overtaking the other UAV before checking if it was successful
 	public static long solvedTimeout = 4 * 1000000000l; // (ns) Timeout when going back to normal state before checking if another UAV considers that there is collision risk with you
-	public static long deadlockTimeout = 1 * 60 * 1000000000l; // (ns) Timeout to consider a deadlock
+	public static long deadlockTimeout = 1 * 60 * 1000000000l; // (ns) Timeout to consider a deadlock (maximum time applying a protocol state
 
 	public static List<Beacon>[] beaconsStored; // To log the sent beacons
 	

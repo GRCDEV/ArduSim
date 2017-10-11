@@ -63,7 +63,6 @@ public class API {
 			SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_1);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE + " = " + mode.getMode());
 			return true;
 		}
 	}

@@ -32,7 +32,7 @@ public class UAVParam {
 	public static UAVCurrentData[] uavCurrentData;
 	
 	// Last n UAV known positions of the UAV
-	public static final int LOCATIONS_SIZE = 3;		// n positions (never less than 2
+	public static final int LOCATIONS_SIZE = 3;		// n positions (never less than 2)
 	public static LastPositions[] lastLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Startup parameters
@@ -326,5 +326,8 @@ public class UAVParam {
 			return type;
 		}
 	}
+
+	// Auxiliary variable needed to ensure that the message thrown when the UAV gets to the end is shown only once
+	public static boolean[] lastWaypointReached;
 	
 }

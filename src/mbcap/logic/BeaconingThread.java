@@ -51,8 +51,6 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 	public void onWaypointReached() {
 		// Project the predicted path over the planned mission
 		MBCAPParam.projectPath.set(numUAV, 1);
-		// Use the UAV acceleration for calculating the future locations
-		MBCAPParam.useAcceleration.set(numUAV, 1);
 	}
 
 	@Override

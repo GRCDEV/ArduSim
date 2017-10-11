@@ -89,7 +89,7 @@ public class CollisionDetectorThread extends Thread {
 						// Case b. No need for commands for the UAV, just change the state
 						if (avoidingBeacon!=null) {
 							if (!Param.IS_REAL_UAV) {
-								MBCAPGUITools.locateImpactRiskMark(null, numUAV, (int)avoidingBeacon.uavId);
+								MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
 							}
 							avoidingBeacon = null;
 							MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
@@ -244,7 +244,6 @@ public class CollisionDetectorThread extends Thread {
 							MBCAPParam.idAvoiding.set(numUAV, avoidingBeacon.uavId);
 							// Progress update
 							MBCAPGUITools.updateState(numUAV, MBCAPState.STAND_STILL);
-							MBCAPParam.useAcceleration.set(numUAV, 0);	// Stop using acceleration when calculating future locations until next waypoint
 						} else {
 							MissionHelper.log(SimParam.prefix[numUAV] + MBCAPText.RISK_DETECTED_ERROR);
 						}
@@ -311,13 +310,13 @@ public class CollisionDetectorThread extends Thread {
 							&& MBCAPParam.state[numUAV] == MBCAPState.OVERTAKING
 							&& selfBeacon.uavId > avoidingBeacon.uavId
 							&& System.nanoTime() - stateTime > MBCAPParam.passingTimeout
-							&& MBCAPHelper.hasOvertaken(numUAV, avoidingBeacon.points.get(0))) {
+							&& MBCAPHelper.hasOvertaken(numUAV, avoidingBeacon.uavId, avoidingBeacon.points.get(0))) {
 
 						// There is no need to apply commands to the UAV
 						MissionHelper.log(SimParam.prefix[numUAV]
 								+ MBCAPText.MISSION_RESUMED + " " + (avoidingBeacon.uavId+1) + "."); // uavId==numUAV in the simulator
 						if (!Param.IS_REAL_UAV) {
-							MBCAPGUITools.locateImpactRiskMark(null, numUAV, (int)avoidingBeacon.uavId);
+							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
 						}
 						avoidingBeacon = null;
 						stateTime = System.nanoTime();
@@ -349,7 +348,7 @@ public class CollisionDetectorThread extends Thread {
 						if (API.setMode(numUAV, UAVParam.Mode.AUTO_ARMED)) {
 							MissionHelper.log(SimParam.prefix[numUAV]
 									+ MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
-							MBCAPGUITools.locateImpactRiskMark(null, numUAV, (int)avoidingBeacon.uavId);
+							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
 							
 							avoidingBeacon = null;
 							stateTime = System.nanoTime();

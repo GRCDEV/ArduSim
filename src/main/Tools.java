@@ -203,6 +203,7 @@ public class Tools {
 		UAVParam.newLocation = new float[Param.numUAVs][3];
 
 		UAVParam.missionUTMSimplified = new AtomicReferenceArray<List<WaypointSimplified>>(Param.numUAVs);
+		UAVParam.lastWaypointReached = new boolean[Param.numUAVs];
 		
 		SimParam.uavUTMPathReceiving = new ArrayBlockingQueue[Param.numUAVs];
 		SimParam.uavUTMPath = new ArrayList[Param.numUAVs];	// Useful for logging purposes
@@ -240,6 +241,8 @@ public class Tools {
 			UAVParam.uavCurrentData[i] = new UAVCurrentData();
 			UAVParam.lastLocations[i] = new LastPositions(UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
+			
+			UAVParam.lastWaypointReached[i] = false;
 			
 			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
@@ -318,7 +321,7 @@ public class Tools {
 		}
 		return Collections.max(ids);
 	}
-
+	
 	/** Starts the virtual UAVs. */
 	public static void startVirtualUAVs(Pair<GeoCoordinates, Double>[] location) {
 		

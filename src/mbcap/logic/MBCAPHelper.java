@@ -41,35 +41,28 @@ public class MBCAPHelper {
 	public static void initializeProtocolDataStructures() {
 		MBCAPGUIParam.predictedLocation = new AtomicReferenceArray<List<Point3D>>(Param.numUAVs);
 
-		if (!Param.IS_REAL_UAV) {
-			MBCAPGUIParam.impactLocationUTM = new Point3D[Param.numUAVs][Param.numUAVs];
-			MBCAPGUIParam.impactLocationPX = new Point3D[Param.numUAVs][Param.numUAVs];
-		}
-
-		MBCAPGUIParam.lastWaypointReached = new boolean[Param.numUAVs];
-
 		MBCAPParam.event = new AtomicIntegerArray(Param.numUAVs);
 		MBCAPParam.state = new MBCAPState[Param.numUAVs];
 		MBCAPParam.idAvoiding = new AtomicLongArray(Param.numUAVs);
 		MBCAPParam.projectPath = new AtomicIntegerArray(Param.numUAVs);
-		MBCAPParam.useAcceleration = new AtomicIntegerArray(Param.numUAVs);
 
 		MBCAPParam.selfBeacon = new AtomicReferenceArray<Beacon>(Param.numUAVs);
 		MBCAPParam.beacons = new ConcurrentHashMap[Param.numUAVs];
+		MBCAPParam.impactLocationUTM = new ConcurrentHashMap[Param.numUAVs];
+		MBCAPParam.impactLocationPX = new ConcurrentHashMap[Param.numUAVs];
 
 		MBCAPParam.targetPointUTM = new Point2D.Double[Param.numUAVs];
 		MBCAPParam.targetPointGeo = new GeoCoordinates[Param.numUAVs];
 		MBCAPParam.beaconsStored = new ArrayList[Param.numUAVs];
 
 		for (int i = 0; i < Param.numUAVs; i++) {
-			MBCAPGUIParam.lastWaypointReached[i] = false;
-
 			MBCAPParam.state[i] = MBCAPState.NORMAL;
 			MBCAPParam.idAvoiding.set(i, MBCAPParam.ID_AVOIDING_DEFAULT);
 			MBCAPParam.projectPath.set(i, 1);		// Begin projecting the predicted path over the theoretical mission
-			MBCAPParam.useAcceleration.set(i, 1);	// Begin using the UAV acceleration
 
 			MBCAPParam.beacons[i] = new ConcurrentHashMap<Long, Beacon>();
+			MBCAPParam.impactLocationUTM[i] = new ConcurrentHashMap<Long, Point3D>();
+			MBCAPParam.impactLocationPX[i] = new ConcurrentHashMap<Long, Point2D.Double>();
 			
 			MBCAPParam.beaconsStored[i] =  new ArrayList<Beacon>();
 		}
@@ -165,11 +158,6 @@ public class MBCAPHelper {
 
 			// 5. When really close to the last waypoint, only the current location is sent
 			if (posNextWaypoint == mission.size()) {
-				// Log that we have reached the end of the mission
-				if (!MBCAPGUIParam.lastWaypointReached[numUAV]) {
-					MBCAPGUIParam.lastWaypointReached[numUAV] = true;
-					MissionHelper.log(SimParam.prefix[numUAV] + MBCAPText.WAYPOINT_REACHED);
-				}
 				posNextWaypoint--; // So it could be drawn until the end
 				if (currentUTMLocation.distance(mission.get(posNextWaypoint)) < MBCAPParam.DISTANCE_TO_MISSION_END) {
 					predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
@@ -328,8 +316,7 @@ public class MBCAPHelper {
 		double totalDistance = 0.0;
 		// MBCAP v1 or MBCAP v2 (no acceleration present)
 		if (Param.selectedProtocol.getId() == 1 || Param.selectedProtocol.getId() == 2
-				|| (Param.selectedProtocol.getId() == 3
-							&& (acceleration == 0.0 || MBCAPParam.useAcceleration.get(numUAV) == 0))) {
+				|| (Param.selectedProtocol.getId() == 3 && acceleration == 0.0)) {
 			totalDistance = MBCAPParam.beaconFlyingTime * speed;
 		} else if (Param.selectedProtocol.getId() == 3) {
 			// MBCAP v3 (constant acceleration present)
@@ -359,8 +346,7 @@ public class MBCAPHelper {
 		double prevSegmentsLength = 0.0;
 
 		if (Param.selectedProtocol.getId() ==1 || Param.selectedProtocol.getId() == 2
-				|| (Param.selectedProtocol.getId() == 3
-							&& (acceleration == 0.0 || MBCAPParam.useAcceleration.get(numUAV) == 0))) {
+				|| (Param.selectedProtocol.getId() == 3 && acceleration == 0.0)) {
 			incDistance = totalDistance / remainingLocations;
 		}
 
@@ -381,8 +367,7 @@ public class MBCAPHelper {
 			currentSegmentLength = distances.get(i);
 
 			if (Param.selectedProtocol.getId() == 1 || Param.selectedProtocol.getId() == 2
-					|| (Param.selectedProtocol.getId() == 3
-							&& (acceleration == 0 || MBCAPParam.useAcceleration.get(numUAV) == 0))) {
+					|| (Param.selectedProtocol.getId() == 3	&& acceleration == 0)) {
 				remainingSegment = Math.min(currentSegmentLength, totalDistance - distanceAcum + prevRemainingSegment);
 
 				// Following the current segment
@@ -441,8 +426,7 @@ public class MBCAPHelper {
 
 		double distanceAcum;
 		List<Double> distances = new ArrayList<Double>(MBCAPParam.DISTANCES_SIZE);
-		if (acceleration == 0.0
-				|| MBCAPParam.useAcceleration.get(numUAV) == 0) {
+		if (acceleration == 0.0) {
 			// The same solution from the previous protocol versions
 			double totalDistance = MBCAPParam.beaconFlyingTime * speed;
 			distanceAcum = currentUTMLocation.distance(mission.get(posNextWaypoint));
@@ -630,7 +614,7 @@ public class MBCAPHelper {
 						< MBCAPParam.reactionDistance) {
 					if (!Param.IS_REAL_UAV) {
 						Point3D p = new Point3D(selfBeacon.points.get(i).x, selfBeacon.points.get(i).y, selfBeacon.points.get(i).z);
-						MBCAPGUITools.locateImpactRiskMark(p, numUAV, (int)receivedBeacon.uavId);
+						MBCAPGUITools.locateImpactRiskMark(p, numUAV, receivedBeacon.uavId);
 					}
 					return true;
 				}
@@ -640,20 +624,35 @@ public class MBCAPHelper {
 	}
 
 	/** Calculates if the current UAV has overtaken another UAV. */
-	public static boolean hasOvertaken(int numUAV, Point2D.Double target) {
-		// Overtaken happened if the distance to the other UAV is increasing
+	public static boolean hasOvertaken(int numUAV, long avoidingId, Point2D.Double target) {
+		// Overtaken happened if the distance to the target UAV and to the risk location is increasing
+		Point3D riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(avoidingId);
 		Point3D[] lastLocations = UAVParam.lastLocations[numUAV].getLastPositions();
-		double distPrev, distPost;
-		for (int i = 1; i < lastLocations.length; i++) {
-			if (lastLocations[i - 1] != null
-					&& lastLocations[i] != null) {
-				distPrev = lastLocations[i - 1]
-						.distance(target);
-				distPost = lastLocations[i].distance(target);
-				if (distPrev >= distPost) {
+		double distPrevToTarget, distPostToTarget, distPostToRisk;
+		double distPrevToRisk = 0;
+		int i = 0;
+		while (lastLocations[i] == null) {
+			i++;
+		}
+		distPrevToTarget = lastLocations[i].distance(target);
+		if (riskLocation != null) {
+			distPrevToRisk = lastLocations[i].distance(riskLocation);
+		}
+		i++;
+		while (i < lastLocations.length) {
+			distPostToTarget = lastLocations[i].distance(target);
+			if (distPrevToTarget >= distPostToTarget) {
+				return false;
+			}
+			distPrevToTarget = distPostToTarget;
+			if (riskLocation != null) {
+				distPostToRisk = lastLocations[i].distance(riskLocation);
+				if (distPrevToRisk >= distPostToRisk) {
 					return false;
 				}
+				distPrevToRisk = distPostToRisk;
 			}
+			i++;
 		}
 		return true;
 	}

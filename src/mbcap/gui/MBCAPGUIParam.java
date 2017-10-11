@@ -19,11 +19,4 @@ public class MBCAPGUIParam {
 	public static final double EXCLAMATION_PX_SIZE = 25.0;							// (px) Size of the image when it is drawn
 	public static double exclamationDrawScale;										// Scale needed to draw the image
 
-	// Parameters that store the point where the collision risk image has to be drawn
-	public static Point3D[][] impactLocationUTM;
-	public static Point3D[][] impactLocationPX;
-
-	// Auxiliary variable needed to ensure that the message thrown when the UAV gets to the end is shown only once
-	public static boolean[] lastWaypointReached;
-
 }

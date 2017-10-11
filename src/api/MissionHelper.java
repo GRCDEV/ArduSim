@@ -528,17 +528,23 @@ public class MissionHelper {
 					&& mode != UAVParam.Mode.LAND_ARMED
 					&& mode != UAVParam.Mode.LAND
 					&& UAVParam.currentWaypoint.get(i) > 0
-					&& UAVParam.currentWaypoint.get(i) == mission.get(mission.size()-1).numSeq
-					&& UAVParam.uavCurrentData[i].getUTMLocation().distance(mission.get(mission.size()-1)) < Param.LAST_WP_THRESHOLD) {
+					&& UAVParam.currentWaypoint.get(i) == mission.get(mission.size()-1).numSeq) {
 				
-				int command = UAVParam.currentGeoMission[i].get(UAVParam.currentGeoMission[i].size() - 1).getCommand();
-				// There is no need of landing when the last waypoint is the command LAND or when it is RTL under some circumstances
-				if (command != MAV_CMD.MAV_CMD_NAV_LAND
-						&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[i] == 0)) {
-					// Land the UAV when reaches the last waypoint and mark as finished
-					if (API.setMode(i, UAVParam.Mode.LAND_ARMED)) {
-					} else {
-						MissionHelper.log(SimParam.prefix[i] + MissionText.LAND_ERROR);
+				if (!UAVParam.lastWaypointReached[i]) {
+					UAVParam.lastWaypointReached[i] = true;
+					MissionHelper.log(SimParam.prefix[i] + MBCAPText.WAYPOINT_REACHED);
+				}
+				
+				if (UAVParam.uavCurrentData[i].getUTMLocation().distance(mission.get(mission.size()-1)) < Param.LAST_WP_THRESHOLD) {
+					int command = UAVParam.currentGeoMission[i].get(UAVParam.currentGeoMission[i].size() - 1).getCommand();
+					// There is no need of landing when the last waypoint is the command LAND or when it is RTL under some circumstances
+					if (command != MAV_CMD.MAV_CMD_NAV_LAND
+							&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[i] == 0)) {
+						// Land the UAV when reaches the last waypoint and mark as finished
+						if (API.setMode(i, UAVParam.Mode.LAND_ARMED)) {
+						} else {
+							MissionHelper.log(SimParam.prefix[i] + MissionText.LAND_ERROR);
+						}
 					}
 				}
 			}

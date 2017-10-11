@@ -63,10 +63,12 @@ public class BrokerThread extends Thread {
 				}
 
 				// 2. Cleaning the obsolete beacons received on each UAV
+				Iterator<Map.Entry<Long, Beacon>> entries;
+				Map.Entry<Long, Beacon> entry;
 				for (int i = 0; i < Param.numUAVs; i++) {
-					Iterator<Map.Entry<Long, Beacon>> entries = MBCAPParam.beacons[i].entrySet().iterator();
+					entries = MBCAPParam.beacons[i].entrySet().iterator();
 					while (entries.hasNext()) {
-						Map.Entry<Long, Beacon> entry = entries.next();
+						entry = entries.next();
 						if (currentTime - entry.getValue().time > MBCAPParam.beaconExpirationTime) {
 							entries.remove();
 						}

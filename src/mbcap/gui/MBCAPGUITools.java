@@ -7,7 +7,9 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -297,59 +299,60 @@ public class MBCAPGUITools {
 	}
 	
 	/** Stores (or removes when p==null) the collision risk location that is drawn. */
-	public static void locateImpactRiskMark(Point3D riskUTMLocation, int numUAV, int beaconId) {
-		MBCAPGUIParam.impactLocationUTM[numUAV][beaconId] = riskUTMLocation; // uavId==numUAV in the simulator
+	public static void locateImpactRiskMark(Point3D riskUTMLocation, int numUAV, long beaconId) {
 		if (riskUTMLocation == null) {
-			MBCAPGUIParam.impactLocationPX[numUAV][beaconId] = null;
+			MBCAPParam.impactLocationUTM[numUAV].remove(beaconId);
+			MBCAPParam.impactLocationPX[numUAV].remove(beaconId);
 		} else {
-			Point2D.Double riskGeoLocation = GUIHelper.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
-			MBCAPGUIParam.impactLocationPX[numUAV][beaconId] = new Point3D(riskGeoLocation.x, riskGeoLocation.y, riskUTMLocation.z);
+			MBCAPParam.impactLocationUTM[numUAV].put(beaconId, riskUTMLocation);
+			Point2D.Double riskPXLocation = GUIHelper.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
+			MBCAPParam.impactLocationPX[numUAV].put(beaconId, riskPXLocation);
 		}
 	}
 	
 	/** Removes all the collision risk locations used for drawing. */
 	public static void removeImpactRiskMarks() {
-		for (int i=0; i<MBCAPGUIParam.impactLocationUTM.length; i++) {
-			for (int j=0; j<MBCAPGUIParam.impactLocationUTM[0].length; j++) {
-				MBCAPGUIParam.impactLocationUTM[i][j] = null;
-				MBCAPGUIParam.impactLocationPX[i][j] = null;
-			}
+		for (int i=0; i<Param.numUAVs; i++) {
+			MBCAPParam.impactLocationUTM[i].clear();
+			MBCAPParam.impactLocationPX[i].clear();
 		}
 	}
 
 	/** Draws the image that represents a collision risk, when needed. */
 	public static void drawImpactRiskMarks(Graphics2D g2, BoardPanel p) {
+		Iterator<Map.Entry<Long, Point2D.Double>> entries;
+		Map.Entry<Long, Point2D.Double> entry;
+		Point2D.Double riskLocationPX;
 		for (int i = 0; i < Param.numUAVs; i++) {
-			for (int j = 0; j < Param.numUAVs; j++) {
-				if (MBCAPGUIParam.impactLocationPX[i][j] != null) {
-					// AffineTransform is applied in reverse order
-					AffineTransform trans = new AffineTransform();
-					synchronized (MBCAPGUIParam.impactLocationPX[i][j]) {
-						trans.translate(MBCAPGUIParam.impactLocationPX[i][j].x,
-								MBCAPGUIParam.impactLocationPX[i][j].y);
-					}
-					trans.scale(MBCAPGUIParam.exclamationDrawScale, MBCAPGUIParam.exclamationDrawScale);
-					trans.translate(-MBCAPGUIParam.exclamationImage.getWidth() / 2,
-							-MBCAPGUIParam.exclamationImage.getHeight() / 2);
-					g2.drawImage(MBCAPGUIParam.exclamationImage, trans, p);
-				}
+			entries = MBCAPParam.impactLocationPX[i].entrySet().iterator();
+			while (entries.hasNext()) {
+				entry = entries.next();
+				riskLocationPX = entry.getValue();
+				// AffineTransform is applied in reverse order
+				AffineTransform trans = new AffineTransform();
+				trans.translate(riskLocationPX.x, riskLocationPX.y);
+				trans.scale(MBCAPGUIParam.exclamationDrawScale, MBCAPGUIParam.exclamationDrawScale);
+				trans.translate(-MBCAPGUIParam.exclamationImage.getWidth() / 2,
+						-MBCAPGUIParam.exclamationImage.getHeight() / 2);
+				g2.drawImage(MBCAPGUIParam.exclamationImage, trans, p);
 			}
 		}
 	}
 
 	/** Calculates the screen position of the points where the collision risk was detected. */
 	public static void rescaleImpactRiskMarkPoints() {
+		Iterator<Map.Entry<Long, Point3D>> entries;
+		Map.Entry<Long, Point3D> entry;
 		Point3D riskLocationUTM;
-		Point2D.Double riskLocationGeo;
+		Point2D.Double riskLocationPX;
 		for (int i = 0; i < Param.numUAVs; i++) {
-			for (int j = 0; j < Param.numUAVs; j++) {
-				if (MBCAPGUIParam.impactLocationUTM[i][j] != null) {
-					synchronized (MBCAPGUIParam.impactLocationUTM[i][j]) {
-						riskLocationUTM = MBCAPGUIParam.impactLocationUTM[i][j];
-						riskLocationGeo = GUIHelper.locatePoint(riskLocationUTM.x, riskLocationUTM.y);
-						MBCAPGUIParam.impactLocationPX[i][j] = new Point3D( riskLocationGeo.x, riskLocationGeo.y, riskLocationUTM.z);
-					}
-				}
+			entries = MBCAPParam.impactLocationUTM[i].entrySet().iterator();
+			MBCAPParam.impactLocationPX[i].clear();
+			while (entries.hasNext()) {
+				entry = entries.next();
+				riskLocationUTM = entry.getValue();
+				riskLocationPX = GUIHelper.locatePoint(riskLocationUTM.x, riskLocationUTM.y);
+				MBCAPParam.impactLocationPX[i].put(entry.getKey(), riskLocationPX);
 			}
 		}
 	}

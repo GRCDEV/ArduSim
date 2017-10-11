@@ -82,6 +82,7 @@ public class SimTools {
 				}
 			});
 		}
+		SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE + " = " + mode);
 	}
 	
 	/** Updates the protocol state on the progress dialog. */

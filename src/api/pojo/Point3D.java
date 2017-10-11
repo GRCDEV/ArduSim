@@ -6,6 +6,7 @@ import java.awt.geom.Point2D;
  * <p>The distance between two points does not include the third coordinate. */
 
 public class Point3D extends Point2D.Double {
+	
 	private static final long serialVersionUID = 1L;
 	public double z; // (m)
 
@@ -17,6 +18,16 @@ public class Point3D extends Point2D.Double {
 	public Point3D(double x, double y, double z) {
 		super(x, y);
 		this.z = z;
+	}
+	
+	/** Two Point3D objects are equal if their three coordinates are the same (x, y, z). */
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Point3D) {
+			return super.equals(obj) && ((Point3D)obj).z == this.z;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
