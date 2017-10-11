@@ -16,10 +16,11 @@ import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 import sim.logic.SimParam;
 import uavController.UAVParam;
+import uavController.WaypointReachedListener;
 
 /** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision. */
 
-public class BeaconingThread extends Thread {
+public class BeaconingThread extends Thread implements WaypointReachedListener {
 
 	private int numUAV; // UAV identifier, beginning from 0
 	private DatagramSocket socket;
@@ -44,6 +45,14 @@ public class BeaconingThread extends Thread {
 		}
 		
 		this.cicleTime = 0;
+	}
+	
+	@Override
+	public void onWaypointReached() {
+		// Project the predicted path over the planned mission
+		MBCAPParam.projectPath.set(numUAV, 1);
+		// Use the UAV acceleration for calculating the future locations
+		MBCAPParam.useAcceleration.set(numUAV, 1);
 	}
 
 	@Override

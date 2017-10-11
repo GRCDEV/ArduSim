@@ -244,6 +244,7 @@ public class CollisionDetectorThread extends Thread {
 							MBCAPParam.idAvoiding.set(numUAV, avoidingBeacon.uavId);
 							// Progress update
 							MBCAPGUITools.updateState(numUAV, MBCAPState.STAND_STILL);
+							MBCAPParam.useAcceleration.set(numUAV, 0);	// Stop using acceleration when calculating future locations until next waypoint
 						} else {
 							MissionHelper.log(SimParam.prefix[numUAV] + MBCAPText.RISK_DETECTED_ERROR);
 						}
@@ -337,7 +338,7 @@ public class CollisionDetectorThread extends Thread {
 						stateTime = System.nanoTime();
 						// Progress update
 						MBCAPGUITools.updateState(numUAV, MBCAPState.GO_ON_PLEASE);
-						
+						MBCAPParam.projectPath.set(numUAV, 0);	// Avoid projecting the predicted path over the theoretical one
 					}
 
 					// In go on, please state. Change to normal state when the risk collision is solved

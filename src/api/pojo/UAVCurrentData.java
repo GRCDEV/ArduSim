@@ -43,6 +43,13 @@ public class UAVCurrentData {
 				// Filter
 				this.acceleration = UAVParam.ACCELERATION_THRESHOLD * acceleration + (1-UAVParam.ACCELERATION_THRESHOLD) * this.acceleration;
 			}
+		} else {
+			if (acceleration > 0) {
+				this.acceleration = UAVParam.MAX_ACCELERATION;
+			} else {
+				this.acceleration = - UAVParam.MAX_ACCELERATION;
+			}
+			
 		}
 	}
 

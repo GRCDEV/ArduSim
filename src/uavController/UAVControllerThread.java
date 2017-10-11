@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import org.mavlink.IMAVLinkMessage;
@@ -61,6 +63,8 @@ import uavController.UAVParam.Mode;
  * <p>If you need to send a new type of message to the flight controller, please contact with the original developer (it would be easier). */
 
 public class UAVControllerThread extends Thread {
+	
+	private List<WaypointReachedListener> listeners;
 
 	private int numUAV;			// Id of the UAV
 	private boolean isStarting; // Used to wait until the first valid coordinates set is received
@@ -83,6 +87,7 @@ public class UAVControllerThread extends Thread {
 	private boolean locationReceived = false;
 
 	public UAVControllerThread(int numUAV) throws SocketException {
+		this.listeners = new ArrayList<WaypointReachedListener>();
 		this.numUAV = numUAV;
 		this.isStarting = true;
 		this.numTests = 0;
@@ -152,6 +157,11 @@ public class UAVControllerThread extends Thread {
 				GUIHelper.exit(Text.TCP_ERROR);
 			}
 		}
+	}
+	
+	/** Ads a listener for the event: waypoint reached (more than one can be set). */
+	public void setWaypointReached(WaypointReachedListener listener) {
+		this.listeners.add(listener);
 	}
 
 	@Override
@@ -330,6 +340,10 @@ public class UAVControllerThread extends Thread {
 		// The received value begins in 0
 		UAVParam.currentWaypoint.set(numUAV, message.seq);
 		SimTools.println(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
+		
+		for (int i=0; i<this.listeners.size(); i++) {
+			this.listeners.get(i).onWaypointReached();
+		}
 	}
 
 	/** Process the received message that gets the number of waypoints included in the UAV mission. */

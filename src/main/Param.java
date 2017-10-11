@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import mbcap.logic.MBCAPText;
 import swarmprot.logic.SwarmProtText;
+import uavController.UAVControllerThread;
 
 /** This class contains general parameters of the application. */
 
@@ -29,6 +30,9 @@ public class Param {
 	
 	// Store additional information in files?
 	public static final boolean VERBOSE_STORE = true;
+	
+	// Array containing the UAV controllers. Useful to set a listener to detect when a waypoint is reached, if needed.
+	public static UAVControllerThread[] controllers;
 
 	// Running Operating System
 	public static final int OS_WINDOWS = 0;

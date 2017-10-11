@@ -45,6 +45,10 @@ public class MBCAPParam {
 	public static final long ID_AVOIDING_DEFAULT = -1; // Default value (not avoiding collision)
 	public static final int POINTS_SIZE = 70; // Initial predicted positions list size
 	public static final int DISTANCES_SIZE = 20; // Initial distances list size, used to calculate the predicted points
+	// Parameter to decide whether the predicted path must be projected over the theoretical mission or not.
+	public static AtomicIntegerArray projectPath;		// 1 means project, 0 means do not project
+	// Parameter to decide if the UAV acceleration must be applied or not
+	public static AtomicIntegerArray useAcceleration;	// 1 means use it, 0 means do not use it
 
 	// Collision detection parameters
 	public static long collisionCheckPeriod = 500000000l; // (ns) Between two checks
@@ -55,7 +59,7 @@ public class MBCAPParam {
 	// Collision risk detection parameters
 	public static double collisionRiskDistance = 20; // (m) Distance between points to assert collision risk (UTM coordinates)
 	public static double collisionRiskScreenDistance; // (px) The previous distance, but in screen coordinates
-	public static long maxTime = 3 * 1000000000l; // (ns) Time range to assert collision risk
+	public static long maxTime = 1 * collisionCheckPeriod; // (ns) Half of the time range to assert collision risk
 	public static double collisionRiskAltitudeDifference = 50; // (m) Altitude difference to assert collision risk
 	public static double reactionDistance = 90; // (m) Distance between the UAV and the collision risk point to assert collision risk
 	public static long riskCheckPeriod = 2 * 1000000000l; // (ns) Time between risk collision checks

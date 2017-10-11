@@ -583,9 +583,11 @@ public class Tools {
 
 	/** Starts the UAVs controllers threads. */
 	public static void startUAVControllers() {
+		Param.controllers = new UAVControllerThread[Param.numUAVs];
 		try {
 			for (int i=0; i<Param.numUAVs; i++) {
-				(new UAVControllerThread(i)).start();
+				Param.controllers[i] = new UAVControllerThread(i);
+				Param.controllers[i].start();
 			}
 			SimTools.println(Text.CONTROLLERS_STARTED);
 		} catch (SocketException e) {

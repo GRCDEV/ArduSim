@@ -51,6 +51,8 @@ public class MBCAPHelper {
 		MBCAPParam.event = new AtomicIntegerArray(Param.numUAVs);
 		MBCAPParam.state = new MBCAPState[Param.numUAVs];
 		MBCAPParam.idAvoiding = new AtomicLongArray(Param.numUAVs);
+		MBCAPParam.projectPath = new AtomicIntegerArray(Param.numUAVs);
+		MBCAPParam.useAcceleration = new AtomicIntegerArray(Param.numUAVs);
 
 		MBCAPParam.selfBeacon = new AtomicReferenceArray<Beacon>(Param.numUAVs);
 		MBCAPParam.beacons = new ConcurrentHashMap[Param.numUAVs];
@@ -64,6 +66,8 @@ public class MBCAPHelper {
 
 			MBCAPParam.state[i] = MBCAPState.NORMAL;
 			MBCAPParam.idAvoiding.set(i, MBCAPParam.ID_AVOIDING_DEFAULT);
+			MBCAPParam.projectPath.set(i, 1);		// Begin projecting the predicted path over the theoretical mission
+			MBCAPParam.useAcceleration.set(i, 1);	// Begin using the UAV acceleration
 
 			MBCAPParam.beacons[i] = new ConcurrentHashMap<Long, Beacon>();
 			
@@ -79,10 +83,13 @@ public class MBCAPHelper {
 
 	/** Executes the protocol threads. */
 	public static void startMBCAPThreads() {
+		BeaconingThread thread;
 		try {
 			(new BrokerThread()).start();
 			for (int i = 0; i < Param.numUAVs; i++) {
-				(new BeaconingThread(i)).start();
+				thread = new BeaconingThread(i);
+				Param.controllers[i].setWaypointReached(thread);
+				thread.start();
 				(new CollisionDetectorThread(i)).start();
 			}
 			MissionHelper.log(MBCAPText.ENABLING);
@@ -172,7 +179,7 @@ public class MBCAPHelper {
 
 			// 6. General case
 			// Initial location calculated depending on the protocol version
-			Pair<Point2D.Double, Integer> currentLocation = MBCAPHelper.getCurrentLocation(mission, currentUTMLocation, posNextWaypoint);
+			Pair<Point2D.Double, Integer> currentLocation = MBCAPHelper.getCurrentLocation(numUAV, mission, currentUTMLocation, posNextWaypoint);
 			currentUTMLocation = currentLocation.getValue0();
 			posNextWaypoint = currentLocation.getValue1();
 			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
@@ -180,9 +187,9 @@ public class MBCAPHelper {
 			if (Param.selectedProtocol == Protocol.MBCAP_V1
 					|| Param.selectedProtocol == Protocol.MBCAP_V2
 					|| Param.selectedProtocol == Protocol.MBCAP_V3) {
-				MBCAPHelper.getPredictedLocations1(speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
+				MBCAPHelper.getPredictedLocations1(numUAV, speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
 			} else if (Param.selectedProtocol == Protocol.MBCAP_V4) {
-				MBCAPHelper.getPredictedLocations2(speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
+				MBCAPHelper.getPredictedLocations2(numUAV, speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
 			}
 			// In case a problem keeps the list empty
 			if (predictedPath.size() == 0) {
@@ -194,7 +201,7 @@ public class MBCAPHelper {
 
 	/** Calculates the first point of the predicted positions list depending on the protocol version.
 	 * <p>It also decides which is the next waypoint the UAV is moving towards, also depending on the protocol version. */
-	private static Pair<Point2D.Double, Integer> getCurrentLocation(List<WaypointSimplified> mission, Point2D.Double currentUTMLocation, int posNextWaypoint) {
+	private static Pair<Point2D.Double, Integer> getCurrentLocation(int numUAV, List<WaypointSimplified> mission, Point2D.Double currentUTMLocation, int posNextWaypoint) {
 		Point2D.Double baseLocation = null;
 		int nextWaypointPosition = posNextWaypoint;
 		if (Param.selectedProtocol.getId() == 1) { // MBCAP v1
@@ -206,100 +213,106 @@ public class MBCAPHelper {
 				|| Param.selectedProtocol.getId() == 3
 				|| Param.selectedProtocol.getId() == 4) {
 			// MBCAP v2, MBCAP v3 or MBCAP v4
-			// It is necessary to project the current location over the planned path
-			WaypointSimplified sp1 = null;
-			Point2D.Double location1 = null;
-			if (posNextWaypoint>1) {
-				sp1 = mission.get(posNextWaypoint-2);	// Segment 1 previous point
-				location1 = new Point2D.Double(sp1.x, sp1.y);
-			}
-
-			// If we are over the first mission segment, the first predicted position is the current coordinates
-			if (location1 == null) {
-				baseLocation = currentUTMLocation;
+			if (MBCAPParam.projectPath.get(numUAV) == 0) {
 				// The next waypoint position has been already set
+				// The first predicted position is the current coordinates
+				baseLocation = currentUTMLocation;
 			} else {
-				// In any other case... (there is a previous segment in the planned path)
-				// The current location can be projected over the previous or the following segment
-				WaypointSimplified sp2 = mission.get(posNextWaypoint-1);	// Segments 1-2 joining point
-				Point2D.Double location2 = new Point2D.Double(sp2.x, sp2.y);
-				WaypointSimplified sp3 = mission.get(posNextWaypoint);		// Segment 2 final point
-				Point2D.Double location3 = new Point2D.Double(sp3.x, sp3.y);
-				// Intersection calculus with both segments
-				Point2D.Double prevIntersection = MBCAPHelper.getIntersection(currentUTMLocation, location1, location2);
-				Point2D.Double postIntersection = MBCAPHelper.getIntersection(currentUTMLocation, location2, location3);
-				// Check the segment over which this point is projected
-				int projectionCase = -1;	// -1 value over the vertex (when this point projects over the intersection of both segments)
-											// 0 value under the vertex (when this point projects under the intersection of both segments)
-											// 1 projects over the first segment
-											// 2 projects over the second segment
-				// 1. Checking the projection over the first segment
-				if (Math.abs(location2.getX() - location1.getX()) == 0.0) {
-					// Vertical line
-					if (prevIntersection.getY() >= Math.min(location1.getY(), location2.getY())
-							&& prevIntersection.getY() <= Math.max(location1.getY(), location2.getY())) {
-						// It projects over the first segment
-						projectionCase = 1;
-					}
-				} else {
-					// Any other case
-					if (prevIntersection.getX() >= Math.min(location1.getX(), location2.getX())
-							&& prevIntersection.getX() <= Math.max(location1.getX(), location2.getX())) {
-						// It projects over the first segment
-						projectionCase = 1;
-					}
+				// It is necessary to project the current location over the planned path
+				WaypointSimplified sp1 = null;
+				Point2D.Double location1 = null;
+				if (posNextWaypoint>1) {
+					sp1 = mission.get(posNextWaypoint-2);	// Segment 1 previous point
+					location1 = new Point2D.Double(sp1.x, sp1.y);
 				}
-				// 2. Checking the projection over the second segment
-				if (Math.abs(location3.getX() - location2.getX()) == 0.0) {
-					// Vertical line
-					if (postIntersection.getY() >= Math.min(location2.getY(), location3.getY())
-							&& postIntersection.getY() <= Math.max(location2.getY(), location3.getY())) {
-						// It projects over the first segment
-						if (projectionCase == -1) {
-							// Only over the second segment
-							projectionCase = 2;
-						} else {
-							// Over both segments
-							projectionCase = 0;
+
+				// If we are over the first mission segment, the first predicted position is the current coordinates
+				if (location1 == null) {
+					baseLocation = currentUTMLocation;
+					// The next waypoint position has been already set
+				} else {
+					// In any other case... (there is a previous segment in the planned path)
+					// The current location can be projected over the previous or the following segment
+					WaypointSimplified sp2 = mission.get(posNextWaypoint-1);	// Segments 1-2 joining point
+					Point2D.Double location2 = new Point2D.Double(sp2.x, sp2.y);
+					WaypointSimplified sp3 = mission.get(posNextWaypoint);		// Segment 2 final point
+					Point2D.Double location3 = new Point2D.Double(sp3.x, sp3.y);
+					// Intersection calculus with both segments
+					Point2D.Double prevIntersection = MBCAPHelper.getIntersection(currentUTMLocation, location1, location2);
+					Point2D.Double postIntersection = MBCAPHelper.getIntersection(currentUTMLocation, location2, location3);
+					// Check the segment over which this point is projected
+					int projectionCase = -1;	// -1 value over the vertex (when this point projects over the intersection of both segments)
+					// 0 value under the vertex (when this point projects under the intersection of both segments)
+					// 1 projects over the first segment
+					// 2 projects over the second segment
+					// 1. Checking the projection over the first segment
+					if (Math.abs(location2.getX() - location1.getX()) == 0.0) {
+						// Vertical line
+						if (prevIntersection.getY() >= Math.min(location1.getY(), location2.getY())
+								&& prevIntersection.getY() <= Math.max(location1.getY(), location2.getY())) {
+							// It projects over the first segment
+							projectionCase = 1;
+						}
+					} else {
+						// Any other case
+						if (prevIntersection.getX() >= Math.min(location1.getX(), location2.getX())
+								&& prevIntersection.getX() <= Math.max(location1.getX(), location2.getX())) {
+							// It projects over the first segment
+							projectionCase = 1;
 						}
 					}
-				} else {
-					// Any other case
-					if (postIntersection.getX() >= Math.min(location2.getX(), location3.getX())
-							&& postIntersection.getX() <= Math.max(location2.getX(), location3.getX())) {
-						// It projects over the first segment
-						if (projectionCase == -1) {
-							// Only over the second segment
-							projectionCase = 2;
-						} else {
-							// Over both segments
-							projectionCase = 0;
+					// 2. Checking the projection over the second segment
+					if (Math.abs(location3.getX() - location2.getX()) == 0.0) {
+						// Vertical line
+						if (postIntersection.getY() >= Math.min(location2.getY(), location3.getY())
+								&& postIntersection.getY() <= Math.max(location2.getY(), location3.getY())) {
+							// It projects over the first segment
+							if (projectionCase == -1) {
+								// Only over the second segment
+								projectionCase = 2;
+							} else {
+								// Over both segments
+								projectionCase = 0;
+							}
+						}
+					} else {
+						// Any other case
+						if (postIntersection.getX() >= Math.min(location2.getX(), location3.getX())
+								&& postIntersection.getX() <= Math.max(location2.getX(), location3.getX())) {
+							// It projects over the first segment
+							if (projectionCase == -1) {
+								// Only over the second segment
+								projectionCase = 2;
+							} else {
+								// Over both segments
+								projectionCase = 0;
+							}
 						}
 					}
-				}
-				// 3. Considering the four cases
-				switch (projectionCase) {
-				case 1: // Projected over the first segment
-					nextWaypointPosition = posNextWaypoint - 1;
-					baseLocation = new Point2D.Double(prevIntersection.getX(), prevIntersection.getY());
-					break;
-				case 2: // Projected over the second segment
-					// posNextWaypoint is the same
-					baseLocation = new Point2D.Double(postIntersection.getX(), postIntersection.getY());
-					break;
-				case -1: // projected out of both segments
-					// posNextWaypoint is the same
-					baseLocation = new Point2D.Double(location2.getX(), location2.getY());
-					break;
-				case 0: // projected over both segments, it requires to check distances
-					if (currentUTMLocation.distance(prevIntersection) <= currentUTMLocation.distance(postIntersection)) {
+					// 3. Considering the four cases
+					switch (projectionCase) {
+					case 1: // Projected over the first segment
 						nextWaypointPosition = posNextWaypoint - 1;
 						baseLocation = new Point2D.Double(prevIntersection.getX(), prevIntersection.getY());
-					} else {
+						break;
+					case 2: // Projected over the second segment
 						// posNextWaypoint is the same
 						baseLocation = new Point2D.Double(postIntersection.getX(), postIntersection.getY());
+						break;
+					case -1: // projected out of both segments
+						// posNextWaypoint is the same
+						baseLocation = new Point2D.Double(location2.getX(), location2.getY());
+						break;
+					case 0: // projected over both segments, it requires to check distances
+						if (currentUTMLocation.distance(prevIntersection) <= currentUTMLocation.distance(postIntersection)) {
+							nextWaypointPosition = posNextWaypoint - 1;
+							baseLocation = new Point2D.Double(prevIntersection.getX(), prevIntersection.getY());
+						} else {
+							// posNextWaypoint is the same
+							baseLocation = new Point2D.Double(postIntersection.getX(), postIntersection.getY());
+						}
+						break;
 					}
-					break;
 				}
 			}
 		}
@@ -307,7 +320,7 @@ public class MBCAPHelper {
 	}
 
 	/** Calculates the predicted positions in MBCAP protocol, versions 1, 2 y 3 */
-	private static void getPredictedLocations1(double speed, double acceleration,
+	private static void getPredictedLocations1(int numUAV, double speed, double acceleration,
 			Point2D.Double currentUTMLocation, List<WaypointSimplified> mission, int posNextWaypoint, int currentWaypoint, double currentZ,
 			List<Point3D> predictedPath) {
 		// 1. Calculus of the segments over which we have to obtain the points
@@ -315,7 +328,8 @@ public class MBCAPHelper {
 		double totalDistance = 0.0;
 		// MBCAP v1 or MBCAP v2 (no acceleration present)
 		if (Param.selectedProtocol.getId() == 1 || Param.selectedProtocol.getId() == 2
-				|| (Param.selectedProtocol.getId() == 3 && acceleration == 0.0)) {
+				|| (Param.selectedProtocol.getId() == 3
+							&& (acceleration == 0.0 || MBCAPParam.useAcceleration.get(numUAV) == 0))) {
 			totalDistance = MBCAPParam.beaconFlyingTime * speed;
 		} else if (Param.selectedProtocol.getId() == 3) {
 			// MBCAP v3 (constant acceleration present)
@@ -345,7 +359,8 @@ public class MBCAPHelper {
 		double prevSegmentsLength = 0.0;
 
 		if (Param.selectedProtocol.getId() ==1 || Param.selectedProtocol.getId() == 2
-				|| (Param.selectedProtocol.getId() == 3 && acceleration == 0.0)) {
+				|| (Param.selectedProtocol.getId() == 3
+							&& (acceleration == 0.0 || MBCAPParam.useAcceleration.get(numUAV) == 0))) {
 			incDistance = totalDistance / remainingLocations;
 		}
 
@@ -366,7 +381,8 @@ public class MBCAPHelper {
 			currentSegmentLength = distances.get(i);
 
 			if (Param.selectedProtocol.getId() == 1 || Param.selectedProtocol.getId() == 2
-					|| (Param.selectedProtocol.getId() == 3 && acceleration == 0)) {
+					|| (Param.selectedProtocol.getId() == 3
+							&& (acceleration == 0 || MBCAPParam.useAcceleration.get(numUAV) == 0))) {
 				remainingSegment = Math.min(currentSegmentLength, totalDistance - distanceAcum + prevRemainingSegment);
 
 				// Following the current segment
@@ -418,14 +434,15 @@ public class MBCAPHelper {
 	}
 
 	/** Calculates the predicted position in MBCAP protocol, version 4 */
-	private static void getPredictedLocations2(double speed, double acceleration,
+	private static void getPredictedLocations2(int numUAV, double speed, double acceleration,
 			Point2D.Double currentUTMLocation, List<WaypointSimplified> mission, int posNextWaypoint, int currentWaypoint, double currentZ,
 			List<Point3D> predictedPath) {
 		// Only works with MBCAP version 4
 
 		double distanceAcum;
 		List<Double> distances = new ArrayList<Double>(MBCAPParam.DISTANCES_SIZE);
-		if (acceleration == 0.0) {
+		if (acceleration == 0.0
+				|| MBCAPParam.useAcceleration.get(numUAV) == 0) {
 			// The same solution from the previous protocol versions
 			double totalDistance = MBCAPParam.beaconFlyingTime * speed;
 			distanceAcum = currentUTMLocation.distance(mission.get(posNextWaypoint));
