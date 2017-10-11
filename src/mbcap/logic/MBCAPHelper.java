@@ -433,7 +433,7 @@ public class MBCAPHelper {
 		}
 	}
 
-	/** Calculates the predicted position in MBCAP protocol, version 4 */
+	/** Calculates the predicted position in MBCAP protocol, v 4 */
 	private static void getPredictedLocations2(int numUAV, double speed, double acceleration,
 			Point2D.Double currentUTMLocation, List<WaypointSimplified> mission, int posNextWaypoint, int currentWaypoint, double currentZ,
 			List<Point3D> predictedPath) {
