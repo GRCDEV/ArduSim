@@ -223,7 +223,7 @@ public class SwarmHelper {
 		 * Starts the movement of each UAV by setting the initial speed, the first
 		 * waypoint and changing to auto mode.
 		 */
-		inicializar máquina de estados y añadir este código (el de abajo) a un hilo
+		//inicializar máquina de estados y añadir este código (el de abajo) a un hilo TODO
 		
 		
 		

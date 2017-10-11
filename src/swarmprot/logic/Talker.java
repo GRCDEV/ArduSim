@@ -39,8 +39,8 @@ public class Talker extends Thread {
 		 * if uav = 0 which is master UAV )
 		 */
 		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
-			mientras estado=START este tiene que esperar al cambio de estado:
-				GUIHelper.waiting(ms);
+			//mientras estado=START este tiene que esperar al cambio de estado: TODO
+				//GUIHelper.waiting(ms);TODO
 
 		} else {
 
