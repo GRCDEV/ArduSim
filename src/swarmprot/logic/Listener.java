@@ -11,6 +11,7 @@ import java.util.HashSet;
 import com.esotericsoftware.kryo.io.Input;
 
 import main.Param;
+import swarmprot.logic.SwarmProtParam.SwarmProtState;
 
 public class Listener extends Thread {
 
@@ -56,6 +57,8 @@ public class Listener extends Thread {
 		// Starting time
 		long startTime = System.currentTimeMillis();
 		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+			
+			while(SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 			// This HashSet contains the UAVs detected in START phase
 			HashSet<Long> UAVsDetected = new HashSet<Long>();
 
@@ -76,10 +79,15 @@ public class Listener extends Thread {
 					UAVsDetected.add(input.readLong());
 				}
 			}
-
+			SwarmProtParam.state[numUAV] = SwarmProtState.SEND_DATA;
 			// PARA VER CUANTOS DETECTA
 			System.out.println("HAN SIDO DETECTADOS " + UAVsDetected.size() + " UAVs");
-
+			}
+			
+			//2 fase protocolo master
+			
+			
+			
 		} else {
 
 		}

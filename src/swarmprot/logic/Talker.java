@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import api.GUIHelper;
 import main.Param;
 
 public class Talker extends Thread {
@@ -38,6 +39,8 @@ public class Talker extends Thread {
 		 * if uav = 0 which is master UAV )
 		 */
 		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+			mientras estado=START este tiene que esperar al cambio de estado:
+				GUIHelper.waiting(ms);
 
 		} else {
 
