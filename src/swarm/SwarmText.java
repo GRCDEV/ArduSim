@@ -6,5 +6,8 @@ public class SwarmText {
 	
 	// Progress shown in the interaction panel
 	public static final String CONFIGURATION_IN_PROGRESS = "Configuration in progress...";
-
+	public static final String ERROR_SOCKET_CREATION = "Error creating or accessing socket";
+	public static final String ERROR_IP_HOST = "The IP address of a host could not be determined";
+	
+	//Finite state machine states
 }
