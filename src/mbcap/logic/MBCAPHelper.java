@@ -100,15 +100,26 @@ public class MBCAPHelper {
 		if (currentUTMLocation == null) {
 			return predictedPath;
 		}
+		
+		// 2. If the UAV is in the "go on, please" state, only the current position and the predicted collision risk location are sent
+		if (MBCAPParam.state[numUAV] == MBCAPState.GO_ON_PLEASE) {
+			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
+			Point3D riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(MBCAPParam.selfBeacon.get(numUAV).idAvoiding);
+			if (riskLocation != null) {
+				predictedPath.add(riskLocation);
+			} else {
+				predictedPath.add(new Point3D(0, 0, 0));	// If no risk point was detected, a fake point is sent
+			}
+			return predictedPath;
+		}
 
-		// 2. If moving slowly or the UAV is in the "go on, please" state, only the current position is sent
-		if ((speed < MBCAPParam.minSpeed && MBCAPParam.state[numUAV] != MBCAPState.STAND_STILL)
-				|| MBCAPParam.state[numUAV] == MBCAPState.GO_ON_PLEASE) {
+		// 3. If moving slowly or still but not in the "stand still" state, only the current position is sent
+		if (speed < MBCAPParam.minSpeed && MBCAPParam.state[numUAV] != MBCAPState.STAND_STILL) {
 			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 			return predictedPath;
 		}
 
-		// 3. If the UAV is moving aside, send the current position and prediction towards the destination safe point
+		// 4. If the UAV is moving aside, send the current position and prediction towards the destination safe point
 		if (MBCAPParam.state[numUAV] == MBCAPState.MOVING_ASIDE) {
 			Point2D.Double destination = MBCAPParam.targetPointUTM[numUAV];
 			double length = currentUTMLocation.distance(destination);
@@ -145,7 +156,7 @@ public class MBCAPHelper {
 				return predictedPath;
 			}
 			
-			// 4. In the stand still state, send the waypoint list so the other UAV could decide whether to move aside or not
+			// 5. In the stand still state, send the waypoint list so the other UAV could decide whether to move aside or not
 			if (MBCAPParam.state[numUAV] == MBCAPState.STAND_STILL) {
 				// The first point is the current position
 				predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
@@ -156,7 +167,7 @@ public class MBCAPHelper {
 				return predictedPath;
 			}
 
-			// 5. When really close to the last waypoint, only the current location is sent
+			// 6. When really close to the last waypoint, only the current location is sent
 			if (posNextWaypoint == mission.size()) {
 				posNextWaypoint--; // So it could be drawn until the end
 				if (currentUTMLocation.distance(mission.get(posNextWaypoint)) < MBCAPParam.DISTANCE_TO_MISSION_END) {
@@ -165,7 +176,7 @@ public class MBCAPHelper {
 				}
 			}
 
-			// 6. General case
+			// 7. General case
 			// Initial location calculated depending on the protocol version
 			Pair<Point2D.Double, Integer> currentLocation = MBCAPHelper.getCurrentLocation(numUAV, mission, currentUTMLocation, posNextWaypoint);
 			currentUTMLocation = currentLocation.getValue0();
@@ -583,39 +594,45 @@ public class MBCAPHelper {
 		long selfTime, beaconTime;
 		for (int i = 0; i < selfBeacon.points.size(); i++) {
 			for (int j = 0; j < receivedBeacon.points.size(); j++) {
-				boolean risky = false;
-				// X,Y collision risk
-				distance = selfBeacon.points.get(i).distance(receivedBeacon.points.get(j));
-				if (distance < MBCAPParam.collisionRiskDistance) {
-					risky = true;
+				// Do not check if the other UAV is in Go on, please and the location is the detected risk location
+				if (receivedBeacon.state == MBCAPState.GO_ON_PLEASE.getId() && j == 1) {
+					continue;
 				}
+				
+				boolean risky = true;
 				// Temporal collision risk (only if the other UAV is also in the normal protocol state)
-				if (risky
-						&& receivedBeacon.state == MBCAPState.NORMAL.getId()) {
-					risky = false;
+				if (receivedBeacon.state == MBCAPState.NORMAL.getId()) {
 					selfTime = selfBeacon.time + i * MBCAPParam.hopTimeNS;
 					beaconTime = receivedBeacon.time + j * MBCAPParam.hopTimeNS;
-					if (Math.abs(selfTime - beaconTime) < MBCAPParam.maxTime) {
-						risky = true;
+					if (Math.abs(selfTime - beaconTime) >= MBCAPParam.collisionRiskTime) {
+						risky = false;
 					}
 				}
+				
+				// X,Y collision risk
+				if (risky) {
+					distance = selfBeacon.points.get(i).distance(receivedBeacon.points.get(j));
+					if (distance >= MBCAPParam.collisionRiskDistance) {
+						risky = false;
+					}
+				}
+				
 				// Z collision risk
 				if (risky) {
-					risky = false;
 					if (Math.abs(selfBeacon.points.get(i).z
-							- receivedBeacon.points.get(j).z) < MBCAPParam.collisionRiskAltitudeDifference) {
-						risky = true;
+							- receivedBeacon.points.get(j).z) >= MBCAPParam.collisionRiskAltitudeDifference) {
+						risky = false;
 					}
 				}
 
 				// Checking the distance between the UAV and the collision risk point
-				if (risky && selfBeacon.speed*MBCAPParam.hopTime*i
-						- selfBeacon.speed*(System.nanoTime() - selfBeacon.time)*0.000000001
-						< MBCAPParam.reactionDistance) {
-					if (!Param.IS_REAL_UAV) {
-						Point3D p = new Point3D(selfBeacon.points.get(i).x, selfBeacon.points.get(i).y, selfBeacon.points.get(i).z);
-						MBCAPGUITools.locateImpactRiskMark(p, numUAV, receivedBeacon.uavId);
-					}
+				if (risky
+						&& selfBeacon.speed*MBCAPParam.hopTime*i
+							- selfBeacon.speed*(System.nanoTime() - selfBeacon.time)*0.000000001
+							< MBCAPParam.reactionDistance) {
+					Point3D p = new Point3D(selfBeacon.points.get(i).x, selfBeacon.points.get(i).y, selfBeacon.points.get(i).z);
+					MBCAPParam.impactLocationUTM[numUAV].put(receivedBeacon.uavId, p);
+					MBCAPGUITools.locateImpactRiskMark(p, numUAV, receivedBeacon.uavId);
 					return true;
 				}
 			}

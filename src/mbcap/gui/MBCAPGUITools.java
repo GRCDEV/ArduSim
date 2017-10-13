@@ -183,7 +183,7 @@ public class MBCAPGUITools {
 				.parseDouble((String) panel.collisionRiskDistanceTextField.getText());
 		MBCAPParam.collisionRiskAltitudeDifference = Double
 				.parseDouble((String) panel.collisionRiskAltitudeDifferenceTextField.getText());
-		MBCAPParam.maxTime = (long) (Double.parseDouble((String) panel.maxTimeTextField.getText()) * 1000000000l);
+		MBCAPParam.collisionRiskTime = (long) (Double.parseDouble((String) panel.maxTimeTextField.getText()) * 1000000000l);
 		MBCAPParam.reactionDistance = Double.parseDouble((String) panel.reactionDistanceTextField.getText());
 		MBCAPParam.riskCheckPeriod = (long) (Double.parseDouble((String) panel.riskCheckPeriodTextField.getText())
 				* 1000000000l);
@@ -215,7 +215,7 @@ public class MBCAPGUITools {
 		// Collision avoidance protocol parameters
 		panel.collisionRiskDistanceTextField.setText("" + MBCAPParam.collisionRiskDistance);
 		panel.collisionRiskAltitudeDifferenceTextField.setText("" + MBCAPParam.collisionRiskAltitudeDifference);
-		panel.maxTimeTextField.setText("" + ((double) MBCAPParam.maxTime) / 1000000000l);
+		panel.maxTimeTextField.setText("" + ((double) MBCAPParam.collisionRiskTime) / 1000000000l);
 		panel.reactionDistanceTextField.setText("" + MBCAPParam.reactionDistance);
 		panel.riskCheckPeriodTextField.setText("" + ((double) MBCAPParam.riskCheckPeriod) / 1000000000l);
 		panel.safePlaceDistanceTextField.setText("" + MBCAPParam.safePlaceDistance);
@@ -300,13 +300,13 @@ public class MBCAPGUITools {
 	
 	/** Stores (or removes when p==null) the collision risk location that is drawn. */
 	public static void locateImpactRiskMark(Point3D riskUTMLocation, int numUAV, long beaconId) {
-		if (riskUTMLocation == null) {
-			MBCAPParam.impactLocationUTM[numUAV].remove(beaconId);
-			MBCAPParam.impactLocationPX[numUAV].remove(beaconId);
-		} else {
-			MBCAPParam.impactLocationUTM[numUAV].put(beaconId, riskUTMLocation);
-			Point2D.Double riskPXLocation = GUIHelper.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
-			MBCAPParam.impactLocationPX[numUAV].put(beaconId, riskPXLocation);
+		if (!Param.IS_REAL_UAV) {
+			if (riskUTMLocation == null) {
+				MBCAPParam.impactLocationPX[numUAV].remove(beaconId);
+			} else {
+				Point2D.Double riskPXLocation = GUIHelper.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
+				MBCAPParam.impactLocationPX[numUAV].put(beaconId, riskPXLocation);
+			}
 		}
 	}
 	
@@ -472,7 +472,7 @@ public class MBCAPGUITools {
 				+ MBCAPParam.collisionRiskDistance + " " + Text.METERS + "\n\t" + MBCAPText.WARN_ALTITUDE + " "
 				+ MBCAPParam.collisionRiskAltitudeDifference + " " + Text.METERS + "\n\t"
 				+ MBCAPText.WARN_TIME + " "
-				+ String.format( "%.2f", MBCAPParam.maxTime*0.000000001 )
+				+ String.format( "%.2f", MBCAPParam.collisionRiskTime*0.000000001 )
 				+ " " + Text.SECONDS + "\n\t" + MBCAPText.CHECK_THRESHOLD + " " + MBCAPParam.reactionDistance
 				+ " " + Text.METERS + "\n\t" + MBCAPText.CHECK_PERIOD + " "
 				+ String.format( "%.2f", MBCAPParam.riskCheckPeriod*0.000000001 )

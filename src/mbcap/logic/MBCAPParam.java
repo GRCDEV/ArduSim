@@ -58,7 +58,7 @@ public class MBCAPParam {
 	// Collision risk detection parameters
 	public static double collisionRiskDistance = 20; // (m) Distance between points to assert collision risk (UTM coordinates)
 	public static double collisionRiskScreenDistance; // (px) The previous distance, but in screen coordinates
-	public static long maxTime = 1 * collisionCheckPeriod; // (ns) Half of the time range to assert collision risk
+	public static long collisionRiskTime = 1 * hopTimeNS; // (ns) Half of the time range to assert collision risk
 	public static double collisionRiskAltitudeDifference = 50; // (m) Altitude difference to assert collision risk
 	public static double reactionDistance = 90; // (m) Distance between the UAV and the collision risk point to assert collision risk
 	public static long riskCheckPeriod = 2 * 1000000000l; // (ns) Time between risk collision checks

@@ -8,6 +8,7 @@ import java.util.PriorityQueue;
 import api.API;
 import api.GUIHelper;
 import api.MissionHelper;
+import api.pojo.Point3D;
 import main.Param;
 import main.Param.SimulatorState;
 import mbcap.gui.MBCAPGUITools;
@@ -51,7 +52,7 @@ public class CollisionDetectorThread extends Thread {
 		}
 
 		int waitingTime;
-		// If two UAVs collide, then the protocol stops. Also, it stops when the UAV lands
+		// If two UAVs collide, then the protocol stops. Also, it stops when the experiment finishes
 		while (!MBCAPParam.stopProtocol && Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 			// Analyze received information while flying
 			if (UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
@@ -89,6 +90,7 @@ public class CollisionDetectorThread extends Thread {
 						// Case b. No need for commands for the UAV, just change the state
 						if (avoidingBeacon!=null) {
 							if (!Param.IS_REAL_UAV) {
+								MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
 								MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
 							}
 							avoidingBeacon = null;
@@ -226,6 +228,16 @@ public class CollisionDetectorThread extends Thread {
 										hasBeenOvertaken = false;
 									}
 									avoidingBeacon = auxBeacon;
+									// Store the other UAV risk location in case this UAV has not detected the risk by itself
+									//  and that UAV is in "go on, please" state
+									if (!MBCAPParam.impactLocationUTM[numUAV].containsKey(avoidingBeacon.uavId)
+											&& avoidingBeacon.state == MBCAPState.GO_ON_PLEASE.getId()) {
+										Point3D riskLocation = avoidingBeacon.points.get(1);
+										if (riskLocation.x != 0 || riskLocation.y != 0 || riskLocation.z != 0) {
+											MBCAPParam.impactLocationUTM[numUAV].put(avoidingBeacon.uavId, riskLocation);
+											MBCAPGUITools.locateImpactRiskMark(riskLocation, numUAV, avoidingBeacon.uavId);
+										}
+									}
 									updateLocated = true;
 								}
 							}
@@ -316,6 +328,7 @@ public class CollisionDetectorThread extends Thread {
 						MissionHelper.log(SimParam.prefix[numUAV]
 								+ MBCAPText.MISSION_RESUMED + " " + (avoidingBeacon.uavId+1) + "."); // uavId==numUAV in the simulator
 						if (!Param.IS_REAL_UAV) {
+							MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
 							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
 						}
 						avoidingBeacon = null;
@@ -348,6 +361,7 @@ public class CollisionDetectorThread extends Thread {
 						if (API.setMode(numUAV, UAVParam.Mode.AUTO_ARMED)) {
 							MissionHelper.log(SimParam.prefix[numUAV]
 									+ MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+							MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
 							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
 							
 							avoidingBeacon = null;

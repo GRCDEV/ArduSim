@@ -4,6 +4,8 @@ import java.awt.EventQueue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.SwingUtilities;
 
@@ -28,6 +30,8 @@ import uavController.UAVParam;
 /** This class contains the main method and the chronological logic followed by the whole application. */
 
 public class Main {
+	
+	private static Timer timer;	// Used to show the time elapsed from the experiment beginning
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
@@ -260,6 +264,28 @@ public class Main {
 				if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 					Param.startTime = System.currentTimeMillis();
 					SimTools.println(Text.TEST_START);
+					timer = new Timer();
+					timer.scheduleAtFixedRate(new TimerTask() {
+			            long time = Param.startTime;
+			            public void run() {
+			            	if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+			            		String timeString = GUIHelper.timeToString(Param.startTime, time);
+				            	time = time + 1000;
+			            		SwingUtilities.invokeLater(new Runnable() {
+									public void run() {
+										MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
+									}
+								});
+			            	} else {
+			            		SwingUtilities.invokeLater(new Runnable() {
+									public void run() {
+										MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
+									}
+								});
+			                	timer.cancel();
+			            	}
+			            }
+			        }, 0, 1000);	// Once each second, without initial waiting time
 					if (Param.simulationIsMissionBased) {
 						MissionHelper.startMissionTestActionPerformed();
 					} else {
