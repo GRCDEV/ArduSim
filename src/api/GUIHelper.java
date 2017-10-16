@@ -4,11 +4,16 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.security.CodeSource;
 
 import javax.swing.JOptionPane;
 
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
+import main.Main;
 import main.Param;
 import main.Param.SimulatorState;
 import sim.board.BoardHelper;
@@ -185,16 +190,29 @@ public class GUIHelper {
 
 	/** Gets the folder where the simulator is running (.jar folder or project root under eclipse). */
 	public static File getCurrentFolder() {
-		File folder = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath());
-		// If running on Eclipse, the class subfolder must be removed from the path
-		if (!new Object() {}.getClass().getEnclosingClass().getResource((new Object() {}.getClass().getEnclosingClass().getSimpleName()) + ".class").getProtocol().equals("jar")) {
-			while (!folder.getName().equals("bin")) {
-				folder = folder.getParentFile();
+		Class<Main> c = main.Main.class;
+		CodeSource codeSource = c.getProtectionDomain().getCodeSource();
+
+		File jarFile = null;
+
+		if (codeSource != null && codeSource.getLocation() != null) {
+			try {
+				jarFile = new File(codeSource.getLocation().toURI());
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
 			}
-			folder = folder.getParentFile(); // Exit from /bin folder
-			
 		}
-		return folder;
+		else {
+			String path = c.getResource(c.getSimpleName() + ".class").getPath();
+			String jarFilePath = path.substring(path.indexOf(":") + 1, path.indexOf("!"));
+			try {
+				jarFilePath = URLDecoder.decode(jarFilePath, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			jarFile = new File(jarFilePath);
+		}
+		return jarFile.getParentFile();
 	}
 	
 	/** Gets the file extension

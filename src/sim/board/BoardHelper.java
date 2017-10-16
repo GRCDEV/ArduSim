@@ -622,7 +622,12 @@ public class BoardHelper {
 		int xPX = (int)Math.round(xUTM*BoardParam.screenScale);
 		int yPX = SimParam.boardPXHeight - (int)Math.round(yUTM*BoardParam.screenScale);	// The "y" coordinate is drawn on inverse order
 		// In case a UAV goes out of the screen
-		if (yPX > SimParam.boardPXHeight || yPX < 0) {
+		if (xPX < 0 || xPX >SimParam.boardPXWidth
+				|| yPX < 0 || yPX > SimParam.boardPXHeight) {
+			
+//			System.out.println("Failing coordinates: UTM(" + inUTMX + "," + inUTMY + ") to screen(" + xPX + "," + yPX + ")");
+			
+			
 			SimTools.println(Text.UAV_OUT_OF_SCREEN_ERROR);
 		}
 		return new Point2D.Double(xPX, yPX);

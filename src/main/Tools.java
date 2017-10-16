@@ -482,22 +482,19 @@ public class Tools {
 			if (SimParam.cygwinPath == null) {
 				GUIHelper.exit(Text.UAVS_START_ERROR_3 + "\n" + SimParam.CYGWIN_PATH1 + " or,\n" + SimParam.CYGWIN_PATH2);
 			}
-
-			sitlPath = System.getProperty("user.dir") + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
+			sitlPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
 		} else if (Param.runningOperatingSystem == Param.OS_LINUX) {
-			sitlPath = System.getProperty("user.dir") + File.separator + SimParam.SITL_LINUX_FILE_NAME;
+			sitlPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_LINUX_FILE_NAME;
 		}
 		// SITL detection
 		if (Param.runningOperatingSystem == Param.OS_WINDOWS
 				|| Param.runningOperatingSystem == Param.OS_LINUX) {
-			String paramPath = System.getProperty("user.dir") + File.separator + SimParam.PARAM_FILE_NAME;
-			if (sitlPath != null) {
-				File sitlPathFile = new File(sitlPath);
-				File paramPathFile = new File(paramPath);
-				if (sitlPathFile.exists() && paramPathFile.exists()) {
-					SimParam.sitlPath = sitlPath;
-					SimParam.paramPath = paramPath;
-				}
+			String paramPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.PARAM_FILE_NAME;
+			File sitlPathFile = new File(sitlPath);
+			File paramPathFile = new File(paramPath);
+			if (sitlPathFile.exists() && sitlPathFile.canExecute() && paramPathFile.exists()) {
+				SimParam.sitlPath = sitlPath;
+				SimParam.paramPath = paramPath;
 			}
 		}
 	}
