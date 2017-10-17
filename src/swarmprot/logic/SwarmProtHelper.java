@@ -6,13 +6,8 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.List;
-
 import javax.swing.JOptionPane;
-
 import org.javatuples.Pair;
-
-import com.esotericsoftware.kryo.io.Input;
-
 import api.API;
 import api.GUIHelper;
 import api.SwarmHelper;
@@ -22,8 +17,6 @@ import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Text;
-import mbcap.logic.MBCAPParam;
-import mbcap.logic.MBCAPParam.MBCAPState;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
 import uavController.UAVParam;
 
@@ -50,6 +43,7 @@ public class SwarmProtHelper {
 	}
 
 	/** Get the position on the map of the drones, in simulation mode */
+	@SuppressWarnings("unchecked")
 	public static Pair<GeoCoordinates, Double>[] getSwarmStartingLocationV1() {
 		/** Position the master on the map */
 		Pair<GeoCoordinates, Double>[] startingLocations = new Pair[Param.numUAVs];
@@ -201,7 +195,7 @@ public class SwarmProtHelper {
 		}
 	}
 
-	/** Send a packete to all Slaves */
+	/** Send a packet to all Slaves */
 	public static void sendDataToSlaves(DatagramPacket packet, DatagramSocket socket) throws IOException {
 		/** The real drone has different IP and sends without problems */
 		if (Param.IS_REAL_UAV) {

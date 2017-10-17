@@ -1,18 +1,10 @@
 package swarmprot.logic;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import mbcap.logic.MBCAPParam;
-import mbcap.logic.MBCAPText;
-import mbcap.logic.MBCAPParam.MBCAPState;
-
 public class SwarmProtParam {
 	public static final int posMaster = 0; // Position of master UAV into array of UAVs
 	public static long idMaster; // Id real
-	public static final String[] MAC = new String[] { "b8:27:eb:74:0c:d1", "00:c0:ca:90:32:05" };// MACs of master with
-																									// standard format
-	public static final long[] MACId = new long[] { 202481593486545L, 202481593486545L };// MACs of master with long
-																							// format
+	public static final String[] MAC = new String[] { "b8:27:eb:74:0c:d1", "00:c0:ca:90:32:05" };// MACs of master with standard format
+	public static final long[] MACId = new long[] { 202481593486545L, 202481593486545L };// MACs of master with long format
 	public static final long idMasterSimulation = 0;
 	public static final int ALTITUDE_WAIT = 500; // Time between checks while take off (ms)
 	public static double[] initial_speeds; // (m/s) Initial UAVs speed
@@ -30,7 +22,7 @@ public class SwarmProtParam {
 	public static final String BROADCAST_IP_REAL = "192.168.1.255"; // Broadcast IP on real life
 	public static int port = 14600; // Simulated broadcast port
 	public static int portTalker = 15100; // Simulated broadcast port
-	public static final int recTimeOut = 500; // Suponiendo que se envia cada 500ms cada orden
+	public static final int recTimeOut = 500; // The port is unlocked after this time (ms)
 
 	// Protocol state included
 	public static SwarmProtState[] state;

@@ -8,13 +8,9 @@ import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-
 import org.javatuples.Pair;
-
 import api.pojo.GeoCoordinates;
-import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
-import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Tools;
 import main.Param.Protocol;
@@ -182,7 +178,6 @@ public class SwarmHelper {
 	 * Gets the initial position of the UAVs from the mission of the master and
 	 * other source for the other UAVs.
 	 */
-	@SuppressWarnings("unchecked")
 	public static Pair<GeoCoordinates, Double>[] getSwarmStartingLocation() {
 
 		// Add here code to locate the starting position of the UAVs from its mission or
