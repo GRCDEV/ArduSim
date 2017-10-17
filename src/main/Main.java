@@ -35,6 +35,7 @@ public class Main {
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
+		System.setProperty("sun.java2d.opengl", "true");
 		Tools.detectOS();
 		if (Param.IS_REAL_UAV) {
 			// 1. Protocol file loading (file containing the name of the protocol to be used)
