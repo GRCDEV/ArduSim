@@ -1,17 +1,25 @@
 package swarmprot.logic;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
 import org.javatuples.Pair;
 
+import com.esotericsoftware.kryo.io.Input;
+
+import api.API;
 import api.GUIHelper;
 import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
+import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Text;
 import mbcap.logic.MBCAPParam;
@@ -20,23 +28,20 @@ import swarmprot.logic.SwarmProtParam.SwarmProtState;
 import uavController.UAVParam;
 
 public class SwarmProtHelper {
-	/**Initialize Swarm Protocol Data Structures*/
+	/** Initialize Swarm Protocol Data Structures */
 	public static void initializeProtocolDataStructures() {
 		SwarmProtParam.masterHeading = 0.0;
-		UAVParam.newLocation = new float[Param.numUAVs][2];
 		SwarmProtParam.state = new SwarmProtState[Param.numUAVs];
-		
-		for(int i = 0; i<Param.numUAVs;i++) {
+
+		/** The state machine starts with the status "START" */
+		for (int i = 0; i < Param.numUAVs; i++) {
 			SwarmProtParam.state[i] = SwarmProtState.START;
 		}
-		
 
 	}
 
-	/**Launch Listener and Talker threads of each UAV*/
+	/** Launch Listener and Talker threads of each UAV */
 	public static void startSwarmThreads() throws SocketException, UnknownHostException {
-		// cuando sea real se tendra que hacer un hilo de lectura y escritura en cada
-		// dron
 		for (int i = 0; i < Param.numUAVs; i++) {
 			(new Listener(i)).start();
 			(new Talker(i)).start();
@@ -44,8 +49,7 @@ public class SwarmProtHelper {
 		SwarmHelper.log(SwarmProtText.ENABLING);
 	}
 
-	
-	/**Get the position on the map of the drones, in simulation mode*/
+	/** Get the position on the map of the drones, in simulation mode */
 	public static Pair<GeoCoordinates, Double>[] getSwarmStartingLocationV1() {
 		/** Position the master on the map */
 		Pair<GeoCoordinates, Double>[] startingLocations = new Pair[Param.numUAVs];
@@ -157,4 +161,64 @@ public class SwarmProtHelper {
 
 		return startingLocations;
 	}
+
+	public static void startSwarmTestActionPerformedV1() {
+		for (int i = 0; i < Param.numUAVs; i++) {
+			/** If you drone is master */
+			if (Param.id[i] == SwarmProtParam.idMaster) {
+
+				/** We create a list with the points of the mission */
+				List<WaypointSimplified> listOfPoints = UAVParam.missionUTMSimplified.get(SwarmProtParam.posMaster);
+
+				for (int j = 1; j < listOfPoints.size(); j++) {
+					/** We obtain each of those points that are given in X and Y */
+					WaypointSimplified pointMasterxy = listOfPoints.get(j);
+
+					/** They are converted to Geometrical coordinates */
+					GeoCoordinates pointMasterGEO = GUIHelper.UTMToGeo(pointMasterxy.x, pointMasterxy.y);
+
+					API.moveUAV(SwarmProtParam.posMaster, pointMasterGEO, (float) pointMasterxy.z);
+				}
+
+			}
+
+		}
+	}
+
+	/** Send a packet to Master */
+	public static void sendDataToMaster(DatagramPacket packet, DatagramSocket socket) throws IOException {
+
+		/** The real drone has different IP and sends without problems */
+		if (Param.IS_REAL_UAV) {
+			socket.send(packet);
+		}
+		/**
+		 * For simulation we need to set port of master
+		 */
+		else {
+			packet.setPort(SwarmProtParam.port);
+			socket.send(packet);
+		}
+	}
+
+	/** Send a packete to all Slaves */
+	public static void sendDataToSlaves(DatagramPacket packet, DatagramSocket socket) throws IOException {
+		/** The real drone has different IP and sends without problems */
+		if (Param.IS_REAL_UAV) {
+			socket.send(packet);
+		}
+		/**
+		 * For simulation we need to set port of each slave
+		 */
+		else {
+			for (int i = 0; i < Param.numUAVs; i++) {
+				if (i != SwarmProtParam.posMaster) {
+					packet.setPort(SwarmProtParam.port + i);
+					socket.send(packet);
+				}
+			}
+		}
+
+	}
+
 }
