@@ -300,6 +300,7 @@ public class UAVParam {
 
 	// Parameters of the UAV or the simulator
 	public enum ControllerParam {
+		LOGGING("LOG_BITMASK", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT32),				// Mask of logs enabled
 		POSITION_FREQUENCY("SR0_POSITION", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Location message frequency
 		BATTERY_CAPACITY("BATT_CAPACITY", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT32),		// Virtual battery capacity
 		WIND_DIRECTION("SIM_WIND_DIR", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),		// Wind direction

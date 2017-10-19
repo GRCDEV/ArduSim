@@ -33,6 +33,7 @@ public class InitialConfigurationThread extends Thread {
 	public static void sendBasicConfiguration(int numUAV) {
 		boolean success = false;
 		if (!Param.IS_REAL_UAV
+				&& API.setParam(numUAV, ControllerParam.LOGGING, 0)	// Disable logging to speed up simulation
 				&& API.setParam(numUAV, ControllerParam.BATTERY_CAPACITY, UAVParam.BATTERY_CHARGE)
 				&& API.setParam(numUAV, ControllerParam.WIND_DIRECTION, Param.windDirection)
 				&& API.setParam(numUAV, ControllerParam.WIND_SPEED, Param.windSpeed)

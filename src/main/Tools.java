@@ -755,13 +755,14 @@ public class Tools {
 			sb.append("\n" + Text.GENERAL_PARAMETERS + "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "): " + UAVParam.initialSpeeds[0]);
 		} else {
 			sb.append("\n" + Text.SIMULATION_PARAMETERS + "\n" + Text.UAV_NUMBER + " " + Param.numUAVs
-					+ "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "): " + UAVParam.initialSpeeds[0]);
-			for (int i=1; i<Param.numUAVs; i++) {
-				if (i%10 == 0) {
+					+ "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "):\n");
+			for (int i=0; i<Param.numUAVs; i++) {
+				sb.append(UAVParam.initialSpeeds[i]);
+				if (i%10 == 9) {
 					sb.append("\n");
+				} else if (i != Param.numUAVs - 1) {
+					sb.append(", ");
 				}
-				sb.append(", " + UAVParam.initialSpeeds[i]);
-				
 			}
 			sb.append("\n" + Text.VISUALIZATION_PARAMETERS + "\n\t" + Text.SCREEN_REFRESH_RATE + " " + BoardParam.screenDelay
 					+ " " + Text.MILLISECONDS + "\n\t" + Text.REDRAW_DISTANCE + " " + BoardParam.minScreenMovement
