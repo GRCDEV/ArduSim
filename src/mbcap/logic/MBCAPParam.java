@@ -105,14 +105,12 @@ public class MBCAPParam {
 			return this.name;
 		}
 		public static MBCAPState getSatateById(short id) {
-			MBCAPState res = null;
 			for (MBCAPState p : MBCAPState.values()) {
 				if (p.getId() == id) {
-					res = p;
-					break;
+					return p;
 				}
 			}
-			return res;
+			return null;
 		}
 	}
 	

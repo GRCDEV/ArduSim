@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -17,6 +16,7 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import api.GUIHelper;
 import main.Text;
 import main.Tools;
 
@@ -55,7 +55,7 @@ public class ResultsDialog extends JDialog {
 				saveButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						JFileChooser chooser = new JFileChooser();
-						chooser.setCurrentDirectory(new File(System.getProperty(Text.HOME_DIR)));
+						chooser.setCurrentDirectory(GUIHelper.getCurrentFolder());
 						chooser.setDialogTitle(Text.RESULTS_DIALOG_TITLE);
 						chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 						FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.RESULTS_DIALOG_SELECTION, Text.FILE_EXTENSION_TXT);

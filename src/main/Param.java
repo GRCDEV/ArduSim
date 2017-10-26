@@ -117,24 +117,20 @@ public class Param {
 			return res;
 		}
 		public static String getModelNameById(int id) {
-			String res = "";
 			for (WirelessModel p : WirelessModel.values()) {
 				if (p.getId() == id) {
-					res = p.getName();
-					break;
+					return p.getName();
 				}
 			}
-			return res;
+			return "";
 		}
 		public static WirelessModel getModelByName(String name) {
-			WirelessModel res = null;
 			for (WirelessModel p : WirelessModel.values()) {
 				if (p.getName().equals(name)) {
-					res = p;
-					break;
+					return p;
 				}
 			}
-			return res;
+			return null;
 		}
 	}
 	
@@ -179,24 +175,20 @@ public class Param {
 			return res;
 		}
 		public static String getProtocolNameById(int id) {
-			String res = "";
 			for (Protocol p : Protocol.values()) {
 				if (p.getId() == id) {
-					res = p.getName();
-					break;
+					return p.getName();
 				}
 			}
-			return res;
+			return "";
 		}
 		public static Protocol getProtocolByName(String name) {
-			Protocol res = null;
 			for (Protocol p : Protocol.values()) {
 				if (p.getName().equals(name)) {
-					res = p;
-					break;
+					return p;
 				}
 			}
-			return res;
+			return null;
 		}
 	}
 

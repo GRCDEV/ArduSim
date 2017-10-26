@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.swing.SwingUtilities;
 
 import api.GUIHelper;
 import api.MissionHelper;
@@ -197,32 +198,36 @@ public class MBCAPGUITools {
 
 	/** Loads the default protocol configuration from variables. */
 	public static void loadDefaultProtocolConfiguration(MBCAPConfigDialogPanel panel) {
-		// Connection parameters
-		panel.portTextField.setText("" + MBCAPParam.MBCAPport);
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				// Connection parameters
+				panel.portTextField.setText("" + MBCAPParam.MBCAPport);
 
-		// Beaconing parameters
-		panel.beaconingPeriodTextField.setText("" + MBCAPParam.beaconingPeriod);
-		panel.numBeaconsTextField.setText("" + MBCAPParam.numBeacons);
-		panel.beaconExpirationTimeTextField.setText("" + ((double) MBCAPParam.beaconExpirationTime) / 1000000000l);
-		panel.beaconFlyingTimeTextField.setText("" + MBCAPParam.beaconFlyingTime);
-		panel.hopTimeTextField.setText("" + MBCAPParam.hopTime);
-		panel.minSpeedTextField.setText("" + MBCAPParam.minSpeed);
+				// Beaconing parameters
+				panel.beaconingPeriodTextField.setText("" + MBCAPParam.beaconingPeriod);
+				panel.numBeaconsTextField.setText("" + MBCAPParam.numBeacons);
+				panel.beaconExpirationTimeTextField.setText("" + ((double) MBCAPParam.beaconExpirationTime) / 1000000000l);
+				panel.beaconFlyingTimeTextField.setText("" + MBCAPParam.beaconFlyingTime);
+				panel.hopTimeTextField.setText("" + MBCAPParam.hopTime);
+				panel.minSpeedTextField.setText("" + MBCAPParam.minSpeed);
 
-		// Collision detection parameters
-		panel.collisionCheckPeriodTextField.setText("" + ((double) MBCAPParam.collisionCheckPeriod) / 1000000000l);
-		panel.collisionDistanceTextField.setText("" + MBCAPParam.collisionDistance);
+				// Collision detection parameters
+				panel.collisionCheckPeriodTextField.setText("" + ((double) MBCAPParam.collisionCheckPeriod) / 1000000000l);
+				panel.collisionDistanceTextField.setText("" + MBCAPParam.collisionDistance);
 
-		// Collision avoidance protocol parameters
-		panel.collisionRiskDistanceTextField.setText("" + MBCAPParam.collisionRiskDistance);
-		panel.collisionRiskAltitudeDifferenceTextField.setText("" + MBCAPParam.collisionRiskAltitudeDifference);
-		panel.maxTimeTextField.setText("" + ((double) MBCAPParam.collisionRiskTime) / 1000000000l);
-		panel.reactionDistanceTextField.setText("" + MBCAPParam.reactionDistance);
-		panel.riskCheckPeriodTextField.setText("" + ((double) MBCAPParam.riskCheckPeriod) / 1000000000l);
-		panel.safePlaceDistanceTextField.setText("" + MBCAPParam.safePlaceDistance);
-		panel.standStillTimeTextField.setText("" + ((double) MBCAPParam.standStillTimeout) / 1000000000l);
-		panel.passingTimeTextField.setText("" + ((double) MBCAPParam.passingTimeout) / 1000000000l);
-		panel.solvedTimeTextField.setText("" + ((double) MBCAPParam.solvedTimeout) / 1000000000l);
-		panel.deadlockTimeoutTextField.setText("" + (int) (((double) MBCAPParam.deadlockTimeout) / 1000000000l));
+				// Collision avoidance protocol parameters
+				panel.collisionRiskDistanceTextField.setText("" + MBCAPParam.collisionRiskDistance);
+				panel.collisionRiskAltitudeDifferenceTextField.setText("" + MBCAPParam.collisionRiskAltitudeDifference);
+				panel.maxTimeTextField.setText("" + ((double) MBCAPParam.collisionRiskTime) / 1000000000l);
+				panel.reactionDistanceTextField.setText("" + MBCAPParam.reactionDistance);
+				panel.riskCheckPeriodTextField.setText("" + ((double) MBCAPParam.riskCheckPeriod) / 1000000000l);
+				panel.safePlaceDistanceTextField.setText("" + MBCAPParam.safePlaceDistance);
+				panel.standStillTimeTextField.setText("" + ((double) MBCAPParam.standStillTimeout) / 1000000000l);
+				panel.passingTimeTextField.setText("" + ((double) MBCAPParam.passingTimeout) / 1000000000l);
+				panel.solvedTimeTextField.setText("" + ((double) MBCAPParam.solvedTimeout) / 1000000000l);
+				panel.deadlockTimeoutTextField.setText("" + (int) (((double) MBCAPParam.deadlockTimeout) / 1000000000l));
+			}
+		});
 	}
 
 	/** Loads the file of the image that represents a risk of collision. */

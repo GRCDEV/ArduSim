@@ -40,9 +40,15 @@ public class Text {
 	public static final String SPEEDS_DIALOG_SELECTION = "Speeds csv file";
 	public static final String FILE_EXTENSION_CSV = "csv";
 	public static final String UAV_NUMBER = "Number of UAVs:";
-	public static final String VISUALIZATION_PARAMETERS = "Visualization parameters:";
+	public static final String PERFORMANCE_PARAMETERS = "Performance parameters:";
 	public static final String SCREEN_REFRESH_RATE = "Screen refresh rate:";
 	public static final String REDRAW_DISTANCE = "Minimum screen redraw distance:";
+	public static final String LOGGING_ENABLED = "ArduCopter logging enabled:";
+	public static final String RENDER = "Rendering quality:";
+	public static final String RENDER_QUALITY1 = "Minimum quality";
+	public static final String RENDER_QUALITY2 = "Text smoothed";
+	public static final String RENDER_QUALITY3 = "Text and lines smoothed";
+	public static final String RENDER_QUALITY4 = "Maximum quality";
 	public static final String UAV_PROTOCOL_USED = "UAV synchronization protocol:";
 	public static final String WIFI_MODEL = "Wireless communications model:";
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
@@ -111,6 +117,12 @@ public class Text {
 	public static final String TEST_FINISHED = "Test finished.";
 	public static final String SHUTTING_DOWN = "Shutting down...";
 	// Progress shown in the log
+	public static final String USING_RAM_DRIVE = "Using RAM drive for temporary files.";
+	public static final String USING_HARD_DRIVE = "Using physical drive for temporary files.";
+	public static final String INSTALL_IMDISK = "It is suggested to install ImDisk in order to improve performance.";
+	public static final String USE_ADMIN = "It is suggested to run " + Text.APP_NAME + " as administrator in order to improve performance.";
+	public static final String INSTALL_IMDISK_USE_ADMIN = "It i suggested to install ImDisk, and run " + Text.APP_NAME + " as administrator in order to improve performance.";
+	public static final String USE_ROOT = "It is suggested to run " + Text.APP_NAME + "as administrator in order to improve performance.";
 	public static final String CAP_IN_USE = "Collision avoidance protocol in use:";
 	public static final String WIRELESS_MODEL_IN_USE = "Wireless model in use:";
 	public static final String SIMULATED_WIND_SPEED = "Wind speed:";
@@ -180,12 +192,16 @@ public class Text {
 	public static final String DEGREE_SYMBOL= "\u00B0";
 	
 	// General errors
+	public static final String PORT_ERROR = "It was not possible to get valid ports to connect to SITL instances.";
 	public static final String MAC_ERROR = "Not valid MAC address could be found on any network interface.";
 	public static final String FATAL_ERROR = "Fatal error";
 	public static final String ARROW_IMAGE_LOAD_ERROR = "The wind arrow image could not be loaded.";
 	public static final String UAV_OUT_OF_SCREEN_ERROR = "A UAV came out of the screen.";
 	public static final String SIMPLIFYING_WAYPOINT_LIST_ERROR = "A back home waypoint was found but home is not defined.\n"
 			+ "Error simplifying the waypoint list of the UAV ";
+	public static final String MOUNT_DRIVE_ERROR_1 = "No available drive letter was found.";
+	public static final String MOUNT_DRIVE_ERROR_2 = "No drives were found on the system.";
+	public static final String TEMP_PATH_ERROR = "It was not possible to define a folder for temporary files.";
 	public static final String UAVS_START_ERROR_1 = "failed starting the virtual UAVs.\nIs another instance of " + Text.APP_NAME + " already running?.";
 	public static final String UAVS_START_ERROR_2 = "It was not possible to create temporal folders in:";
 	public static final String UAVS_START_ERROR_3 = Text.APP_NAME + " for Windows requires Cygwin:";
@@ -199,6 +215,7 @@ public class Text {
 	public static final String TAKE_OFF_ERROR_1 = "Failed executing the take off of the UAV";
 	public static final String WIRELESS_ERROR = "Error. The function Tools.isInRange() must be modified.";
 	public static final String DOWNLOAD_ERROR = "Image not available";
+	public static final String DISMOUNT_DRIVE_ERROR = "Failed dismounting the virtual RAM drive.";
 	
 	// System properties
 	public static final String HOME_DIR = "user.home";

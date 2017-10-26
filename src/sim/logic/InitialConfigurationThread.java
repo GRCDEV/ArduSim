@@ -31,32 +31,55 @@ public class InitialConfigurationThread extends Thread {
 	
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, loads missions..., to a specific UAV. */
 	public static void sendBasicConfiguration(int numUAV) {
-		boolean success = false;
-		if (!Param.IS_REAL_UAV
-				&& API.setParam(numUAV, ControllerParam.LOGGING, 0)	// Disable logging to speed up simulation
-				&& API.setParam(numUAV, ControllerParam.BATTERY_CAPACITY, UAVParam.BATTERY_CHARGE)
-				&& API.setParam(numUAV, ControllerParam.WIND_DIRECTION, Param.windDirection)
-				&& API.setParam(numUAV, ControllerParam.WIND_SPEED, Param.windSpeed)
-				&& API.setSpeed(numUAV, UAVParam.initialSpeeds[numUAV])
-				&& API.getParam(numUAV, ControllerParam.MAX_THROTTLE)) {
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue[numUAV]);
-			if (API.getParam(numUAV, ControllerParam.MIN_THROTTLE)) {
-				UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue[numUAV])) / 2;
-				if (API.getParam(numUAV, ControllerParam.RTL_ALTITUDE)) {
-					UAVParam.RTLAltitude[numUAV] = UAVParam.newParamValue[numUAV]*0.01; // Data received in centimeters
-					if (API.getParam(numUAV, ControllerParam.RTL_ALTITUDE_FINAL)) {
-						UAVParam.RTLAltitudeFinal[numUAV] = UAVParam.newParamValue[numUAV];
-						if (Param.simulationIsMissionBased) {
-							success = MissionHelper.sendBasicMissionConfig(numUAV);
-						} else {
-							success = SwarmHelper.sendBasicSwarmConfig(numUAV);
-						}
-						if (success) {
-							InitialConfigurationThread.UAVS_CONFIGURED.incrementAndGet();
-						}
-					}
-				}
+		if (!Param.IS_REAL_UAV) {
+			// Disable logging to speed up simulation
+			if (!SimParam.arducopterLoggingEnabled && !API.setParam(numUAV, ControllerParam.LOGGING, 0)) {
+				return;
+			}
+			// Increase battery capacity and set simulated wind parameters
+			if (!API.setParam(numUAV, ControllerParam.BATTERY_CAPACITY, UAVParam.BATTERY_CHARGE)
+					|| !API.setParam(numUAV, ControllerParam.WIND_DIRECTION, Param.windDirection)
+					|| !API.setParam(numUAV, ControllerParam.WIND_SPEED, Param.windSpeed)) {
+				return;
 			}
 		}
+		
+		// Get flight controller configuration
+		// Stablish the middle throttle stick position 
+		if (!API.getParam(numUAV, ControllerParam.MAX_THROTTLE)) {
+			return;
+		}
+		UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue[numUAV]);
+		if (!API.getParam(numUAV, ControllerParam.MIN_THROTTLE)) {
+			return;
+		}
+		UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue[numUAV])) / 2;
+		// Get the altitude used for RTL, and when the UAV reaches launch when using RTL
+		if (!API.getParam(numUAV, ControllerParam.RTL_ALTITUDE)) {
+			return;
+		}
+		UAVParam.RTLAltitude[numUAV] = UAVParam.newParamValue[numUAV]*0.01;			// Data received in centimeters
+		if (!API.getParam(numUAV, ControllerParam.RTL_ALTITUDE_FINAL)) {
+			return;
+		}
+		UAVParam.RTLAltitudeFinal[numUAV] = UAVParam.newParamValue[numUAV]*0.01;	// Data received in centimeters
+		
+		// Set the speed when following a mission
+		if (UAVParam.initialSpeeds[numUAV] != 0.0 && !API.setSpeed(numUAV, UAVParam.initialSpeeds[numUAV])) {
+			return;
+		}
+		
+		if (Param.simulationIsMissionBased) {
+			if (!MissionHelper.sendBasicMissionConfig(numUAV)) {
+				return;
+			}
+		} else {
+			if (!SwarmHelper.sendBasicSwarmConfig(numUAV)) {
+				return;
+			}
+		}
+		
+		// Configuration successful
+		InitialConfigurationThread.UAVS_CONFIGURED.incrementAndGet();
 	}
 }

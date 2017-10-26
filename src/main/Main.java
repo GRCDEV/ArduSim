@@ -1,11 +1,11 @@
 package main;
 
-import java.awt.EventQueue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingUtilities;
 
@@ -87,7 +87,16 @@ public class Main {
 			Param.simStatus = SimulatorState.CONFIGURING;
 			
 			Tools.locateSITL();
-			EventQueue.invokeLater(new Runnable() {
+			Tools.checkAdminPrivileges();
+			try {
+				UAVParam.mavPort = Tools.getSITLPorts();
+			} catch (InterruptedException | ExecutionException e) {
+				GUIHelper.exit(Text.PORT_ERROR);
+			}
+			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
+				Tools.checkImdiskInstalled();
+			}
+			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					new ConfigDialog();
 				}
@@ -111,7 +120,7 @@ public class Main {
 			}
 			
 			// 3. Launch the main window
-			EventQueue.invokeLater(new Runnable() {
+			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.window = new MainWindow();
 				}
@@ -161,6 +170,28 @@ public class Main {
 		// Configuration feedback
 		SimTools.println(Text.CAP_IN_USE + " " + Param.selectedProtocol.getName());
 		if (!Param.IS_REAL_UAV) {
+			if (SimParam.userIsAdmin
+					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
+							|| Param.runningOperatingSystem == Param.OS_LINUX)) {
+				SimTools.println(Text.USING_RAM_DRIVE);
+			} else {
+				SimTools.println(Text.USING_HARD_DRIVE);
+			}
+			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
+				if (SimParam.userIsAdmin && !SimParam.imdiskIsInstalled) {
+					SimTools.println(Text.INSTALL_IMDISK);
+				}
+				if (!SimParam.userIsAdmin) {
+					if (SimParam.imdiskIsInstalled) {
+						SimTools.println(Text.USE_ADMIN);
+					} else {
+						SimTools.println(Text.INSTALL_IMDISK_USE_ADMIN);
+					}
+				}
+			}
+			if (Param.runningOperatingSystem == Param.OS_LINUX && !SimParam.userIsAdmin) {
+				SimTools.println(Text.USE_ROOT);
+			}
 			SimTools.println(Text.WIRELESS_MODEL_IN_USE + " " + Param.selectedWirelessModel.getName());
 			if (Param.windSpeed != 0.0) {
 				SimTools.println(Text.SIMULATED_WIND_SPEED + " " + Param.windSpeed);
@@ -178,6 +209,10 @@ public class Main {
 				start = MissionHelper.getMissionStartingLocation();
 			} else {
 				start = SwarmHelper.getSwarmStartingLocation();
+			}
+			SimParam.tempFolderBasePath = Tools.defineTemporaryFolder();
+			if (SimParam.tempFolderBasePath == null) {
+				GUIHelper.exit(Text.TEMP_PATH_ERROR);
 			}
 			Tools.startVirtualUAVs(start);
 		}

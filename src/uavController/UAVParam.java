@@ -21,8 +21,15 @@ public class UAVParam {
 
 	// Application-SITL connection parameters
 	//   TCP
+	public static final int MAX_SITL_INSTANCES = 256;	// Maximum number of SITL instances allowed by ArduCopter implementation
 	public static final String MAV_NETWORK_IP = "127.0.0.1";
-	public static final int MAV_INITIAL_PORT = 5760; // SITL listening port
+	public static final int MAX_PORT = 65535;			// Maximum port value
+	public static final int MAV_INITIAL_PORT = 5760;	// SITL initial listening port
+	public static final int[] MAV_INTERNAL_PORT = new int[] {5501, 5502, 5503};
+	public static final int MAV_FINAL_PORT = Math.min(MAV_INITIAL_PORT + 10*(MAX_SITL_INSTANCES-1), MAX_PORT);
+	
+	public static final int PORT_CHECK_TIMEOUT = 200;	// (ms) Timeout while checking if a port is available
+	public static Integer[] mavPort;					// List of ports really used by SITL instances
 	//   Serial port
 	public static final String SERIAL_CONTROLLER_NAME = "gnu.io.rxtx.SerialPorts";
 	public static final String SERIAL_PORT = "/dev/ttyAMA0";
@@ -287,14 +294,12 @@ public class UAVParam {
 		 * Return the ardupilot flight mode corresponding to the base and custom values.
 		 * <p>If no valid flight mode is found, it returns null. */
 		public static UAVParam.Mode getMode(int base, long custom) {
-			Mode res = null;
 			for (Mode p : Mode.values()) {
 				if (p.baseMode == base && p.customMode == custom) {
-					res = p;
-					break;
+					return p;
 				}
 			}
-			return res;
+			return null;
 		}
 	}
 

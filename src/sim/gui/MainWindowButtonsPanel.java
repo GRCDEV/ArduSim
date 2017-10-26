@@ -1,32 +1,30 @@
 package sim.gui;
 
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-
-import java.awt.GridBagLayout;
-import javax.swing.JTextArea;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import main.Param;
-import main.Text;
 import main.Param.SimulatorState;
+import main.Text;
+import main.Tools;
 import sim.logic.SimParam;
 import swarm.SwarmText;
-import main.Tools;
-
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.Component;
-import javax.swing.Box;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 /** This class generates the panel used to interact with the application, which is inside the main window. */
 
@@ -101,7 +99,7 @@ public class MainWindowButtonsPanel extends JPanel {
 
 				if (!SimParam.progressShowing) {
 					SimParam.progressShowing = true;
-					EventQueue.invokeLater(new Runnable() {
+					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							MainWindow.progressDialog.setVisible(true);
 							progressDialogButton.setEnabled(false);

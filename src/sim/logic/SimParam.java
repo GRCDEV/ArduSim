@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import api.pojo.LogPoint;
+import main.Text;
 
 /** This class contains parameters related to the simulation platform. */
 
@@ -16,29 +17,98 @@ public class SimParam {
 
 	// Whether the progress dialog is showing or not
 	public static volatile boolean progressShowing = false;
+	
+	// Performance parameters
+	public static volatile boolean arducopterLoggingEnabled = false;
+	// Rendering quality levels
+	public static volatile RenderQuality renderQuality = RenderQuality.Q3;
+	public enum RenderQuality {
+		Q1(0, Text.RENDER_QUALITY1),
+		Q2(1, Text.RENDER_QUALITY2),
+		Q3(2, Text.RENDER_QUALITY3),
+		Q4(3, Text.RENDER_QUALITY4);
+		
+		private final int id;
+		private final String name;
+		private RenderQuality(int id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+		public int getId() {
+			return this.id;
+		}
+		public String getName() {
+			return this.name;
+		}
+		public static RenderQuality getHighestIdRenderQuality() {
+			RenderQuality res = null;
+			for (RenderQuality rq : RenderQuality.values()) {
+				if (res == null) {
+					res = rq;
+				} else {
+					if (rq.id >= res.id) {
+						res = rq;
+					}
+				}
+			}
+			return res;
+		}
+		public static String getRenderQualityNameById(int id) {
+			for (RenderQuality rq : RenderQuality.values()) {
+				if (rq.getId() == id) {
+					return rq.getName();
+				}
+			}
+			return "";
+		}
+		public static RenderQuality getRenderQualityByName(String name) {
+			for (RenderQuality rq : RenderQuality.values()) {
+				if (rq.name.equals(name)) {
+					return rq;
+				}
+			}
+			return null;
+		}
+	}
 
 	// Wind parameters
 	public static final String ARROW_IMAGE_PATH = "/files/wind.png"; // arrow image path
 	public static BufferedImage arrowImage; // arrow image
 	public static final int ARROW_PANEL_SIZE = 36; // (px) arrow image size
 
+	// Administrator user check and ImDisk installation check and drive parameters
+	public static boolean userIsAdmin;			// Only initialized if using simulation, not in a real UAV
+	public static final String FAKE_FILE_NAME = "ArduSimFakeFile(remove when found).txt";
+	public static boolean imdiskIsInstalled;	// Only initialized if using simulation under Windows, not in a real UAV
+	public static final String IMDISK_PATH = "\\system32\\imdisk.exe";
+	public static final String IMDISK_REGISTRY_PATH = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\ImDisk";
+	public static final String IMDISK_REGISTRY_KEY = "DisplayName";
+	public static final String IMDISK_REGISTRY_VALUE = "ImDisk Virtual Disk Driver";
+	public static final String RAM_DRIVE_NAME = "ArduSimTemp";	// Maximux size = 11 characters
+	public static final String[] WINDOWS_DRIVES = new String[] {"Z", "Y", "X", "W", "V", "U", "T", "S", "R", "Q", "P", "O", "N", "M", "L", "K", "J", "I", "H", "G", "F", "E", "D", "C", "B", "A"};
+	public static final int UAV_RAM_DRIVE_SIZE = 5;			// (MB) RAM drive size needed by one UAV (without logging)
+	public static final int LOGGING_RAM_DRIVE_SIZE = 45;	// (MB) RAM drive size needed by one UAV for logging purposes
+	public static final int MIN_FAT32_SIZE = 260;			// (MB) RAM drive minimum size when using FAT32 file system (65527clusters*4KB)
+	public static boolean usingRAMDrive = false;
+	
 	// Cygwin and SITL location parameters and temporary folders
 	public static final String CYGWIN_PATH1 = "C:" + File.separator + "cygwin" + File.separator
 			+ "bin" + File.separator + "bash.exe";	// 32bits platform
 	public static final String CYGWIN_PATH2 = "C:" + File.separator + "cygwin64" + File.separator
 			+ "bin" + File.separator + "bash.exe";	// 64bits platform
 	public static volatile String cygwinPath = null;	// Final file path found
-	public static final String SITL_WINDOWS_FILE_NAME = "ArduCopter.elf";
+	public static final String SITL_WINDOWS_FILE_NAME = "arducopter.exe";
 	public static final String SITL_LINUX_FILE_NAME = "arducopter";
 	public static volatile String sitlPath = null;	// Final SITL file path
 	public static final String PARAM_FILE_NAME = "copter.parm";
 	public static volatile String paramPath = null;	// Final copter parameters file path
 	public static Process[] processes;				// Processes used to launch SITL
+	public static String tempFolderBasePath;
 	public static final String TEMP_FOLDER_PREFIX = "virtual_uav_temp_";
 
 	public static final int CONSOLE_READ_RETRY_WAITING_TIME = 100; // (ms)
-	public static final long SITL_STARTING_TIMEOUT = 10 * 1000000000l; // (ns)
-
+	public static final long SITL_STARTING_TIMEOUT = 20 * 1000000000l; // (ns)
+	
 	// Parameters needed to draw and store the log of the UAVs path
 	// Received UTM positions, time and speed, and whether they are received during the experiment
 	public static BlockingQueue<LogPoint>[] uavUTMPathReceiving;
@@ -76,5 +146,5 @@ public class SimParam {
 
 	// Prefix added to log lines to identify each UAV
 	public static String[] prefix;
-
+	
 }

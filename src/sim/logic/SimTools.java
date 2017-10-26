@@ -32,6 +32,7 @@ import sim.board.BoardParam;
 import sim.gui.ConfigDialogPanel;
 import sim.gui.MainWindow;
 import sim.gui.ProgressDialogPanel;
+import sim.logic.SimParam.RenderQuality;
 import uavController.UAVParam;
 
 /** This class contains method used internally by the application for its own profit. */
@@ -222,9 +223,15 @@ public class SimTools {
 		//  Simulation parameters
 		Param.numUAVs = Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem());
 
-		//  Visualization parameters
+		//  Performance parameters
 		BoardParam.screenDelay = Integer.parseInt((String)panel.screenDelayTextField.getText());
 		BoardParam.minScreenMovement = Double.parseDouble((String)panel.minScreenMovementTextField.getText());
+		String loggingEnabled = (String)panel.loggingEnabledButton.getText();
+		if (loggingEnabled.equals(Text.YES_OPTION)) {
+			SimParam.arducopterLoggingEnabled = true;
+		} else {
+			SimParam.arducopterLoggingEnabled = false;
+		}
 
 		//  CAP protocol parameters
 		String protocol = (String)panel.protocolComboBox.getSelectedItem();
@@ -247,13 +254,24 @@ public class SimTools {
 
 	/** Loads the default experiment configuration from variables */
 	public static void loadDefaultConfiguration(ConfigDialogPanel panel) {
-		//  Visualization parameters
-		panel.screenDelayTextField.setText("" + BoardParam.screenDelay);
-		panel.minScreenMovementTextField.setText("" + BoardParam.minScreenMovement);
+		//  Performance parameters
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				panel.screenDelayTextField.setText("" + BoardParam.screenDelay);
+				panel.minScreenMovementTextField.setText("" + BoardParam.minScreenMovement);
+				if (SimParam.arducopterLoggingEnabled) {
+					panel.loggingEnabledButton.setText(Text.YES_OPTION);
+				} else {
+					panel.loggingEnabledButton.setText(Text.NO_OPTION);
+				}
+				panel.renderQualityComboBox.setSelectedIndex(RenderQuality.Q3.getId());
+			}
+		});
+		SimParam.renderQuality = RenderQuality.Q3;
 
 		//  CAP protocol parameters
 		Param.selectedProtocol = Protocol.getHighestIdProtocol();
-		EventQueue.invokeLater(new Runnable() {
+		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				for (int i=0; i<panel.protocolComboBox.getItemCount(); i++) {
 					if (((String)panel.protocolComboBox.getItemAt(i)).equals(Param.selectedProtocol.getName())) {
@@ -264,20 +282,28 @@ public class SimTools {
 		});
 
 		//  Wireless model parameters
-		EventQueue.invokeLater(new Runnable() {
+		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				panel.wirelessModelComboBox.setSelectedIndex(0);
 			}
 		});
 		Param.selectedWirelessModel = WirelessModel.NONE;
-		panel.fixedRangeTextField.setText("" + Param.fixedRange);
-		panel.fixedRangeTextField.setEnabled(false);
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				panel.fixedRangeTextField.setText("" + Param.fixedRange);
+				panel.fixedRangeTextField.setEnabled(false);
+			}
+		});
 
 		//  Wind parameters
-		panel.windDirTextField.setText("" + Param.DEFAULT_WIND_DIRECTION);
-		panel.windSpeedTextField.setText("" + Param.DEFAULT_WIND_SPEED);
-		panel.lblDegrees.setText(Text.DEGREE_SYMBOL);
-		panel.dontUseWindButton.setSelected(true);
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				panel.windDirTextField.setText("" + Param.DEFAULT_WIND_DIRECTION);
+				panel.windSpeedTextField.setText("" + Param.DEFAULT_WIND_SPEED);
+				panel.lblDegrees.setText(Text.DEGREE_SYMBOL);
+				panel.dontUseWindButton.setSelected(true);
+			}
+		});
 	}
 	
 	/** Loads the UAV image */
