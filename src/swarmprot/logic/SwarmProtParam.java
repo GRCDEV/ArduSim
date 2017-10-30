@@ -29,6 +29,9 @@ public class SwarmProtParam {
 
 	// Waiting time in listening or reading threads
 	public static final int waitState = 100;
+	
+	//Wait between ACK
+	public static int swarmStateWait = 200; // (ms) Time between ACK
 
 	// SwarmProt finite state machine states enumerator
 	public enum SwarmProtState {
