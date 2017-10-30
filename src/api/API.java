@@ -15,7 +15,8 @@ import uavController.UAVParam.ControllerParam;
 
 public class API {
 
-	/** API: Sets a new value for a controller or SITL parameter. */
+	/** API: Sets a new value for a controller or SITL parameter.
+	 * <p>Returns true if the command was successful. */
 	public static boolean setParam(int numUAV, ControllerParam parameter, double value) {
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.newParamValue[numUAV] = value;
@@ -34,6 +35,7 @@ public class API {
 	}
 	
 	/** API: Gets the value of a controller or SITL parameter.
+	 * <p>Returns true if the command was successful.
 	 * <p>New value available on UAVParam.newParamValue[numUAV]. */
 	public static boolean getParam(int numUAV, ControllerParam parameter) {
 		UAVParam.newParam[numUAV] = parameter;
@@ -51,7 +53,8 @@ public class API {
 		}
 	}
 
-	/** API: Changes the UAV flight mode. */
+	/** API: Changes the UAV flight mode.
+	 * <p>Returns true if the command was successful. */
 	public static boolean setMode(int numUAV, UAVParam.Mode mode) {
 		UAVParam.newFlightMode[numUAV] = mode;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MODE);
@@ -67,7 +70,8 @@ public class API {
 		}
 	}
 
-	/** API: Arms the engines. */
+	/** API: Arms the engines.
+	 * <p>Returns true if the command was successful. */
 	public static boolean armEngines(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ARM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -83,7 +87,9 @@ public class API {
 		}
 	}
 
-	/** API: Takes off. */
+	/** API: Takes off.
+	 * Target altitude is UAVParam.takeOffAltitude[numUAV], stored when sending the mission to the UAV.
+	 * <p>Returns true if the command was successful. */
 	public static boolean doTakeOff(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_TAKE_OFF);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -99,7 +105,8 @@ public class API {
 		}
 	}
 
-	/** API: Changes the planned flight speed (m/s). */
+	/** API: Changes the planned flight speed (m/s).
+	 * <p>Returns true if the command was successful. */
 	public static boolean setSpeed(int numUAV, double speed) {
 		UAVParam.newSpeed[numUAV] = speed;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_SPEED);
@@ -116,7 +123,8 @@ public class API {
 		}
 	}
 
-	/** API: Modifies the current waypoint of the mission stored on the UAV. */
+	/** API: Modifies the current waypoint of the mission stored on the UAV.
+	 * <p>Returns true if the command was successful. */
 	public static boolean setCurrentWaypoint(int numUAV, int currentWP) {
 		UAVParam.newCurrentWaypoint[numUAV] = currentWP;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_CURRENT_WP);
@@ -134,6 +142,7 @@ public class API {
 	}
 
 	/** API: Suspends temporally a mission, entering on loiter flight mode to force a fast stop.
+	 * <p>Returns true if the command was successful.
 	 * <p>This method already includes the "setThrottle" function. */
 	public static boolean stopUAV(int numUAV) {
 		if (API.setThrottle(numUAV) && setMode(numUAV, UAVParam.Mode.LOITER_ARMED)) {
@@ -154,7 +163,8 @@ public class API {
 	}
 
 	/** API: Moves the throttle stick to half power using RC3.
-	 * <p>Useful for starting auto flight when being on the ground, andto stabilize altitude when going out of auto mode. */
+	 * <p>Returns true if the command was successful.
+	 * <p>Useful for starting auto flight when being on the ground, and to stabilize altitude when going out of auto mode. */
 	public static boolean setThrottle(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -171,6 +181,7 @@ public class API {
 	}
 
 	/** API: Moves the UAV to a new position.
+	 * <p>Returns true if the command was successful.
 	 * <p>The UAV must be in guided mode. */
 	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude) {
 		UAVParam.newLocation[numUAV][0] = (float)geo.latitude;
@@ -206,7 +217,8 @@ public class API {
 		}
 	}
 
-	/** API: Removes the current mission from the UAV. */
+	/** API: Removes the current mission from the UAV.
+	 * <p>Returns true if the command was successful. */
 	public static boolean clearMission(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_CLEAR_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -223,6 +235,7 @@ public class API {
 	}
 
 	/** API: Sends a new mission to the UAV.
+	 * <p>Returns true if the command was successful.
 	 * <p>The waypoint 0 must be the current coordinates retrieved from the controller.
 	 * <p>The waypoint 1 must be take off.
 	 * <p>The last waypoint can be land or RTL. */
@@ -274,6 +287,7 @@ public class API {
 	}
 
 	/** API: Retrieves the mission stored on the UAV.
+	 * <p>Returns true if the command was successful.
 	 * <p>New value available on UAVParam.currentGeoMission[numUAV].
 	 * <p>Simplified version of the mission in UTM coordinates available on UAVParam.missionUTMSimplified[numUAV]. */
 	public static boolean getMission(int numUAV) {

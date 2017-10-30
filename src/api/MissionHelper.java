@@ -1,6 +1,5 @@
 package api;
 
-import java.awt.EventQueue;
 import java.awt.Graphics2D;
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -26,9 +26,9 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import api.pojo.GeoCoordinates;
-import api.pojo.WaypointSimplified;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
+import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Param.Protocol;
 import main.Text;
@@ -37,15 +37,15 @@ import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPHelper;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPParam.MBCAPState;
-import mission.StartMissionTestThread;
+import mbcap.logic.MBCAPText;
 import mission.MissionText;
+import mission.StartMissionTestThread;
 import sim.board.BoardPanel;
 import sim.board.BoardParam;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
 import uavController.UAVParam;
 import uavController.UAVParam.Mode;
-import mbcap.logic.MBCAPText;
 
 /** This class consists exclusively of static methods that allow to launch threads, and set specific configuration for mission based protocols.
  *  <p>The methods are sorted as they are called by the application on its different stages.
@@ -228,7 +228,7 @@ public class MissionHelper {
 				|| Param.selectedProtocol == Protocol.MBCAP_V2
 				|| Param.selectedProtocol == Protocol.MBCAP_V3
 				|| Param.selectedProtocol == Protocol.MBCAP_V4) {
-			EventQueue.invokeLater(new Runnable() {
+			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					new MBCAPConfigDialog();
 				}

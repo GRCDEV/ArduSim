@@ -22,8 +22,8 @@ import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
 import api.pojo.LogPoint;
 import api.pojo.Point3D;
-import api.pojo.WaypointSimplified;
 import api.pojo.UTMCoordinates;
+import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
@@ -182,12 +182,28 @@ public class BoardHelper {
 	/** Draws the main panel. */
 	public static void paintBoard(Graphics g, BoardPanel p) {
 		Graphics2D g2 = (Graphics2D) g;
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-				RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
-				RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-		g2.setRenderingHint( RenderingHints.  KEY_STROKE_CONTROL,
-				RenderingHints.VALUE_STROKE_PURE);
+		switch(SimParam.renderQuality) {
+		case Q1:
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+			g2.setRenderingHint( RenderingHints.  KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_DEFAULT);
+			break;
+		case Q2:
+			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+			g2.setRenderingHint( RenderingHints.  KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_DEFAULT);
+			break;
+		case Q3:
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+			g2.setRenderingHint( RenderingHints.  KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+			break;
+		case Q4:
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+			g2.setRenderingHint( RenderingHints.  KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+			break;
+		}
 	
 		// At the beginning, only the UAVs can be drawn
 		if (!BoardParam.drawAll) {
@@ -224,6 +240,7 @@ public class BoardHelper {
 				BoardHelper.rescaleScaleBar();	// Gets the scale bar
 			}
 		}
+		
 		BoardHelper.drawAll(g2, p);
 	}
 	
@@ -232,11 +249,13 @@ public class BoardHelper {
 		int numUAVsConnected = 0;
 		for (int i=0; i<Param.numUAVs; i++) {
 			// When UAVs have just connected, the previous position is null
-			if (BoardParam.uavPrevUTMLocation[i] == null) {
-				BoardParam.uavPrevUTMLocation[i] = SimParam.uavUTMPathReceiving[i].poll();// If queue already empty, tries to get some data is received
-			}
-			if (BoardParam.uavPrevUTMLocation[i] != null) {
-				numUAVsConnected++;
+			if (BoardParam.uavPrevUTMLocation != null) {
+				if (BoardParam.uavPrevUTMLocation[i] == null) {
+					BoardParam.uavPrevUTMLocation[i] = SimParam.uavUTMPathReceiving[i].poll();// If queue already empty, tries to get some data is received
+				}
+				if (BoardParam.uavPrevUTMLocation[i] != null) {
+					numUAVsConnected++;
+				}
 			}
 		}
 		return numUAVsConnected;
@@ -528,11 +547,13 @@ public class BoardHelper {
 	
 	/** Draws the waypoints of the missions. */
 	private static void drawMissions(Graphics2D g) {
-		for (int i=0; i<Param.numUAVs; i++) {
-			if (!UAVParam.MissionPx[i].isEmpty()) {
-				g.setColor(SimParam.COLOR[i%SimParam.COLOR.length]);
-				for (int j=0; j<UAVParam.MissionPx[i].size(); j++) {
-					g.draw(UAVParam.MissionPx[i].get(j));
+		if (UAVParam.MissionPx != null) {
+			for (int i=0; i<Param.numUAVs; i++) {
+				if (UAVParam.MissionPx[i] != null && !UAVParam.MissionPx[i].isEmpty()) {
+					g.setColor(SimParam.COLOR[i%SimParam.COLOR.length]);
+					for (int j=0; j<UAVParam.MissionPx[i].size(); j++) {
+						g.draw(UAVParam.MissionPx[i].get(j));
+					}
 				}
 			}
 		}
@@ -544,43 +565,49 @@ public class BoardHelper {
 		Point2D.Double currentPXauxiliary;
 		LogPoint currentPX;
 		LogPoint previousPX;
-		for (int i=0; i<Param.numUAVs; i++) {
-			//  1. Create new lines if new positions are stored
-			while(!SimParam.uavUTMPathReceiving[i].isEmpty()) {
-				currentUTM = SimParam.uavUTMPathReceiving[i].poll();
-				if (currentUTM != null) {
-					// Info storage to redraw in case the screen is rescaled and for logging purposes
-					SimParam.uavUTMPath[i].add(currentUTM);
-	
-					// Store the current position to draw the UAV
-					BoardParam.uavCurrentUTMLocation[i] = currentUTM;
-					// The UAV is connected. New lines can be drawn
-					currentPXauxiliary = BoardHelper.locatePoint(currentUTM.x, currentUTM.y);
-					currentPX
-						= new LogPoint(currentUTM.time, currentPXauxiliary.x, currentPXauxiliary.y, currentUTM.z, currentUTM.heading,
-							currentUTM.speed, currentUTM.inTest);
-					BoardParam.uavCurrentPXLocation[i] = currentPX;
-					
-					if (BoardParam.uavPrevUTMLocation[i] != null) {
-						// New line only if the UAV has moved far enough
-						previousPX = BoardParam.uavPrevPXLocation[i];
-						if (currentPX.distance(previousPX.x, previousPX.y)>=BoardParam.minScreenMovement) {
-							Shape l = new Line2D.Double(previousPX.x, previousPX.y,
-									currentPX.x,
-									currentPX.y);
-							BoardParam.uavPXPathLines[i].add(l);
+		if (SimParam.uavUTMPathReceiving != null) {
+			for (int i=0; i<Param.numUAVs; i++) {
+				//  1. Create new lines if new positions are stored
+				if (SimParam.uavUTMPathReceiving[i] != null) {
+					while(!SimParam.uavUTMPathReceiving[i].isEmpty()) {
+						currentUTM = SimParam.uavUTMPathReceiving[i].poll();
+						if (currentUTM != null) {
+							// Info storage to redraw in case the screen is rescaled and for logging purposes
+							SimParam.uavUTMPath[i].add(currentUTM);
+			
+							// Store the current position to draw the UAV
+							BoardParam.uavCurrentUTMLocation[i] = currentUTM;
+							// The UAV is connected. New lines can be drawn
+							currentPXauxiliary = BoardHelper.locatePoint(currentUTM.x, currentUTM.y);
+							currentPX
+								= new LogPoint(currentUTM.time, currentPXauxiliary.x, currentPXauxiliary.y, currentUTM.z, currentUTM.heading,
+									currentUTM.speed, currentUTM.inTest);
+							BoardParam.uavCurrentPXLocation[i] = currentPX;
 							
-							BoardParam.uavPrevUTMLocation[i] = currentUTM;
-							BoardParam.uavPrevPXLocation[i] = currentPX;
+							if (BoardParam.uavPrevUTMLocation[i] != null) {
+								// New line only if the UAV has moved far enough
+								previousPX = BoardParam.uavPrevPXLocation[i];
+								if (currentPX.distance(previousPX.x, previousPX.y)>=BoardParam.minScreenMovement) {
+									Shape l = new Line2D.Double(previousPX.x, previousPX.y,
+											currentPX.x,
+											currentPX.y);
+									BoardParam.uavPXPathLines[i].add(l);
+									
+									BoardParam.uavPrevUTMLocation[i] = currentUTM;
+									BoardParam.uavPrevPXLocation[i] = currentPX;
+								}
+							}
 						}
 					}
 				}
-			}
-			
-			// 2. Draw all the lines
-			g.setColor(SimParam.COLOR[i%SimParam.COLOR.length]);
-			for (int j=0; j<BoardParam.uavPXPathLines[i].size(); j++) {
-				g.draw(BoardParam.uavPXPathLines[i].get(j));
+				
+				// 2. Draw all the lines
+				if (BoardParam.uavPXPathLines != null && BoardParam.uavPXPathLines[i] != null) {
+					g.setColor(SimParam.COLOR[i%SimParam.COLOR.length]);
+					for (int j=0; j<BoardParam.uavPXPathLines[i].size(); j++) {
+						g.draw(BoardParam.uavPXPathLines[i].get(j));
+					}
+				}
 			}
 		}
 	}
@@ -588,29 +615,31 @@ public class BoardHelper {
 	/** Draws the UAV image, identifier and altitude value. */
 	private static void drawUAVs(Graphics2D g, BoardPanel p) {
 		LogPoint currentPXLocation;
-		for (int i=0; i<Param.numUAVs; i++) {
-			// Only drawn when there is known current position
-			currentPXLocation = BoardParam.uavCurrentPXLocation[i];
-			if (currentPXLocation != null) {
-				// AffineTransform is applied on inverse order
-				AffineTransform trans = new AffineTransform();
-				trans.translate(currentPXLocation.x, currentPXLocation.y);
-				trans.scale(SimParam.uavImageScale, SimParam.uavImageScale);
-				trans.rotate( currentPXLocation.heading );
-				trans.translate(-SimParam.uavImage.getWidth()/2, -SimParam.uavImage.getHeight()/2);
-				g.drawImage(SimParam.uavImage, trans, p);
-	
-				//  Draw altitude text
-				g.setColor(Color.BLACK);
-				g.drawString(
-						String.format("%.2f",currentPXLocation.z),
-						(float)(currentPXLocation.x+10),
-						(float)(currentPXLocation.y-10));
-	
-				//  Draw UAV id
-				g.drawString(Text.UAV_ID + " " + Param.id[i],
-						(float)(currentPXLocation.x-25),
-						(float)(currentPXLocation.y+25));
+		if (BoardParam.uavCurrentPXLocation != null) {
+			for (int i=0; i<Param.numUAVs; i++) {
+				// Only drawn when there is known current position
+				currentPXLocation = BoardParam.uavCurrentPXLocation[i];
+				if (currentPXLocation != null) {
+					// AffineTransform is applied on inverse order
+					AffineTransform trans = new AffineTransform();
+					trans.translate(currentPXLocation.x, currentPXLocation.y);
+					trans.scale(SimParam.uavImageScale, SimParam.uavImageScale);
+					trans.rotate( currentPXLocation.heading );
+					trans.translate(-SimParam.uavImage.getWidth()/2, -SimParam.uavImage.getHeight()/2);
+					g.drawImage(SimParam.uavImage, trans, p);
+		
+					//  Draw altitude text
+					g.setColor(Color.BLACK);
+					g.drawString(
+							String.format("%.2f",currentPXLocation.z),
+							(float)(currentPXLocation.x+10),
+							(float)(currentPXLocation.y-10));
+		
+					//  Draw UAV id
+					g.drawString(Text.UAV_ID + " " + Param.id[i],
+							(float)(currentPXLocation.x-25),
+							(float)(currentPXLocation.y+25));
+				}
 			}
 		}
 	}

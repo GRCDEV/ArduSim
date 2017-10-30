@@ -1,7 +1,6 @@
 package sim.gui;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.Toolkit;
@@ -14,14 +13,15 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
 import api.MissionHelper;
 import api.SwarmHelper;
 import main.Param;
-import main.Text;
 import main.Param.Protocol;
+import main.Text;
 import sim.logic.SimParam;
 
 /** This class generates the dialog that shows UAV information on real time, over the main window. */
@@ -93,7 +93,7 @@ public class ProgressDialog extends JDialog {
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
 				SimParam.progressShowing = false;
-				EventQueue.invokeLater(new Runnable() {
+				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						setVisible(false);
 						MainWindow.buttonsPanel.progressDialogButton.setEnabled(true);

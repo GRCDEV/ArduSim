@@ -91,7 +91,6 @@ public class UAVControllerThread extends Thread {
 		this.numUAV = numUAV;
 		this.isStarting = true;
 		this.numTests = 0;
-		this.port = UAVParam.MAV_INITIAL_PORT + 10*numUAV; // Each instance of SITL starts +10 over the previous one
 
 		// Connection through serial port on a real UAV
 		if(Param.IS_REAL_UAV) {
@@ -142,6 +141,7 @@ public class UAVControllerThread extends Thread {
 
 		} else {
 			// Connection through TCP in the simulator
+			this.port = UAVParam.mavPort[numUAV];
 			reader = null;
 			try {
 				socket = new Socket(UAVParam.MAV_NETWORK_IP, this.port);

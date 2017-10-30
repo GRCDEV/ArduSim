@@ -7,7 +7,10 @@ import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -16,6 +19,12 @@ import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Matcher;
@@ -25,6 +34,7 @@ import java.util.stream.Collectors;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileSystemView;
 
 import org.javatuples.Pair;
 
@@ -261,6 +271,92 @@ public class Tools {
 		}
 	}
 	
+	/** Auxiliary method to get the TCP ports available for SITL instances. */
+	public static Integer[] getSITLPorts() throws InterruptedException, ExecutionException {
+		// SITL starts using TCP5760 and UDP5501,5502,5503
+		ExecutorService es = Executors.newFixedThreadPool(20);
+	    List<Future<PortScanResult>> tcpMain = new ArrayList<Future<PortScanResult>>();
+	    List<Future<PortScanResult>> udpAux1 = new ArrayList<Future<PortScanResult>>();
+	    List<Future<PortScanResult>> udpAux2 = new ArrayList<Future<PortScanResult>>();
+	    List<Future<PortScanResult>> udpAux3 = new ArrayList<Future<PortScanResult>>();
+	    List<Integer> ports = new ArrayList<Integer>(UAVParam.MAX_SITL_INSTANCES);
+	    int tcpPort = UAVParam.MAV_INITIAL_PORT;
+	    int udp1Port = UAVParam.MAV_INTERNAL_PORT[0];
+	    int udp2Port = UAVParam.MAV_INTERNAL_PORT[1];
+	    int udp3Port = UAVParam.MAV_INTERNAL_PORT[2];
+	    while (tcpPort <= UAVParam.MAV_FINAL_PORT) {
+	    	tcpMain.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, tcpPort, UAVParam.PORT_CHECK_TIMEOUT));
+	    	udpAux1.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, udp1Port, UAVParam.PORT_CHECK_TIMEOUT));
+	    	udpAux2.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, udp2Port, UAVParam.PORT_CHECK_TIMEOUT));
+	    	udpAux3.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, udp3Port, UAVParam.PORT_CHECK_TIMEOUT));
+	    	tcpPort = tcpPort + 10;
+	    	udp1Port = udp1Port + 10;
+	    	udp2Port = udp2Port + 10;
+	    	udp3Port = udp3Port + 10;
+	    }
+	    es.awaitTermination((long)UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
+	    Future<PortScanResult> tcp, udp1, udp2, udp3;
+	    for (int i=0; i<tcpMain.size(); i++) {
+	    	tcp = tcpMain.get(i);
+	    	udp1 = udpAux1.get(i);
+	    	udp2 = udpAux2.get(i);
+	    	udp3 = udpAux3.get(i);
+	    	if (!tcp.get().isOpen() && !udp1.get().isOpen() && !udp2.get().isOpen() && !udp3.get().isOpen()) {
+	    		ports.add(tcp.get().getPort());
+	    	}
+	    }
+	    es.shutdown();
+		return ports.toArray(new Integer[ports.size()]);
+	}
+	
+	/** Auxiliary method to get a number of available TCP ports, starting from an initial port. */
+	public static Integer[] getAvailablePorts(int numPorts, int initialPort) throws InterruptedException, ExecutionException {
+		ExecutorService es = Executors.newFixedThreadPool(20);
+	    List<Future<PortScanResult>> futures = new ArrayList<>();
+	    List<Integer> ports = new ArrayList<Integer>(numPorts);
+	    int usedPorts = 0;
+	    int port = initialPort;
+	    int i = 0;
+	    int testPort;
+	    while (port <= UAVParam.MAX_PORT && ports.size() < numPorts) {
+	    	futures.clear();
+	    	while (i < numPorts + usedPorts) {
+	        	futures.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, port, UAVParam.PORT_CHECK_TIMEOUT));
+	        	port = port + 10;
+	    		i++;
+	    	}
+	    	es.awaitTermination((long)UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
+	        for (final Future<PortScanResult> f : futures) {
+	        	testPort = f.get().getPort();
+	            if (f.get().isOpen()) {
+	            	usedPorts++;
+	            } else {
+	            	ports.add(testPort);
+	            }
+	        }
+	    }
+	    es.shutdown();
+		return ports.toArray(new Integer[ports.size()]);
+	}
+	
+	/** Auxiliary method to detect asynchronously if a TCP port is in use by the system or any other application. */
+	private static Future<PortScanResult> portIsOpen(final ExecutorService es, final String ip, final int port,
+	        final int timeout) {
+	    return es.submit(new Callable<PortScanResult>() {
+	        @Override
+	        public PortScanResult call() {
+	            try {
+	                Socket socket = new Socket();
+	                socket.connect(new InetSocketAddress(ip, port), timeout);
+	                socket.close();
+	                return new PortScanResult(port, true);
+	            } catch (Exception ex) {
+	                return new PortScanResult(port, false);
+	            }
+	        }
+	    });
+	}
+	
 	/** Gets the id when using a real UAV, based on the MAC address. */
 	public static long getRealId() {
 		List<Long> ids = new ArrayList<Long>();
@@ -322,6 +418,224 @@ public class Tools {
 		return Collections.max(ids);
 	}
 	
+	/** Gets the folder for temporary files, and creates a RAM disk if necessary. Return null in case of error. */
+	public static String defineTemporaryFolder() {
+		// If possible, use a virtual RAM drive
+		if (SimParam.userIsAdmin) {
+			if (Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled) {
+				// Check if temporal filesystem is already mounted and dismount
+				File ramDiskFile = Tools.checkDriveMountedWindows();
+				if (ramDiskFile != null) {
+					if (!Tools.dismountDriveWindows(ramDiskFile.getAbsolutePath())) {
+						return null;
+					}
+				}
+				ramDiskFile = Tools.mountDriveWindows();
+				if (ramDiskFile != null) {
+					SimParam.usingRAMDrive = true;
+					return ramDiskFile.getAbsolutePath();
+				}
+			}
+			if (Param.runningOperatingSystem == Param.OS_LINUX) {
+				String ramDiskPath = "/media/" + SimParam.RAM_DRIVE_NAME;
+				File ramDiskFile = new File(ramDiskPath);
+				if (ramDiskFile.exists()) {
+					// Check if temporal filesystem is already mounted and dismount
+					if (Tools.checkDriveMountedLinux(ramDiskPath)) {
+						if (!Tools.dismountDriveLinux(ramDiskPath)) {
+							return null;
+						}
+					}
+				} else {
+					// Create the folder
+					ramDiskFile.mkdirs();
+				}
+				if (Tools.mountDriveLinux(ramDiskPath)) {
+					SimParam.usingRAMDrive = true;
+					return ramDiskPath;
+				}
+			}
+		}
+		
+		// When it is not possible, use physical storage
+		if ((SimParam.userIsAdmin && Param.runningOperatingSystem == Param.OS_WINDOWS && !SimParam.imdiskIsInstalled)
+				|| !SimParam.userIsAdmin) {
+			File parentFolder = (new File(SimParam.sitlPath)).getParentFile();
+			return parentFolder.getAbsolutePath();
+		}
+		return null;
+	}
+	
+	/** If an appropriate virtual RAM drive is already mounted under Windows, it returns its location, or null in case of error. */
+	private static File checkDriveMountedWindows() {
+		File[] roots = File.listRoots();
+		if (roots != null && roots.length > 0) {
+			for(int i = 0; i < roots.length ; i++) {
+				String name = FileSystemView.getFileSystemView().getSystemDisplayName(roots[i]);
+				if (name.contains(SimParam.RAM_DRIVE_NAME.toUpperCase())) {
+					return roots[i];
+				}
+			}
+		}
+		return null;
+	}
+
+	/** Mounts a virtual RAM drive under Windows, and returns the location, or null in case of error. */
+	private static File mountDriveWindows() {
+		// 1. Find an available drive letter
+		File[] roots = File.listRoots();
+		if (roots != null && roots.length > 0) {
+			List<String> driveLetters = new ArrayList<>(); 
+			for(int i = 0; i < roots.length ; i++) {
+				driveLetters.add("" + roots[i].getAbsolutePath().charAt(0));
+			}
+			boolean found = true;
+			String freeDrive = null;
+			for (int i=0; i<SimParam.WINDOWS_DRIVES.length && found; i++) {
+				if (!driveLetters.contains(SimParam.WINDOWS_DRIVES[i])) {
+					freeDrive = SimParam.WINDOWS_DRIVES[i];
+					found = false;
+				}
+			}
+			if (freeDrive == null) {
+				System.out.println(Text.MOUNT_DRIVE_ERROR_1);
+				return null;
+			}
+			
+			// 2. Mount the temporary filesystem
+			List<String> commandLine = new ArrayList<String>();
+			BufferedReader input;
+			commandLine.add("imdisk");
+			commandLine.add("-a");
+			commandLine.add("-s");
+			int ramSize;
+			if (SimParam.arducopterLoggingEnabled) {
+				ramSize = (SimParam.UAV_RAM_DRIVE_SIZE + SimParam.LOGGING_RAM_DRIVE_SIZE)*Param.numUAVs;
+			} else {
+				ramSize = SimParam.UAV_RAM_DRIVE_SIZE*Param.numUAVs;
+			}
+			ramSize = Math.max(ramSize, SimParam.MIN_FAT32_SIZE);
+			commandLine.add(ramSize + "M");
+			commandLine.add("-m");
+			commandLine.add(freeDrive + ":");
+			commandLine.add("-p");
+			commandLine.add("/fs:fat32 /q /v:" + SimParam.RAM_DRIVE_NAME + " /y");
+			ProcessBuilder pb = new ProcessBuilder(commandLine);
+			try {
+				Process p = pb.start();
+				input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				String result = input.lines().collect(Collectors.joining("\n"));
+				if (result.endsWith("Done.")) {
+					return Tools.checkDriveMountedWindows();
+				}
+			} catch (IOException e) {
+			}
+		} else {
+			System.out.println(Text.MOUNT_DRIVE_ERROR_2);
+		}
+		return null;
+	}
+
+	/** Dismounts a virtual RAM drive under Windows. Returns true if the command was successful. */
+	private static boolean dismountDriveWindows(String diskPath) {
+		List<String> commandLine = new ArrayList<String>();
+		BufferedReader input;
+		commandLine.add("imdisk");
+		commandLine.add("-D");
+		commandLine.add("-m");
+		commandLine.add(diskPath.substring(0, 2));
+		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		try {
+			Process p = pb.start();
+			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String result = input.lines().collect(Collectors.joining("\n"));
+			if (result.endsWith("Done.")) {
+				return true;
+			}
+		} catch (IOException e) {
+		}
+		return false;
+	}
+	
+	/** If an appropriate virtual RAM drive is already mounted under Linux, it returns its location, or null in case of error. */
+	private static boolean checkDriveMountedLinux(String diskPath) {
+		List<String> commandLine = new ArrayList<String>();
+		BufferedReader input;
+		commandLine.add("df");
+		commandLine.add("-aTh");
+		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		try {
+			Process p = pb.start();
+			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String rootUsers = input.lines().collect(Collectors.joining("\n"));
+			if (rootUsers.contains(diskPath)) {
+				return true;
+			}
+		} catch (IOException e) {
+		}
+		return false;
+	}
+	
+	/** Mount a virtual RAM drive under Linux. Return true if the command was successful. */
+	private static boolean mountDriveLinux(String diskPath) {
+		List<String> commandLine = new ArrayList<String>();
+		BufferedReader input;
+		commandLine.add("mount");
+		commandLine.add("-t");
+		commandLine.add("tmpfs");
+		commandLine.add("-o");
+		int ramSize;
+		if (SimParam.arducopterLoggingEnabled) {
+			ramSize = (SimParam.UAV_RAM_DRIVE_SIZE + SimParam.LOGGING_RAM_DRIVE_SIZE)*Param.numUAVs;
+		} else {
+			ramSize = SimParam.UAV_RAM_DRIVE_SIZE*Param.numUAVs;
+		}
+		ramSize = Math.max(ramSize, SimParam.MIN_FAT32_SIZE);
+		commandLine.add("size=" + ramSize + "M");
+		commandLine.add("tmpfs");
+		commandLine.add(diskPath);
+		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		try {
+			Process p = pb.start();
+			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String result = input.lines().collect(Collectors.joining("\n"));
+			if (result.length() == 0) {
+				return true;
+			}
+		} catch (IOException e) {
+		}
+		return false;
+	}
+	
+	/** Dismounts a virtual RAM drive under Linux. Returns true if the command was successful. */
+	private static boolean dismountDriveLinux(String diskPath) {
+		List<String> commandLine = new ArrayList<String>();
+		BufferedReader input;
+		commandLine.add("umount");
+		commandLine.add(diskPath);
+		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		try {
+			Process p = pb.start();
+			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String result = input.lines().collect(Collectors.joining("\n"));
+			if (result.length() == 0) {
+				return true;
+			}
+		} catch (IOException e) {
+		}
+		return false;
+	}
+	
+	/** Checks if the application is stand alone (.jar) or it is running inside an IDE. */
+	public static boolean isRunningFromJar() {
+		String file = Tools.class.getResource("/" + Tools.class.getName().replace('.', '/') + ".class").toString();
+		if (file.startsWith("jar:")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	/** Starts the virtual UAVs. */
 	public static void startVirtualUAVs(Pair<GeoCoordinates, Double>[] location) {
 		
@@ -334,9 +648,19 @@ public class Tools {
 				rt.exec("taskkill /F /IM " + (new File(SimParam.sitlPath)).getName());
 			}
 
-			// 2. Create the temporary folders, one per UAV
-			File parentFolder = (new File(SimParam.sitlPath)).getParentFile();
+			// 2. Create the temporary folders, one per UAV, and copy files to RAM drive if possible
+			File parentFolder = new File(SimParam.tempFolderBasePath);
 			try {
+				File file1, file2;
+				// Trying to speed up locating files on the RAM drive (under Windows)
+				if (SimParam.usingRAMDrive && Param.runningOperatingSystem == Param.OS_WINDOWS) {
+					file1 = new File(SimParam.sitlPath);
+					file2 = new File(parentFolder, file1.getName());
+					Files.copy(file1.toPath(), file2.toPath());
+					file1 = new File(SimParam.paramPath);
+					file2 = new File(parentFolder, file1.getName());
+					Files.copy(file1.toPath(), file2.toPath());
+				}
 				for (int i=0; i<Param.numUAVs; i++) {
 					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
 					// Delete recursively in case it already exists
@@ -345,6 +669,16 @@ public class Tools {
 					}
 					if (!tempFolder.mkdir()) {
 						throw new IOException();
+					}
+					
+					// Trying to speed up locating files on the RAM drive (under Linux)
+					if (SimParam.usingRAMDrive && Param.runningOperatingSystem == Param.OS_LINUX) {
+						file1 = new File(SimParam.sitlPath);
+						file2 = new File(tempFolder, file1.getName());
+						Files.copy(file1.toPath(), file2.toPath());
+						file1 = new File(SimParam.paramPath);
+						file2 = new File(tempFolder, file1.getName());
+						Files.copy(file1.toPath(), file2.toPath());
 					}
 				}
 			} catch (IOException e) {
@@ -355,10 +689,13 @@ public class Tools {
 			// 3. Execute each SITL instance
 			List<String> commandLine = new ArrayList<String>();
 			BufferedReader input;
-			String s;
+			String s, file1, file2;
 			boolean success = false;
 			String tempFolder;
+			int instance;
 			for (int i = 0; i < Param.numUAVs; i++) {
+				tempFolder = (new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i)).getAbsolutePath();
+				instance = (UAVParam.mavPort[i] - UAVParam.MAV_INITIAL_PORT) / 10;
 				
 				// Under Windows, launch Cygwin console with arducopter command:
 				if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
@@ -367,19 +704,32 @@ public class Tools {
 					commandLine.add("--login");
 					commandLine.add("-i");
 					commandLine.add("-c");
-					tempFolder = (new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i)).getAbsolutePath();
-					commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
-							+ ";/cygdrive/" + SimParam.sitlPath.replace("\\", "/").replace(":", "") + " -S -I" + i
-							+ " --home " + location[i].getValue0().latitude + "," + location[i].getValue0().longitude
-							+ ",-0.1," + location[i].getValue1() + " --model + --speedup 1 --defaults "
-							+ "/cygdrive/" + SimParam.paramPath.replace("\\", "/").replace(":", ""));
+					if (SimParam.usingRAMDrive) {
+						file1 = (new File(parentFolder, (new File(SimParam.sitlPath)).getName())).getAbsolutePath();
+						file2 = (new File(parentFolder, (new File(SimParam.paramPath)).getName())).getAbsolutePath();
+						commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
+								+ ";/cygdrive/" + file1.replace("\\", "/").replace(":", "") + " -S -I" + instance
+								+ " --home " + location[i].getValue0().latitude + "," + location[i].getValue0().longitude
+								+ ",-0.1," + location[i].getValue1() + " --model + --speedup 1 --defaults "
+								+ "/cygdrive/" + file2.replace("\\", "/").replace(":", ""));
+					} else {
+						commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
+								+ ";/cygdrive/" + SimParam.sitlPath.replace("\\", "/").replace(":", "") + " -S -I" + instance
+								+ " --home " + location[i].getValue0().latitude + "," + location[i].getValue0().longitude
+								+ ",-0.1," + location[i].getValue1() + " --model + --speedup 1 --defaults "
+								+ "/cygdrive/" + SimParam.paramPath.replace("\\", "/").replace(":", ""));
+					}
 				}
 				// Under Linux, launch arducopter command:
 				if (Param.runningOperatingSystem == Param.OS_LINUX) {
 					commandLine.clear();
-					commandLine.add(SimParam.sitlPath);
+					if (SimParam.usingRAMDrive) {
+						commandLine.add((new File(tempFolder, (new File(SimParam.sitlPath)).getName())).getAbsolutePath());
+					} else {
+						commandLine.add(SimParam.sitlPath);
+					}
 					commandLine.add("-S");
-					commandLine.add("-I" + i);
+					commandLine.add("-I" + instance);
 					commandLine.add("--home");
 					commandLine.add(location[i].getValue0().latitude + "," + location[i].getValue0().longitude + ",-0.1," + location[i].getValue1());
 					commandLine.add("--model");
@@ -387,12 +737,16 @@ public class Tools {
 					commandLine.add("--speedup");
 					commandLine.add("1");
 					commandLine.add("--defaults");
-					commandLine.add(SimParam.paramPath);
+					if (SimParam.usingRAMDrive) {
+						commandLine.add((new File(tempFolder, (new File(SimParam.paramPath)).getName())).getAbsolutePath());
+					} else {
+						commandLine.add(SimParam.paramPath);
+					}
 				}
 				
 				ProcessBuilder pb = new ProcessBuilder(commandLine);
 				if (Param.runningOperatingSystem == Param.OS_LINUX) {
-					pb.directory(new File((new File(SimParam.sitlPath)).getParentFile(),SimParam.TEMP_FOLDER_PREFIX + i));
+					pb.directory(new File(SimParam.tempFolderBasePath, SimParam.TEMP_FOLDER_PREFIX + i));
 				}
 				SimParam.processes[i] = pb.start();
 
@@ -411,7 +765,7 @@ public class Tools {
 								SimTools.println(SimParam.prefix[i] + Text.SITL_UP);
 								success = true;
 							}
-						}else{
+						} else {
 							GUIHelper.waiting(SimParam.CONSOLE_READ_RETRY_WAITING_TIME);
 							if (System.nanoTime() - startTime > SimParam.SITL_STARTING_TIMEOUT) {
 								break;
@@ -419,11 +773,12 @@ public class Tools {
 						}
 					}
 				} catch (IOException e) {
+					e.printStackTrace();
 				}
-			}
-			
-			if (!success) {
-				throw new IOException();
+				if (!success) {
+					System.out.println("Falla la instancia: " + i);
+					throw new IOException();
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -498,7 +853,100 @@ public class Tools {
 			}
 		}
 	}
+	
+	/** Detects whether the program is executed with root/administrator privileges. */
+	public static void checkAdminPrivileges() {
+		if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
+			try {
+				String programFiles = System.getenv("ProgramFiles");
+				if (programFiles == null) {
+					programFiles = "C:\\Program Files";
+				}
+				File temp = new File(programFiles, SimParam.FAKE_FILE_NAME);
+				if (temp.createNewFile()) {
+					temp.delete();
+					SimParam.userIsAdmin = true;
+					return;
+				}
+			} catch (IOException e) {
+				// If fails writing the file, for sure the execution doesn't have administrator privileges
+			}
+		}
+		if (Param.runningOperatingSystem == Param.OS_LINUX) {
+			String userName = System.getProperty("user.name");
+			if (userName.equals("root")) {
+				SimParam.userIsAdmin = true;
+				return;
+			}
+			// The user can be root but without root name
+			List<String> commandLine = new ArrayList<String>();
+			BufferedReader input;
+			commandLine.add("getent");
+			commandLine.add("group");
+			commandLine.add("root");
+			ProcessBuilder pb = new ProcessBuilder(commandLine);
+			try {
+				Process p = pb.start();
+				input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				String rootUsers = input.lines().collect(Collectors.joining("\n"));
+				if (rootUsers.contains(userName)) {
+					SimParam.userIsAdmin = true;
+					return;
+				}
+			} catch (IOException e) {
+				// If fails starting the process, for sure the execution doesn't have root privileges
+			}
+		}
+		SimParam.userIsAdmin = false;
+	}
 
+	/** Checks if ImDisk RAM Disk Driver is installed. Use only under Windows OS. */
+	public static void checkImdiskInstalled() {
+		File imdiskFile = new File(System.getenv("windir") + SimParam.IMDISK_PATH);
+		// Check if ImDisk executable is present
+		if (imdiskFile.exists() && imdiskFile.canExecute()) {
+			// Asynchronously check if ImDisk is on Windows 64 and 32bits registry, under LM or CU
+			String result = null;
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
+						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
+						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
+						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
+						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
+		}
+		SimParam.imdiskIsInstalled = false;
+	}
+	
 	/** Closes the SITL simulator instances, and the application. Also the Cygwin consoles if using Windows. */
 	public static void shutdown(JFrame mainWindowFrame) {
 		// 1. Ask for confirmation if the experiment has not started or finished
@@ -567,16 +1015,38 @@ public class Tools {
 			}
 		}
 		
-		// 3. Removes temporary files and folders
-		File parentFolder = (new File(SimParam.sitlPath)).getParentFile();
-		for (int i=0; i<Param.numUAVs; i++) {
-			File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
-			if (tempFolder.exists()) {
-				try {
-					deleteFolder(tempFolder);
-				} catch (IOException e) {
+		// 3. Removes temporary files and folders or dismount virtual RAM drive
+		if (SimParam.usingRAMDrive) {
+			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
+				// Unmount temporal filesystem
+				if (Tools.checkDriveMountedWindows() != null && !Tools.dismountDriveWindows(SimParam.tempFolderBasePath)) {
+					System.out.println(Text.DISMOUNT_DRIVE_ERROR);
 				}
+			}
+			
+			if (Param.runningOperatingSystem == Param.OS_LINUX) {
+				// Unmount temporal filesystem and remove folder
+				if (Tools.checkDriveMountedLinux(SimParam.tempFolderBasePath) && !Tools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
+					System.out.println(Text.DISMOUNT_DRIVE_ERROR);
+				}
+				File ramDiskFile = new File(SimParam.tempFolderBasePath);
+				if (ramDiskFile.exists()) {
+					ramDiskFile.delete();
+				}
+			}
+		} else {
+			if (SimParam.tempFolderBasePath != null) {
+				File parentFolder = new File(SimParam.tempFolderBasePath);
+				for (int i=0; i<Param.numUAVs; i++) {
+					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
+					if (tempFolder.exists()) {
+						try {
+							deleteFolder(tempFolder);
+						} catch (IOException e) {
+						}
 
+					}
+				}
 			}
 		}
 	}
@@ -755,15 +1225,16 @@ public class Tools {
 			sb.append("\n" + Text.GENERAL_PARAMETERS + "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "): " + UAVParam.initialSpeeds[0]);
 		} else {
 			sb.append("\n" + Text.SIMULATION_PARAMETERS + "\n" + Text.UAV_NUMBER + " " + Param.numUAVs
-					+ "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "): " + UAVParam.initialSpeeds[0]);
-			for (int i=1; i<Param.numUAVs; i++) {
-				if (i%10 == 0) {
+					+ "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "):\n");
+			for (int i=0; i<Param.numUAVs; i++) {
+				sb.append(UAVParam.initialSpeeds[i]);
+				if (i%10 == 9) {
 					sb.append("\n");
+				} else if (i != Param.numUAVs - 1) {
+					sb.append(", ");
 				}
-				sb.append(", " + UAVParam.initialSpeeds[i]);
-				
 			}
-			sb.append("\n" + Text.VISUALIZATION_PARAMETERS + "\n\t" + Text.SCREEN_REFRESH_RATE + " " + BoardParam.screenDelay
+			sb.append("\n" + Text.PERFORMANCE_PARAMETERS + "\n\t" + Text.SCREEN_REFRESH_RATE + " " + BoardParam.screenDelay
 					+ " " + Text.MILLISECONDS + "\n\t" + Text.REDRAW_DISTANCE + " " + BoardParam.minScreenMovement
 					+ " " + Text.PIXELS);
 		}
