@@ -190,10 +190,6 @@ public class MBCAPHelper {
 			} else if (Param.selectedProtocol == Protocol.MBCAP_V4) {
 				MBCAPHelper.getPredictedLocations2(numUAV, speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
 			}
-			// In case a problem keeps the list empty
-			if (predictedPath.size() == 0) {
-				predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
-			}
 		}
 		return predictedPath;
 	}

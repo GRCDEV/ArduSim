@@ -326,7 +326,7 @@ public class CollisionDetectorThread extends Thread {
 
 						// There is no need to apply commands to the UAV
 						MissionHelper.log(SimParam.prefix[numUAV]
-								+ MBCAPText.MISSION_RESUMED + " " + (avoidingBeacon.uavId+1) + "."); // uavId==numUAV in the simulator
+								+ MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 						if (!Param.IS_REAL_UAV) {
 							MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
 							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
