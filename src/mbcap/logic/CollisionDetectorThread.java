@@ -63,7 +63,7 @@ public class CollisionDetectorThread extends Thread {
 				MBCAPState state = MBCAPParam.state[numUAV];
 				if (state != MBCAPState.NORMAL
 						&& state != MBCAPState.EMERGENCY_LAND
-						&& System.nanoTime() - stateTime > MBCAPParam.deadlockTimeout) {
+						&& System.nanoTime() - stateTime > MBCAPParam.uavDeadlockTimeout[numUAV]) {
 					MissionHelper.log(SimParam.prefix[numUAV] + MBCAPText.PROT_TIMED);
 					// Case a. The UAV can resume the mission
 					if (avoidingBeacon == null

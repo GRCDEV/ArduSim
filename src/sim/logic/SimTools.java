@@ -183,6 +183,19 @@ public class SimTools {
 			GUIHelper.warn(Text.VALIDATION_WARNING, Text.MIN_SCREEN_MOVEMENT_ERROR_2);
 			return false;
 		}
+		
+		if (panel.batteryButton.isSelected()) {
+			validating = (String)panel.batteryTextField.getText();
+			if (!GUIHelper.isValidInteger(validating)) {
+				GUIHelper.warn(Text.VALIDATION_WARNING, Text.BATTERY_ERROR_1);
+				return false;
+			}
+			intValue = Integer.parseInt(validating);
+			if (intValue > UAVParam.MAX_BATTERY_CAPACITY) {
+				GUIHelper.warn(Text.VALIDATION_WARNING, Text.BATTERY_ERROR_2);
+				return false;
+			}
+		}
 
 		//  Wireless model parameters
 		if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
@@ -199,7 +212,7 @@ public class SimTools {
 		}
 
 		//  Wind parameters
-		if (panel.useWindButton.isSelected()) {
+		if (panel.windButton.isSelected()) {
 			validating = (String)panel.windDirTextField.getText();
 			if (!GUIHelper.isValidDouble(validating)) {
 				GUIHelper.warn(Text.VALIDATION_WARNING, Text.WIND_DIRECTION_ERROR);
@@ -226,11 +239,19 @@ public class SimTools {
 		//  Performance parameters
 		BoardParam.screenDelay = Integer.parseInt((String)panel.screenDelayTextField.getText());
 		BoardParam.minScreenMovement = Double.parseDouble((String)panel.minScreenMovementTextField.getText());
-		String loggingEnabled = (String)panel.loggingEnabledButton.getText();
-		if (loggingEnabled.equals(Text.YES_OPTION)) {
+		if (panel.loggingEnabledButton.isSelected()) {
 			SimParam.arducopterLoggingEnabled = true;
 		} else {
 			SimParam.arducopterLoggingEnabled = false;
+		}
+		if (panel.batteryButton.isSelected()) {
+			UAVParam.batteryCapacity = Integer.parseInt(panel.batteryTextField.getText());
+		} else {
+			UAVParam.batteryCapacity = UAVParam.MAX_BATTERY_CAPACITY;
+		}
+		UAVParam.batteryLowLevel = (int)Math.rint(UAVParam.batteryCapacity * UAVParam.BATTERY_DEPLETED_THRESHOLD);
+		if (UAVParam.batteryLowLevel % 50 != 0) {
+			UAVParam.batteryLowLevel = (UAVParam.batteryLowLevel / 50 + 1) * 50;	// Multiple of 50 roof value
 		}
 
 		//  CAP protocol parameters
@@ -243,7 +264,7 @@ public class SimTools {
 		}
 
 		//  Wind parameters
-		if (panel.useWindButton.isSelected()) {
+		if (panel.windButton.isSelected()) {
 			Param.windDirection = Double.parseDouble((String)panel.windDirTextField.getText());
 			Param.windSpeed = Double.parseDouble((String)panel.windSpeedTextField.getText());
 		} else {
@@ -260,11 +281,17 @@ public class SimTools {
 				panel.screenDelayTextField.setText("" + BoardParam.screenDelay);
 				panel.minScreenMovementTextField.setText("" + BoardParam.minScreenMovement);
 				if (SimParam.arducopterLoggingEnabled) {
-					panel.loggingEnabledButton.setText(Text.YES_OPTION);
+					panel.loggingEnabledButton.setSelected(true);
+					panel.loggingEnabledButton.setText(Text.OPTION_ENABLED);
 				} else {
-					panel.loggingEnabledButton.setText(Text.NO_OPTION);
+					panel.loggingEnabledButton.setSelected(false);
+					panel.loggingEnabledButton.setText(Text.OPTION_DISABLED);
 				}
 				panel.renderQualityComboBox.setSelectedIndex(RenderQuality.Q3.getId());
+				panel.batteryButton.setSelected(false);
+				panel.batteryButton.setText(Text.NO_OPTION);
+				panel.batteryTextField.setText("" + UAVParam.STANDARD_BATTERY_CAPACITY);
+				panel.batteryTextField.setEnabled(false);
 			}
 		});
 		SimParam.renderQuality = RenderQuality.Q3;
@@ -301,7 +328,7 @@ public class SimTools {
 				panel.windDirTextField.setText("" + Param.DEFAULT_WIND_DIRECTION);
 				panel.windSpeedTextField.setText("" + Param.DEFAULT_WIND_SPEED);
 				panel.lblDegrees.setText(Text.DEGREE_SYMBOL);
-				panel.dontUseWindButton.setSelected(true);
+				panel.windButton.setSelected(false);
 			}
 		});
 	}

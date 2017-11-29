@@ -30,7 +30,7 @@ public class MBCAPText {
 	public static final String HOVERING_TIMEOUT = "Hovering timeout:";
 	public static final String OVERTAKE_TIMEOUT = "Overtake delay timeout:";
 	public static final String RESUME_MODE_DELAY = "Default flight mode resume delay:";
-	public static final String DEADLOCK_TIMEOUT = "Deadlock timeout:";
+	public static final String DEADLOCK_TIMEOUT = "Deadlock base timeout:";
 	// Error messages:
 	public static final String PORT_ERROR = "The simulated broadcast link port must be an integer between 1024 and 65535.";
 	public static final String BEACON_PERIOD_ERROR = "The time between beacons must be a valid positive integer.";

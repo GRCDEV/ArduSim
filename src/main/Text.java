@@ -43,7 +43,8 @@ public class Text {
 	public static final String PERFORMANCE_PARAMETERS = "Performance parameters:";
 	public static final String SCREEN_REFRESH_RATE = "Screen refresh rate:";
 	public static final String REDRAW_DISTANCE = "Minimum screen redraw distance:";
-	public static final String LOGGING_ENABLED = "ArduCopter logging enabled:";
+	public static final String LOGGING = "ArduCopter logging:";
+	public static final String BATTERY = "Battery capacity limited:";
 	public static final String RENDER = "Rendering quality:";
 	public static final String RENDER_QUALITY1 = "Minimum quality";
 	public static final String RENDER_QUALITY2 = "Text smoothed";
@@ -52,7 +53,7 @@ public class Text {
 	public static final String UAV_PROTOCOL_USED = "UAV synchronization protocol:";
 	public static final String WIFI_MODEL = "Wireless communications model:";
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
-	public static final String ENABLE_WIND = "Enable wind:";
+	public static final String WIND = "Wind:";
 	public static final String WIND_DIRECTION = "Direction:";
 	public static final String WIND_SPEED = "Speed:";
 	// Error messages:
@@ -77,6 +78,8 @@ public class Text {
 	public static final String MIN_SCREEN_MOVEMENT_ERROR_1 = "The minimal screen movement of a UAV must be a valid positive number.";
 	public static final String MIN_SCREEN_MOVEMENT_ERROR_2 = "The minimal screen movement of a UAV must be less than "
 			+ BoardParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD + " pixels.";
+	public static final String BATTERY_ERROR_1 = "The battery capacity must be a valid positive integer.";
+	public static final String BATTERY_ERROR_2 = "The battery capacity can be a maximum of " + UAVParam.MAX_BATTERY_CAPACITY + " " + Text.BATTERY_CAPACITY;
 	public static final String WIRELESS_MODEL_ERROR_1 = "The wireless range must be a valid positive number.";
 	public static final String WIRELESS_MODEL_ERROR_2 = "The wireless range must be less than "
 			+ Param.FIXED_MAX_RANGE + " meters.";
@@ -122,7 +125,7 @@ public class Text {
 	public static final String INSTALL_IMDISK = "It is suggested to install ImDisk in order to improve performance.";
 	public static final String USE_ADMIN = "It is suggested to run " + Text.APP_NAME + " as administrator in order to improve performance.";
 	public static final String INSTALL_IMDISK_USE_ADMIN = "It i suggested to install ImDisk, and run " + Text.APP_NAME + " as administrator in order to improve performance.";
-	public static final String USE_ROOT = "It is suggested to run " + Text.APP_NAME + "as administrator in order to improve performance.";
+	public static final String USE_ROOT = "It is suggested to run " + Text.APP_NAME + " as root in order to improve performance.";
 	public static final String CAP_IN_USE = "Collision avoidance protocol in use:";
 	public static final String WIRELESS_MODEL_IN_USE = "Wireless model in use:";
 	public static final String SIMULATED_WIND_SPEED = "Wind speed:";
@@ -150,11 +153,12 @@ public class Text {
 	public static final String XML_PARSING_ERROR_3 = "Wrong file format.";
 	public static final String XML_PARSING_ERROR_4 = "Error parsing line/point:";
 	public static final String FILE_HEADER = "QGC WPL 110";
-	public static final String FILE_PARSING_ERROR_1 = "Waypoint file: Nothing useful found.";
-	public static final String FILE_PARSING_ERROR_2 = "Waypoint file: Format not valid.";
-	public static final String FILE_PARSING_ERROR_3 = "Waypoint file: Wrong length in line:";
-	public static final String FILE_PARSING_ERROR_4 = "Waypoint file: Wrong format in line:";
-	public static final String FILE_PARSING_ERROR_5 = "Waypoint file: Waypoint 0 is needed but ignored, and\n waypoint 1 must be a take off.";
+	public static final String FILE_PARSING_ERROR_1 = "Waypoint file error: Nothing useful found.";
+	public static final String FILE_PARSING_ERROR_2 = "Waypoint file error: Format not valid.";
+	public static final String FILE_PARSING_ERROR_3 = "Waypoint file error: Wrong length in line:";
+	public static final String FILE_PARSING_ERROR_4 = "Waypoint file error: Wrong format in line:";
+	public static final String FILE_PARSING_ERROR_5 = "Waypoint file error: Waypoint 0 is needed but ignored, and\n waypoint 1 must be a take off.";
+	public static final String FILE_PARSING_ERROR_6 = "Waypoint file error: Waypoints are not in the propper sequence order.";
 	// Parsing speeds file
 	public static final String SPEEDS_NOT_FOUND = "No valid speeds file was found on current folder.";
 	public static final String SPEEDS_ERROR_3 = "Only one csv file must be stored on the current folder.";
@@ -178,10 +182,13 @@ public class Text {
 	public static final String LOG_GLOBAL = "Global";
 	public static final String LOG_TOTAL_TIME = "Total time";
 	public static final String LOG_SPEED = "Initial speed";
+	public static final String LOG_BATTERY = "Battery capacity";
 	
 	// General options and units
 	public static final String YES_OPTION = "yes";
 	public static final String NO_OPTION = "no";
+	public static final String OPTION_ENABLED = "enabled";
+	public static final String OPTION_DISABLED = "disabled";
 	public static final String RESULTS_SAVE_DATA = "Save";
 	public static final String RESULTS_IGNORE_DATA = "Close";
 	public static final String MILLISECONDS = "ms";
@@ -189,10 +196,13 @@ public class Text {
 	public static final String METERS = "m";
 	public static final String SECONDS = "s";
 	public static final String METERS_PER_SECOND = "m/s";
+	public static final String BATTERY_CAPACITY = "mAh";
 	public static final String DEGREE_SYMBOL= "\u00B0";
 	
 	// General errors
-	public static final String PORT_ERROR = "It was not possible to get valid ports to connect to SITL instances.";
+	public static final String PORT_ERROR = "Communications error";
+	public static final String PORT_ERROR_1 = "Some ports are in use, so only can be simulated a maximum of ";
+	public static final String PORT_ERROR_2 = "It was not possible to get valid ports to connect to SITL instances.";
 	public static final String MAC_ERROR = "Not valid MAC address could be found on any network interface.";
 	public static final String FATAL_ERROR = "Fatal error";
 	public static final String ARROW_IMAGE_LOAD_ERROR = "The wind arrow image could not be loaded.";
@@ -212,6 +222,7 @@ public class Text {
 	public static final String THREAD_START_ERROR = "Failed to bind socket to IP.";
 	public static final String INITIAL_CONFIGURATION_ERROR_1 = "Failed forcing GPS data messages on the UAVs";
 	public static final String INITIAL_CONFIGURATION_ERROR_2 = "Failed sending the initial configuration to the UAVs";
+	public static final String BATTERY_FAILING = "Battery depleting on ";
 	public static final String TAKE_OFF_ERROR_1 = "Failed executing the take off of the UAV";
 	public static final String WIRELESS_ERROR = "Error. The function Tools.isInRange() must be modified.";
 	public static final String DOWNLOAD_ERROR = "Image not available";

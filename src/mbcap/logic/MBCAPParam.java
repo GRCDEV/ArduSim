@@ -79,7 +79,9 @@ public class MBCAPParam {
 	public static long standStillTimeout = 5 * 1000000000l; // (ns) Timeout while the UAV stands still
 	public static long passingTimeout = 3 * 1000000000l; // (ns) Timeout when the UAV starts overtaking the other UAV before checking if it was successful
 	public static long solvedTimeout = 4 * 1000000000l; // (ns) Timeout when going back to normal state before checking if another UAV considers that there is collision risk with you
-	public static long deadlockTimeout = 1 * 60 * 1000000000l; // (ns) Timeout to consider a deadlock (maximum time applying a protocol state
+	public static long globalDeadlockTimeout = 1 * 50 * 1000000000l; // (ns) Base timeout to consider a deadlock (maximum time available applying a protocol state)
+	public static long[] uavDeadlockTimeout;	// (ns) Previous timeout, but adapted to each UAV
+	public static final long DEADLOCK_TIMEOUT_BASE = 20 *  1000000000l; // (ns) Added during the calculus
 
 	public static List<Beacon>[] beaconsStored; // To log the sent beacons
 	

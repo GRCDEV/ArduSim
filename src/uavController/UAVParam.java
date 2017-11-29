@@ -11,6 +11,7 @@ import org.mavlink.messages.MAV_PARAM_TYPE;
 
 import api.pojo.LastPositions;
 import api.pojo.UAVCurrentData;
+import api.pojo.UAVCurrentStatus;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Text;
@@ -37,6 +38,7 @@ public class UAVParam {
 	
 	// Received information
 	public static UAVCurrentData[] uavCurrentData;
+	public static UAVCurrentStatus[] uavCurrentStatus;
 	
 	// Last n UAV known positions of the UAV
 	public static final int LOCATIONS_SIZE = 3;		// n positions (never less than 2)
@@ -48,7 +50,14 @@ public class UAVParam {
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
 	public static final double WIND_THRESHOLD = 0.5;	// Minimum wind speed accepted by the simulator, when used
 
-	public static final int BATTERY_CHARGE = 500000000;	// (mA) Initial battery level
+	public static final int MAX_BATTERY_CAPACITY = 500000000;	// (mAh) Maximum initial battery capacity
+	public static final int STANDARD_BATTERY_CAPACITY = 3300;	// (mAh) Standard battery capacity
+	public static int batteryCapacity;					// (mAh) Used battery capacity
+	public static final double BATTERY_DEPLETED_THRESHOLD = 0.2;	// Battery level to rise the alarm
+	public static int batteryLowLevel;
+	public static final int BATTERY_DEPLETED_ACTION = 1;	// 0 Disabled
+															// 1 Land (RTL if flying in auto mode)
+															// 2 RTL
 	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
 	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
 
@@ -306,14 +315,43 @@ public class UAVParam {
 	// Parameters of the UAV or the simulator
 	public enum ControllerParam {
 		LOGGING("LOG_BITMASK", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT32),				// Mask of logs enabled
+		// Information requested to the flight controller
 		POSITION_FREQUENCY("SR0_POSITION", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Location message frequency
+		STATISTICS("SR0_EXT_STAT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),				// Statistics including CPU load, and battery remaining
+		// Battery configuration
 		BATTERY_CAPACITY("BATT_CAPACITY", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT32),		// Virtual battery capacity
+		BATTERY_MONITOR("BATT_MONITOR", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),		// Enable battery voltage and current monitoring
+																					// 0 Disabled, 3 voltage, 4 voltage and current, (5,6,7 others)
+		BATTERY_VOLTAGE_PIN("BATT_VOLT_PIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Pin used to measure voltage (don't touch)
+		BATTERY_VOLTAGE_MULTIPLIER("BATT_VOLT_MULT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Related to voltage measurement (don't touch)
+		BATTERY_OFFSET("BATT_AMP_OFFSET", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Voltage offset at 0 current on sensor (don't touch)
+		BATTERY_CURRENT_PIN("BATT_CURR_PIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Pin used to measure current (don't touch)
+		BATTERY_DENSITY("BATT_AMP_PERVOLT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Amperes included in 1 volt (don't touch)
+		// Battery failsafe options
+		BATTERY_FAILSAFE_ACTION("FS_BATT_ENABLE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// Action when battery low
+																							// 0 Disabled, 1 Land, 2 RTL
+		BATTERY_VOLTAGE_DEPLETION_THRESHOLD("FS_BATT_VOLTAGE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),// (V) Lower limit to do a RTL (0 disabled)
+		BATTERY_CURRENT_DEPLETION_THRESHOLD("FS_BATT_MAH", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// (mAh) Remaining to trigger failsafe (50 mAh increment, 0 disabled)
+		// Wind options
 		WIND_DIRECTION("SIM_WIND_DIR", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),		// Wind direction
 		WIND_SPEED("SIM_WIND_SPD", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),			// Wind speed
+		// Other failsafe types options
+		GCS_LOST_FAILSAFE("FS_GCS_ENABLE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// Failsafe when connection lost with RC_OVERRIDE in use
+																					// 0 Disabled, 1 RTL, 2 continue if auto mode during mission
+		REMOTE_LOST_FAILSAFE("FS_THR_ENABLE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),	// Failsafe when connection lost with remote
+																					// 0 Disabled, 1 RTL, 2 continue if auto mode during mission, 3 LAND
+		REMOTE_LOST_FAILSAFE_THROTTLE_VALUE("FS_THR_VALUE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Throttle value adopted to failsafe when connection lost with remote
+		CRASH_FAILSAFE("FS_CRASH_CHECK", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// Failsafe to disarm motors (value=1) if a crash is detected
+		GPS_FAILSAFE_ACTION("FS_EKF_ACTION", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),	// Action when GPS position is lost (EKF error)
+																					// 1 Land, 2 AltHold, 3 Land even in Stabilize mode
+		GPS_FAILSAFE_THRESHOLD("FS_EKF_THRESH", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Precision to assert EKF error
+																						// 0.6 Strict, 0.8 Default, 1.0 Relaxed
+		// Specific parameters requested to the flight controoler
 		MAX_THROTTLE("RC3_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),				// Maximum value for throttle
 		MIN_THROTTLE("RC3_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),				// Minimum value for throttle
 		RTL_ALTITUDE("RTL_ALT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),				// Altitude during return to launch
 		RTL_ALTITUDE_FINAL("RTL_ALT_FINAL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Loiter altitude when not desired to land after return to launch
+		// Others
 		CIRCLE_RADIUS("CIRCLE_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32);		// Circle mode radius
 
 		private final String id;

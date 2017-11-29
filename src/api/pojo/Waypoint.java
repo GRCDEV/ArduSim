@@ -84,6 +84,11 @@ public class Waypoint implements Cloneable {
 	public double getAltitude() {
 		return this.param7;
 	}
+	
+	/** Sets this waypoint altitude. */
+	public void setAltitude(double altitude) {
+		this.param7 = altitude;
+	}
 
 	/** Returns whether this waypoint is the current one. */
 	public boolean isCurrent() {

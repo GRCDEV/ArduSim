@@ -49,8 +49,9 @@ public class Param {
 	public static final double LAST_WP_THRESHOLD = 1.0; // (m) Maximum distance considered
 	
 	// Statistics parameters
-	public static volatile long startTime; // (ms) experiment start in local time
-	public static long[] testEndTime; // (ms) experiment finish in local time
+	public static volatile long startTime;	// (ms) experiment start in local time
+	public static long[] testEndTime;		// (ms) one UAV experiment finish in local time
+	public static long latestEndTime;		// (ms) experiment finish in local time
 
 	// Selected protocol
 	public static volatile Protocol selectedProtocol;

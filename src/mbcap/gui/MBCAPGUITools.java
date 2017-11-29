@@ -192,7 +192,7 @@ public class MBCAPGUITools {
 		MBCAPParam.standStillTimeout = (long) (Double.parseDouble((String) panel.standStillTimeTextField.getText()) * 1000000000l);
 		MBCAPParam.passingTimeout = (long) (Double.parseDouble((String) panel.passingTimeTextField.getText()) * 1000000000l);
 		MBCAPParam.solvedTimeout = (long) (Double.parseDouble((String) panel.solvedTimeTextField.getText()) * 1000000000l);
-		MBCAPParam.deadlockTimeout = Integer.parseInt((String) panel.deadlockTimeoutTextField.getText())
+		MBCAPParam.globalDeadlockTimeout = Integer.parseInt((String) panel.deadlockTimeoutTextField.getText())
 				* 1000000000l;
 	}
 
@@ -225,7 +225,7 @@ public class MBCAPGUITools {
 				panel.standStillTimeTextField.setText("" + ((double) MBCAPParam.standStillTimeout) / 1000000000l);
 				panel.passingTimeTextField.setText("" + ((double) MBCAPParam.passingTimeout) / 1000000000l);
 				panel.solvedTimeTextField.setText("" + ((double) MBCAPParam.solvedTimeout) / 1000000000l);
-				panel.deadlockTimeoutTextField.setText("" + (int) (((double) MBCAPParam.deadlockTimeout) / 1000000000l));
+				panel.deadlockTimeoutTextField.setText("" + (int) (((double) MBCAPParam.globalDeadlockTimeout) / 1000000000l));
 			}
 		});
 	}
@@ -489,7 +489,7 @@ public class MBCAPGUITools {
 				+ " " + Text.SECONDS + "\n\t" + MBCAPText.RESUME_MODE_DELAY + " "
 				+ String.format( "%.2f", MBCAPParam.solvedTimeout*0.000000001 )
 				+ " " + Text.SECONDS + "\n\t" + MBCAPText.DEADLOCK_TIMEOUT + " "
-				+ String.format( "%.2f", MBCAPParam.deadlockTimeout*0.000000001 ) + " " + Text.SECONDS);
+				+ String.format( "%.2f", MBCAPParam.globalDeadlockTimeout*0.000000001 ) + " " + Text.SECONDS);
 		return sb.toString();
 	}
 

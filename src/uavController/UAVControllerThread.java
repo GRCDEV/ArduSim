@@ -39,6 +39,7 @@ import org.mavlink.messages.ardupilotmega.msg_param_value;
 import org.mavlink.messages.ardupilotmega.msg_rc_channels_override;
 import org.mavlink.messages.ardupilotmega.msg_set_mode;
 import org.mavlink.messages.ardupilotmega.msg_statustext;
+import org.mavlink.messages.ardupilotmega.msg_sys_status;
 
 import api.GUIHelper;
 import api.pojo.LogPoint;
@@ -226,6 +227,9 @@ public class UAVControllerThread extends Thread {
 			break;
 		case IMAVLinkMessageID.MAVLINK_MSG_ID_COMMAND_ACK:
 			processCommandAck();
+			break;
+		case IMAVLinkMessageID.MAVLINK_MSG_ID_SYS_STATUS:
+			processStatus();
 			break;
 		default:
 			break;
@@ -638,6 +642,13 @@ public class UAVControllerThread extends Thread {
 			SimTools.println(Text.NOT_REQUESTED_ACK_ERROR
 					+ " (command=" + message.command + ", result=" + message.result + ")");
 		}
+	}
+	
+	/** Process battery information received. */
+	private void processStatus() {
+		msg_sys_status message = (msg_sys_status) inMsg;
+		UAVParam.uavCurrentStatus[numUAV].update(message.voltage_battery, message.current_battery,
+				message.battery_remaining, message.load);
 	}
 
 	/** Sending heartbeat message. */

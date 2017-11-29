@@ -72,6 +72,18 @@ public class MBCAPHelper {
 		for (int i=0; i < Param.numUAVs; i++) {
 			MBCAPParam.progress[i] = new ArrayList<ProgressState>();
 		}
+		
+		MBCAPParam.uavDeadlockTimeout = new long[Param.numUAVs];
+		
+		double maxBeaconDistance;
+		for (int i=0; i < Param.numUAVs; i++) {
+			maxBeaconDistance = UAVParam.initialSpeeds[i] * MBCAPParam.beaconFlyingTime;
+			if (MBCAPParam.reactionDistance < maxBeaconDistance) {
+				maxBeaconDistance = MBCAPParam.reactionDistance;
+			}
+			long aux = MBCAPParam.DEADLOCK_TIMEOUT_BASE + Math.round((maxBeaconDistance * 2 / UAVParam.initialSpeeds[i]) * 1000000000l);
+			MBCAPParam.uavDeadlockTimeout[i] = Math.max(MBCAPParam.globalDeadlockTimeout, aux);
+		}
 	}
 
 	/** Executes the protocol threads. */

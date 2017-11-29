@@ -36,9 +36,20 @@ public class InitialConfigurationThread extends Thread {
 			if (!SimParam.arducopterLoggingEnabled && !API.setParam(numUAV, ControllerParam.LOGGING, 0)) {
 				return;
 			}
+			// Ask the flight controller for information about battery usage
+			if (!API.setParam(numUAV, ControllerParam.STATISTICS, 1)) {
+				return;
+			}
 			// Increase battery capacity and set simulated wind parameters
-			if (!API.setParam(numUAV, ControllerParam.BATTERY_CAPACITY, UAVParam.BATTERY_CHARGE)
-					|| !API.setParam(numUAV, ControllerParam.WIND_DIRECTION, Param.windDirection)
+			if (!API.setParam(numUAV, ControllerParam.BATTERY_CAPACITY, UAVParam.batteryCapacity)) {
+				return;
+			}
+			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY
+					&& (!API.setParam(numUAV, ControllerParam.BATTERY_CURRENT_DEPLETION_THRESHOLD, UAVParam.batteryLowLevel)
+							|| !API.setParam(numUAV, ControllerParam.BATTERY_FAILSAFE_ACTION, UAVParam.BATTERY_DEPLETED_ACTION))) {
+				return;
+			}
+			if (!API.setParam(numUAV, ControllerParam.WIND_DIRECTION, Param.windDirection)
 					|| !API.setParam(numUAV, ControllerParam.WIND_SPEED, Param.windSpeed)) {
 				return;
 			}

@@ -90,8 +90,11 @@ public class Main {
 			Tools.checkAdminPrivileges();
 			try {
 				UAVParam.mavPort = Tools.getSITLPorts();
+				if (UAVParam.mavPort.length < UAVParam.MAX_SITL_INSTANCES) {
+					GUIHelper.warn(Text.PORT_ERROR, Text.PORT_ERROR_1 + UAVParam.mavPort.length + " " + Text.UAV_ID + "s");
+				}
 			} catch (InterruptedException | ExecutionException e) {
-				GUIHelper.exit(Text.PORT_ERROR);
+				GUIHelper.exit(Text.PORT_ERROR_2);
 			}
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				Tools.checkImdiskInstalled();
@@ -330,6 +333,7 @@ public class Main {
 
 					// 15. Waiting while the experiment is is progress and detecting the experiment end
 					while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+						Tools.checkBatteryLevel();
 						if (Param.simulationIsMissionBased) {
 							// Land all the UAVs when reach the last waypoint
 							MissionHelper.detectMissionEnd();
@@ -347,7 +351,7 @@ public class Main {
 
 					// 16. Wait for the user to close the simulator, only if the program is not being closed
 					if (Param.simStatus == SimulatorState.TEST_FINISHED) {
-						SimTools.println(Text.TEST_FINISHED);
+						SimTools.println(GUIHelper.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 						if (!Param.IS_REAL_UAV) {
 							SimTools.println(Text.WAITING_FOR_USER);
 							SwingUtilities.invokeLater(new Runnable() {

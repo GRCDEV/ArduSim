@@ -45,6 +45,7 @@ import api.pojo.GeoCoordinates;
 import api.pojo.LastPositions;
 import api.pojo.LogPoint;
 import api.pojo.UAVCurrentData;
+import api.pojo.UAVCurrentStatus;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param.Protocol;
@@ -194,6 +195,7 @@ public class Tools {
 	@SuppressWarnings("unchecked")
 	public static void initializeDataStructures() {
 		UAVParam.uavCurrentData = new UAVCurrentData[Param.numUAVs];
+		UAVParam.uavCurrentStatus = new UAVCurrentStatus[Param.numUAVs];
 		UAVParam.lastLocations = new LastPositions[Param.numUAVs];
 		UAVParam.flightMode = new AtomicReferenceArray<Mode>(Param.numUAVs);
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
@@ -249,6 +251,7 @@ public class Tools {
 		
 		for (int i = 0; i < Param.numUAVs; i++) {
 			UAVParam.uavCurrentData[i] = new UAVCurrentData();
+			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
 			UAVParam.lastLocations[i] = new LastPositions(UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
 			
@@ -969,7 +972,7 @@ public class Tools {
 			if (!reallyClose) return;
 		}
 
-		// 2. Change the simulator status and close SITL
+		// 2. Change the status and close SITL
 		Param.simStatus = SimulatorState.SHUTTING_DOWN;
 		if (!Param.IS_REAL_UAV) {
 			SwingUtilities.invokeLater(new Runnable() {
@@ -1044,7 +1047,6 @@ public class Tools {
 							deleteFolder(tempFolder);
 						} catch (IOException e) {
 						}
-
 					}
 				}
 			}
@@ -1168,18 +1170,39 @@ public class Tools {
 		}
 	}
 	
+	/** Detects if a UAV is running out of battery. */
+	public static void checkBatteryLevel() {
+		int depleted = 0;
+		double threshold = 100 * UAVParam.batteryLowLevel / UAVParam.batteryCapacity;
+		for (int i=0; i<Param.numUAVs; i++) {
+			if (UAVParam.uavCurrentStatus[i].getRemainingBattery() < threshold) {
+				depleted++;
+			}
+		}
+		if (depleted > 0) {
+			SimTools.println(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
+		}
+	}
+	
 	/** Detects if all the UAVs have finished the experiment (they are all on the ground, with engines not armed). */
 	public static boolean isTestFinished() {
 		boolean allFinished = true;
+		long latest = 0;
 		for (int i = 0; i < Param.numUAVs; i++) {
 			Mode mode = UAVParam.flightMode.get(i);
 			if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
 				if (Param.testEndTime[i] == 0) {
 					Param.testEndTime[i] = System.currentTimeMillis();
+					if (Param.testEndTime[i] > latest) {
+						latest = Param.testEndTime[i];
+					}
 				}
 			} else {
 				allFinished = false;
 			}
+		}
+		if (allFinished) {
+			Param.latestEndTime = latest;
 		}
 		return allFinished;
 	}
@@ -1234,9 +1257,28 @@ public class Tools {
 					sb.append(", ");
 				}
 			}
+			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY) {
+				sb.append("\n").append(Text.LOG_BATTERY).append(" (").append(Text.BATTERY_CAPACITY).append("): ").append(UAVParam.batteryCapacity);
+			}
 			sb.append("\n" + Text.PERFORMANCE_PARAMETERS + "\n\t" + Text.SCREEN_REFRESH_RATE + " " + BoardParam.screenDelay
 					+ " " + Text.MILLISECONDS + "\n\t" + Text.REDRAW_DISTANCE + " " + BoardParam.minScreenMovement
 					+ " " + Text.PIXELS);
+			sb.append("\n\t").append(Text.LOGGING).append(" ");
+			if (SimParam.arducopterLoggingEnabled) {
+				sb.append(Text.OPTION_ENABLED);
+			} else {
+				sb.append(Text.OPTION_DISABLED);
+			}
+			sb.append("\n\t").append(Text.BATTERY).append(" ");
+			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY) {
+				sb.append(Text.YES_OPTION);
+			} else {
+				sb.append(Text.NO_OPTION);
+			}
+			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY) {
+				sb.append("\n\t\t").append(UAVParam.batteryCapacity).append(" ").append(Text.BATTERY_CAPACITY);
+			}
+			sb.append("\n\t").append(Text.RENDER).append(" ").append(SimParam.renderQuality.getName());
 		}
 		
 		if (Param.selectedProtocol != Protocol.NONE) {
@@ -1247,7 +1289,7 @@ public class Tools {
 			if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
 				sb.append(": " + Param.fixedRange + " " + Text.METERS);
 			}
-			sb.append("\n" + Text.ENABLE_WIND + " ");
+			sb.append("\n" + Text.WIND + " ");
 			if (Param.windSpeed == Param.DEFAULT_WIND_SPEED
 					&& Param.windDirection == Param.DEFAULT_WIND_DIRECTION) {
 				// There is no wind
@@ -1379,6 +1421,23 @@ public class Tools {
 			MissionHelper.logMissionData(folder, baseFileName);
 		} else {
 			SwarmHelper.logSwarmData(folder, baseFileName);
+		}
+		// 4. Store ArduCopter logs if needed
+		if (SimParam.arducopterLoggingEnabled) {
+			File currentFolder = GUIHelper.getCurrentFolder();
+			File logSource, logDestination;
+			File parentFolder = new File(SimParam.tempFolderBasePath);
+			for (int i=0; i<Param.numUAVs; i++) {
+				File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
+				if (tempFolder.exists()  ) {
+					logSource = new File(new File(tempFolder, SimParam.LOG_FOLDER), SimParam.LOG_SOURCE_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
+					logDestination = new File(currentFolder, baseFileName + "_" + i + "_" + SimParam.LOG_DESTINATION_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
+					try {
+						Files.copy(logSource.toPath(), logDestination.toPath());
+					} catch (IOException e1) {
+					}
+				}
+			}
 		}
 	}
 

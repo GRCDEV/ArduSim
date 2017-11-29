@@ -104,6 +104,10 @@ public class SimParam {
 	public static volatile String paramPath = null;	// Final copter parameters file path
 	public static Process[] processes;				// Processes used to launch SITL
 	public static String tempFolderBasePath;
+	public static final String LOG_FOLDER = "logs";
+	public static final String LOG_SOURCE_FILENAME = "00000001";
+	public static final String LOG_SOURCE_FILEEXTENSION = "BIN";
+	public static final String LOG_DESTINATION_FILENAME = "ArduCopter_log";
 	public static final String TEMP_FOLDER_PREFIX = "virtual_uav_temp_";
 
 	public static final int CONSOLE_READ_RETRY_WAITING_TIME = 100; // (ms)

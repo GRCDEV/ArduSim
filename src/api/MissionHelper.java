@@ -103,7 +103,7 @@ public class MissionHelper {
 						MissionHelper.log(Text.XML_PARSING_ERROR_2 + " " + (i+1));
 						return null;
 					}
-					missions[i] = new ArrayList<>(lines[i].length+2); // Adding fake home, and take off waypoints
+					missions[i] = new ArrayList<>(lines[i].length+2); // Adding fake home, and substitute first real waypoint with take off
 					// Add a fake waypoint for the home position (essential but ignored by the flight controller)
 					wp = new Waypoint(0, true, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 0, 1);
 					missions[i].add(wp);
@@ -126,15 +126,32 @@ public class MissionHelper {
 							// Waypoint 0 is home and current
 							// Waypoint 1 is take off
 							if (j==0) {
-								wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-										MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
-								missions[i].add(wp);
+								if (Param.IS_REAL_UAV) {
+									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
+									missions[i].add(wp);
+									wp = new Waypoint(2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											lat, lon, z, 1);
+									missions[i].add(wp);
+								} else {
+									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, lat, lon, z, 1);
+									missions[i].add(wp);
+								}
+							} else {
+								if (Param.IS_REAL_UAV) {
+									wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											lat, lon, z, 1);
+									missions[i].add(wp);
+								} else {
+									wp = new Waypoint(j+1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											lat, lon, z, 1);
+									missions[i].add(wp);
+								}
 							}
-							
-							wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-									MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
-									lat, lon, z, 1);
-							missions[i].add(wp);
 						} catch (NumberFormatException e) {
 							MissionHelper.log(Text.XML_PARSING_ERROR_4 + " " + (i+1) + "/" + (j+1));
 							return null;
@@ -154,6 +171,7 @@ public class MissionHelper {
 	 *  Returns null if the file is not valid or it is empty.
 	 *  <p>Do not modify this method.
 	 *  <p>This helper function is already applied for real and simulated UAVs. */
+	@SuppressWarnings("unused")
 	public static List<Waypoint> loadMissionFile(String path) {
 	
 		List<String> list = new ArrayList<>();
@@ -164,7 +182,8 @@ public class MissionHelper {
 			return null;
 		}
 		// Check if there are at least take off and a waypoint to define a mission (first line is header, and wp0 is home)
-		if (list==null || list.size()<4) {
+		// During simulation an additional waypoint is needed in order to stablish the starting location
+		if (list==null || (Param.IS_REAL_UAV && list.size()<4) || (!Param.IS_REAL_UAV && list.size()<5)) {
 			MissionHelper.log(Text.FILE_PARSING_ERROR_1);
 			return null;
 		}
@@ -204,15 +223,38 @@ public class MissionHelper {
 				param7 = Double.parseDouble(line[10].trim());
 				autoContinue = Integer.parseInt(line[11].trim());
 				
-				if (numSeq == 2
-						&& (frame != MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT
-							|| command != MAV_CMD.MAV_CMD_NAV_TAKEOFF
-							|| param7 <= 0)) {
-					MissionHelper.log(Text.FILE_PARSING_ERROR_5);
+				if (numSeq + 1 != i) {
+					MissionHelper.log(Text.FILE_PARSING_ERROR_6);
 					return null;
 				}
-				wp = new Waypoint(numSeq, i == 0, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
-				mission.add(wp);
+				
+				if (numSeq == 1) {
+					if ((frame != MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT
+							|| command != MAV_CMD.MAV_CMD_NAV_TAKEOFF
+							|| (Param.IS_REAL_UAV && param7 <= 0))) {
+						MissionHelper.log(Text.FILE_PARSING_ERROR_5);
+						return null;
+					}
+					wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+					mission.add(wp);
+				} else {
+					if (Param.IS_REAL_UAV) {
+						wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+						mission.add(wp);
+					} else {
+						if (numSeq == 2) {
+							// Set takeoff coordinates from the first wapoint that has coordinates
+							wp = mission.get(mission.size()-1);
+							wp.setLatitude(param5);
+							wp.setLongitude(param6);
+							wp.setAltitude(param7);
+						} else {
+							numSeq = numSeq - 1;
+							wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+							mission.add(wp);
+						}
+					}
+				}
 			} catch (NumberFormatException e1) {
 				MissionHelper.log(Text.FILE_PARSING_ERROR_4 + " " + i);
 				return null;
@@ -388,12 +430,19 @@ public class MissionHelper {
 							if (incY > 0)	heading = 0.0;
 							else			heading = 180.0;
 						} else if (incY == 0) {
-							if (incX > 0)	heading = 89.9;
+							if (incX > 0)	heading = 89.9;	// SITL fails changing the flight mode if heading is close to 90 degrees
 							else			heading = 270.0;
 						} else {
 							double gamma = Math.atan(incY/incX);
 							if (incX >0)	heading = 90 - gamma * 180 / Math.PI;
 							else 			heading = 270.0 - gamma * 180 / Math.PI;
+						}
+						// Same correction due to the SITL error
+						if (heading < 90 && heading > 89.9) {
+							heading = 89.9;
+						}
+						if (heading > 90 && heading < 90.1) {
+							heading = 90.1;
 						}
 					}
 				}
@@ -464,6 +513,9 @@ public class MissionHelper {
 				break;
 			case MAV_CMD.MAV_CMD_NAV_TAKEOFF:
 				// The geographic coordinates have been set by the flight controller
+				utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
+				WaypointSimplified twp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+				missionUTMSimplified.add(twp);
 				if (!foundFirst) {
 					utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
 					first = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());

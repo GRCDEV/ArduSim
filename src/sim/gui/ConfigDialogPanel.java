@@ -13,14 +13,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
@@ -48,7 +47,7 @@ public class ConfigDialogPanel extends JPanel {
 	public JComboBox<String> simulationTypeComboBox;
 	public JTextField screenDelayTextField;
 	public JTextField minScreenMovementTextField;
-	public JButton loggingEnabledButton;
+	public JToggleButton loggingEnabledButton;
 	public JComboBox<String> renderQualityComboBox;
 	public JTextField arducopterPathTextField;
 	public JTextField missionsTextField;
@@ -56,21 +55,21 @@ public class ConfigDialogPanel extends JPanel {
 	public JTextField speedsTextField;
 	public JTextField fixedRangeTextField;
 	public JComboBox<String> UAVsComboBox;
-	private final ButtonGroup buttonGroup = new ButtonGroup();
+	public JToggleButton batteryButton;
+	public JTextField batteryTextField;
 	public JComboBox<String> protocolComboBox;
 	public JComboBox<String> wirelessModelComboBox;
+	public JToggleButton windButton;
 	public JTextField windSpeedTextField;
 	public JTextField windDirTextField;
-	public JRadioButton useWindButton;
-	public JRadioButton dontUseWindButton;
 	public JLabel lblDegrees;
 
 	public ConfigDialogPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 5 };
-		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31 };
+		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31 };
 		gridBagLayout.columnWeights = new double[] { 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
 				Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 
@@ -568,7 +567,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblPixels.gridy = 8;
 		add(lblPixels, gbc_lblPixels);
 		
-		JLabel lblLoggingEnabled = new JLabel(Text.LOGGING_ENABLED);
+		JLabel lblLoggingEnabled = new JLabel(Text.LOGGING);
 		lblLoggingEnabled.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblLoggingEnabled = new GridBagConstraints();
 		gbc_lblLoggingEnabled.gridwidth = 4;
@@ -578,31 +577,92 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblLoggingEnabled.gridy = 9;
 		add(lblLoggingEnabled, gbc_lblLoggingEnabled);
 		
-		loggingEnabledButton = new JButton(Text.NO_OPTION);
-		loggingEnabledButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String loggingEnabled = (String)loggingEnabledButton.getText();
-				if (loggingEnabled.equals(Text.YES_OPTION)) {
+		loggingEnabledButton = new JToggleButton(Text.OPTION_DISABLED);
+		loggingEnabledButton.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							loggingEnabledButton.setText(Text.NO_OPTION);
+							loggingEnabledButton.setText(Text.OPTION_ENABLED);
 						}
 					});
 				} else {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							loggingEnabledButton.setText(Text.YES_OPTION);
+							loggingEnabledButton.setText(Text.OPTION_DISABLED);
 						}
 					});
 				}
 			}
+			
 		});
+		
 		GridBagConstraints gbc_loggingEnabledButton = new GridBagConstraints();
 		gbc_loggingEnabledButton.anchor = GridBagConstraints.WEST;
+		gbc_loggingEnabledButton.fill = GridBagConstraints.HORIZONTAL;
 		gbc_loggingEnabledButton.insets = new Insets(0, 0, 5, 5);
 		gbc_loggingEnabledButton.gridx = 5;
 		gbc_loggingEnabledButton.gridy = 9;
 		add(loggingEnabledButton, gbc_loggingEnabledButton);
+		
+		JLabel lblBattery = new JLabel(Text.BATTERY);
+		lblBattery.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblBattery = new GridBagConstraints();
+		gbc_lblBattery.gridwidth = 4;
+		gbc_lblBattery.anchor = GridBagConstraints.EAST;
+		gbc_lblBattery.insets = new Insets(0, 0, 5, 5);
+		gbc_lblBattery.gridx = 1;
+		gbc_lblBattery.gridy = 10;
+		add(lblBattery, gbc_lblBattery);
+		
+		batteryButton = new JToggleButton();
+		batteryButton.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							batteryButton.setText(Text.YES_OPTION);
+							batteryTextField.setEnabled(true);
+						}
+					});
+				} else {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							batteryButton.setText(Text.NO_OPTION);
+							batteryTextField.setEnabled(false);
+						}
+					});
+				}
+			}
+			
+		});
+		GridBagConstraints gbc_batteryButton = new GridBagConstraints();
+		gbc_batteryButton.anchor = GridBagConstraints.WEST;
+		gbc_batteryButton.insets = new Insets(0, 0, 5, 5);
+		gbc_batteryButton.gridx = 5;
+		gbc_batteryButton.gridy = 10;
+		add(batteryButton, gbc_batteryButton);
+		
+		batteryTextField = new JTextField();
+		batteryTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_batteryTextField = new GridBagConstraints();
+		gbc_batteryTextField.insets = new Insets(0, 0, 5, 5);
+		gbc_batteryTextField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_batteryTextField.gridx = 5;
+		gbc_batteryTextField.gridy = 11;
+		add(batteryTextField, gbc_batteryTextField);
+		batteryTextField.setColumns(10);
+		
+		JLabel lblmah = new JLabel(Text.BATTERY_CAPACITY);
+		lblmah.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblmah = new GridBagConstraints();
+		gbc_lblmah.anchor = GridBagConstraints.WEST;
+		gbc_lblmah.insets = new Insets(0, 0, 5, 5);
+		gbc_lblmah.gridx = 6;
+		gbc_lblmah.gridy = 11;
+		add(lblmah, gbc_lblmah);
 		
 		JLabel renderQualityLabel = new JLabel(Text.RENDER);
 		renderQualityLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -611,7 +671,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_renderQualityLabel.gridwidth = 3;
 		gbc_renderQualityLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_renderQualityLabel.gridx = 1;
-		gbc_renderQualityLabel.gridy = 10;
+		gbc_renderQualityLabel.gridy = 12;
 		add(renderQualityLabel, gbc_renderQualityLabel);
 		
 		renderQualityComboBox = new JComboBox<String>();
@@ -637,7 +697,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_renderQualityComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_renderQualityComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_renderQualityComboBox.gridx = 4;
-		gbc_renderQualityComboBox.gridy = 10;
+		gbc_renderQualityComboBox.gridy = 12;
 		add(renderQualityComboBox, gbc_renderQualityComboBox);
 
 		JLabel lblProtocolParameters = new JLabel(Text.UAV_PROTOCOL_USED);
@@ -646,7 +706,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblProtocolParameters.gridwidth = 4;
 		gbc_lblProtocolParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblProtocolParameters.gridx = 0;
-		gbc_lblProtocolParameters.gridy = 11;
+		gbc_lblProtocolParameters.gridy = 13;
 		add(lblProtocolParameters, gbc_lblProtocolParameters);
 
 		protocolComboBox = new JComboBox<String>();
@@ -657,7 +717,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_protocolComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_protocolComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_protocolComboBox.gridx = 4;
-		gbc_protocolComboBox.gridy = 11;
+		gbc_protocolComboBox.gridy = 13;
 		add(protocolComboBox, gbc_protocolComboBox);
 
 		JLabel lblWirelessModelParameters = new JLabel(Text.WIFI_MODEL);
@@ -666,7 +726,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblWirelessRangeParameters.gridwidth = 4;
 		gbc_lblWirelessRangeParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblWirelessRangeParameters.gridx = 0;
-		gbc_lblWirelessRangeParameters.gridy = 12;
+		gbc_lblWirelessRangeParameters.gridy = 14;
 		add(lblWirelessModelParameters, gbc_lblWirelessRangeParameters);
 
 		wirelessModelComboBox = new JComboBox<String>();
@@ -698,7 +758,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_wirelessModelComboBox.insets = new Insets(0, 0, 5, 0);
 		gbc_wirelessModelComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_wirelessModelComboBox.gridx = 4;
-		gbc_wirelessModelComboBox.gridy = 12;
+		gbc_wirelessModelComboBox.gridy = 14;
 		add(wirelessModelComboBox, gbc_wirelessModelComboBox);
 
 		JLabel lblFixedRangeDistance = new JLabel(Text.FIXED_RANGE_DISTANCE);
@@ -708,7 +768,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblFixedRangeDistance.gridwidth = 4;
 		gbc_lblFixedRangeDistance.insets = new Insets(0, 0, 5, 5);
 		gbc_lblFixedRangeDistance.gridx = 1;
-		gbc_lblFixedRangeDistance.gridy = 13;
+		gbc_lblFixedRangeDistance.gridy = 15;
 		add(lblFixedRangeDistance, gbc_lblFixedRangeDistance);
 
 		fixedRangeTextField = new JTextField();
@@ -718,7 +778,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_rangeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_rangeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_rangeTextField.gridx = 5;
-		gbc_rangeTextField.gridy = 13;
+		gbc_rangeTextField.gridy = 15;
 		add(fixedRangeTextField, gbc_rangeTextField);
 		fixedRangeTextField.setColumns(10);
 
@@ -728,45 +788,47 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM_5.anchor = GridBagConstraints.WEST;
 		gbc_lblM_5.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM_5.gridx = 6;
-		gbc_lblM_5.gridy = 13;
+		gbc_lblM_5.gridy = 15;
 		add(lblM_5, gbc_lblM_5);
 
-		JLabel lblNewLabel = new JLabel(Text.ENABLE_WIND);
+		JLabel lblNewLabel = new JLabel(Text.WIND);
 		GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
 		gbc_lblNewLabel.gridwidth = 4;
 		gbc_lblNewLabel.anchor = GridBagConstraints.WEST;
 		gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNewLabel.gridx = 0;
-		gbc_lblNewLabel.gridy = 14;
+		gbc_lblNewLabel.gridy = 16;
 		add(lblNewLabel, gbc_lblNewLabel);
-
-		useWindButton = new JRadioButton(Text.YES_OPTION);
-		buttonGroup.add(useWindButton);
-		GridBagConstraints gbc_useWindButton = new GridBagConstraints();
-		gbc_useWindButton.insets = new Insets(0, 0, 5, 5);
-		gbc_useWindButton.gridx = 3;
-		gbc_useWindButton.gridy = 15;
-		add(useWindButton, gbc_useWindButton);
-
-		dontUseWindButton = new JRadioButton(Text.NO_OPTION);
-		dontUseWindButton.setSelected(true);
-		buttonGroup.add(dontUseWindButton);
-		GridBagConstraints gbc_dontUseWindButton = new GridBagConstraints();
-		gbc_dontUseWindButton.insets = new Insets(0, 0, 5, 5);
-		gbc_dontUseWindButton.gridx = 4;
-		gbc_dontUseWindButton.gridy = 15;
-		add(dontUseWindButton, gbc_dontUseWindButton);
-
-		useWindButton.addItemListener(new ItemListener() {
+		
+		windButton = new JToggleButton(Text.OPTION_DISABLED);
+		windButton.addItemListener(new ItemListener() {
+			@Override
 			public void itemStateChanged(ItemEvent e) {
-				windModeSelected();
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							windButton.setText(Text.OPTION_ENABLED);
+							windDirTextField.setEnabled(true);
+							windSpeedTextField.setEnabled(true);
+						}
+					});
+				} else {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							windButton.setText(Text.OPTION_DISABLED);
+							windDirTextField.setEnabled(false);
+							windSpeedTextField.setEnabled(false);
+						}
+					});
+				}
 			}
+			
 		});
-		dontUseWindButton.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				windModeSelected();
-			}
-		});
+		GridBagConstraints gbc_windButton = new GridBagConstraints();
+		gbc_windButton.insets = new Insets(0, 0, 5, 5);
+		gbc_windButton.gridx = 3;
+		gbc_windButton.gridy = 16;
+		add(windButton, gbc_windButton);
 
 		JLabel lblDirection = new JLabel(Text.WIND_DIRECTION);
 		lblDirection.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -774,7 +836,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDirection.anchor = GridBagConstraints.EAST;
 		gbc_lblDirection.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDirection.gridx = 3;
-		gbc_lblDirection.gridy = 16;
+		gbc_lblDirection.gridy = 18;
 		add(lblDirection, gbc_lblDirection);
 
 		ConfigDialogWindPanel windDirPanel = new ConfigDialogWindPanel();
@@ -782,7 +844,7 @@ public class ConfigDialogPanel extends JPanel {
 		GridBagConstraints gbc_windDirPanel = new GridBagConstraints();
 		gbc_windDirPanel.insets = new Insets(0, 0, 5, 5);
 		gbc_windDirPanel.gridx = 4;
-		gbc_windDirPanel.gridy = 16;
+		gbc_windDirPanel.gridy = 18;
 		add(windDirPanel, gbc_windDirPanel);
 
 		windDirTextField = new JTextField();
@@ -835,7 +897,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_windDirTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_windDirTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_windDirTextField.gridx = 5;
-		gbc_windDirTextField.gridy = 16;
+		gbc_windDirTextField.gridy = 18;
 		add(windDirTextField, gbc_windDirTextField);
 		windDirTextField.setColumns(10);
 
@@ -845,7 +907,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDegrees.anchor = GridBagConstraints.WEST;
 		gbc_lblDegrees.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDegrees.gridx = 6;
-		gbc_lblDegrees.gridy = 16;
+		gbc_lblDegrees.gridy = 18;
 		add(lblDegrees, gbc_lblDegrees);
 
 		JLabel lblSpeedms = new JLabel(Text.WIND_SPEED);
@@ -854,7 +916,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblSpeedms.anchor = GridBagConstraints.EAST;
 		gbc_lblSpeedms.insets = new Insets(0, 0, 0, 5);
 		gbc_lblSpeedms.gridx = 3;
-		gbc_lblSpeedms.gridy = 17;
+		gbc_lblSpeedms.gridy = 19;
 		add(lblSpeedms, gbc_lblSpeedms);
 
 		windSpeedTextField = new JTextField();
@@ -865,7 +927,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_windSpeedTextField.insets = new Insets(0, 0, 0, 5);
 		gbc_windSpeedTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_windSpeedTextField.gridx = 5;
-		gbc_windSpeedTextField.gridy = 17;
+		gbc_windSpeedTextField.gridy = 19;
 		add(windSpeedTextField, gbc_windSpeedTextField);
 		windSpeedTextField.setColumns(10);
 
@@ -875,22 +937,8 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMs_1.anchor = GridBagConstraints.WEST;
 		gbc_lblMs_1.insets = new Insets(0, 0, 0, 5);
 		gbc_lblMs_1.gridx = 6;
-		gbc_lblMs_1.gridy = 17;
+		gbc_lblMs_1.gridy = 19;
 		add(lblMs_1, gbc_lblMs_1);
-	}
-
-	private void windModeSelected() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				if (useWindButton.isSelected()) {
-					windDirTextField.setEnabled(true);
-					windSpeedTextField.setEnabled(true);
-				} else {
-					windDirTextField.setEnabled(false);
-					windSpeedTextField.setEnabled(false);
-				}
-			}
-		});
 	}
 	
 	private void loadProtocols(boolean isMissionBased) {

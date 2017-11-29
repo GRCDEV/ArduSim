@@ -657,7 +657,7 @@ public class BoardHelper {
 //			System.out.println("Failing coordinates: UTM(" + inUTMX + "," + inUTMY + ") to screen(" + xPX + "," + yPX + ")");
 			
 			
-			SimTools.println(Text.UAV_OUT_OF_SCREEN_ERROR);
+			//SimTools.println(Text.UAV_OUT_OF_SCREEN_ERROR);
 		}
 		return new Point2D.Double(xPX, yPX);
 	}
