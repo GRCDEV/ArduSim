@@ -31,7 +31,6 @@ import sim.board.pojo.MercatorProjection;
 import sim.gui.MainWindow;
 import sim.logic.InitialConfigurationThread;
 import sim.logic.SimParam;
-import sim.logic.SimTools;
 import uavController.UAVParam;
 
 /** This class contains methods used to show information on the board of the main window. */
@@ -268,11 +267,11 @@ public class BoardHelper {
 		
 		// 1. UTM rectangle extended to make room on the screen limits
 		double widthUTM, heightUTM;
-		widthUTM = (BoardParam.xUTMmax - BoardParam.xUTMmin)*BoardParam.SCALE_MAGNIFIER;
-		heightUTM = (BoardParam.yUTMmax - BoardParam.yUTMmin)*BoardParam.SCALE_MAGNIFIER;
-		// If only one UAV is on the screen, put it in the middle on a fixed UTM size
-		if (Param.numUAVs==1 && widthUTM==0 && heightUTM==0) {
-			widthUTM = BoardParam.MAX_SINGLE_RANGE*2*BoardParam.SCALE_MAGNIFIER;
+		widthUTM = (BoardParam.xUTMmax - BoardParam.xUTMmin) * BoardParam.SCALE_MAGNIFIER;
+		heightUTM = (BoardParam.yUTMmax - BoardParam.yUTMmin) * BoardParam.SCALE_MAGNIFIER;
+		// If no missions are loaded and the UAVs are overlapping, put them in the middle on a fixed UTM size
+		if (widthUTM==0 && heightUTM==0) {
+			widthUTM = BoardParam.MAX_HALF_RANGE * 2 * BoardParam.SCALE_MAGNIFIER;
 			heightUTM = widthUTM;
 		}
 		// The UAVs could be horizontally or vertically aligned
@@ -519,7 +518,7 @@ public class BoardHelper {
 				if (BoardParam.map[i] != null) {
 					for (int j=0; j<BoardParam.map[i].length; j++) {
 						if (BoardParam.map[i][j] != null) {
-							if (BoardParam.map[i][j].img!=null && BoardParam.mapDownloadErrorText[i][j] != null) {
+							if (BoardParam.map[i][j].img==null && BoardParam.mapDownloadErrorText[i][j] != null) {
 								// Draw download error message
 								locationPX = BoardHelper.locatePoint(BoardParam.map[i][j].centerX, BoardParam.map[i][j].centerY);
 								g.drawString(BoardParam.mapDownloadErrorText[i][j],

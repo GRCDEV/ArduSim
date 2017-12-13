@@ -46,7 +46,7 @@ public class Text {
 	public static final String LOGGING = "ArduCopter logging:";
 	public static final String BATTERY = "Battery capacity limited:";
 	public static final String RENDER = "Rendering quality:";
-	public static final String RENDER_QUALITY1 = "Minimum quality";
+	public static final String RENDER_QUALITY1 = "Maximum performance";
 	public static final String RENDER_QUALITY2 = "Text smoothed";
 	public static final String RENDER_QUALITY3 = "Text and lines smoothed";
 	public static final String RENDER_QUALITY4 = "Maximum quality";
@@ -83,7 +83,7 @@ public class Text {
 	public static final String WIRELESS_MODEL_ERROR_1 = "The wireless range must be a valid positive number.";
 	public static final String WIRELESS_MODEL_ERROR_2 = "The wireless range must be less than "
 			+ Param.FIXED_MAX_RANGE + " meters.";
-	public static final String WIND_DIRECTION_ERROR = "The wind direction must be a valid number.";
+	public static final String WIND_DIRECTION_ERROR = "The wind direction must be a valid positive integer.";
 	public static final String WIND_SPEED_ERROR_1 = "The wind speed must be a valid positive number.";
 	public static final String WIND_SPEED_ERROR_2 = "The wind speed must be greater or equal to " + UAVParam.WIND_THRESHOLD;
 	
@@ -126,7 +126,7 @@ public class Text {
 	public static final String USE_ADMIN = "It is suggested to run " + Text.APP_NAME + " as administrator in order to improve performance.";
 	public static final String INSTALL_IMDISK_USE_ADMIN = "It i suggested to install ImDisk, and run " + Text.APP_NAME + " as administrator in order to improve performance.";
 	public static final String USE_ROOT = "It is suggested to run " + Text.APP_NAME + " as root in order to improve performance.";
-	public static final String CAP_IN_USE = "Collision avoidance protocol in use:";
+	public static final String PROTOCOL_IN_USE = "Protocol in use:";
 	public static final String WIRELESS_MODEL_IN_USE = "Wireless model in use:";
 	public static final String SIMULATED_WIND_SPEED = "Wind speed:";
 	public static final String STARTING_UAVS = "Starting up virtual UAVs...";
@@ -227,6 +227,8 @@ public class Text {
 	public static final String WIRELESS_ERROR = "Error. The function Tools.isInRange() must be modified.";
 	public static final String DOWNLOAD_ERROR = "Image not available";
 	public static final String DISMOUNT_DRIVE_ERROR = "Failed dismounting the virtual RAM drive.";
+	public static final String STORE_WARNING = "Store warning";
+	public static final String STORE_QUESTION = "Do you want to overwrite the file?";
 	
 	// System properties
 	public static final String HOME_DIR = "user.home";

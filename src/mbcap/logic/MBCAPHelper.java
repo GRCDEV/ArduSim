@@ -595,12 +595,16 @@ public class MBCAPHelper {
 		return new Point2D.Double(x, y);
 	}
 
-	/** Calculates if two UAVs have collision risk. */
+	/** Calculates if two UAVs have collision risk.
+	 * <p>Requires to be in the normal protocol state. */
 	public static boolean hasCollisionRisk(int numUAV, Beacon selfBeacon, Beacon receivedBeacon) {
-		// Requires to be in the normal protocol state
 		double distance;
 		long selfTime, beaconTime;
-		for (int i = 0; i < selfBeacon.points.size(); i++) {
+		int maxPoints = (int)Math.ceil(MBCAPParam.reactionDistance / (selfBeacon.speed * MBCAPParam.hopTime)) + 1;
+		Point3D selfPoint, receivedPoint;
+		for (int i = 0; i < selfBeacon.points.size() && i < maxPoints; i++) {
+			selfTime = selfBeacon.time + i * MBCAPParam.hopTimeNS;
+			selfPoint = selfBeacon.points.get(i);
 			for (int j = 0; j < receivedBeacon.points.size(); j++) {
 				// Do not check if the other UAV is in Go on, please and the location is the detected risk location
 				if (receivedBeacon.state == MBCAPState.GO_ON_PLEASE.getId() && j == 1) {
@@ -610,38 +614,22 @@ public class MBCAPHelper {
 				boolean risky = true;
 				// Temporal collision risk (only if the other UAV is also in the normal protocol state)
 				if (receivedBeacon.state == MBCAPState.NORMAL.getId()) {
-					selfTime = selfBeacon.time + i * MBCAPParam.hopTimeNS;
 					beaconTime = receivedBeacon.time + j * MBCAPParam.hopTimeNS;
 					if (Math.abs(selfTime - beaconTime) >= MBCAPParam.collisionRiskTime) {
 						risky = false;
 					}
 				}
 				
-				// X,Y collision risk
+				// X,Y, Z collision risk
 				if (risky) {
-					distance = selfBeacon.points.get(i).distance(receivedBeacon.points.get(j));
-					if (distance >= MBCAPParam.collisionRiskDistance) {
-						risky = false;
+					receivedPoint = receivedBeacon.points.get(j);
+					distance = selfPoint.distance(receivedPoint);
+					if (distance < MBCAPParam.collisionRiskDistance
+							&& Math.abs(selfPoint.z - receivedPoint.z) < MBCAPParam.collisionRiskAltitudeDifference) {
+						MBCAPParam.impactLocationUTM[numUAV].put(receivedBeacon.uavId, selfPoint);
+						MBCAPGUITools.locateImpactRiskMark(selfPoint, numUAV, receivedBeacon.uavId);
+						return true;
 					}
-				}
-				
-				// Z collision risk
-				if (risky) {
-					if (Math.abs(selfBeacon.points.get(i).z
-							- receivedBeacon.points.get(j).z) >= MBCAPParam.collisionRiskAltitudeDifference) {
-						risky = false;
-					}
-				}
-
-				// Checking the distance between the UAV and the collision risk point
-				if (risky
-						&& selfBeacon.speed*MBCAPParam.hopTime*i
-							- selfBeacon.speed*(System.nanoTime() - selfBeacon.time)*0.000000001
-							< MBCAPParam.reactionDistance) {
-					Point3D p = new Point3D(selfBeacon.points.get(i).x, selfBeacon.points.get(i).y, selfBeacon.points.get(i).z);
-					MBCAPParam.impactLocationUTM[numUAV].put(receivedBeacon.uavId, p);
-					MBCAPGUITools.locateImpactRiskMark(p, numUAV, receivedBeacon.uavId);
-					return true;
 				}
 			}
 		}
@@ -891,7 +879,8 @@ public class MBCAPHelper {
 					totalPredictedLocations[i][j] = new ArrayList<PointTime>();
 					for (int k=0; k<locations.size(); k++) {
 						if (Param.VERBOSE_STORE) {
-							sb1.append("," + locations.get(k).x + "," + locations.get(k).y);
+							sb1.append(",").append(GUIHelper.round(locations.get(k).x, 3))
+								.append(",").append(GUIHelper.round(locations.get(k).y, 3));
 						}
 						predictedLocation = new PointTime(beacon.time + MBCAPParam.hopTimeNS*k, locations.get(k).x, locations.get(k).y);
 						// Predicted positions for later calculus of the error in prediction
@@ -932,8 +921,10 @@ public class MBCAPHelper {
 					pos++;
 					if (pair!=null && Param.VERBOSE_STORE) {
 						sb2.append("._LINE\n");
-						sb2.append(pair.getValue0().x + "," + pair.getValue0().y + "\n");
-						sb2.append(pair.getValue1().x + "," + pair.getValue1().y + "\n\n");
+						sb2.append(GUIHelper.round(pair.getValue0().x, 3)).append(",")
+							.append(GUIHelper.round(pair.getValue0().y, 3)).append("\n");
+						sb2.append(GUIHelper.round(pair.getValue1().x, 3)).append(",")
+							.append(GUIHelper.round(pair.getValue1().y, 3)).append("\n\n");
 					}
 				}
 			}
@@ -946,9 +937,11 @@ public class MBCAPHelper {
 			sb3 = new StringBuilder(2000);
 			sb3.append("max(m),mean(m)\n");
 			for (int k=0; k<maxBeaconDistance.length-1; k++) {
-				sb3.append(maxBeaconDistance[k] + "," + meanBeaconDistance[k] + "\n");
+				sb3.append(GUIHelper.round(maxBeaconDistance[k], 3)).append(",")
+					.append(GUIHelper.round(meanBeaconDistance[k], 3)).append("\n");
 			}
-			sb3.append(maxBeaconDistance[maxBeaconDistance.length-1] + "," + meanBeaconDistance[meanBeaconDistance.length-1]);
+			sb3.append(GUIHelper.round(maxBeaconDistance[maxBeaconDistance.length-1], 3)).append(",")
+				.append(GUIHelper.round(meanBeaconDistance[meanBeaconDistance.length-1], 3));
 			GUIHelper.storeFile(beaconsErrorFile, sb3.toString());
 			
 			// 5. Calculus and storage of the mean and maximum error on each position of each beacon
@@ -965,9 +958,11 @@ public class MBCAPHelper {
 			sb4 = new StringBuilder(2000);
 			sb4.append("max(m),mean(m)\n");
 			for (int k=0; k<maxTimeDistance.length-1; k++) {
-				sb4.append(maxTimeDistance[k] + "," + meanTimeDistance[k] + "\n");
+				sb4.append(GUIHelper.round(maxTimeDistance[k], 3)).append(",")
+					.append(GUIHelper.round(meanTimeDistance[k], 3)).append("\n");
 			}
-			sb4.append(maxTimeDistance[maxTimeDistance.length-1] + "," + meanTimeDistance[meanTimeDistance.length-1]);
+			sb4.append(GUIHelper.round(maxTimeDistance[maxTimeDistance.length-1], 3)).append(",")
+				.append(GUIHelper.round(meanTimeDistance[meanTimeDistance.length-1], 3));
 			GUIHelper.storeFile(timeErrorFile, sb4.toString());
 		}
 	}

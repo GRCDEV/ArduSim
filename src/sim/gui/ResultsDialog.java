@@ -5,10 +5,12 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -60,10 +62,28 @@ public class ResultsDialog extends JDialog {
 						chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 						FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.RESULTS_DIALOG_SELECTION, Text.FILE_EXTENSION_TXT);
 						chooser.addChoosableFileFilter(filter1);
-						int retrival = chooser.showSaveDialog(null);
-						if (retrival == JFileChooser.APPROVE_OPTION) {
-							Tools.storeResults(s, chooser.getSelectedFile());
-							dispose();
+						chooser.setAcceptAllFileFilterUsed(false);
+						int retrieval = chooser.showSaveDialog(null);
+						if (retrieval == JFileChooser.APPROVE_OPTION) {
+							File file = chooser.getSelectedFile();
+							if (file.exists()) {
+								Object[] options = {Text.YES_OPTION, Text.NO_OPTION};
+								int result = JOptionPane.showOptionDialog(frame,
+										Text.STORE_QUESTION,
+										Text.STORE_WARNING,
+										JOptionPane.YES_NO_OPTION,
+										JOptionPane.QUESTION_MESSAGE,
+										null,
+										options,
+										options[1]);
+								if (result == JOptionPane.YES_OPTION) {
+									Tools.storeResults(s, file);
+									dispose();
+								}
+							} else {
+								Tools.storeResults(s, file);
+								dispose();
+							}
 						}
 					}
 				});

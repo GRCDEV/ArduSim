@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.security.CodeSource;
@@ -124,6 +126,14 @@ public class GUIHelper {
 		}
 		
 		return new UTMCoordinates(Easting, Northing, Zone, Letter);
+	}
+	
+	/** Round a double number to "places" decimal digits. */
+	public static double round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+	    BigDecimal bd = new BigDecimal(Double.toString(value));
+	    bd = bd.setScale(places, RoundingMode.HALF_UP);
+	    return bd.doubleValue();
 	}
 
 	/** Validates a TCP port. */

@@ -57,7 +57,7 @@ public class BoardParam {
 	public static double yUTMmin = Double.POSITIVE_INFINITY;
 	public static double yUTMmax = Double.NEGATIVE_INFINITY;
 	public static final double SCALE_MAGNIFIER = 1.2; // Makes room between objects and the panel limits
-	public static final double MAX_SINGLE_RANGE = 500; // (m) Minimum distance to the panel limits when using only one UAV
+	public static final double MAX_HALF_RANGE = 500; // (m) Minimum distance to the panel limits when no missions are loaded
 	public static double boardUTMx0, boardUTMy0; // (m) Bottom-left corner UTM coordinates
 	public static double screenScale; // pixels/UTM scale
 	public static volatile boolean drawAll = false; // It's time to start drawing

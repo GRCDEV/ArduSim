@@ -171,7 +171,7 @@ public class Main {
 			}
 		}
 		// Configuration feedback
-		SimTools.println(Text.CAP_IN_USE + " " + Param.selectedProtocol.getName());
+		SimTools.println(Text.PROTOCOL_IN_USE + " " + Param.selectedProtocol.getName());
 		if (!Param.IS_REAL_UAV) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)

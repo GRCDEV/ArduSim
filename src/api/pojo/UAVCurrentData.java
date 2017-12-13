@@ -16,10 +16,11 @@ public class UAVCurrentData {
 	private double z, zRelative;		// (m) Altitude
 	private double speed;				// (m/s) Currrent speed
 	private double acceleration;		// (m/s^2) Current acceleration
+	private double heading;				// (rad) Current heading
 
 	/** Updates the UAV object data. */
 	public synchronized void update(long time, Point2D.Double locationGeo, Point2D.Double locationUTM, double z,
-			double zRelative, double speed) {
+			double zRelative, double speed, double heading) {
 		this.locationGeo = locationGeo;
 		this.locationUTM = locationUTM;
 		this.z = z;
@@ -33,6 +34,7 @@ public class UAVCurrentData {
 		}
 		this.time = time;
 		this.speed = speed;
+		this.heading = heading;
 
 		// Filtering the acceleration
 		double abs = Math.abs(acceleration);
@@ -49,7 +51,6 @@ public class UAVCurrentData {
 			} else {
 				this.acceleration = - UAVParam.MAX_ACCELERATION;
 			}
-			
 		}
 	}
 
@@ -89,5 +90,10 @@ public class UAVCurrentData {
 	/** Returns the current speed (m/s). */
 	public synchronized double getSpeed() {
 		return this.speed;
+	}
+	
+	/** Returns the current heading (rad). */
+	public synchronized double getHeading() {
+		return this.heading;
 	}
 }

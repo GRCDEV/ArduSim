@@ -1040,7 +1040,7 @@ public class Tools {
 		} else {
 			if (SimParam.tempFolderBasePath != null) {
 				File parentFolder = new File(SimParam.tempFolderBasePath);
-				for (int i=0; i<Param.numUAVs; i++) {
+				for (int i=0; i<UAVParam.MAX_SITL_INSTANCES; i++) {
 					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
 					if (tempFolder.exists()) {
 						try {
@@ -1338,6 +1338,7 @@ public class Tools {
 
 			while (j<SimParam.uavUTMPath[i].size()) {
 				sp = SimParam.uavUTMPath[i].get(j);
+				// Calculus of the unfiltered acceleration
 				if (j == 0) {
 					a = 0.0;
 				} else {
@@ -1351,35 +1352,45 @@ public class Tools {
 					y = sp.y;
 					if (spPrev == null) {
 						// First test location
-						sb1.append(x + "," + y + "," + sp.z
-						+ "," + SimParam.uavUTMPath[i].get(j).time
-						+ "," + SimParam.uavUTMPath[i].get(j).speed + "," + a + ",0.0,0.0\n");
-						sb2.append(x + "," + y + "\n");
+						sb1.append(GUIHelper.round(x, 3)).append(",")
+							.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3))
+							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
+							.append(",").append(GUIHelper.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(GUIHelper.round(a, 3)).append(",0.000,0.000\n");
+						sb2.append(GUIHelper.round(x, 3)).append(",")
+							.append(GUIHelper.round(y, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(x + "," + y + "," + sp.z + "\n");
+							sb3.append(GUIHelper.round(x, 3)).append(",")
+								.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3)).append("\n");
 						}
 						spPrev = sp;
 					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
 						// Moved horizontally
 						d = sp.distance(spPrev);
 						dist = dist + d;
-						sb1.append(x + "," + y + "," + sp.z
-						+ "," + SimParam.uavUTMPath[i].get(j).time
-						+ "," + SimParam.uavUTMPath[i].get(j).speed
-						+ "," + a + "," + d + "," + dist + "\n");
-						sb2.append(x + "," + y + "\n");
+						sb1.append(GUIHelper.round(x, 3)).append(",")
+							.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3))
+							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
+							.append(",").append(GUIHelper.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(GUIHelper.round(a, 3)).append(",").append(GUIHelper.round(d, 3))
+							.append(",").append(GUIHelper.round(dist, 3)).append("\n");
+						sb2.append(GUIHelper.round(x, 3)).append(",")
+							.append(GUIHelper.round(y, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(x + "," + y + "," + sp.z + "\n");
+							sb3.append(GUIHelper.round(x, 3)).append(",")
+								.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3)).append("\n");
 						}
 						spPrev = sp;
 					} else if (sp.z!=spPrev.z) {
 						// Only moved vertically
-						sb1.append(x + "," + y + "," + sp.z
-						+ "," + SimParam.uavUTMPath[i].get(j).time
-						+ "," + SimParam.uavUTMPath[i].get(j).speed
-						+ "," + a + ",0.0," + dist + "\n");
+						sb1.append(GUIHelper.round(x, 3)).append(",")
+							.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3))
+							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
+							.append(",").append(GUIHelper.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(GUIHelper.round(a, 3)).append(",0.0,").append(GUIHelper.round(dist, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(x + "," + y + "," + sp.z + "\n");
+							sb3.append(GUIHelper.round(x, 3)).append(",")
+								.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3)).append("\n");
 						}
 						spPrev = sp;
 					}

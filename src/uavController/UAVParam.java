@@ -50,11 +50,12 @@ public class UAVParam {
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
 	public static final double WIND_THRESHOLD = 0.5;	// Minimum wind speed accepted by the simulator, when used
 
+	public static final double MIN_BATTERY_VOLTAGE = 10.8;		// (V) Minimum voltage to rise the alarm (charged level = 12.6 V)
 	public static final int MAX_BATTERY_CAPACITY = 500000000;	// (mAh) Maximum initial battery capacity
 	public static final int STANDARD_BATTERY_CAPACITY = 3300;	// (mAh) Standard battery capacity
 	public static int batteryCapacity;					// (mAh) Used battery capacity
-	public static final double BATTERY_DEPLETED_THRESHOLD = 0.2;	// Battery level to rise the alarm
-	public static int batteryLowLevel;
+	public static final double BATTERY_DEPLETED_THRESHOLD = 0.2;	// (%) Battery energy level to rise the alarm
+	public static int batteryLowLevel;								// (mAh) Calculated battery energy level to rise the alarm
 	public static final int BATTERY_DEPLETED_ACTION = 1;	// 0 Disabled
 															// 1 Land (RTL if flying in auto mode)
 															// 2 RTL

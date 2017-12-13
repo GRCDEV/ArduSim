@@ -214,7 +214,7 @@ public class SimTools {
 		//  Wind parameters
 		if (panel.windButton.isSelected()) {
 			validating = (String)panel.windDirTextField.getText();
-			if (!GUIHelper.isValidDouble(validating)) {
+			if (!GUIHelper.isValidInteger(validating)) {
 				GUIHelper.warn(Text.VALIDATION_WARNING, Text.WIND_DIRECTION_ERROR);
 				return false;
 			}

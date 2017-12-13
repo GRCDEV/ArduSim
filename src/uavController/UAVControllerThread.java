@@ -261,7 +261,7 @@ public class UAVControllerThread extends Thread {
 			// Global horizontal speed estimation
 			double speed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
 			// Update the UAV data, including the acceleration calculus
-			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed);
+			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed, heading);
 			// Send location to GUI to draw the UAV path and to log data
 			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z, heading, speed,
 					Param.simStatus == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] == 0)); // UAV under test

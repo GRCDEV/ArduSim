@@ -666,10 +666,10 @@ public class MissionHelper {
 				while (j<missionUTMSimplified.size()) {
 					current = missionUTMSimplified.get(j);
 					if (prev == null) {
-						sb.append(current.x + "," + current.y + "\n");
+						sb.append(GUIHelper.round(current.x, 3)).append(",").append(GUIHelper.round(current.y, 3)).append("\n");
 						prev = current;
 					} else if (!current.equals(prev)) {
-						sb.append(current.x + "," + current.y + "\n");
+						sb.append(GUIHelper.round(current.x, 3)).append(",").append(GUIHelper.round(current.y, 3)).append("\n");
 						prev = current;
 					}
 					j++;
