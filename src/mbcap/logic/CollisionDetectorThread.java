@@ -128,6 +128,11 @@ public class CollisionDetectorThread extends Thread {
 						Iterator<Map.Entry<Long, Beacon>> entries = MBCAPParam.beacons[numUAV].entrySet().iterator();
 						while (entries.hasNext()) {
 							Map.Entry<Long, Beacon> entry = entries.next();
+							
+							
+							// Remove obsolete entries like in broker thread, may be on the receiver thread
+							;
+							
 							sortingQueue.add(entry.getValue());
 						}
 
