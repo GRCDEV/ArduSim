@@ -2,8 +2,6 @@ package mbcap.logic;
 
 import java.awt.geom.Point2D;
 import java.io.File;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,9 +20,8 @@ import api.pojo.Point3D;
 import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Param.Protocol;
-import main.Text;
-import mbcap.gui.MBCAPGUITools;
 import mbcap.gui.MBCAPGUIParam;
+import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.PointTime;
@@ -89,18 +86,14 @@ public class MBCAPHelper {
 	/** Executes the protocol threads. */
 	public static void startMBCAPThreads() {
 		BeaconingThread thread;
-		try {
-			(new BrokerThread()).start();
-			for (int i = 0; i < Param.numUAVs; i++) {
-				thread = new BeaconingThread(i);
-				Param.controllers[i].setWaypointReached(thread);
-				thread.start();
-				(new CollisionDetectorThread(i)).start();
-			}
-			MissionHelper.log(MBCAPText.ENABLING);
-		} catch (SocketException | UnknownHostException e) {
-			GUIHelper.exit(Text.THREAD_START_ERROR);
+		for (int i = 0; i < Param.numUAVs; i++) {
+			thread = new BeaconingThread(i);
+			Param.controllers[i].setWaypointReached(thread);
+			thread.start();
+			(new ReceiverThread(i)).start();
+			(new CollisionDetectorThread(i)).start();
 		}
+		MissionHelper.log(MBCAPText.ENABLING);
 	}
 	
 	/** Predicts the future positions of the UAV. Returns empty list in case of problems. */

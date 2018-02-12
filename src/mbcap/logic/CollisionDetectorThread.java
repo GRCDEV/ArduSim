@@ -53,7 +53,7 @@ public class CollisionDetectorThread extends Thread {
 
 		int waitingTime;
 		// If two UAVs collide, then the protocol stops. Also, it stops when the experiment finishes
-		while (!MBCAPParam.stopProtocol && Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+		while (!UAVParam.collisionDetected && Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 			// Analyze received information while flying
 			if (UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
 				// 1. Periodic check if the UAV is stuck too many time in a protocol state. Cases:
@@ -128,12 +128,10 @@ public class CollisionDetectorThread extends Thread {
 						Iterator<Map.Entry<Long, Beacon>> entries = MBCAPParam.beacons[numUAV].entrySet().iterator();
 						while (entries.hasNext()) {
 							Map.Entry<Long, Beacon> entry = entries.next();
-							
-							
-							// Remove obsolete entries like in broker thread, may be on the receiver thread
-							;
-							
-							sortingQueue.add(entry.getValue());
+							// Ignoring obsolete beacons
+							if (System.nanoTime() - entry.getValue().time < MBCAPParam.beaconExpirationTime) {
+								sortingQueue.add(entry.getValue());
+							}
 						}
 
 						// Selecting and ordering the UAVs that suppose a collision risk

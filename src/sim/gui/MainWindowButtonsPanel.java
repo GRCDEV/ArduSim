@@ -38,7 +38,7 @@ public class MainWindowButtonsPanel extends JPanel {
 	public JTextArea logArea;
 	public JLabel statusLabel;
 
-	public MainWindowButtonsPanel(JFrame frame) {
+	public MainWindowButtonsPanel(final JFrame frame) {
 		setMaximumSize(new Dimension(32767, 100));
 		setPreferredSize(new Dimension(800, 100));
 		GridBagLayout gridBagLayout = new GridBagLayout();

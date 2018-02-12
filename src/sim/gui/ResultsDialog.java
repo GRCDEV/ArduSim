@@ -34,7 +34,7 @@ public class ResultsDialog extends JDialog {
 		this("", null, false);
 	}
 
-	public ResultsDialog(String s, Frame frame, boolean isModal) {
+	public ResultsDialog(final String s, final Frame frame, boolean isModal) {
 		super(frame, isModal);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));

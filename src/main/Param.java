@@ -40,10 +40,10 @@ public class Param {
 	public static volatile int runningOperatingSystem;
 	
 	// Wind parameters
-	public static final double DEFAULT_WIND_DIRECTION = 180.0;	// (degrees) North wind by default 
+	public static final int DEFAULT_WIND_DIRECTION = 180;	// (degrees) North wind by default. Integer values only
 	public static final double DEFAULT_WIND_SPEED = 0.0;
-	public static volatile double windDirection = Param.DEFAULT_WIND_DIRECTION;
-	public static double windSpeed = Param.DEFAULT_WIND_SPEED;
+	public static volatile int windDirection = Param.DEFAULT_WIND_DIRECTION;
+	public static volatile double windSpeed = Param.DEFAULT_WIND_SPEED;
 
 	// Parameters used to detect when a UAV reaches the last waypoint
 	public static final double LAST_WP_THRESHOLD = 1.0; // (m) Maximum distance considered

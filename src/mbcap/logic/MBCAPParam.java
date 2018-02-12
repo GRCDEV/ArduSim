@@ -16,28 +16,21 @@ import mbcap.pojo.ProgressState;
 
 public class MBCAPParam {
 
-	// TCP parameters
-	public static final int DATAGRAM_MAX_LENGTH = 1472; // (B) 1500-20-8 (MTU - IP - UDP)
-	public static final String BROKER_IP = "127.0.0.1";	// Simulated broadcast IP
-	public static int MBCAPport = 14650;				// Simulated broadcast port
-	public static final String BROADCAST_IP = "192.168.1.255";// Broadcast IP used on a real UAV
-
 	// Maximum distance to the last waypoint used to stop calculating future positions
 	public static final double DISTANCE_TO_MISSION_END = 2.0;
 
-	public static volatile boolean stopProtocol = false; // Used to stop the protocol when a collision happens
-	
 	// Protocol progress parameter
 	public static List<ProgressState>[] progress;
 
 	// Beaconing parameters
-	public static int beaconingPeriod = 200; // (ms) Time between beacons
-	public static int numBeacons = 5; // Between a new future positions calculus
-	public static long beaconExpirationTime = 10 * 1000000000l; // (ns) Beacon validity before being deleted
-	public static double beaconFlyingTime = 25; // (s) Included in predicted positions
-	public static double hopTime = 0.5; // (s) Between two predicted positions
-	public static long hopTimeNS = (long) (hopTime * 1000000000l); // (ns) The same in nanoseconds
-	public static final int MAX_POINTS = 119; // Maximum number of predicted points that fit on a UDP frame
+	public static int beaconingPeriod = 200;						// (ms) Time between beacons
+	public static int numBeacons = 5;								// Between a new future positions calculus
+	public static long beaconExpirationTime = 10 * 1000000000l;		// (ns) Beacon validity before being ignored
+	public static final long BEACON_EXPIRATION_CHECK_PERIOD = 2 * 1000;	// (ms) Expired beacons removing check frequency
+	public static double beaconFlyingTime = 25;						// (s) Included in predicted positions
+	public static double hopTime = 0.5;								// (s) Between two predicted positions
+	public static long hopTimeNS = (long) (hopTime * 1000000000l);	// (ns) The same in nanoseconds
+	public static final int MAX_POINTS = 119;						// Maximum number of predicted points that fit on a UDP frame
 
 	public static double minSpeed = 1.0; // (m/s) To calculate the predicted future positions
 	public static AtomicIntegerArray event; // Event number included in the beacon
@@ -48,12 +41,6 @@ public class MBCAPParam {
 	public static final int DISTANCES_SIZE = 20; // Initial distances list size, used to calculate the predicted points
 	// Parameter to decide whether the predicted path must be projected over the theoretical mission or not.
 	public static AtomicIntegerArray projectPath;		// 1 means project, 0 means do not project
-
-	// Collision detection parameters
-	public static long collisionCheckPeriod = 500000000l; // (ns) Between two checks
-	public static double collisionDistance = 5; // (m) Distance to assert that a collision has happened (UTM coordinates)
-	public static final double COLLISION_ALTITUDE_DIFFERENCE = 10; // (m) Altitude difference to assert that a collision has happened
-	public static double collisionScreenDistance; // (px) The previous distance, but in screen coordinates
 
 	// Collision risk detection parameters
 	public static double collisionRiskDistance = 20; // (m) Distance between points to assert collision risk (UTM coordinates)

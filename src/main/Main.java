@@ -9,6 +9,13 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.javatuples.Pair;
 
 import api.GUIHelper;
@@ -23,6 +30,11 @@ import sim.gui.ConfigDialog;
 import sim.gui.MainWindow;
 import sim.gui.ProgressDialog;
 import sim.gui.ResultsDialog;
+import sim.logic.CollisionDetector;
+import sim.logic.DistanceCalculusThread;
+import sim.logic.FakeReceiverThread;
+import sim.logic.FakeSenderThread;
+import sim.logic.RangeCalculusThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
 import uavController.UAVParam;
@@ -30,12 +42,69 @@ import uavController.UAVParam;
 /** This class contains the main method and the chronological logic followed by the whole application. */
 
 public class Main {
-	
+
 	private static Timer timer;	// Used to show the time elapsed from the experiment beginning
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
+		// TODO prepare the real input
+		String usageCommand = "java -jar ArduSim.jar [-doFake -p <arg> -s <arg>]";
+		Option periodOption = Option.builder("p").longOpt("period").required(false).desc("period between messages (ms)").hasArg(true).build();
+		Option sizeOption = Option.builder("s").longOpt("size").required(false).desc("message size (bytes)").hasArg(true).build();
+		Option doFakeSendingOption = new Option("doFake", "activate fake threads to simulate communications behavior.");
+		Options options = new Options();
+		options.addOption(periodOption);
+		options.addOption(sizeOption);
+		options.addOption(doFakeSendingOption);
+		Option help = Option.builder("h").longOpt("help").required(false).desc("ussage help").hasArg(false).build();
+		options.addOption(help);
+		CommandLineParser parser = new DefaultParser();
+		CommandLine cmdLine;
+		boolean doFakeSending = false;
+		try {
+			cmdLine = parser.parse(options, args);
+			HelpFormatter myHelp = new HelpFormatter();
+			if (cmdLine.hasOption("h")) {
+				myHelp.printHelp(usageCommand, options);
+				System.exit(0);
+			}
+			if (cmdLine.hasOption("doFake")) {
+				doFakeSending = true;
+				if (!cmdLine.hasOption("p") || !cmdLine.hasOption("s")) {
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				String periodString = cmdLine.getOptionValue("p");
+				if (!GUIHelper.isValidInteger(periodString) || Integer.parseInt(periodString) > 10000) {
+					System.out.println("The period between messages must be a valid positive integer lower or equal to 10000 ms.\n");
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				String sizeString = cmdLine.getOptionValue("s");
+				if (!GUIHelper.isValidInteger(sizeString) || Integer.parseInt(sizeString) > 1472) {
+					System.out.println("The size of the messages must be a valid positive integer lower or equal to 1472 bytes.\n");
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+
+				FakeSenderThread.period = Integer.parseInt(periodString);
+				FakeSenderThread.messageSize = Integer.parseInt(sizeString);
+			} else {
+				doFakeSending = false;
+			}
+		} catch (ParseException e1) {
+			System.out.println(e1.getMessage() + "\n");
+			HelpFormatter myHelp = new HelpFormatter();
+			myHelp.printHelp(usageCommand, options);
+			System.exit(1);
+		}
+
+
+
+
+
 		System.setProperty("sun.java2d.opengl", "true");
+		Param.simStatus = SimulatorState.CONFIGURING;
 		Tools.detectOS();
 		if (Param.IS_REAL_UAV) {
 			// 1. Protocol file loading (file containing the name of the protocol to be used)
@@ -48,14 +117,14 @@ public class Main {
 			}
 			Param.selectedProtocol = protocol;
 			Param.simulationIsMissionBased = Param.selectedProtocol.isMissionBased();
-			
+
 			// 2. We need to make constant the parameters shown in the GUI
 			Param.numUAVs = 1;	// Always one UAV per Raspberry Pi or whatever the device where the application is deployed
-			
+
 			// Establish the identifier of the UAV
 			Param.id = new long[Param.numUAVs];
 			Param.id[0] = Tools.getRealId();
-			
+
 			// Mission file loading
 			boolean loadMission;
 			if (Param.simulationIsMissionBased) {
@@ -71,7 +140,7 @@ public class Main {
 				UAVParam.missionGeoLoaded = new ArrayList[1];
 				UAVParam.missionGeoLoaded[0] = mission;
 			}
-			
+
 			// Speeds file loading
 			Double speed = null;
 			speed = Tools.loadSpeed(parentFolder);
@@ -80,12 +149,12 @@ public class Main {
 			}
 			UAVParam.initialSpeeds = new double[1];
 			UAVParam.initialSpeeds[0] = speed;
-			
-			
+
+
 		} else {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;
-			
+
 			Tools.locateSITL();
 			Tools.checkAdminPrivileges();
 			try {
@@ -108,7 +177,7 @@ public class Main {
 			while (Param.simStatus == SimulatorState.CONFIGURING) {
 				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 			}
-			
+
 			// 2. Opening the configuration dialog of the protocol under test
 			if (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
 				if (Param.simulationIsMissionBased) {
@@ -121,7 +190,7 @@ public class Main {
 					GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 				}
 			}
-			
+
 			// 3. Launch the main window
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -129,7 +198,7 @@ public class Main {
 				}
 			});
 		}
-		
+
 		// 4. Data structures initializing
 		Tools.initializeDataStructures();
 		if (Param.simulationIsMissionBased) {
@@ -142,7 +211,7 @@ public class Main {
 			while (MainWindow.boardPanel == null || MainWindow.buttonsPanel == null) {
 				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 			}
-			
+
 			// 5. Initial GUI configuration and launch the progress dialog
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -161,7 +230,7 @@ public class Main {
 			while (!SimParam.progressShowing || MainWindow.progressDialog == null) {
 				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 			}
-			
+
 			// 6. Load needed resources
 			SimTools.loadUAVImage();
 			if (Param.simulationIsMissionBased) {
@@ -228,15 +297,24 @@ public class Main {
 		}
 		Tools.getGPSFix();
 		Tools.sendBasicConfiguration();
+		
+		// 10. Set communications online, and start collision detection if needed
+		if (!Param.IS_REAL_UAV && Param.numUAVs > 1) {
+			(new DistanceCalculusThread()).start();
+			(new RangeCalculusThread()).start();
+			if (UAVParam.collisionCheckEnabled) {
+				(new CollisionDetector()).start();
+			}
+		}
 
-		// 10. Launch the threads of the protocol under test
+		// 11. Launch the threads of the protocol under test
 		if (Param.simulationIsMissionBased) {
 			MissionHelper.launchMissionThreads();
 		} else {
 			SwarmHelper.launchSwarmThreads();
 		}
 
-		// 11. Build auxiliary elements to be drawn and prepare the user interaction
+		// 12. Build auxiliary elements to be drawn and prepare the user interaction
 		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
 		if (Param.IS_REAL_UAV) {
@@ -245,7 +323,7 @@ public class Main {
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
 			GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 		}
-		
+
 		if (Param.IS_REAL_UAV) {
 			Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
 		} else {
@@ -270,8 +348,8 @@ public class Main {
 		while (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
 			GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 		}
-		
-		// 12. Apply the configuration step, only if the program is not being closed (state SHUTTING_DOWN)
+
+		// 13. Apply the configuration step, only if the program is not being closed (state SHUTTING_DOWN)
 		if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
 			if (Param.simulationIsMissionBased) {
 				Param.simStatus = SimulatorState.READY_FOR_TEST;
@@ -281,8 +359,8 @@ public class Main {
 			while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
 				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 			}
-			
-			// 13. Waiting for the user to start the experiment, only if the program is not being closed
+
+			// 14. Waiting for the user to start the experiment, only if the program is not being closed
 			if (Param.simStatus == SimulatorState.READY_FOR_TEST) {
 				if (Param.IS_REAL_UAV) {
 					Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
@@ -298,40 +376,53 @@ public class Main {
 				while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
 					GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 				}
-				
-				// 14. Start the experiment, only if the program is not being closed
+
+				// 15. Start the experiment, only if the program is not being closed
 				if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+					// TODO remove new threads
+					if (doFakeSending) {
+						for (int i = 0; i < Param.numUAVs; i++) {
+							(new FakeSenderThread(i)).start();
+							(new FakeReceiverThread(i)).start();
+						}
+					}
+					
+
+
+
+
+
 					Param.startTime = System.currentTimeMillis();
 					SimTools.println(Text.TEST_START);
 					timer = new Timer();
 					timer.scheduleAtFixedRate(new TimerTask() {
-			            long time = Param.startTime;
-			            public void run() {
-			            	if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-			            		String timeString = GUIHelper.timeToString(Param.startTime, time);
-				            	time = time + 1000;
-			            		SwingUtilities.invokeLater(new Runnable() {
+						long time = Param.startTime;
+						public void run() {
+							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+								final String timeString = GUIHelper.timeToString(Param.startTime, time);
+								time = time + 1000;
+								SwingUtilities.invokeLater(new Runnable() {
 									public void run() {
 										MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
 									}
 								});
-			            	} else {
-			            		SwingUtilities.invokeLater(new Runnable() {
+							} else {
+								SwingUtilities.invokeLater(new Runnable() {
 									public void run() {
 										MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
 									}
 								});
-			                	timer.cancel();
-			            	}
-			            }
-			        }, 0, 1000);	// Once each second, without initial waiting time
+								timer.cancel();
+							}
+						}
+					}, 0, 1000);	// Once each second, without initial waiting time
 					if (Param.simulationIsMissionBased) {
 						MissionHelper.startMissionTestActionPerformed();
 					} else {
 						SwarmHelper.startSwarmTestActionPerformed();
 					}
 
-					// 15. Waiting while the experiment is is progress and detecting the experiment end
+					// 16. Waiting while the experiment is is progress and detecting the experiment end
 					while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 						Tools.checkBatteryLevel();
 						if (Param.simulationIsMissionBased) {
@@ -349,7 +440,7 @@ public class Main {
 						}
 					}
 
-					// 16. Wait for the user to close the simulator, only if the program is not being closed
+					// 17. Wait for the user to close the simulator, only if the program is not being closed
 					if (Param.simStatus == SimulatorState.TEST_FINISHED) {
 						SimTools.println(GUIHelper.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 						if (!Param.IS_REAL_UAV) {
@@ -375,7 +466,7 @@ public class Main {
 						} else {
 							res += SwarmHelper.getSwarmProtocolConfig();
 						}
-						
+
 						final String res2 = res;
 						if (Param.IS_REAL_UAV) {
 							Tools.storeResults(res2, new File(GUIHelper.getCurrentFolder(), Text.DEFAULT_BASE_NAME));

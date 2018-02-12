@@ -7,9 +7,6 @@ public class MBCAPText {
 	// Configuration dialog window:
 	public static final String CANCEL = "Cancel";
 	public static final String CONFIGURATION = "configuration";
-	public static final String CONNECTION_PARAMETERS = "Connection parameters:";
-	public static final String BROADCAST_SIM_PORT = "Simulated broadcast address port:";
-	public static final String BROADCAST_PORT = "Broadcast address port";
 	public static final String BEACONING_PARAM = "Beaconing parameters:";
 	public static final String BEACON_INTERVAL = "Beacon interval:";
 	public static final String BEACON_REFRESH = "Beacon renewal rate:";
@@ -17,9 +14,6 @@ public class MBCAPText {
 	public static final String TIME_WINDOW = "Look ahead time window:";
 	public static final String INTERSAMPLE = "Intersample time:";
 	public static final String MIN_ADV_SPEED = "Minimum advertisement speed:";
-	public static final String COLLISION_PARAM = "Collision check parameters:";
-	public static final String COLLISION_PERIOD = "Collision check period:";
-	public static final String COLLISION_DET_THRESHOLD = "Collision detection threshold:";
 	public static final String AVOID_PARAM = "Collision avoidance protocol parameters:";
 	public static final String WARN_DISTANCE = "Collision warning distance:";
 	public static final String WARN_ALTITUDE = "Collision warning altitude offset:";
@@ -32,7 +26,6 @@ public class MBCAPText {
 	public static final String RESUME_MODE_DELAY = "Default flight mode resume delay:";
 	public static final String DEADLOCK_TIMEOUT = "Deadlock base timeout:";
 	// Error messages:
-	public static final String PORT_ERROR = "The simulated broadcast link port must be an integer between 1024 and 65535.";
 	public static final String BEACON_PERIOD_ERROR = "The time between beacons must be a valid positive integer.";
 	public static final String BEACON_REFRESH_ERROR = "The number of beacons repetitions must be a valid positive integer.";
 	public static final String BEACON_EXPIRATION_ERROR = "The beacon expiration time must be a valid positive number.";
@@ -41,10 +34,10 @@ public class MBCAPText {
 	public static final String FLYING_TIME_ERROR_2 = "The included flying time depends on the time\nbetween points and must be les than";
 	public static final String FLYING_TIME_ERROR_3 = "The included flying time must be multiple of the time between predicted points.";
 	public static final String MIN_SPEED_ERROR = "The minimal speed must be a valid positive number.";
-	public static final String COLLISION_PERIOD_ERROR = "The collision check period must be a valid positive number.";
-	public static final String COLLISION_DET_THRESHOLD_ERROR = "The distance to assert collision must be a valid positive number.";
-	public static final String WARN_DISTANCE_ERROR = "The distance between paths must be a valid positive number.";
-	public static final String WARN_ALTITUDE_ERROR = "The altitude difference must be a valid positive number.";
+	public static final String WARN_DISTANCE_ERROR_1 = "The distance between UAVs must be a valid positive number.";
+	public static final String WARN_DISTANCE_ERROR_2 = "The distance between UAVs must be greater than the distance defined to detect collision.";
+	public static final String WARN_ALTITUDE_ERROR_1 = "The altitude difference must be a valid positive number.";
+	public static final String WARN_ALTITUDE_ERROR_2 = "The altitude difference must be greater than the distance defined to detect collision.";
 	public static final String WARN_TIME_ERROR = "The time difference must be a valid positive number.";
 	public static final String CHECK_THRESHOLD_ERROR_1 = "The maximum distance to react to a risk must be a valid positive number.";
 	public static final String CHECK_THRESHOLD_ERROR_2 = "The maximum distance to react to a risk must be greater than the distance to the risk.";

@@ -8,10 +8,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,12 +24,15 @@ import java.util.Formatter;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,13 +62,15 @@ import mbcap.logic.MBCAPText;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
 import sim.logic.GPSStartThread;
+import sim.logic.InitialConfigurationThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
+import sim.pojo.IncomingMessage;
+import sim.pojo.IncomingMessageQueue;
 import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 import uavController.UAVParam.Mode;
-import sim.logic.InitialConfigurationThread;
 
 /** This class contains general tools used by the simulator. */
 
@@ -171,8 +180,12 @@ public class Tools {
 			for (int i=0; i<files.length; i++) {
 				// Trying to read one file
 				List<String> lines = new ArrayList<>();
-				try (BufferedReader br = Files.newBufferedReader(files[i].toPath())) {
-					lines = br.lines().collect(Collectors.toList());
+				
+				try (BufferedReader br = new BufferedReader(new FileReader(files[i]))) {
+					String line = null;
+					while ((line = br.readLine()) != null) {
+				        lines.add(line);
+				    }
 				} catch (IOException e) {
 					e.printStackTrace();
 					continue;
@@ -272,6 +285,61 @@ public class Tools {
 			
 			SimParam.prefix[i] = Text.UAV_ID + " " + Param.id[i] + ": ";
 		}
+		
+		// UAV to UAV communication structures
+		if (Param.IS_REAL_UAV) {
+			for (int i = 0; i < Param.numUAVs; i++) {
+				try {
+					UAVParam.sendSocket[i] = new DatagramSocket();
+					UAVParam.sendSocket[i].setBroadcast(true);
+					UAVParam.sendPacket[i] = new DatagramPacket(new byte[UAVParam.DATAGRAM_MAX_LENGTH],
+							UAVParam.DATAGRAM_MAX_LENGTH,
+							InetAddress.getByName(UAVParam.BROADCAST_IP),
+							UAVParam.BROADCAST_PORT);
+					UAVParam.receiveSocket[i] = new DatagramSocket(UAVParam.BROADCAST_PORT);
+					UAVParam.receiveSocket[i].setBroadcast(true);
+					UAVParam.receivePacket[i] = new DatagramPacket(new byte[UAVParam.DATAGRAM_MAX_LENGTH], UAVParam.DATAGRAM_MAX_LENGTH);
+				} catch (SocketException | UnknownHostException e) {
+					GUIHelper.exit(Text.THREAD_START_ERROR);
+				}
+			}
+		} else {
+			UAVParam.distances = new AtomicReference[Param.numUAVs][Param.numUAVs];
+			UAVParam.isInRange = new AtomicBoolean[Param.numUAVs][Param.numUAVs];
+			for (int i = 0; i < Param.numUAVs; i++) {
+				for (int j = 0; j < Param.numUAVs; j++) {
+					UAVParam.distances[i][j] = new AtomicReference<Double>();
+					UAVParam.isInRange[i][j] = new AtomicBoolean();
+				}
+			}
+			
+			UAVParam.prevSentMessage = new AtomicReferenceArray<IncomingMessage>(Param.numUAVs);
+			UAVParam.mBuffer = new IncomingMessageQueue[Param.numUAVs];
+			for (int i = 0; i < Param.numUAVs; i++) {
+				UAVParam.mBuffer[i] = new IncomingMessageQueue();
+			}
+			if (UAVParam.pCollisionEnabled) {
+				UAVParam.vBuffer = new ConcurrentSkipListSet[Param.numUAVs];
+				UAVParam.vBufferUsedSpace = new AtomicIntegerArray(Param.numUAVs);
+				for (int i = 0; i < Param.numUAVs; i++) {
+					UAVParam.vBuffer[i] = new ConcurrentSkipListSet<>();
+				}
+				UAVParam.maxCompletedTEndTime = new long[Param.numUAVs];
+			}
+			
+			UAVParam.packetWaitedPrevSending = new int[Param.numUAVs];
+			UAVParam.packetWaitedMediaAvailable = new int[Param.numUAVs];
+			UAVParam.receiverOutOfRange = new AtomicIntegerArray(Param.numUAVs);
+			UAVParam.receiverWasSending = new AtomicIntegerArray(Param.numUAVs);
+			UAVParam.receiverVirtualQueueFull = new AtomicIntegerArray(Param.numUAVs);
+			UAVParam.receiverQueueFull = new AtomicIntegerArray(Param.numUAVs);
+			UAVParam.successfullyReceived = new AtomicIntegerArray(Param.numUAVs);
+			UAVParam.discardedForCollision = new int[Param.numUAVs];
+			UAVParam.successfullyEnqueued = new int[Param.numUAVs];
+		}
+		UAVParam.sentPacket = new int[Param.numUAVs];
+		UAVParam.receivedPacket = new int[Param.numUAVs];
+		
 	}
 	
 	/** Auxiliary method to get the TCP ports available for SITL instances. */
@@ -527,8 +595,16 @@ public class Tools {
 			try {
 				Process p = pb.start();
 				input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				String result = input.lines().collect(Collectors.joining("\n"));
-				if (result.endsWith("Done.")) {
+				StringBuilder sb = new StringBuilder();
+				String line = null;
+			    while ((line = input.readLine()) != null) {
+			        sb.append(line).append("\n");
+			    }
+				String s = sb.toString();
+				if (s.length() > 0 && s.charAt(s.length()-1) == '\n') {
+					s = s.substring(0, s.length()-1);
+				}
+				if (s.endsWith("Done.")) {
 					return Tools.checkDriveMountedWindows();
 				}
 			} catch (IOException e) {
@@ -551,8 +627,16 @@ public class Tools {
 		try {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String result = input.lines().collect(Collectors.joining("\n"));
-			if (result.endsWith("Done.")) {
+			StringBuilder sb = new StringBuilder();
+			String line = null;
+		    while ((line = input.readLine()) != null) {
+		        sb.append(line).append("\n");
+		    }
+			String s = sb.toString();
+			if (s.length() > 0 && s.charAt(s.length()-1) == '\n') {
+				s = s.substring(0, s.length()-1);
+			}
+			if (s.endsWith("Done.")) {
 				return true;
 			}
 		} catch (IOException e) {
@@ -570,8 +654,16 @@ public class Tools {
 		try {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String rootUsers = input.lines().collect(Collectors.joining("\n"));
-			if (rootUsers.contains(diskPath)) {
+			StringBuilder sb = new StringBuilder();
+			String line = null;
+		    while ((line = input.readLine()) != null) {
+		        sb.append(line).append("\n");
+		    }
+			String s = sb.toString();
+			if (s.length() > 0 && s.charAt(s.length()-1) == '\n') {
+				s = s.substring(0, s.length()-1);
+			}
+			if (s.contains(diskPath)) {
 				return true;
 			}
 		} catch (IOException e) {
@@ -601,8 +693,16 @@ public class Tools {
 		try {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String result = input.lines().collect(Collectors.joining("\n"));
-			if (result.length() == 0) {
+			StringBuilder sb = new StringBuilder();
+			String line = null;
+		    while ((line = input.readLine()) != null) {
+		        sb.append(line).append("\n");
+		    }
+			String s = sb.toString();
+			if (s.length() > 0 && s.charAt(s.length()-1) == '\n') {
+				s = s.substring(0, s.length()-1);
+			}
+			if (s.length() == 0) {
 				return true;
 			}
 		} catch (IOException e) {
@@ -620,8 +720,16 @@ public class Tools {
 		try {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String result = input.lines().collect(Collectors.joining("\n"));
-			if (result.length() == 0) {
+			StringBuilder sb = new StringBuilder();
+			String line = null;
+		    while ((line = input.readLine()) != null) {
+		        sb.append(line).append("\n");
+		    }
+			String s = sb.toString();
+			if (s.length() > 0 && s.charAt(s.length()-1) == '\n') {
+				s = s.substring(0, s.length()-1);
+			}
+			if (s.length() == 0) {
 				return true;
 			}
 		} catch (IOException e) {
@@ -891,8 +999,16 @@ public class Tools {
 			try {
 				Process p = pb.start();
 				input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				String rootUsers = input.lines().collect(Collectors.joining("\n"));
-				if (rootUsers.contains(userName)) {
+				StringBuilder sb = new StringBuilder();
+				String line = null;
+			    while ((line = input.readLine()) != null) {
+			        sb.append(line).append("\n");
+			    }
+				String s = sb.toString();
+				if (s.length() > 0 && s.charAt(s.length()-1) == '\n') {
+					s = s.substring(0, s.length()-1);
+				}
+				if (s.contains(userName)) {
 					SimParam.userIsAdmin = true;
 					return;
 				}
@@ -999,7 +1115,7 @@ public class Tools {
 		// 1. Close Cygwin under Windows or SITL under Linux
 		for (int i=0; i<Param.numUAVs; i++) {
 			if (SimParam.processes[i] != null) {
-				SimParam.processes[i].destroyForcibly();
+				SimParam.processes[i].destroy();
 			}
 		}
 
@@ -1218,7 +1334,7 @@ public class Tools {
 			}
 		}
 		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append(Text.LOG_GLOBAL + ":\n\n");
+			sb.append(Text.LOG_GLOBAL).append(":\n\n");
 		}
 		long totalTime = maxTime - Param.startTime;
 		long[] uavsTotalTime = new long[Param.numUAVs];
@@ -1227,14 +1343,14 @@ public class Tools {
 		}
 
 		// 2. Global times
-		sb.append(Text.LOG_TOTAL_TIME + ": " + GUIHelper.timeToString(0, totalTime) + "\n");
+		sb.append(Text.LOG_TOTAL_TIME).append(": ").append(GUIHelper.timeToString(0, totalTime)).append("\n");
 		for (int i = 0; i < Param.numUAVs; i++) {
-			sb.append(Text.UAV_ID + " " + Param.id[i] + ": " + GUIHelper.timeToString(0, uavsTotalTime[i]) + "\n");
+			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(GUIHelper.timeToString(0, uavsTotalTime[i])).append("\n");
 		}
 
-		// 3. Protocol times header, if needed
+		// 3. Protocol results header, if needed
 		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append("\n" + Param.selectedProtocol.getName() + ":\n\n");
+			sb.append("\n").append(Param.selectedProtocol.getName()).append(":\n\n");
 		}
 		
 		return sb.toString();
@@ -1245,24 +1361,23 @@ public class Tools {
 		// 1. Global configuration
 		StringBuilder sb = new StringBuilder(2000);
 		if (Param.IS_REAL_UAV) {
-			sb.append("\n" + Text.GENERAL_PARAMETERS + "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "): " + UAVParam.initialSpeeds[0]);
+			sb.append("\n").append(Text.GENERAL_PARAMETERS);
+			sb.append("\n\t").append(Text.LOG_SPEED).append(UAVParam.initialSpeeds[0]).append(Text.METERS_PER_SECOND);
 		} else {
-			sb.append("\n" + Text.SIMULATION_PARAMETERS + "\n" + Text.UAV_NUMBER + " " + Param.numUAVs
-					+ "\n" + Text.LOG_SPEED + " (" + Text.METERS_PER_SECOND + "):\n");
+			sb.append("\n").append(Text.SIMULATION_PARAMETERS);
+			sb.append("\n\t").append(Text.UAV_NUMBER).append(" ").append(Param.numUAVs);
+			sb.append("\n\t").append(Text.LOG_SPEED).append(" (").append(Text.METERS_PER_SECOND).append("):\n");
 			for (int i=0; i<Param.numUAVs; i++) {
 				sb.append(UAVParam.initialSpeeds[i]);
 				if (i%10 == 9) {
-					sb.append("\n");
+					sb.append("\n\t");
 				} else if (i != Param.numUAVs - 1) {
 					sb.append(", ");
 				}
 			}
-			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY) {
-				sb.append("\n").append(Text.LOG_BATTERY).append(" (").append(Text.BATTERY_CAPACITY).append("): ").append(UAVParam.batteryCapacity);
-			}
-			sb.append("\n" + Text.PERFORMANCE_PARAMETERS + "\n\t" + Text.SCREEN_REFRESH_RATE + " " + BoardParam.screenDelay
-					+ " " + Text.MILLISECONDS + "\n\t" + Text.REDRAW_DISTANCE + " " + BoardParam.minScreenMovement
-					+ " " + Text.PIXELS);
+			sb.append("\n").append(Text.PERFORMANCE_PARAMETERS);
+			sb.append("\n\t").append(Text.SCREEN_REFRESH_RATE).append(" ").append(BoardParam.screenDelay).append(" ").append(Text.MILLISECONDS);
+			sb.append("\n\t").append(Text.REDRAW_DISTANCE).append(" ").append(BoardParam.minScreenMovement).append(" ").append(Text.PIXELS);
 			sb.append("\n\t").append(Text.LOGGING).append(" ");
 			if (SimParam.arducopterLoggingEnabled) {
 				sb.append(Text.OPTION_ENABLED);
@@ -1272,37 +1387,122 @@ public class Tools {
 			sb.append("\n\t").append(Text.BATTERY).append(" ");
 			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY) {
 				sb.append(Text.YES_OPTION);
+				sb.append("\n\t\t").append(UAVParam.batteryCapacity).append(" ").append(Text.BATTERY_CAPACITY);
 			} else {
 				sb.append(Text.NO_OPTION);
 			}
-			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY) {
-				sb.append("\n\t\t").append(UAVParam.batteryCapacity).append(" ").append(Text.BATTERY_CAPACITY);
-			}
 			sb.append("\n\t").append(Text.RENDER).append(" ").append(SimParam.renderQuality.getName());
 		}
-		
-		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append("\n" + Text.UAV_PROTOCOL_USED + " " + Param.selectedProtocol.getName());
+		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(Param.selectedProtocol.getName());
+		sb.append("\n").append(Text.COMMUNICATIONS);
+		long sentPacketTot = 0;
+		long receivedPacketTot = 0;
+		for (int i = 0; i < Param.numUAVs; i++) {
+			sentPacketTot = sentPacketTot + UAVParam.sentPacket[i];
+			receivedPacketTot = receivedPacketTot + UAVParam.receivedPacket[i];
 		}
-		if (!Param.IS_REAL_UAV) {
-			sb.append("\n" + Text.WIFI_MODEL + " " + Param.selectedWirelessModel.getName());
+		if (Param.IS_REAL_UAV) {
+			sb.append("\n\t").append(Text.BROADCAST_IP).append(" ").append(UAVParam.BROADCAST_IP);
+			sb.append("\n\t").append(Text.BROADCAST_PORT).append(" ").append(UAVParam.BROADCAST_PORT);
+			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);
+			sb.append("\n\t").append(Text.TOT_PROCESSED).append(" ").append(receivedPacketTot);
+		} else {
+			sb.append("\n\t").append(Text.CARRIER_SENSING_ENABLED).append(" ").append(UAVParam.carrierSensingEnabled);
+			sb.append("\n\t").append(Text.PACKET_COLLISION_DETECTION_ENABLED).append(" ").append(UAVParam.pCollisionEnabled);
+			sb.append("\n\t").append(Text.BUFFER_SIZE).append(" ").append(UAVParam.receivingBufferSize).append(" ").append(Text.BYTES);
+			sb.append("\n\t").append(Text.WIFI_MODEL).append(" ").append(Param.selectedWirelessModel.getName());
 			if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
-				sb.append(": " + Param.fixedRange + " " + Text.METERS);
+				sb.append(": ").append(Param.fixedRange).append(" ").append(Text.METERS);
 			}
-			sb.append("\n" + Text.WIND + " ");
+			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);
+			if (Param.numUAVs > 1 && sentPacketTot > 0) {
+				long packetWaitedPrevSendingTot = 0;
+				long equivalentReceived = sentPacketTot * (Param.numUAVs - 1);
+				long receiverOutOfRangeTot = 0;
+				long receiverWasSendingTot = 0;
+				long receiverVirtualQueueFullTot = 0;
+				long receiverQueueFullTot = 0;
+				long successfullyReceivedTot = 0;
+				long discardedForCollisionTot = 0;
+				long successfullyEnqueuedTot = 0;
+				for (int i = 0; i < Param.numUAVs; i++) {
+					packetWaitedPrevSendingTot = packetWaitedPrevSendingTot + UAVParam.packetWaitedPrevSending[i];
+					receiverOutOfRangeTot = receiverOutOfRangeTot + UAVParam.receiverOutOfRange.get(i);
+					receiverWasSendingTot = receiverWasSendingTot + UAVParam.receiverWasSending.get(i);
+					receiverQueueFullTot = receiverQueueFullTot + UAVParam.receiverQueueFull.get(i);
+					successfullyReceivedTot = successfullyReceivedTot + UAVParam.successfullyReceived.get(i);
+				}
+				long totRemainingInBuffer = successfullyReceivedTot - receivedPacketTot;
+				if (UAVParam.pCollisionEnabled) {
+					for (int i = 0; i < Param.numUAVs; i++) {
+						receiverVirtualQueueFullTot = receiverVirtualQueueFullTot + UAVParam.receiverVirtualQueueFull.get(i);
+						discardedForCollisionTot = discardedForCollisionTot + UAVParam.discardedForCollision[i];
+						successfullyEnqueuedTot = successfullyEnqueuedTot + UAVParam.successfullyEnqueued[i];
+					}
+				}
+				sb.append("\n\t\t").append(Text.TOT_WAITED_PREV_SENDING).append(" ").append(packetWaitedPrevSendingTot)
+					.append(" (").append(GUIHelper.round((100.0 * packetWaitedPrevSendingTot)/sentPacketTot, 3)).append("%)");
+				if (UAVParam.carrierSensingEnabled) {
+					long packetWaitedMediaAvailableTot = 0;
+					for (int i = 0; i < Param.numUAVs; i++) {
+						packetWaitedMediaAvailableTot = packetWaitedMediaAvailableTot + UAVParam.packetWaitedMediaAvailable[i];
+					}
+					sb.append("\n\t\t").append(Text.TOT_WAITED_MEDIA_AVAILABLE).append(" ").append(packetWaitedMediaAvailableTot)
+						.append(" (").append(GUIHelper.round((100.0 * packetWaitedMediaAvailableTot)/sentPacketTot, 3)).append("%)");
+				}
+				sb.append("\n\t").append(Text.TOT_EQUIVALENT_RECEIVED).append(" ").append(equivalentReceived);
+				sb.append("\n\t\t").append(Text.TOT_OUT_OF_RANGE).append(" ").append(receiverOutOfRangeTot)
+					.append(" (").append(GUIHelper.round((100.0 * receiverOutOfRangeTot)/equivalentReceived, 3)).append("%)");
+				sb.append("\n\t\t").append(Text.TOT_LOST_RECEIVER_WAS_SENDING).append(" ").append(receiverWasSendingTot)
+					.append(" (").append(GUIHelper.round((100.0 * receiverWasSendingTot)/equivalentReceived, 3)).append("%)");
+				if (UAVParam.pCollisionEnabled) {
+					sb.append("\n\t\t").append(Text.TOT_VIRTUAL_QUEUE_WAS_FULL).append(" ").append(receiverVirtualQueueFullTot)
+						.append(" (").append(GUIHelper.round((100.0 * receiverVirtualQueueFullTot)/equivalentReceived, 3)).append("%)");
+				}
+				sb.append("\n\t\t").append(Text.TOT_QUEUE_WAS_FULL).append(" ").append(receiverQueueFullTot)
+					.append(" (").append(GUIHelper.round((100.0 * receiverQueueFullTot)/equivalentReceived, 3)).append("%)");
+				sb.append("\n\t\t").append(Text.TOT_RECEIVED).append(" ").append(successfullyReceivedTot)
+					.append(" (").append(GUIHelper.round((100.0 * successfullyReceivedTot)/equivalentReceived, 3)).append("%)");
+				if (successfullyReceivedTot > 0) {
+					sb.append("\n\t\t\t").append(Text.TOT_REMAINING_IN_BUFFER).append(" ").append(totRemainingInBuffer)
+						.append(" (").append(GUIHelper.round((100.0 * totRemainingInBuffer)/successfullyReceivedTot, 3)).append("%)");
+					sb.append("\n\t\t\t").append(Text.TOT_PROCESSED).append(" ").append(receivedPacketTot)
+						.append(" (").append(GUIHelper.round((100.0 * receivedPacketTot)/successfullyReceivedTot, 3)).append("%)");
+					if (receivedPacketTot > 0 && UAVParam.pCollisionEnabled) {
+						sb.append("\n\t\t\t\t").append(Text.TOT_DISCARDED_FOR_COLLISION).append(" ").append(discardedForCollisionTot)
+							.append(" (").append(GUIHelper.round((100.0 * discardedForCollisionTot)/receivedPacketTot, 3)).append("%)");
+						sb.append("\n\t\t\t\t").append(Text.TOT_ENQUEUED_OK).append(" ").append(successfullyEnqueuedTot)
+							.append(" (").append(GUIHelper.round((100.0 * successfullyEnqueuedTot)/receivedPacketTot, 3)).append("%)");
+					}
+				}
+			}
+			
+			sb.append("\n").append(Text.COLLISION);
+			boolean collisionCheck = UAVParam.collisionCheckEnabled;
+			sb.append("\n\t").append(Text.COLLISION_ENABLE).append(" ");
+			if (collisionCheck) {
+				sb.append(Text.YES_OPTION);
+				sb.append("\n\t").append(Text.COLLISION_PERIOD).append(" ").append(UAVParam.collisionCheckPeriod).append(" ").append(Text.SECONDS);
+				sb.append("\n\t").append(Text.COLLISION_DISTANCE).append(" ").append(UAVParam.collisionDistance).append(" ").append(Text.METERS);
+				sb.append("\n\t").append(Text.COLLISION_ALTITUDE).append(" ").append(UAVParam.collisionAltitudeDifference).append(" ").append(Text.METERS);
+			} else {
+				sb.append(Text.NO_OPTION);
+			}
+			sb.append("\n").append(Text.WIND).append(" ");
 			if (Param.windSpeed == Param.DEFAULT_WIND_SPEED
 					&& Param.windDirection == Param.DEFAULT_WIND_DIRECTION) {
 				// There is no wind
 				sb.append(Text.NO_OPTION);
 			} else {
-				sb.append(Text.YES_OPTION+ "\n\t" + Text.WIND_SPEED + " " + Param.windSpeed
-						+ "\n\t" + Text.WIND_DIRECTION + " " + Param.windDirection + " " + Text.DEGREE_SYMBOL);
+				sb.append(Text.YES_OPTION);
+				sb.append("\n\t").append(Text.WIND_SPEED).append(" ").append(Param.windSpeed).append(" ").append(Text.METERS_PER_SECOND);
+				sb.append("\n\t").append(Text.WIND_DIRECTION).append(" ").append(Param.windDirection).append(" ").append(Text.DEGREE_SYMBOL);
 			}
 		}
 		
 		// 2. Protocol configuration, if needed
 		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append("\n\n" + Param.selectedProtocol.getName() + " " + MBCAPText.CONFIGURATION + ":\n");
+			sb.append("\n\n").append(Param.selectedProtocol.getName()).append(" ").append(MBCAPText.CONFIGURATION).append(":\n");
 		}
 		
 		return sb.toString();

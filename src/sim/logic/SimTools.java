@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -42,7 +43,7 @@ public class SimTools {
 	
 	/** Sends information to the main window log and console. */
 	public static void println(String text) {
-		String res;
+		final String res;
 		if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 			res = GUIHelper.timeToString(Param.startTime, System.currentTimeMillis())
 					+ " " + text;
@@ -63,7 +64,7 @@ public class SimTools {
 	}
 	
 	/** Sends information to the main window upper-right corner label when a protocol needs it. */
-	public static void updateGlobalInformation(String text) {
+	public static void updateGlobalInformation(final String text) {
 		// Update GUI only when using simulator
 		if (!Param.IS_REAL_UAV) {
 			SwingUtilities.invokeLater(new Runnable() {
@@ -75,7 +76,7 @@ public class SimTools {
 	}
 
 	/** Updates the MAVLink flight mode on the progress dialog. */
-	public static void updateUAVMAVMode(int numUAV, String mode) {
+	public static void updateUAVMAVMode(final int numUAV, final String mode) {
 		if (MainWindow.progressDialog!=null) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -87,7 +88,7 @@ public class SimTools {
 	}
 	
 	/** Updates the protocol state on the progress dialog. */
-	public static void updateprotocolState(int numUAV, String state) {
+	public static void updateprotocolState(final int numUAV, final String state) {
 		if (MainWindow.progressDialog != null) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -102,8 +103,11 @@ public class SimTools {
 	 * <p>Returns null if the file is not valid or it is empty. */
 	public static double[] loadSpeedsFile(String txtFile) {
 		List<String> lines = new ArrayList<>();
-		try (BufferedReader br = Files.newBufferedReader(Paths.get(txtFile))) {
-			lines = br.lines().collect(Collectors.toList());
+		try (BufferedReader br = new BufferedReader(new FileReader(txtFile))) {
+			String line = null;
+			while ((line = br.readLine()) != null) {
+		        lines.add(line);
+		    }
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -172,7 +176,6 @@ public class SimTools {
 			GUIHelper.warn(Text.VALIDATION_WARNING, Text.SCREEN_DELAY_ERROR_2);
 			return false;
 		}
-
 		validating = (String)panel.minScreenMovementTextField.getText();
 		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, Text.MIN_SCREEN_MOVEMENT_ERROR_1);
@@ -183,8 +186,7 @@ public class SimTools {
 			GUIHelper.warn(Text.VALIDATION_WARNING, Text.MIN_SCREEN_MOVEMENT_ERROR_2);
 			return false;
 		}
-		
-		if (panel.batteryButton.isSelected()) {
+		if (panel.batteryCheckBox.isSelected()) {
 			validating = (String)panel.batteryTextField.getText();
 			if (!GUIHelper.isValidInteger(validating)) {
 				GUIHelper.warn(Text.VALIDATION_WARNING, Text.BATTERY_ERROR_1);
@@ -197,7 +199,17 @@ public class SimTools {
 			}
 		}
 
-		//  Wireless model parameters
+		//  UAV to UAV communications parameters
+		validating = (String)panel.receivingBufferSizeTextField.getText();
+		if (!GUIHelper.isValidInteger(validating)) {
+			GUIHelper.warn(Text.VALIDATION_WARNING, Text.BUFFER_SIZE_ERROR_1);
+			return false;
+		}
+		intValue = Integer.parseInt(validating);
+		if (intValue < UAVParam.DATAGRAM_MAX_LENGTH) {
+			GUIHelper.warn(Text.VALIDATION_WARNING, Text.BUFFER_SIZE_ERROR_2);
+			return false;
+		}
 		if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
 			validating = (String)panel.fixedRangeTextField.getText();
 			if (!GUIHelper.isValidPositiveDouble(validating)) {
@@ -210,9 +222,29 @@ public class SimTools {
 				return false;
 			}
 		}
-
+		
+		// Collision detection parameters
+		boolean checkCollision = panel.collisionDetectionCheckBox.isSelected();
+		if (checkCollision) {
+			validating = (String) panel.collisionCheckPeriodTextField.getText();
+			if (!GUIHelper.isValidPositiveDouble(validating)) {
+				GUIHelper.warn(Text.VALIDATION_WARNING, Text.COLLISION_PERIOD_ERROR);
+				return false;
+			}
+			validating = (String) panel.collisionDistanceTextField.getText();
+			if (!GUIHelper.isValidPositiveDouble(validating)) {
+				GUIHelper.warn(Text.VALIDATION_WARNING, Text.COLLISION_DISTANCE_THRESHOLD_ERROR);
+				return false;
+			}
+			validating = (String) panel.collisionAltitudeTextField.getText();
+			if (!GUIHelper.isValidPositiveDouble(validating)) {
+				GUIHelper.warn(Text.VALIDATION_WARNING,  Text.COLLISION_ALTITUDE_THRESHOLD_ERROR);
+				return false;
+			}
+		}
+		
 		//  Wind parameters
-		if (panel.windButton.isSelected()) {
+		if (panel.windCheckBox.isSelected()) {
 			validating = (String)panel.windDirTextField.getText();
 			if (!GUIHelper.isValidInteger(validating)) {
 				GUIHelper.warn(Text.VALIDATION_WARNING, Text.WIND_DIRECTION_ERROR);
@@ -239,12 +271,12 @@ public class SimTools {
 		//  Performance parameters
 		BoardParam.screenDelay = Integer.parseInt((String)panel.screenDelayTextField.getText());
 		BoardParam.minScreenMovement = Double.parseDouble((String)panel.minScreenMovementTextField.getText());
-		if (panel.loggingEnabledButton.isSelected()) {
+		if (panel.loggingEnabledCheckBox.isSelected()) {
 			SimParam.arducopterLoggingEnabled = true;
 		} else {
 			SimParam.arducopterLoggingEnabled = false;
 		}
-		if (panel.batteryButton.isSelected()) {
+		if (panel.batteryCheckBox.isSelected()) {
 			UAVParam.batteryCapacity = Integer.parseInt(panel.batteryTextField.getText());
 		} else {
 			UAVParam.batteryCapacity = UAVParam.MAX_BATTERY_CAPACITY;
@@ -254,18 +286,36 @@ public class SimTools {
 			UAVParam.batteryLowLevel = (UAVParam.batteryLowLevel / 50 + 1) * 50;	// Multiple of 50 roof value
 		}
 
-		//  CAP protocol parameters
+		//  Protocol parameters
 		String protocol = (String)panel.protocolComboBox.getSelectedItem();
 		Param.selectedProtocol = Protocol.getProtocolByName(protocol);
 
-		//  Wireless model parameters
+		//  UAV to UAV communications parameters
+		UAVParam.carrierSensingEnabled = panel.carrierSensingCheckBox.isSelected();
+		UAVParam.pCollisionEnabled = panel.pCollisionDetectionCheckBox.isSelected();
+		UAVParam.receivingBufferSize = Integer.parseInt((String)panel.receivingBufferSizeTextField.getText());
+		UAVParam.receivingvBufferSize = UAVParam.V_BUFFER_SIZE_FACTOR * UAVParam.receivingBufferSize;
 		if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
 			Param.fixedRange = Double.parseDouble((String)panel.fixedRangeTextField.getText());
 		}
+		
+		// Collision detection parameters
+		boolean checkCollision = panel.collisionDetectionCheckBox.isSelected();
+		UAVParam.collisionCheckEnabled = checkCollision;
+		if (checkCollision) {
+			UAVParam.collisionCheckPeriod = Double.parseDouble((String) panel.collisionCheckPeriodTextField.getText());
+			UAVParam.appliedCollisionCheckPeriod = (int) Math.round(UAVParam.collisionCheckPeriod*1000);
+			UAVParam.collisionDistance = Double.parseDouble((String) panel.collisionDistanceTextField.getText());
+			UAVParam.collisionAltitudeDifference = Double.parseDouble((String) panel.collisionAltitudeTextField.getText());
+			// Distance calculus slightly faster than the collision check frequency
+			UAVParam.distanceCalculusPeriod = Math.min(UAVParam.RANGE_CHECK_PERIOD / 2, (int) Math.round(UAVParam.collisionCheckPeriod*950));
+		} else {
+			UAVParam.distanceCalculusPeriod = UAVParam.RANGE_CHECK_PERIOD / 2;
+		}
 
 		//  Wind parameters
-		if (panel.windButton.isSelected()) {
-			Param.windDirection = Double.parseDouble((String)panel.windDirTextField.getText());
+		if (panel.windCheckBox.isSelected()) {
+			Param.windDirection = Integer.parseInt((String)panel.windDirTextField.getText());
 			Param.windSpeed = Double.parseDouble((String)panel.windSpeedTextField.getText());
 		} else {
 			Param.windDirection = Param.DEFAULT_WIND_DIRECTION;
@@ -274,61 +324,55 @@ public class SimTools {
 	}
 
 	/** Loads the default experiment configuration from variables */
-	public static void loadDefaultConfiguration(ConfigDialogPanel panel) {
-		//  Performance parameters
+	public static void loadDefaultConfiguration(final ConfigDialogPanel panel) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
+				//  Performance parameters
 				panel.screenDelayTextField.setText("" + BoardParam.screenDelay);
 				panel.minScreenMovementTextField.setText("" + BoardParam.minScreenMovement);
 				if (SimParam.arducopterLoggingEnabled) {
-					panel.loggingEnabledButton.setSelected(true);
-					panel.loggingEnabledButton.setText(Text.OPTION_ENABLED);
+					panel.loggingEnabledCheckBox.setSelected(true);
 				} else {
-					panel.loggingEnabledButton.setSelected(false);
-					panel.loggingEnabledButton.setText(Text.OPTION_DISABLED);
+					panel.loggingEnabledCheckBox.setSelected(false);
 				}
+				SimParam.renderQuality = RenderQuality.Q3;
 				panel.renderQualityComboBox.setSelectedIndex(RenderQuality.Q3.getId());
-				panel.batteryButton.setSelected(false);
-				panel.batteryButton.setText(Text.NO_OPTION);
+				
+				panel.batteryCheckBox.setSelected(false);
 				panel.batteryTextField.setText("" + UAVParam.STANDARD_BATTERY_CAPACITY);
 				panel.batteryTextField.setEnabled(false);
-			}
-		});
-		SimParam.renderQuality = RenderQuality.Q3;
-
-		//  CAP protocol parameters
-		Param.selectedProtocol = Protocol.getHighestIdProtocol();
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
+				
+				//  Protocol parameters
+				Param.selectedProtocol = Protocol.getHighestIdProtocol();
 				for (int i=0; i<panel.protocolComboBox.getItemCount(); i++) {
 					if (((String)panel.protocolComboBox.getItemAt(i)).equals(Param.selectedProtocol.getName())) {
 						panel.protocolComboBox.setSelectedIndex(i);
 					}
 				}
-			}
-		});
-
-		//  Wireless model parameters
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				panel.wirelessModelComboBox.setSelectedIndex(0);
-			}
-		});
-		Param.selectedWirelessModel = WirelessModel.NONE;
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
+				
+				//  UAV to UAV communications parameters
+				panel.carrierSensingCheckBox.setSelected(UAVParam.carrierSensingEnabled);
+				panel.pCollisionDetectionCheckBox.setSelected(UAVParam.pCollisionEnabled);
+				panel.receivingBufferSizeTextField.setText("" + UAVParam.receivingBufferSize);
+				Param.selectedWirelessModel = WirelessModel.NONE;
+				panel.wirelessModelComboBox.setSelectedIndex(WirelessModel.NONE.getId());
 				panel.fixedRangeTextField.setText("" + Param.fixedRange);
 				panel.fixedRangeTextField.setEnabled(false);
-			}
-		});
-
-		//  Wind parameters
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
+				
+				// Collision detection parameters
+				panel.collisionDetectionCheckBox.setSelected(false);
+				panel.collisionCheckPeriodTextField.setText("" + UAVParam.collisionCheckPeriod);
+				panel.collisionCheckPeriodTextField.setEnabled(false);
+				panel.collisionDistanceTextField.setText("" + UAVParam.collisionDistance);
+				panel.collisionDistanceTextField.setEnabled(false);
+				panel.collisionAltitudeTextField.setText("" + UAVParam.collisionAltitudeDifference);
+				panel.collisionAltitudeTextField.setEnabled(false);
+				
+				//  Wind parameters
 				panel.windDirTextField.setText("" + Param.DEFAULT_WIND_DIRECTION);
 				panel.windSpeedTextField.setText("" + Param.DEFAULT_WIND_SPEED);
 				panel.lblDegrees.setText(Text.DEGREE_SYMBOL);
-				panel.windButton.setSelected(false);
+				panel.windCheckBox.setSelected(false);
 			}
 		});
 	}

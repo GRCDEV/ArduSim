@@ -43,16 +43,50 @@ public class Text {
 	public static final String PERFORMANCE_PARAMETERS = "Performance parameters:";
 	public static final String SCREEN_REFRESH_RATE = "Screen refresh rate:";
 	public static final String REDRAW_DISTANCE = "Minimum screen redraw distance:";
-	public static final String LOGGING = "ArduCopter logging:";
-	public static final String BATTERY = "Battery capacity limited:";
+	public static final String LOGGING = "Enable arducopter logging:";
+	public static final String BATTERY = "Restrict battery capacity:";
 	public static final String RENDER = "Rendering quality:";
 	public static final String RENDER_QUALITY1 = "Maximum performance";
 	public static final String RENDER_QUALITY2 = "Text smoothed";
 	public static final String RENDER_QUALITY3 = "Text and lines smoothed";
 	public static final String RENDER_QUALITY4 = "Maximum quality";
 	public static final String UAV_PROTOCOL_USED = "UAV synchronization protocol:";
+	public static final String COMMUNICATIONS = "UAV to UAV communications parameters:";
+	public static final String BROADCAST_IP = "Broadcast IP address:";
+	public static final String BROADCAST_PORT = "Broadcast address port:";
+	public static final String CARRIER_SENSING = "Enable carrier sensing:";
+	public static final String CARRIER_SENSING_ENABLED = "Carrier sensing enabled:";
+	public static final String PACKET_COLLISION_DETECTION = "Enable packet collision detection:";
+	public static final String PACKET_COLLISION_DETECTION_ENABLED = "Packet Collision detection enabled:";
+	public static final String BUFFER_SIZE = "Receiving buffer size:";
+	public static final String BUFFER_SIZE_ERROR_1 = "The receiving buffer must be a positive number of bytes.";
+	public static final String BUFFER_SIZE_ERROR_2 = "The receiving buffer must be big enough to store at least one frame (" + UAVParam.DATAGRAM_MAX_LENGTH + ")";
 	public static final String WIFI_MODEL = "Wireless communications model:";
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
+	
+	public static final String TOT_SENT_PACKETS = "Total sent packets:";
+	public static final String TOT_WAITED_PREV_SENDING = "Waited the previous packet to be sent:";
+	public static final String TOT_WAITED_MEDIA_AVAILABLE = "Waited the media to be available (carrier sensing):";
+	public static final String TOT_EQUIVALENT_RECEIVED = "Potentially received packets:";
+	public static final String TOT_OUT_OF_RANGE = "Not received due to range:";
+	public static final String TOT_LOST_RECEIVER_WAS_SENDING = "Not received because the receiver was sending:";
+	public static final String TOT_VIRTUAL_QUEUE_WAS_FULL = "Not received because the virtual receiving queue was full:";
+	public static final String TOT_QUEUE_WAS_FULL = "Not received because the receiving queue was full:";
+	public static final String TOT_RECEIVED = "Received packets:";
+	public static final String TOT_REMAINING_IN_BUFFER = "Remaining in buffers:";
+	public static final String TOT_PROCESSED = "Processed:";
+	public static final String TOT_DISCARDED_FOR_COLLISION = "Discarded for collisions:";
+	public static final String TOT_ENQUEUED_OK = "Valid and used:";
+	
+	
+	public static final String COLLISION = "UAV Collision detection parameters:";
+	public static final String COLLISION_ENABLE = "Enable collision detection:";
+	public static final String COLLISION_PERIOD = "Check period:";
+	public static final String COLLISION_PERIOD_ERROR = "The collision check period must be a valid positive number.";
+	public static final String COLLISION_DISTANCE = "Distance threshold:";
+	public static final String COLLISION_DISTANCE_THRESHOLD_ERROR = "The distance to assert collision must be a valid positive number.";
+	public static final String COLLISION_ALTITUDE = "Altitude difference threshold:";
+	public static final String COLLISION_ALTITUDE_THRESHOLD_ERROR = "The altitude difference to assert collision must be a valid positive number.";
 	public static final String WIND = "Wind:";
 	public static final String WIND_DIRECTION = "Direction:";
 	public static final String WIND_SPEED = "Speed:";
@@ -197,6 +231,7 @@ public class Text {
 	public static final String SECONDS = "s";
 	public static final String METERS_PER_SECOND = "m/s";
 	public static final String BATTERY_CAPACITY = "mAh";
+	public static final String BYTES = "bytes";
 	public static final String DEGREE_SYMBOL= "\u00B0";
 	
 	// General errors

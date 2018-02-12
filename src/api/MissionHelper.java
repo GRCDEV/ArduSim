@@ -3,6 +3,7 @@ package api;
 import java.awt.Graphics2D;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -35,7 +36,6 @@ import main.Text;
 import mbcap.gui.MBCAPConfigDialog;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPHelper;
-import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.logic.MBCAPText;
 import mission.MissionText;
@@ -175,8 +175,12 @@ public class MissionHelper {
 	public static List<Waypoint> loadMissionFile(String path) {
 	
 		List<String> list = new ArrayList<>();
-		try (BufferedReader br = Files.newBufferedReader(Paths.get(path))) {
-			list = br.lines().collect(Collectors.toList());
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				list.add(line);
+		    }
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -361,7 +365,7 @@ public class MissionHelper {
 				|| Param.selectedProtocol == Protocol.MBCAP_V2
 				|| Param.selectedProtocol == Protocol.MBCAP_V3
 				|| Param.selectedProtocol == Protocol.MBCAP_V4) {
-			if (!MBCAPParam.stopProtocol) {
+			if (!UAVParam.collisionDetected) {
 				g2.setStroke(SimParam.STROKE_POINT);
 				MBCAPGUITools.drawPredictedLocations(g2);
 				MBCAPGUITools.drawCollisionCircle(g2);

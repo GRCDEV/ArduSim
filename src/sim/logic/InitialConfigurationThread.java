@@ -45,9 +45,9 @@ public class InitialConfigurationThread extends Thread {
 				return;
 			}
 			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY
-					&& (!API.setParam(numUAV, ControllerParam.BATTERY_VOLTAGE_DEPLETION_THRESHOLD, UAVParam.MIN_BATTERY_VOLTAGE)
-							|| !API.setParam(numUAV, ControllerParam.BATTERY_CURRENT_DEPLETION_THRESHOLD, UAVParam.batteryLowLevel)
+					&& (!API.setParam(numUAV, ControllerParam.BATTERY_CURRENT_DEPLETION_THRESHOLD, UAVParam.batteryLowLevel)
 							|| !API.setParam(numUAV, ControllerParam.BATTERY_FAILSAFE_ACTION, UAVParam.BATTERY_DEPLETED_ACTION))) {
+				// The parameter ControllerParam.BATTERY_VOLTAGE_DEPLETION_THRESHOLD cannot be set on simulation (voltages does not changes)
 				return;
 			}
 			// Set simulated wind parameters

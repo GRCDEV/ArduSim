@@ -32,7 +32,7 @@ public class Beacon implements Comparable<Beacon> {
 	private int idAvoidingPos;// Avoiding UAV position in the buffer so it could be updated
 	public double speed;		// Current speed
 	public long time;			// (ns) On a sending beacon, it is the data capture local time,
-								//       and on a receiving beacon, it means the data capture time corrected to local time
+								//      On a receiving beacon, it means the data capture time corrected to local time
 	private int timePos;		// Time position in the buffer so it could be updated
 	public List<Point3D> points;// Predicted positions
 
@@ -71,7 +71,7 @@ public class Beacon implements Comparable<Beacon> {
 		res.points = points;
 
 		// 3. Buffer building
-		res.sendBuffer = new byte[MBCAPParam.DATAGRAM_MAX_LENGTH];
+		res.sendBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
 		res.out = new Output(res.sendBuffer);
 		res.out.clear();
 		res.out.writeLong(res.uavId);
@@ -122,8 +122,12 @@ public class Beacon implements Comparable<Beacon> {
 	}
 
 	/** Creates a beacon from a received buffer.
-	 * <p>It requires later analysis of which UAV has sent the beacon, based on the uavId parameter. */
+	 * <p>It requires later analysis of which UAV has sent the beacon, based on the uavId parameter.
+	 * <p>Returns null if the buffer is null. */
 	public static Beacon getBeacon(byte[] buffer) {
+		if (buffer == null) {
+			return null;
+		}
 		Beacon res = new Beacon();
 		res.processed = false;
 		res.in = new Input(buffer);

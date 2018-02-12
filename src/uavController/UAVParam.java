@@ -1,9 +1,14 @@
 package uavController;
 
 import java.awt.Shape;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.List;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import org.mavlink.messages.MAV_MODE_FLAG;
@@ -15,13 +20,15 @@ import api.pojo.UAVCurrentStatus;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Text;
+import sim.pojo.IncomingMessage;
+import sim.pojo.IncomingMessageQueue;
 
 /** This class includes parameters specifically related to the communication with the flight controller. */
 
 public class UAVParam {
 
 	// Application-SITL connection parameters
-	//   TCP
+	// TCP (on virtual UAVs)
 	public static final int MAX_SITL_INSTANCES = 256;	// Maximum number of SITL instances allowed by ArduCopter implementation
 	public static final String MAV_NETWORK_IP = "127.0.0.1";
 	public static final int MAX_PORT = 65535;			// Maximum port value
@@ -31,10 +38,55 @@ public class UAVParam {
 	
 	public static final int PORT_CHECK_TIMEOUT = 200;	// (ms) Timeout while checking if a port is available
 	public static Integer[] mavPort;					// List of ports really used by SITL instances
-	//   Serial port
+	// Serial port (on real UAVs)
 	public static final String SERIAL_CONTROLLER_NAME = "gnu.io.rxtx.SerialPorts";
 	public static final String SERIAL_PORT = "/dev/ttyAMA0";
 	public static final int BAUD_RATE = 57600;
+	
+	// UAV-UAV connection parameters
+	// TCP parameters (on real UAVs)
+	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
+	public static final String BROADCAST_IP = "192.168.1.255";	// Broadcast IP
+	public static final int BROADCAST_PORT = 14650;				// Broadcast port
+	public static DatagramSocket[] sendSocket;					// Sending socket
+	public static DatagramPacket[] sendPacket;					// Sending packet
+	public static DatagramSocket[] receiveSocket;				// Receiving socket
+	public static DatagramPacket[] receivePacket;				// Receiving packet
+	// Range check and receiving virtual buffer (on virtual UAVs)
+	public static volatile int distanceCalculusPeriod;						// (ms) Between distance calculus between UAVs
+																			// It is the minimum of the range check period and the collision check period when applied
+	public static volatile boolean distanceCalculusIsOnline = false;		// Whether the distance calculus service is online or not
+	public static AtomicReference<Double>[][] distances;					// (m) Stored distances between UAVs
+	public static final int RANGE_CHECK_PERIOD = 1000;						// (ms) Between UAVs range check
+	public static AtomicBoolean[][] isInRange;								// Matrix containing the range check result
+	public static AtomicReferenceArray<IncomingMessage> prevSentMessage;	// Stores the last sent message for each UAV
+	public static boolean pCollisionEnabled = true;							// Whether the packet collision detection is enabled or not
+	public static boolean carrierSensingEnabled = true;						// Whether the carrier sensing is enabled or not
+	public static IncomingMessageQueue[] mBuffer;							// Array with the message queues used as buffers
+	public static final int RECEIVING_BUFFER_PACKET_SIZE = 350;				// (packets) Initial size of the incoming queue q
+	public static int receivingBufferSize = 212992;							// (bytes) By default, the Ubutu receiving buffer size
+	public static long[] maxCompletedTEndTime;								// Array with the later completed transfer finish time for each sending UAV when using collision detection
+	public static final int MESSAGE_WAITING_TIME = 1;
+	
+	
+	// (ms) Waiting time to check if a message
+	public static ConcurrentSkipListSet<IncomingMessage>[] vBuffer;			// Array with virtual buffer to calculate packet collisions when using packet collision detection
+	public static final int V_BUFFER_SIZE_FACTOR = 10;						// vBuffer is this times the size of mBuffer
+	public static int receivingvBufferSize = V_BUFFER_SIZE_FACTOR * receivingBufferSize;	// default value
+	public static AtomicIntegerArray vBufferUsedSpace;						// Array containing the number of bytes of the vBuffer in use
+	// Statistics
+	public static int[] sentPacket, packetWaitedPrevSending, packetWaitedMediaAvailable;
+	public static AtomicIntegerArray receiverOutOfRange, receiverWasSending, receiverVirtualQueueFull, receiverQueueFull, successfullyReceived;
+	public static int[] receivedPacket, discardedForCollision, successfullyEnqueued;
+	
+	// UAVs collision detection parameters
+	public static volatile boolean collisionCheckEnabled = false;	// Whether the collision check is enabled or not
+	public static volatile double collisionCheckPeriod = 0.5;		// (s) Between two checks
+	public static int appliedCollisionCheckPeriod;					// The same parameter but in milliseconds
+	public static volatile double collisionDistance = 10;			// (m) Distance to assert that a collision has happened (UTM coordinates)
+	public static volatile double collisionAltitudeDifference = 20;	// (m) Altitude difference to assert that a collision has happened
+	public static double collisionScreenDistance;					// (px) The previous distance, but in screen coordinates
+	public static volatile boolean collisionDetected = false; 		// Can be used to stop protocols when a collision happens
 	
 	// Received information
 	public static UAVCurrentData[] uavCurrentData;
@@ -90,6 +142,9 @@ public class UAVParam {
 	
 	// Minumum base mode to assert that the UAV is flying
 	public static final int MIN_MODE_TO_BE_FLYING = 209;
+	
+	// Auxiliary variable needed to ensure that the message thrown when the UAV gets to the end is shown only once
+	public static boolean[] lastWaypointReached;
 
 	// Communications finite state machine. States of the MAVLink protocol
 	public static AtomicIntegerArray MAVStatus;
@@ -372,7 +427,6 @@ public class UAVParam {
 		}
 	}
 
-	// Auxiliary variable needed to ensure that the message thrown when the UAV gets to the end is shown only once
-	public static boolean[] lastWaypointReached;
 	
+
 }

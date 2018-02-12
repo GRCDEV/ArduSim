@@ -37,31 +37,30 @@ public class MBCAPGUITools {
 
 	/** Checks the validity of the configuration of the protocol. */
 	public static boolean isValidProtocolConfiguration(MBCAPConfigDialogPanel panel) {
-		// Connection parameters
-		if (!GUIHelper.isValidPort((String) panel.portTextField.getText())) {
-			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.PORT_ERROR);
-			return false;
-		}
-
 		// Beaconing parameters
-		if (!GUIHelper.isValidInteger((String) panel.beaconingPeriodTextField.getText())) {
+		String validating = (String) panel.beaconingPeriodTextField.getText();
+		if (!GUIHelper.isValidInteger(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.BEACON_PERIOD_ERROR);
 			return false;
 		}
-		if (!GUIHelper.isValidInteger((String) panel.numBeaconsTextField.getText())) {
+		validating = (String) panel.numBeaconsTextField.getText();
+		if (!GUIHelper.isValidInteger(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.BEACON_REFRESH_ERROR);
 			return false;
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.beaconExpirationTimeTextField.getText())) {
+		validating = (String) panel.beaconExpirationTimeTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.BEACON_EXPIRATION_ERROR);
 			return false;
 		}
-		double beaconExpirationTime = Double.parseDouble((String) panel.beaconExpirationTimeTextField.getText());
-		if (!GUIHelper.isValidPositiveDouble((String) panel.beaconFlyingTimeTextField.getText())) {
+		double beaconExpirationTime = Double.parseDouble(validating);
+		validating = (String) panel.beaconFlyingTimeTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.FLYING_TIME_ERROR_1);
 			return false;
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.hopTimeTextField.getText())) {
+		validating = (String) panel.hopTimeTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.HOP_TIME_ERROR);
 			return false;
 		}
@@ -83,30 +82,38 @@ public class MBCAPGUITools {
 			return false;
 		}
 
-		// Collision detection parameters
-		if (!GUIHelper.isValidPositiveDouble((String) panel.collisionCheckPeriodTextField.getText())) {
-			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.COLLISION_PERIOD_ERROR);
-			return false;
-		}
-		String validating = (String) panel.collisionDistanceTextField.getText();
-		if (!GUIHelper.isValidPositiveDouble(validating)) {
-			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.COLLISION_DET_THRESHOLD_ERROR);
-			return false;
-		}
-		double collisionDistance = Double.parseDouble(validating);
-
 		// Collision avoidance protocol parameters
 		validating = (String) panel.collisionRiskDistanceTextField.getText();
 		if (!GUIHelper.isValidPositiveDouble(validating)) {
-			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR);
+			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_1);
 			return false;
 		}
 		double collisionRiskDistance = Double.parseDouble(validating);
-		if (!GUIHelper.isValidPositiveDouble((String) panel.collisionRiskAltitudeDifferenceTextField.getText())) {
-			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR);
+		boolean checkCollision = UAVParam.collisionCheckEnabled;
+		double collisionDistance = 0;
+		if (checkCollision) {
+			collisionDistance = UAVParam.collisionDistance;
+			if (collisionRiskDistance <= collisionDistance) {
+				GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_1);
+				return false;
+			}
+		}
+		validating = (String) panel.collisionRiskAltitudeDifferenceTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
+			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_1);
 			return false;
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.maxTimeTextField.getText())) {
+		double collisionRiskAltitudeDifference = Double.parseDouble(validating);
+		double collisionAltitudeDifference;
+		if (checkCollision) {
+			collisionAltitudeDifference = UAVParam.collisionAltitudeDifference;
+			if (collisionRiskAltitudeDifference <= collisionAltitudeDifference) {
+				GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_2);
+				return false;
+			}
+		}
+		validating = (String) panel.maxTimeTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.WARN_TIME_ERROR);
 			return false;
 		}
@@ -120,7 +127,8 @@ public class MBCAPGUITools {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.CHECK_THRESHOLD_ERROR_2);
 			return false;
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.riskCheckPeriodTextField.getText())) {
+		validating = (String) panel.riskCheckPeriodTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.CHECK_PERIOD_ERROR);
 			return false;
 		}
@@ -129,28 +137,34 @@ public class MBCAPGUITools {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.SAFE_DISTANCE_ERROR_1);
 			return false;
 		}
-		double safePlaceDistance = Double.parseDouble(validating);
-		if (safePlaceDistance <= collisionDistance) {
-			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.SAFE_DISTANCE_ERROR_2);
-			return false;
+		if (checkCollision) {
+			double safePlaceDistance = Double.parseDouble(validating);
+			if (safePlaceDistance <= collisionDistance) {
+				GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.SAFE_DISTANCE_ERROR_2);
+				return false;
+			}
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.standStillTimeTextField.getText())) {
+		validating = (String) panel.standStillTimeTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.HOVERING_TIMEOUT_ERROR);
 			return false;
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.passingTimeTextField.getText())) {
+		validating = (String) panel.passingTimeTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.OVERTAKE_TIMEOUT_ERROR);
 			return false;
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.solvedTimeTextField.getText())) {
+		validating = (String) panel.solvedTimeTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.RESUME_MODE_DELAY_ERROR);
 			return false;
 		}
-		if (!GUIHelper.isValidPositiveDouble((String) panel.deadlockTimeoutTextField.getText())) {
+		validating = (String) panel.deadlockTimeoutTextField.getText();
+		if (!GUIHelper.isValidPositiveDouble(validating)) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.DEADLOCK_TIMEOUT_ERROR_1);
 			return false;
 		}
-		double deadlockTimeout = Double.parseDouble((String) panel.deadlockTimeoutTextField.getText());
+		double deadlockTimeout = Double.parseDouble(validating);
 		if (deadlockTimeout < beaconExpirationTime) {
 			GUIHelper.warn(Text.VALIDATION_WARNING, MBCAPText.DEADLOCK_TIMEOUT_ERROR_2);
 			return false;
@@ -160,9 +174,6 @@ public class MBCAPGUITools {
 
 	/** Stores the configuration of the protocol in variables. */
 	public static void storeProtocolConfiguration(MBCAPConfigDialogPanel panel) {
-		// Connection parameters
-		MBCAPParam.MBCAPport = Integer.parseInt((String) panel.portTextField.getText());
-
 		// Beaconing parameters
 		MBCAPParam.beaconingPeriod = Integer.parseInt((String) panel.beaconingPeriodTextField.getText());
 		MBCAPParam.numBeacons = Integer.parseInt((String) panel.numBeaconsTextField.getText());
@@ -173,11 +184,6 @@ public class MBCAPGUITools {
 		MBCAPParam.hopTime = Double.parseDouble((String)panel.hopTimeTextField.getText());
 		MBCAPParam.hopTimeNS = (long) (MBCAPParam.hopTime * 1000000000l);
 		MBCAPParam.minSpeed = Double.parseDouble((String) panel.minSpeedTextField.getText());
-
-		// Collision detection parameters
-		MBCAPParam.collisionCheckPeriod = (long) (Double
-				.parseDouble((String) panel.collisionCheckPeriodTextField.getText()) * 1000000000l);
-		MBCAPParam.collisionDistance = Double.parseDouble((String) panel.collisionDistanceTextField.getText());
 
 		// Collision avoidance protocol
 		MBCAPParam.collisionRiskDistance = Double
@@ -197,12 +203,9 @@ public class MBCAPGUITools {
 	}
 
 	/** Loads the default protocol configuration from variables. */
-	public static void loadDefaultProtocolConfiguration(MBCAPConfigDialogPanel panel) {
+	public static void loadDefaultProtocolConfiguration(final MBCAPConfigDialogPanel panel) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				// Connection parameters
-				panel.portTextField.setText("" + MBCAPParam.MBCAPport);
-
 				// Beaconing parameters
 				panel.beaconingPeriodTextField.setText("" + MBCAPParam.beaconingPeriod);
 				panel.numBeaconsTextField.setText("" + MBCAPParam.numBeacons);
@@ -210,10 +213,6 @@ public class MBCAPGUITools {
 				panel.beaconFlyingTimeTextField.setText("" + MBCAPParam.beaconFlyingTime);
 				panel.hopTimeTextField.setText("" + MBCAPParam.hopTime);
 				panel.minSpeedTextField.setText("" + MBCAPParam.minSpeed);
-
-				// Collision detection parameters
-				panel.collisionCheckPeriodTextField.setText("" + ((double) MBCAPParam.collisionCheckPeriod) / 1000000000l);
-				panel.collisionDistanceTextField.setText("" + MBCAPParam.collisionDistance);
 
 				// Collision avoidance protocol parameters
 				panel.collisionRiskDistanceTextField.setText("" + MBCAPParam.collisionRiskDistance);
@@ -277,8 +276,8 @@ public class MBCAPGUITools {
 						&& UAVParam.flightMode.get(i).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
 					g.setColor(Color.RED);
 					ellipse = new Ellipse2D.Double(
-							currentPXLocation.x-MBCAPParam.collisionScreenDistance, currentPXLocation.y-MBCAPParam.collisionScreenDistance,
-							2*MBCAPParam.collisionScreenDistance, 2*MBCAPParam.collisionScreenDistance
+							currentPXLocation.x-UAVParam.collisionScreenDistance, currentPXLocation.y-UAVParam.collisionScreenDistance,
+							2*UAVParam.collisionScreenDistance, 2*UAVParam.collisionScreenDistance
 							);
 					g.draw(ellipse);
 				}
@@ -299,8 +298,8 @@ public class MBCAPGUITools {
 		Point2D.Double a = GUIHelper.locatePoint(locationUTM.x, locationUTM.y);
 		Point2D.Double b = GUIHelper.locatePoint(locationUTM.x + MBCAPParam.collisionRiskDistance, locationUTM.y);
 		MBCAPParam.collisionRiskScreenDistance =b.x - a.x;
-		b = GUIHelper.locatePoint(locationUTM.x + MBCAPParam.collisionDistance, locationUTM.y);
-		MBCAPParam.collisionScreenDistance = b.x - a.x;
+		b = GUIHelper.locatePoint(locationUTM.x + UAVParam.collisionDistance, locationUTM.y);
+		UAVParam.collisionScreenDistance = b.x - a.x;
 	}
 	
 	/** Stores (or removes when p==null) the collision risk location that is drawn. */
@@ -377,7 +376,7 @@ public class MBCAPGUITools {
 		long[] uavPassingTime = new long[Param.numUAVs];
 		long[] uavEmergencyLandTime = new long[Param.numUAVs];
 		for (int i = 0; i < Param.numUAVs; i++) {
-			sb.append(Text.UAV_ID + " " + Param.id[i] + "\n");
+			sb.append(Text.UAV_ID).append(" ").append(Param.id[i]).append("\n");
 			if (MBCAPParam.progress[i].size() == 0) {
 				// In this case, only the global time is available
 				uavNormalTime[i] = Param.testEndTime[i] - Param.startTime;
@@ -437,18 +436,18 @@ public class MBCAPGUITools {
 					break;
 				}
 			}
-			sb.append(MBCAPState.NORMAL.getName() + " = " + GUIHelper.timeToString(0, uavNormalTime[i]) + " ("
-					+ String.format("%.2f%%", 100 * uavNormalTime[i] / (double) uavsTotalTime[i]) + ")\n"
-					+ MBCAPState.STAND_STILL.getName() + " = " + GUIHelper.timeToString(0, uavStandStillTime[i]) + " ("
-					+ String.format("%.2f%%", 100 * uavStandStillTime[i] / (double) uavsTotalTime[i]) + ")\n"
-					+ MBCAPState.MOVING_ASIDE.getName() + " = " + GUIHelper.timeToString(0, uavMovingTime[i]) + " ("
-					+ String.format("%.2f%%", 100 * uavMovingTime[i] / (double) uavsTotalTime[i]) + ")\n"
-					+ MBCAPState.GO_ON_PLEASE.getName() + " = " + GUIHelper.timeToString(0, uavGoOnPleaseTime[i]) + " ("
-					+ String.format("%.2f%%", 100 * uavGoOnPleaseTime[i] / (double) uavsTotalTime[i]) + ")\n"
-					+ MBCAPState.OVERTAKING.getName() + " = " + GUIHelper.timeToString(0, uavPassingTime[i]) + " ("
-					+ String.format("%.2f%%", 100 * uavPassingTime[i] / (double) uavsTotalTime[i]) + ")\n"
-					+ MBCAPState.EMERGENCY_LAND.getName() + " = " + GUIHelper.timeToString(0, uavEmergencyLandTime[i]) + " ("
-					+ String.format("%.2f%%", 100 * uavEmergencyLandTime[i] / (double) uavsTotalTime[i]) + ")\n");
+			sb.append(MBCAPState.NORMAL.getName()).append(" = ").append(GUIHelper.timeToString(0, uavNormalTime[i])).append(" (")
+					.append(String.format("%.2f%%", 100 * uavNormalTime[i] / (double) uavsTotalTime[i])).append(")\n");
+					sb.append(MBCAPState.STAND_STILL.getName()).append(" = ").append(GUIHelper.timeToString(0, uavStandStillTime[i])).append(" (")
+					.append(String.format("%.2f%%", 100 * uavStandStillTime[i] / (double) uavsTotalTime[i])).append(")\n");
+					sb.append(MBCAPState.MOVING_ASIDE.getName()).append(" = ").append(GUIHelper.timeToString(0, uavMovingTime[i])).append(" (")
+					.append(String.format("%.2f%%", 100 * uavMovingTime[i] / (double) uavsTotalTime[i])).append(")\n");
+					sb.append(MBCAPState.GO_ON_PLEASE.getName()).append(" = ").append(GUIHelper.timeToString(0, uavGoOnPleaseTime[i])).append(" (")
+					.append(String.format("%.2f%%", 100 * uavGoOnPleaseTime[i] / (double) uavsTotalTime[i])).append(")\n");
+					sb.append(MBCAPState.OVERTAKING.getName()).append(" = ").append(GUIHelper.timeToString(0, uavPassingTime[i])).append(" (")
+					.append(String.format("%.2f%%", 100 * uavPassingTime[i] / (double) uavsTotalTime[i])).append(")\n");
+					sb.append(MBCAPState.EMERGENCY_LAND.getName()).append(" = ").append(GUIHelper.timeToString(0, uavEmergencyLandTime[i])).append(" (")
+					.append(String.format("%.2f%%", 100 * uavEmergencyLandTime[i] / (double) uavsTotalTime[i])).append(")\n");
 		}
 		return sb.toString();
 	}
@@ -456,40 +455,24 @@ public class MBCAPGUITools {
 	/** Adds the protocol configuration to the results String. */
 	public static String getMBCAPConfiguration() {
 		StringBuilder sb = new StringBuilder(2000);
-		if (Param.IS_REAL_UAV) {
-			sb.append(MBCAPText.BROADCAST_PORT);
-		} else {
-			sb.append(MBCAPText.BROADCAST_SIM_PORT);
-		}
-		sb.append(" " + MBCAPParam.MBCAPport
-				+ "\n" + MBCAPText.BEACONING_PARAM + "\n\t" + MBCAPText.BEACON_INTERVAL + " " + MBCAPParam.beaconingPeriod
-				+ " " + Text.MILLISECONDS + "\n\t" + MBCAPText.BEACON_REFRESH + " " + MBCAPParam.numBeacons
-				+ "\n\t" + MBCAPText.BEACON_EXPIRATION + " "
-				+ String.format( "%.2f", MBCAPParam.beaconExpirationTime*0.000000001 )
-				+ " " + Text.SECONDS + "\n\t" + MBCAPText.TIME_WINDOW + " " + MBCAPParam.beaconFlyingTime
-				+ " " + Text.MILLISECONDS + "\n\t" + MBCAPText.INTERSAMPLE + " " + MBCAPParam.hopTime
-				+ " " + Text.MILLISECONDS + "\n\t" + MBCAPText.MIN_ADV_SPEED + " " + MBCAPParam.minSpeed
-				+ " " + Text.METERS_PER_SECOND + "\n" + MBCAPText.COLLISION_PARAM + "\n\t"
-				+ MBCAPText.COLLISION_PERIOD + " "
-				+ String.format( "%.2f", MBCAPParam.collisionCheckPeriod*0.000000001 )
-				+ " " + Text.SECONDS + "\n\t" + MBCAPText.COLLISION_DET_THRESHOLD + " " + MBCAPParam.collisionDistance
-				+ " " + Text.METERS + "\n" + MBCAPText.AVOID_PARAM + "\n\t" + MBCAPText.WARN_DISTANCE + " "
-				+ MBCAPParam.collisionRiskDistance + " " + Text.METERS + "\n\t" + MBCAPText.WARN_ALTITUDE + " "
-				+ MBCAPParam.collisionRiskAltitudeDifference + " " + Text.METERS + "\n\t"
-				+ MBCAPText.WARN_TIME + " "
-				+ String.format( "%.2f", MBCAPParam.collisionRiskTime*0.000000001 )
-				+ " " + Text.SECONDS + "\n\t" + MBCAPText.CHECK_THRESHOLD + " " + MBCAPParam.reactionDistance
-				+ " " + Text.METERS + "\n\t" + MBCAPText.CHECK_PERIOD + " "
-				+ String.format( "%.2f", MBCAPParam.riskCheckPeriod*0.000000001 )
-				+ " " + Text.SECONDS + "\n\t" + MBCAPText.SAFE_DISTANCE + " " + MBCAPParam.safePlaceDistance
-				+ " " + Text.METERS + "\n\t" + MBCAPText.HOVERING_TIMEOUT + " "
-				+ String.format( "%.2f", MBCAPParam.standStillTimeout*0.000000001 )
-				+ " " + Text.SECONDS + "\n\t" + MBCAPText.OVERTAKE_TIMEOUT + " "
-				+ String.format( "%.2f", MBCAPParam.passingTimeout*0.000000001 )
-				+ " " + Text.SECONDS + "\n\t" + MBCAPText.RESUME_MODE_DELAY + " "
-				+ String.format( "%.2f", MBCAPParam.solvedTimeout*0.000000001 )
-				+ " " + Text.SECONDS + "\n\t" + MBCAPText.DEADLOCK_TIMEOUT + " "
-				+ String.format( "%.2f", MBCAPParam.globalDeadlockTimeout*0.000000001 ) + " " + Text.SECONDS);
+		sb.append(MBCAPText.BEACONING_PARAM);
+		sb.append("\n\t").append(MBCAPText.BEACON_INTERVAL).append(" ").append(MBCAPParam.beaconingPeriod).append(" ").append(Text.MILLISECONDS);
+		sb.append("\n\t").append(MBCAPText.BEACON_REFRESH).append(" ").append(MBCAPParam.numBeacons);
+		sb.append("\n\t").append(MBCAPText.BEACON_EXPIRATION).append(" ").append(String.format( "%.2f", MBCAPParam.beaconExpirationTime*0.000000001 )).append(" ").append(Text.SECONDS);
+		sb.append("\n\t").append(MBCAPText.TIME_WINDOW).append(" ").append(MBCAPParam.beaconFlyingTime).append(" ").append(Text.MILLISECONDS);
+		sb.append("\n\t").append(MBCAPText.INTERSAMPLE).append(" ").append(MBCAPParam.hopTime).append(" ").append(Text.MILLISECONDS);
+		sb.append("\n\t").append(MBCAPText.MIN_ADV_SPEED).append(" ").append(MBCAPParam.minSpeed).append(" ").append(Text.METERS_PER_SECOND);
+		sb.append("\n").append(MBCAPText.AVOID_PARAM);
+		sb.append("\n\t").append(MBCAPText.WARN_DISTANCE).append(" ").append(MBCAPParam.collisionRiskDistance).append(" ").append(Text.METERS);
+		sb.append("\n\t").append(MBCAPText.WARN_ALTITUDE).append(" ").append(MBCAPParam.collisionRiskAltitudeDifference).append(" ").append(Text.METERS);
+		sb.append("\n\t").append(MBCAPText.WARN_TIME).append(" ").append(String.format( "%.2f", MBCAPParam.collisionRiskTime*0.000000001 )).append(" ").append(Text.SECONDS);
+		sb.append("\n\t").append(MBCAPText.CHECK_THRESHOLD).append(" ").append(MBCAPParam.reactionDistance).append(" ").append(Text.METERS);
+		sb.append("\n\t").append(MBCAPText.CHECK_PERIOD).append(" ").append(String.format( "%.2f", MBCAPParam.riskCheckPeriod*0.000000001 )).append(" ").append(Text.SECONDS);
+		sb.append("\n\t").append(MBCAPText.SAFE_DISTANCE).append(" ").append(MBCAPParam.safePlaceDistance).append(" ").append(Text.METERS);
+		sb.append("\n\t").append(MBCAPText.HOVERING_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.standStillTimeout*0.000000001 )).append(" ").append(Text.SECONDS);
+		sb.append("\n\t").append(MBCAPText.OVERTAKE_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.passingTimeout*0.000000001 )).append(" ").append(Text.SECONDS);
+		sb.append("\n\t").append(MBCAPText.RESUME_MODE_DELAY).append(" ").append(String.format( "%.2f", MBCAPParam.solvedTimeout*0.000000001 )).append(" ").append(Text.SECONDS);
+		sb.append("\n\t").append(MBCAPText.DEADLOCK_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.globalDeadlockTimeout*0.000000001 )).append(" ").append(Text.SECONDS);
 		return sb.toString();
 	}
 
