@@ -10,11 +10,13 @@ import api.GUIHelper;
 import api.MissionHelper;
 import api.pojo.Point3D;
 import main.Param;
+import main.Text;
 import main.Param.SimulatorState;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
 import sim.logic.SimParam;
+import sim.logic.SimTools;
 import uavController.UAVParam;
 import uavController.UAVParam.Mode;
 
@@ -296,7 +298,16 @@ public class CollisionDetectorThread extends Thread {
 									// Progress update
 									MBCAPGUITools.updateState(numUAV, MBCAPState.MOVING_ASIDE);
 									// Moving
-									if (API.moveUAV(numUAV, MBCAPParam.targetPointGeo[numUAV], (float) UAVParam.uavCurrentData[numUAV].getZRelative())) {
+									if (API.moveUAV(numUAV, MBCAPParam.targetPointGeo[numUAV], (float) UAVParam.uavCurrentData[numUAV].getZRelative(), MBCAPParam.SAFETY_DISTANCE_RANGE)) {
+										// We have to wait until the UAV stops
+										long time = System.nanoTime();
+										while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
+											GUIHelper.waiting(UAVParam.STABILIZATION_WAIT_TIME);
+											if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
+												SimTools.println(SimParam.prefix[numUAV] + Text.MOVING_ERROR_2);
+												break;
+											}
+										}
 										MissionHelper.log(SimParam.prefix[numUAV] + MBCAPText.MOVED);
 									} else {
 										MissionHelper.log(SimParam.prefix[numUAV] + MBCAPText.MOVING_ERROR);

@@ -58,7 +58,7 @@ public class MBCAPParam {
 	
 	// Parameters related to the actions undertaken when a collision risk takes place
 	public static double safePlaceDistance = 20; // (m) Minimum safety distance to the other UAV path
-	public static final double PRECISION_MARGIN = 0.1; // (m) In case a precision error occurs
+	public static final double PRECISION_MARGIN = 0.5; // (m) In case a precision error occurs
 	public static final double SAFETY_DISTANCE_RANGE = 1; // (m) Maximum distance to consider that the UAV has reached the safety position
 	public static Point2D.Double[] targetPointUTM;			// Safety position to move towards (UTM coordinates)
 	public static GeoCoordinates[] targetPointGeo;	// Safety position to move towards (Mercator coordinates)

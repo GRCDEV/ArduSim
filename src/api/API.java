@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import api.pojo.GeoCoordinates;
+import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import main.Param;
 import main.Text;
@@ -186,9 +187,10 @@ public class API {
 	}
 
 	/** API: Moves the UAV to a new position.
+	 * <p>Blocking method.
 	 * <p>Returns true if the command was successful.
 	 * <p>The UAV must be in guided mode. */
-	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude) {
+	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold) {
 		UAVParam.newLocation[numUAV][0] = (float)geo.latitude;
 		UAVParam.newLocation[numUAV][1] = (float)geo.longitude;
 		UAVParam.newLocation[numUAV][2] = relAltitude;
@@ -201,22 +203,11 @@ public class API {
 			SimTools.println(SimParam.prefix[numUAV] + Text.MOVING_ERROR_1);
 			return false;
 		} else {
-			// Once the command is issued, we have to wait until the UAV starts the movement
-			long time = System.nanoTime();
-			while (UAVParam.uavCurrentData[numUAV].getSpeed() < 4 * UAVParam.STABILIZATION_SPEED) {
+			UTMCoordinates utm = GUIHelper.geoToUTM(geo.latitude, geo.longitude);
+			Point2D.Double destination = new Point2D.Double(utm.Easting, utm.Northing);
+			// Once the command is issued, we have to wait until the UAV approaches to destination
+			while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold) {
 				GUIHelper.waiting(UAVParam.STABILIZATION_WAIT_TIME);
-				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
-					SimTools.println(SimParam.prefix[numUAV] + Text.MOVING_ERROR_2);
-					return false;
-				}
-			}
-			// Finally, we have to wait until the UAV stops
-			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
-				GUIHelper.waiting(UAVParam.STABILIZATION_WAIT_TIME);
-				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
-					SimTools.println(SimParam.prefix[numUAV] + Text.MOVING_ERROR_3);
-					return false;
-				}
 			}
 			return true;
 		}

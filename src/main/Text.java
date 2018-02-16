@@ -297,8 +297,7 @@ public class Text {
 	public static final String STABILIZE_ALTITUDE = "Altitude stabilized.";
 	public static final String STABILIZE_ALTITUDE_ERROR = "Error getting the altitude control.";
 	public static final String MOVING_ERROR_1 = "Error changing position.";
-	public static final String MOVING_ERROR_2 = "Can't increase speed while moving to a new position.";
-	public static final String MOVING_ERROR_3 = "Can't stabilize position in destination position.";
+	public static final String MOVING_ERROR_2 = "Can't stabilize position in destination position.";
 	public static final String MISSION_DELETE = "Previous mission erased.";
 	public static final String MISSION_DELETE_ERROR = "Error erasing the current mission.";
 	public static final String MISSION_SENT = "Mission sent.";
