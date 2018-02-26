@@ -7,5 +7,7 @@ public class MissionText {
 	// General errors
 	public static final String START_MISSION_ERROR = "Error starting the mission of the UAVs";
 	public static final String LAND_ERROR = "Was unable to land.";
+	// Logs stored
+	public static final String MISSION_SUFIX = "mission_AutoCAD.scr";
 	
 }

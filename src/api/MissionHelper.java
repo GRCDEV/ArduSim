@@ -5,12 +5,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import javax.xml.parsers.DocumentBuilder;
@@ -659,7 +655,7 @@ public class MissionHelper {
 		StringBuilder sb;
 		int j;
 		for (int i=0; i<Param.numUAVs; i++) {
-			file = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MBCAPText.MISSION_SUFIX);
+			file = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MissionText.MISSION_SUFIX);
 			sb = new StringBuilder(2000);
 			sb.append("._PLINE\n");
 			j = 0;

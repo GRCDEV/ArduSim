@@ -104,7 +104,6 @@ public class MBCAPText {
 	public static final String STATE_EMERGENCY_LAND = "Emergency land";
 
 	// Logs stored
-	public static final String MISSION_SUFIX = "mission_AutoCAD.scr";
 	public static final String BEACONS_SUFIX = "beacons.csv";
 	public static final String MAX_ERROR_LINES_SUFIX = "max_error_per_beacon.scr";
 	public static final String BEACON_TOTAL_ERROR_SUFIX = "error_per_beacon.csv";
