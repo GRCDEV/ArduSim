@@ -64,7 +64,7 @@ public class UAVParam {
 	public static boolean carrierSensingEnabled = true;						// Whether the carrier sensing is enabled or not
 	public static IncomingMessageQueue[] mBuffer;							// Array with the message queues used as buffers
 	public static final int RECEIVING_BUFFER_PACKET_SIZE = 350;				// (packets) Initial size of the incoming queue q
-	public static int receivingBufferSize = 212992;							// (bytes) By default, the Ubutu receiving buffer size
+	public static int receivingBufferSize = 163840;							// (bytes) By default, the Raspberry Pi 3 receiving buffer size
 	public static long[] maxCompletedTEndTime;								// Array with the later completed transfer finish time for each sending UAV when using collision detection
 	public static final int MESSAGE_WAITING_TIME = 1;
 	
