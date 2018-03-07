@@ -50,10 +50,10 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 		Name | Category/Name/Description
 		--- | ---
-		autoconf | Devel &#124; autoconf: Wrapper scripts for autoconf commands
-		automake | Devel &#124; automake: Wrapper for multiple versions of Automake
-		ccache | Devel &#124; ccache: A C compiler cache for improving recompilation
-		g++ | Devel &#124; gcc-g++ GNU Compiler Collection (C++)
+		autoconf | Devel &#23AE; autoconf: Wrapper scripts for autoconf commands
+		automake | Devel \U23AE automake: Wrapper for multiple versions of Automake
+		ccache | Devel \U+23AE ccache: A C compiler cache for improving recompilation
+		g++ | Devel \u23AE gcc-g++ GNU Compiler Collection (C++)
 		git | Devel &#124; git: Distributed version control system
 		libtool | Devel &#124; libtool: Generic library support script
 		make | Devel &#124; make: The GNU version of the ‘make’ utility
