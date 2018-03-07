@@ -50,20 +50,19 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 		Name | Category/Name/Description
 		--- | ---
-		autoconf | Devel &#23AE; autoconf: Wrapper scripts for autoconf commands
-		automake | Devel \U23AE automake: Wrapper for multiple versions of Automake
-		ccache | Devel \U+23AE ccache: A C compiler cache for improving recompilation
-		g++ | Devel \u23AE gcc-g++ GNU Compiler Collection (C++)
-		git | Devel [U+23AE] git: Distributed version control system
-		libtool | Devel &#124; libtool: Generic library support script
-		make | Devel &#124; make: The GNU version of the ‘make’ utility
-		gawk | Interpreters &#124; gawk: GNU awk, a pattern scanning and processing language
-		libexpat | Libs &#124; libexpat-devel: Expat XML parser library (development files)
-		libxml2-devel | Libs &#124; libxml2-devel: Gnome XML library (development)
-		libxslt-devel | Libs &#124; libxslt-devel: GNOME XSLT library (development)
-		python2-devel | Python `[|]` python2-devel: Python2 language interpreter
-		procps | System `|` procps-ng: System and process monitoring utilities
-		trash | `book[/bookstore/@specialty=@style]`
+		autoconf | Devel - autoconf: Wrapper scripts for autoconf commands
+		automake | Devel - automake: Wrapper for multiple versions of Automake
+		ccache | Devel - ccache: A C compiler cache for improving recompilation
+		g++ | Devel - gcc-g++ GNU Compiler Collection (C++)
+		git | Devel - git: Distributed version control system
+		libtool | Devel - libtool: Generic library support script
+		make | Devel - make: The GNU version of the ‘make’ utility
+		gawk | Interpreters - gawk: GNU awk, a pattern scanning and processing language
+		libexpat | Libs - libexpat-devel: Expat XML parser library (development files)
+		libxml2-devel | Libs - libxml2-devel: Gnome XML library (development)
+		libxslt-devel | Libs - libxslt-devel: GNOME XSLT library (development)
+		python2-devel | Python - python2-devel: Python2 language interpreter
+		procps | System - procps-ng: System and process monitoring utilities
    
 	2. When all the packages are selected, click through the rest of the prompts and accept all other default options (including the additional dependencies) until the end of the setup. From now we will use *Cygwin* to refer indistinctly to the 32 (*Cygwin*) and 64 bits (*Cygwin64*) installed program and folders.
    
@@ -72,9 +71,9 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 	1. Open a *Cygwin terminal* from the desktop to initialize user files.
 	2. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, so the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
 
-		~~~~
+		```
 		export PATH=$PATH:$HOME/ardupilot/Tools/autotest
-		~~~~
+		```
 
 5. Install required Python packages
 
