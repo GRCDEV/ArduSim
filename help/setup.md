@@ -79,28 +79,28 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 	Open a *Cygwin terminal* from the desktop and install the following packages:
 
-	~~~~
+	```
 	python -m ensurepip --user
 	python -m pip install --user future
 	python -m pip install --user lxml
 	python -m pip install --user uavcan`
-	~~~~
+	```
 
 6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal input this lines:
 
-	~~~~
+	```
 	git clone git://github.com/ArduPilot/ardupilot.git
 	cd ardupilot
 	git submodule update --init --recursive
-	~~~~
+	```
 
 7. Make the multicopter. In the same *Cygwin terminal* and already within the *ardupilot* folder type:
 
-	~~~~
+	```
 	cd ArduCopter
 	make sitl -j4
 	sim_vehicle.py -w
-	~~~~
+	```
 
 	Once fully loaded, use "Ctrl+C" to close the running program.
 
@@ -116,72 +116,72 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 1. Install Java if not present.
 
 	On debian based systems (Ubuntu, Mint, ...) run:
-	~~~~
+	```
 	sudo add-apt-repository ppa:webupd8team/java
 	sudo apt-get update
 	sudo apt-get install oracle-java8-installer
-	~~~~
+	```
     
 	On RPM based systems (CentOS, Fedora, ...) you must go to the [Oracle official download page](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html), accept the license agreement, and download the appropriate file. The, execute the following command, changing the version number accordingly to the download one:
-	~~~~
+	```
 	sudo yum localinstall jre-8u162-linux-x64.rpm
-	~~~~
+	```
 
 2. Install git if not present.
 
 	On debian based systems (Ubuntu, Mint, ...) run:
-	~~~~
+	```
 	sudo apt-get install git-core
-	~~~~
+	```
 
 	On RPM based systems (CentOS, Fedora, ...) run:
-	~~~~
+	```
 	sudo yum install git
-	~~~~
+	```
 
 3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal go to your home folder (*/home/user_name*) input this lines:
 
-	~~~~
+	```
 	git clone git://github.com/ArduPilot/ardupilot.git
 	cd ardupilot
 	git submodule update --init --recursive
-	~~~~
+	```
 
 4. Install required packages.
 
 	On debian based systems (Ubuntu, Mint, ...) run:
-	~~~~
+	```
 	sudo apt-get install python-matplotlib python-serial python-wxgtk3.0 python-wxtools python-lxml
 	sudo apt-get install python-scipy python-opencv ccache gawk git python-pip python-pexpect
 	sudo pip install future pymavlink MAVProxy
-	~~~~
+	```
     
 	On RPM based systems (CentOS, Fedora, ...) run:
-	~~~~
+	```
 	sudo yum install opencv-python wxPython python-pip pyserial scipy python-lxml python-matplotlib python-pexpect python-matplotlib-wx
-	~~~~
+	```
 
 5. Set up path. This procedure makes it easy to execute simulated vehicles under SITL (sim_vehicle.py will be found from anywhere), but it is not strictly needed to just compile a multicopter, if the next steps are followed.
 
 	Edit the **.bashrc** file located on the user home folder */home/user_name/.bashrc*, to add the following lines:
 
-	~~~~
+	```
 	export PATH=$PATH:$HOME/ardupilot/Tools/autotest
 	export PATH=/usr/lib/ccache:$PATH
-	~~~~
+	```
     
 	Next, reload the PATH using the *dot* command:
 
-	~~~~
+	```
 	. ~/.bashrc
-	~~~~
+	```
 
 6. Make the multicopter.
 
-	~~~~
+	```
 	cd $HOME/ardupilot/ArduCopter
 	sim_vehicle.py -w
-	~~~~
+	```
 
 	Once fully loaded, use "Ctrl+C" to close the running program.
 
