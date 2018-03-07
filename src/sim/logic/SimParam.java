@@ -84,6 +84,8 @@ public class SimParam {
 	public static final String IMDISK_REGISTRY_PATH = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\ImDisk";
 	public static final String IMDISK_REGISTRY_KEY = "DisplayName";
 	public static final String IMDISK_REGISTRY_VALUE = "ImDisk Virtual Disk Driver";
+	public static final String IMDISK_REGISTRY_PATH2 = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\ImDiskApp";
+	public static final String IMDISK_REGISTRY_VALUE2 = "ImDisk Toolkit";
 	public static final String RAM_DRIVE_NAME = "ArduSimTemp";	// Maximux size = 11 characters
 	public static final String[] WINDOWS_DRIVES = new String[] {"Z", "Y", "X", "W", "V", "U", "T", "S", "R", "Q", "P", "O", "N", "M", "L", "K", "J", "I", "H", "G", "F", "E", "D", "C", "B", "A"};
 	public static final int UAV_RAM_DRIVE_SIZE = 5;			// (MB) RAM drive size needed by one UAV (without logging)

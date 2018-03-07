@@ -1062,6 +1062,44 @@ public class Tools {
 				SimParam.imdiskIsInstalled = true;
 				return;
 			}
+			
+			// Check again with ImDisk Toolkit (other installation pack)
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
+						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
+						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
+						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
+			try {
+				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
+						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			}
+			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
+				SimParam.imdiskIsInstalled = true;
+				return;
+			}
 		}
 		SimParam.imdiskIsInstalled = false;
 	}
