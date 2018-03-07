@@ -77,14 +77,14 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 5. Install required Python packages.
 
-	Open a *Cygwin terminal* from the desktop and install the following packages:
+    Open a *Cygwin terminal* from the desktop and install the following packages:
 
-    ```bash
-    python -m ensurepip --user
-    python -m pip install --user future
-    python -m pip install --user lxml
-    python -m pip install --user uavcan
-    ```
+        ```
+        python -m ensurepip --user
+        python -m pip install --user future
+        python -m pip install --user lxml
+        python -m pip install --user uavcan
+        ```
 
 6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal input this lines:
 
