@@ -10,7 +10,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 [SITL setup in Windows](#markdown-header-sitl-setup-in-windows)
 
-[SITL setup in Linux)](#markdown-header-sitl-setup-in-linux-\(tested-in-Ubuntu\))
+[SITL setup in Linux)](#markdown-header-sitl-setup-in-linux)
 
 ## System requirements
 
@@ -79,12 +79,12 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 	Open a *Cygwin terminal* from the desktop and install the following packages:
 
-```
+	```
 python -m ensurepip --user
 python -m pip install --user future
 python -m pip install --user lxml
 python -m pip install --user uavcan
-```
+	```
 
 6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal input this lines:
 
@@ -113,7 +113,7 @@ python -m pip install --user uavcan
 8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters, a setup that speeds up the execution when running ArduSim on a computer with a slow hard drive.
 
 
-## SITL setup in Linux (tested in Ubuntu)
+## SITL setup in Linux
 
 The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal.
 
