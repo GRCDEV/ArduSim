@@ -68,23 +68,19 @@ The next steps must be followed in order to compile a multicopter. Alternatively
    
 4. Set up folders/paths in Cygwin. This procedure makes it easy to execute simulated vehicles under SITL (sim_vehicle.py will be found from anywhere), but it is not strictly needed to just compile a multicopter, if the next steps are followed.
 
-	1. Open a *Cygwin terminal* from the desktop to initialize user files and close it.
-	2. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, so the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
+    1. Open a *Cygwin terminal* from the desktop to initialize user files and close it.
+    2. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, so the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
 
-		```
-		export PATH=$PATH:$HOME/ardupilot/Tools/autotest
-		```
+        export PATH=$PATH:$HOME/ardupilot/Tools/autotest
 
 5. Install required Python packages.
 
     Open a *Cygwin terminal* from the desktop and install the following packages:
 
-        ```
         python -m ensurepip --user
         python -m pip install --user future
         python -m pip install --user lxml
         python -m pip install --user uavcan
-        ```
 
 6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal input this lines:
 
