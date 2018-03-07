@@ -71,7 +71,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
     1. Open a *Cygwin terminal* from the desktop to initialize user files and close it.
     2. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, so the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
 
-        export PATH=$PATH:$HOME/ardupilot/Tools/autotest
+            export PATH=$PATH:$HOME/ardupilot/Tools/autotest
 
 5. Install required Python packages.
 
