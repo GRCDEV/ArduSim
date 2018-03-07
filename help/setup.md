@@ -81,8 +81,11 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 	```
     python -m ensurepip --user
+    
     python -m pip install --user future
+    
     python -m pip install --user lxml
+    
     python -m pip install --user uavcan
 	```
 
