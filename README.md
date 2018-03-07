@@ -9,8 +9,6 @@ The communication among multicopters emulates an Ad-hoc WiFi network link in the
 
 ## Table of contents
 
-[System requirements](#markdown-header-system-requirements)
-
 [ArduSim setup](#markdown-header-ardusim-setup)
 
 [Protocol development](#markdown-header-protocol-development)
@@ -20,33 +18,6 @@ The communication among multicopters emulates an Ad-hoc WiFi network link in the
 [Deployment on real devices](#markdown-header-deployment-on-real-devices---raspberry-pi-3-example)
 
 [Copyright information](#markdown-header-copyright-information)
-
-
-## System requirements
-
-###### Minimal:
-
-* Intel core i5 (four cores version)
-
-* RAM 6 GB
-
-* Microsoft Windows 7
-
-* Java SE Runtime Environment 7 32 bits
-
-###### Recommended:
-
-* Intel core i7 (four cores with Hyper-Threading)
-
-* RAM 16 GB
-
-* Linux (i.e. Ubuntu 16.04)
-
-* Java SE Runtime Environment 8 64 bits (or latest version)
-
-* ImDisk Virtual Disk Driver (under Windows)
-
-
 
 ## ArduSim setup
 

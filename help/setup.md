@@ -54,7 +54,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 		automake | Devel \U23AE automake: Wrapper for multiple versions of Automake
 		ccache | Devel \U+23AE ccache: A C compiler cache for improving recompilation
 		g++ | Devel \u23AE gcc-g++ GNU Compiler Collection (C++)
-		git | Devel &#124; git: Distributed version control system
+		git | Devel [U+23AE] git: Distributed version control system
 		libtool | Devel &#124; libtool: Generic library support script
 		make | Devel &#124; make: The GNU version of the ‘make’ utility
 		gawk | Interpreters &#124; gawk: GNU awk, a pattern scanning and processing language
