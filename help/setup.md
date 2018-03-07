@@ -63,6 +63,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 		libxslt-devel | Libs &#124; libxslt-devel: GNOME XSLT library (development)
 		python2-devel | Python `[|]` python2-devel: Python2 language interpreter
 		procps | System `|` procps-ng: System and process monitoring utilities
+		trash | `book[/bookstore/@specialty=@style]`
    
 	2. When all the packages are selected, click through the rest of the prompts and accept all other default options (including the additional dependencies) until the end of the setup. From now we will use *Cygwin* to refer indistinctly to the 32 (*Cygwin*) and 64 bits (*Cygwin64*) installed program and folders.
    
