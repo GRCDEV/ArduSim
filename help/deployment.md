@@ -15,9 +15,9 @@ You are supposed to previously have a Pixhawk controlled multicopter and a Raspb
 ### Raspberry - Pixhawk serial link
 
 
-[Pixhawk setup](pixhawk.jpg)
+![Pixhawk setup](pixhawk.jpg)
 
-[Raspberry Pi 3 setup](raspberry.jpg)
+![Raspberry Pi 3 setup](raspberry.jpg)
 
 
 ### Wireless ad-hoc network
