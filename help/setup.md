@@ -94,9 +94,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         make sitl -j4
         sim_vehicle.py -w
 
-    Once fully loaded, use "Ctrl+C" to close the running program.
-
-    The second line builds the multicopter firmware *arducopter.elf*, and the third one uses MAVProxy to finally build the multicopter executable file *arducopter.exe* located in *C:\cygwin\home\user_name\ardupilot\build\sitl\bin*. Copy that file next to the ArduSim .jar file, and also the file *C:\cygwin\home\user_name\ardupilot\Tools\autotest\default_params\copter.param* to finish the basic setup process.
+    Once fully loaded, use "Ctrl+C" to close the running program. The second line builds the multicopter firmware *arducopter.elf*, and the third one uses MAVProxy to finally build the multicopter executable file *arducopter.exe* located in *C:\cygwin\home\user_name\ardupilot\build\sitl\bin*. Copy that file next to the ArduSim .jar file, and also the file *C:\cygwin\home\user_name\ardupilot\Tools\autotest\default_params\copter.param* to finish the basic setup process.
 
 8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters, a setup that speeds up the execution when running ArduSim on a computer with a slow hard drive.
 
@@ -161,6 +159,4 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         cd $HOME/ardupilot/ArduCopter
         sim_vehicle.py -w
 
-    Once fully loaded, use "Ctrl+C" to close the running program.
-
-    The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *$HOME/ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *$HOME/ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process.
+    Once fully loaded, use "Ctrl+C" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *$HOME/ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *$HOME/ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process.

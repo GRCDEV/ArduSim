@@ -41,9 +41,11 @@ java -jar ArduSim.jar parametros
 
 ## Deployment on real devices - Raspberry Pi 3 example
 
+You can deploy the developed protocol on real UAVs just changing the ArduSim execution parameters, as explained before. In order to do this, the real multicopter must meet the following requirements:
 
 
 
+As an example, in [this link](help/deployment.md) you can follow detailed instructions to setup de deployment on a muticopter with Pixhawk flight controller, with a Raspberry Pi 3 attached to it.  
 
 
 ## Copyright information
