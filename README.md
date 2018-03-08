@@ -21,7 +21,7 @@ The communication among multicopters emulates an Ad-hoc WiFi network link in the
 
 ## ArduSim setup
 
-[Setup details link](help/setup.md).
+Follow [this link](help/setup.md) for detailed instructions.
 
 ## Protocol development
 
