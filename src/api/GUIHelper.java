@@ -30,11 +30,14 @@ public class GUIHelper {
 
 	/** Generates an error message dialog and exits the application. */
 	public static void exit(String message) {
-		JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
-		if (!Param.IS_REAL_UAV
-				&& Param.simStatus != SimulatorState.CONFIGURING
+		if (Param.IS_REAL_UAV) {
+			System.out.println(Text.FATAL_ERROR + ": " + message);
+		} else {
+			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
+			if (Param.simStatus != SimulatorState.CONFIGURING
 				&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
-			Tools.closeSITL();
+				Tools.closeSITL();
+			}
 		}
 		System.exit(1);
 	}

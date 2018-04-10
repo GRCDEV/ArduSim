@@ -29,13 +29,28 @@ Por explicar
 
 
 
+
+
+
+
+
+
+
 ## ArduSim usage
+
+ArduSim can be executed with the following command line:
+
+    java -jar ArduSim.jar [-r <arg>] [-doFake -p <arg> -s <arg>]
+
+
+
+
 
 
 
 Recomendar ejecutar como root administrador para usar disco ram
 En una terminal de linux o windows
-java -jar ArduSim.jar parametros
+
 
 
 
@@ -49,3 +64,7 @@ As an example, in [this link](help/deployment.md) you can follow detailed instru
 
 
 ## Copyright information
+
+TODAVÍA EN ESTUDIO
+
+

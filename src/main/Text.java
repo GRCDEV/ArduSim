@@ -10,8 +10,14 @@ public class Text {
 	// Application name
 	public static final String APP_NAME = "ArduSim";
 	
-	// Protocol versions
+	// Default protocol
 	public static final String PROTOCOL_NONE = "none";
+	
+	// Simulator parameters parsing errors
+	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
+	public static final String PROTOCOL_NOT_FOUND_ERROR = "The specified protocol was not found. Valid protocols:";
+	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
+	
 	
 	// Configuration dialog window:
 	public static final String OK = "OK";
@@ -120,6 +126,10 @@ public class Text {
 	public static final String WIND_DIRECTION_ERROR = "The wind direction must be a valid positive integer.";
 	public static final String WIND_SPEED_ERROR_1 = "The wind speed must be a valid positive number.";
 	public static final String WIND_SPEED_ERROR_2 = "The wind speed must be greater or equal to " + UAVParam.WIND_THRESHOLD;
+	public static final String BIND_ERROR_1 = "Unable to bind port to receive commands from the computer assistant.";
+	public static final String BIND_ERROR_2 = "Unable to open socket to send status information to the computer assistant.";
+	public static final String BIND_ERROR_3 = "Unable to bind port to receive status information from the UAVs.";
+	public static final String SHUTDOWN_ERROR = "Operating system not supported.";
 	
 	// Progress dialog window:
 	public static final String PROGRESS_DIALOG_TITLE = "Test progress";
@@ -193,15 +203,9 @@ public class Text {
 	public static final String FILE_PARSING_ERROR_4 = "Waypoint file error: Wrong format in line:";
 	public static final String FILE_PARSING_ERROR_5 = "Waypoint file error: Waypoint 0 is needed but ignored, and\n waypoint 1 must be a take off.";
 	public static final String FILE_PARSING_ERROR_6 = "Waypoint file error: Waypoints are not in the propper sequence order.";
-	// Parsing speeds file
-	public static final String SPEEDS_NOT_FOUND = "No valid speeds file was found on current folder.";
-	public static final String SPEEDS_ERROR_3 = "Only one csv file must be stored on the current folder.";
-	public static final String SPEEDS_ERROR_4 = "UAV loaded speed must be greater than 0.";
-	public static final String SPEEDS_CSV_SELECTED = "Using first speeds value found on file:";
+	// Parsing speed(s) file(s)
 	public static final String SPEEDS_PARSING_ERROR_1 = "Speeds file: No speed values found.";
 	public static final String SPEEDS_PARSING_ERROR_2 = "Speeds file: Wrong format in line:";
-	// Parsing protocol file
-	public static final String PROTOCOL_NOT_FOUND = "No valid protocol file was found on current folder.";
 	
 	// Results dialog window:
 	public static final String RESULTS_TITLE = "Results";
@@ -276,7 +280,8 @@ public class Text {
 	
 	// MAVLink errors
 	public static final String MAVLINK_ERROR = "Unable to stablish MAVLink connection with all UAVs.";
-	public static final String GPS_FIX_ERROR = "Unable to get GPS fix from all UAVs.";
+	public static final String GPS_FIX_ERROR_1 = "Unable to get GPS fix from all UAVs.";
+	public static final String GPS_FIX_ERROR_2 = "Unable to get GPS fix.";
 	public static final String PARAMETER_1 = "New parameter value:";
 	public static final String PARAMETER_ERROR_1 = "Error modifying parameter:";
 	public static final String PARAMETER_2 = "Received new parameter:";
@@ -345,5 +350,19 @@ public class Text {
 	public static final String AVOID_ADSB_ARMED = "Avoid_Adsb_armed";
 	public static final String CIRCLE = "Circle";
 	public static final String CIRCLE_ARMED = "Circle_armed";
+	
+	// PC Companion
+	public static final String NUM_UAVS_COUNTER = "UAVs connected";
+	public static final String PROTOCOL = "Protocol:";
+	public static final String IDENTIFIER_HEADER = "identifier";
+	public static final String MAC_HEADER = "MAC";
+	public static final String IP_HEADER = "IP";
+	public static final String STATUS_HEADER = "status";
+	
+	
+	
+	
+	
+	
 
 }

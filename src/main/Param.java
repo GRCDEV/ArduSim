@@ -11,7 +11,10 @@ import uavController.UAVControllerThread;
 public class Param {
 	
 	// The experiment is done in simulator or on a real UAV?
-	public static final boolean IS_REAL_UAV = false;
+	public static volatile boolean IS_REAL_UAV;
+	
+	// The application is being run as a PC companion
+	public static volatile boolean IS_PC_COMPANION;
 	
 	// Whether the experiment is mission based or not
 	public static boolean simulationIsMissionBased;
@@ -83,6 +86,14 @@ public class Param {
 		public int getStateId() {
 			return this.id;
 		}
+		public static SimulatorState getStateById(int id) {
+			for (SimulatorState e : SimulatorState.values()) {
+				if (e.getStateId() == id) {
+					return e;
+				}
+			}
+			return null;
+		}
 	}
 	
 	// Wireless models enumerator
@@ -142,7 +153,8 @@ public class Param {
 		MBCAP_V2(2, MBCAPText.MBCAP_V2, true),	// Adapts the prediction to the theoretical like a magnet
 		MBCAP_V3(3, MBCAPText.MBCAP_V3, true),	// v2 taking the UAV acceleration into account
 		MBCAP_V4(4, MBCAPText.MBCAP_V4, true),	// v3 with a variable acceleration
-		SWARM_PROT_V1(5, SwarmProtText.PROTOCOL_TEXT, false);
+		SWARM_PROT_V1(5, SwarmProtText.PROTOCOL_TEXT, false),
+		FOLLOW_ME_V1(6, "Sigueme", false);
 		// New protocols should follow the increasing numeration
 
 		private final int id;
@@ -183,18 +195,17 @@ public class Param {
 			}
 			return "";
 		}
+		/** Returns the protocol given its name.
+		 * <p>Returns null if the protocol was not found. */
 		public static Protocol getProtocolByName(String name) {
 			for (Protocol p : Protocol.values()) {
-				if (p.getName().equals(name)) {
+				if (p.getName().toUpperCase().equals(name.toUpperCase())) {
 					return p;
 				}
 			}
 			return null;
 		}
 	}
-
-	
-
 	
 
 	

@@ -36,13 +36,18 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileSystemView;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.javatuples.Pair;
 
 import api.GUIHelper;
@@ -59,14 +64,18 @@ import main.Param.Protocol;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
 import mbcap.logic.MBCAPText;
+import pccompanion.PCCompanionGUI;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
+import sim.logic.FakeSenderThread;
 import sim.logic.GPSStartThread;
 import sim.logic.InitialConfigurationThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
 import sim.pojo.IncomingMessage;
 import sim.pojo.IncomingMessageQueue;
+import sim.pojo.PortScanResult;
+import sim.pojo.WinRegistry;
 import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
@@ -75,6 +84,131 @@ import uavController.UAVParam.Mode;
 /** This class contains general tools used by the simulator. */
 
 public class Tools {
+	
+	/** Parses the command line of the simulator.
+	 * <p>Returns false if running a PC companion and the thread execution must stop. */
+	public static boolean parseArgs(String[] args) {
+		String usageCommand = "java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-doFake -t <arg> -l <arg>] [-h]";
+		Option control = Option.builder("c").longOpt("pccompanion").required(true).desc("whether running as a PC companion for real UAVs (true) or not (false)").hasArg(true).build();
+		Option realUAV = Option.builder("r").longOpt("realUAV").required(false).desc("whether running in real UAV (true) or not (false)").hasArg(true).build();
+		Option protocol = Option.builder("p").longOpt("protocol").required(false).desc("selected protocol when running in real UAV").hasArg(true).build();
+		Option sp = Option.builder("s").longOpt("speed").required(false).desc("UAV speed (m/s)").hasArg(true).build();
+		Option periodOption = Option.builder("t").longOpt("period").required(false).desc("period between messages (ms)").hasArg(true).build();
+		Option sizeOption = Option.builder("l").longOpt("length").required(false).desc("message length (bytes)").hasArg(true).build();
+		Option doFakeSendingOption = new Option("doFake", "if true, it activates fake threads to simulate communications behavior.");
+		Options options = new Options();
+		options.addOption(control);
+		options.addOption(realUAV);
+		options.addOption(protocol);
+		options.addOption(sp);
+		options.addOption(periodOption);
+		options.addOption(sizeOption);
+		options.addOption(doFakeSendingOption);
+		Option help = Option.builder("h").longOpt("help").required(false).desc("ussage help").hasArg(false).build();
+		options.addOption(help);
+		CommandLineParser parser = new DefaultParser();
+		CommandLine cmdLine;
+		boolean pcCompanion = false;
+		try {
+			cmdLine = parser.parse(options, args);
+			HelpFormatter myHelp = new HelpFormatter();
+			String con = cmdLine.getOptionValue("c");
+			if (con == null || con.length() == 0 || (!con.toUpperCase().equals("TRUE") && !con.toUpperCase().equals("FALSE"))) {
+				myHelp.printHelp(usageCommand, options);
+				System.exit(1);
+			}
+			if (con.toUpperCase().equals("TRUE")) {
+				pcCompanion = true;
+			}
+			Param.IS_PC_COMPANION = pcCompanion;
+			if (pcCompanion && (cmdLine.hasOption("r") || cmdLine.hasOption("doFake"))) {
+				System.out.println(Text.COMPANION_ERROR + "\n");
+				myHelp.printHelp(usageCommand, options);
+				System.exit(1);
+			}
+			if (pcCompanion) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						PCCompanionGUI.companion = new PCCompanionGUI();
+					}
+				});
+				return false;
+			}
+			
+			if (cmdLine.hasOption("r")) {
+				String iRU = cmdLine.getOptionValue("r");
+				if (!iRU.toUpperCase().equals("TRUE") && !iRU.toUpperCase().equals("FALSE")) {
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				Param.IS_REAL_UAV = Boolean.parseBoolean(iRU.toLowerCase());
+			} else {
+				Param.IS_REAL_UAV = false;
+			}
+			if (Param.IS_REAL_UAV) {
+				if (!cmdLine.hasOption("p") || !cmdLine.hasOption("s")) {
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				String pr = cmdLine.getOptionValue("p");
+				Protocol pro = Protocol.getProtocolByName(pr.trim());
+				if (pro == null) {
+					System.out.println(Text.PROTOCOL_NOT_FOUND_ERROR);
+					for (Protocol p : Protocol.values()) {
+						System.out.println(p.getName());
+					}
+					System.out.println("\n");
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				Param.selectedProtocol = pro;
+				Param.simulationIsMissionBased = Param.selectedProtocol.isMissionBased();
+				String spe = cmdLine.getOptionValue("s");
+				if (!GUIHelper.isValidPositiveDouble(spe)) {
+					System.out.println(Text.SPEED_ERROR + "\n");
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				UAVParam.initialSpeeds = new double[1];
+				UAVParam.initialSpeeds[0] = Double.parseDouble(spe);
+				
+			}
+			if (cmdLine.hasOption("h")) {
+				myHelp.printHelp(usageCommand, options);
+				System.exit(0);
+			}
+			if (cmdLine.hasOption("doFake")) {
+				UAVParam.doFakeSending = true;
+				if (!cmdLine.hasOption("t") || !cmdLine.hasOption("l")) {
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				String periodString = cmdLine.getOptionValue("t");
+				if (!GUIHelper.isValidInteger(periodString) || Integer.parseInt(periodString) > 10000) {
+					System.out.println("The period between messages must be a valid positive integer lower or equal to 10000 ms.\n");
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+				String sizeString = cmdLine.getOptionValue("l");
+				if (!GUIHelper.isValidInteger(sizeString) || Integer.parseInt(sizeString) > 1472) {
+					System.out.println("The size of the messages must be a valid positive integer lower or equal to 1472 bytes.\n");
+					myHelp.printHelp(usageCommand, options);
+					System.exit(1);
+				}
+
+				FakeSenderThread.period = Integer.parseInt(periodString);
+				FakeSenderThread.messageSize = Integer.parseInt(sizeString);
+			} else {
+				UAVParam.doFakeSending = false;
+			}
+		} catch (ParseException e1) {
+			System.out.println(e1.getMessage() + "\n");
+			HelpFormatter myHelp = new HelpFormatter();
+			myHelp.printHelp(usageCommand, options);
+			System.exit(1);
+		}
+		return true;
+	}
 
 	/** Loads a mission from file when using a real UAV.
 	 * <p>Priority loading: 1st xml, 2nd waypoints, 3rd txt.
@@ -138,72 +272,6 @@ public class Tools {
 		return null;
 	}
 	
-	/** Loads a speed from csv file when using a real UAV.
-	 * <p>Only the first valid file/speed value found is used.
-	 * <p>Returns null if no valid speed value was found. */
-	public static Double loadSpeed(File parentFolder) {
-		File[] files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_CSV) && pathname.isFile();
-			}
-		});
-		if (files != null && files.length>0) {
-			// Only one csv file must be on the current folder
-			if (files.length>1) {
-				GUIHelper.exit(Text.SPEEDS_ERROR_3);
-			}
-			double[] speeds = SimTools.loadSpeedsFile(files[0].getAbsolutePath());
-			if (speeds != null && speeds.length > 0) {
-				SimTools.println(Text.SPEEDS_CSV_SELECTED + "\n" + files[0].getName());
-				if (speeds[0] <= 0) {
-					GUIHelper.exit(Text.SPEEDS_ERROR_4);
-				}
-				return speeds[0];
-			}
-		}
-		return null;
-	}
-	
-	/** Loads from a txt file the protocol to be appplied when using a real UAV.
-	 * <p>Only the first valid file/protocol name found is used.
-	 * <p>Returns null if no valid protocol name was found. */
-	public static Protocol loadProtocol(File parentFolder) {
-		File[] files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_TXT) && pathname.isFile();
-			}
-		});
-		Protocol prot = null;
-		if (files != null && files.length>0) {
-			for (int i=0; i<files.length; i++) {
-				// Trying to read one file
-				List<String> lines = new ArrayList<>();
-				
-				try (BufferedReader br = new BufferedReader(new FileReader(files[i]))) {
-					String line = null;
-					while ((line = br.readLine()) != null) {
-				        lines.add(line);
-				    }
-				} catch (IOException e) {
-					e.printStackTrace();
-					continue;
-				}
-				// Check file length
-				if (lines==null || lines.size()<1) {
-					continue;
-				}
-				String protName = lines.get(0).trim(); 
-				prot = Protocol.getProtocolByName(protName);
-				if (prot != null) {
-					return prot;
-				}
-			}
-		}
-		return prot;
-	}
-	
 	/** Initializes the data structures at the simulator start. */
 	@SuppressWarnings("unchecked")
 	public static void initializeDataStructures() {
@@ -229,6 +297,8 @@ public class Tools {
 
 		UAVParam.missionUTMSimplified = new AtomicReferenceArray<List<WaypointSimplified>>(Param.numUAVs);
 		UAVParam.lastWaypointReached = new boolean[Param.numUAVs];
+		
+		UAVParam.rcs = new AtomicReference[Param.numUAVs];
 		
 		SimParam.uavUTMPathReceiving = new ArrayBlockingQueue[Param.numUAVs];
 		SimParam.uavUTMPath = new ArrayList[Param.numUAVs];	// Useful for logging purposes
@@ -270,6 +340,8 @@ public class Tools {
 			
 			UAVParam.lastWaypointReached[i] = false;
 			
+			UAVParam.rcs[i] = new AtomicReference<>();
+			
 			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
 			
@@ -288,6 +360,10 @@ public class Tools {
 		
 		// UAV to UAV communication structures
 		if (Param.IS_REAL_UAV) {
+			UAVParam.sendSocket = new DatagramSocket[Param.numUAVs];
+			UAVParam.sendPacket = new DatagramPacket[Param.numUAVs];
+			UAVParam.receiveSocket = new DatagramSocket[Param.numUAVs];
+			UAVParam.receivePacket = new DatagramPacket[Param.numUAVs];
 			for (int i = 0; i < Param.numUAVs; i++) {
 				try {
 					UAVParam.sendSocket[i] = new DatagramSocket();
@@ -380,36 +456,6 @@ public class Tools {
 		return ports.toArray(new Integer[ports.size()]);
 	}
 	
-	/** Auxiliary method to get a number of available TCP ports, starting from an initial port. */
-	public static Integer[] getAvailablePorts(int numPorts, int initialPort) throws InterruptedException, ExecutionException {
-		ExecutorService es = Executors.newFixedThreadPool(20);
-	    List<Future<PortScanResult>> futures = new ArrayList<>();
-	    List<Integer> ports = new ArrayList<Integer>(numPorts);
-	    int usedPorts = 0;
-	    int port = initialPort;
-	    int i = 0;
-	    int testPort;
-	    while (port <= UAVParam.MAX_PORT && ports.size() < numPorts) {
-	    	futures.clear();
-	    	while (i < numPorts + usedPorts) {
-	        	futures.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, port, UAVParam.PORT_CHECK_TIMEOUT));
-	        	port = port + 10;
-	    		i++;
-	    	}
-	    	es.awaitTermination((long)UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
-	        for (final Future<PortScanResult> f : futures) {
-	        	testPort = f.get().getPort();
-	            if (f.get().isOpen()) {
-	            	usedPorts++;
-	            } else {
-	            	ports.add(testPort);
-	            }
-	        }
-	    }
-	    es.shutdown();
-		return ports.toArray(new Integer[ports.size()]);
-	}
-	
 	/** Auxiliary method to detect asynchronously if a TCP port is in use by the system or any other application. */
 	private static Future<PortScanResult> portIsOpen(final ExecutorService es, final String ip, final int port,
 	        final int timeout) {
@@ -457,8 +503,9 @@ public class Tools {
 			List<String> interfaces = new ArrayList<String>();
 	        Pattern pattern = Pattern.compile("^ *(.*):");
 	        String hexId;
+	        BufferedReader in = null;
 	        try (FileReader reader = new FileReader("/proc/net/dev")) {
-	            BufferedReader in = new BufferedReader(reader);
+	            in = new BufferedReader(reader);
 	            String line = null;
 	            while( (line = in.readLine()) != null) {
 	                Matcher m = pattern.matcher(line);
@@ -481,6 +528,12 @@ public class Tools {
 	                }
 	            }
 	        } catch (IOException e) {
+	        } finally {
+	        	try {
+					if (in != null) {
+						in.close();
+					}
+				} catch (IOException e) {}
 	        }
 		}
 		if (ids.size() == 0) {
@@ -1105,13 +1158,13 @@ public class Tools {
 	}
 	
 	/** Closes the SITL simulator instances, and the application. Also the Cygwin consoles if using Windows. */
-	public static void shutdown(JFrame mainWindowFrame) {
+	public static void shutdown() {
 		// 1. Ask for confirmation if the experiment has not started or finished
 		if (!Param.IS_REAL_UAV) {
 			boolean reallyClose = true;
 			if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 				Object[] options = {Text.YES_OPTION, Text.NO_OPTION};
-				int result = JOptionPane.showOptionDialog(mainWindowFrame,
+				int result = JOptionPane.showOptionDialog(MainWindow.window.mainWindowFrame,
 						Text.CLOSING_QUESTION,
 						Text.CLOSING_DIALOG_TITLE,
 						JOptionPane.YES_NO_OPTION,
@@ -1142,9 +1195,29 @@ public class Tools {
 		// 3. Close the application
 		SimTools.println(Text.EXITING);
 		GUIHelper.waiting(SimParam.LONG_WAITING_TIME);
-		if (!Param.IS_REAL_UAV) {
-			mainWindowFrame.dispose();
+		if (Param.IS_REAL_UAV) {
+			String shutdownCommand;
+		    String operatingSystem = System.getProperty("os.name");
+
+		    if (operatingSystem.startsWith("Linux") || operatingSystem.startsWith("Mac")) {
+		        shutdownCommand = "sudo shutdown -h now";
+		        try {
+			    	Runtime.getRuntime().exec(shutdownCommand);
+			    } catch (IOException e) {}
+		    }
+		    else if (operatingSystem.startsWith("Win")) {
+		        shutdownCommand = "shutdown.exe -s -t 0";
+		        try {
+			    	Runtime.getRuntime().exec(shutdownCommand);
+			    } catch (IOException e) {}
+		    }
+		    else {
+		    	SimTools.println(Text.SHUTDOWN_ERROR);
+		    }
+		} else {
+			MainWindow.window.mainWindowFrame.dispose();
 		}
+	    
 		System.exit(0);
 	}
 	
@@ -1225,13 +1298,22 @@ public class Tools {
 	public static void waitMAVLink() {
 		long time = System.nanoTime();
 		boolean allReady = false;
+		boolean error = false;
 		while (!allReady) {
 			if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
 				allReady = true;
 			}
 
+			// On simulation, stop if error happens and they are not online
 			if (System.nanoTime() - time > UAVParam.MAVLINK_ONLINE_TIMEOUT) {
-				break;
+				if (Param.IS_REAL_UAV) {
+					if (!error) {
+						SimTools.println(Text.MAVLINK_ERROR);
+						error = true;
+					}
+				} else {
+					break;
+				}
 			}
 			if (!allReady) {
 				GUIHelper.waiting(UAVParam.MAVLINK_WAIT);
@@ -1273,26 +1355,36 @@ public class Tools {
 	public static void getGPSFix() {
 		long time = System.nanoTime();
 		boolean startProcess = false;
+		boolean error = false;
 		while (!startProcess) {
 			if (UAVParam.numGPSFixed.get() == Param.numUAVs) {
 				startProcess = true;
 			}
 			if (System.nanoTime() - time > UAVParam.GPS_FIX_TIMEOUT) {
-				break;
+				if (Param.IS_REAL_UAV) {
+					if (!error) {
+						SimTools.println(Text.GPS_FIX_ERROR_2);
+						error = true;
+					}
+				} else {
+					break;
+				}
 			}
 			if (!startProcess) {
 				GUIHelper.waiting(UAVParam.GPS_FIX_WAIT);
 			}
 		}
 		if (!startProcess) {
-			GUIHelper.exit(Text.GPS_FIX_ERROR);
+			GUIHelper.exit(Text.GPS_FIX_ERROR_1);
 		}
 		SimTools.println(Text.GPS_OK);
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				MainWindow.buttonsPanel.statusLabel.setText(Text.UAVS_ONLINE);
-			}
-		});
+		if (!Param.IS_REAL_UAV) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.statusLabel.setText(Text.UAVS_ONLINE);
+				}
+			});
+		}
 	}
 	
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, retrieves controller configuration, loads missions, etc. */

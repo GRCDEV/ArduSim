@@ -14,6 +14,8 @@ import mbcap.logic.MBCAPText;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
 import sim.pojo.IncomingMessage;
+import uavController.RCValues;
+import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
@@ -185,6 +187,15 @@ public class API {
 			return true;
 		}
 	}
+	
+	/** API: Overrides the remote control output.
+	 * <p>Channel values in microseconds.
+	 * <p>Value 0 means that the control of that channel must be returned to the RC radio
+	 * <p>Value UINT16_MAX means to ignore this field
+	 * <p>Standard modulation: 1000 (0%) - 2000 (100%)*/
+	public static void channelsOverride(int numUAV, int chan1, int chan2, int chan3, int chan4) {
+		UAVParam.rcs[numUAV].set(new RCValues(chan1, chan2, chan3, chan4));
+	}
 
 	/** API: Moves the UAV to a new position.
 	 * <p>Blocking method.
@@ -262,11 +273,10 @@ public class API {
 		for (int i = 0; i < list.size(); i++) {
 			UAVParam.currentGeoMission[numUAV].add(list.get(i).clone());
 		}
-		Point2D.Double p = UAVParam.uavCurrentData[numUAV].getUTMLocation();
-		GeoCoordinates geo = GUIHelper.UTMToGeo(p.x, p.y);
+		Point2D.Double geo = UAVParam.uavCurrentData[numUAV].getGeoLocation();
 		// The take off waypoint must be modified to include current coordinates
-		UAVParam.currentGeoMission[numUAV].get(1).setLatitude(geo.latitude);
-		UAVParam.currentGeoMission[numUAV].get(1).setLongitude(geo.longitude);
+		UAVParam.currentGeoMission[numUAV].get(1).setLatitude(geo.y);
+		UAVParam.currentGeoMission[numUAV].get(1).setLongitude(geo.x);
 		
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SEND_WPS);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK

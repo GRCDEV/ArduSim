@@ -52,17 +52,8 @@ public class MissionHelper {
 	
 	/** Asserts if it is needed to load a mission, when using protocol on a real UAV. */
 	public static boolean loadMission() {
-		
-		if (Param.selectedProtocol == Protocol.MBCAP_V1
-				|| Param.selectedProtocol == Protocol.MBCAP_V2
-				|| Param.selectedProtocol == Protocol.MBCAP_V3
-				|| Param.selectedProtocol == Protocol.MBCAP_V4) {
-			return true;
-		}
-		
-		// Add here code to decide if the UAV has to load a mission, depending on the protocol logic
-		
-		return false;
+		// On mission based protocols we always load a mission file
+		return true;
 	}
 	
 	/** Loads missions from Google Earth kml file.

@@ -84,7 +84,7 @@ public class MainWindow {
 					public void run() {
 						if (Param.simStatus != SimulatorState.SHUTTING_DOWN
 								&& MainWindow.buttonsPanel.exitButton.isEnabled()) {
-							Tools.shutdown(mainWindowFrame);
+							Tools.shutdown();
 						}
 					}
 				})).start();

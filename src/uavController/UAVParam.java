@@ -97,6 +97,7 @@ public class UAVParam {
 	public static LastPositions[] lastLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Startup parameters
+	public static volatile boolean doFakeSending;				// Do fake communications among the UAVs
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
 	public static final double MIN_FLYING_ALTITUDE = 5;	// (m) Minimum relative initial flight altitude
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
@@ -145,6 +146,9 @@ public class UAVParam {
 	
 	// Auxiliary variable needed to ensure that the message thrown when the UAV gets to the end is shown only once
 	public static boolean[] lastWaypointReached;
+	
+	// RC Channels message sent values
+	public static AtomicReference<RCValues>[] rcs;
 
 	// Communications finite state machine. States of the MAVLink protocol
 	public static AtomicIntegerArray MAVStatus;

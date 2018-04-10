@@ -159,7 +159,7 @@ public class MainWindowButtonsPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				(new Thread(new Runnable() {
 					public void run() {
-						Tools.shutdown(frame);
+						Tools.shutdown();
 					}
 				})).start();
 			}

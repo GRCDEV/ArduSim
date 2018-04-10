@@ -1,0 +1,95 @@
+package pccompanion;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
+import java.net.SocketException;
+
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Output;
+
+import api.GUIHelper;
+import main.Param;
+import main.Text;
+import main.Param.Protocol;
+import main.Param.SimulatorState;
+import uavController.UAVParam;
+
+public class PCCompanionTalker extends Thread {
+
+	@Override
+	public void run() {
+		PCCompanionListener listener = new PCCompanionListener();
+		listener.start();
+		
+		DatagramSocket sendSocket = null;
+		byte[] sendBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		String broadcastAddress;
+		if (Param.IS_PC_COMPANION) {
+			broadcastAddress = UAVParam.BROADCAST_IP;
+		} else {
+			broadcastAddress = UAVParam.MAV_NETWORK_IP;
+		}
+		DatagramPacket sentPacket = new DatagramPacket(sendBuffer, sendBuffer.length,
+				new InetSocketAddress(broadcastAddress, PCCompanionParam.UAV_PORT));
+		Output output = new Output(sendBuffer);
+
+		try {
+			sendSocket = new DatagramSocket();
+			sendSocket.setBroadcast(true);
+		} catch (SocketException e) {
+			GUIHelper.exit(Text.BIND_ERROR_2);
+		}
+
+		long time = System.currentTimeMillis();
+		long sleep;
+		boolean send;
+		while (true) {
+			if (!listener.isAlive()) {
+				break;
+			}
+			
+			if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS
+					|| Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+				send = true;
+			} else {
+				send = false;
+			}
+
+			if (send) {
+				try {
+					output.clear();
+					output.writeInt(Param.simStatus.getStateId());
+					sentPacket.setData(sendBuffer, 0, output.position());
+					sendSocket.send(sentPacket);
+				} catch (KryoException e) {} catch (IOException e) {}
+			}
+
+			sleep = PCCompanionParam.COMMAND_SEND_TIMEOUT - (System.currentTimeMillis() - time);
+			if (sleep > 0) {
+				GUIHelper.waiting((int)sleep);
+			}
+			time = time + PCCompanionParam.COMMAND_SEND_TIMEOUT;
+		}
+		output.close();
+		sendSocket.close();
+		
+		this.launchProtocolDialog();
+	}
+	
+	private void launchProtocolDialog() {
+		Protocol p = PCCompanionParam.SELECTED_PROTOCOL.get();
+		if (p == Protocol.MBCAP_V1
+				|| p == Protocol.MBCAP_V2
+				|| p == Protocol.MBCAP_V3
+				|| p == Protocol.MBCAP_V4) {
+			MBCAPDialog.mbcap = new MBCAPDialog();
+			MBCAPDialog.mbcap.setVisible(true);
+			
+			// Listen for protocol data packets
+			MBCAPDialog.mbcap.listenForPackets();
+		}
+	}
+
+}

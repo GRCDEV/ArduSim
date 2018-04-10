@@ -2,6 +2,7 @@ package main;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -9,13 +10,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingUtilities;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.javatuples.Pair;
 
 import api.GUIHelper;
@@ -23,7 +17,6 @@ import api.MissionHelper;
 import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
 import api.pojo.Waypoint;
-import main.Param.Protocol;
 import main.Param.SimulatorState;
 import sim.board.BoardHelper;
 import sim.gui.ConfigDialog;
@@ -37,6 +30,8 @@ import sim.logic.FakeSenderThread;
 import sim.logic.RangeCalculusThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
+import uavController.ExperimentListener;
+import uavController.ExperimentTalker;
 import uavController.UAVParam;
 
 /** This class contains the main method and the chronological logic followed by the whole application. */
@@ -47,91 +42,31 @@ public class Main {
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
-		// TODO prepare the real input
-		String usageCommand = "java -jar ArduSim.jar [-doFake -p <arg> -s <arg>]";
-		Option periodOption = Option.builder("p").longOpt("period").required(false).desc("period between messages (ms)").hasArg(true).build();
-		Option sizeOption = Option.builder("s").longOpt("size").required(false).desc("message size (bytes)").hasArg(true).build();
-		Option doFakeSendingOption = new Option("doFake", "activate fake threads to simulate communications behavior.");
-		Options options = new Options();
-		options.addOption(periodOption);
-		options.addOption(sizeOption);
-		options.addOption(doFakeSendingOption);
-		Option help = Option.builder("h").longOpt("help").required(false).desc("ussage help").hasArg(false).build();
-		options.addOption(help);
-		CommandLineParser parser = new DefaultParser();
-		CommandLine cmdLine;
-		boolean doFakeSending = false;
-		try {
-			cmdLine = parser.parse(options, args);
-			HelpFormatter myHelp = new HelpFormatter();
-			if (cmdLine.hasOption("h")) {
-				myHelp.printHelp(usageCommand, options);
-				System.exit(0);
-			}
-			if (cmdLine.hasOption("doFake")) {
-				doFakeSending = true;
-				if (!cmdLine.hasOption("p") || !cmdLine.hasOption("s")) {
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-				String periodString = cmdLine.getOptionValue("p");
-				if (!GUIHelper.isValidInteger(periodString) || Integer.parseInt(periodString) > 10000) {
-					System.out.println("The period between messages must be a valid positive integer lower or equal to 10000 ms.\n");
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-				String sizeString = cmdLine.getOptionValue("s");
-				if (!GUIHelper.isValidInteger(sizeString) || Integer.parseInt(sizeString) > 1472) {
-					System.out.println("The size of the messages must be a valid positive integer lower or equal to 1472 bytes.\n");
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-
-				FakeSenderThread.period = Integer.parseInt(periodString);
-				FakeSenderThread.messageSize = Integer.parseInt(sizeString);
-			} else {
-				doFakeSending = false;
-			}
-		} catch (ParseException e1) {
-			System.out.println(e1.getMessage() + "\n");
-			HelpFormatter myHelp = new HelpFormatter();
-			myHelp.printHelp(usageCommand, options);
-			System.exit(1);
+		// Parse the command line arguments
+		if (!Tools.parseArgs(args)) {
+			return;
 		}
-
-
-
-
 
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
 		Tools.detectOS();
 		if (Param.IS_REAL_UAV) {
-			// 1. Protocol file loading (file containing the name of the protocol to be used)
-			// Protocol, mission, and speed are loaded from files on the same folder as the jar file
-			File parentFolder = GUIHelper.getCurrentFolder();
-			Protocol protocol = null;
-			protocol = Tools.loadProtocol(parentFolder);
-			if (protocol == null) {
-				GUIHelper.exit(Text.PROTOCOL_NOT_FOUND);
-			}
-			Param.selectedProtocol = protocol;
-			Param.simulationIsMissionBased = Param.selectedProtocol.isMissionBased();
-
-			// 2. We need to make constant the parameters shown in the GUI
+			// 1. We need to make constant the parameters shown in the GUI
 			Param.numUAVs = 1;	// Always one UAV per Raspberry Pi or whatever the device where the application is deployed
 
-			// Establish the identifier of the UAV
+			// 2. Establish the identifier of the UAV
 			Param.id = new long[Param.numUAVs];
 			Param.id[0] = Tools.getRealId();
 
-			// Mission file loading
+			// 3. Mission file loading
+			// The mission is loaded from a file on the same folder as the jar file
 			boolean loadMission;
 			if (Param.simulationIsMissionBased) {
 				loadMission = MissionHelper.loadMission();
 			} else {
 				loadMission = SwarmHelper.loadMission();
 			}
+			File parentFolder = GUIHelper.getCurrentFolder();
 			if (loadMission) {
 				List<Waypoint> mission = Tools.loadMission(parentFolder);
 				if (mission == null) {
@@ -140,17 +75,10 @@ public class Main {
 				UAVParam.missionGeoLoaded = new ArrayList[1];
 				UAVParam.missionGeoLoaded[0] = mission;
 			}
-
-			// Speeds file loading
-			Double speed = null;
-			speed = Tools.loadSpeed(parentFolder);
-			if (speed == null) {
-				GUIHelper.exit(Text.SPEEDS_NOT_FOUND);
-			}
-			UAVParam.initialSpeeds = new double[1];
-			UAVParam.initialSpeeds[0] = speed;
-
-
+			
+			// 4. Start threads for waiting to commands to start the setup and start steps of the experiment
+			(new ExperimentTalker()).start();
+			(new ExperimentListener()).start();
 		} else {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;
@@ -270,7 +198,7 @@ public class Main {
 			}
 		}
 
-		// 7. Automatic screen update activation (position logging when in a real UAV
+		// 7. Automatic screen update activation (position logging when in a real UAV)
 		SimTools.update();
 
 		// 8. Startup of the virtual UAVs
@@ -306,7 +234,7 @@ public class Main {
 				(new CollisionDetector()).start();
 			}
 		}
-
+		
 		// 11. Launch the threads of the protocol under test
 		if (Param.simulationIsMissionBased) {
 			MissionHelper.launchMissionThreads();
@@ -323,167 +251,176 @@ public class Main {
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
 			GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 		}
-
-		if (Param.IS_REAL_UAV) {
-			Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-		} else {
-			BoardHelper.downloadBackground();
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					if (Param.simulationIsMissionBased) {
-						MainWindow.buttonsPanel.startTestButton.setEnabled(true);
-					} else {
-						MainWindow.buttonsPanel.setupButton.setEnabled(true);
+		if (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
+			if (!Param.IS_REAL_UAV) {
+				BoardHelper.downloadBackground();
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						if (Param.simulationIsMissionBased) {
+							MainWindow.buttonsPanel.startTestButton.setEnabled(true);
+						} else {
+							MainWindow.buttonsPanel.setupButton.setEnabled(true);
+						}
+						MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_FLY);
 					}
-					MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_FLY);
+				});
+				if (Param.simulationIsMissionBased) {
+					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
+				} else {
+					SimTools.println(Text.WAITING_FOR_USER);
 				}
-			});
-			// Waiting for the user to start the configuration step
-			if (Param.simulationIsMissionBased) {
-				Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-			} else {
-				SimTools.println(Text.WAITING_FOR_USER);
 			}
-		}
-		while (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
-			GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
-		}
-
-		// 13. Apply the configuration step, only if the program is not being closed (state SHUTTING_DOWN)
-		if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
-			if (Param.simulationIsMissionBased) {
-				Param.simStatus = SimulatorState.READY_FOR_TEST;
-			} else {
-				SwarmHelper.swarmSetupActionPerformed();
-			}
-			while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
+			while (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
 				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 			}
 
-			// 14. Waiting for the user to start the experiment, only if the program is not being closed
-			if (Param.simStatus == SimulatorState.READY_FOR_TEST) {
-				if (Param.IS_REAL_UAV) {
-					Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
+			// 13. Apply the configuration step, only if the program is not being closed (state SHUTTING_DOWN)
+			if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
+				if (Param.simulationIsMissionBased) {
+					Param.simStatus = SimulatorState.READY_FOR_TEST;
 				} else {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
-							MainWindow.buttonsPanel.startTestButton.setEnabled(true);
-						}
-					});
-					SimTools.println(Text.WAITING_FOR_USER);
+					SwarmHelper.swarmSetupActionPerformed();
 				}
-				while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+				while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
 					GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
 				}
 
-				// 15. Start the experiment, only if the program is not being closed
-				if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-					// TODO remove new threads
-					if (doFakeSending) {
-						for (int i = 0; i < Param.numUAVs; i++) {
-							(new FakeSenderThread(i)).start();
-							(new FakeReceiverThread(i)).start();
-						}
+				// 14. Waiting for the user to start the experiment, only if the program is not being closed
+				if (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+					if (!Param.IS_REAL_UAV) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
+								MainWindow.buttonsPanel.startTestButton.setEnabled(true);
+							}
+						});
+						SimTools.println(Text.WAITING_FOR_USER);
 					}
-					
+					while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+						GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+					}
+
+					// 15. Start the experiment, only if the program is not being closed
+					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+						
+						
+//						System.out.println("HA LLEGADO CORRECTAMENTE HASTA EJECUTARLO TODO");
+//						GUIHelper.waiting(15000);//TODO borrar esto
+//						System.exit(0);
+						
+						
+						
+						// TODO remove new threads and clean the console parameters (args)
+						if (UAVParam.doFakeSending) {
+							for (int i = 0; i < Param.numUAVs; i++) {
+								(new FakeSenderThread(i)).start();
+								(new FakeReceiverThread(i)).start();
+							}
+						}
+						
 
 
 
 
 
-					Param.startTime = System.currentTimeMillis();
-					SimTools.println(Text.TEST_START);
-					timer = new Timer();
-					timer.scheduleAtFixedRate(new TimerTask() {
-						long time = Param.startTime;
-						public void run() {
+						Param.startTime = System.currentTimeMillis();
+						SimTools.println(Text.TEST_START);
+						if (!Param.IS_REAL_UAV) {
+							timer = new Timer();
+							timer.scheduleAtFixedRate(new TimerTask() {
+								long time = Param.startTime;
+								public void run() {
+									if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+										final String timeString = GUIHelper.timeToString(Param.startTime, time);
+										time = time + 1000;
+										SwingUtilities.invokeLater(new Runnable() {
+											public void run() {
+												MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
+											}
+										});
+									} else {
+										SwingUtilities.invokeLater(new Runnable() {
+											public void run() {
+												MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
+											}
+										});
+										timer.cancel();
+									}
+								}
+							}, 0, 1000);	// Once each second, without initial waiting time
+						}
+						if (Param.simulationIsMissionBased) {
+							MissionHelper.startMissionTestActionPerformed();
+						} else {
+							SwarmHelper.startSwarmTestActionPerformed();
+						}
+
+						// 16. Waiting while the experiment is is progress and detecting the experiment end
+						while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+							Tools.checkBatteryLevel();
+							if (Param.simulationIsMissionBased) {
+								// Land all the UAVs when they reach the last waypoint
+								MissionHelper.detectMissionEnd();
+							} else {
+								SwarmHelper.detectSwarmEnd();
+							}
+							// Detects if all UAVs are on the ground in order to finish the experiment
+							if (Tools.isTestFinished()) {
+								Param.simStatus = SimulatorState.TEST_FINISHED;
+							}
 							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-								final String timeString = GUIHelper.timeToString(Param.startTime, time);
-								time = time + 1000;
+								GUIHelper.waiting(SimParam.LONG_WAITING_TIME);
+							}
+						}
+
+						// 17. Wait for the user to close the simulator, only if the program is not being closed
+						if (Param.simStatus == SimulatorState.TEST_FINISHED) {
+							SimTools.println(GUIHelper.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
+							if (!Param.IS_REAL_UAV) {
+								SimTools.println(Text.WAITING_FOR_USER);
 								SwingUtilities.invokeLater(new Runnable() {
 									public void run() {
-										MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
+										MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED);
 									}
 								});
+							}
+
+							// Gather information to show the results dialog
+							String res = null;//después terminar revisión interfaz prot y nombre clases
+							res = Tools.getTestResults();
+							if (Param.simulationIsMissionBased) {
+								res += MissionHelper.getMissionTestResults();
+							} else {
+								res += SwarmHelper.getSwarmTestResults();
+							}
+							res += Tools.getTestGlobalConfiguration();
+							if (Param.simulationIsMissionBased) {
+								res += MissionHelper.getMissionProtocolConfig();
+							} else {
+								res += SwarmHelper.getSwarmProtocolConfig();
+							}
+
+							final String res2 = res;
+							if (Param.IS_REAL_UAV) {
+								Calendar cal = Calendar.getInstance();
+								String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
+										+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
+										+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
+								Tools.storeResults(res2, new File(GUIHelper.getCurrentFolder(), fileName));
+								Tools.shutdown();	// Closes the simulator
 							} else {
 								SwingUtilities.invokeLater(new Runnable() {
 									public void run() {
-										MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
+										new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true);
 									}
 								});
-								timer.cancel();
 							}
-						}
-					}, 0, 1000);	// Once each second, without initial waiting time
-					if (Param.simulationIsMissionBased) {
-						MissionHelper.startMissionTestActionPerformed();
-					} else {
-						SwarmHelper.startSwarmTestActionPerformed();
-					}
 
-					// 16. Waiting while the experiment is is progress and detecting the experiment end
-					while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-						Tools.checkBatteryLevel();
-						if (Param.simulationIsMissionBased) {
-							// Land all the UAVs when reach the last waypoint
-							MissionHelper.detectMissionEnd();
-						} else {
-							SwarmHelper.detectSwarmEnd();
+							// Now, the user must close the application, even to do a new experiment
 						}
-						// Detects if all UAVs are on the ground in order to finish the experiment
-						if (Tools.isTestFinished()) {
-							Param.simStatus = SimulatorState.TEST_FINISHED;
-						}
-						if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-							GUIHelper.waiting(SimParam.LONG_WAITING_TIME);
-						}
-					}
-
-					// 17. Wait for the user to close the simulator, only if the program is not being closed
-					if (Param.simStatus == SimulatorState.TEST_FINISHED) {
-						SimTools.println(GUIHelper.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
-						if (!Param.IS_REAL_UAV) {
-							SimTools.println(Text.WAITING_FOR_USER);
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED);
-								}
-							});
-						}
-
-						// Gather information to show the results dialog
-						String res = null;//después terminar revisión interfaz prot y nombre clases
-						res = Tools.getTestResults();
-						if (Param.simulationIsMissionBased) {
-							res += MissionHelper.getMissionTestResults();
-						} else {
-							res += SwarmHelper.getSwarmTestResults();
-						}
-						res += Tools.getTestGlobalConfiguration();
-						if (Param.simulationIsMissionBased) {
-							res += MissionHelper.getMissionProtocolConfig();
-						} else {
-							res += SwarmHelper.getSwarmProtocolConfig();
-						}
-
-						final String res2 = res;
-						if (Param.IS_REAL_UAV) {
-							Tools.storeResults(res2, new File(GUIHelper.getCurrentFolder(), Text.DEFAULT_BASE_NAME));
-							Tools.shutdown(null);	// Closes the simulator
-						} else {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true);
-								}
-							});
-						}
-
-						// Now, the user must close the application, even to do a new experiment
 					}
 				}
 			}
 		}
 	}
-
 }

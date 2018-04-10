@@ -17,6 +17,7 @@ import org.mavlink.MAVLinkReader;
 import org.mavlink.messages.IMAVLinkMessageID;
 import org.mavlink.messages.MAVLinkMessage;
 import org.mavlink.messages.MAV_CMD;
+import org.mavlink.messages.MAV_COMPONENT;
 import org.mavlink.messages.MAV_FRAME;
 import org.mavlink.messages.MAV_MISSION_RESULT;
 import org.mavlink.messages.MAV_TYPE;
@@ -85,6 +86,7 @@ public class UAVControllerThread extends Thread {
 	private boolean uavConnected = false;
 	
 	/** Indicates when the UAV sends valid coordinates. */
+	private int receivedGPSOnline = 0;
 	private boolean locationReceived = false;
 
 	public UAVControllerThread(int numUAV) throws SocketException {
@@ -170,11 +172,92 @@ public class UAVControllerThread extends Thread {
 		// Periodically sending a heartbeat to keep control over the UAV, while reading received MAVLink messages
 		long prevTime = System.nanoTime();
 		long posTime;
+		
+//		long ini = System.currentTimeMillis();
+		
 		while (true) {
 			inMsg = null;
 			try {
 				inMsg = reader.getNextMessage();
 				if (inMsg != null) {
+					/*
+					switch (inMsg.messageType) {
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS2:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS3:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_ATTITUDE:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS_RAW:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_VIBRATION:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_EKF_STATUS_REPORT:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYSTEM_TIME:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_HWSTATUS:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_VFR_HUD:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
+						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_FENCE_STATUS:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_GPS_RAW_INT:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_CURRENT:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_MEMINFO:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_POWER_STATUS:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_PRESSURE:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_IMU2:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_RAW_IMU:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYS_STATUS:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_HEARTBEAT:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_SENSOR_OFFSETS:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_PARAM_VALUE:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_COMMAND_ACK:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ACK:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_LOCAL_POSITION_NED:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REPORT:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REQUEST:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_HOME_POSITION:
+						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_REQUEST:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_COUNT:
+						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM:
+						break;
+					default:
+						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
+					}*/
+					
 					// Identify and process the received message
 					identifyMessage();
 					// Periodic heartbeat, once all UAVs have connected
@@ -202,7 +285,9 @@ public class UAVControllerThread extends Thread {
 			processMode();
 			break;
 		case IMAVLinkMessageID.MAVLINK_MSG_ID_STATUSTEXT:
-			processGPSFix();
+			if (!this.locationReceived) {
+				processGPSFix();
+			}
 			break;
 		case IMAVLinkMessageID.MAVLINK_MSG_ID_PARAM_VALUE:
 			processParam();
@@ -242,6 +327,10 @@ public class UAVControllerThread extends Thread {
 		// Only process position when the GPS sends valid Mercator coordinates (non zero latitude and longitude)
 		if (!this.isStarting || (message.lat != 0 && message.lon != 0)) {
 			isStarting = false;
+			if (!this.locationReceived && this.receivedGPSOnline == 2) {
+				UAVParam.numGPSFixed.incrementAndGet();
+				this.locationReceived = true;
+			}
 
 			Point2D.Double locationUTM = new Point2D.Double();
 			Point2D.Double locationGeo = new Point2D.Double(message.lon * 0.0000001, message.lat * 0.0000001);
@@ -291,12 +380,16 @@ public class UAVControllerThread extends Thread {
 
 	/** Process the detection of the GPS fix. */
 	private void processGPSFix() {
-		// Alternatively, it can be assumed that we get GPS fix when latitude!=0 or longitude!=0
-		msg_statustext message = (msg_statustext) inMsg;
-		String text = message.getText();
-		if (text.contains("EKF") && text.contains("IMU")
-				&& text.contains("using GPS")
-				&& !this.locationReceived) {
+		// Both IMU0 and IMU1 must confirm that they are using GPS, and valid coordinates must be received
+		if (this.receivedGPSOnline < 2) {
+			msg_statustext message = (msg_statustext) inMsg;
+			String text = message.getText();
+			if (text.contains("EKF") && text.contains("IMU")
+					&& text.contains("using GPS")) {
+				this.receivedGPSOnline++;
+			}
+		}
+		if (this.receivedGPSOnline == 2 && UAVParam.uavCurrentData[numUAV].getGeoLocation() != null) {
 			UAVParam.numGPSFixed.incrementAndGet();
 			this.locationReceived = true;
 		}
@@ -588,6 +681,15 @@ public class UAVControllerThread extends Thread {
 			}
 			break;
 		}
+		
+		RCValues values = UAVParam.rcs[numUAV].getAndSet(null);
+		if (values != null) {
+			try {
+				msgrcChannelsOverride(values.rc1, values.rc2, values.rc3, values.rc4);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/** Process a received command ACK. */
@@ -655,8 +757,24 @@ public class UAVControllerThread extends Thread {
 	private void msgHeartBeat() throws IOException {
 		msg_heartbeat message = new msg_heartbeat();
 		message.sysId = 255;
-		message.componentId = 0;
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
 		message.type = MAV_TYPE.MAV_TYPE_GCS;
+		this.sendMessage(message.encode());
+	}
+	
+	/** Restricted method for API ussage. Please, don't use it. */
+	private void msgrcChannelsOverride(int chan1, int chan2, int chan3, int chan4) throws IOException {
+		msg_rc_channels_override message = new msg_rc_channels_override();
+		message.chan1_raw = chan1;
+		message.chan2_raw = chan2;
+		message.chan3_raw = chan3;
+		message.chan4_raw = chan4;
+		message.chan5_raw = 0;
+		message.chan6_raw = 0;
+		message.chan7_raw = 0;
+		message.chan8_raw = 0;
+		message.sysId = 255;
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
 		this.sendMessage(message.encode());
 	}
 
@@ -796,7 +914,7 @@ public class UAVControllerThread extends Thread {
 	private void msgMoveUAV() throws IOException {
 		msg_mission_item message = new msg_mission_item();
 		message.sysId = 255;
-		message.componentId = 0;
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
 		message.frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT;
 		message.command = MAV_CMD.MAV_CMD_NAV_WAYPOINT;
 		message.param1 = 0;

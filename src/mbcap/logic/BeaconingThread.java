@@ -49,7 +49,8 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 		long cicleTime = System.currentTimeMillis();
 		while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
 				&& UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
-				&& !UAVParam.collisionDetected) {
+				&& !UAVParam.collisionDetected
+				) {
 			SimulatorState state = Param.simStatus;
 			// Send beacons while the UAV is flying during the experiment
 			if (state == SimulatorState.TEST_IN_PROGRESS) {

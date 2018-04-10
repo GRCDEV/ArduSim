@@ -1,4 +1,4 @@
-package main;
+package sim.pojo;
 
 public class PortScanResult {
 	private int port;

@@ -25,14 +25,14 @@ A Pixhawk controller has two telemetry ports, one tipically used by one telemetr
 
 Regarding the communication among multicopters, we need to create an Ad-hoc network among them.
 
-On a previous work ([On the impact of inter-UAV communications interference in the 2.4 GHz band](http://ieeexplore.ieee.org/document/7986413/)), we found that most of the remote controls available in the market jam the 2.4 GHz frequency band, so it is convenient to use an external WiFi adapter to use the 5 GHz band. We used an Alfa AWUS051NH dual band adapter on our setup. Rasbian already has this adapter driver, so we didn't need to install it.
+On a previous work ([On the impact of inter-UAV communications interference in the 2.4 GHz band](http://ieeexplore.ieee.org/document/7986413/)), we found that most of the remote controls available in the market jam the 2.4 GHz frequency band, so it is convenient to use an external WiFi adapter to use the 5 GHz band on Raspberry Pi 1, 2, and 3. We used an Alfa AWUS051NH dual band adapter on our setup. Rasbian already has this adapter driver, so we didn't need to install it.
 
 
 ## Software setup
 
 ### Raspberry - Pixhawk serial link
 
-We have follow two steps to successfully configure the Raspberry Pi 3. First, we have to enable the serial port link, and then we have to install the library that ArduSim uses to connect to the flight controller through the serial port.
+We have to follow two steps to successfully configure the Raspberry Pi 3. First, we have to enable the serial port link, and then we have to install the library that ArduSim uses to connect to the flight controller through the serial port.
 
 #### Enabling serial port
 
@@ -45,15 +45,16 @@ Next, restart the device and check that the *ttyAMA0* port is available again wi
 
     ls -l /dev
 
-Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to run the Raspbian configuration utility with the next command, and disable the serial OS control under *"Advanced Options" - "Serial"*.
+Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to run the Raspbian configuration utility with the next command, and disable console output to the serial port, but keeping the serial hardware enabled. Go to: *"Interfacing Options" - "Serial"*.
 
+    sudo apt-get update
     sudo raspi-config
 
-After rebooting and just to be sure, it is good idea check if the file */boot/cmdline.txt* contains *"console=serial0,115200"* for output, deleting this piece of text if exists.
+After rebooting and just to be sure, it is good idea check if the file */boot/cmdline.txt* contains *"console=serial0,115200"* for output, deleting this piece of text if it exists.
 
 #### Enabling serial communication for ArduSim
 
-Ardusim uses [RXTX library](http://rxtx.qbang.org/wiki/index.php/Main_Page) from Trent Jarvi et al. to communicate the Raspberry Pi with the flight controller, so you have to install it. 
+Ardusim uses [RXTX library](http://rxtx.qbang.org/wiki/index.php/Main_Page) from Trent Jarvi et al. to communicate the Raspberry Pi with the flight controller, so you have to install it via Internet.
 
 1. Create folders */home/pi/libs* and */home/pi/javalibs* to store the binary and Java components, respectively.
 
@@ -64,7 +65,7 @@ Ardusim uses [RXTX library](http://rxtx.qbang.org/wiki/index.php/Main_Page) from
         JAVA_HOME="/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt"
         CLASSPATH="/home/pi/javalibs/RXTXcomm.jar"
 
-    Please, check if the Java home path matches with your installed Java version.
+    Please, check if the Java home path matches with your installed Java version (Java 8 is already included with Raspbian).
 
 4. Install the binary library version 2.2pre1. When you run ArduSim you will notice a warning message in the console advising of a version mismatch between the binary and the Java libraries versions. Don't take care, it is normal and causes no problems.
 
@@ -79,9 +80,9 @@ Ardusim uses [RXTX library](http://rxtx.qbang.org/wiki/index.php/Main_Page) from
 
     As in step 3, check the installed Java path.
 
-6. Create two symbolic links to the binary library in the folder */home/pi/libs*:
+6. Create two symbolic links to the binary library in the folders */home/pi/libs* and */usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre/lib/arm*:
 
-        sudo ln -s /usr/lib/jni/librxtxSerial-2.2pre1.so /home/pi/lib/librxtxSerial.so
+        sudo ln -s /usr/lib/jni/librxtxSerial-2.2pre1.so /home/pi/libs/librxtxSerial.so
         sudo ln -s /usr/lib/jni/librxtxSerial-2.2pre1.so /usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre/lib/arm/librxtxSerial.so
 
     Please, check if the paths match with your installed library and Java version.
@@ -93,20 +94,20 @@ Finally, restart the Raspberry pi 3 for the changes to take effect.
 
 1. Change the regulatory region to yours with the *Raspberry Pi Configuration*  tool, on the tab *Localisation*, option *set wifi region*, and then restart the device. You must inquire if your country allows to stablish an Ad-hoc network in the 5 GHz band with these commands:
 
-        iw reg get
-        iw dev wlan1 info
+        iw reg get (shows current limitations)
+        iwlist wlan1 channel (shows allowed frequencies)
 
     One or both commands will show your limitations on different frequency ranges. You are not allowed to do an Ad-hoc network on a specific frequency if a text like *"no-IBSS"* appears. In that case, you should try on the 2.4 GHz band.
 
-2. Network configuration. Our setup is done in the 5.18 GHz frequency (channel 36), and the wireless adapter identifier was wlan1, so edit wlan1 configuration the file */etc/network/interfaces*:
+2. Network configuration. Our setup is done in the 5.18 GHz frequency (channel 36), and the wireless adapter identifier was wlan1, so edit wlan1 configuration in the file */etc/network/interfaces* and leave others adapters untoched:
 
-        auto wlan0
+        auto wlan1
         iface wlan1 inet static
         address 192.168.1.2
         netmask 255.255.255.0
+        wireless-mode ad-hoc
         wireless-channel 36
         wireless-essid NETWORK_NAME
-        wireless-mode ad-hoc
 
     We use a static network address named *NETWORK_NAME*. You have to change the network address for each multicopter used in the group/swarm.
 
@@ -124,11 +125,11 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     #!/bin/bash
     java -jar /home/pi/Desktop/ArduSim.jar 2>&1 | tee -a /home/pi/Desktop/log.txt
 
-These command allows us to execute the application and, at the same time, show and store the standard output in a file.
+These command allows us to execute the application and, at the same time, shows and stores the standard output in a file.
 
-We found an additional problem with the wireless ad-hoc network, as if the wireless regulatory region was set after the adapter uses this configuration. It changes successfully to ad-hoc mode, but it can't change to 5.18 GHz frequency at the same time. To solve this issue, we included another line just before the execution of the application, in the same script (*start.sh*):
+We found an additional problem with the wireless ad-hoc network. It seems that the wireless regulatory region is set after the adapter uses this configuration. It changes successfully to ad-hoc mode, but it can't change to 5.18 GHz frequency at the same time. To solve this issue, we included another line just before the execution of the application, in the same script (*start.sh*):
 
-    sudo iwconfig wlan1 freq 5.18G
+    echo sudoerpassword | sudo -S iwconfig wlan1 freq 5.18G
 
 The script will run each time the Raspberry Pi 3 start, just adding the following line to the end of the file */home/pi/.config/lxsession/LXDE-pi/autostart*:
 

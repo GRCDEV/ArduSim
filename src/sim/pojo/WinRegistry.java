@@ -1,4 +1,4 @@
-package main;
+package sim.pojo;
 /**
  * Pure Java Windows Registry access.
  * Modified by petrucio@stackoverflow(828681) to add support for
