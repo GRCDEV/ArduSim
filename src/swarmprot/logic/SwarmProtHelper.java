@@ -1,5 +1,6 @@
 package swarmprot.logic;
 
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -10,13 +11,16 @@ import javax.swing.JOptionPane;
 import org.javatuples.Pair;
 import api.API;
 import api.GUIHelper;
+import api.MissionHelper;
 import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
+import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Text;
+import sim.logic.SimParam;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
 import uavController.UAVParam;
 
@@ -25,6 +29,20 @@ public class SwarmProtHelper {
 	public static void initializeProtocolDataStructures() {
 		SwarmProtParam.masterHeading = 0.0;
 		SwarmProtParam.state = new SwarmProtState[Param.numUAVs];
+		//UTM
+		SwarmProtParam.flightListPersonalized = new Point3D[Param.numUAVs][];
+		SwarmProtParam.flightListPersonalizedAlt = new Double[Param.numUAVs][];
+		//GEO
+		SwarmProtParam.flightListPersonalizedGeo = new GeoCoordinates[Param.numUAVs][];
+		SwarmProtParam.flightListPersonalizedAltGeo = new Double[Param.numUAVs][];
+		
+		//Drones with his prev and next for takeoff
+		SwarmProtParam.fightPrevNext = new long[Param.numUAVs][2];
+		
+		//Inicialización vector detección ultimo WP
+		SwarmProtParam.WpLast = new boolean[Param.numUAVs][1];
+
+
 
 		/** The state machine starts with the status "START" */
 		for (int i = 0; i < Param.numUAVs; i++) {
@@ -46,14 +64,11 @@ public class SwarmProtHelper {
 	@SuppressWarnings("unchecked")
 	public static Pair<GeoCoordinates, Double>[] getSwarmStartingLocationV1() {
 		/** Position the master on the map */
-		Pair<GeoCoordinates, Double>[] startingLocations = new Pair[Param.numUAVs];
 		double heading = 0.0;
 		Waypoint waypoint1, waypoint2;
 		waypoint1 = waypoint2 = null;
 		int waypoint1pos = 0;
 		boolean waypointFound;
-		UTMCoordinates p1UTM, p2UTM;
-		double incX, incY;
 
 		if (UAVParam.missionGeoLoaded != null && UAVParam.missionGeoLoaded[SwarmProtParam.posMaster] != null) {
 			waypointFound = false;
@@ -76,31 +91,8 @@ public class SwarmProtHelper {
 				}
 			}
 			if (waypointFound) {
-				// We only can set a heading if at least two points with valid coordinates are
-				// found
-				p1UTM = GUIHelper.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
-				p2UTM = GUIHelper.geoToUTM(waypoint2.getLatitude(), waypoint2.getLongitude());
-				incX = p2UTM.Easting - p1UTM.Easting;
-				incY = p2UTM.Northing - p1UTM.Northing;
-				if (incX != 0 || incY != 0) {
-					if (incX == 0) {
-						if (incY > 0)
-							heading = 0.0;
-						else
-							heading = 180.0;
-					} else if (incY == 0) {
-						if (incX > 0)
-							heading = 89.9;
-						else
-							heading = 270.0;
-					} else {
-						double gamma = Math.atan(incY / incX);
-						if (incX > 0)
-							heading = 90 - gamma * 180 / Math.PI;
-						else
-							heading = 270.0 - gamma * 180 / Math.PI;
-					}
-				}
+				heading = masterHeading(waypoint1, waypoint2);
+				SwarmProtParam.missionHeading = heading;
 			}
 		} else {
 			JOptionPane.showMessageDialog(null,
@@ -109,51 +101,27 @@ public class SwarmProtHelper {
 			System.exit(1);
 		}
 
-		startingLocations[SwarmProtParam.posMaster] = Pair
-				.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
-
-		/** Position the slaves on the map according to master position */
-		SwarmProtParam.masterHeading = heading;
-		UTMCoordinates initialPoint = GUIHelper.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
-		UTMCoordinates destPointP = new UTMCoordinates(initialPoint.Easting, initialPoint.Northing, initialPoint.Zone,
-				initialPoint.Letter);
-		UTMCoordinates destPointI = new UTMCoordinates(initialPoint.Easting, initialPoint.Northing, initialPoint.Zone,
-				initialPoint.Letter);
-		GeoCoordinates destPointFinal;
-
-		for (int i = 0; i < Param.numUAVs; i++) {
-			if (i != SwarmProtParam.posMaster) {
-				if (i % 2 == 0) {
-					destPointP.Easting = SwarmProtParam.initialDistanceBetweenUAV
-							* Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
-							+ 0 * Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180) + destPointP.Easting;
-					destPointP.Northing = 0 * Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
-							- SwarmProtParam.initialDistanceBetweenUAV
-									* Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180)
-							+ destPointP.Northing;
-
-					destPointFinal = GUIHelper.UTMToGeo(destPointP.Easting, destPointP.Northing);
-					startingLocations[i] = Pair.with(
-							new GeoCoordinates(destPointFinal.latitude, destPointFinal.longitude),
-							SwarmProtParam.masterHeading);
-				} else {
-					destPointI.Easting = destPointI.Easting - (SwarmProtParam.initialDistanceBetweenUAV
-							* Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
-							+ 0 * Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180));
-					destPointI.Northing = destPointI.Northing
-							- (0 * Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
-									- SwarmProtParam.initialDistanceBetweenUAV
-											* Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180));
-
-					destPointFinal = GUIHelper.UTMToGeo(destPointI.Easting, destPointI.Northing);
-					startingLocations[i] = Pair.with(
-							new GeoCoordinates(destPointFinal.latitude, destPointFinal.longitude),
-							SwarmProtParam.masterHeading);
-				}
-			}
+		GeoCoordinates[] startingLocations = posSlaveFromMaster(heading, waypoint1, Param.numUAVs - 1,
+				SwarmProtParam.initialDistanceBetweenUAV);
+		Pair<GeoCoordinates, Double>[] startingLocationsFinal = new Pair[Param.numUAVs];
+		int aux = 0;
+		int destAux = 0;
+		while (aux < SwarmProtParam.posMaster) {
+			startingLocationsFinal[destAux] = Pair.with(startingLocations[aux], heading);
+			aux++;
+			destAux++;
 		}
 
-		return startingLocations;
+		startingLocationsFinal[destAux] = Pair
+				.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
+		destAux++;
+		while (aux < startingLocations.length) {
+			startingLocationsFinal[destAux] = Pair.with(startingLocations[aux], heading);
+			aux++;
+			destAux++;
+		}
+
+		return startingLocationsFinal;
 	}
 
 	public static void startSwarmTestActionPerformedV1() {
@@ -171,7 +139,7 @@ public class SwarmProtHelper {
 					/** They are converted to Geometrical coordinates */
 					GeoCoordinates pointMasterGEO = GUIHelper.UTMToGeo(pointMasterxy.x, pointMasterxy.y);
 
-					API.moveUAV(SwarmProtParam.posMaster, pointMasterGEO, (float) pointMasterxy.z);
+					API.moveUAV(SwarmProtParam.posMaster, pointMasterGEO, (float) pointMasterxy.z, SwarmProtParam.distToAcceptPointReached);
 				}
 
 			}
@@ -214,5 +182,118 @@ public class SwarmProtHelper {
 		}
 
 	}
+	
+	/** Manually takes off all the UAVs: executes mode=guided, arm engines, and then the take off. Blocking method.
+	 * <p>Usefull when starting on the ground, on stabilize flight mode
+	 * <p>Do not modify this method. */
+	public static void takeOffIndividual(int numUAV) {
+			//Se lanza el despegue a la altura del punto intermedio
+			UAVParam.takeOffAltitude[numUAV] = Listener.takeOffAltitudeStepOne;
+			if (!API.setMode(numUAV, UAVParam.Mode.GUIDED) || !API.armEngines(numUAV) || !API.doTakeOff(numUAV)) {
+				GUIHelper.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
+			}
+
+		// The application must wait until all UAVs reach the planned altitude
+			while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * UAVParam.takeOffAltitude[numUAV]) {
+				if (Param.VERBOSE_LOGGING) {
+					MissionHelper.log(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
+							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
+							+ " " + Text.METERS);
+				}
+				GUIHelper.waiting(UAVParam.ALTITUDE_WAIT);
+			}
+		}
+	
+	
+	/** Calculates the master heading */
+	public static double masterHeading(Waypoint wp1, Waypoint wp2) {
+		// We only can set a heading if at least two points with valid coordinates are
+		// found
+		UTMCoordinates p1UTM, p2UTM;
+		double incX, incY;
+		double heading = 0.0;
+		p1UTM = GUIHelper.geoToUTM(wp1.getLatitude(), wp1.getLongitude());
+		p2UTM = GUIHelper.geoToUTM(wp2.getLatitude(), wp2.getLongitude());
+		incX = p2UTM.Easting - p1UTM.Easting;
+		incY = p2UTM.Northing - p1UTM.Northing;
+		if (incX != 0 || incY != 0) {
+			if (incX == 0) {
+				if (incY > 0)
+					heading = 0.0;
+				else
+					heading = 180.0;
+			} else if (incY == 0) {
+				if (incX > 0)
+					heading = 89.9;
+				else
+					heading = 270.0;
+			} else {
+				double gamma = Math.atan(incY / incX);
+				if (incX > 0)
+					heading = 90 - gamma * 180 / Math.PI;
+				else
+					heading = 270.0 - gamma * 180 / Math.PI;
+			}
+		}
+		return heading;
+	}
+
+	/** Position the slaves on the map according to master position */
+	public static Point2D.Double[] posSlaveFromMasterUTM(double heading, Waypoint waypoint1, int numOfUAVs,
+			int initialDistanceBetweenUAV) {
+		UTMCoordinates initialPoint = GUIHelper.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
+		return posSlaveFromMasterLinear(heading, new Point2D.Double(initialPoint.Easting, initialPoint.Northing),
+				numOfUAVs, initialDistanceBetweenUAV);
+
+	}
+
+	// Var initialDistanceBetweenUAV simulation mode distance between UAV
+	/**
+	 * Position the slaves on the map according to master position forming a
+	 * straight line perpendicular to the master heading.
+	 */
+	public static Point2D.Double[] posSlaveFromMasterLinear(double heading, Point2D.Double initialPoint, int numOfUAVs,
+			int initialDistanceBetweenUAV) {
+		Point2D.Double[] startingLocations = new Point2D.Double[numOfUAVs];
+
+		SwarmProtParam.masterHeading = heading;
+		Point2D.Double destPointP = new Point2D.Double(initialPoint.x, initialPoint.y);
+		Point2D.Double destPointI = new Point2D.Double(initialPoint.x, initialPoint.y);
+
+		for (int i = 0; i < numOfUAVs; i++) {
+			if (i % 2 == 0) {
+				destPointP.x = destPointP.x
+						+ initialDistanceBetweenUAV * Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
+						+ 0 * Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180);
+				destPointP.y = destPointP.y + 0 * Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
+						- initialDistanceBetweenUAV * Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180);
+				startingLocations[i] = new Point2D.Double(destPointP.x, destPointP.y);
+
+			} else {
+				destPointI.x = destPointI.x
+						- (initialDistanceBetweenUAV * Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
+								+ 0 * Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180));
+				destPointI.y = destPointI.y - (0 * Math.cos((SwarmProtParam.masterHeading * Math.PI) / 180)
+						- initialDistanceBetweenUAV * Math.sin((SwarmProtParam.masterHeading * Math.PI) / 180));
+				startingLocations[i] = new Point2D.Double(destPointI.x, destPointI.y);
+			}
+
+		}
+		return startingLocations;
+	}
+
+	// Return position of UAVs from master with GEO
+	public static GeoCoordinates[] posSlaveFromMaster(double heading, Waypoint waypoint1, int numOfUAVs,
+			int initialDistanceBetweenUAV) {
+		Point2D.Double[] aux = posSlaveFromMasterUTM(heading, waypoint1, numOfUAVs, initialDistanceBetweenUAV);
+		GeoCoordinates[] result = new GeoCoordinates[aux.length];
+		for (int i = 0; i < aux.length; i++) {
+			result[i] = GUIHelper.UTMToGeo(aux[i].x, aux[i].y);
+		}
+		return result;
+	}
+
+	
+	
 
 }
