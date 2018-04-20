@@ -279,6 +279,7 @@ public class Text {
 	public static final String SCROLLBAR_WIDTH = "ScrollBar.width";
 	public static final String OPERATING_SYSTEM_WINDOWS = "Windows OS detected.";
 	public static final String OPERATING_SYSTEM_LINUX = "Linux OS detected.";
+	public static final String OPERATING_SYSTEM_MAC = "Mac OS detected.";
 	
 	// MAVLink messages
 	public static final String WAYPOINT_REACHED = "Reached waypoint";

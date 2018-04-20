@@ -40,6 +40,7 @@ public class Param {
 	// Running Operating System
 	public static final int OS_WINDOWS = 0;
 	public static final int OS_LINUX = 1;
+	public static final int OS_MAC = 2;
 	public static volatile int runningOperatingSystem;
 	
 	// Wind parameters
