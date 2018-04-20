@@ -544,6 +544,35 @@ public class Tools {
 					}
 				} catch (IOException e) {}
 	        }
+		} else if (Param.runningOperatingSystem == Param.OS_MAC) {
+			Formatter formatter;
+			String hexId;
+			byte[] mac;
+			NetworkInterface ni;
+			InetAddress ip;
+			
+			try {
+				ip = InetAddress.getLocalHost();
+				NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+				mac = network.getHardwareAddress();
+				
+				if (mac != null) {
+					formatter = new Formatter();
+					for (byte b : mac) {
+						formatter.format("%02X", b);
+					}
+					hexId = formatter.toString();
+					formatter.close();
+					ids.add(Long.parseUnsignedLong(hexId, 16));
+				}
+				
+				
+			} catch (SocketException e1) {
+			} catch (NumberFormatException e1) {
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+			
 		}
 		if (ids.size() == 0) {
 			GUIHelper.exit(Text.MAC_ERROR);
@@ -571,6 +600,25 @@ public class Tools {
 			}
 			if (Param.runningOperatingSystem == Param.OS_LINUX) {
 				String ramDiskPath = "/media/" + SimParam.RAM_DRIVE_NAME;
+				File ramDiskFile = new File(ramDiskPath);
+				if (ramDiskFile.exists()) {
+					// Check if temporal filesystem is already mounted and dismount
+					if (Tools.checkDriveMountedLinux(ramDiskPath)) {
+						if (!Tools.dismountDriveLinux(ramDiskPath)) {
+							return null;
+						}
+					}
+				} else {
+					// Create the folder
+					ramDiskFile.mkdirs();
+				}
+				if (Tools.mountDriveLinux(ramDiskPath)) {
+					SimParam.usingRAMDrive = true;
+					return ramDiskPath;
+				}
+			}
+			if (Param.runningOperatingSystem == Param.OS_MAC) {
+				String ramDiskPath = "/tmp/" + SimParam.RAM_DRIVE_NAME;
 				File ramDiskFile = new File(ramDiskPath);
 				if (ramDiskFile.exists()) {
 					// Check if temporal filesystem is already mounted and dismount
@@ -845,7 +893,7 @@ public class Tools {
 					}
 					
 					// Trying to speed up locating files on the RAM drive (under Linux)
-					if (SimParam.usingRAMDrive && Param.runningOperatingSystem == Param.OS_LINUX) {
+					if (SimParam.usingRAMDrive && (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)) {
 						file1 = new File(SimParam.sitlPath);
 						file2 = new File(tempFolder, file1.getName());
 						Files.copy(file1.toPath(), file2.toPath());
@@ -894,7 +942,7 @@ public class Tools {
 					}
 				}
 				// Under Linux, launch arducopter command:
-				if (Param.runningOperatingSystem == Param.OS_LINUX) {
+				if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 					commandLine.clear();
 					if (SimParam.usingRAMDrive) {
 						commandLine.add((new File(tempFolder, (new File(SimParam.sitlPath)).getName())).getAbsolutePath());
@@ -918,7 +966,7 @@ public class Tools {
 				}
 				
 				ProcessBuilder pb = new ProcessBuilder(commandLine);
-				if (Param.runningOperatingSystem == Param.OS_LINUX) {
+				if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 					pb.directory(new File(SimParam.tempFolderBasePath, SimParam.TEMP_FOLDER_PREFIX + i));
 				}
 				SimParam.processes[i] = pb.start();
@@ -988,6 +1036,11 @@ public class Tools {
 			if (Param.VERBOSE_LOGGING){
 				SimTools.println(Text.OPERATING_SYSTEM_LINUX);
 			}
+		} else if (OS.contains("mac")) {
+			Param.runningOperatingSystem = Param.OS_MAC;
+			if (Param.VERBOSE_LOGGING){
+				SimTools.println(Text.OPERATING_SYSTEM_MAC);
+			}
 		} else {
 			GUIHelper.exit(Text.UAVS_START_ERROR_4);
 		}
@@ -1013,10 +1066,12 @@ public class Tools {
 			sitlPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
 		} else if (Param.runningOperatingSystem == Param.OS_LINUX) {
 			sitlPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_LINUX_FILE_NAME;
+		} else if (Param.runningOperatingSystem == Param.OS_MAC) {
+			sitlPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_MAC_FILE_NAME;
 		}
 		// SITL detection
 		if (Param.runningOperatingSystem == Param.OS_WINDOWS
-				|| Param.runningOperatingSystem == Param.OS_LINUX) {
+				|| Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 			String paramPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.PARAM_FILE_NAME;
 			File sitlPathFile = new File(sitlPath);
 			File paramPathFile = new File(paramPath);
@@ -1045,7 +1100,7 @@ public class Tools {
 				// If fails writing the file, for sure the execution doesn't have administrator privileges
 			}
 		}
-		if (Param.runningOperatingSystem == Param.OS_LINUX) {
+		if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 			String userName = System.getProperty("user.name");
 			if (userName.equals("root")) {
 				SimParam.userIsAdmin = true;
@@ -1263,7 +1318,7 @@ public class Tools {
 				}
 			}
 			
-			if (Param.runningOperatingSystem == Param.OS_LINUX) {
+			if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 				// Unmount temporal filesystem and remove folder
 				if (Tools.checkDriveMountedLinux(SimParam.tempFolderBasePath) && !Tools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
 					System.out.println(Text.DISMOUNT_DRIVE_ERROR);

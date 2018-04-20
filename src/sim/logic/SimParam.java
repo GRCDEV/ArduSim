@@ -101,6 +101,7 @@ public class SimParam {
 	public static volatile String cygwinPath = null;	// Final file path found
 	public static final String SITL_WINDOWS_FILE_NAME = "arducopter.exe";
 	public static final String SITL_LINUX_FILE_NAME = "arducopter";
+	public static final String SITL_MAC_FILE_NAME = "arducopter_mac";
 	public static volatile String sitlPath = null;	// Final SITL file path
 	public static final String PARAM_FILE_NAME = "copter.parm";
 	public static volatile String paramPath = null;	// Final copter parameters file path
