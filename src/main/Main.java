@@ -362,7 +362,7 @@ public class Main {
 								SwarmHelper.detectSwarmEnd();
 							}
 							// Detects if all UAVs are on the ground in order to finish the experiment
-							if (Tools.isTestFinished()) {//TODO descomentar
+							if (Tools.isTestFinished()) {
 								Param.simStatus = SimulatorState.TEST_FINISHED;
 							}
 							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {

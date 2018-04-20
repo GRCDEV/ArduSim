@@ -28,14 +28,10 @@ public class StartMissionTestThread extends Thread {
 	public static void startMissionTest(int numUAV) {
 		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
-		if (
-				API.setMode(numUAV, UAVParam.Mode.STABILIZE)
+		if (API.setMode(numUAV, UAVParam.Mode.STABILIZE)
 				&& API.armEngines(numUAV)
 				&& API.setMode(numUAV, UAVParam.Mode.AUTO)
-				&& API.setThrottle(numUAV)
-				//&& API.armEngines(numUAV)
-				//&& API.setThrottle(numUAV)
-				//&& API.setMode(numUAV, UAVParam.Mode.AUTO_ARMED)
+				&& API.setThrottle(numUAV)//TODO descomentar
 				) {
 			StartMissionTestThread.UAVS_TESTING.incrementAndGet();
 		}
