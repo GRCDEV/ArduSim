@@ -1,13 +1,13 @@
 package pccompanion;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Frame;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -15,6 +15,9 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import api.GUIHelper;
 import api.pojo.Point3D;
@@ -48,11 +51,14 @@ public class MBCAPDialog extends JDialog {
 	private DefaultTableModel tableModel;
 	private JPanel panel_1;
 	private JPanel panel_2;
+	
+	private MBCAPDialog() {}
 
 	/**
 	 * Create the dialog.
 	 */
-	public MBCAPDialog() {
+	public MBCAPDialog(Frame owner) {
+		super(owner);
 		setTitle(PCCompanionParam.SELECTED_PROTOCOL.get().getName());
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
@@ -97,6 +103,9 @@ public class MBCAPDialog extends JDialog {
 
 			JScrollPane scrollPane = new JScrollPane(panel_2);
 			getContentPane().add(scrollPane, BorderLayout.CENTER);
+			resizeColumnWidth();
+			
+			
 		}
 	}
 
@@ -118,80 +127,76 @@ public class MBCAPDialog extends JDialog {
 					tableModel.setValueAt(MBCAPParam.MBCAPState.getSatateById(b.state), row, 2);
 					tableModel.setValueAt(b.idAvoiding, row, 3);
 					tableModel.setValueAt(GUIHelper.round(b.speed, 3), row, 4);
-					Point3D p = b.points.get(0);
-					tableModel.setValueAt(GUIHelper.round(p.x, 3), row, 5);
-					tableModel.setValueAt(GUIHelper.round(p.y, 3), row, 6);
-					tableModel.setValueAt(GUIHelper.round(p.z, 2), row, 7);
+					if (b.points.size() > 0) {
+						Point3D p = b.points.get(0);
+						tableModel.setValueAt(GUIHelper.round(p.x, 3), row, 5);
+						tableModel.setValueAt(GUIHelper.round(p.y, 3), row, 6);
+						tableModel.setValueAt(GUIHelper.round(p.z, 2), row, 7);
+					}
+					resizeColumnWidth();
 				}
 			});
 		}
+	}
+	
+	private void resizeColumnWidth() {
+	    final TableColumnModel columnModel = table.getColumnModel();
+	    TableCellRenderer renderer;
+	    Component comp;
+	    
+	    for (int col = 0; col < table.getColumnCount(); col++) {
+	    	TableColumn column = columnModel.getColumn(col);
+	    	int currentWidth = column.getPreferredWidth();
+	        int width = 20; // Min width
+	        for (int row = 0; row < table.getRowCount(); row++) {
+	            renderer = table.getCellRenderer(row, col);
+	            comp = table.prepareRenderer(renderer, row, col);
+	            width = Math.max(comp.getPreferredSize().width +1 , width);
+	        }
+	        
+	        renderer = column.getHeaderRenderer();
+	        if (renderer == null) {
+	        	renderer = table.getTableHeader().getDefaultRenderer();
+	        }
+	        comp = renderer.getTableCellRendererComponent(table, column.getHeaderValue(), false, false, -1, col);
+	        width = Math.max(comp.getPreferredSize().width +1,  width);
+	        // Upper row width limit
+	        if(width > 300) {
+	        	width=300;
+	        }
+	        if (width + 20 > currentWidth) {
+	        	column.setPreferredWidth(width + 20);
+	        }
+	    }
+	    int prevWidth = this.getWidth();
+	    this.pack();
+	    if (this.getWidth() < prevWidth) {
+	    	this.setSize(prevWidth, this.getHeight());
+	    }
 	}
 
 	/** Listens for data packets on this protocol. */
 	public void listenForPackets() {
 		byte[] array;
 		Beacon b;
-//		if (Param.IS_REAL_UAV) {
-			try {
-				@SuppressWarnings("resource")
-				DatagramSocket s = new DatagramSocket(UAVParam.BROADCAST_PORT);
-				s.setBroadcast(true);
-				DatagramPacket p = new DatagramPacket(new byte[UAVParam.DATAGRAM_MAX_LENGTH], UAVParam.DATAGRAM_MAX_LENGTH);
-				while (true) {
-					p.setData(new byte[UAVParam.DATAGRAM_MAX_LENGTH], 0, UAVParam.DATAGRAM_MAX_LENGTH);
-					try {
-						s.receive(p);
-						array = p.getData();
-						b = Beacon.getBeacon(array);
-						updateRow(b);
-					} catch (IOException e) {}
-				}
-			} catch (SocketException e) {
-				GUIHelper.exit(Text.THREAD_START_ERROR);
+		try {
+			@SuppressWarnings("resource")
+			DatagramSocket s = new DatagramSocket(UAVParam.BROADCAST_PORT);
+			s.setBroadcast(true);
+			DatagramPacket p = new DatagramPacket(new byte[UAVParam.DATAGRAM_MAX_LENGTH], UAVParam.DATAGRAM_MAX_LENGTH);
+			while (true) {
+				p.setData(new byte[UAVParam.DATAGRAM_MAX_LENGTH], 0, UAVParam.DATAGRAM_MAX_LENGTH);
+				try {
+					s.receive(p);
+					array = p.getData();
+					b = Beacon.getBeacon(array);
+					updateRow(b);
+				} catch (IOException e) {}
 			}
-//		} else {
-//			// Wait the dialog to be built, if needed
-//			while (MBCAPDialog.mbcap.shown == null) {
-//				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
-//			}
-//			int[] shownOrder = new int[Param.numUAVs];
-//			boolean found;
-//			long id;
-//			int pos = -1;
-//			for (int i = 0; i < Param.numUAVs; i++) {
-//				found = false;
-//				id = Param.id[i];
-//				for (int j = 0; j < shown.length && !found; j++) {
-//					if (id == shown[j].id) {
-//						pos = j;
-//						found = true;
-//					}
-//				}
-//				if (found) {
-//					shownOrder[i] = pos;
-//				} else {
-//					shownOrder[i] = -1;
-//				}
-//			}
-//			Arrays.toString(shownOrder);
-//			long time = System.currentTimeMillis();
-//			long sleep;
-//			while (true) {
-//				for (int i = 0; i < Param.numUAVs; i++) {
-//					if (shownOrder[i] != -1 && UAVParam.prevSentMessage.get(i) != null) {
-//						array = UAVParam.prevSentMessage.get(i).message;
-//						b = Beacon.getBeacon(array);
-//						updateRow(b);
-//					}
-//				}
-//				sleep = BoardParam.screenDelay - (System.currentTimeMillis() - time);
-//				if (sleep > 0) {
-//					GUIHelper.waiting((int)sleep);
-//				}
-//				time = time + BoardParam.screenDelay;
-//			}
-//		}
-//		s.close();
+//			s.close();
+		} catch (SocketException e) {
+			GUIHelper.exit(Text.THREAD_START_ERROR);
+		}
 	}
 
 }

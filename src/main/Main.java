@@ -223,7 +223,7 @@ public class Main {
 		if (!Param.IS_REAL_UAV) {
 			Tools.forceGPS();
 		}
-		Tools.getGPSFix();
+		Tools.getGPSFix();//TODO descomentar
 		Tools.sendBasicConfiguration();
 		
 		// 10. Set communications online, and start collision detection if needed
@@ -302,14 +302,6 @@ public class Main {
 
 					// 15. Start the experiment, only if the program is not being closed
 					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-						
-						
-//						System.out.println("HA LLEGADO CORRECTAMENTE HASTA EJECUTARLO TODO");
-//						GUIHelper.waiting(15000);//TODO borrar esto
-//						System.exit(0);
-						
-						
-						
 						// TODO remove new threads and clean the console parameters (args)
 						if (UAVParam.doFakeSending) {
 							for (int i = 0; i < Param.numUAVs; i++) {
@@ -354,10 +346,15 @@ public class Main {
 						} else {
 							SwarmHelper.startSwarmTestActionPerformed();
 						}
-
+						
 						// 16. Waiting while the experiment is is progress and detecting the experiment end
+						int check = 0;
 						while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-							Tools.checkBatteryLevel();
+							// Check the battery level periodically
+							if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
+								Tools.checkBatteryLevel();
+							}
+							check++;
 							if (Param.simulationIsMissionBased) {
 								// Land all the UAVs when they reach the last waypoint
 								MissionHelper.detectMissionEnd();
@@ -365,7 +362,7 @@ public class Main {
 								SwarmHelper.detectSwarmEnd();
 							}
 							// Detects if all UAVs are on the ground in order to finish the experiment
-							if (Tools.isTestFinished()) {
+							if (Tools.isTestFinished()) {//TODO descomentar
 								Param.simStatus = SimulatorState.TEST_FINISHED;
 							}
 							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {

@@ -20,6 +20,7 @@ import org.mavlink.messages.MAV_CMD;
 import org.mavlink.messages.MAV_COMPONENT;
 import org.mavlink.messages.MAV_FRAME;
 import org.mavlink.messages.MAV_MISSION_RESULT;
+import org.mavlink.messages.MAV_RESULT;
 import org.mavlink.messages.MAV_TYPE;
 import org.mavlink.messages.ardupilotmega.msg_command_ack;
 import org.mavlink.messages.ardupilotmega.msg_command_long;
@@ -361,16 +362,22 @@ public class UAVControllerThread extends Thread {
 	private void processMode() {
 		msg_heartbeat message = (msg_heartbeat) inMsg;
 		UAVParam.Mode prevMode = UAVParam.flightMode.get(numUAV);
-		// Only process when flight mode changes
-		if (prevMode == null || prevMode.getBaseMode() != message.base_mode || prevMode.getCustomMode() != message.custom_mode) {
-			UAVParam.Mode mode = UAVParam.Mode.getMode(message.base_mode, message.custom_mode);
-			if (mode != null) {
-				UAVParam.flightMode.set(numUAV, mode);
-				SimTools.updateUAVMAVMode(numUAV, mode.getMode());	// Also update the GUI
-			} else {
-				SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + message.base_mode + "," + message.custom_mode + ")");
+		// Only process valid mode
+		if (message.base_mode != 0 || message.custom_mode != 0) {
+			// Only process when mode changes
+			if (prevMode == null || prevMode.getBaseMode() != message.base_mode || prevMode.getCustomMode() != message.custom_mode) {
+				UAVParam.Mode mode = UAVParam.Mode.getMode(message.base_mode, message.custom_mode);
+				if (mode != null) {
+					UAVParam.flightMode.set(numUAV, mode);
+					SimTools.updateUAVMAVMode(numUAV, mode.getMode());	// Also update the GUI
+				} else {
+					SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + message.base_mode + "," + message.custom_mode + ")");
+				}
 			}
-		}
+		} else {
+			System.out.println("HEARTBEAT received from System " + message.sysId + " Component " + message.componentId + ": " + message.toString());
+		}//TODO eliminar el else (probablemente es el teléfono móvil o el mando)
+		
 		// Detect when the UAV has connected (first heartbeat received)
 		if (!this.uavConnected) {
 			UAVParam.numMAVLinksOnline.incrementAndGet();
@@ -700,7 +707,7 @@ public class UAVControllerThread extends Thread {
 		// ACK received when changing the flight mode
 		case UAVParam.MAV_STATUS_ACK_MODE:
 			if (message.command == msg_set_mode.MAVLINK_MSG_ID_SET_MODE) {
-				if (message.result == 0) {
+				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
 					// The new value has been accepted, so we can set it
 					UAVParam.flightMode.set(numUAV, UAVParam.newFlightMode[numUAV]);
 					SimTools.updateUAVMAVMode(numUAV, UAVParam.newFlightMode[numUAV].getMode());
@@ -713,7 +720,7 @@ public class UAVControllerThread extends Thread {
 		// ACK received when arming motors
 		case UAVParam.MAV_STATUS_ACK_ARM:
 			if (message.command == MAV_CMD.MAV_CMD_COMPONENT_ARM_DISARM) {
-				if (message.result == 0) {
+				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 				} else {
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_ARM);
@@ -723,7 +730,7 @@ public class UAVControllerThread extends Thread {
 		// ACK received when taking off
 		case UAVParam.MAV_STATUS_ACK_TAKE_OFF:
 			if (message.command == MAV_CMD.MAV_CMD_NAV_TAKEOFF) {
-				if (message.result == 0) {
+				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 				} else {
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_TAKE_OFF);
@@ -733,7 +740,7 @@ public class UAVControllerThread extends Thread {
 		// ACK received when changing the horizontal flight speed
 		case UAVParam.MAV_STATUS_ACK_SET_SPEED:
 			if (message.command == MAV_CMD.MAV_CMD_DO_CHANGE_SPEED) {
-				if (message.result == 0) {
+				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 				} else {
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_SET_SPEED);
@@ -781,12 +788,14 @@ public class UAVControllerThread extends Thread {
 	/** Sending new fligh mode message. */
 	private void msgSetMode() throws IOException {
 		// Currently, it should be better to use a msg_command_long, but SITL does not support it on MAVLink v1
-		// msg_command_long res = new msg_command_long();
-		// res.command = MAV_CMD.MAV_CMD_DO_SET_MODE;
-		// res.param1 = MAVParameter.newFlightMode[numUAV].getBaseMode();
-		// res.param2 = MAVParameter.newFlightMode[numUAV].getCustomMode();
-		// res.target_system = 1;
-		// res.target_component = 1;
+//		msg_command_long message = new msg_command_long();
+//		message.command = MAV_CMD.MAV_CMD_DO_SET_MODE;
+//		message.param1 = UAVParam.newFlightMode[numUAV].getBaseMode();
+//		message.param2 = UAVParam.newFlightMode[numUAV].getCustomMode();
+//		message.target_system = 1;
+//		message.target_component = 1;
+//		message.sysId = 255;
+//		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
 		msg_set_mode message = new msg_set_mode();
 		message.target_system = 1;
 		message.base_mode = UAVParam.newFlightMode[numUAV].getBaseMode();

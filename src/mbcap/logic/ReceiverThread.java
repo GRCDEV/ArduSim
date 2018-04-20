@@ -60,7 +60,10 @@ public class ReceiverThread extends Thread {
 			
 			// Ignoring beacons without useful information
 			if (beacon != null && beacon.points.size() > 0) {
-				MBCAPParam.beacons[numUAV].put(beacon.uavId, beacon);
+				// On real UAVs, the broadcast is also received by the sender
+				if (beacon.uavId != Param.id[numUAV]) {
+					MBCAPParam.beacons[numUAV].put(beacon.uavId, beacon);
+				}
 			}
 		}
 	}

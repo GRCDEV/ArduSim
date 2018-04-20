@@ -97,23 +97,46 @@ public class UAVParam {
 	public static LastPositions[] lastLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Startup parameters
-	public static volatile boolean doFakeSending;				// Do fake communications among the UAVs
+	public static volatile boolean doFakeSending;		// Do fake communications among the UAVs
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
 	public static final double MIN_FLYING_ALTITUDE = 5;	// (m) Minimum relative initial flight altitude
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
 	public static final double WIND_THRESHOLD = 0.5;	// Minimum wind speed accepted by the simulator, when used
+	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
+	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
 
-	public static final double MIN_BATTERY_VOLTAGE = 10.8;		// (V) Minimum voltage to rise the alarm (charged level = 12.6 V)
-	public static final int MAX_BATTERY_CAPACITY = 500000000;	// (mAh) Maximum initial battery capacity
-	public static final int STANDARD_BATTERY_CAPACITY = 3300;	// (mAh) Standard battery capacity
-	public static int batteryCapacity;					// (mAh) Used battery capacity
+	// Battery levels
+	private static final double CHARGED_VOLTAGE = 4.2;				// (V) Cell voltage at maximum charge
+	private static final double NOMINAL_VOLTAGE = 3.7;				// (V) Nominal cell voltage of a cell
+	private static final double ALARM_VOLTAGE = 3.5;				// (V) 20% charge. Minimum cell voltage under load (already flying)
+	private static final double FINAL_VOLTAGE = 3.75;				// (V) 20% charge. Minimum cell voltage without load (just when finished the flight)
+	private static final double FULLY_DISCHARGED_VOLTAGE = 3.2;	// (V) 0% charge. Minimum cell voltage without load
+	private static final double STORAGE_VOLTAGE = 3.8;				// (V) Cell voltage for storage purposes
 	public static final double BATTERY_DEPLETED_THRESHOLD = 0.2;	// (%) Battery energy level to rise the alarm
-	public static int batteryLowLevel;								// (mAh) Calculated battery energy level to rise the alarm
 	public static final int BATTERY_DEPLETED_ACTION = 1;	// 0 Disabled
 															// 1 Land (RTL if flying in auto mode)
 															// 2 RTL
-	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
-	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
+	public static final int BATTERY_PRINT_PERIOD = 5;	// (messages) Number of battery checks between output messages
+	// Real battery
+	public static final int LIPO_BATTERY_CELLS = 4;			// Number of cells of the LiPo battery
+	public static final double LIPO_BATTERY_CHARGED_VOLTAGE = LIPO_BATTERY_CELLS * CHARGED_VOLTAGE;	// (V) Maximum charge (16.8V)
+	public static final double LIPO_BATTERY_NOMINAL_VOLTAGE = LIPO_BATTERY_CELLS * NOMINAL_VOLTAGE;	// (V) Standard voltage (14.8V)
+	public static final double LIPO_BATTERY_ALARM_VOLTAGE = LIPO_BATTERY_CELLS * ALARM_VOLTAGE;		// (V) Voltage on flight to rise an alarm (14V)
+	public static final double LIPO_BATTERY_FINAL_VOLTAGE = LIPO_BATTERY_CELLS * FINAL_VOLTAGE;		// (V) Voltage at the end without load (15V)
+	public static final double LIPO_BATTERY_DISCHARGED_VOLTAGE = LIPO_BATTERY_CELLS * FULLY_DISCHARGED_VOLTAGE;	// (V) Minimum to avoid damage (12.8V)
+	public static final double LIPO_BATTERY_STORAGE_VOLTAGE = LIPO_BATTERY_CELLS * STORAGE_VOLTAGE;	// (V) Level for storage (15.2V)
+	// Virtual battery
+	public static final int VIRTUAL_BATTERY_CELLS = 3;		// Number of cells of the virtual battery on ArduSim
+	public static final double VIRT_BATTERY_CHARGED_VOLTAGE = VIRTUAL_BATTERY_CELLS * CHARGED_VOLTAGE;	// (V) Maximum charge (12.6V)
+	public static final double VIRT_BATTERY_NOMINAL_VOLTAGE = VIRTUAL_BATTERY_CELLS * NOMINAL_VOLTAGE;	// (V) Standard voltage (11.1V)
+	public static final double VIRT_BATTERY_ALARM_VOLTAGE = VIRTUAL_BATTERY_CELLS * ALARM_VOLTAGE;		// (V) Voltage on flight to rise an alarm (10.5V)
+	public static final double VIRT_BATTERY_FINAL_VOLTAGE = VIRTUAL_BATTERY_CELLS * FINAL_VOLTAGE;		// (V) Voltage at the end without load (11.25V)
+	public static final double VIRT_BATTERY_DISCHARGED_VOLTAGE = VIRTUAL_BATTERY_CELLS * FULLY_DISCHARGED_VOLTAGE;	// (V) Minimum to avoid damage (9.6V)
+	public static final double VIRT_BATTERY_STORAGE_VOLTAGE = VIRTUAL_BATTERY_CELLS * STORAGE_VOLTAGE;	// (V) Level for storage (11.4V)
+	public static final int MAX_BATTERY_CAPACITY = 500000000;	// (mAh) Maximum initial battery capacity
+	public static final int STANDARD_BATTERY_CAPACITY = 3300;	// (mAh) Standard battery capacity
+	public static int batteryCapacity;					// (mAh) Used battery capacity
+	public static int batteryLowLevel;								// (mAh) Calculated battery energy level to rise the alarm
 
 	// MAVLink waiting parameters
 	public static AtomicInteger numMAVLinksOnline = new AtomicInteger();	// Number of MAVLink links stablished
@@ -387,6 +410,9 @@ public class UAVParam {
 		BATTERY_OFFSET("BATT_AMP_OFFSET", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Voltage offset at 0 current on sensor (don't touch)
 		BATTERY_CURRENT_PIN("BATT_CURR_PIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Pin used to measure current (don't touch)
 		BATTERY_DENSITY("BATT_AMP_PERVOLT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Amperes included in 1 volt (don't touch)
+		
+		BATTERY_CAPACITY2("BATT2_CAPACITY", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT32),	// Second battery parameters
+		
 		// Battery failsafe options
 		BATTERY_FAILSAFE_ACTION("FS_BATT_ENABLE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// Action when battery low
 																							// 0 Disabled, 1 Land, 2 RTL

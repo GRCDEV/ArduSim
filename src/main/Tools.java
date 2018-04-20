@@ -504,6 +504,7 @@ public class Tools {
 	        Pattern pattern = Pattern.compile("^ *(.*):");
 	        String hexId;
 	        BufferedReader in = null;
+	        BufferedReader in2 = null;
 	        try (FileReader reader = new FileReader("/proc/net/dev")) {
 	            in = new BufferedReader(reader);
 	            String line = null;
@@ -513,7 +514,15 @@ public class Tools {
 	                	// Ignore loopback interface
 	                	String nameFound = m.group(1);
 	                	if (!nameFound.equals("lo")) {
-	                		interfaces.add(nameFound);
+	                		// Ignoring disabled interfaces
+	                		try (FileReader reader3 = new FileReader("/sys/class/net/" + nameFound + "/operstate")) {
+	                			in2 = new BufferedReader(reader3);
+	    	                    String state = in2.readLine();
+	    	                    if (state.equals("up")) {
+	    	                    	interfaces.add(nameFound);
+	    	                    }
+	                		} catch (IOException e) {
+	    	                }
 	                	}
 	                }
 	            }
@@ -1353,6 +1362,7 @@ public class Tools {
 	
 	/** Waits until GPS is available in all executing UAVs. */
 	public static void getGPSFix() {
+		SimTools.println(Text.WAITING_GPS);
 		long time = System.nanoTime();
 		boolean startProcess = false;
 		boolean error = false;
@@ -1419,13 +1429,53 @@ public class Tools {
 	/** Detects if a UAV is running out of battery. */
 	public static void checkBatteryLevel() {
 		int depleted = 0;
-		double threshold = 100 * UAVParam.batteryLowLevel / UAVParam.batteryCapacity;
+		double alarmLevel;
+		if (Param.IS_REAL_UAV) {
+			alarmLevel = UAVParam.LIPO_BATTERY_ALARM_VOLTAGE;
+		} else {
+			alarmLevel = UAVParam.VIRT_BATTERY_ALARM_VOLTAGE;
+		}
+		int percentage;
+		double voltage;
+		boolean isDepleted;
 		for (int i=0; i<Param.numUAVs; i++) {
-			if (UAVParam.uavCurrentStatus[i].getRemainingBattery() < threshold) {
-				depleted++;
+			percentage = UAVParam.uavCurrentStatus[i].getRemainingBattery();
+			voltage = UAVParam.uavCurrentStatus[i].getVoltage();
+			isDepleted = false;
+			if (percentage != -1 && percentage < UAVParam.BATTERY_DEPLETED_THRESHOLD * 100) {
+				isDepleted = true;
+			}
+			if (voltage != -1 && voltage <alarmLevel) {
+				isDepleted = true;
+			}
+			if (percentage != -1 && voltage != -1) {
+				if (Param.IS_REAL_UAV) {
+					SimTools.println(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
+				} else if (Param.VERBOSE_LOGGING) {
+					SimTools.println(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
+				}
+			} else if (percentage != -1) {
+				if (Param.IS_REAL_UAV) {
+					SimTools.println(Text.BATTERY_LEVEL + " " + percentage + " %");
+				} else if (Param.VERBOSE_LOGGING) {
+					SimTools.println(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
+				}
+			} else if (voltage != -1) {
+				if (Param.IS_REAL_UAV) {
+					SimTools.println(Text.BATTERY_LEVEL + " " + voltage + " V");
+				} else if (Param.VERBOSE_LOGGING) {
+					SimTools.println(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
+				}
+			}
+			if (isDepleted) {
+				if (Param.IS_REAL_UAV) {
+					SimTools.println(Text.BATTERY_FAILING2);
+				} else {
+					depleted++;
+				}
 			}
 		}
-		if (depleted > 0) {
+		if (!Param.IS_REAL_UAV && depleted > 0) {
 			SimTools.println(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
 		}
 	}

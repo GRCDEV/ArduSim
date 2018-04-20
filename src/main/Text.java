@@ -51,6 +51,8 @@ public class Text {
 	public static final String REDRAW_DISTANCE = "Minimum screen redraw distance:";
 	public static final String LOGGING = "Enable arducopter logging:";
 	public static final String BATTERY = "Restrict battery capacity:";
+	public static final String BATTERY_SIZE = "Battery capacity:";
+	public static final String BATTERY_THRESHOLD = "Low level battery threshold:";
 	public static final String RENDER = "Rendering quality:";
 	public static final String RENDER_QUALITY1 = "Maximum performance";
 	public static final String RENDER_QUALITY2 = "Text smoothed";
@@ -262,6 +264,9 @@ public class Text {
 	public static final String INITIAL_CONFIGURATION_ERROR_1 = "Failed forcing GPS data messages on the UAVs";
 	public static final String INITIAL_CONFIGURATION_ERROR_2 = "Failed sending the initial configuration to the UAVs";
 	public static final String BATTERY_FAILING = "Battery depleting on ";
+	public static final String BATTERY_FAILING2 = "Battery failing.";
+	public static final String BATTERY_LEVEL = "Battery level:";
+	public static final String BATTERY_LEVEL2 = "Battery level of UAV";
 	public static final String TAKE_OFF_ERROR_1 = "Failed executing the take off of the UAV";
 	public static final String WIRELESS_ERROR = "Error. The function Tools.isInRange() must be modified.";
 	public static final String DOWNLOAD_ERROR = "Image not available";
@@ -299,7 +304,7 @@ public class Text {
 	public static final String STOP = "UAV stationary.";
 	public static final String STOP_ERROR_1 = "Can't stabilize position.";
 	public static final String STOP_ERROR_2 = "Error stopping.";
-	public static final String STABILIZE_ALTITUDE = "Altitude stabilized.";
+	public static final String STABILIZE_ALTITUDE = "Altitude control enabled.";
 	public static final String STABILIZE_ALTITUDE_ERROR = "Error getting the altitude control.";
 	public static final String MOVING_ERROR_1 = "Error changing position.";
 	public static final String MOVING_ERROR_2 = "Can't stabilize position in destination position.";
@@ -352,13 +357,14 @@ public class Text {
 	public static final String CIRCLE_ARMED = "Circle_armed";
 	
 	// PC Companion
-	public static final String NUM_UAVS_COUNTER = "UAVs connected";
+	public static final String NUM_UAVS_COUNTER = " UAVs connected";
 	public static final String PROTOCOL = "Protocol:";
 	public static final String IDENTIFIER_HEADER = "identifier";
 	public static final String MAC_HEADER = "MAC";
 	public static final String IP_HEADER = "IP";
 	public static final String STATUS_HEADER = "status";
-	
+	public static final String DIALOG_TITLE = "Warning";
+	public static final String SETUP_WARNING = "Are you sure that the safety switch is armed? (when needed)";
 	
 	
 	

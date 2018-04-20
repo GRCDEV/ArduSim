@@ -6,6 +6,7 @@ import api.API;
 import api.MissionHelper;
 import api.SwarmHelper;
 import main.Param;
+import main.Text;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
@@ -31,13 +32,14 @@ public class InitialConfigurationThread extends Thread {
 	
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, loads missions..., to a specific UAV. */
 	public static void sendBasicConfiguration(int numUAV) {
+		// Ask the flight controller for information about battery usage (1Hz)
+		if (!API.setParam(numUAV, ControllerParam.STATISTICS, 1)) {
+			return;
+		}
+		
 		if (!Param.IS_REAL_UAV) {
 			// Disable logging to speed up simulation
 			if (!SimParam.arducopterLoggingEnabled && !API.setParam(numUAV, ControllerParam.LOGGING, 0)) {
-				return;
-			}
-			// Ask the flight controller for information about battery usage (1Hz)
-			if (!API.setParam(numUAV, ControllerParam.STATISTICS, 1)) {
 				return;
 			}
 			// Set simulated battery capacity
@@ -55,6 +57,20 @@ public class InitialConfigurationThread extends Thread {
 					|| !API.setParam(numUAV, ControllerParam.WIND_SPEED, Param.windSpeed)) {
 				return;
 			}
+		} else {
+			if (!API.getParam(numUAV, ControllerParam.BATTERY_CAPACITY)) {
+				return;
+			}
+			UAVParam.batteryCapacity = (int)Math.round(UAVParam.newParamValue[numUAV]);
+			if (UAVParam.batteryCapacity == 0 && !API.getParam(numUAV, ControllerParam.BATTERY_CAPACITY2)) {
+				return;
+			}
+			SimTools.println(Text.BATTERY_SIZE + " " + UAVParam.batteryCapacity);
+			UAVParam.batteryLowLevel = (int)Math.rint(UAVParam.batteryCapacity * UAVParam.BATTERY_DEPLETED_THRESHOLD);
+			if (UAVParam.batteryLowLevel % 50 != 0) {
+				UAVParam.batteryLowLevel = (UAVParam.batteryLowLevel / 50 + 1) * 50;	// Multiple of 50 roof value
+			}
+			SimTools.println(Text.BATTERY_THRESHOLD + " " + UAVParam.batteryLowLevel + " (" + (UAVParam.BATTERY_DEPLETED_THRESHOLD * 100) + " %)");
 		}
 		
 		// Get flight controller configuration
@@ -90,7 +106,7 @@ public class InitialConfigurationThread extends Thread {
 			if (!SwarmHelper.sendBasicSwarmConfig(numUAV)) {
 				return;
 			}
-		}
+		}//TODO uncomment
 		
 		// Configuration successful
 		InitialConfigurationThread.UAVS_CONFIGURED.incrementAndGet();

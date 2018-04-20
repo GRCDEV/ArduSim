@@ -2,9 +2,11 @@ package pccompanion;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.math.BigInteger;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -13,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -52,6 +55,8 @@ public class PCCompanionGUI {
 	private AtomicInteger rowCount = new AtomicInteger();
 	private JComboBox<String> protocolComboBox;
 	private JLabel lblProtocol;
+	
+	private volatile int connected = 0;
 
 	public PCCompanionGUI() {
 		initialize();
@@ -74,7 +79,7 @@ public class PCCompanionGUI {
 		gbl_upperPanel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
 		upperPanel.setLayout(gbl_upperPanel);
 		
-		numUAVsLabel = new JLabel();
+		numUAVsLabel = new JLabel("" + this.connected);
 		GridBagConstraints gbc_numUAVsLabel = new GridBagConstraints();
 		gbc_numUAVsLabel.insets = new Insets(0, 5, 0, 5);
 		gbc_numUAVsLabel.gridx = 0;
@@ -110,14 +115,20 @@ public class PCCompanionGUI {
 		setupButton = new JButton(Text.SWARM_BASED_CONFIGURATION);
 		setupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-				PCCompanionParam.SELECTED_PROTOCOL.set(Param.Protocol.getProtocolByName((String)protocolComboBox.getSelectedItem()));
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						setupButton.setEnabled(false);
-						protocolComboBox.setEnabled(false);
-					}
-				});
+				int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
+						Text.SETUP_WARNING,
+						Text.DIALOG_TITLE,
+						JOptionPane.YES_NO_OPTION);
+				if (result == JOptionPane.YES_OPTION) {
+					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
+					PCCompanionParam.SELECTED_PROTOCOL.set(Param.Protocol.getProtocolByName((String)protocolComboBox.getSelectedItem()));
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							setupButton.setEnabled(false);
+							protocolComboBox.setEnabled(false);
+						}
+					});
+				}
 			}
 		});
 		GridBagConstraints gbc_setupButton = new GridBagConstraints();
@@ -129,24 +140,30 @@ public class PCCompanionGUI {
 		startButton = new JButton(Text.START_TEST);
 		startButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						startButton.setEnabled(false);
-					}
-				});
-				Timer timer = new Timer();
-				timer.scheduleAtFixedRate(new TimerTask() {
-		            long count = 0;
-		            public void run() {
-		            	SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								progressTimeLabel.setText(GUIHelper.timeToString(0, count));
-								count = count + 1000;
-							}
-						});
-		            }
-		        }, 0, 1000);	// for each second, without initial delay
+				int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
+						Text.SETUP_WARNING,
+						Text.DIALOG_TITLE,
+						JOptionPane.YES_NO_OPTION);
+				if (result == JOptionPane.YES_OPTION) {
+					Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							startButton.setEnabled(false);
+						}
+					});
+					Timer timer = new Timer();
+					timer.scheduleAtFixedRate(new TimerTask() {
+			            long count = 0;
+			            public void run() {
+			            	SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									progressTimeLabel.setText(GUIHelper.timeToString(0, count));
+									count = count + 1000;
+								}
+							});
+			            }
+			        }, 0, 1000);	// for each second, without initial delay
+				}
 			}
 		});
 		GridBagConstraints gbc_startButton = new GridBagConstraints();
@@ -193,6 +210,10 @@ public class PCCompanionGUI {
 		
 		setupButton.setEnabled(false);
 		startButton.setEnabled(false);
+		
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		assistantFrame.setLocation(dim.width/2-assistantFrame.getSize().width/2, 0);
+		
 		assistantFrame.setVisible(true);
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 		(new PCCompanionTalker()).start();
@@ -208,7 +229,11 @@ public class PCCompanionGUI {
 		if (Param.IS_PC_COMPANION) {
 			BigInteger bi = new BigInteger(Long.toString(id & ~(1L << 63)));
 		    if (id < 0) bi = bi.setBit(64);
-		    mac = bi.toString(16).replaceAll(".{2}(?=.)", "$0:");
+		    String m = bi.toString(16);
+		    while (m.length() < 12) {
+		    	m = "0" + m;
+		    }
+		    mac = m.replaceAll(".{2}(?=.)", "$0:");
 		} else {
 			mac = "-";
 		}
@@ -216,6 +241,8 @@ public class PCCompanionGUI {
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
+				connected++;
+				numUAVsLabel.setText("" + connected);
 				tableModel.addRow(new Object[] { "" + (numUAV+1), idString, mac, ip, status2 });
 				resizeColumnWidth();
 			}
@@ -263,6 +290,12 @@ public class PCCompanionGUI {
 	        if (width + 20 != currentWidth) {
 	        	column.setPreferredWidth(width + 20);
 	        }
+	    }
+	    
+	    int prevWidth = assistantFrame.getWidth();
+	    assistantFrame.pack();
+	    if (assistantFrame.getWidth() < prevWidth) {
+	    	assistantFrame.setSize(prevWidth, assistantFrame.getHeight());
 	    }
 	}
 

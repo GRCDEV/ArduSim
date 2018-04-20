@@ -2,33 +2,41 @@ package api.pojo;
 
 import org.javatuples.Quartet;
 
+import api.GUIHelper;
+
 /** This class generates and object that contains the current status information received from the UAV. */
 
 public class UAVCurrentStatus {
 	
 	// Current values
-	private double voltage;				// Volts
-	private double current;				// Amperes
-	private int remainingBattery;		// Percentage
-	private double cpuLoad;				// Percentage
+	private double voltage = -1;			// Volts
+	private double current = -1;			// Amperes
+	private int remainingBattery = -1;		// Percentage
+	private double cpuLoad = -1;			// Percentage
 	
 	/** Updates current values with raw data received. */
 	public synchronized void update(int voltage, int current, int remainingBattery, int load) {
-		this.voltage = voltage * 0.001;
-		this.current = current * 0.01;
+		this.voltage = GUIHelper.round(voltage * 0.001, 3);
+		if (current != -1) {	// ardupilot measures the current
+			this.current = GUIHelper.round(current * 0.01, 2);
+		}
 		this.remainingBattery = remainingBattery;
-		this.cpuLoad = load * 0.1;
+		this.cpuLoad = GUIHelper.round(load * 0.1, 1);
 	}
-	
+	/** Returns the battery level (V) or -1 if unknown. */
 	public synchronized double getVoltage() {
 		return this.voltage;
 	}
+	/** Returns the battery current (A) or -1 if unknown. */
 	public synchronized double getCurrent() {
 		return this.current;
 	}
+	/** Returns the battery remaining level (%) or -1 if unknown.
+	 * <p>100% is the level when started, even if the battery was not fully charged!. */
 	public synchronized int getRemainingBattery() {
 		return this.remainingBattery;
 	}
+	/** Returns the CPU load (%) or -1 if unknown. */
 	public synchronized double getCPULoad() {
 		return this.cpuLoad;
 	}

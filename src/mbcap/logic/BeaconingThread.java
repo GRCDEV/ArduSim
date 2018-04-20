@@ -47,7 +47,8 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 
 		// The protocol is stopped when two UAVs collide
 		long cicleTime = System.currentTimeMillis();
-		while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
+		while (
+				Param.simStatus == SimulatorState.TEST_IN_PROGRESS
 				&& UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
 				&& !UAVParam.collisionDetected
 				) {

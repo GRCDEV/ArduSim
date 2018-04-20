@@ -1,5 +1,6 @@
 package pccompanion;
 
+import java.awt.Dialog.ModalityType;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -84,7 +85,8 @@ public class PCCompanionTalker extends Thread {
 				|| p == Protocol.MBCAP_V2
 				|| p == Protocol.MBCAP_V3
 				|| p == Protocol.MBCAP_V4) {
-			MBCAPDialog.mbcap = new MBCAPDialog();
+			MBCAPDialog.mbcap = new MBCAPDialog(PCCompanionGUI.companion.assistantFrame);
+			MBCAPDialog.mbcap.setModalityType(ModalityType.APPLICATION_MODAL);
 			MBCAPDialog.mbcap.setVisible(true);
 			
 			// Listen for protocol data packets

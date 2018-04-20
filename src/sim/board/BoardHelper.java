@@ -222,7 +222,8 @@ public class BoardHelper {
 			}
 		} else {
 			// All UAVs connected. Draw everything
-			if (BoardParam.rescaleQueries.getAndSet(0) > 0) {
+			if (BoardParam.rescaleQueries.getAndSet(0) > 0
+					|| (Param.simStatus == SimulatorState.STARTING_UAVS && Param.numMissionUAVs.get() == 0)) {
 				BoardHelper.setScale();
 				if (Param.simulationIsMissionBased) {
 					MissionHelper.rescaleMissionDataStructures();
