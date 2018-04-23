@@ -15,6 +15,7 @@ import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import main.Param;
 import main.Tools;
+import pollution.PollutionHelper;
 import main.Param.Protocol;
 import main.Param.SimulatorState;
 import main.Text;
@@ -91,6 +92,10 @@ public class SwarmHelper {
 			SwarmProtParam.idMaster = SwarmProtParam.idMasterSimulation;
 
 		}
+		// TODO
+		if (Param.selectedProtocol == Protocol.POLLUTION) {
+			PollutionHelper.openConfigurationDialog();
+		}
 
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 
@@ -103,6 +108,11 @@ public class SwarmHelper {
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
 			SwarmProtHelper.initializeProtocolDataStructures();
+		}
+		
+		// TODO
+		if (Param.selectedProtocol == Protocol.POLLUTION) {
+			PollutionHelper.initializeDataStructures();
 		}
 	}
 
@@ -191,6 +201,12 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
 			return SwarmProtHelper.getSwarmStartingLocationV1();
 		}
+		
+		// TODO
+		if (Param.selectedProtocol == Protocol.POLLUTION) {
+			return PollutionHelper.getStartingLocation();
+		}
+		
 		return null;
 
 	}
@@ -243,6 +259,10 @@ public class SwarmHelper {
 				SwarmHelper.log(SwarmText.ERROR_IP_HOST);
 				e.printStackTrace();
 			}
+		}
+		
+		if (Param.selectedProtocol == Protocol.POLLUTION) {
+			PollutionHelper.launchThreads();
 		}
 	}
 
