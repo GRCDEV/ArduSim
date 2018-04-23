@@ -57,7 +57,7 @@ public class PCCompanionListener extends Thread {
 					received = receiving.get(id);
 					if (status != received.status) {
 						received.status = status;
-						PCCompanionGUI.companion.setStatus(received.row, status.name());
+						PCCompanionGUI.companion.setState(received.row, status.name());
 					}
 				} else if (Param.simStatus == SimulatorState.STARTING_UAVS) {
 					received = new StatusPacket();

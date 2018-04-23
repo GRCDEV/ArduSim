@@ -368,10 +368,10 @@ public class UAVControllerThread extends Thread {
 			if (prevMode == null || prevMode.getBaseMode() != message.base_mode || prevMode.getCustomMode() != message.custom_mode) {
 				UAVParam.Mode mode = UAVParam.Mode.getMode(message.base_mode, message.custom_mode);
 				if (mode != null) {
+					UAVParam.flightMode.set(numUAV, mode);
 					if (mode.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
 						UAVParam.flightStarted = true;
 					}
-					UAVParam.flightMode.set(numUAV, mode);
 					SimTools.updateUAVMAVMode(numUAV, mode.getMode());	// Also update the GUI
 				} else {
 					SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + message.base_mode + "," + message.custom_mode + ")");

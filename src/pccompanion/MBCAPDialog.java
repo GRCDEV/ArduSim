@@ -21,14 +21,12 @@ import javax.swing.table.TableColumnModel;
 
 import api.GUIHelper;
 import api.pojo.Point3D;
-import main.Param;
 import main.Text;
 import main.Param.SimulatorState;
 import mbcap.logic.MBCAPParam;
+import mbcap.logic.MBCAPText;
 import mbcap.pojo.Beacon;
-import sim.board.BoardParam;
 import sim.gui.VerticalFlowLayout;
-import sim.logic.SimParam;
 import uavController.UAVParam;
 
 import javax.swing.JScrollPane;
@@ -52,11 +50,9 @@ public class MBCAPDialog extends JDialog {
 	private JPanel panel_1;
 	private JPanel panel_2;
 	
+	@SuppressWarnings("unused")
 	private MBCAPDialog() {}
 
-	/**
-	 * Create the dialog.
-	 */
 	public MBCAPDialog(Frame owner) {
 		super(owner);
 		setTitle(PCCompanionParam.SELECTED_PROTOCOL.get().getName());
@@ -65,7 +61,9 @@ public class MBCAPDialog extends JDialog {
 		{
 
 			tableModel = new DefaultTableModel(0, 0);
-			String header[] = new String[] { "id", "event", "flight mode", "id avoiding", "speed", "x", "y", "z" };
+			String header[] = new String[] { MBCAPText.ID, MBCAPText.EVENT, MBCAPText.FLIGHT_MODE,
+					MBCAPText.ID_AVOIDING, MBCAPText.SPEED,
+					MBCAPText.X, MBCAPText.Y, MBCAPText.Z };
 			tableModel.setColumnIdentifiers(header);
 			DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 			centerRenderer.setHorizontalAlignment( SwingConstants.CENTER );
@@ -109,6 +107,7 @@ public class MBCAPDialog extends JDialog {
 		}
 	}
 
+	/** Updates a UAV row with information received within the protocol. */
 	public void updateRow(Beacon beacon) {
 		int pos = -1;
 		boolean found = false;

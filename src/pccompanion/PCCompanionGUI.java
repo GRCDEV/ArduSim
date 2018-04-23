@@ -140,30 +140,24 @@ public class PCCompanionGUI {
 		startButton = new JButton(Text.START_TEST);
 		startButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
-						Text.SETUP_WARNING,
-						Text.DIALOG_TITLE,
-						JOptionPane.YES_NO_OPTION);
-				if (result == JOptionPane.YES_OPTION) {
-					Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							startButton.setEnabled(false);
-						}
-					});
-					Timer timer = new Timer();
-					timer.scheduleAtFixedRate(new TimerTask() {
-			            long count = 0;
-			            public void run() {
-			            	SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									progressTimeLabel.setText(GUIHelper.timeToString(0, count));
-									count = count + 1000;
-								}
-							});
-			            }
-			        }, 0, 1000);	// for each second, without initial delay
-				}
+				Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						startButton.setEnabled(false);
+					}
+				});
+				Timer timer = new Timer();
+				timer.scheduleAtFixedRate(new TimerTask() {
+		            long count = 0;
+		            public void run() {
+		            	SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								progressTimeLabel.setText(GUIHelper.timeToString(0, count));
+								count = count + 1000;
+							}
+						});
+		            }
+		        }, 0, 1000);	// for each second, without initial delay
 			}
 		});
 		GridBagConstraints gbc_startButton = new GridBagConstraints();
@@ -220,7 +214,7 @@ public class PCCompanionGUI {
 	}
 	
 	/** Inserts a UAV in the table.
-	 * <p>Returns the row number starting in 0. */
+	 * <p>Returns the row number, starting in 0. */
 	public int insertRow(long id, String IP, String status) {
 		final int  numUAV = rowCount.getAndIncrement();
 		final String idString = "" + id;
@@ -250,12 +244,13 @@ public class PCCompanionGUI {
 		return numUAV;
 	}
 	
-	public void setStatus(int row, String status) {
+	/** Modifies the application state received from each UAV. */
+	public void setState(int row, String state) {
 		final int row2 = row;
-		final String status2 = status;
+		final String state2 = state;
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				tableModel.setValueAt(status2, row2, 4);
+				tableModel.setValueAt(state2, row2, 4);
 				resizeColumnWidth();
 			}
 		});

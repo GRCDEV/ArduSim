@@ -108,5 +108,16 @@ public class MBCAPText {
 	public static final String MAX_ERROR_LINES_SUFIX = "max_error_per_beacon.scr";
 	public static final String BEACON_TOTAL_ERROR_SUFIX = "error_per_beacon.csv";
 	public static final String BEACON_POINT_ERROR_SUFIX = "error_per_time.csv";
+	
+	// PC Companion
+	public static final String ID = "id";
+	public static final String EVENT = "event";
+	public static final String FLIGHT_MODE = "flight mode";
+	public static final String ID_AVOIDING = "id avoiding";
+	public static final String SPEED = "speed";
+	public static final String X = "x";
+	public static final String Y = "y";
+	public static final String Z = "z";
+	
 
 }
