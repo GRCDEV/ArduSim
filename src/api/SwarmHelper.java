@@ -241,6 +241,10 @@ public class SwarmHelper {
 
 			// return success;
 		}
+		
+		if (Param.selectedProtocol == Protocol.POLLUTION) {
+			success = true;
+		}
 		return success;
 	}
 
