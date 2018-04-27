@@ -53,6 +53,7 @@ import org.javatuples.Pair;
 import api.GUIHelper;
 import api.MissionHelper;
 import api.SwarmHelper;
+import api.pojo.AtomicDoubleArray;
 import api.pojo.GeoCoordinates;
 import api.pojo.LastPositions;
 import api.pojo.LogPoint;
@@ -284,12 +285,15 @@ public class Tools {
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
 		UAVParam.RTLAltitude = new double[Param.numUAVs];
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
+		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.gcsId = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCmapThrottle = new AtomicIntegerArray(Param.numUAVs);
 
 		UAVParam.newFlightMode = new Mode[Param.numUAVs];
 		UAVParam.takeOffAltitude = new double[Param.numUAVs];
 		UAVParam.newSpeed = new double[Param.numUAVs];
 		UAVParam.newParam = new ControllerParam[Param.numUAVs];
-		UAVParam.newParamValue = new double[Param.numUAVs];
+		UAVParam.newParamValue = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newCurrentWaypoint = new int[Param.numUAVs];
 		UAVParam.newGeoMission = new Waypoint[Param.numUAVs][];
 		UAVParam.stabilizationThrottle = new int[Param.numUAVs];

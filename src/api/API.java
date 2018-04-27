@@ -15,7 +15,6 @@ import sim.logic.SimParam;
 import sim.logic.SimTools;
 import sim.pojo.IncomingMessage;
 import uavController.RCValues;
-import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
@@ -27,7 +26,7 @@ public class API {
 	 * <p>Returns true if the command was successful. */
 	public static boolean setParam(int numUAV, ControllerParam parameter, double value) {
 		UAVParam.newParam[numUAV] = parameter;
-		UAVParam.newParamValue[numUAV] = value;
+		UAVParam.newParamValue.set(numUAV, value);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_1_PARAM) {
@@ -56,7 +55,7 @@ public class API {
 			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_2 + " " + parameter.getId() + ".");
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + parameter.getId() + " = " + UAVParam.newParamValue[numUAV]);
+			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + parameter.getId() + " = " + UAVParam.newParamValue.get(numUAV));
 			return true;
 		}
 	}
@@ -153,7 +152,7 @@ public class API {
 	 * <p>Returns true if the command was successful.
 	 * <p>This method already includes the "setThrottle" function. */
 	public static boolean stopUAV(int numUAV) {
-		if (API.setThrottle(numUAV) && setMode(numUAV, UAVParam.Mode.LOITER_ARMED)) {
+		if (API.setThrottle(numUAV) && setMode(numUAV, UAVParam.Mode.LOITER)) {
 			long time = System.nanoTime();
 			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
 				GUIHelper.waiting(UAVParam.STABILIZATION_WAIT_TIME);

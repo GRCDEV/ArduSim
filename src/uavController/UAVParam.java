@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import org.mavlink.messages.MAV_MODE_FLAG;
 import org.mavlink.messages.MAV_PARAM_TYPE;
 
+import api.pojo.AtomicDoubleArray;
 import api.pojo.LastPositions;
 import api.pojo.UAVCurrentData;
 import api.pojo.UAVCurrentStatus;
@@ -104,6 +105,12 @@ public class UAVParam {
 	public static final double WIND_THRESHOLD = 0.5;	// Minimum wind speed accepted by the simulator, when used
 	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
 	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
+	public static AtomicIntegerArray mavId;				// ID of the multicopter in the MAVLink protocol
+	public static final int MAV_ID = 1;					// ID of the multicopter in the MAVLink protocol by default
+	public static AtomicIntegerArray gcsId;			// ID of the GCS authorized to send commands to the flight controller
+														//   255 for Mission Planner and DroidPlanner
+														//   252 for APM Planner 2
+	public static AtomicIntegerArray RCmapThrottle;		// Channel the throttle is mapped to
 
 	// Battery levels
 	private static final double CHARGED_VOLTAGE = 4.2;				// (V) Cell voltage at maximum charge
@@ -197,7 +204,7 @@ public class UAVParam {
 	public static final int MAV_STATUS_ACK_PARAM = 14;
 	public static final int MAV_STATUS_ERROR_1_PARAM = 15;
 	public static ControllerParam[] newParam;
-	public static double[] newParamValue;		// Parameter value to send or received from the UAV controller
+	public static AtomicDoubleArray newParamValue;		// Parameter value to send or received from the UAV controller
 	public static final int MAV_STATUS_GET_PARAM = 16;
 	public static final int MAV_STATUS_WAIT_FOR_PARAM = 17;
 	public static final int MAV_STATUS_ERROR_2_PARAM = 18;
@@ -433,9 +440,26 @@ public class UAVParam {
 																					// 1 Land, 2 AltHold, 3 Land even in Stabilize mode
 		GPS_FAILSAFE_THRESHOLD("FS_EKF_THRESH", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),	// Precision to assert EKF error
 																						// 0.6 Strict, 0.8 Default, 1.0 Relaxed
-		// Specific parameters requested to the flight controoler
-		MAX_THROTTLE("RC3_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),				// Maximum value for throttle
-		MIN_THROTTLE("RC3_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),				// Minimum value for throttle
+		// Specific parameters requested to the flight controller
+		SINGLE_GCS("SYSID_ENFORCE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),			// Whether only one system id is accepted for commands or not
+		GCS_ID("SYSID_MYGCS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Identifier of the GCS allowed to send commands
+		RCMAP_THROTTLE("RCMAP_THROTTLE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// RC channel used for throttle
+		MAX_RC1("RC1_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC1
+		MIN_RC1("RC1_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC1
+		MAX_RC2("RC2_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC2
+		MIN_RC2("RC2_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC2
+		MAX_RC3("RC3_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC3 (typically, throttle)
+		MIN_RC3("RC3_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC3 (typically, throttle)
+		MAX_RC4("RC4_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC4
+		MIN_RC4("RC4_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC4
+		MAX_RC5("RC5_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC5
+		MIN_RC5("RC5_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC5
+		MAX_RC6("RC6_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC6
+		MIN_RC6("RC6_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC6
+		MAX_RC7("RC7_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC7
+		MIN_RC7("RC7_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC7
+		MAX_RC8("RC8_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC8
+		MIN_RC8("RC8_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC8
 		RTL_ALTITUDE("RTL_ALT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),				// Altitude during return to launch
 		RTL_ALTITUDE_FINAL("RTL_ALT_FINAL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Loiter altitude when not desired to land after return to launch
 		// Others

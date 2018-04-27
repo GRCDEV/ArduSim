@@ -5,6 +5,7 @@ package mission;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import api.API;
+import api.GUIHelper;
 import uavController.UAVParam;
 
 public class StartMissionTestThread extends Thread {
