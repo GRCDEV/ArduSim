@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.javatuples.Triplet;
 import org.mavlink.IMAVLinkMessage;
 import org.mavlink.MAVLinkReader;
 import org.mavlink.messages.IMAVLinkMessageID;
@@ -21,8 +22,6 @@ import org.mavlink.messages.MAV_CMD;
 import org.mavlink.messages.MAV_COMPONENT;
 import org.mavlink.messages.MAV_FRAME;
 import org.mavlink.messages.MAV_MISSION_RESULT;
-import org.mavlink.messages.MAV_MODE;
-import org.mavlink.messages.MAV_MODE_FLAG;
 import org.mavlink.messages.MAV_RESULT;
 import org.mavlink.messages.MAV_STATE;
 import org.mavlink.messages.MAV_TYPE;
@@ -44,6 +43,7 @@ import org.mavlink.messages.ardupilotmega.msg_param_set;
 import org.mavlink.messages.ardupilotmega.msg_param_value;
 import org.mavlink.messages.ardupilotmega.msg_rc_channels_override;
 import org.mavlink.messages.ardupilotmega.msg_set_mode;
+import org.mavlink.messages.ardupilotmega.msg_set_position_target_global_int;
 import org.mavlink.messages.ardupilotmega.msg_statustext;
 import org.mavlink.messages.ardupilotmega.msg_sys_status;
 
@@ -360,11 +360,12 @@ public class UAVControllerThread extends Thread {
 			// The last few UAV positions are stored for later use in protocols
 			UAVParam.lastLocations[numUAV].updateLastPositions(new Point3D(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z));
 			// Global horizontal speed estimation
-			double speed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
+			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
+			Triplet<Double, Double, Double> speed = Triplet.with(message.vx * 0.01, message.vy * 0.01, message.vz * 0.01);
 			// Update the UAV data, including the acceleration calculus
-			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed, heading);
+			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
-			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z, heading, speed,
+			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z, heading, hSpeed,
 					Param.simStatus == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] == 0)); // UAV under test
 		}
 	}
@@ -544,29 +545,33 @@ public class UAVControllerThread extends Thread {
 	/** Process a mission ACK. */
 	private void processMissionAck() {
 		msg_mission_ack message = (msg_mission_ack) inMsg;
+		switch (UAVParam.MAVStatus.get(numUAV)) {
 		// ACK received when removing the current mission
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_CLEAR_WP_LIST) {
+		case UAVParam.MAV_STATUS_ACK_CLEAR_WP_LIST:
 			if (message.type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_CLEAR_WP_LIST);
 			}
-		}
+			break;
 		// ACK received when sending a waypoint
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_SENDING_WPS) {
+		case UAVParam.MAV_STATUS_SENDING_WPS:
 			if (message.type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_SENDING_WPS);
 			}
-		}
+			break;
 		// ACK received when moving a UAV to another location
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_MOVE_UAV) {
+		case UAVParam.MAV_STATUS_MOVE_UAV:
 			if (message.type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_MOVE_UAV_ERROR);
 			}
+			break;
+		default:
+			SimTools.println(Text.NOT_REQUESTED_ACK_ERROR + " " + message.toString());
 		}
 	}
 
@@ -892,16 +897,82 @@ public class UAVControllerThread extends Thread {
 	}
 	
 	/** Use yaw in degrees (0-360). */
-	public void msgYaw(float yaw) {
+	public void msgYaw(float yaw) throws IOException {
 		msg_command_long message = new msg_command_long();
-		message.command = MAV_CMD.MAV_CMD_CONDITION_YAW;// TODO probando
+		message.command = MAV_CMD.MAV_CMD_CONDITION_YAW;// TODO probando, borrar el método
 		message.confirmation = 0;
 		message.param1 = yaw;	// [0-360] Angle in degress
 		//message.param2 = ;	//
 		//message.param3 = ;
+		message.sysId = UAVParam.gcsId.get(numUAV);
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		message.target_system = UAVParam.mavId.get(numUAV);
+		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		this.sendMessage(message.encode());
+	}
+	
+	/** Sends the UAV to a specific location.
+	 * <p>mode. 1=Use coordinates, 2=Use speeds, 3=Use both coordinates and speeds.
+	 * <p>yaw, setYaw. May be, yaw is mandatory when using coordinates, or may be not
+	 * <p>altitude. Over sea level (not relative).
+	 * <p>speed. x=North, y=East, z=Down.*/
+	public void msgTarget(int mode, double latitude, double longitude, double altitude, double yaw, boolean setYaw,
+			double speedX, double speedY, double speedZ) throws IOException {
+		// Alternativamente se puede probar lo de la función msgMoveUAV()
+		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
+		message.time_boot_ms = System.currentTimeMillis();
+		message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;// TODO probando
+		int bX = 1;// bit 0// TODO sacar esto a un enum
+		int bY = 2;
+		int bZ = 4;
+		int bVx = 8;// bit 3
+		int bVy = 16;
+		int bVz = 32;
+		int bAx = 64;// bit 6	// No soportado
+		int bAy = 128;
+		int bAz = 256;
+		int bForceA = 512;// bit 9
+		int bYaw = 1024;
+		int bYawRate = 2048;
+		boolean setCoordinates = false;
+		boolean setSpeed = false;
+		message.type_mask = 0;
+		if (mode == 1) {
+			message.type_mask = bX | bY | bZ;
+			setCoordinates = true;
+		} if (mode == 2) {
+			message.type_mask = bVx | bVy | bVz;
+			setSpeed = true;
+		} if (mode ==3) {
+			message.type_mask = bX | bY | bZ | bVx | bVy | bVz;
+			setCoordinates = true;
+			setSpeed = true;
+		} else {
+			System.out.println("NO USES ESTA CONFIGURACIÓN PARA MOVER AL DRON");
+		}
+		if (setYaw) {
+			message.type_mask = message.type_mask | bYaw;
+		}
+		message.type_mask = ~message.type_mask & 0xFFFF; // 0=use, 1=ignore, so we need to flip bits
 		
+		if (setCoordinates) {
+			message.lat_int = Math.round(10000000l * latitude);	// Degrees
+			message.lon_int = Math.round(10000000l * longitude);
+			message.alt = (float)altitude;
+		}
+		if (setSpeed) {
+			message.vx= (float)speedX;
+			message.vy= (float)speedY;
+			message.vz= (float)speedZ;
+		}
 		
+		// Accelerations are not supported and we don't plan to set target yaw
 		
+		message.sysId = UAVParam.gcsId.get(numUAV);
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		message.target_system = UAVParam.mavId.get(numUAV);
+		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
+		this.sendMessage(message.encode());
 	}
 
 	/** Sending new parameter value message. */
