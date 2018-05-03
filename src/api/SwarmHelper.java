@@ -13,6 +13,7 @@ import org.javatuples.Pair;
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
+import followme.logic.FollowMeHelper;
 import main.Param;
 import main.Tools;
 import pollution.PollutionHelper;
@@ -96,6 +97,9 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.openConfigurationDialog();
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			SwarmHelper.log("SwarmConfigurationDialog --> Mas tarde");
+		}
 
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 
@@ -113,6 +117,9 @@ public class SwarmHelper {
 		// TODO
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.initializeDataStructures();
+		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			FollowMeHelper.initializeProtocolDataStructures();
 		}
 	}
 
@@ -206,6 +213,9 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			return PollutionHelper.getStartingLocation();
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			return FollowMeHelper.getSwarmStartingLocation();
+		}
 		
 		return null;
 
@@ -245,6 +255,10 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			success = true;
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			// De momento nada
+			success = true;
+		}
 		return success;
 	}
 
@@ -268,6 +282,9 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.launchThreads();
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			FollowMeHelper.startFollowMeThreads();
+		}
 	}
 
 	/** Setup of swarm protocols, when the user pushes the configuration button. */
@@ -278,6 +295,13 @@ public class SwarmHelper {
 
 		// Finally, change the simulator state
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
+			Param.simStatus = SimulatorState.READY_FOR_TEST;
+		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+
+			FollowMeHelper.openFollowMeConfigurationDialog();
+			// Modo de vuelo Loiter / Loiter_Armed
+			// UAVParam.flightMode.set(0, Mode.LOITER);
 			Param.simStatus = SimulatorState.READY_FOR_TEST;
 		}
 	}
@@ -294,6 +318,19 @@ public class SwarmHelper {
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
 			SwarmProtHelper.startSwarmTestActionPerformedV1();
+		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			// SwarmHelper.log("startSwarmTestActionPerformed ");
+			SwarmHelper.log("Ready for test...");
+			// Param.simStatus = SimulatorState.READY_FOR_TEST;
+
+			// Param.simStatus = SimulatorState.READY_FOR_TEST;
+			// Modo de vuelo Loiter / Loiter_Armed
+			// UAVParam.flightMode.set(0, Mode.LOITER);
+			if (!API.armEngines(0) || !API.setMode(0, UAVParam.Mode.LOITER) || !API.setThrottle(0)) {
+				// Tratar el fallo
+			}
+
 		}
 
 	}
