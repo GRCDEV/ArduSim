@@ -155,7 +155,8 @@ public class Param {
 		MBCAP_V4(4, MBCAPText.MBCAP_V4, true),	// v3 with a variable acceleration
 		SWARM_PROT_V1(5, SwarmProtText.PROTOCOL_TEXT, false),
 		FOLLOW_ME_V1(6, "Sigueme", false),
-		POLLUTION(7, "Pollución", false);
+		POLLUTION(7, "Pollución", false),
+		UAVFISHING(8, "UAV fishing", false);
 		// New protocols should follow the increasing numeration
 
 		private final int id;

@@ -964,7 +964,7 @@ public class UAVControllerThread extends Thread {
 			message.vx= (float)speedX;
 			message.vy= (float)speedY;
 			message.vz= (float)speedZ;
-		}
+		}// TODO el yaw no lo he empleado en nada
 		
 		// Accelerations are not supported and we don't plan to set target yaw
 		
