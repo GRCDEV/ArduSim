@@ -298,7 +298,7 @@ public class CollisionDetectorThread extends Thread {
 									// Progress update
 									MBCAPGUITools.updateState(numUAV, MBCAPState.MOVING_ASIDE);
 									// Moving
-									if (API.moveUAV(numUAV, MBCAPParam.targetPointGeo[numUAV], (float) UAVParam.uavCurrentData[numUAV].getZRelative(), MBCAPParam.SAFETY_DISTANCE_RANGE)) {
+									if (API.moveUAV(numUAV, MBCAPParam.targetPointGeo[numUAV], (float) UAVParam.uavCurrentData[numUAV].getZRelative(), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {
 										// We have to wait until the UAV stops
 										long time = System.nanoTime();
 										while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {

@@ -197,10 +197,14 @@ public class API {
 	}
 
 	/** API: Moves the UAV to a new position.
+	 * <p>geo. Geographic coordinates the UAV has to move to.
+	 * <p>relAltitude. Relative altitude the UAV has to move to.
+	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
+	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
 	 * <p>Blocking method.
 	 * <p>Returns true if the command was successful.
 	 * <p>The UAV must be in guided mode. */
-	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold) {
+	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold, double altThreshold) {
 		UAVParam.newLocation[numUAV][0] = (float)geo.latitude;
 		UAVParam.newLocation[numUAV][1] = (float)geo.longitude;
 		UAVParam.newLocation[numUAV][2] = relAltitude;
@@ -216,7 +220,8 @@ public class API {
 			UTMCoordinates utm = GUIHelper.geoToUTM(geo.latitude, geo.longitude);
 			Point2D.Double destination = new Point2D.Double(utm.Easting, utm.Northing);
 			// Once the command is issued, we have to wait until the UAV approaches to destination
-			while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold) {
+			while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold
+					|| Math.abs(relAltitude - UAVParam.uavCurrentData[numUAV].getZRelative()) > altThreshold) {
 				GUIHelper.waiting(UAVParam.STABILIZATION_WAIT_TIME);
 			}
 			return true;
