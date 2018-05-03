@@ -7,6 +7,7 @@ import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
 import api.pojo.UAVCurrentData;
 import main.Param;
+import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.Mode;
 
@@ -45,7 +46,8 @@ public class FollowerThread extends Thread {
 			float relAltitude = (float) z;
 			if (fly) {
 				
-//				boolean ok = API.moveUAV(num, geo, relAltitude, z);
+//				boolean ok = API.moveUAV(num, geo, relAltitude, 1, 1);
+//				Param.controllers[numUAV].msgTarget(mode, latitude, longitude, altitude, yaw, setYaw, speedX, speedY, speedZ);
 //				System.out.println("MoveUAV" + numUAV+" "+ok);
 			}
 		}
