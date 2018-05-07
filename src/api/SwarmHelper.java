@@ -50,14 +50,7 @@ public class SwarmHelper {
 	public static boolean loadMission() {
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			// Only the master UAV has a mission
-			/** You get the id = MAC for real drone */
-			for (int i = 0; i < SwarmProtParam.MACId.length; i++) {
-				if (SwarmProtParam.MACId[i] == Param.id[SwarmProtParam.posMaster]) {
-					SwarmProtParam.idMaster = Param.id[SwarmProtParam.posMaster];
-					return true;
-				}
-			}
+			SwarmProtHelper.loadMission();
 		}
 
 		// Add here code to decide if the UAV has to load a mission, depending on the
@@ -74,24 +67,7 @@ public class SwarmHelper {
 		// or set Param.sim_status = SimulatorState.STARTING_UAVS to go to the next step
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			/** Si pongo una pantalla de preconfiguración, se hace aqui */
-
-			/** We load the file directly with the mission. In a future add menu */
-			List<Waypoint> mission = Tools.loadMission(GUIHelper.getCurrentFolder());
-
-			if (mission != null) {
-				/** The master is assigned the first mission in the list */
-				UAVParam.missionGeoLoaded = new ArrayList[Param.numUAVs];
-				UAVParam.missionGeoLoaded[SwarmProtParam.posMaster] = mission;
-
-			} else {
-				JOptionPane.showMessageDialog(null, Text.MISSIONS_ERROR_3, Text.MISSIONS_SELECTION_ERROR,
-						JOptionPane.WARNING_MESSAGE);
-
-				return;
-			}
-			SwarmProtParam.idMaster = SwarmProtParam.idMasterSimulation;
-
+			SwarmProtHelper.openSwarmConfigurationDialog();
 		}
 		// TODO
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
@@ -234,22 +210,7 @@ public class SwarmHelper {
 		boolean success = false;
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			success = true;
-			if (Param.id[numUAV] == SwarmProtParam.idMaster) {
-				success = false;
-				// Erases, sends and retrieves the planned mission. Blocking procedure
-				if (API.clearMission(numUAV) && API.sendMission(numUAV, UAVParam.missionGeoLoaded[numUAV])
-						&& API.getMission(numUAV) && API.setCurrentWaypoint(numUAV, 0)) {
-					MissionHelper.simplifyMission(numUAV);
-					Param.numMissionUAVs.incrementAndGet();
-					if (!Param.IS_REAL_UAV) {
-						BoardParam.rescaleQueries.incrementAndGet();
-					}
-					success = true;
-				}
-			}
-
-			// return success;
+			success = SwarmProtHelper.sendBasicSwarmConfig(numUAV);
 		}
 		
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
@@ -268,17 +229,8 @@ public class SwarmHelper {
 		// Add here to launch threads for any swarm protocol
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			try {
-				SwarmProtHelper.startSwarmThreads();
-			} catch (SocketException e) {
-				SwarmHelper.log(SwarmText.ERROR_SOCKET_CREATION);
-				e.printStackTrace();
-			} catch (UnknownHostException e) {
-				SwarmHelper.log(SwarmText.ERROR_IP_HOST);
-				e.printStackTrace();
-			}
+			SwarmProtHelper.startSwarmThreads();
 		}
-		
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.launchThreads();
 		}

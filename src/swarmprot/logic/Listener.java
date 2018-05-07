@@ -56,6 +56,7 @@ public class Listener extends Thread {
 	public long idPrev;
 	public long idNext;
 	public static long idPrevMaster;
+	public static long idNextMaster;
 
 	// Identifier that indicates the last WP
 	public static boolean WPLast = false;
@@ -303,6 +304,7 @@ public class Listener extends Thread {
 						// The matrix is ​​filled with the idPrev and idNext (for take off step) of each UAV
 						SwarmProtParam.fightPrevNext[numUAV][0] = idPrev;
 						SwarmProtParam.fightPrevNext[numUAV][1] = idNext;
+						System.out.println("HOLAAAAAAAAAAAAAAAAAAAAA" + idNext);
 
 						// The number of WP is read to know the loop length
 						int numberOfWp = input.readInt();
@@ -341,7 +343,7 @@ public class Listener extends Thread {
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
 				
 				// If I'm the first one, I take off directly
-				//TODO modificar aqui porque si soy primero por eso lo del minimo de envios pero algo se podra hacer
+				//TODO modificar para no tener que hacer "minimodeenvios"
 				if (idPrev == SwarmProtParam.broadcastMAC && Talker.semaphoreSlaveACK3) {
 					SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
 				}
@@ -384,17 +386,17 @@ public class Listener extends Thread {
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
 			if (UAVParam.uavCurrentData[numUAV].getZRelative() < takeOffAltitudeStepOne) {
 				if (txtPrint) {
-					SwarmHelper.log("The UAV " + numUAV + " is going to the safety height");
+					SwarmHelper.log("The UAV " + numUAV + " is going to the safety altitude");
 				}
 				txtPrint = false;
 			} else {
-				SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;
+					SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;		
 			}
 
 		}
-
 		/** END PHASE TAKING OFF */
-		//Revisar que el ultimo no se esperana la altura final TODO
+		
+		
 		while (SwarmProtParam.WpLast[numUAV][0] != true) {
 			/** PHASE MOVE_TO_WP */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {

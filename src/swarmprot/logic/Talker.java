@@ -251,6 +251,11 @@ public class Talker extends Thread {
 							}else {
 								Listener.idPrevMaster = allMissions[i - 1].id;
 							}
+							if(j == loopPos.length-1) { 
+								
+								Listener.idNextMaster = SwarmProtParam.broadcastMAC;
+							System.out.println("ADIOS TALKER" + Listener.idNextMaster);
+							}
 							SwarmProtParam.flightListPersonalized[numUAV][j] = new Point3D(loopPos[j].x, loopPos[j].y,
 									loopPos[j].z);
 
@@ -475,8 +480,6 @@ public class Talker extends Thread {
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
-			// El no hace nada simplemente espera porque la orden de despegue al siguiente
-			// dron la da la PHASE moveToWP
 			GUIHelper.waiting(SwarmProtParam.waitState);
 		} /** END PHASE TAKING OFF */
 
@@ -488,11 +491,9 @@ public class Talker extends Thread {
 		while (SwarmProtParam.WpLast[numUAV][0] != true) {
 
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
-				
-				//TODO Cambiar el move al listener y ahora el counter se modifica en el listener cuando el move detecta que esta dentro de la zona que se acepta como buena el counter sera un atomicInteger array
-				
+								
 				if (missionPointNumber == 1 && SwarmProtParam.fightPrevNext[numUAV][1] != SwarmProtParam.broadcastMAC) {
-					// ENVIAR MAS VECES POR SI FALLA EL ENVIO TODO
+					// ENVIAR MAS VECES POR SI FALLA EL ENVIO TODO improve
 					// Envio orde de despegue al idNext que correspode a este UAV
 					output = new Output(buffer);
 					output.clear();
@@ -516,56 +517,22 @@ public class Talker extends Thread {
 					}
 					
 
-					// Contador para saber si es el primer punto de mission (despegue)
+					// Counter to know if it is the first mission point (takeoff)
 					missionPointNumber++;
 
 				}
 
-				// Por si soy el ultimo directamente hago counter++ y asi no envio ninguna orden
-				// de despegue
+				// If I'm the last one I directly do counter ++ and do not send any takeoff order
 				if (SwarmProtParam.fightPrevNext[numUAV][1] == SwarmProtParam.broadcastMAC) {
 					missionPointNumber++;
 				}
 				if (missionPointNumber > 1) {
-					// Se mueve el dron al punto que indique la variable actualWP empezando por 0 la
-					// prmera vez que se entra aqui
-					API.moveUAV(numUAV, SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP], SwarmProtParam.flightListPersonalizedAltGeo[numUAV][actualWP].floatValue(), SwarmProtParam.distToAcceptPointReached);
+					API.moveUAV(numUAV, SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP], SwarmProtParam.flightListPersonalizedAltGeo[numUAV][actualWP].floatValue(), SwarmProtParam.distToAcceptPointReached, 0.05);
 
 				}
-
-				// Si la posición actual(la que detecta el gps del drone) es ~= Al wp ordenado
-				// (SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP]) cambio a
-				// WP_REACHE
-				Point2D.Double posicionActual = UAVParam.uavCurrentData[numUAV].getUTMLocation();
-
-				// POSICION DEL WP al que me dirijo. Primero se pasa a UTM y despues se calcula
-				// la distancia entre puntos
-				UTMCoordinates wpactual = GUIHelper.geoToUTM(
-						SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP].latitude,
-						SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP].longitude);
-				Point2D.Double posicionWPactual = new Point2D.Double(wpactual.Easting, wpactual.Northing);
-				
+		
 				actualWP++;
-
-				// Devuelve la ditancia entre puntos En metros utilizar esto en vez de
-				// getDistance()
-				Double distanciaActualEntrePuntos = posicionActual.distance(posicionWPactual);
-
-				//Esta conprobacion deberia estar en el listener para hacer que pare el envio de siguiente despegar
-				while (distanciaActualEntrePuntos > SwarmProtParam.acceptableRadiusDistanceWP) {
-					GUIHelper.waiting(UAVParam.ALTITUDE_WAIT);
-
-					//System.out.println("La distancia respecto al punto original destino es inacaptable! "+ distanciaActualEntrePuntos);
-					posicionActual = UAVParam.uavCurrentData[numUAV].getUTMLocation();
-					distanciaActualEntrePuntos = posicionActual.distance(posicionWPactual);
-
-				}
-				//System.out.println("Ya se cree que la distancia respecto al punto original destino es aceptable!");
-
-				//Esto ira al listener cuando haga el move en listener TODO
 				SwarmProtParam.state[numUAV] = SwarmProtState.WP_REACHED;
-				// Si cuando alcanzo el punto, paso al siguiente
-				
 
 			}
 			/** END PHASE moveToWP */
@@ -575,15 +542,13 @@ public class Talker extends Thread {
 				SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.WP_REACHED + "-->Talker");
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
-				// Si eres maestro
+				//Master
 				if (Param.id[numUAV] == SwarmProtParam.idMaster) {
-					// Si el maestro recibe la confirmación de que todos los esclavos han llegado al
-					// punto envia mensaje para que continuen los esclavos
+					// If the master receives confirmation that all slaves have reached the WP, he sends a message to continue the slaves
 					if (Listener.uavsACK4.size() == Listener.UAVsDetected.size()) {
 						int minimodeenvios = 0;
 						while (minimodeenvios < 15) {
-							// El for es para enviar a cada uno de los ids registrados 10 mensajes minimo
-							// para que sepan que tienen que mover al siguiente WP
+							//The for is to send to each of the registered ids 15 messages minimum TODO improve
 							for (int i = 0; i < Listener.positionsAndIDs.length; i++) {
 								output = new Output(buffer);
 								output.clear();
@@ -616,11 +581,9 @@ public class Talker extends Thread {
 						SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;
 
 					} else {
-						// Si todavia no he recibido todos los ACK espero
 						GUIHelper.waiting(SwarmProtParam.waitState);
 					}
-				} else {// Si eres esclavo
-						// Envio msj diciendo al maestro que he llegado al WP ACK4
+				} else {//Slave
 					/** ACK4 */
 					output = new Output(buffer);
 					output.clear();
@@ -647,7 +610,7 @@ public class Talker extends Thread {
 				}
 			} /** END PHASE WP_REACHED */
 			
-			//Si detecto que es el ultimo punto lo indico
+			//Detect if it's the last WP
 			if(actualWP == SwarmProtParam.flightListPersonalizedGeo[numUAV].length) {
 				SwarmProtParam.WpLast[numUAV][0] = true;
 				SwarmProtParam.state[numUAV] = SwarmProtState.LANDING;
@@ -658,9 +621,6 @@ public class Talker extends Thread {
 		/** PHASE LANDING */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
 			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.LANDING + "-->Talker");
-			// Provisionalmente si no quiero esperar para aterrizar aqui doy orden de
-			// aterrizaje
-			// API.setMode(numUAV, UAVParam.Mode.LAND_ARMED);
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
@@ -668,7 +628,6 @@ public class Talker extends Thread {
 				output = new Output(buffer);
 				output.clear();
 				output.writeShort(6);
-				//output.writeLong(Param.id[numUAV]);
 				output.flush();
 
 				packet.setData(buffer, 0, output.position());
@@ -711,49 +670,47 @@ public class Talker extends Thread {
 
 	/** Methods */
 
-	// Obtener las posiciones de vuelo inicial
+	// Obtain the initial flight positions
 	private Triplet<Long, Integer, uavPosition[]> getFormation(uavPosition[] current) {
 
 		uavPosition[] bestFormation = null;
 		double distanceOfBestFormation = Double.MAX_VALUE;
 		long centerGlobal = Long.MAX_VALUE;
 
-		// Buscamos el dron que ha de hacer de centro a partir de las posiciones en
-		// tierra
+		// We look for the drone that behave like center drone
 		for (int i = 0; i < current.length; i++) {
-			// ditancia en vuelo entre drones initialDistanceBetweenUAVreal
-			// Obtenemos coordenadas para los drones que rodean al central. Alterna par e
-			// impar a cada lado,
-			// comenzando en el par
+			//Distance in flight between drones initialDistanceBetweenUAVreal 
+			
+			//We obtain coordinates for the drones that surround the central.
 			Point2D.Double[] formation = SwarmProtHelper.posSlaveFromMasterLinear(SwarmProtParam.masterHeading, current[i],
 					current.length - 1, SwarmProtParam.initialDistanceBetweenUAVreal);
 			Point2D.Double[] flightFormationFinal = Arrays.copyOf(formation, formation.length + 1);
-			// Para añadir al final del array el que se esta viendo si es el centro
+			
+			// Add to the end of the array the one that is being viewed if it is the center
 			flightFormationFinal[flightFormationFinal.length - 1] = current[i];
 
-			// Se hace copia de los ids
+			// Copy of Ids
 			Long[] ids = new Long[flightFormationFinal.length];
 			for (int j = 0; j < current.length; j++) {
 				ids[j] = current[j].id;
 			}
 
-			// Se va a probar todas las posibles combinaciones de ids
+			// Calculate all possible combinations of ids
 			Permutation<Long> prueba = new Permutation<Long>(ids);
 			long[] bestForCurrentCenter = null;
 			double dOfCurrentCenter = Double.MAX_VALUE;
 			int j = factorial(ids.length);
 			while (j > 0) {
-				// Prueba de una permutación
+				// Test of a permutation
 				Long[] mix = prueba.next();
 				double acum = 0;
-				// Cálculo de la suma de distancias al cuadrado de cada dron en tierra a la
-				// posición que
-				// le correspondería en el aire según la combinación actual de ids
+				//Calculation of the sum of distances to the square of each drone on the ground to the position that would correspond 
+				//to it in the air according to the current combination of ids
 				for (int k = 0; k < current.length; k++) {
 					uavPosition c = current[k];
 					boolean found = false;
 					int pos = -1;
-					// Se busca la posición pos en el aire para la combinación actual de ids
+					// Find the position "pos" in the air for current Ids combination
 					for (int n = 0; n < mix.length && !found; n++) {
 
 						if (mix[n] == c.id) {
@@ -761,7 +718,7 @@ public class Talker extends Thread {
 							found = true;
 						}
 					}
-					// Ajuste de minimos cuadrados para exagerar ver cual esta mas cerca
+					// Adjustment of least squares. The distance is exaggerated to know which is closest
 					acum = acum + Math.pow(c.distance(flightFormationFinal[pos]), 2);
 				}
 				if (bestForCurrentCenter == null || acum < dOfCurrentCenter) {
