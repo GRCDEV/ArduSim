@@ -77,7 +77,10 @@ public class SwarmHelper {
 			SwarmHelper.log("SwarmConfigurationDialog --> Mas tarde");
 		}
 
-		Param.simStatus = SimulatorState.STARTING_UAVS;
+		//TODO esto debera de hacerse dentro del OK del cuadro de configuracion del dialogo
+		if(Param.selectedProtocol != Protocol.SWARM_PROT_V1) {
+			Param.simStatus = SimulatorState.STARTING_UAVS;
+		}
 
 	}
 

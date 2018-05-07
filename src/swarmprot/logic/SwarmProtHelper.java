@@ -24,6 +24,7 @@ import main.Text;
 import main.Tools;
 import sim.board.BoardParam;
 import sim.logic.SimParam;
+import swarmprot.gui.SwarmConfig;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
 import uavController.UAVParam;
 
@@ -320,7 +321,9 @@ public class SwarmProtHelper {
 			return;
 		}
 		SwarmProtParam.idMaster = SwarmProtParam.idMasterSimulation;
-
+		
+		SwarmConfig dialog = new SwarmConfig();
+		
 	}
 	
 	public static boolean loadMission() {
