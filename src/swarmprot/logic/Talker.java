@@ -116,8 +116,11 @@ public class Talker extends Thread {
 		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
 
 			/** PHASE START */
+			//TODO en todos los estados setSwarmState(numuav,"");
+			
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_TALKER);
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSTART);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				GUIHelper.waiting(SwarmProtParam.waitState);
@@ -126,6 +129,7 @@ public class Talker extends Thread {
 			/** PHASE SEND DATA */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
 				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_DATA_TALKER);
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSEND_DATA);
 			}
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
 				while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
@@ -164,6 +168,8 @@ public class Talker extends Thread {
 			/** PHASE SEND LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_LIST) {
 				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_TALKER);
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSEND_LIST);
+
 
 				while (!Listener.semaphore) {
 					GUIHelper.waiting(SwarmProtParam.waitState);
@@ -254,7 +260,6 @@ public class Talker extends Thread {
 							if(j == loopPos.length-1) { 
 								
 								Listener.idNextMaster = SwarmProtParam.broadcastMAC;
-							System.out.println("ADIOS TALKER" + Listener.idNextMaster);
 							}
 							SwarmProtParam.flightListPersonalized[numUAV][j] = new Point3D(loopPos[j].x, loopPos[j].y,
 									loopPos[j].z);
@@ -354,6 +359,7 @@ public class Talker extends Thread {
 			/** PHASE SEND TAKE OFF */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
 				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.SEND_TAKE_OFF + "--> Talker");
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSEND_TAKE_OFF);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
 				// It only listen for his MSJ4
@@ -371,6 +377,7 @@ public class Talker extends Thread {
 			/** PHASE START */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_START_TALKER);
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSTART);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				/** MSJ1 */
@@ -404,6 +411,8 @@ public class Talker extends Thread {
 			/** PHASE WAIT LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
 				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_LIST_TALKER);
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTWAIT_LIST);
+
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
 				// Send ACK2 continuously while this is in WAIT_LIST state, listener will change
@@ -437,6 +446,7 @@ public class Talker extends Thread {
 			/** PHASE WAIT TAKE OFF */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
 				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_TAKE_OFF_TALKER);
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTWAIT_TAKE_OFF);
 			}
 			int minimodeenvios = 0;
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
@@ -477,6 +487,7 @@ public class Talker extends Thread {
 		/** PHASE TAKING OFF */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
 			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.TAKING_OFF_COMMON + "--> Talker");
+			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTTAKING_OFF);
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
@@ -486,6 +497,8 @@ public class Talker extends Thread {
 		/** PHASE moveToWP */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
 			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.MOVE_TO_WP + "-->Talker");
+			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
+
 		}
 
 		while (SwarmProtParam.WpLast[numUAV][0] != true) {
@@ -540,6 +553,7 @@ public class Talker extends Thread {
 			/** PHASE WP_REACHED */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
 				SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.WP_REACHED + "-->Talker");
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTWP_REACHED);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
 				//Master
@@ -579,6 +593,7 @@ public class Talker extends Thread {
 						//TODO probar a vaciar el map para que no coja datos antiguos cuando se actualice el simulador
 						//Listener.uavsACK4.clear();
 						SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;
+						SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 					} else {
 						GUIHelper.waiting(SwarmProtParam.waitState);
@@ -621,6 +636,7 @@ public class Talker extends Thread {
 		/** PHASE LANDING */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
 			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.LANDING + "-->Talker");
+			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTLANDING_UAV);
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
@@ -663,6 +679,7 @@ public class Talker extends Thread {
 		/** PHASE FINISH */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.FINISH) {
 			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.FINISH + "--> Talker");
+			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTFINISH);
 		}
 		/** END PHASE FINISH */
 

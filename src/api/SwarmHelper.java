@@ -109,7 +109,10 @@ public class SwarmHelper {
 	public static void setSwarmProtocolInitialState(JLabel label) {
 
 		// Add here the initial value of the protocol in the progress dialog
-
+		//TODO el texto en SwarmText
+		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
+			label.setText("INICIO");
+		}
 	}
 
 	/**
@@ -250,7 +253,7 @@ public class SwarmHelper {
 
 		// Finally, change the simulator state
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			Param.simStatus = SimulatorState.READY_FOR_TEST;
+//			Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
 		}
 		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
 

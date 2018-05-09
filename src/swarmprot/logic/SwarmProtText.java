@@ -27,6 +27,19 @@ public class SwarmProtText {
 	public static final String LANDING_UAV = "Landing";
 	public static final String FINISH = "The flight is over";
 	
+	//Internal Simulator States
+	public static final String INTSTART = "START";
+	public static final String INTSEND_DATA ="SEND DATA" ;
+	public static final String INTWAIT_LIST = "WAIT LIST";
+	public static final String INTSEND_LIST = "SEND LIST";
+	public static final String INTWAIT_TAKE_OFF = "WAIT TAKE OFF";
+	public static final String INTSEND_TAKE_OFF = "SEND TAKE OFF";
+	public static final String INTTAKING_OFF = "TAKING OFF";
+	public static final String INTMOVE_TO_WP = "MOVE TO WP";
+	public static final String INTWP_REACHED = "WP REACHED";
+	public static final String INTLANDING_UAV = "LANDING";
+	public static final String INTFINISH = "FINISH";
+	
 	//States Strings Master
 	public static final String MASTER_START_TALKER = "Wait";
 	public static final String MASTER_START_LISTENER = "Detect his slaves";
