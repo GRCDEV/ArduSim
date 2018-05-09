@@ -394,7 +394,7 @@ public class Main {
 							}
 							res += Tools.getTestGlobalConfiguration();
 							if (Param.selectedProtocol != Protocol.NONE) {
-								res = "\n\n" + Param.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
+								res += "\n\n" + Param.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
 								String s = null;
 								if (Param.simulationIsMissionBased) {
 									s = MissionHelper.getMissionProtocolConfig();
