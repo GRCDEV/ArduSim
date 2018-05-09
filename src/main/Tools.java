@@ -64,7 +64,6 @@ import api.pojo.WaypointSimplified;
 import main.Param.Protocol;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
-import mbcap.logic.MBCAPText;
 import pccompanion.PCCompanionGUI;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
@@ -1546,7 +1545,6 @@ public class Tools {
 	
 	/** Builds a String with the experiment parameters. */
 	public static String getTestGlobalConfiguration() {
-		// 1. Global configuration
 		StringBuilder sb = new StringBuilder(2000);
 		if (Param.IS_REAL_UAV) {
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
@@ -1686,11 +1684,6 @@ public class Tools {
 				sb.append("\n\t").append(Text.WIND_SPEED).append(" ").append(Param.windSpeed).append(" ").append(Text.METERS_PER_SECOND);
 				sb.append("\n\t").append(Text.WIND_DIRECTION).append(" ").append(Param.windDirection).append(" ").append(Text.DEGREE_SYMBOL);
 			}
-		}
-		
-		// 2. Protocol configuration, if needed
-		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append("\n\n").append(Param.selectedProtocol.getName()).append(" ").append(MBCAPText.CONFIGURATION).append(":\n");
 		}
 		
 		return sb.toString();

@@ -17,7 +17,9 @@ import api.MissionHelper;
 import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
 import api.pojo.Waypoint;
+import main.Param.Protocol;
 import main.Param.SimulatorState;
+import mbcap.logic.MBCAPText;
 import sim.board.BoardHelper;
 import sim.gui.ConfigDialog;
 import sim.gui.MainWindow;
@@ -391,10 +393,17 @@ public class Main {
 								res += SwarmHelper.getSwarmTestResults();
 							}
 							res += Tools.getTestGlobalConfiguration();
-							if (Param.simulationIsMissionBased) {
-								res += MissionHelper.getMissionProtocolConfig();
-							} else {
-								res += SwarmHelper.getSwarmProtocolConfig();
+							if (Param.selectedProtocol != Protocol.NONE) {
+								res = "\n\n" + Param.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
+								String s = null;
+								if (Param.simulationIsMissionBased) {
+									s = MissionHelper.getMissionProtocolConfig();
+								} else {
+									s = SwarmHelper.getSwarmProtocolConfig();
+								}
+								if (s != null && s.length() > 0) {
+									res += s;
+								}
 							}
 
 							final String res2 = res;
