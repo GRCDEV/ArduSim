@@ -387,14 +387,21 @@ public class Main {
 							// Gather information to show the results dialog
 							String res = null;//después terminar revisión interfaz prot y nombre clases
 							res = Tools.getTestResults();
-							if (Param.simulationIsMissionBased) {
-								res += MissionHelper.getMissionTestResults();
-							} else {
-								res += SwarmHelper.getSwarmTestResults();
+							if (Param.selectedProtocol != Protocol.NONE) {
+								String s = null;
+								if (Param.simulationIsMissionBased) {
+									s = MissionHelper.getMissionTestResults();
+								} else {
+									s = SwarmHelper.getSwarmTestResults();
+								}
+								if (s != null && s.length() > 0) {
+									res += "\n" + Param.selectedProtocol.getName() + ":\n\n";
+									res += s;
+								}
 							}
+							
 							res += Tools.getTestGlobalConfiguration();
 							if (Param.selectedProtocol != Protocol.NONE) {
-								res += "\n\n" + Param.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
 								String s = null;
 								if (Param.simulationIsMissionBased) {
 									s = MissionHelper.getMissionProtocolConfig();
@@ -402,6 +409,7 @@ public class Main {
 									s = SwarmHelper.getSwarmProtocolConfig();
 								}
 								if (s != null && s.length() > 0) {
+									res += "\n\n" + Param.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
 									res += s;
 								}
 							}
