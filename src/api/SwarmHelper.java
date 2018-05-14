@@ -27,6 +27,7 @@ import swarm.SwarmText;
 import swarmprot.logic.SwarmProtHelper;
 import swarmprot.logic.SwarmProtParam;
 import uavController.UAVParam;
+import uavFishing.logic.uavFishingHelper;
 
 /**
  * This class consists exclusively of static methods that allow to launch
@@ -75,6 +76,9 @@ public class SwarmHelper {
 		}
 		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
 			SwarmHelper.log("SwarmConfigurationDialog --> Mas tarde");
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			// uavFishingHelper.openConfigurationDialog();
 		}
 
 		//TODO esto debera de hacerse dentro del OK del cuadro de configuracion del dialogo
@@ -198,6 +202,10 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
 			return FollowMeHelper.getSwarmStartingLocation();
 		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			return uavFishingHelper.getStartingLocation();
+		}
+		
 		
 		return null;
 
@@ -226,6 +234,10 @@ public class SwarmHelper {
 			// De momento nada
 			success = true;
 		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			success = uavFishingHelper.sendBasicConfig(numUAV);
+		}
+		
 		return success;
 	}
 
@@ -242,6 +254,9 @@ public class SwarmHelper {
 		}
 		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
 			FollowMeHelper.startFollowMeThreads();
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			uavFishingHelper.launchThreads();
 		}
 	}
 
@@ -260,6 +275,9 @@ public class SwarmHelper {
 			FollowMeHelper.openFollowMeConfigurationDialog();
 			// Modo de vuelo Loiter / Loiter_Armed
 			// UAVParam.flightMode.set(0, Mode.LOITER);
+			Param.simStatus = SimulatorState.READY_FOR_TEST;
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
 			Param.simStatus = SimulatorState.READY_FOR_TEST;
 		}
 	}
