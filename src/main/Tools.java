@@ -1535,11 +1535,6 @@ public class Tools {
 			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(GUIHelper.timeToString(0, uavsTotalTime[i])).append("\n");
 		}
 
-		// 3. Protocol results header, if needed
-		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append("\n").append(Param.selectedProtocol.getName()).append(":\n\n");
-		}
-		
 		return sb.toString();
 	}
 	

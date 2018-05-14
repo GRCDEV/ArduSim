@@ -504,6 +504,7 @@ public class Talker extends Thread {
 		while (SwarmProtParam.WpLast[numUAV][0] != true) {
 
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
+				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 								
 				if (missionPointNumber == 1 && SwarmProtParam.fightPrevNext[numUAV][1] != SwarmProtParam.broadcastMAC) {
 					// ENVIAR MAS VECES POR SI FALLA EL ENVIO TODO improve
