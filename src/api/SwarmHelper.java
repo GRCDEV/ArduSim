@@ -27,7 +27,7 @@ import swarm.SwarmText;
 import swarmprot.logic.SwarmProtHelper;
 import swarmprot.logic.SwarmProtParam;
 import uavController.UAVParam;
-import uavFishing.logic.uavFishingHelper;
+import uavFishing.logic.UavFishingHelper;
 
 /**
  * This class consists exclusively of static methods that allow to launch
@@ -78,7 +78,7 @@ public class SwarmHelper {
 			SwarmHelper.log("SwarmConfigurationDialog --> Mas tarde");
 		}
 		if (Param.selectedProtocol == Protocol.UAVFISHING) {
-			// uavFishingHelper.openConfigurationDialog();
+			UavFishingHelper.openConfigurationDialog();
 		}
 
 		//TODO esto debera de hacerse dentro del OK del cuadro de configuracion del dialogo
@@ -203,7 +203,7 @@ public class SwarmHelper {
 			return FollowMeHelper.getSwarmStartingLocation();
 		}
 		if (Param.selectedProtocol == Protocol.UAVFISHING) {
-			return uavFishingHelper.getStartingLocation();
+			return UavFishingHelper.getStartingLocation();
 		}
 		
 		
@@ -235,7 +235,7 @@ public class SwarmHelper {
 			success = true;
 		}
 		if (Param.selectedProtocol == Protocol.UAVFISHING) {
-			success = uavFishingHelper.sendBasicConfig(numUAV);
+			success = UavFishingHelper.sendBasicConfig(numUAV);
 		}
 		
 		return success;
@@ -256,7 +256,7 @@ public class SwarmHelper {
 			FollowMeHelper.startFollowMeThreads();
 		}
 		if (Param.selectedProtocol == Protocol.UAVFISHING) {
-			uavFishingHelper.launchThreads();
+			UavFishingHelper.launchThreads();
 		}
 	}
 
@@ -307,6 +307,10 @@ public class SwarmHelper {
 				// Tratar el fallo
 			}
 
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			
+			UavFishingHelper.startTestActionPerformed();
 		}
 
 	}
