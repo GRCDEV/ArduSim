@@ -263,6 +263,9 @@ public class Listener extends Thread {
 
 			} /** END PHASE SEND LIST */
 			
+			//Sync time
+			GUIHelper.waiting(3000);
+			
 			Param.simStatus = SimulatorState.READY_FOR_TEST;
 			while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
 				GUIHelper.waiting(SwarmProtParam.waitState);
@@ -392,7 +395,6 @@ public class Listener extends Thread {
 			}
 
 			// If I'm the first one, I take off directly
-			//TODO modificar para no tener que hacer "minimodeenvios"
 			if (idPrev == SwarmProtParam.broadcastMAC && Talker.semaphoreSlaveACK3) {
 				SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
 			}else {

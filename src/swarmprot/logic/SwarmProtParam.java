@@ -68,13 +68,16 @@ public class SwarmProtParam {
 	public static final double speedLanding = 0.2;
 	
 	// Time the master waits for the slaves in the START phase
-	public static final int waitTimeForSlaves = 20000;
+	public static final int waitTimeForSlaves = 3000;
 	
 	// Heading of the mission
 	public static double missionHeading = 0;
 	
 	// Distance from which it is accepted that you have reached the WP
 	public static double distToAcceptPointReached = 1.0;
+	
+	// Timeout for sending methods (ms), like TCP/IP
+	public static final int timeoutSendingShort = 2000;
 
 
 	// SwarmProt finite state machine states enumerator

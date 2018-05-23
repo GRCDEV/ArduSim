@@ -47,7 +47,7 @@ public class Talker extends Thread {
 	// Personalized list of Waypoints received from Master
 	public static Point3D[][] flightList;
 
-	// Stores the ACK3 of all the Slaves to continue with the protocol 
+	// Stores the ACK3 of all the Slaves to continue with the protocol
 	public static volatile boolean semaphoreSlaveACK3 = false;
 
 	// Indicates in which point of the flight list the UAV is
@@ -116,8 +116,8 @@ public class Talker extends Thread {
 		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
 
 			/** PHASE START */
-			//TODO en todos los estados setSwarmState(numuav,"");
-			
+			// TODO en todos los estados setSwarmState(numuav,"");
+
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_TALKER);
 				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSTART);
@@ -170,7 +170,6 @@ public class Talker extends Thread {
 				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_TALKER);
 				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSEND_LIST);
 
-
 				while (!Listener.semaphore) {
 					GUIHelper.waiting(SwarmProtParam.waitState);
 				}
@@ -179,20 +178,25 @@ public class Talker extends Thread {
 
 				// TODO INICIO (Quitar, solo sirve para medir algoritmo despegue)
 				long inicio = System.currentTimeMillis();
-				System.out.println("Tiempo de inicio: "+ inicio);
+				System.out.println("Tiempo de inicio: " + inicio);
+
+				System.out.println("Iniciales: " + Arrays.toString(currentPositions));
 
 				// Calculation of formation flying
 				Triplet<Long, Integer, uavPosition[]> resultArray = getFormation(currentPositions);
 
 				// TODO Para medir tiempo algoritmo de despegue
 				long fin = System.currentTimeMillis();
-				System.out.println("Tiempo de fin: "+ fin + " resultado: "+(fin-inicio));
-				//TODO FIN
-				
+				System.out.println("Tiempo de fin: " + fin + " resultado: " + (fin - inicio));
+				// TODO FIN
+
 				@SuppressWarnings("unused")
 				int posMasterReo = resultArray.getValue1();
 				long center = resultArray.getValue0();
 				uavPosition[] takeoffLocations = resultArray.getValue2();
+
+				System.out.println(" Id del centro: " + center + " Posición del maestro: " + posMasterReo);
+				System.out.println(Arrays.toString(takeoffLocations));
 
 				List<WaypointSimplified> prueba = UAVParam.missionUTMSimplified.get(SwarmProtParam.posMaster);
 				if (prueba.size() > SwarmProtParam.maxWaypoints) {
@@ -251,14 +255,14 @@ public class Talker extends Thread {
 
 					if (i == masterPosReo) {
 						for (int j = 0; j < loopPos.length; j++) {
-							// The mission is assigned to the Master point by point 
-							if(i == 0) {
+							// The mission is assigned to the Master point by point
+							if (i == 0) {
 								Listener.idPrevMaster = SwarmProtParam.broadcastMAC;
-							}else {
+							} else {
 								Listener.idPrevMaster = allMissions[i - 1].id;
 							}
-							if(j == loopPos.length-1) { 
-								
+							if (j == loopPos.length - 1) {
+
 								Listener.idNextMaster = SwarmProtParam.broadcastMAC;
 							}
 							SwarmProtParam.flightListPersonalized[numUAV][j] = new Point3D(loopPos[j].x, loopPos[j].y,
@@ -337,7 +341,7 @@ public class Talker extends Thread {
 						}
 
 					} else {
-							packet.setData(sendList[j]);	
+						packet.setData(sendList[j]);
 						try {
 							SwarmProtHelper.sendDataToSlaves(packet, socket);
 						} catch (IOException e) {
@@ -505,46 +509,51 @@ public class Talker extends Thread {
 
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
 				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
-								
+
 				if (missionPointNumber == 1 && SwarmProtParam.fightPrevNext[numUAV][1] != SwarmProtParam.broadcastMAC) {
-					// ENVIAR MAS VECES POR SI FALLA EL ENVIO TODO improve
-					// Envio orde de despegue al idNext que correspode a este UAV
-					output = new Output(buffer);
-					output.clear();
-					output.writeShort(4);
-					output.writeLong(SwarmProtParam.fightPrevNext[numUAV][1]);
-					output.flush();
-					packet.setData(buffer, 0, output.position());
-					try {
-						// Data to Master and Slaves because we do not know which is the addressee
-						SwarmProtHelper.sendDataToMaster(packet, socket);
-						SwarmProtHelper.sendDataToSlaves(packet, socket);
-					} catch (IOException e) {
-						SwarmHelper.log("Problem in Slave or Master during MOVE_TO_WP stage");
-						e.printStackTrace();
-					}
-					// Timer
-					cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
-					waitingTime = (int) (cicleTime - System.currentTimeMillis());
-					if (waitingTime > 0) {
-						GUIHelper.waiting(waitingTime);
+
+					long startTime = System.currentTimeMillis(); // fetch starting time
+					while ((System.currentTimeMillis() - startTime) < SwarmProtParam.timeoutSendingShort) {
+						output = new Output(buffer);
+						output.clear();
+						output.writeShort(4);
+						output.writeLong(SwarmProtParam.fightPrevNext[numUAV][1]);
+						output.flush();
+						packet.setData(buffer, 0, output.position());
+						try {
+							// Data to Master and Slaves because we do not know which is the addressee
+							SwarmProtHelper.sendDataToMaster(packet, socket);
+							SwarmProtHelper.sendDataToSlaves(packet, socket);
+						} catch (IOException e) {
+							SwarmHelper.log("Problem in Slave or Master during MOVE_TO_WP stage");
+							e.printStackTrace();
+						}
+						// Timer
+						cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
+						waitingTime = (int) (cicleTime - System.currentTimeMillis());
+						if (waitingTime > 0) {
+							GUIHelper.waiting(waitingTime);
+						}
+
 					}
 					
-
 					// Counter to know if it is the first mission point (takeoff)
 					missionPointNumber++;
 
 				}
 
-				// If I'm the last one I directly do counter ++ and do not send any takeoff order
+				// If I'm the last one I directly do counter ++ and do not send any takeoff
+				// order
 				if (SwarmProtParam.fightPrevNext[numUAV][1] == SwarmProtParam.broadcastMAC) {
 					missionPointNumber++;
 				}
 				if (missionPointNumber > 1) {
-					API.moveUAV(numUAV, SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP], SwarmProtParam.flightListPersonalizedAltGeo[numUAV][actualWP].floatValue(), SwarmProtParam.distToAcceptPointReached, 0.05);
+					API.moveUAV(numUAV, SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP],
+							SwarmProtParam.flightListPersonalizedAltGeo[numUAV][actualWP].floatValue(),
+							SwarmProtParam.distToAcceptPointReached, 0.05);
 
 				}
-		
+
 				actualWP++;
 				SwarmProtParam.state[numUAV] = SwarmProtState.WP_REACHED;
 
@@ -557,13 +566,11 @@ public class Talker extends Thread {
 				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTWP_REACHED);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
-				//Master
+				// Master
 				if (Param.id[numUAV] == SwarmProtParam.idMaster) {
-					// If the master receives confirmation that all slaves have reached the WP, he sends a message to continue the slaves
+					// If the master receives confirmation that all slaves have reached the WP, he
+					// sends a message to continue the slaves
 					if (Listener.uavsACK4.size() == Listener.UAVsDetected.size()) {
-						int minimodeenvios = 0;
-						while (minimodeenvios < 15) {
-							//The for is to send to each of the registered ids 15 messages minimum TODO improve
 							for (int i = 0; i < Listener.positionsAndIDs.length; i++) {
 								output = new Output(buffer);
 								output.clear();
@@ -589,17 +596,15 @@ public class Talker extends Thread {
 								}
 
 							}
-							minimodeenvios++;
-						}
-						//TODO probar a vaciar el map para que no coja datos antiguos cuando se actualice el simulador
-						//Listener.uavsACK4.clear();
+							
+						Listener.uavsACK4.clear();
 						SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;
 						SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 					} else {
 						GUIHelper.waiting(SwarmProtParam.waitState);
 					}
-				} else {//Slave
+				} else {// Slave
 					/** ACK4 */
 					output = new Output(buffer);
 					output.clear();
@@ -608,10 +613,10 @@ public class Talker extends Thread {
 					output.flush();
 
 					packet.setData(buffer, 0, output.position());
-
 					try {
 						// Data only for Master
 						SwarmProtHelper.sendDataToMaster(packet, socket);
+
 					} catch (IOException e) {
 						SwarmHelper.log("Problem in Slave WP_REACHED stage");
 						e.printStackTrace();
@@ -625,13 +630,13 @@ public class Talker extends Thread {
 					}
 				}
 			} /** END PHASE WP_REACHED */
-			
-			//Detect if it's the last WP
-			if(actualWP == SwarmProtParam.flightListPersonalizedGeo[numUAV].length) {
+
+			// Detect if it's the last WP
+			if (actualWP == SwarmProtParam.flightListPersonalizedGeo[numUAV].length) {
 				SwarmProtParam.WpLast[numUAV][0] = true;
 				SwarmProtParam.state[numUAV] = SwarmProtState.LANDING;
 			}
-			
+
 		} /** END WHILE DE LAS DOS FASES DE MOVIMENTO **/
 
 		/** PHASE LANDING */
@@ -656,8 +661,8 @@ public class Talker extends Thread {
 					SwarmHelper.log("Problem in Master sending LANDING order");
 					e.printStackTrace();
 				}
-				
-			}else {
+
+			} else {
 				output = new Output(buffer);
 				output.clear();
 				output.writeShort(10);
@@ -673,10 +678,10 @@ public class Talker extends Thread {
 					SwarmHelper.log("Problem in Slave LANDING stage");
 					e.printStackTrace();
 				}
-				
+
 			}
-		}/** END PHASE LANDING **/
-		
+		} /** END PHASE LANDING **/
+
 		/** PHASE FINISH */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.FINISH) {
 			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.FINISH + "--> Talker");
@@ -693,17 +698,19 @@ public class Talker extends Thread {
 
 		uavPosition[] bestFormation = null;
 		double distanceOfBestFormation = Double.MAX_VALUE;
-		long centerGlobal = Long.MAX_VALUE;
+		// long centerGlobal = Long.MAX_VALUE;
+		// long currentCenter;
 
 		// We look for the drone that behave like center drone
 		for (int i = 0; i < current.length; i++) {
-			//Distance in flight between drones initialDistanceBetweenUAVreal 
-			
-			//We obtain coordinates for the drones that surround the central.
-			Point2D.Double[] formation = SwarmProtHelper.posSlaveFromMasterLinear(SwarmProtParam.masterHeading, current[i],
-					current.length - 1, SwarmProtParam.initialDistanceBetweenUAVreal);
+			// currentCenter = current[i].id;
+			// Distance in flight between drones initialDistanceBetweenUAVreal
+
+			// We obtain coordinates for the drones that surround the central.
+			Point2D.Double[] formation = SwarmProtHelper.posSlaveFromMasterLinear(SwarmProtParam.masterHeading,
+					current[i], current.length - 1, SwarmProtParam.initialDistanceBetweenUAVreal);
 			Point2D.Double[] flightFormationFinal = Arrays.copyOf(formation, formation.length + 1);
-			
+
 			// Add to the end of the array the one that is being viewed if it is the center
 			flightFormationFinal[flightFormationFinal.length - 1] = current[i];
 
@@ -722,8 +729,9 @@ public class Talker extends Thread {
 				// Test of a permutation
 				Long[] mix = prueba.next();
 				double acum = 0;
-				//Calculation of the sum of distances to the square of each drone on the ground to the position that would correspond 
-				//to it in the air according to the current combination of ids
+				// Calculation of the sum of distances to the square of each drone on the ground
+				// to the position that would correspond
+				// to it in the air according to the current combination of ids
 				for (int k = 0; k < current.length; k++) {
 					uavPosition c = current[k];
 					boolean found = false;
@@ -736,18 +744,30 @@ public class Talker extends Thread {
 							found = true;
 						}
 					}
-					// Adjustment of least squares. The distance is exaggerated to know which is closest
+					// Adjustment of least squares. The distance is exaggerated to know which is
+					// closest
 					acum = acum + Math.pow(c.distance(flightFormationFinal[pos]), 2);
 				}
+
+				if (i == 1) {
+					// System.out.println("Centro: " + currentCenter + " acum: " + acum + " en i: "
+					// + i);
+					System.out.println(Arrays.toString(mix));
+				}
+
 				if (bestForCurrentCenter == null || acum < dOfCurrentCenter) {
 					bestForCurrentCenter = new long[mix.length];
-					for(int t = 0; t<mix.length; t++) {
+					for (int t = 0; t < mix.length; t++) {
 						bestForCurrentCenter[t] = mix[t];
 					}
 					dOfCurrentCenter = acum;
+
 				}
 				j--;
 			}
+
+			// System.out.println("Error acumulado: " + dOfCurrentCenter + " para centro " +
+			// currentCenter);
 
 			if (bestFormation == null || dOfCurrentCenter < distanceOfBestFormation) {
 				j = 0;
@@ -756,7 +776,7 @@ public class Talker extends Thread {
 					bestFormation[j] = new uavPosition(flightFormationFinal[j].x, flightFormationFinal[j].y,
 							bestForCurrentCenter[j], SwarmProtParam.masterHeading);
 					distanceOfBestFormation = dOfCurrentCenter;
-					centerGlobal = current[i].id;
+					// centerGlobal = currentCenter;
 					boolean found = false;
 					for (int x = 0; x < bestForCurrentCenter.length; x++) {
 						if (bestForCurrentCenter[j] == SwarmProtParam.idMaster) {
@@ -768,6 +788,22 @@ public class Talker extends Thread {
 					}
 					j++;
 				}
+
+			}
+		}
+
+		// Cálculo del centro
+		long centerGlobal = Long.MAX_VALUE;
+		double globalError = Double.MAX_VALUE;
+		for (int i = 0; i < bestFormation.length; i++) {
+			double acum = 0;
+			for (int j = 0; j < bestFormation.length; j++) {
+				if (i != j) {
+					acum += Math.pow(bestFormation[i].distance(bestFormation[j]), 2);
+				}
+			}
+			if (acum < globalError) {
+				centerGlobal = bestFormation[i].id;
 			}
 		}
 

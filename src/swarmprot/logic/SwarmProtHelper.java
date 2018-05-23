@@ -304,22 +304,6 @@ public class SwarmProtHelper {
 
 	
 	public static void openSwarmConfigurationDialog() {
-		/** Si pongo una pantalla de preconfiguración, se hace aqui TODO*/
-
-		/** We load the file directly with the mission. In a future add menu */
-		List<Waypoint> mission = Tools.loadMission(GUIHelper.getCurrentFolder());
-
-		if (mission != null) {
-			/** The master is assigned the first mission in the list */
-			UAVParam.missionGeoLoaded = new ArrayList[Param.numUAVs];
-			UAVParam.missionGeoLoaded[SwarmProtParam.posMaster] = mission;
-
-		} else {
-			JOptionPane.showMessageDialog(null, Text.MISSIONS_ERROR_3, Text.MISSIONS_SELECTION_ERROR,
-					JOptionPane.WARNING_MESSAGE);
-
-			return;
-		}
 		SwarmProtParam.idMaster = SwarmProtParam.idMasterSimulation;
 		
 		SwarmConfig dialog = new SwarmConfig();
