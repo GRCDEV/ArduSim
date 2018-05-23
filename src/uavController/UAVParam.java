@@ -234,7 +234,8 @@ public class UAVParam {
 	public static final int MAV_STATUS_THROTTLE_ON_ERROR = 33;
 	public static int[] stabilizationThrottle;	// By default is 1500 (altitude stabilized)
 	public static final int MAV_STATUS_MOVE_UAV = 34;
-	public static final int MAV_STATUS_MOVE_UAV_ERROR = 35;
+	public static final int MAV_STATUS_ACK_MOVE_UAV = 35;
+	public static final int MAV_STATUS_MOVE_UAV_ERROR = 36;
 	public static float[][] newLocation;	// [latitude, longitude, relative altitude] where to move the UAV
 
 	// Ardupilot flight modes

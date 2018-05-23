@@ -1811,14 +1811,13 @@ public class Tools {
 		}
 		// 4. Store ArduCopter logs if needed
 		if (SimParam.arducopterLoggingEnabled) {
-			File currentFolder = GUIHelper.getCurrentFolder();
 			File logSource, logDestination;
 			File parentFolder = new File(SimParam.tempFolderBasePath);
 			for (int i=0; i<Param.numUAVs; i++) {
 				File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
 				if (tempFolder.exists()  ) {
 					logSource = new File(new File(tempFolder, SimParam.LOG_FOLDER), SimParam.LOG_SOURCE_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
-					logDestination = new File(currentFolder, baseFileName + "_" + i + "_" + SimParam.LOG_DESTINATION_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
+					logDestination = new File(folder, baseFileName + "_" + i + "_" + SimParam.LOG_DESTINATION_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
 					try {
 						Files.copy(logSource.toPath(), logDestination.toPath());
 					} catch (IOException e1) {

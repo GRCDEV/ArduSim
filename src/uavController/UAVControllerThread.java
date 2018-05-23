@@ -563,15 +563,16 @@ public class UAVControllerThread extends Thread {
 			}
 			break;
 		// ACK received when moving a UAV to another location
-		case UAVParam.MAV_STATUS_MOVE_UAV:
+		case UAVParam.MAV_STATUS_ACK_MOVE_UAV:
 			if (message.type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_MOVE_UAV_ERROR);
 			}
 			break;
-		default:
-			SimTools.println(Text.NOT_REQUESTED_ACK_ERROR + " " + message.toString());
+		//default:
+			// We must not print this, as sometimes the flight controller sends more than one ACK for the mission
+			//SimTools.println(Text.NOT_REQUESTED_ACK_ERROR + " " + message.toString());
 		}
 	}
 
@@ -592,7 +593,7 @@ public class UAVControllerThread extends Thread {
 		case UAVParam.MAV_STATUS_MOVE_UAV:
 			try {
 				msgMoveUAV();
-				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_MOVE_UAV);
 			} catch (IOException e1) {
 				e1.printStackTrace();
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_MOVE_UAV_ERROR);
