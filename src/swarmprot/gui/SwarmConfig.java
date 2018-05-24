@@ -19,6 +19,7 @@ import main.Param;
 import main.Text;
 import swarm.SwarmText;
 import swarmprot.logic.SwarmProtParam;
+import swarmprot.logic.SwarmProtText;
 import uavController.UAVParam;
 import main.Param.SimulatorState;
 import sim.logic.SimParam;
@@ -49,6 +50,8 @@ public class SwarmConfig extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 	private JTextField missionsTextField;
+	JSpinner spinnerGround;
+	JSpinner spinnerFlight;
 
 	/**
 	 * Create the dialog.
@@ -95,19 +98,6 @@ public class SwarmConfig extends JDialog {
 			missionsTextField.setColumns(10);
 		}
 		{
-			/**JButton btnMap = new JButton("...");
-			btnMap.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-				}
-			});
-			GridBagConstraints gbc_btnMap = new GridBagConstraints();
-			gbc_btnMap.insets = new Insets(0, 0, 5, 5);
-			gbc_btnMap.gridx = 2;
-			gbc_btnMap.gridy = 0;
-			contentPanel.add(btnMap, gbc_btnMap);
-			*/
-			
-			
 			JButton btnMap = new JButton(Text.BUTTON_SELECT);
 			btnMap.addActionListener(new ActionListener() {
 				@SuppressWarnings("unchecked")
@@ -211,8 +201,8 @@ public class SwarmConfig extends JDialog {
 			contentPanel.add(lblGroundFormationDistance, gbc_lblGroundFormationDistance);
 		}
 		{
-			SpinnerNumberModel model1 = new SpinnerNumberModel(5.0, 5.0, 100.0, 1.0);  
-			JSpinner spinnerGround = new JSpinner(model1);
+			SpinnerNumberModel model1 = new SpinnerNumberModel(1.0, 1.0, 100.0, 1.0);  
+			spinnerGround = new JSpinner(model1);
 			JFormattedTextField txt = ((JSpinner.NumberEditor) spinnerGround.getEditor()).getTextField();
 			((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
 			GridBagConstraints gbc_spinnerGround = new GridBagConstraints();
@@ -233,7 +223,7 @@ public class SwarmConfig extends JDialog {
 		}
 		{
 			SpinnerNumberModel model2 = new SpinnerNumberModel(5.0, 5.0, 100.0, 1.0); 
-			JSpinner spinnerFlight = new JSpinner(model2);
+			spinnerFlight = new JSpinner(model2);
 			JFormattedTextField txt = ((JSpinner.NumberEditor) spinnerFlight.getEditor()).getTextField();
 			((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
 			GridBagConstraints gbc_spinnerFlight = new GridBagConstraints();
@@ -262,9 +252,20 @@ public class SwarmConfig extends JDialog {
 		contentPanel.add(okButton, gbc_okButton);
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//Acepta la configuración y cambia el estado
-				Param.simStatus = SimulatorState.STARTING_UAVS;
-				dispose();					}
+				
+				if(UAVParam.missionGeoLoaded != null ) {
+					//Acepta la configuración y cambia el estado
+					Param.simStatus = SimulatorState.STARTING_UAVS;
+					Double groud = (Double) spinnerGround.getValue();
+					Double air = (Double) spinnerFlight.getValue();
+					SwarmProtParam.initialDistanceBetweenUAV = groud.intValue();
+					SwarmProtParam.initialDistanceBetweenUAVreal = air.intValue();
+
+					dispose();
+				}else {
+					JOptionPane.showMessageDialog(null, SwarmProtText.BAD_INPUT);
+				}					
+				}
 		});
 		okButton.setActionCommand("OK");
 		getRootPane().setDefaultButton(okButton);

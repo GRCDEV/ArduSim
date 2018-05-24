@@ -12,9 +12,10 @@ public class SwarmProtParam {
 	public static final int ALTITUDE_WAIT = 500; // Time between checks while take off (ms)
 	public static double[] initial_speeds; // (m/s) Initial UAVs speed
 	public static double masterHeading; // Master UAV Heading
-	public static int initialDistanceBetweenUAV = 2; // Initial distance between uav's on simulation
+	// Ground
+	public static int initialDistanceBetweenUAV = 1; // Initial distance between uav's on simulation
+	// Air
 	public static int initialDistanceBetweenUAVreal = 5; // Initial distance between uav's on real flight
-	//public static int firstStepAltitude = 3; // Altitude for the first step of take off
 
 	// TCP parameters
 	public static final int DGRAM_MAX_LENGTH = 1472; // (B) 1500-20-8 (MTU - IP - UDP)

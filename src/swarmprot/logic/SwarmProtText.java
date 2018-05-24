@@ -67,4 +67,9 @@ public class SwarmProtText {
 	public static final String MASTER_SOCKET_READ_ERROR = "Error processing information received";
 	public static final String MASTER_SOCKET_ERROR = "Master failure while listening to socket";
 
+	
+	//Errors
+	public static final String BAD_INPUT = "Please, check the selected information.";
+
+	
 }
