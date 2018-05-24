@@ -898,65 +898,68 @@ public class MBCAPHelper {
 					numBeacons++;
 				}
 			}
-			double[] maxBeaconDistance = new double[numBeacons]; // One per beacon
-			double[] meanBeaconDistance = new double[numBeacons];
-			if (Param.VERBOSE_STORE) {
-				// Log the line from the real to the predicted location, with maximum error
-				maxErrorFile = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MBCAPText.MAX_ERROR_LINES_SUFIX);
-				sb2 = new StringBuilder(2000);
-			}
-			int pos = 0;
-			for (j=0; j<predictedLocations.length; j++) {
-				if (predictedLocations[j] != null) {
-					Pair<Point2D.Double, Point2D.Double> pair =
-							MBCAPHelper.beaconErrorCalculation(realUAVPath, predictedLocations, j,
-									maxBeaconDistance, pos, meanBeaconDistance);
-					pos++;
-					if (pair!=null && Param.VERBOSE_STORE) {
-						sb2.append("._LINE\n");
-						sb2.append(GUIHelper.round(pair.getValue0().x, 3)).append(",")
-							.append(GUIHelper.round(pair.getValue0().y, 3)).append("\n");
-						sb2.append(GUIHelper.round(pair.getValue1().x, 3)).append(",")
-							.append(GUIHelper.round(pair.getValue1().y, 3)).append("\n\n");
+			// Only store information if useful beacons were found
+			if (numBeacons > 0) {
+				double[] maxBeaconDistance = new double[numBeacons]; // One per beacon
+				double[] meanBeaconDistance = new double[numBeacons];
+				if (Param.VERBOSE_STORE) {
+					// Log the line from the real to the predicted location, with maximum error
+					maxErrorFile = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MBCAPText.MAX_ERROR_LINES_SUFIX);
+					sb2 = new StringBuilder(2000);
+				}
+				int pos = 0;
+				for (j=0; j<predictedLocations.length; j++) {
+					if (predictedLocations[j] != null) {
+						Pair<Point2D.Double, Point2D.Double> pair =
+								MBCAPHelper.beaconErrorCalculation(realUAVPath, predictedLocations, j,
+										maxBeaconDistance, pos, meanBeaconDistance);
+						pos++;
+						if (pair!=null && Param.VERBOSE_STORE) {
+							sb2.append("._LINE\n");
+							sb2.append(GUIHelper.round(pair.getValue0().x, 3)).append(",")
+								.append(GUIHelper.round(pair.getValue0().y, 3)).append("\n");
+							sb2.append(GUIHelper.round(pair.getValue1().x, 3)).append(",")
+								.append(GUIHelper.round(pair.getValue1().y, 3)).append("\n\n");
+						}
 					}
 				}
-			}
-			if (Param.VERBOSE_STORE) {
-				GUIHelper.storeFile(maxErrorFile, sb2.toString());
-			}
-			
-			// 4. Storage of the mean and maximum error on each beacon
-			beaconsErrorFile = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MBCAPText.BEACON_TOTAL_ERROR_SUFIX);
-			sb3 = new StringBuilder(2000);
-			sb3.append("max(m),mean(m)\n");
-			for (int k=0; k<maxBeaconDistance.length-1; k++) {
-				sb3.append(GUIHelper.round(maxBeaconDistance[k], 3)).append(",")
-					.append(GUIHelper.round(meanBeaconDistance[k], 3)).append("\n");
-			}
-			sb3.append(GUIHelper.round(maxBeaconDistance[maxBeaconDistance.length-1], 3)).append(",")
-				.append(GUIHelper.round(meanBeaconDistance[meanBeaconDistance.length-1], 3));
-			GUIHelper.storeFile(beaconsErrorFile, sb3.toString());
-			
-			// 5. Calculus and storage of the mean and maximum error on each position of each beacon
-			int size = 0;
-			for (int m = 0; m<predictedLocations.length; m++) {
-				if (predictedLocations[m].size()>size) {
-					size = predictedLocations[m].size();
+				if (Param.VERBOSE_STORE) {
+					GUIHelper.storeFile(maxErrorFile, sb2.toString());
 				}
+				
+				// 4. Storage of the mean and maximum error on each beacon
+				beaconsErrorFile = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MBCAPText.BEACON_TOTAL_ERROR_SUFIX);
+				sb3 = new StringBuilder(2000);
+				sb3.append("max(m),mean(m)\n");
+				for (int k=0; k<maxBeaconDistance.length-1; k++) {
+					sb3.append(GUIHelper.round(maxBeaconDistance[k], 3)).append(",")
+						.append(GUIHelper.round(meanBeaconDistance[k], 3)).append("\n");
+				}
+				sb3.append(GUIHelper.round(maxBeaconDistance[maxBeaconDistance.length-1], 3)).append(",")
+					.append(GUIHelper.round(meanBeaconDistance[meanBeaconDistance.length-1], 3));
+				GUIHelper.storeFile(beaconsErrorFile, sb3.toString());
+				
+				// 5. Calculus and storage of the mean and maximum error on each position of each beacon
+				int size = 0;
+				for (int m = 0; m<predictedLocations.length; m++) {
+					if (predictedLocations[m].size()>size) {
+						size = predictedLocations[m].size();
+					}
+				}
+				double[] maxTimeDistance = new double[size];
+				double[] meanTimeDistance = new double[size];
+				MBCAPHelper.timeErrorCalculation(realUAVPath, predictedLocations, maxTimeDistance, meanTimeDistance);
+				timeErrorFile = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MBCAPText.BEACON_POINT_ERROR_SUFIX);
+				sb4 = new StringBuilder(2000);
+				sb4.append("max(m),mean(m)\n");
+				for (int k=0; k<maxTimeDistance.length-1; k++) {
+					sb4.append(GUIHelper.round(maxTimeDistance[k], 3)).append(",")
+						.append(GUIHelper.round(meanTimeDistance[k], 3)).append("\n");
+				}
+				sb4.append(GUIHelper.round(maxTimeDistance[maxTimeDistance.length-1], 3)).append(",")
+					.append(GUIHelper.round(meanTimeDistance[meanTimeDistance.length-1], 3));
+				GUIHelper.storeFile(timeErrorFile, sb4.toString());
 			}
-			double[] maxTimeDistance = new double[size];
-			double[] meanTimeDistance = new double[size];
-			MBCAPHelper.timeErrorCalculation(realUAVPath, predictedLocations, maxTimeDistance, meanTimeDistance);
-			timeErrorFile = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + MBCAPText.BEACON_POINT_ERROR_SUFIX);
-			sb4 = new StringBuilder(2000);
-			sb4.append("max(m),mean(m)\n");
-			for (int k=0; k<maxTimeDistance.length-1; k++) {
-				sb4.append(GUIHelper.round(maxTimeDistance[k], 3)).append(",")
-					.append(GUIHelper.round(meanTimeDistance[k], 3)).append("\n");
-			}
-			sb4.append(GUIHelper.round(maxTimeDistance[maxTimeDistance.length-1], 3)).append(",")
-				.append(GUIHelper.round(meanTimeDistance[meanTimeDistance.length-1], 3));
-			GUIHelper.storeFile(timeErrorFile, sb4.toString());
 		}
 	}
 	

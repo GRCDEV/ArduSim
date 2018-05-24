@@ -195,8 +195,8 @@ public class UAVControllerThread extends Thread {
 						break;
 					case IMAVLinkMessageID.MAVLINK_MSG_ID_ATTITUDE:
 						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS:
-//						break;
+					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS:
+						break;
 					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS_RAW:
 						break;
 					case IMAVLinkMessageID.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
@@ -249,9 +249,9 @@ public class UAVControllerThread extends Thread {
 						break;
 					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REQUEST:
 						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_HOME_POSITION:
-						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
-						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_HOME_POSITION:
+//						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
+//						break;
 					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_REQUEST:
 						break;
 					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_COUNT:
@@ -260,8 +260,8 @@ public class UAVControllerThread extends Thread {
 						break;
 					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
 						break;
-					default:
-						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
+//					default:
+//						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
 					}
 					
 					// Identify and process the received message
@@ -396,9 +396,7 @@ public class UAVControllerThread extends Thread {
 				UAVParam.numMAVLinksOnline.incrementAndGet();
 				this.uavConnected = true;
 			}
-		} else {
-			System.out.println("HEARTBEAT received from System " + message.sysId + " Component " + message.componentId + ": " + message.toString());
-		}//TODO eliminar el else (probablemente es el teléfono móvil o el mando)
+		}
 	}
 
 	/** Process the detection of the GPS fix. */

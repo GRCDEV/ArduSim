@@ -351,6 +351,7 @@ public class Main {
 						
 						// 16. Waiting while the experiment is is progress and detecting the experiment end
 						int check = 0;
+						boolean checkEnd = false;
 						while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 							// Check the battery level periodically
 							if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
@@ -364,8 +365,14 @@ public class Main {
 								SwarmHelper.detectSwarmEnd();
 							}
 							// Detects if all UAVs are on the ground in order to finish the experiment
-							if (Tools.isTestFinished()) {
-								Param.simStatus = SimulatorState.TEST_FINISHED;
+							if (checkEnd) {
+								if (Tools.isTestFinished()) {
+									Param.simStatus = SimulatorState.TEST_FINISHED;
+								}
+							} else {
+								if (System.currentTimeMillis() - Param.startTime > Param.STARTING_TIMEOUT) {
+									checkEnd = true;
+								}
 							}
 							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 								GUIHelper.waiting(SimParam.LONG_WAITING_TIME);
