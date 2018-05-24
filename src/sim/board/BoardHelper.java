@@ -270,8 +270,8 @@ public class BoardHelper {
 		double widthUTM, heightUTM;
 		widthUTM = (BoardParam.xUTMmax - BoardParam.xUTMmin) * BoardParam.SCALE_MAGNIFIER;
 		heightUTM = (BoardParam.yUTMmax - BoardParam.yUTMmin) * BoardParam.SCALE_MAGNIFIER;
-		// If no missions are loaded and the UAVs are overlapping, put them in the middle on a fixed UTM size
-		if (widthUTM==0 && heightUTM==0) {
+		// If no missions are loaded and the UAVs are really close, put them in the middle on a fixed UTM size
+		if (widthUTM<BoardParam.MIN_SEPARATION && heightUTM<BoardParam.MIN_SEPARATION) {
 			widthUTM = BoardParam.MAX_HALF_RANGE * 2 * BoardParam.SCALE_MAGNIFIER;
 			heightUTM = widthUTM;
 		}
