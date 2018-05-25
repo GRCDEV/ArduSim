@@ -2,12 +2,16 @@ package api;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.mavlink.messages.MAV_CMD;
 
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
+import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Text;
 import mbcap.logic.MBCAPText;
@@ -42,9 +46,9 @@ public class API {
 	}
 	
 	/** API: Gets the value of a controller or SITL parameter.
-	 * <p>Returns true if the command was successful.
-	 * <p>New value available on UAVParam.newParamValue[numUAV]. */
-	public static boolean getParam(int numUAV, ControllerParam parameter) {
+	 * <p>Returns the parameter value if the command was successful.
+	 * <p>Returns null if an error happens. */
+	public static Double getParam(int numUAV, ControllerParam parameter) {
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_GET_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -53,10 +57,10 @@ public class API {
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_2_PARAM) {
 			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_2 + " " + parameter.getId() + ".");
-			return false;
+			return null;
 		} else {
 			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + parameter.getId() + " = " + UAVParam.newParamValue.get(numUAV));
-			return true;
+			return UAVParam.newParamValue.get(numUAV);
 		}
 	}
 
@@ -95,9 +99,10 @@ public class API {
 	}
 
 	/** API: Takes off.
-	 * Target altitude is UAVParam.takeOffAltitude[numUAV], stored when sending the mission to the UAV.
+	 * <p>altitude. Target altitude over the ground.
 	 * <p>Returns true if the command was successful. */
-	public static boolean doTakeOff(int numUAV) {
+	public static boolean doTakeOff(int numUAV, double altitude) {
+		UAVParam.takeOffAltitude.set(numUAV, altitude);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_TAKE_OFF);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_TAKE_OFF) {
@@ -148,7 +153,7 @@ public class API {
 		}
 	}
 
-	/** API: Suspends temporally a mission, entering on loiter flight mode to force a fast stop.
+	/** API: Suspends temporally a mission in auto mode, entering on loiter flight mode to force a fast stop.
 	 * <p>Returns true if the command was successful.
 	 * <p>This method already includes the "setThrottle" function. */
 	public static boolean stopUAV(int numUAV) {
@@ -271,7 +276,7 @@ public class API {
 		UAVParam.currentWaypoint.set(numUAV, current);
 		UAVParam.newCurrentWaypoint[numUAV] = current;
 		// Relative altitude calculus to take off
-		UAVParam.takeOffAltitude[numUAV] = list.get(1).getAltitude();
+		UAVParam.takeOffAltitude.set(numUAV, list.get(1).getAltitude());
 
 		UAVParam.currentGeoMission[numUAV].clear();
 		for (int i = 0; i < list.size(); i++) {
@@ -295,12 +300,37 @@ public class API {
 			return true;
 		}
 	}
+	
+	/** API: Sets the loaded missions from file/s for the UAVs, in geographic coordinates.
+	 * <p>This method must be used in a really early step to load the mission to be used by the UAV.*/
+	public static void setLoadedMissions(List<Waypoint>[] missions) {
+		UAVParam.missionGeoLoaded = missions;
+	}
+	
+	/** API: Provides the missions loaded from files in geographic coordinates.
+	 * <p>Mission only available once they has been loaded.
+	 * <p>Returns null if not available.*/
+	public static List<Waypoint>[] getLoadedMissions() {
+		return UAVParam.missionGeoLoaded;
+	}
+	
+	/** API: Provides the mission stored in the UAV in geographic coordinates.
+	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/
+	public static List<Waypoint> getUAVMission(int numUAV) {
+		return UAVParam.currentGeoMission[numUAV];
+	}
+	
+	/** API: Provides the simplified mission shown in the screen in UTM coordinates.
+	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/ 
+	public static List<WaypointSimplified> getUAVMissionSimplified(int numUAV) {
+		return UAVParam.missionUTMSimplified.get(numUAV);
+	}
 
 	/** API: Retrieves the mission stored on the UAV.
 	 * <p>Returns true if the command was successful.
 	 * <p>New value available on UAVParam.currentGeoMission[numUAV].
 	 * <p>Simplified version of the mission in UTM coordinates available on UAVParam.missionUTMSimplified[numUAV]. */
-	public static boolean getMission(int numUAV) {
+	public static boolean retrieveMission(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_REQUEST_WP_LIST) {
@@ -310,9 +340,61 @@ public class API {
 			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_GET_ERROR);
 			return false;
 		} else {
+			API.simplifyMission(numUAV);
 			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_GET);
 			return true;
 		}
+	}
+	
+	/** Creates the simplified mission shown on screen, and forces view to rescale.*/
+	private static void simplifyMission(int numUAV) {
+		List<WaypointSimplified> missionUTMSimplified = new ArrayList<WaypointSimplified>();
+	
+		// Hypothesis:
+		//   The first take off waypoint retrieved from the UAV is used as "home"
+		//   The "home" coordinates are no modified along the mission
+		WaypointSimplified first = null;
+		boolean foundFirst = false;
+		Waypoint wp;
+		UTMCoordinates utm;
+		for (int i=0; i<UAVParam.currentGeoMission[numUAV].size(); i++) {
+			wp = UAVParam.currentGeoMission[numUAV].get(i);
+			switch (wp.getCommand()) {
+			case MAV_CMD.MAV_CMD_NAV_WAYPOINT:
+			case MAV_CMD.MAV_CMD_NAV_LOITER_UNLIM:
+			case MAV_CMD.MAV_CMD_NAV_LOITER_TURNS:
+			case MAV_CMD.MAV_CMD_NAV_LOITER_TIME:
+			case MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT:
+			case MAV_CMD.MAV_CMD_PAYLOAD_PREPARE_DEPLOY:
+			case MAV_CMD.MAV_CMD_NAV_LOITER_TO_ALT:
+			case MAV_CMD.MAV_CMD_NAV_LAND:
+				utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
+				WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+				missionUTMSimplified.add(swp);
+				break;
+			case MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH:
+				if (!foundFirst) {
+					MissionHelper.log(Text.SIMPLIFYING_WAYPOINT_LIST_ERROR + Param.id[numUAV]);
+				} else {
+					WaypointSimplified s = new WaypointSimplified(wp.getNumSeq(),
+							first.x, first.y, UAVParam.RTLAltitude[numUAV]);
+					missionUTMSimplified.add(s);
+				}
+				break;
+			case MAV_CMD.MAV_CMD_NAV_TAKEOFF:
+				// The geographic coordinates have been set by the flight controller
+				utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
+				WaypointSimplified twp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+				missionUTMSimplified.add(twp);
+				if (!foundFirst) {
+					utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
+					first = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+					foundFirst = true;
+				}
+				break;
+			}
+		}
+		UAVParam.missionUTMSimplified.set(numUAV, missionUTMSimplified);
 	}
 	
 	/** API: Sends a message to the other UAVs.

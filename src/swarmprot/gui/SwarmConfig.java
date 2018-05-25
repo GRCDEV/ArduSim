@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.NumberFormatter;
 
+import api.API;
 import api.GUIHelper;
 import api.MissionHelper;
 import api.pojo.Waypoint;
@@ -136,8 +137,9 @@ public class SwarmConfig extends JDialog {
 							
 							if (mission != null) {
 								/** The master is assigned the first mission in the list */
-								UAVParam.missionGeoLoaded = new ArrayList[Param.numUAVs];
-								UAVParam.missionGeoLoaded[SwarmProtParam.posMaster] = mission;
+								List<Waypoint>[] missions = new ArrayList[Param.numUAVs];
+								missions[SwarmProtParam.posMaster] = mission;
+								API.setLoadedMissions(missions);
 
 							} else {
 								JOptionPane.showMessageDialog(null, Text.MISSIONS_ERROR_3, Text.MISSIONS_SELECTION_ERROR,
@@ -161,9 +163,9 @@ public class SwarmConfig extends JDialog {
 							// The mission is stored
 							if (current != null) {
 								/** The master is assigned the first mission in the list */
-								UAVParam.missionGeoLoaded = new ArrayList[Param.numUAVs];
-								UAVParam.missionGeoLoaded[SwarmProtParam.posMaster] = current;
-
+								List<Waypoint>[] missions = new ArrayList[Param.numUAVs];
+								missions[SwarmProtParam.posMaster] = current;
+								API.setLoadedMissions(missions);
 							} else {
 								JOptionPane.showMessageDialog(null, Text.MISSIONS_ERROR_3, Text.MISSIONS_SELECTION_ERROR,
 										JOptionPane.WARNING_MESSAGE);
@@ -253,7 +255,7 @@ public class SwarmConfig extends JDialog {
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
-				if(UAVParam.missionGeoLoaded != null ) {
+				if(API.getLoadedMissions() != null ) {
 					//Acepta la configuración y cambia el estado
 					Param.simStatus = SimulatorState.STARTING_UAVS;
 					Double groud = (Double) spinnerGround.getValue();

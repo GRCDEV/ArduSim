@@ -68,7 +68,7 @@ public class UavFishingHelper {
 		API.setMode(1, Mode.STABILIZE);
 		API.armEngines(1);
 		API.setMode(1, Mode.GUIDED);
-		API.doTakeOff(1);
+		API.doTakeOff(1, 25);
 		
 		
 				

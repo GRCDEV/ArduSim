@@ -12,6 +12,7 @@ import javax.swing.SwingUtilities;
 
 import org.javatuples.Pair;
 
+import api.API;
 import api.GUIHelper;
 import api.MissionHelper;
 import api.SwarmHelper;
@@ -74,8 +75,7 @@ public class Main {
 				if (mission == null) {
 					GUIHelper.exit(Text.MISSION_NOT_FOUND);
 				}
-				UAVParam.missionGeoLoaded = new ArrayList[1];
-				UAVParam.missionGeoLoaded[0] = mission;
+				API.setLoadedMissions(new List[] {mission});
 			}
 			
 			// 4. Start threads for waiting to commands to start the setup and start steps of the experiment

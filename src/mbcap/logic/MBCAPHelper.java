@@ -146,7 +146,7 @@ public class MBCAPHelper {
 		// Reasonable hypothesis: The UAV moves in the waypoint list in increasing order
 		// First of all, we have to locate the waypoint the UAV is moving toward (posNextWaypoint)
 		int currentWaypoint = UAVParam.currentWaypoint.get(numUAV);
-		List<WaypointSimplified> mission = UAVParam.missionUTMSimplified.get(numUAV);
+		List<WaypointSimplified> mission = API.getUAVMissionSimplified(numUAV);
 		if (mission != null) {
 			int posNextWaypoint = 0;
 			boolean found = false;

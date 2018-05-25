@@ -32,19 +32,22 @@ public class InitialConfigurationThread extends Thread {
 	
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, loads missions..., to a specific UAV. */
 	public static void sendBasicConfiguration(int numUAV) {
+		Double paramValue;
 		// Determining the GCS identifier that must be used
-		if (!API.getParam(numUAV, ControllerParam.SINGLE_GCS)) {
+		paramValue = API.getParam(numUAV, ControllerParam.SINGLE_GCS);
+		if (paramValue == null) {
 			return;
 		}
-		if ((int)Math.round(UAVParam.newParamValue.get(numUAV)) == 1) {
+		if ((int)Math.round(paramValue) == 1) {
 			if (!API.setParam(numUAV, ControllerParam.SINGLE_GCS, 0)) {
 				return;
 			}
 		}
-		if (!API.getParam(numUAV, ControllerParam.GCS_ID)) {
+		paramValue = API.getParam(numUAV, ControllerParam.GCS_ID);
+		if (paramValue == null) {
 			return;
 		}
-		UAVParam.gcsId.set(numUAV, (int)Math.round(UAVParam.newParamValue.get(numUAV)));
+		UAVParam.gcsId.set(numUAV, (int)Math.round(paramValue));
 		
 		// Ask the flight controller for information about battery usage (1Hz)
 		if (!API.setParam(numUAV, ControllerParam.STATISTICS, 1)) {
@@ -72,12 +75,17 @@ public class InitialConfigurationThread extends Thread {
 				return;
 			}
 		} else {
-			if (!API.getParam(numUAV, ControllerParam.BATTERY_CAPACITY)) {
+			paramValue = API.getParam(numUAV, ControllerParam.BATTERY_CAPACITY);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.batteryCapacity = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (UAVParam.batteryCapacity == 0 && !API.getParam(numUAV, ControllerParam.BATTERY_CAPACITY2)) {
-				return;
+			UAVParam.batteryCapacity = (int)Math.round(paramValue);
+			if (UAVParam.batteryCapacity == 0) {
+				paramValue = API.getParam(numUAV, ControllerParam.BATTERY_CAPACITY2);
+				if (paramValue == null) {
+					return;
+				}
+				UAVParam.batteryCapacity = (int)Math.round(paramValue);
 			}
 			SimTools.println(Text.BATTERY_SIZE + " " + UAVParam.batteryCapacity);
 			UAVParam.batteryLowLevel = (int)Math.rint(UAVParam.batteryCapacity * UAVParam.BATTERY_DEPLETED_THRESHOLD);
@@ -89,101 +97,120 @@ public class InitialConfigurationThread extends Thread {
 		
 		// Get flight controller configuration
 		// Stablish the middle throttle stick position
-		if (!API.getParam(numUAV, ControllerParam.RCMAP_THROTTLE)) {
+		paramValue = API.getParam(numUAV, ControllerParam.RCMAP_THROTTLE);
+		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmapThrottle.set(numUAV, (int)Math.round(UAVParam.newParamValue.get(numUAV)));
+		UAVParam.RCmapThrottle.set(numUAV, (int)Math.round(paramValue));
 		switch (UAVParam.RCmapThrottle.get(numUAV)) {
 		case 1:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC1)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC1);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC1)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC1);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		case 2:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC2)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC2);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC2)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC2);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		case 3:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC3)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC3);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC3)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC3);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		case 4:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC4)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC4);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC4)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC4);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		case 5:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC5)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC5);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC5)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC5);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		case 6:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC6)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC6);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC6)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC6);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		case 7:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC7)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC7);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC7)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC7);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		case 8:
-			if (!API.getParam(numUAV, ControllerParam.MAX_RC8)) {
+			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC8);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(UAVParam.newParamValue.get(numUAV));
-			if (!API.getParam(numUAV, ControllerParam.MIN_RC8)) {
+			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
+			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC8);
+			if (paramValue == null) {
 				return;
 			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(UAVParam.newParamValue.get(numUAV))) / 2;
+			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
 			break;
 		}
 		// Get the altitude used for RTL, and when the UAV reaches launch when using RTL
-		if (!API.getParam(numUAV, ControllerParam.RTL_ALTITUDE)) {
+		paramValue = API.getParam(numUAV, ControllerParam.RTL_ALTITUDE);
+		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RTLAltitude[numUAV] = UAVParam.newParamValue.get(numUAV)*0.01;			// Data received in centimeters
-		if (!API.getParam(numUAV, ControllerParam.RTL_ALTITUDE_FINAL)) {
+		UAVParam.RTLAltitude[numUAV] = paramValue*0.01;			// Data received in centimeters
+		paramValue = API.getParam(numUAV, ControllerParam.RTL_ALTITUDE_FINAL);
+		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RTLAltitudeFinal[numUAV] = UAVParam.newParamValue.get(numUAV)*0.01;	// Data received in centimeters
+		UAVParam.RTLAltitudeFinal[numUAV] = paramValue*0.01;	// Data received in centimeters
 		
 		// Set the speed when following a mission
 		if (UAVParam.initialSpeeds[numUAV] != 0.0 && !API.setSpeed(numUAV, UAVParam.initialSpeeds[numUAV])) {

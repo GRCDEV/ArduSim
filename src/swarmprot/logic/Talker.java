@@ -74,7 +74,7 @@ public class Talker extends Thread {
 		 * Calculate the take-off altitude, which uses the take-off algorithm (it is not
 		 * the same as the altitude of the mission)
 		 */
-		missionAltitude = UAVParam.currentGeoMission[SwarmProtParam.posMaster].get(1).getAltitude();
+		missionAltitude = API.getUAVMission(SwarmProtParam.posMaster).get(1).getAltitude();
 
 		if (missionAltitude <= 5.0) {
 			takeOffAltitudeStepOne = 2.0;
@@ -198,7 +198,7 @@ public class Talker extends Thread {
 				System.out.println(" Id del centro: " + center + " Posición del maestro: " + posMasterReo);
 				System.out.println(Arrays.toString(takeoffLocations));
 
-				List<WaypointSimplified> prueba = UAVParam.missionUTMSimplified.get(SwarmProtParam.posMaster);
+				List<WaypointSimplified> prueba = API.getUAVMissionSimplified(SwarmProtParam.posMaster);
 				if (prueba.size() > SwarmProtParam.maxWaypoints) {
 					GUIHelper.exit(SwarmProtParam.maxWpMes);
 				}

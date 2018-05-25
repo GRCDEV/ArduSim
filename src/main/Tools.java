@@ -289,7 +289,7 @@ public class Tools {
 		UAVParam.RCmapThrottle = new AtomicIntegerArray(Param.numUAVs);
 
 		UAVParam.newFlightMode = new Mode[Param.numUAVs];
-		UAVParam.takeOffAltitude = new double[Param.numUAVs];
+		UAVParam.takeOffAltitude = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newSpeed = new double[Param.numUAVs];
 		UAVParam.newParam = new ControllerParam[Param.numUAVs];
 		UAVParam.newParamValue = new AtomicDoubleArray(Param.numUAVs);

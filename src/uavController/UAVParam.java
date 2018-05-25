@@ -195,7 +195,7 @@ public class UAVParam {
 	public static final int MAV_STATUS_REQUEST_TAKE_OFF = 7;
 	public static final int MAV_STATUS_ACK_TAKE_OFF = 8;
 	public static final int MAV_STATUS_ERROR_TAKE_OFF = 9;
-	public static double[] takeOffAltitude;
+	public static AtomicDoubleArray takeOffAltitude;
 	public static final int MAV_STATUS_SET_SPEED = 10;
 	public static final int MAV_STATUS_ACK_SET_SPEED = 11;
 	public static final int MAV_STATUS_ERROR_SET_SPEED = 12;

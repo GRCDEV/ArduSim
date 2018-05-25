@@ -870,7 +870,7 @@ public class UAVControllerThread extends Thread {
 		message.command = MAV_CMD.MAV_CMD_NAV_TAKEOFF;
 		message.confirmation = 0;
 		//message.param1 = 0; // Ignored: climb angle on planes
-		message.param7 = (float)UAVParam.takeOffAltitude[numUAV];
+		message.param7 = (float)UAVParam.takeOffAltitude.get(numUAV);
 		
 		message.sysId = UAVParam.gcsId.get(numUAV);
 		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
