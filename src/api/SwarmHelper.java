@@ -76,6 +76,7 @@ public class SwarmHelper {
 		}
 		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
 			SwarmHelper.log("SwarmConfigurationDialog --> Mas tarde");
+			FollowMeHelper.openFollowMeConfigurationDialog();
 		}
 		if (Param.selectedProtocol == Protocol.UAVFISHING) {
 			UavFishingHelper.openConfigurationDialog();
@@ -272,7 +273,7 @@ public class SwarmHelper {
 		}
 		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
 
-			FollowMeHelper.openFollowMeConfigurationDialog();
+			
 			// Modo de vuelo Loiter / Loiter_Armed
 			// UAVParam.flightMode.set(0, Mode.LOITER);
 			Param.simStatus = SimulatorState.READY_FOR_TEST;

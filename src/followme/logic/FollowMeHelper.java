@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -131,39 +132,38 @@ public class FollowMeHelper {
 		y = x + 1;
 		while (y < listaAux.size()) {
 			double headingX = 0.0, headingY = 0.0;
-			long timeX = 0, timeY =0;
-			
+			long timeX = 0, timeY = 0;
+
 			if (listaAux.get(x).type == 0) {
 				timeX = listaAux.get(x).time;
-				headingX=listaAux.get(x).heading;
+				headingX = listaAux.get(x).heading;
 			}
-			
-			while (y < listaAux.size() && listaAux.get(y).type != 0 ) 
+
+			while (y < listaAux.size() && listaAux.get(y).type != 0)
 				y++;
-			if(y>=listaAux.size())break;
+			if (y >= listaAux.size())
+				break;
 			if (listaAux.get(y).type == 0) {
-				timeY=listaAux.get(y).time;
-				headingY=listaAux.get(y).heading;
+				timeY = listaAux.get(y).time;
+				headingY = listaAux.get(y).heading;
 			}
-			
-			double headingDif = headingY-headingX;
+
+			double headingDif = headingY - headingX;
 			long timeDif = timeY - timeX;
-			
-			while (x<y) {
+
+			while (x < y) {
 				x++;
-				listaAux.get(x).heading = headingX+((listaAux.get(x).time-timeX)*(headingDif)/(timeDif));
+				listaAux.get(x).heading = headingX + ((listaAux.get(x).time - timeX) * (headingDif) / (timeDif));
 			}
-			
-			x=y;
-			y=x+1;
-			
-			
+
+			x = y;
+			y = x + 1;
 
 		}
 
-//		for (int k = 0; k < 10; k++) {
-//			listaAux.get(k).print();
-//		}
+		// for (int k = 0; k < 10; k++) {
+		// listaAux.get(k).print();
+		// }
 		for (Nodo nodo : listaAux) {
 			rc.put(nodo);
 		}
@@ -175,11 +175,12 @@ public class FollowMeHelper {
 
 		FollowMeParam.uavs = new FollowMeState[Param.numUAVs];
 
-		// Iniciar los estados del los drones
 		for (int i = 0; i < Param.numUAVs; i++) {
 			FollowMeParam.uavs[i] = FollowMeState.START;
+			SwarmHelper.setSwarmState(i, FollowMeParam.uavs[i].getName());
+
 		}
-		
+
 		// Analyze which UAV is master
 		int posMaster = -1;
 		boolean realUAVisMaster = false;
@@ -197,57 +198,72 @@ public class FollowMeHelper {
 				}
 			}
 			// TODO tratar error si no lo encuentra
-			
-			
+
 		}
 		FollowMeParam.posMaster = posMaster;
 		FollowMeParam.realUAVisMaster = realUAVisMaster;
+		FollowMeParam.posFormacion = new ConcurrentHashMap<Integer, Integer>();
 	}
 
 	public static void startFollowMeThreads() {
 		if (Param.IS_REAL_UAV) {
 			if (FollowMeParam.realUAVisMaster) {
-				SendOrderThread sendTh = new SendOrderThread();
-				sendTh.start();
-				SwarmHelper.log("Thread send start");
-				MasterThread masterTh = new MasterThread();
-				masterTh.start();
+//				MasterMando sendTh = new MasterMando();
+//				sendTh.start();
+//				SwarmHelper.log("Thread send start");
+//				MasterThread masterTh = new MasterThread();
+//				masterTh.start();
 			} else {
-				FollowerThread followerTh = new FollowerThread(0);
-				followerTh.start();
+//				FollowerThread followerTh = new FollowerThread(0);
+//				followerTh.start();
 			}
 		} else {
 			for (int i = 0; i < Param.numUAVs; i++) {
 				if (i == FollowMeParam.posMaster) {
-					SendOrderThread sendTh = new SendOrderThread();
-					sendTh.start();
-					SwarmHelper.log("Thread send start");
-					MasterThread masterTh = new MasterThread();
-					masterTh.start();
+					// SendOrderThread sendTh = new SendOrderThread();
+					// sendTh.start();
+					// SwarmHelper.log("Thread send start");
+					// MasterThread masterTh = new MasterThread();
+					// masterTh.start();
+					MasterTalker masterTalker = new MasterTalker(i);
+					MasterListener masterListener = new MasterListener(i);
+					MasterMando masterMando = new MasterMando();
+					SwarmHelper.log("Iniciando Master");
+					masterTalker.start();
+					masterListener.start();
+					masterMando.start();
+
 				} else {
-					FollowerThread followerTh = new FollowerThread(i);
-					followerTh.start();
+					// FollowerThread followerTh = new FollowerThread(i);
+					// followerTh.start();
+					SlaveTalker slaveTalker = new SlaveTalker(i);
+					SlaveListener slaveListener = new SlaveListener(i);
+					SwarmHelper.log("Iniciando Slave "+i);
+					slaveTalker.start();
+					slaveListener.start();
+
 				}
 			}
 		}
-		
+
 		// UAV 0 is master
-		
-		FollowerThread followerTh;
-		for (int i = 1; i < Param.numUAVs; i++) {
-			followerTh = new FollowerThread(i);
-			followerTh.start();
-		}
-		
+
+		// FollowerThread followerTh;
+		// for (int i = 1; i < Param.numUAVs; i++) {
+		// followerTh = new FollowerThread(i);
+		// followerTh.start();
+		// }
 
 	}
 
 	public static Pair<GeoCoordinates, Double>[] getSwarmStartingLocation() {
 		Pair<GeoCoordinates, Double>[] iniLocation = new Pair[Param.numUAVs];
+
 		iniLocation[0] = Pair.with(new GeoCoordinates(39.482588, -0.345971), 0.0);
-		for (int i = 0; i < Param.numUAVs; i++) {
-			iniLocation[i] = Pair.with(new GeoCoordinates((39.482588 - (0.000001 * i)), (-0.345971 - (0.000001 * i))),
-					0.0);
+		iniLocation[1] = Pair.with(new GeoCoordinates(39.482111, -0.346857), 0.0);
+		for (int i = 1; i < Param.numUAVs - 1; i++) {
+			iniLocation[i + 1] = Pair.with(new GeoCoordinates(iniLocation[1].getValue0().latitude, /*- (0.00001 * i)*/
+					iniLocation[1].getValue0().longitude + (0.0002 * i)), 0.0);
 		}
 		return iniLocation;
 
