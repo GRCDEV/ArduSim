@@ -110,7 +110,16 @@ public class UAVParam {
 	public static AtomicIntegerArray gcsId;			// ID of the GCS authorized to send commands to the flight controller
 														//   255 for Mission Planner and DroidPlanner
 														//   252 for APM Planner 2
+	public static AtomicIntegerArray RCmapRoll;			// Channel the roll is mapped to
+	public static AtomicIntegerArray RCmapPitch;		// Channel the pitch is mapped to
 	public static AtomicIntegerArray RCmapThrottle;		// Channel the throttle is mapped to
+	public static AtomicIntegerArray RCmapYaw;			// Channel the yaw is mapped to
+	public static AtomicIntegerArray[] RCminValue;		// Minimum value of all the 8 channels
+	public static AtomicIntegerArray[] RCtrimValue;		// Trim value of all the 8 channels
+	public static AtomicIntegerArray[] RCmaxValue;		// Maximum value of all the 8 channels
+	public static AtomicIntegerArray[] flightModeMap;	// Mapping of the 6 flight modes used in the remote control switch
+	public static int[][] customModeToFlightModeMap;	// Mapping from real custom flight mode to FLTMODEx (provides x)
+														//   WARNING: not all modes are mapped in the remote control. Unmapped modes return -1
 
 	// Battery levels
 	private static final double CHARGED_VOLTAGE = 4.2;				// (V) Cell voltage at maximum charge
@@ -237,6 +246,10 @@ public class UAVParam {
 	public static final int MAV_STATUS_ACK_MOVE_UAV = 35;
 	public static final int MAV_STATUS_MOVE_UAV_ERROR = 36;
 	public static float[][] newLocation;	// [latitude, longitude, relative altitude] where to move the UAV
+	
+	// Potentiometer levels for the six flight modes configurable in the remote control (min, used, max)
+	public static final int[][] RC5_MODE_LEVEL = new int[][] {{0, 1000, 1230}, {1231, 1295, 1360},
+		{1361, 1425, 1490}, {1491, 1555, 1620}, {1621, 1685, 1749}, {1750, 1875, 2000}};
 
 	// Ardupilot flight modes
 	public enum Mode {
@@ -250,8 +263,7 @@ public class UAVParam {
 				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
 				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, // only 209, not as the rest (217)
 				0, Text.STABILIZE_ARMED),
-		GUIDED(
-				MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
+		GUIDED(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
 				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
 				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
 				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
@@ -370,10 +382,10 @@ public class UAVParam {
 				1, Text.ACRO);
 
 		private final int baseMode;
-		private final long customMode;
+		private final int customMode;
 		private final String modeName;
 
-		private Mode(int baseMode, long customMode, String modeName) {
+		private Mode(int baseMode, int customMode, String modeName) {
 			this.baseMode = baseMode;
 			this.customMode = customMode;
 			this.modeName = modeName;
@@ -383,7 +395,7 @@ public class UAVParam {
 			return baseMode;
 		}
 
-		public long getCustomMode() {
+		public int getCustomMode() {
 			return customMode;
 		}
 		
@@ -403,7 +415,7 @@ public class UAVParam {
 			return null;
 		}
 	}
-
+	
 	// Parameters of the UAV or the simulator
 	public enum ControllerParam {
 		LOGGING("LOG_BITMASK", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT32),				// Mask of logs enabled
@@ -444,23 +456,40 @@ public class UAVParam {
 		// Specific parameters requested to the flight controller
 		SINGLE_GCS("SYSID_ENFORCE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),			// Whether only one system id is accepted for commands or not
 		GCS_ID("SYSID_MYGCS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Identifier of the GCS allowed to send commands
+		RCMAP_ROLL("RCMAP_ROLL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),				// RC channel used for roll
+		RCMAP_PITCH("RCMAP_PITCH", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),				// RC channel used for pitch
 		RCMAP_THROTTLE("RCMAP_THROTTLE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// RC channel used for throttle
-		MAX_RC1("RC1_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC1
-		MIN_RC1("RC1_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC1
-		MAX_RC2("RC2_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC2
-		MIN_RC2("RC2_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC2
-		MAX_RC3("RC3_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC3 (typically, throttle)
-		MIN_RC3("RC3_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC3 (typically, throttle)
-		MAX_RC4("RC4_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC4
-		MIN_RC4("RC4_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC4
-		MAX_RC5("RC5_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC5
-		MIN_RC5("RC5_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC5
-		MAX_RC6("RC6_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC6
-		MIN_RC6("RC6_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC6
-		MAX_RC7("RC7_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC7
-		MIN_RC7("RC7_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC7
-		MAX_RC8("RC8_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Maximum value for RC8
-		MIN_RC8("RC8_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),					// Minimum value for RC8
+		RCMAP_YAW("RCMAP_YAW", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// RC channel used for yaw
+		MAX_RC1("RC1_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC1 (typically, roll)
+		TRIM_RC1("RC1_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC1 (typically, roll)
+		MIN_RC1("RC1_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC1 (typically, roll)
+		MAX_RC2("RC2_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC2 (typically, pitch)
+		TRIM_RC2("RC2_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC2 (typically, pitch)
+		MIN_RC2("RC2_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC2 (typically, pitch)
+		MAX_RC3("RC3_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC3 (typically, throttle)
+		TRIM_RC3("RC3_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC3 (typically, throttle)
+		MIN_RC3("RC3_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC3 (typically, throttle)
+		MAX_RC4("RC4_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC4 (typically, yaw)
+		TRIM_RC4("RC4_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC4 (typically, yaw)
+		MIN_RC4("RC4_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC4 (typically, yaw)
+		MAX_RC5("RC5_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC5 (always, flight mode)
+		TRIM_RC5("RC5_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC5 (always, flight mode)
+		MIN_RC5("RC5_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC5 (always, flight mode)
+		MAX_RC6("RC6_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC6
+		TRIM_RC6("RC6_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC6
+		MIN_RC6("RC6_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC6
+		MAX_RC7("RC7_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC7
+		TRIM_RC7("RC7_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC7
+		MIN_RC7("RC7_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC7
+		MAX_RC8("RC8_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC8
+		TRIM_RC8("RC8_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC8
+		MIN_RC8("RC8_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC8
+		FLTMODE1("FLTMODE1", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 1 (x<=1230)
+		FLTMODE2("FLTMODE2", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 2 (1230<x<=1360)
+		FLTMODE3("FLTMODE3", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 3 (1360<x<=1490)
+		FLTMODE4("FLTMODE4", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 4 (1490<x<=1620)
+		FLTMODE5("FLTMODE5", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 5 (1620<x<=1749)
+		FLTMODE6("FLTMODE6", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 6 (x>1749)
 		RTL_ALTITUDE("RTL_ALT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),				// Altitude during return to launch
 		RTL_ALTITUDE_FINAL("RTL_ALT_FINAL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Loiter altitude when not desired to land after return to launch
 		// Others

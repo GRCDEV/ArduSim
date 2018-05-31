@@ -193,12 +193,12 @@ public class API {
 	}
 	
 	/** API: Overrides the remote control output.
-	 * <p>Channel values in microseconds.
-	 * <p>Value 0 means that the control of that channel must be returned to the RC radio
-	 * <p>Value UINT16_MAX means to ignore this field
-	 * <p>Standard modulation: 1000 (0%) - 2000 (100%)*/
-	public static void channelsOverride(int numUAV, int chan1, int chan2, int chan3, int chan4) {
-		UAVParam.rcs[numUAV].set(new RCValues(chan1, chan2, chan3, chan4));
+	 * <p>Channel values in microseconds. Typically chan1=roll, chan2=pitch, chan3=throttle, chan4=yaw.
+	 * <p>Value 0 means that the control of that channel must be returned to the RC radio.
+	 * <p>Value UINT16_MAX means to ignore this field.
+	 * <p>Standard modulation: 1000 (0%) - 2000 (100%).*/
+	public static void channelsOverride(int numUAV, int roll, int pitch, int throttle, int yaw) {
+		UAVParam.rcs[numUAV].set(new RCValues(roll, pitch, throttle, yaw));
 	}
 
 	/** API: Moves the UAV to a new position.

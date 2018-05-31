@@ -178,7 +178,7 @@ public class UAVControllerThread extends Thread {
 		long prevTime = System.nanoTime();
 		long posTime;
 		
-		long ini = System.currentTimeMillis();
+//		long ini = System.currentTimeMillis();
 		
 		while (true) {
 			inMsg = null;
@@ -186,83 +186,83 @@ public class UAVControllerThread extends Thread {
 				inMsg = reader.getNextMessage();
 				if (inMsg != null) {
 					
-					switch (inMsg.messageType) {
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS2:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS3:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_ATTITUDE:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS_RAW:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_VIBRATION:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_EKF_STATUS_REPORT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYSTEM_TIME:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_HWSTATUS:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_VFR_HUD:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_FENCE_STATUS:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_GPS_RAW_INT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_CURRENT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_MEMINFO:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_POWER_STATUS:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_PRESSURE:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_IMU2:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_RAW_IMU:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYS_STATUS:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_HEARTBEAT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_SENSOR_OFFSETS:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_PARAM_VALUE:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_COMMAND_ACK:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ACK:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_LOCAL_POSITION_NED:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REPORT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REQUEST:
-						break;
+//					switch (inMsg.messageType) {
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS2:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS3:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_ATTITUDE:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS_RAW:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_VIBRATION:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_EKF_STATUS_REPORT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYSTEM_TIME:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_HWSTATUS:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_VFR_HUD:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_FENCE_STATUS:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_GPS_RAW_INT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_CURRENT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MEMINFO:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_POWER_STATUS:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_PRESSURE:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_IMU2:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_RAW_IMU:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYS_STATUS:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_HEARTBEAT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SENSOR_OFFSETS:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_PARAM_VALUE:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_COMMAND_ACK:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ACK:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_LOCAL_POSITION_NED:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REPORT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REQUEST:
+//						break;
 //					case IMAVLinkMessageID.MAVLINK_MSG_ID_HOME_POSITION:
 //						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
 //						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_REQUEST:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_COUNT:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM:
-						break;
-					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
-						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_REQUEST:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_COUNT:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM:
+//						break;
+//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
+//						break;
 //					default:
 //						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
-					}
+//					}
 					
 					// Identify and process the received message
 					identifyMessage();
@@ -283,12 +283,7 @@ public class UAVControllerThread extends Thread {
 	}
 
 	/** Message identification to process it. */
-	private void identifyMessage() {// TODO ignorar si vienen de otro id, una vez se sabe el mavId
-		if (!this.uavConnected || inMsg.sysId == UAVParam.mavId.get(numUAV)) {
-			
-		}
-		
-		
+	private void identifyMessage() {
 		switch (inMsg.messageType) {
 		case IMAVLinkMessageID.MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
 			processGlobalLocation();
@@ -711,7 +706,7 @@ public class UAVControllerThread extends Thread {
 		RCValues values = UAVParam.rcs[numUAV].getAndSet(null);
 		if (values != null) {
 			try {
-				msgrcChannelsOverride(values.rc1, values.rc2, values.rc3, values.rc4);
+				msgrcChannelsOverride(values.roll, values.pitch, values.throttle, values.yaw);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -808,17 +803,31 @@ public class UAVControllerThread extends Thread {
 	/** Restricted method for API ussage. Please, don't use it.
 	 * <p>Value 0 returns control to the RC.
 	 * <p>UINT16_MAX avoids changing that channel.*/
-	private void msgrcChannelsOverride(int chan1, int chan2, int chan3, int chan4) throws IOException {
+	private void msgrcChannelsOverride(int roll, int pitch, int throttle, int yaw) throws IOException {
 		msg_rc_channels_override message = new msg_rc_channels_override();
-		message.chan1_raw = chan1;
-		message.chan2_raw = chan2;
-		message.chan3_raw = chan3;
-		message.chan4_raw = chan4;
-		message.chan5_raw = 0;// TODO arreglar valores con uint16 = 0xFFFF
-		message.chan6_raw = 0;
-		message.chan7_raw = 0;
-		message.chan8_raw = 0;
-		
+		// Initially, only trim values
+		int[] values = new int[] {UAVParam.RCtrimValue[numUAV].get(0), UAVParam.RCtrimValue[numUAV].get(1),
+				UAVParam.RCtrimValue[numUAV].get(2), UAVParam.RCtrimValue[numUAV].get(3),
+				UAVParam.RCtrimValue[numUAV].get(4), UAVParam.RCtrimValue[numUAV].get(5),
+				UAVParam.RCtrimValue[numUAV].get(6), UAVParam.RCtrimValue[numUAV].get(7)};
+		// New roll, pitch, throttle, and yaw values
+		values[UAVParam.RCmapRoll.get(numUAV)-1] = roll;
+		values[UAVParam.RCmapPitch.get(numUAV)-1] = pitch;
+		values[UAVParam.RCmapThrottle.get(numUAV)-1] = throttle;
+		values[UAVParam.RCmapYaw.get(numUAV)-1] = yaw;
+		// Flight mode
+		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
+		if (fltmode != -1) {
+			values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
+		}
+		message.chan1_raw = values[0];
+		message.chan2_raw = values[1];
+		message.chan3_raw = values[2];
+		message.chan4_raw = values[3];
+		message.chan5_raw = values[4];
+		message.chan6_raw = values[5];
+		message.chan7_raw = values[6];
+		message.chan8_raw = values[7];
 		message.sysId = UAVParam.gcsId.get(numUAV);
 		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
 		message.target_system = UAVParam.mavId.get(numUAV);
@@ -1086,41 +1095,26 @@ public class UAVControllerThread extends Thread {
 	/** Sending a throttle value message. */
 	private void msgSetThrottle(int throttle) throws IOException {
 		msg_rc_channels_override message = new msg_rc_channels_override();
-		message.chan1_raw = 0;
-		message.chan2_raw = 0;
-		message.chan3_raw = 0;
-		message.chan4_raw = 0;
-		message.chan5_raw = 0;
-		message.chan6_raw = 0;
-		message.chan7_raw = 0;
-		message.chan8_raw = 0;
-		switch (UAVParam.RCmapThrottle.get(numUAV)) {
-		case 1:
-			message.chan1_raw = throttle;
-			break;
-		case 2:
-			message.chan2_raw = throttle;
-			break;
-		case 3:
-			message.chan3_raw = throttle;
-			break;
-		case 4:
-			message.chan4_raw = throttle;
-			break;
-		case 5:
-			message.chan5_raw = throttle;
-			break;
-		case 6:
-			message.chan6_raw = throttle;
-			break;
-		case 7:
-			message.chan7_raw = throttle;
-			break;
-		case 8:
-			message.chan8_raw = throttle;
-			break;
+		// Initially, only trim values
+		int[] values = new int[] {UAVParam.RCtrimValue[numUAV].get(0), UAVParam.RCtrimValue[numUAV].get(1),
+				UAVParam.RCtrimValue[numUAV].get(2), UAVParam.RCtrimValue[numUAV].get(3),
+				UAVParam.RCtrimValue[numUAV].get(4), UAVParam.RCtrimValue[numUAV].get(5),
+				UAVParam.RCtrimValue[numUAV].get(6), UAVParam.RCtrimValue[numUAV].get(7)};
+		// New throttle value
+		values[UAVParam.RCmapThrottle.get(numUAV)-1] = throttle;
+		// Flight mode
+		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
+		if (fltmode != -1) {
+			values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
 		}
-		
+		message.chan1_raw = values[0];
+		message.chan2_raw = values[1];
+		message.chan3_raw = values[2];
+		message.chan4_raw = values[3];
+		message.chan5_raw = values[4];
+		message.chan6_raw = values[5];
+		message.chan7_raw = values[6];
+		message.chan8_raw = values[7];
 		message.sysId = UAVParam.gcsId.get(numUAV);
 		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
 		message.target_system = UAVParam.mavId.get(numUAV);

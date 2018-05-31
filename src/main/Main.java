@@ -1,7 +1,6 @@
 package main;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
@@ -20,7 +19,6 @@ import api.pojo.GeoCoordinates;
 import api.pojo.Waypoint;
 import main.Param.Protocol;
 import main.Param.SimulatorState;
-import mbcap.logic.MBCAPText;
 import sim.board.BoardHelper;
 import sim.gui.ConfigDialog;
 import sim.gui.MainWindow;

@@ -286,8 +286,16 @@ public class Tools {
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
 		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.gcsId = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCmapRoll = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCmapPitch = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.RCmapThrottle = new AtomicIntegerArray(Param.numUAVs);
-
+		UAVParam.RCmapYaw = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCminValue = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.RCtrimValue = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.RCmaxValue = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.flightModeMap = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.customModeToFlightModeMap = new int[Param.numUAVs][24];
+		
 		UAVParam.newFlightMode = new Mode[Param.numUAVs];
 		UAVParam.takeOffAltitude = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newSpeed = new double[Param.numUAVs];
@@ -340,6 +348,13 @@ public class Tools {
 			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
 			UAVParam.lastLocations[i] = new LastPositions(UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
+			UAVParam.RCminValue[i] = new AtomicIntegerArray(8);
+			UAVParam.RCtrimValue[i] = new AtomicIntegerArray(8);
+			UAVParam.RCmaxValue[i] = new AtomicIntegerArray(8);
+			UAVParam.flightModeMap[i] = new AtomicIntegerArray(6);
+			for (int j = 0; j < UAVParam.customModeToFlightModeMap[i].length; j++) {
+				UAVParam.customModeToFlightModeMap[i][j] = -1;
+			}
 			
 			UAVParam.lastWaypointReached[i] = false;
 			

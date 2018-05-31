@@ -96,109 +96,190 @@ public class InitialConfigurationThread extends Thread {
 		}
 		
 		// Get flight controller configuration
-		// Stablish the middle throttle stick position
+		// RC mapping
+		paramValue = API.getParam(numUAV, ControllerParam.RCMAP_ROLL);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmapRoll.set(numUAV, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.RCMAP_PITCH);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmapPitch.set(numUAV, (int)Math.round(paramValue));
 		paramValue = API.getParam(numUAV, ControllerParam.RCMAP_THROTTLE);
 		if (paramValue == null) {
 			return;
 		}
 		UAVParam.RCmapThrottle.set(numUAV, (int)Math.round(paramValue));
-		switch (UAVParam.RCmapThrottle.get(numUAV)) {
-		case 1:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC1);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC1);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
-		case 2:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC2);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC2);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
-		case 3:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC3);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC3);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
-		case 4:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC4);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC4);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
-		case 5:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC5);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC5);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
-		case 6:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC6);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC6);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
-		case 7:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC7);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC7);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
-		case 8:
-			paramValue = API.getParam(numUAV, ControllerParam.MAX_RC8);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (int)Math.round(paramValue);
-			paramValue = API.getParam(numUAV, ControllerParam.MIN_RC8);
-			if (paramValue == null) {
-				return;
-			}
-			UAVParam.stabilizationThrottle[numUAV] = (UAVParam.stabilizationThrottle[numUAV] + (int)Math.round(paramValue)) / 2;
-			break;
+		paramValue = API.getParam(numUAV, ControllerParam.RCMAP_YAW);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmapYaw.set(numUAV, (int)Math.round(paramValue));
+		// RC levels
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC1);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(0, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC1);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(0, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC1);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(0, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC2);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(1, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC2);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(1, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC2);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(1, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC3);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(2, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC3);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(2, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC3);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(2, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC4);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(3, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC4);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(3, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC4);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(3, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC5);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(4, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC5);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(4, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC5);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(4, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC6);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(5, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC6);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(5, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC6);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(5, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC7);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(6, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC7);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(6, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC7);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(6, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MIN_RC8);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCminValue[numUAV].set(7, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.TRIM_RC8);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCtrimValue[numUAV].set(7, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.MAX_RC8);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCmaxValue[numUAV].set(7, (int)Math.round(paramValue));
+		// Stablish the middle throttle stick position
+		int throttlePos = UAVParam.RCmapThrottle.get(numUAV);
+		UAVParam.stabilizationThrottle[numUAV] = (UAVParam.RCmaxValue[numUAV].get(throttlePos - 1)
+				+ UAVParam.RCminValue[numUAV].get(throttlePos - 1)) / 2;
+		// Flight modes mapping
+		paramValue = API.getParam(numUAV, ControllerParam.FLTMODE1);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.flightModeMap[numUAV].set(0, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.FLTMODE2);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.flightModeMap[numUAV].set(1, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.FLTMODE3);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.flightModeMap[numUAV].set(2, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.FLTMODE4);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.flightModeMap[numUAV].set(3, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.FLTMODE5);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.flightModeMap[numUAV].set(4, (int)Math.round(paramValue));
+		paramValue = API.getParam(numUAV, ControllerParam.FLTMODE6);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.flightModeMap[numUAV].set(5, (int)Math.round(paramValue));
+		// Mapping of custom flight mode to FLTMODE location in array
+		int mode;
+		// For each custom mode mapped in the remote control...
+		for (int i = 0; i < UAVParam.flightModeMap[numUAV].length(); i++) {
+			mode = UAVParam.flightModeMap[numUAV].get(i);
+			// Store the FLTMODE it is mapped to
+			UAVParam.customModeToFlightModeMap[numUAV][mode] = i + 1;
 		}
 		// Get the altitude used for RTL, and when the UAV reaches launch when using RTL
 		paramValue = API.getParam(numUAV, ControllerParam.RTL_ALTITUDE);
