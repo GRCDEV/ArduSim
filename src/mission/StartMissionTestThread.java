@@ -32,18 +32,9 @@ public class StartMissionTestThread extends Thread {
 		if (API.setMode(numUAV, UAVParam.Mode.STABILIZE)
 				&& API.armEngines(numUAV)
 				&& API.setMode(numUAV, UAVParam.Mode.AUTO)
-				 //TODO descomentar
+				&& API.setThrottle(numUAV) //TODO descomentar
 				) {
-			
-			int customMode;//arreglar setMode para que haga esta espera
-			do {
-				GUIHelper.waiting(UAVParam.COMMAND_WAIT);
-				customMode = UAVParam.flightMode.get(numUAV).getCustomMode();
-			} while(customMode != UAVParam.Mode.AUTO_ARMED.getCustomMode());
-			
-			if (API.setThrottle(numUAV)) {
-				StartMissionTestThread.UAVS_TESTING.incrementAndGet();
-			}
+			StartMissionTestThread.UAVS_TESTING.incrementAndGet();
 		}
 		
 	}

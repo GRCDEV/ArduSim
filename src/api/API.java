@@ -77,6 +77,21 @@ public class API {
 			SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_1);
 			return false;
 		} else {
+			long start = System.currentTimeMillis();
+			boolean changed = false;
+			UAVParam.Mode currentMode;
+			while (!changed) {
+				currentMode = UAVParam.flightMode.get(numUAV);
+				if (currentMode.getCustomMode() == mode.getCustomMode()) {
+					changed = true;
+				} else {
+					if (System.currentTimeMillis() - start > UAVParam.MODE_CHANGE_TIMEOUT) {
+						return false;
+					} else {
+						GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+					}
+				}
+			}
 			return true;
 		}
 	}
