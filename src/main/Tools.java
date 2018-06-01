@@ -53,6 +53,7 @@ import org.javatuples.Pair;
 import api.GUIHelper;
 import api.MissionHelper;
 import api.SwarmHelper;
+import api.pojo.AtomicDoubleArray;
 import api.pojo.GeoCoordinates;
 import api.pojo.LastPositions;
 import api.pojo.LogPoint;
@@ -63,7 +64,6 @@ import api.pojo.WaypointSimplified;
 import main.Param.Protocol;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
-import mbcap.logic.MBCAPText;
 import pccompanion.PCCompanionGUI;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
@@ -284,12 +284,23 @@ public class Tools {
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
 		UAVParam.RTLAltitude = new double[Param.numUAVs];
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
-
+		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.gcsId = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCmapRoll = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCmapPitch = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCmapThrottle = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCmapYaw = new AtomicIntegerArray(Param.numUAVs);
+		UAVParam.RCminValue = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.RCtrimValue = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.RCmaxValue = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.flightModeMap = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.customModeToFlightModeMap = new int[Param.numUAVs][24];
+		
 		UAVParam.newFlightMode = new Mode[Param.numUAVs];
-		UAVParam.takeOffAltitude = new double[Param.numUAVs];
+		UAVParam.takeOffAltitude = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newSpeed = new double[Param.numUAVs];
 		UAVParam.newParam = new ControllerParam[Param.numUAVs];
-		UAVParam.newParamValue = new double[Param.numUAVs];
+		UAVParam.newParamValue = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newCurrentWaypoint = new int[Param.numUAVs];
 		UAVParam.newGeoMission = new Waypoint[Param.numUAVs][];
 		UAVParam.stabilizationThrottle = new int[Param.numUAVs];
@@ -337,6 +348,13 @@ public class Tools {
 			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
 			UAVParam.lastLocations[i] = new LastPositions(UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
+			UAVParam.RCminValue[i] = new AtomicIntegerArray(8);
+			UAVParam.RCtrimValue[i] = new AtomicIntegerArray(8);
+			UAVParam.RCmaxValue[i] = new AtomicIntegerArray(8);
+			UAVParam.flightModeMap[i] = new AtomicIntegerArray(6);
+			for (int j = 0; j < UAVParam.customModeToFlightModeMap[i].length; j++) {
+				UAVParam.customModeToFlightModeMap[i][j] = -1;
+			}
 			
 			UAVParam.lastWaypointReached[i] = false;
 			
@@ -1532,17 +1550,11 @@ public class Tools {
 			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(GUIHelper.timeToString(0, uavsTotalTime[i])).append("\n");
 		}
 
-		// 3. Protocol results header, if needed
-		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append("\n").append(Param.selectedProtocol.getName()).append(":\n\n");
-		}
-		
 		return sb.toString();
 	}
 	
 	/** Builds a String with the experiment parameters. */
 	public static String getTestGlobalConfiguration() {
-		// 1. Global configuration
 		StringBuilder sb = new StringBuilder(2000);
 		if (Param.IS_REAL_UAV) {
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
@@ -1684,11 +1696,6 @@ public class Tools {
 			}
 		}
 		
-		// 2. Protocol configuration, if needed
-		if (Param.selectedProtocol != Protocol.NONE) {
-			sb.append("\n\n").append(Param.selectedProtocol.getName()).append(" ").append(MBCAPText.CONFIGURATION).append(":\n");
-		}
-		
 		return sb.toString();
 	}
 
@@ -1819,14 +1826,13 @@ public class Tools {
 		}
 		// 4. Store ArduCopter logs if needed
 		if (SimParam.arducopterLoggingEnabled) {
-			File currentFolder = GUIHelper.getCurrentFolder();
 			File logSource, logDestination;
 			File parentFolder = new File(SimParam.tempFolderBasePath);
 			for (int i=0; i<Param.numUAVs; i++) {
 				File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
 				if (tempFolder.exists()  ) {
 					logSource = new File(new File(tempFolder, SimParam.LOG_FOLDER), SimParam.LOG_SOURCE_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
-					logDestination = new File(currentFolder, baseFileName + "_" + i + "_" + SimParam.LOG_DESTINATION_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
+					logDestination = new File(folder, baseFileName + "_" + i + "_" + SimParam.LOG_DESTINATION_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
 					try {
 						Files.copy(logSource.toPath(), logDestination.toPath());
 					} catch (IOException e1) {

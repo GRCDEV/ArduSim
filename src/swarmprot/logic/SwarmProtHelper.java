@@ -6,6 +6,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 import org.javatuples.Pair;
@@ -20,7 +21,10 @@ import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param;
 import main.Text;
+import main.Tools;
+import sim.board.BoardParam;
 import sim.logic.SimParam;
+import swarmprot.gui.SwarmConfig;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
 import uavController.UAVParam;
 
@@ -52,12 +56,17 @@ public class SwarmProtHelper {
 	}
 
 	/** Launch Listener and Talker threads of each UAV */
-	public static void startSwarmThreads() throws SocketException, UnknownHostException {
+	public static void startSwarmThreads() {
+		try {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			(new Listener(i)).start();
 			(new Talker(i)).start();
 		}
 		SwarmHelper.log(SwarmProtText.ENABLING);
+		}catch(SocketException | UnknownHostException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	/** Get the position on the map of the drones, in simulation mode */
@@ -69,11 +78,11 @@ public class SwarmProtHelper {
 		waypoint1 = waypoint2 = null;
 		int waypoint1pos = 0;
 		boolean waypointFound;
-
-		if (UAVParam.missionGeoLoaded != null && UAVParam.missionGeoLoaded[SwarmProtParam.posMaster] != null) {
+		List<Waypoint>[] missions = API.getLoadedMissions();
+		if (missions != null && missions[SwarmProtParam.posMaster] != null) {
 			waypointFound = false;
-			for (int j = 0; j < UAVParam.missionGeoLoaded[SwarmProtParam.posMaster].size() && !waypointFound; j++) {
-				waypoint1 = UAVParam.missionGeoLoaded[SwarmProtParam.posMaster].get(j);
+			for (int j = 0; j < missions[SwarmProtParam.posMaster].size() && !waypointFound; j++) {
+				waypoint1 = missions[SwarmProtParam.posMaster].get(j);
 				if (waypoint1.getLatitude() != 0 || waypoint1.getLongitude() != 0) {
 					waypoint1pos = j;
 					waypointFound = true;
@@ -83,9 +92,9 @@ public class SwarmProtHelper {
 				GUIHelper.exit(Text.UAVS_START_ERROR_6 + " " + Param.id[SwarmProtParam.posMaster]);
 			}
 			waypointFound = false;
-			for (int j = waypoint1pos + 1; j < UAVParam.missionGeoLoaded[SwarmProtParam.posMaster].size()
+			for (int j = waypoint1pos + 1; j < missions[SwarmProtParam.posMaster].size()
 					&& !waypointFound; j++) {
-				waypoint2 = UAVParam.missionGeoLoaded[SwarmProtParam.posMaster].get(j);
+				waypoint2 = missions[SwarmProtParam.posMaster].get(j);
 				if (waypoint2.getLatitude() != 0 || waypoint2.getLongitude() != 0) {
 					waypointFound = true;
 				}
@@ -130,7 +139,7 @@ public class SwarmProtHelper {
 			if (Param.id[i] == SwarmProtParam.idMaster) {
 
 				/** We create a list with the points of the mission */
-				List<WaypointSimplified> listOfPoints = UAVParam.missionUTMSimplified.get(SwarmProtParam.posMaster);
+				List<WaypointSimplified> listOfPoints = API.getUAVMissionSimplified(SwarmProtParam.posMaster);
 
 				for (int j = 1; j < listOfPoints.size(); j++) {
 					/** We obtain each of those points that are given in X and Y */
@@ -139,7 +148,7 @@ public class SwarmProtHelper {
 					/** They are converted to Geometrical coordinates */
 					GeoCoordinates pointMasterGEO = GUIHelper.UTMToGeo(pointMasterxy.x, pointMasterxy.y);
 
-					API.moveUAV(SwarmProtParam.posMaster, pointMasterGEO, (float) pointMasterxy.z, SwarmProtParam.distToAcceptPointReached);
+					API.moveUAV(SwarmProtParam.posMaster, pointMasterGEO, (float) pointMasterxy.z, SwarmProtParam.distToAcceptPointReached, 0.05);
 				}
 
 			}
@@ -187,14 +196,14 @@ public class SwarmProtHelper {
 	 * <p>Usefull when starting on the ground, on stabilize flight mode
 	 * <p>Do not modify this method. */
 	public static void takeOffIndividual(int numUAV) {
-			//Se lanza el despegue a la altura del punto intermedio
-			UAVParam.takeOffAltitude[numUAV] = Listener.takeOffAltitudeStepOne;
-			if (!API.setMode(numUAV, UAVParam.Mode.GUIDED) || !API.armEngines(numUAV) || !API.doTakeOff(numUAV)) {
+			//Taking Off to first altitude step
+			double targetAltitude = Listener.takeOffAltitudeStepOne;
+			if (!API.setMode(numUAV, UAVParam.Mode.GUIDED) || !API.armEngines(numUAV) || !API.doTakeOff(numUAV, targetAltitude)) {
 				GUIHelper.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
 			}
 
 		// The application must wait until all UAVs reach the planned altitude
-			while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * UAVParam.takeOffAltitude[numUAV]) {
+			while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * targetAltitude) {
 				if (Param.VERBOSE_LOGGING) {
 					MissionHelper.log(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
 							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
@@ -294,6 +303,42 @@ public class SwarmProtHelper {
 	}
 
 	
+	public static void openSwarmConfigurationDialog() {
+		SwarmProtParam.idMaster = SwarmProtParam.idMasterSimulation;
+		
+		SwarmConfig dialog = new SwarmConfig();
+		
+	}
 	
+	public static boolean loadMission() {
+		// Only the master UAV has a mission
+		boolean b = false;
+		/** You get the id = MAC for real drone */
+		for (int i = 0; i < SwarmProtParam.MACId.length; i++) {
+			if (SwarmProtParam.MACId[i] == Param.id[SwarmProtParam.posMaster]) {
+				SwarmProtParam.idMaster = Param.id[SwarmProtParam.posMaster];
+				return b = true;
+			}
+		}
+		return b;
+	}
+	
+	public static boolean sendBasicSwarmConfig(int numUAV) {
+		boolean success = true;
+		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+			success = false;
+			// Erases, sends and retrieves the planned mission. Blocking procedure
+			if (API.clearMission(numUAV) && API.sendMission(numUAV, API.getLoadedMissions()[numUAV])
+					&& API.retrieveMission(numUAV) && API.setCurrentWaypoint(numUAV, 0)) {
+				Param.numMissionUAVs.incrementAndGet();
+				if (!Param.IS_REAL_UAV) {
+					BoardParam.rescaleQueries.incrementAndGet();
+				}
+				success = true;
+			}
+		}
+
+		return success;
+	}
 
 }

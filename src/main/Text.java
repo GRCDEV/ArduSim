@@ -73,8 +73,8 @@ public class Text {
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
 	
 	public static final String TOT_SENT_PACKETS = "Total sent packets:";
-	public static final String TOT_WAITED_PREV_SENDING = "Waited the previous packet to be sent:";
-	public static final String TOT_WAITED_MEDIA_AVAILABLE = "Waited the media to be available (carrier sensing):";
+	public static final String TOT_WAITED_PREV_SENDING = "Waiting for the previous packet to be sent:";
+	public static final String TOT_WAITED_MEDIA_AVAILABLE = "Waiting the media to be available (carrier sensing):";
 	public static final String TOT_EQUIVALENT_RECEIVED = "Potentially received packets:";
 	public static final String TOT_OUT_OF_RANGE = "Not received due to range:";
 	public static final String TOT_LOST_RECEIVER_WAS_SENDING = "Not received because the receiver was sending:";
@@ -83,7 +83,7 @@ public class Text {
 	public static final String TOT_RECEIVED = "Received packets:";
 	public static final String TOT_REMAINING_IN_BUFFER = "Remaining in buffers:";
 	public static final String TOT_PROCESSED = "Processed:";
-	public static final String TOT_DISCARDED_FOR_COLLISION = "Discarded for collisions:";
+	public static final String TOT_DISCARDED_FOR_COLLISION = "Discarded due to collisions:";
 	public static final String TOT_ENQUEUED_OK = "Valid and used:";
 	
 	
@@ -213,6 +213,7 @@ public class Text {
 	public static final String RESULTS_TITLE = "Results";
 	public static final String RESULTS_DIALOG_TITLE = "Select destination";
 	public static final String RESULTS_DIALOG_SELECTION = "Text files";
+	public static final String CONFIGURATION = "configuration";
 	
 	// Closing dialog
 	public static final String CLOSING_QUESTION = "Do you really want to close " + Text.APP_NAME + "?";

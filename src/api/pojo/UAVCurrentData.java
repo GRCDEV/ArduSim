@@ -3,6 +3,7 @@ package api.pojo;
 import java.awt.geom.Point2D;
 
 import org.javatuples.Quintet;
+import org.javatuples.Triplet;
 
 import uavController.UAVParam;
 
@@ -14,13 +15,14 @@ public class UAVCurrentData {
 	private Point2D.Double locationGeo;	// (degrees) longitude,latitude coordinates (x=longitude)
 	private Point2D.Double locationUTM;	// (m) X,Y UTM coordinates
 	private double z, zRelative;		// (m) Altitude
-	private double speed;				// (m/s) Currrent speed
+	private Triplet<Double, Double, Double> speed;	// (m/s) Current speed in the three axes
+	private double groundSpeed;			// (m/s) Currrent ground speed
 	private double acceleration;		// (m/s^2) Current acceleration
 	private double heading;				// (rad) Current heading
 
 	/** Updates the UAV object data. */
 	public synchronized void update(long time, Point2D.Double locationGeo, Point2D.Double locationUTM, double z,
-			double zRelative, double speed, double heading) {
+			double zRelative, Triplet<Double, Double, Double> speed, double groundSpeed, double heading) {
 		this.locationGeo = locationGeo;
 		this.locationUTM = locationUTM;
 		this.z = z;
@@ -28,12 +30,13 @@ public class UAVCurrentData {
 
 		double acceleration;
 		if (this.time != 0) {
-			acceleration = (speed - this.speed)/(time - this.time)*1000000000l;
+			acceleration = (groundSpeed - this.groundSpeed)/(time - this.time)*1000000000l;
 		} else {
 			acceleration = 0.0;
 		}
 		this.time = time;
 		this.speed = speed;
+		this.groundSpeed = groundSpeed;
 		this.heading = heading;
 
 		// Filtering the acceleration
@@ -61,7 +64,7 @@ public class UAVCurrentData {
 	 * <p>double. Speed.
 	 * <p>double. Acceleration. */
 	public synchronized Quintet<Long, java.awt.geom.Point2D.Double, Double, Double, Double> getData() {
-		return Quintet.with(this.time, this.locationUTM, this.z, this.speed, this.acceleration);
+		return Quintet.with(this.time, this.locationUTM, this.z, this.groundSpeed, this.acceleration);
 	}
 
 	/** Returns the current location in UTM coordinates (x,y). */
@@ -87,8 +90,13 @@ public class UAVCurrentData {
 		return this.z;
 	}
 
-	/** Returns the current speed (m/s). */
+	/** Returns the current ground speed (m/s). */
 	public synchronized double getSpeed() {
+		return this.groundSpeed;
+	}
+	
+	/** Returns the current speed in the three axes (m/s). */
+	public synchronized Triplet<Double, Double, Double> getSpeeds() {
 		return this.speed;
 	}
 	

@@ -12,9 +12,10 @@ public class SwarmProtParam {
 	public static final int ALTITUDE_WAIT = 500; // Time between checks while take off (ms)
 	public static double[] initial_speeds; // (m/s) Initial UAVs speed
 	public static double masterHeading; // Master UAV Heading
-	public static int initialDistanceBetweenUAV = 2; // Initial distance between uav's on simulation
+	// Ground
+	public static int initialDistanceBetweenUAV = 1; // Initial distance between uav's on simulation
+	// Air
 	public static int initialDistanceBetweenUAVreal = 5; // Initial distance between uav's on real flight
-	public static int firstStepAltitude = 3; // Altitude for the first step of take off
 
 	// TCP parameters
 	public static final int DGRAM_MAX_LENGTH = 1472; // (B) 1500-20-8 (MTU - IP - UDP)
@@ -32,49 +33,52 @@ public class SwarmProtParam {
 	// Waiting time in listening or reading threads
 	public static final int waitState = 250;
 	
-	//Wait between ACK
+	// Wait between ACK
 	public static int swarmStateWait = 200; // (ms) Time between sends
-	
-	//Broadcast MAC comes from FFFFFFFFFFFF MAC address
+	 
+	// Broadcast MAC comes from FFFFFFFFFFFF MAC address
 	public static final long broadcastMAC = 281474976710655L;
 	
-	//Maximum number of waypoints
+	// Maximum number of waypoints
 	public static final int maxWaypoints = 60;
 	
-	//Maximum number of waypoints reached
+	// Maximum number of waypoints reached
 	public static final String maxWpMes = "Maximum number of waypoints reached, please use less than 60";
 	
-	//Matriz con missiones individuales de cada Dron
+	// Matrix with individual missions of each Drone UTM
 	public static Point3D[][] flightListPersonalized;
 	public static Double[][] flightListPersonalizedAlt;
 	
-	//Matriz con missiones individuales de cada Dron
+	// Matrix with individual missions of each Drone GEO
 	public static GeoCoordinates[][] flightListPersonalizedGeo;
 	public static Double[][] flightListPersonalizedAltGeo;
 	
-	//Matriz con numero de UAV y su idPrev y idNext en ese orden
+	// Matrix with UAV number and its idPrev and idNext in that order
 	public static long[][] fightPrevNext;
 	
-	//Matriz con detección de ultimo punto de la Mission
+	// Matrix with detection of the last point of the Mission
 	public static boolean[][] WpLast;
 	
-	//Distancia respecto al WP destino en la cual se acepta como que ha llegado a dicho punto (meters)
+	// Distance between WP destination in which it is accepted as having arrived at said point (meters)
 	public static final double acceptableRadiusDistanceWP = 2.0;
 	
-	//Distancia respecto del suelo para concluir que el experimento ha acabado
+	// Distance from the ground to conclude that the experiment has finished
 	public static final int landingAtiFinal = 1;
 	
-	//Velocidad maxima a la que se puede ir para determinar que esta aterrizado (m/s)
+	// Maximum speed at which you can go to determine if is landed (m / s)
 	public static final double speedLanding = 0.2;
 	
-	// Tiempo que espera el maestro a los esclavos en la fase START
-	public static final int waitTimeForSlaves = 20000;
+	// Time the master waits for the slaves in the START phase
+	public static final int waitTimeForSlaves = 3000;
 	
-	//
+	// Heading of the mission
 	public static double missionHeading = 0;
 	
 	// Distance from which it is accepted that you have reached the WP
 	public static double distToAcceptPointReached = 1.0;
+	
+	// Timeout for sending methods (ms), like TCP/IP
+	public static final int timeoutSendingShort = 2000;
 
 
 	// SwarmProt finite state machine states enumerator

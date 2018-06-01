@@ -25,6 +25,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import api.API;
 import api.GUIHelper;
 import api.MissionHelper;
 import api.pojo.Waypoint;
@@ -125,7 +126,7 @@ public class ConfigDialogPanel extends JPanel {
 							}
 							// Clear the missions and the number of UAV
 							missionsTextField.setText("");
-							UAVParam.missionGeoLoaded = null;
+							API.setLoadedMissions(null);
 							UAVsComboBox.removeAllItems();
 						}
 					});
@@ -216,9 +217,10 @@ public class ConfigDialogPanel extends JPanel {
 							if (UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
 								int numUAVs = -1;
 								if (Param.simulationIsMissionBased) {
-									if (UAVParam.missionGeoLoaded != null
-											&& UAVParam.missionGeoLoaded.length > 0) {
-										numUAVs = Math.min(UAVParam.missionGeoLoaded.length, UAVParam.initialSpeeds.length);
+									List<Waypoint>[] missions = API.getLoadedMissions();
+									if (missions != null
+											&& missions.length > 0) {
+										numUAVs = Math.min(missions.length, UAVParam.initialSpeeds.length);
 										numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
 									}
 								} else {
@@ -315,14 +317,14 @@ public class ConfigDialogPanel extends JPanel {
 							return;
 						}
 						// Missions are stored
-						UAVParam.missionGeoLoaded = lists;
+						API.setLoadedMissions(lists);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								missionsTextField.setText(selection[0].getAbsolutePath());
 								// Update UAVs combobox if arducopter and speeds are already loaded
 								if (SimParam.sitlPath != null
 										&& UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
-									int numUAVs = Math.min(UAVParam.missionGeoLoaded.length, UAVParam.initialSpeeds.length);
+									int numUAVs = Math.min(API.getLoadedMissions().length, UAVParam.initialSpeeds.length);
 									numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
 									UAVsComboBox.removeAllItems();
 									for (int i = 0; i < numUAVs; i++) {
@@ -350,7 +352,7 @@ public class ConfigDialogPanel extends JPanel {
 						// If no valid missions were found, just ignore the action
 						if (j == 0) {
 							GUIHelper.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
-							UAVParam.missionGeoLoaded = null;
+							API.setLoadedMissions(null);
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
 									UAVsComboBox.removeAllItems();
@@ -371,7 +373,7 @@ public class ConfigDialogPanel extends JPanel {
 							}
 						}
 						// The missions are stored
-						UAVParam.missionGeoLoaded = lists;
+						API.setLoadedMissions(lists);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								missionsTextField.setText(chooser.getCurrentDirectory().getAbsolutePath());
@@ -379,7 +381,7 @@ public class ConfigDialogPanel extends JPanel {
 								// Update UAVs combobox if arducopter and speeds are already loaded
 								if (SimParam.sitlPath != null
 										&& UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
-									int numUAVs = Math.min(UAVParam.missionGeoLoaded.length, UAVParam.initialSpeeds.length);
+									int numUAVs = Math.min(API.getLoadedMissions().length, UAVParam.initialSpeeds.length);
 									numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
 									UAVsComboBox.removeAllItems();
 									for (int i = 0; i < numUAVs; i++) {
@@ -458,9 +460,10 @@ public class ConfigDialogPanel extends JPanel {
 							if (SimParam.sitlPath != null) {
 								int numUAVs = -1;
 								if (Param.simulationIsMissionBased) {
-									if (UAVParam.missionGeoLoaded != null
-											&& UAVParam.missionGeoLoaded.length > 0) {
-										numUAVs = Math.min(UAVParam.missionGeoLoaded.length, UAVParam.initialSpeeds.length);
+									List<Waypoint>[] missions = API.getLoadedMissions();
+									if (missions != null
+											&& missions.length > 0) {
+										numUAVs = Math.min(missions.length, UAVParam.initialSpeeds.length);
 										numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
 									}
 								} else {

@@ -390,11 +390,14 @@ public class MissionHelper {
 		boolean waypointFound;
 		UTMCoordinates p1UTM, p2UTM;
 		double incX, incY;
+		List<Waypoint>[] missions = API.getLoadedMissions();
+		List<Waypoint> mission;
 		for (int i = 0; i < Param.numUAVs; i++) {
-			if (UAVParam.missionGeoLoaded != null && UAVParam.missionGeoLoaded[i] != null) {
+			mission = missions[i];
+			if (mission != null) {
 				waypointFound = false;
-				for (int j=0; j<UAVParam.missionGeoLoaded[i].size() && !waypointFound; j++) {
-					waypoint1 = UAVParam.missionGeoLoaded[i].get(j);
+				for (int j=0; j<mission.size() && !waypointFound; j++) {
+					waypoint1 = mission.get(j);
 					if (waypoint1.getLatitude()!=0 || waypoint1.getLongitude()!=0) {
 						waypoint1pos = j;
 						waypointFound = true;
@@ -404,8 +407,8 @@ public class MissionHelper {
 					GUIHelper.exit(Text.UAVS_START_ERROR_6 + " " + Param.id[i]);
 				}
 				waypointFound = false;
-				for (int j=waypoint1pos+1; j<UAVParam.missionGeoLoaded[i].size() && !waypointFound; j++) {
-					waypoint2 = UAVParam.missionGeoLoaded[i].get(j);
+				for (int j=waypoint1pos+1; j<mission.size() && !waypointFound; j++) {
+					waypoint2 = mission.get(j);
 					if (waypoint2.getLatitude()!=0 || waypoint2.getLongitude()!=0) {
 						waypointFound = true;
 					}
@@ -453,10 +456,9 @@ public class MissionHelper {
 		boolean success = false;
 		// Erases, sends and retrieves the planned mission. Blocking procedure
 		if (API.clearMission(numUAV)
-				&& API.sendMission(numUAV, UAVParam.missionGeoLoaded[numUAV])
-				&& API.getMission(numUAV)
+				&& API.sendMission(numUAV, API.getLoadedMissions()[numUAV])
+				&& API.retrieveMission(numUAV)
 				&& API.setCurrentWaypoint(numUAV, 0)) {
-			MissionHelper.simplifyMission(numUAV);
 			Param.numMissionUAVs.incrementAndGet();
 			if (!Param.IS_REAL_UAV) {
 				BoardParam.rescaleQueries.incrementAndGet();
@@ -464,58 +466,6 @@ public class MissionHelper {
 			success = true;
 		}
 		return success;
-	}
-	
-	/** Creates the simplified mission shown on screen, and forces view to rescale.
-	 * <p>Do not modify this method. */
-	public static void simplifyMission(int numUAV) {
-		List<WaypointSimplified> missionUTMSimplified = new ArrayList<WaypointSimplified>();
-	
-		// Hypothesis:
-		//   The first take off waypoint retrieved from the UAV is used as "home"
-		//   The "home" coordinates are no modified along the mission
-		WaypointSimplified first = null;
-		boolean foundFirst = false;
-		Waypoint wp;
-		UTMCoordinates utm;
-		for (int i=0; i<UAVParam.currentGeoMission[numUAV].size(); i++) {
-			wp = UAVParam.currentGeoMission[numUAV].get(i);
-			switch (wp.getCommand()) {
-			case MAV_CMD.MAV_CMD_NAV_WAYPOINT:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_UNLIM:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_TURNS:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_TIME:
-			case MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT:
-			case MAV_CMD.MAV_CMD_PAYLOAD_PREPARE_DEPLOY:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_TO_ALT:
-			case MAV_CMD.MAV_CMD_NAV_LAND:
-				utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
-				WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
-				missionUTMSimplified.add(swp);
-				break;
-			case MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH:
-				if (!foundFirst) {
-					MissionHelper.log(Text.SIMPLIFYING_WAYPOINT_LIST_ERROR + Param.id[numUAV]);
-				} else {
-					WaypointSimplified s = new WaypointSimplified(wp.getNumSeq(),
-							first.x, first.y, UAVParam.RTLAltitude[numUAV]);
-					missionUTMSimplified.add(s);
-				}
-				break;
-			case MAV_CMD.MAV_CMD_NAV_TAKEOFF:
-				// The geographic coordinates have been set by the flight controller
-				utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
-				WaypointSimplified twp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
-				missionUTMSimplified.add(twp);
-				if (!foundFirst) {
-					utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
-					first = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
-					foundFirst = true;
-				}
-				break;
-			}
-		}
-		UAVParam.missionUTMSimplified.set(numUAV, missionUTMSimplified);
 	}
 	
 	/** Launch threads related to mission based protocols. */
@@ -565,7 +515,7 @@ public class MissionHelper {
 	 * <p>Do not modify this method. */
 	public static void detectMissionEnd() {
 		for (int i = 0; i < Param.numUAVs; i++) {
-			List<WaypointSimplified> mission = UAVParam.missionUTMSimplified.get(i);
+			List<WaypointSimplified> mission = API.getUAVMissionSimplified(i);
 			Mode mode = UAVParam.flightMode.get(i);
 			if (mission != null
 					&& mode != UAVParam.Mode.LAND_ARMED
@@ -579,7 +529,8 @@ public class MissionHelper {
 				}
 				
 				if (UAVParam.uavCurrentData[i].getUTMLocation().distance(mission.get(mission.size()-1)) < Param.LAST_WP_THRESHOLD) {
-					int command = UAVParam.currentGeoMission[i].get(UAVParam.currentGeoMission[i].size() - 1).getCommand();
+					List<Waypoint> missionGeo = API.getUAVMission(i);
+					int command = missionGeo.get(missionGeo.size() - 1).getCommand();
 					// There is no need of landing when the last waypoint is the command LAND or when it is RTL under some circumstances
 					if (command != MAV_CMD.MAV_CMD_NAV_LAND
 							&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[i] == 0)) {
@@ -650,7 +601,7 @@ public class MissionHelper {
 			sb = new StringBuilder(2000);
 			sb.append("._PLINE\n");
 			j = 0;
-			List<WaypointSimplified> missionUTMSimplified = UAVParam.missionUTMSimplified.get(i);
+			List<WaypointSimplified> missionUTMSimplified = API.getUAVMissionSimplified(i);
 			if (missionUTMSimplified != null) {
 				WaypointSimplified prev = null;
 				WaypointSimplified current;
@@ -675,14 +626,17 @@ public class MissionHelper {
 	 * <p>Usefull when starting on the ground, on stabilize flight mode
 	 * <p>Do not modify this method. */
 	public static void takeoff() {
+		List<Waypoint>[] missions = API.getLoadedMissions();
 		for (int i = 0; i < Param.numUAVs; i++) {
-			if (!API.setMode(i, UAVParam.Mode.GUIDED) || !API.armEngines(i) || !API.doTakeOff(i)) {
+			if (!API.setMode(i, UAVParam.Mode.GUIDED) || !API.armEngines(i) || !API.doTakeOff(i, missions[i].get(1).getAltitude())) {
 				GUIHelper.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[i]);
 			}
 		}
 		// The application must wait until all UAVs reach the planned altitude
+		double targetAltitude;
 		for (int i = 0; i < Param.numUAVs; i++) {
-			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * UAVParam.takeOffAltitude[i]) {
+			targetAltitude = missions[i].get(1).getAltitude();
+			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * targetAltitude) {
 				if (Param.VERBOSE_LOGGING) {
 					MissionHelper.log(SimParam.prefix[i] + Text.ALTITUDE_TEXT
 							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())

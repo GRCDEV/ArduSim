@@ -1,7 +1,6 @@
 package main;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
@@ -12,11 +11,13 @@ import javax.swing.SwingUtilities;
 
 import org.javatuples.Pair;
 
+import api.API;
 import api.GUIHelper;
 import api.MissionHelper;
 import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
 import api.pojo.Waypoint;
+import main.Param.Protocol;
 import main.Param.SimulatorState;
 import sim.board.BoardHelper;
 import sim.gui.ConfigDialog;
@@ -72,8 +73,7 @@ public class Main {
 				if (mission == null) {
 					GUIHelper.exit(Text.MISSION_NOT_FOUND);
 				}
-				UAVParam.missionGeoLoaded = new ArrayList[1];
-				UAVParam.missionGeoLoaded[0] = mission;
+				API.setLoadedMissions(new List[] {mission});
 			}
 			
 			// 4. Start threads for waiting to commands to start the setup and start steps of the experiment
@@ -349,6 +349,7 @@ public class Main {
 						
 						// 16. Waiting while the experiment is is progress and detecting the experiment end
 						int check = 0;
+						boolean checkEnd = false;
 						while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 							// Check the battery level periodically
 							if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
@@ -362,8 +363,14 @@ public class Main {
 								SwarmHelper.detectSwarmEnd();
 							}
 							// Detects if all UAVs are on the ground in order to finish the experiment
-							if (Tools.isTestFinished()) {
-								Param.simStatus = SimulatorState.TEST_FINISHED;
+							if (checkEnd) {
+								if (Tools.isTestFinished()) {
+									Param.simStatus = SimulatorState.TEST_FINISHED;
+								}
+							} else {
+								if (System.currentTimeMillis() - Param.startTime > Param.STARTING_TIMEOUT) {
+									checkEnd = true;
+								}
 							}
 							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 								GUIHelper.waiting(SimParam.LONG_WAITING_TIME);
@@ -385,16 +392,31 @@ public class Main {
 							// Gather information to show the results dialog
 							String res = null;//después terminar revisión interfaz prot y nombre clases
 							res = Tools.getTestResults();
-							if (Param.simulationIsMissionBased) {
-								res += MissionHelper.getMissionTestResults();
-							} else {
-								res += SwarmHelper.getSwarmTestResults();
+							if (Param.selectedProtocol != Protocol.NONE) {
+								String s = null;
+								if (Param.simulationIsMissionBased) {
+									s = MissionHelper.getMissionTestResults();
+								} else {
+									s = SwarmHelper.getSwarmTestResults();
+								}
+								if (s != null && s.length() > 0) {
+									res += "\n" + Param.selectedProtocol.getName() + ":\n\n";
+									res += s;
+								}
 							}
+							
 							res += Tools.getTestGlobalConfiguration();
-							if (Param.simulationIsMissionBased) {
-								res += MissionHelper.getMissionProtocolConfig();
-							} else {
-								res += SwarmHelper.getSwarmProtocolConfig();
+							if (Param.selectedProtocol != Protocol.NONE) {
+								String s = null;
+								if (Param.simulationIsMissionBased) {
+									s = MissionHelper.getMissionProtocolConfig();
+								} else {
+									s = SwarmHelper.getSwarmProtocolConfig();
+								}
+								if (s != null && s.length() > 0) {
+									res += "\n\n" + Param.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
+									res += s;
+								}
 							}
 
 							final String res2 = res;

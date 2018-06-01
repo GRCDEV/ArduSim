@@ -99,8 +99,6 @@ public class Waypoint implements Cloneable {
 	/** Generates a MAVLink message with this waypoint data. */
 	public msg_mission_item getMessage() {
 		msg_mission_item res = new msg_mission_item();
-		res.target_system = 1;
-		res.target_component = 1;
 		res.seq = this.numSeq;
 		res.frame = this.frame;
 		res.current = this.isCurrent;

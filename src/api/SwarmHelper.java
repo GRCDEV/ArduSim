@@ -13,6 +13,7 @@ import org.javatuples.Pair;
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
+import followme.logic.FollowMeHelper;
 import main.Param;
 import main.Tools;
 import pollution.PollutionHelper;
@@ -26,6 +27,7 @@ import swarm.SwarmText;
 import swarmprot.logic.SwarmProtHelper;
 import swarmprot.logic.SwarmProtParam;
 import uavController.UAVParam;
+import uavFishing.logic.UavFishingHelper;
 
 /**
  * This class consists exclusively of static methods that allow to launch
@@ -49,14 +51,7 @@ public class SwarmHelper {
 	public static boolean loadMission() {
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			// Only the master UAV has a mission
-			/** You get the id = MAC for real drone */
-			for (int i = 0; i < SwarmProtParam.MACId.length; i++) {
-				if (SwarmProtParam.MACId[i] == Param.id[SwarmProtParam.posMaster]) {
-					SwarmProtParam.idMaster = Param.id[SwarmProtParam.posMaster];
-					return true;
-				}
-			}
+			SwarmProtHelper.loadMission();
 		}
 
 		// Add here code to decide if the UAV has to load a mission, depending on the
@@ -73,31 +68,24 @@ public class SwarmHelper {
 		// or set Param.sim_status = SimulatorState.STARTING_UAVS to go to the next step
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			/** Si pongo una pantalla de preconfiguración, se hace aqui */
-
-			/** We load the file directly with the mission. In a future add menu */
-			List<Waypoint> mission = Tools.loadMission(GUIHelper.getCurrentFolder());
-
-			if (mission != null) {
-				/** The master is assigned the first mission in the list */
-				UAVParam.missionGeoLoaded = new ArrayList[Param.numUAVs];
-				UAVParam.missionGeoLoaded[SwarmProtParam.posMaster] = mission;
-
-			} else {
-				JOptionPane.showMessageDialog(null, Text.MISSIONS_ERROR_3, Text.MISSIONS_SELECTION_ERROR,
-						JOptionPane.WARNING_MESSAGE);
-
-				return;
-			}
-			SwarmProtParam.idMaster = SwarmProtParam.idMasterSimulation;
-
+			SwarmProtHelper.openSwarmConfigurationDialog();
 		}
 		// TODO
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.openConfigurationDialog();
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			SwarmHelper.log("SwarmConfigurationDialog --> Mas tarde");
+			FollowMeHelper.openFollowMeConfigurationDialog();
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			UavFishingHelper.openConfigurationDialog();
+		}
 
-		Param.simStatus = SimulatorState.STARTING_UAVS;
+		//TODO esto debera de hacerse dentro del OK del cuadro de configuracion del dialogo
+		if(Param.selectedProtocol != Protocol.SWARM_PROT_V1) {
+			Param.simStatus = SimulatorState.STARTING_UAVS;
+		}
 
 	}
 
@@ -114,6 +102,9 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.initializeDataStructures();
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			FollowMeHelper.initializeProtocolDataStructures();
+		}
 	}
 
 	/**
@@ -123,7 +114,10 @@ public class SwarmHelper {
 	public static void setSwarmProtocolInitialState(JLabel label) {
 
 		// Add here the initial value of the protocol in the progress dialog
-
+		//TODO el texto en SwarmText
+		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
+			label.setText("INICIO");
+		}
 	}
 
 	/**
@@ -206,6 +200,13 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			return PollutionHelper.getStartingLocation();
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			return FollowMeHelper.getSwarmStartingLocation();
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			return UavFishingHelper.getStartingLocation();
+		}
+		
 		
 		return null;
 
@@ -224,27 +225,20 @@ public class SwarmHelper {
 		boolean success = false;
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			success = true;
-			if (Param.id[numUAV] == SwarmProtParam.idMaster) {
-				success = false;
-				// Erases, sends and retrieves the planned mission. Blocking procedure
-				if (API.clearMission(numUAV) && API.sendMission(numUAV, UAVParam.missionGeoLoaded[numUAV])
-						&& API.getMission(numUAV) && API.setCurrentWaypoint(numUAV, 0)) {
-					MissionHelper.simplifyMission(numUAV);
-					Param.numMissionUAVs.incrementAndGet();
-					if (!Param.IS_REAL_UAV) {
-						BoardParam.rescaleQueries.incrementAndGet();
-					}
-					success = true;
-				}
-			}
-
-			// return success;
+			success = SwarmProtHelper.sendBasicSwarmConfig(numUAV);
 		}
 		
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			success = true;
 		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			// De momento nada
+			success = true;
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			success = UavFishingHelper.sendBasicConfig(numUAV);
+		}
+		
 		return success;
 	}
 
@@ -254,19 +248,16 @@ public class SwarmHelper {
 		// Add here to launch threads for any swarm protocol
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
-			try {
-				SwarmProtHelper.startSwarmThreads();
-			} catch (SocketException e) {
-				SwarmHelper.log(SwarmText.ERROR_SOCKET_CREATION);
-				e.printStackTrace();
-			} catch (UnknownHostException e) {
-				SwarmHelper.log(SwarmText.ERROR_IP_HOST);
-				e.printStackTrace();
-			}
+			SwarmProtHelper.startSwarmThreads();
 		}
-		
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.launchThreads();
+		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			FollowMeHelper.startFollowMeThreads();
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			UavFishingHelper.launchThreads();
 		}
 	}
 
@@ -278,6 +269,16 @@ public class SwarmHelper {
 
 		// Finally, change the simulator state
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
+//			Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
+		}
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+
+			
+			// Modo de vuelo Loiter / Loiter_Armed
+			// UAVParam.flightMode.set(0, Mode.LOITER);
+			Param.simStatus = SimulatorState.READY_FOR_TEST;
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
 			Param.simStatus = SimulatorState.READY_FOR_TEST;
 		}
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
@@ -298,8 +299,27 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
 			SwarmProtHelper.startSwarmTestActionPerformedV1();
 		}
+		
 		if (Param.selectedProtocol == Protocol.POLLUTION) {
 			PollutionHelper.startTestActionPerformed();
+		}
+
+		if (Param.selectedProtocol == Protocol.FOLLOW_ME_V1) {
+			// SwarmHelper.log("startSwarmTestActionPerformed ");
+			SwarmHelper.log("Ready for test...");
+			// Param.simStatus = SimulatorState.READY_FOR_TEST;
+
+			// Param.simStatus = SimulatorState.READY_FOR_TEST;
+			// Modo de vuelo Loiter / Loiter_Armed
+			// UAVParam.flightMode.set(0, Mode.LOITER);
+			if (!API.armEngines(0) || !API.setMode(0, UAVParam.Mode.LOITER) || !API.setThrottle(0)) {
+				// Tratar el fallo
+			}
+
+		}
+		if (Param.selectedProtocol == Protocol.UAVFISHING) {
+			
+			UavFishingHelper.startTestActionPerformed();
 		}
 
 	}

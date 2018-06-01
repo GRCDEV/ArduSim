@@ -55,6 +55,7 @@ public class Param {
 	public static volatile long startTime;	// (ms) experiment start in local time
 	public static long[] testEndTime;		// (ms) one UAV experiment finish in local time
 	public static long latestEndTime;		// (ms) experiment finish in local time
+	public static final long STARTING_TIMEOUT = 10000;	// (ms) Time to wait before checking if all UAVs are on the ground 
 
 	// Selected protocol
 	public static volatile Protocol selectedProtocol;
@@ -155,7 +156,8 @@ public class Param {
 		MBCAP_V4(4, MBCAPText.MBCAP_V4, true),	// v3 with a variable acceleration
 		SWARM_PROT_V1(5, SwarmProtText.PROTOCOL_TEXT, false),
 		FOLLOW_ME_V1(6, "Sigueme", false),
-		POLLUTION(7, "Pollución", false);
+		POLLUTION(7, "Pollución", false),
+		UAVFISHING(8, "UAV fishing", false);
 		// New protocols should follow the increasing numeration
 
 		private final int id;
