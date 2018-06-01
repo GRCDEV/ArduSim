@@ -183,6 +183,9 @@ public class UAVParam {
 	// Minumum base mode to assert that the UAV is flying
 	public static final int MIN_MODE_TO_BE_FLYING = 209;
 	
+	// Flight mode change timeout (since the command was accepted by the flight controller until that change is received through a heartbeat
+	public static final int MODE_CHANGE_TIMEOUT = 5000;	// (ms)
+	
 	// Auxiliary variable needed to ensure that the message thrown when the UAV gets to the end is shown only once
 	public static boolean[] lastWaypointReached;
 	
