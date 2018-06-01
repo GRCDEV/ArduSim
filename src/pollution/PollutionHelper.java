@@ -54,8 +54,7 @@ public class PollutionHelper {
 	
 	public static void startTestActionPerformed() {
 		/* Takeoff */
-		UAVParam.takeOffAltitude[0] = PollutionParam.altitude;
-		if (!API.setMode(0, UAVParam.Mode.GUIDED) || !API.armEngines(0) || !API.doTakeOff(0)) {
+		if (!API.setMode(0, UAVParam.Mode.GUIDED) || !API.armEngines(0) || !API.doTakeOff(0, PollutionParam.altitude)) {
 			GUIHelper.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[0]);
 		}
 		//API.moveUAV(0, PollutionParam.startLocation, (float) PollutionParam.altitude, 1.0);

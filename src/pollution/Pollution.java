@@ -21,7 +21,7 @@ public class Pollution extends Thread {
 		move(p.x, p.y);
 	}
 	void move(int x, int y) {
-		API.moveUAV(0, GUIHelper.UTMToGeo(origin.Easting + (x * PollutionParam.density), origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0);
+		API.moveUAV(0, GUIHelper.UTMToGeo(origin.Easting + (x * PollutionParam.density), origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
 	}
 	
 	//HashMap<Double, HashMap<Double, Double>> data;
@@ -111,7 +111,7 @@ public class Pollution extends Thread {
 						// Tumble
 						for(int i = -1; i < 2; i++)
 							for(int j = -1; j< 2; j++) {
-								if(sVisited.contains(p)) {}
+								//if(sVisited.contains(p)) {}
 							}
 					}
 				}
