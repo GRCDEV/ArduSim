@@ -280,6 +280,9 @@ public class SwarmHelper {
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
 			Param.simStatus = SimulatorState.READY_FOR_TEST;
 		}
+		if (Param.selectedProtocol == Protocol.POLLUTION) {
+			PollutionHelper.setupActionPerformed();
+		}
 	}
 
 	/** Starts the movement of each UAV of swarm protocols. */
@@ -294,6 +297,9 @@ public class SwarmHelper {
 
 		if (Param.selectedProtocol == Protocol.SWARM_PROT_V1) {
 			SwarmProtHelper.startSwarmTestActionPerformedV1();
+		}
+		if (Param.selectedProtocol == Protocol.POLLUTION) {
+			PollutionHelper.startTestActionPerformed();
 		}
 
 	}
