@@ -1,4 +1,4 @@
-package uavController;
+package api.pojo;
 
 public class RCValues {
 	public int roll, pitch, throttle, yaw;

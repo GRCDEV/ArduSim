@@ -10,7 +10,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 
-import api.GUIHelper;
+import api.GUI;
+import api.Tools;
 import main.Param;
 import main.Param.SimulatorState;
 import pccompanion.PCCompanionParam;
@@ -21,14 +22,14 @@ public class ExperimentListener extends Thread {
 	@Override
 	public void run() {
 		DatagramSocket receiveSocket = null;
-		byte[] receivedBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		byte[] receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		DatagramPacket receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
 		Input input = new Input(receivedBuffer);
 		try {
 			receiveSocket = new DatagramSocket(PCCompanionParam.UAV_PORT);
 			receiveSocket.setBroadcast(true);
 		} catch (SocketException e) {
-			GUIHelper.exit(Text.BIND_ERROR_1);
+			GUI.exit(Text.BIND_ERROR_1);
 		}
 		
 		while (true) {
@@ -67,7 +68,7 @@ public class ExperimentListener extends Thread {
 					}
 				} catch (KryoException e) {}
 			} catch (IOException e) {}
-			receivedBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+			receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 			receivedPacket.setData(receivedBuffer, 0, receivedBuffer.length);
 		}
 		input.close();

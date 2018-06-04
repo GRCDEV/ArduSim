@@ -1,5 +1,6 @@
 package followme.logic;
 
+import java.awt.Graphics2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -12,16 +13,32 @@ import javax.swing.JFileChooser;
 
 import org.javatuples.Pair;
 
-import api.SwarmHelper;
+import api.Copter;
+import api.GUI;
+import api.ProtocolHelper;
+import api.Tools;
+import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
-import main.Param;
+import sim.board.BoardPanel;
 
-public class FollowMeHelper {
+public class FollowMeHelper extends ProtocolHelper {
 
-	public static void openFollowMeConfigurationDialog() {
+	@Override
+	public void setProtocol() {
+		this.protocol = ProtocolHelper.Protocol.FOLLOW_ME_V1;
+	}
+	
+	@Override
+	public boolean loadMission() {
+		return false;
+	}
+
+	@Override
+	public void openConfigurationDialog() {
+		GUI.log("SwarmConfigurationDialog --> Mas tarde");
 		// Cargar fichero de logs msg
-		SwarmHelper.log("Cargando Archivo");
+		GUI.log("Cargando Archivo");
 
 		String SEPARATOR = ",";
 		String pathFile = "fileLogMsg/2018-2-15-14-30-48logs_msg.txt";
@@ -95,9 +112,10 @@ public class FollowMeHelper {
 		}
 
 		FollowMeParam.recurso.set(headingInterpolar(recurso));
-
+		
+		Tools.setProtocolConfigured(true);
 	}
-
+	
 	private static RecursoCompartido headingInterpolar(RecursoCompartido recurso) {
 		RecursoCompartido rc = null;
 		rc = recurso;
@@ -171,29 +189,32 @@ public class FollowMeHelper {
 		return rc;
 	}
 
-	public static void initializeProtocolDataStructures() {
 
-		FollowMeParam.uavs = new FollowMeState[Param.numUAVs];
+	@Override
+	public void initializeDataStructures() {
+		int numUAVs = Tools.getNumUAVs();
+		FollowMeParam.uavs = new FollowMeState[numUAVs];
 
-		for (int i = 0; i < Param.numUAVs; i++) {
+		for (int i = 0; i < numUAVs; i++) {
 			FollowMeParam.uavs[i] = FollowMeState.START;
-			SwarmHelper.setSwarmState(i, FollowMeParam.uavs[i].getName());
+			GUI.updateprotocolState(i, FollowMeParam.uavs[i].getName());
 
 		}
 
 		// Analyze which UAV is master
 		int posMaster = -1;
 		boolean realUAVisMaster = false;
-		if (Param.IS_REAL_UAV) {
+		if (Tools.isRealUAV()) {
+			long id = Tools.getIdFromPos(0);
 			for (int i = 0; i < FollowMeParam.MASTER_ID_REAL.length && !realUAVisMaster; i++) {
-				if (Param.id[0] == FollowMeParam.MASTER_ID_REAL[i]) {
+				if (id == FollowMeParam.MASTER_ID_REAL[i]) {
 					posMaster = i;
 					realUAVisMaster = true;
 				}
 			}
 		} else {
-			for (int i = 0; i < Param.numUAVs && posMaster == -1; i++) {
-				if (Param.id[i] == FollowMeParam.MASTER_ID_SIM) {
+			for (int i = 0; i < numUAVs && posMaster == -1; i++) {
+				if (Tools.getIdFromPos(i) == FollowMeParam.MASTER_ID_SIM) {
 					posMaster = i;
 				}
 			}
@@ -205,8 +226,53 @@ public class FollowMeHelper {
 		FollowMeParam.posFormacion = new ConcurrentHashMap<Integer, Integer>();
 	}
 
-	public static void startFollowMeThreads() {
-		if (Param.IS_REAL_UAV) {
+	@Override
+	public String setInitialState() {
+		// TODO 
+		return null;
+	}
+
+	@Override
+	public void rescaleDataStructures() {
+		// TODO 
+	}
+
+	@Override
+	public void loadResources() {
+		// TODO 
+	}
+	
+	@Override
+	public void rescaleShownResources() {
+		// TODO 
+	}
+
+	@Override
+	public void drawResources(Graphics2D g2, BoardPanel p) {
+		// TODO 
+	}
+
+	@Override
+	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
+		Pair<GeoCoordinates, Double>[] iniLocation = new Pair[Tools.getNumUAVs()];
+
+		iniLocation[0] = Pair.with(new GeoCoordinates(39.482588, -0.345971), 0.0);
+		iniLocation[1] = Pair.with(new GeoCoordinates(39.482111, -0.346857), 0.0);
+		for (int i = 1; i < Tools.getNumUAVs() - 1; i++) {
+			iniLocation[i + 1] = Pair.with(new GeoCoordinates(iniLocation[1].getValue0().latitude, /*- (0.00001 * i)*/
+					iniLocation[1].getValue0().longitude + (0.0002 * i)), 0.0);
+		}
+		return iniLocation;
+	}
+
+	@Override
+	public boolean sendInitialConfiguration(int numUAV) {
+		return true;
+	}
+
+	@Override
+	public void startThreads() {
+		if (Tools.isRealUAV()) {
 			if (FollowMeParam.realUAVisMaster) {
 //				MasterMando sendTh = new MasterMando();
 //				sendTh.start();
@@ -218,7 +284,7 @@ public class FollowMeHelper {
 //				followerTh.start();
 			}
 		} else {
-			for (int i = 0; i < Param.numUAVs; i++) {
+			for (int i = 0; i < Tools.getNumUAVs(); i++) {
 				if (i == FollowMeParam.posMaster) {
 					// SendOrderThread sendTh = new SendOrderThread();
 					// sendTh.start();
@@ -228,7 +294,7 @@ public class FollowMeHelper {
 					MasterTalker masterTalker = new MasterTalker(i);
 					MasterListener masterListener = new MasterListener(i);
 					MasterMando masterMando = new MasterMando();
-					SwarmHelper.log("Iniciando Master");
+					GUI.log("Iniciando Master");
 					masterTalker.start();
 					masterListener.start();
 					masterMando.start();
@@ -238,7 +304,7 @@ public class FollowMeHelper {
 					// followerTh.start();
 					SlaveTalker slaveTalker = new SlaveTalker(i);
 					SlaveListener slaveListener = new SlaveListener(i);
-					SwarmHelper.log("Iniciando Slave "+i);
+					GUI.log("Iniciando Slave "+i);
 					slaveTalker.start();
 					slaveListener.start();
 
@@ -253,20 +319,55 @@ public class FollowMeHelper {
 		// followerTh = new FollowerThread(i);
 		// followerTh.start();
 		// }
-
 	}
 
-	public static Pair<GeoCoordinates, Double>[] getSwarmStartingLocation() {
-		Pair<GeoCoordinates, Double>[] iniLocation = new Pair[Param.numUAVs];
+	@Override
+	public void setupActionPerformed() {
+		
+	}
 
-		iniLocation[0] = Pair.with(new GeoCoordinates(39.482588, -0.345971), 0.0);
-		iniLocation[1] = Pair.with(new GeoCoordinates(39.482111, -0.346857), 0.0);
-		for (int i = 1; i < Param.numUAVs - 1; i++) {
-			iniLocation[i + 1] = Pair.with(new GeoCoordinates(iniLocation[1].getValue0().latitude, /*- (0.00001 * i)*/
-					iniLocation[1].getValue0().longitude + (0.0002 * i)), 0.0);
+	@Override
+	public void startExperimentActionPerformed() {
+		// SwarmHelper.log("startSwarmTestActionPerformed ");
+		GUI.log("Ready for test...");
+		// Param.simStatus = SimulatorState.READY_FOR_TEST;
+
+		// Param.simStatus = SimulatorState.READY_FOR_TEST;
+		// Modo de vuelo Loiter / Loiter_Armed
+		// UAVParam.flightMode.set(0, Mode.LOITER);
+		if (!Copter.armEngines(0) || !Copter.setFlightMode(0, FlightMode.LOITER) || !Copter.setHalfThrottle(0)) {
+			// Tratar el fallo
 		}
-		return iniLocation;
-
 	}
 
+	@Override
+	public void forceExperimentEnd() {
+		// TODO 
+	}
+
+	@Override
+	public String getExperimentResults() {
+		// TODO 
+		return null;
+	}
+
+	@Override
+	public String getExperimentConfiguration() {
+		// TODO 
+		return null;
+	}
+
+	@Override
+	public void logData(String folder, String baseFileName) {
+		// TODO 
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }

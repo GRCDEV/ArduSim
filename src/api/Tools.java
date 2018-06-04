@@ -1,7 +1,9 @@
 package api;
 
-import java.awt.geom.Point2D;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -10,59 +12,395 @@ import java.math.RoundingMode;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.security.CodeSource;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.swing.JOptionPane;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.mavlink.messages.MAV_CMD;
+import org.mavlink.messages.MAV_FRAME;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import api.pojo.GeoCoordinates;
+import api.pojo.LogPoint;
 import api.pojo.UTMCoordinates;
+import api.pojo.Waypoint;
+import api.pojo.WaypointSimplified;
 import main.Main;
 import main.Param;
 import main.Param.SimulatorState;
-import sim.board.BoardHelper;
-import sim.logic.SimParam;
-import sim.logic.SimTools;
 import main.Text;
-import main.Tools;
+import sim.logic.SimParam;
+import uavController.UAVParam;
 
-/** This class consists exclusively of static methods that help the developer to validate and show information on screen. */
-
-public class GUIHelper {
-
-	/** Generates an error message dialog and exits the application. */
-	public static void exit(String message) {
-		if (Param.IS_REAL_UAV) {
-			System.out.println(Text.FATAL_ERROR + ": " + message);
-		} else {
-			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
-			if (Param.simStatus != SimulatorState.CONFIGURING
-				&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
-				Tools.closeSITL();
-			}
-		}
-		System.exit(1);
-	}
-
-	/** Warns the user with a dialog. */
-	public static void warn(String title, String message) {
-		JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
-	}
-
-	/** Formats time retrieved by System.curentTimeMillis(), from initial to final time, to h:mm:ss. */
-	public static String timeToString(long ini, long fin) {
-		long time = Math.abs(fin - ini);
-		long h = time/3600000;
-		time = time - h*3600000;
-		long m = time/60000;
-		time = time - m*60000;
-		long s = time/1000;
-		return h + ":" + String.format("%02d", m) + ":" + String.format("%02d", s);
+public class Tools {
+	
+	// TCP parameter: maximum size of the byte array used on messages
+	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
+	
+	/** Returns true if the protocol is running on an real UAV or false if a simulation is being performed. */
+	public static boolean isRealUAV() {
+		return Param.IS_REAL_UAV;
 	}
 	
-	/** Locates a UTM point on the screen, using the current screen scale. */
-	public static Point2D.Double locatePoint(double inUTMX, double inUTMY) {
-		return BoardHelper.locatePoint(inUTMX, inUTMY);
+	/** Returns the number of UAVs that are running on the same machine.
+	 * <p> 1 When running on a real UAV (arrays are of size 1 and numUAV==0).
+	 * <p> n When running a simulation on a PC. */
+	public static int getNumUAVs() {
+		return Param.numUAVs;
+	}
+	
+	/** Returns the ID of a UAV.
+	 * <p>On real UAV returns a value based on the MAC address.
+	 * <p>On virtual UAV returns the position of the UAV in the arrays used by the simulator. */
+	public static long getIdFromPos(int numUAV) {
+		return Param.id[numUAV];
+	}
+	
+	/** Use this function to assert that the configuration of the protocol has finished when the corresponding dialog is closed.
+	 * <p>In order the parameters of the protocol to work properly, please establish default values for all of them to be used automatically when ArduSim is loaded. */
+	public static void setProtocolConfigured(boolean isConfigured) {
+		Param.simStatus = SimulatorState.STARTING_UAVS;
+	}
+	
+	/** Returns true while the UAVs are starting and without valid coordinates. Phase 1. */
+	public static boolean areUAVsNotAvailable() {
+		return Param.simStatus == Param.SimulatorState.STARTING_UAVS
+				|| Param.simStatus == Param.SimulatorState.CONFIGURING_PROTOCOL
+				|| Param.simStatus == Param.SimulatorState.CONFIGURING;
+	}
+	
+	/** Returns true if the UAVs are available and ready for the setup step, which has not been started jet. Phase 2. */
+	public static boolean areUAVsReadyForSetup() {
+		return Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED;
+	}
+	
+	/** Returns true while the setup step is in progress. Phase 3. */
+	public static boolean isSetupInProgress() {
+		return Param.simStatus == Param.SimulatorState.SETUP_IN_PROGRESS;
+	}
+	
+	/** Returns true if the setup step has finished but the experiment has not started. Phase 4. */
+	public static boolean isSetupFinished() {
+		return Param.simStatus == Param.SimulatorState.READY_FOR_TEST;
+	}
+	
+	/** Returns true while the experiment is in progress. */
+	public static boolean isExperimentInProgress() {
+		return Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS;
+	}
+	
+	/** Returns true if the experiment is finished. */
+	public static boolean isExperimentFinished() {
+		return Param.simStatus == Param.SimulatorState.TEST_FINISHED;
+	}
+	
+	/** Loads missions from a Google Earth kml file.
+	 * <p>Returns null if the file is not valid or it is empty. */
+	@SuppressWarnings("unchecked")
+	public static List<Waypoint>[] loadXMLMissionsFile(File xmlFile) {
+		List<Waypoint>[] missions;
+		try {
+			Waypoint wp;
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			Document doc = dBuilder.parse(xmlFile);
+			doc.getDocumentElement().normalize();
+			NodeList nList = doc.getElementsByTagName(Text.LINE_TAG);
+			if (nList.getLength()==0) {
+				GUI.log(Text.XML_PARSING_ERROR_1);
+				return null;
+			}
+	
+			missions = new ArrayList[nList.getLength()];
+			String[][] lines = new String[nList.getLength()][];
+			// One UAV per line
+			String[] aux;
+			double lat, lon, z;
+			for (int i = 0; i < nList.getLength(); i++) {
+				Node nNode = nList.item(i);
+				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+					Element eElement = (Element) nNode;
+					lines[i] = eElement.getElementsByTagName(Text.COORDINATES_TAG).item(0).getTextContent().trim().split(" ");
+					// Check if there are at least two coordinates to define a mission
+					if (lines[i].length<2) {
+						GUI.log(Text.XML_PARSING_ERROR_2 + " " + (i+1));
+						return null;
+					}
+					missions[i] = new ArrayList<>(lines[i].length+2); // Adding fake home, and substitute first real waypoint with take off
+					// Add a fake waypoint for the home position (essential but ignored by the flight controller)
+					wp = new Waypoint(0, true, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 0, 1);
+					missions[i].add(wp);
+					// Check the coordinate triplet format
+					for (int j=0; j<lines[i].length; j++) {
+						aux = lines[i][j].split(",");
+						if (aux.length!=3) {
+							GUI.log(Text.XML_PARSING_ERROR_3);
+							return null;
+						}
+						try {
+							lon = Double.parseDouble(aux[0].trim());
+							lat = Double.parseDouble(aux[1].trim());
+							//  Usually, Google Earth sets z=0
+							z = Double.parseDouble(aux[2].trim());
+							if (z==0) {
+								//  Default flying altitude
+								z = UAVParam.MIN_FLYING_ALTITUDE;
+							}
+							// Waypoint 0 is home and current
+							// Waypoint 1 is take off
+							if (j==0) {
+								if (Param.IS_REAL_UAV) {
+									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
+									missions[i].add(wp);
+									wp = new Waypoint(2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											lat, lon, z, 1);
+									missions[i].add(wp);
+								} else {
+									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, lat, lon, z, 1);
+									missions[i].add(wp);
+								}
+							} else {
+								if (Param.IS_REAL_UAV) {
+									wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											lat, lon, z, 1);
+									missions[i].add(wp);
+								} else {
+									wp = new Waypoint(j+1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											lat, lon, z, 1);
+									missions[i].add(wp);
+								}
+							}
+						} catch (NumberFormatException e) {
+							GUI.log(Text.XML_PARSING_ERROR_4 + " " + (i+1) + "/" + (j+1));
+							return null;
+						}
+					}
+				}
+			}
+			return missions;
+		} catch (ParserConfigurationException e) {
+		} catch (SAXException e) {
+		} catch (IOException e) {
+		}
+		return null;
 	}
 
+	/** Loads a mission from a standard QGroundControl file.
+	 * <p>Returns null if the file is not valid or it is empty. */
+	public static List<Waypoint> loadMissionFile(String path) {
+	
+		List<String> list = new ArrayList<>();
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				list.add(line);
+		    }
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		// Check if there are at least take off and a waypoint to define a mission (first line is header, and wp0 is home)
+		// During simulation an additional waypoint is needed in order to stablish the starting location
+		if (list==null || (Param.IS_REAL_UAV && list.size()<4) || (!Param.IS_REAL_UAV && list.size()<5)) {
+			GUI.log(Text.FILE_PARSING_ERROR_1);
+			return null;
+		}
+		// Check the header of the file
+		if (!list.get(0).trim().toUpperCase().equals(Text.FILE_HEADER)) {
+			GUI.log(Text.FILE_PARSING_ERROR_2);
+			return null;
+		}
+	
+		List<Waypoint> mission = new ArrayList<Waypoint>(list.size()-1);
+		Waypoint wp;
+		String[] line;
+		// One line per waypoint
+		// The first waypoint is supposed to be a fake point that will be ignored by the flight controller, but it is needed
+		wp = new Waypoint(0, true, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 0, 1);
+		mission.add(wp);
+		for (int i=2; i<list.size(); i++) { // After header and fake home lines
+			// Tabular delimited line
+			line = list.get(i).split("\t");
+			if (line.length!=12) {
+				GUI.log(Text.FILE_PARSING_ERROR_3 + " " + i);
+				return null;
+			}
+			int numSeq, frame, command;
+			double param1, param2, param3, param4, param5, param6, param7;
+			int autoContinue;
+			try {
+				numSeq = Integer.parseInt(line[0].trim());
+				frame = Integer.parseInt(line[2].trim());
+				command = Integer.parseInt(line[3].trim());
+				param1 = Double.parseDouble(line[4].trim());
+				param2 = Double.parseDouble(line[5].trim());
+				param3 = Double.parseDouble(line[6].trim());
+				param4 = Double.parseDouble(line[7].trim());
+				param5 = Double.parseDouble(line[8].trim());
+				param6 = Double.parseDouble(line[9].trim());
+				param7 = Double.parseDouble(line[10].trim());
+				autoContinue = Integer.parseInt(line[11].trim());
+				
+				if (numSeq + 1 != i) {
+					GUI.log(Text.FILE_PARSING_ERROR_6);
+					return null;
+				}
+				
+				if (numSeq == 1) {
+					if ((frame != MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT
+							|| command != MAV_CMD.MAV_CMD_NAV_TAKEOFF
+							|| (Param.IS_REAL_UAV && param7 <= 0))) {
+						GUI.log(Text.FILE_PARSING_ERROR_5);
+						return null;
+					}
+					wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+					mission.add(wp);
+				} else {
+					if (Param.IS_REAL_UAV) {
+						wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+						mission.add(wp);
+					} else {
+						if (numSeq == 2) {
+							// Set takeoff coordinates from the first wapoint that has coordinates
+							wp = mission.get(mission.size()-1);
+							wp.setLatitude(param5);
+							wp.setLongitude(param6);
+							wp.setAltitude(param7);
+						} else {
+							numSeq = numSeq - 1;
+							wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+							mission.add(wp);
+						}
+					}
+				}
+			} catch (NumberFormatException e1) {
+				GUI.log(Text.FILE_PARSING_ERROR_4 + " " + i);
+				return null;
+			}
+		}
+		return mission;
+	}
+
+	/** Loads the first mission found in a folder.
+	 * <p>Priority loading: 1st xml file, 2nd QGRoundControl file, 3rd txt file.
+	 * <p>Only the first valid file/mission found is used.
+	 * <p>Returns null if no valid mission was found. */
+	public static List<Waypoint> loadMission(File parentFolder) {
+		// 1. kml file case
+		File[] files = parentFolder.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_KML) && pathname.isFile();
+			}
+		});
+		if (files != null && files.length>0) {
+			// Only one kml file must be on the current folder
+			if (files.length>1) {
+				GUI.exit(Text.MISSIONS_ERROR_6);
+			}
+			List<Waypoint>[] missions = loadXMLMissionsFile(files[0]);
+			if (missions != null && missions.length>0) {
+				GUI.log(Text.MISSION_XML_SELECTED + " " + files[0].getName());
+				return missions[0];
+			}
+		}
+		
+		// 2. kml file not found or not valid. waypoints file case
+		files = parentFolder.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_WAYPOINTS) && pathname.isFile();
+			}
+		});
+		List<Waypoint> mission;
+		if (files != null && files.length>0) {
+			// Only one waypoints file must be on the current folder
+			if (files.length>1) {
+				GUI.exit(Text.MISSIONS_ERROR_7);
+			}
+			mission = loadMissionFile(files[0].getAbsolutePath());
+			if (mission != null) {
+				GUI.log(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
+				return mission;
+			}
+		}
+		
+		// 3. waypoints file not found or not valid. txt file case
+		files = parentFolder.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_TXT) && pathname.isFile();
+			}
+		});
+		if (files != null && files.length>0) {
+			// Not checking single txt file existence, as other file types can use the same extension
+			mission = loadMissionFile(files[0].getAbsolutePath());
+			if (mission != null) {
+				GUI.log(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
+				return mission;
+			}
+		}
+		return null;
+	}
+	
+	/** Sets the loaded missions from file/s for the UAVs, in geographic coordinates.
+	 * <p>Missions must be loaded and set in the protocol configuration dialog when needed.*/
+	public static void setLoadedMissionsFromFile(List<Waypoint>[] missions) {
+		UAVParam.missionGeoLoaded = missions;
+	}
+	
+	/** Provides the missions loaded from files in geographic coordinates.
+	 * <p>Mission only available once they has been loaded.
+	 * <p>Returns null if not available.*/
+	public static List<Waypoint>[] getLoadedMissions() {
+		return UAVParam.missionGeoLoaded;
+	}
+
+	/** Provides the mission currently stored in the UAV in geographic coordinates.
+	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/
+	public static List<Waypoint> getUAVMission(int numUAV) {
+		return UAVParam.currentGeoMission[numUAV];
+	}
+
+	/** Provides the simplified mission shown in the screen in UTM coordinates.
+	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/ 
+	public static List<WaypointSimplified> getUAVMissionSimplified(int numUAV) {
+		return UAVParam.missionUTMSimplified.get(numUAV);
+	}
+	
+	/** Advises if the collision check is enabled or not. */
+	public static boolean isCollisionCheckEnabled() {
+		return UAVParam.collisionCheckEnabled;
+	}
+	
+	/** Provides the maximum ground distance between two UAVs to assert that a collision has happened. */
+	public static double getCollisionHorizontalDistance() {
+		return UAVParam.collisionDistance;
+	}
+	
+	/** Provides the maximum vertical distance between two UAVs to assert that a collision has happened. */
+	public static double getCollisionVerticalDistance() {
+		return UAVParam.collisionAltitudeDifference;
+	}
+	
+	/** Advises when at least one collision between UAVs has happened. */
+	public static boolean isCollisionDetected() {
+		return UAVParam.collisionDetected;
+	}
+	
 	/** Transforms UTM coordinates to Geographic coordinates. 
 	 *  <p>Example: Tools.UTMToGeo(312915.84, 4451481.33).
 	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, in order to get the zone and the letter of the UTM projection, available on GUIParam.zone and GUIParam.letter. */
@@ -130,7 +468,18 @@ public class GUIHelper {
 		
 		return new UTMCoordinates(Easting, Northing, Zone, Letter);
 	}
-	
+
+	/** Formats time retrieved by System.curentTimeMillis(), from initial to final time, to h:mm:ss. */
+	public static String timeToString(long start, long end) {
+		long time = Math.abs(end - start);
+		long h = time/3600000;
+		time = time - h*3600000;
+		long m = time/60000;
+		time = time - m*60000;
+		long s = time/1000;
+		return h + ":" + String.format("%02d", m) + ":" + String.format("%02d", s);
+	}
+
 	/** Round a double number to "places" decimal digits. */
 	public static double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
@@ -205,9 +554,9 @@ public class GUIHelper {
 	public static File getCurrentFolder() {
 		Class<Main> c = main.Main.class;
 		CodeSource codeSource = c.getProtectionDomain().getCodeSource();
-
+	
 		File jarFile = null;
-
+	
 		if (codeSource != null && codeSource.getLocation() != null) {
 			try {
 				jarFile = new File(codeSource.getLocation().toURI());
@@ -227,7 +576,7 @@ public class GUIHelper {
 		}
 		return jarFile.getParentFile();
 	}
-	
+
 	/** Gets the file extension
 	 * <p>Returns empty String if there is not file extension */
 	public static String getFileExtension(File file) {
@@ -258,31 +607,13 @@ public class GUIHelper {
 			}
 		}
 	}
-
-	/** Checks if the data packet must arrive to the destination depending on distance and the wireless model used (only used on simulation). */
-	public static boolean isInRange(double distance) {
-		switch (Param.selectedWirelessModel) {
-		case NONE:
-			return true;
-		case FIXED_RANGE:
-			if (distance <= Param.fixedRange) {
-				return true;
-			} else {
-				return false;
-			}
-		case DISTANCE_5GHZ:
-			if (Math.random() <= 5.335*Math.pow(10, -7)*distance*distance + 3.395*Math.pow(10, -5)*distance) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-		
-		// Point never reached if the selection structure is enlarged when adding new wireless models
-		SimTools.println(Text.WIRELESS_ERROR);
-		return false;
-	}
 	
+	/** Returns true if verbose store feature is enabled.
+	 * <p>If set to true, the developer can store additional file(s) for non relevant information. */
+	public static boolean isVerboseStorageEnabled() {
+		return Param.VERBOSE_STORE;
+	}
+
 	/** Makes the thread wait for ms milliseconds. */
 	public static void waiting(int ms) {
 		try {
@@ -290,5 +621,23 @@ public class GUIHelper {
 		} catch (InterruptedException e) {
 		}
 	}
+	
+	/** Returns the instant when the experiment started in local time.
+	 * <p>Returns 0 if the experiment has not started.*/
+	public static long getExperimentStartTime() {
+		return Param.startTime;
+	}
 
+	/** Returns the instant when a specific UAV has finished the experiment in local time (starting time is not 0).
+	 * <p>Returns 0 if the experiment has not finished jet, or it has not even started. */
+	public static long getExperimentEndTime(int numUAV) {
+		return Param.testEndTime[numUAV];
+	}
+	
+	/** Returns the path followed by the UAV in screen in UTM coordinates.
+	 * <p>Useful to log protocol data related to the path followed by the UAV, once the experiment has finished and the UAV is on the ground.*/
+	public static List<LogPoint> getUTMPath(int numUAV) {
+		return SimParam.uavUTMPath[numUAV];
+	}
+	
 }

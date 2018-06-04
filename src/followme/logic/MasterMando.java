@@ -1,11 +1,9 @@
 package followme.logic;
 
-import api.API;
-import api.SwarmHelper;
-import followme.logic.FollowMeParam.FollowMeState;
-import main.Param;
-import main.Param.SimulatorState;
-import uavController.UAVParam.Mode;
+import api.Copter;
+import api.GUI;
+import api.Tools;
+import api.pojo.FlightMode;
 
 public class MasterMando extends Thread {
 
@@ -17,7 +15,7 @@ public class MasterMando extends Thread {
 		
 		// espera al inicio del experimento
 
-		while (Param.simStatus != SimulatorState.TEST_IN_PROGRESS) {
+		while (!Tools.isExperimentInProgress()) {
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
@@ -26,7 +24,7 @@ public class MasterMando extends Thread {
 			}
 		}
 
-		SwarmHelper.log("Iniciado SendTh");
+		GUI.log("Iniciado SendTh");
 		while (FollowMeParam.recurso.get() == null) {
 			try {
 				Thread.sleep(100);
@@ -56,7 +54,7 @@ public class MasterMando extends Thread {
 		// SwarmHelper.log("Error armar motores");
 		// }
 
-		while (Param.simStatus != SimulatorState.TEST_IN_PROGRESS) {
+		while (!Tools.isExperimentInProgress()) {
 			try {
 				Thread.sleep(1000);
 
@@ -90,14 +88,14 @@ public class MasterMando extends Thread {
 			if (type != 1) {
 				n.print();
 			} else {
-				API.channelsOverride(FollowMeParam.posMaster, n.chan1, n.chan2, n.chan3, n.chan4);
+				Copter.channelsOverride(FollowMeParam.posMaster, n.chan1, n.chan2, n.chan3, n.chan4);
 			}
 			// System.out.println(n.time);
 
 			if (n.next == null) {
 				tfin = n.time;
-				API.setMode(FollowMeParam.posMaster, Mode.LAND_ARMED);
-				SwarmHelper.log("Mode Master " + Mode.LAND_ARMED);
+				Copter.setFlightMode(FollowMeParam.posMaster, FlightMode.LAND_ARMED);
+				GUI.log("Mode Master " + FlightMode.LAND_ARMED);
 				break;
 			}
 		} while (n != null || n.next != null);

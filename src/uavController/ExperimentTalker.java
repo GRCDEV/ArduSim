@@ -9,7 +9,8 @@ import java.net.SocketException;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Output;
 
-import api.GUIHelper;
+import api.GUI;
+import api.Tools;
 import main.Param;
 import main.Text;
 import main.Param.SimulatorState;
@@ -20,7 +21,7 @@ public class ExperimentTalker extends Thread {
 	@Override
 	public void run() {
 		DatagramSocket sendSocket = null;
-		byte[] sendBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		byte[] sendBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
 		if (Param.IS_REAL_UAV) {
 			broadcastAddress = UAVParam.BROADCAST_IP;
@@ -35,7 +36,7 @@ public class ExperimentTalker extends Thread {
 			sendSocket = new DatagramSocket();
 			sendSocket.setBroadcast(true);
 		} catch (SocketException e) {
-			GUIHelper.exit(Text.BIND_ERROR_2);
+			GUI.exit(Text.BIND_ERROR_2);
 		}
 		
 		long time = System.currentTimeMillis();
@@ -73,7 +74,7 @@ public class ExperimentTalker extends Thread {
 			
 			sleep = PCCompanionParam.STATUS_SEND_TIMEOUT - (System.currentTimeMillis() - time);
 			if (sleep > 0) {
-				GUIHelper.waiting((int)sleep);
+				Tools.waiting((int)sleep);
 			}
 			time = time + PCCompanionParam.STATUS_SEND_TIMEOUT;
 		}

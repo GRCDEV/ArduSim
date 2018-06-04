@@ -14,7 +14,7 @@ import javax.swing.JFrame;
 
 import main.Param;
 import main.Text;
-import main.Tools;
+import main.ArduSimTools;
 import main.Param.SimulatorState;
 import sim.board.BoardPanel;
 import sim.logic.SimParam;
@@ -84,7 +84,7 @@ public class MainWindow {
 					public void run() {
 						if (Param.simStatus != SimulatorState.SHUTTING_DOWN
 								&& MainWindow.buttonsPanel.exitButton.isEnabled()) {
-							Tools.shutdown();
+							ArduSimTools.shutdown();
 						}
 					}
 				})).start();

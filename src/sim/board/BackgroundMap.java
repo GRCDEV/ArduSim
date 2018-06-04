@@ -13,7 +13,7 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 
-import api.GUIHelper;
+import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import sim.board.pojo.MercatorProjection;
@@ -45,13 +45,13 @@ public class BackgroundMap {
 		MercatorProjection projection = new MercatorProjection(latitude, longitude, pxWidth, pxHeight, Math.pow(2, zoom));
 		GeoCoordinates upLeft = projection.getGeoLocation(0, 0);
 
-		UTMCoordinates upLeftUTM = GUIHelper.geoToUTM(upLeft.latitude, upLeft.longitude);
+		UTMCoordinates upLeftUTM = Tools.geoToUTM(upLeft.latitude, upLeft.longitude);
 		this.originUTM = upLeftUTM;
 
 		GeoCoordinates upRight = projection.getGeoLocation(pxWidth, 0);
-		UTMCoordinates upRightUTM = GUIHelper.geoToUTM(upRight.latitude, upRight.longitude);
+		UTMCoordinates upRightUTM = Tools.geoToUTM(upRight.latitude, upRight.longitude);
 		GeoCoordinates bottomRight = projection.getGeoLocation(pxWidth, pxHeight);
-		UTMCoordinates bottomRightUTM = GUIHelper.geoToUTM(bottomRight.latitude, bottomRight.longitude);
+		UTMCoordinates bottomRightUTM = Tools.geoToUTM(bottomRight.latitude, bottomRight.longitude);
 
 		double incHorizontal = new Point2D.Double(upRightUTM.Easting, upRightUTM.Northing).distance(upLeftUTM.Easting,
 				upLeftUTM.Northing);

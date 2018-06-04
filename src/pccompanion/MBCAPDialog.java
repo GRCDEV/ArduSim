@@ -19,7 +19,8 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import api.GUIHelper;
+import api.GUI;
+import api.Tools;
 import api.pojo.Point3D;
 import main.Text;
 import main.Param.SimulatorState;
@@ -125,12 +126,12 @@ public class MBCAPDialog extends JDialog {
 					tableModel.setValueAt(b.event, row, 1);
 					tableModel.setValueAt(MBCAPParam.MBCAPState.getSatateById(b.state), row, 2);
 					tableModel.setValueAt(b.idAvoiding, row, 3);
-					tableModel.setValueAt(GUIHelper.round(b.speed, 3), row, 4);
+					tableModel.setValueAt(Tools.round(b.speed, 3), row, 4);
 					if (b.points.size() > 0) {
 						Point3D p = b.points.get(0);
-						tableModel.setValueAt(GUIHelper.round(p.x, 3), row, 5);
-						tableModel.setValueAt(GUIHelper.round(p.y, 3), row, 6);
-						tableModel.setValueAt(GUIHelper.round(p.z, 2), row, 7);
+						tableModel.setValueAt(Tools.round(p.x, 3), row, 5);
+						tableModel.setValueAt(Tools.round(p.y, 3), row, 6);
+						tableModel.setValueAt(Tools.round(p.z, 2), row, 7);
 					}
 					resizeColumnWidth();
 				}
@@ -182,9 +183,9 @@ public class MBCAPDialog extends JDialog {
 			@SuppressWarnings("resource")
 			DatagramSocket s = new DatagramSocket(UAVParam.BROADCAST_PORT);
 			s.setBroadcast(true);
-			DatagramPacket p = new DatagramPacket(new byte[UAVParam.DATAGRAM_MAX_LENGTH], UAVParam.DATAGRAM_MAX_LENGTH);
+			DatagramPacket p = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
 			while (true) {
-				p.setData(new byte[UAVParam.DATAGRAM_MAX_LENGTH], 0, UAVParam.DATAGRAM_MAX_LENGTH);
+				p.setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
 				try {
 					s.receive(p);
 					array = p.getData();
@@ -194,7 +195,7 @@ public class MBCAPDialog extends JDialog {
 			}
 //			s.close();
 		} catch (SocketException e) {
-			GUIHelper.exit(Text.THREAD_START_ERROR);
+			GUI.exit(Text.THREAD_START_ERROR);
 		}
 	}
 

@@ -17,10 +17,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
-import api.MissionHelper;
-import api.SwarmHelper;
+import api.ProtocolHelper;
 import main.Param;
-import main.Param.Protocol;
 import main.Text;
 import sim.logic.SimParam;
 
@@ -47,15 +45,14 @@ public class ProgressDialog extends JDialog {
 			for (int i = 0; i < Param.numUAVs; i++) {
 				panels[i] = new ProgressDialogPanel();
 				panels[i].numUAVLabel.setText("" + Param.id[i]);
-				if (Param.selectedProtocol == Protocol.NONE) {
+				if (ProtocolHelper.selectedProtocol == ProtocolHelper.Protocol.NONE) {
 					panels[i].lblProtState.setText("");
 					panels[i].protStateLabel.setText("");
 				} else {
 					panels[i].lblProtState.setText(Text.PROTOCOL_STATUS);
-					if (Param.simulationIsMissionBased) {
-						MissionHelper.setMissionProtocolInitialState(panels[i].protStateLabel);
-					} else {
-						SwarmHelper.setSwarmProtocolInitialState(panels[i].protStateLabel);
+					String initialState = ProtocolHelper.selectedProtocolInstance.setInitialState();
+					if (initialState != null) {
+						panels[i].protStateLabel.setText(initialState);
 					}
 				}
 				aux.add(panels[i]);

@@ -21,7 +21,7 @@ public class Pollution extends Thread {
 		move(p.x, p.y);
 	}
 	void move(int x, int y) {
-		API.moveUAV(0, GUIHelper.UTMToGeo(origin.Easting + (x * PollutionParam.density), origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
+		Copter.moveUAV(0, Tools.UTMToGeo(origin.Easting + (x * PollutionParam.density), origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
 	}
 	
 	//HashMap<Double, HashMap<Double, Double>> data;
@@ -58,7 +58,7 @@ public class Pollution extends Thread {
 		// Calculate grid size and origin
 		sizeX = (int) ((double) PollutionParam.width * PollutionParam.density);
 		sizeY = (int) ((double) PollutionParam.length * PollutionParam.density);
-		origin = api.GUIHelper.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
+		origin = api.Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
 		origin.Easting -= PollutionParam.width/2.0;
 		origin.Northing -= PollutionParam.length/2.0;
 		
@@ -74,7 +74,7 @@ public class Pollution extends Thread {
 		//data = new HashMap<Double, HashMap<Double, Double>>();
 		
 		/* Start Algorithm */
-		SimTools.println("Start PdUC Algorithm");
+		GUI.log("Start PdUC Algorithm");
 		
 		// Move to the grid centre
 		p1 = new Point(sizeX / 2, sizeY / 2);

@@ -18,9 +18,9 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import api.GUIHelper;
+import api.Tools;
 import main.Text;
-import main.Tools;
+import main.ArduSimTools;
 
 /** This class generates a dialog when the experiment finalizes, with the experiment configuration and the results. */
 
@@ -57,7 +57,7 @@ public class ResultsDialog extends JDialog {
 				saveButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						JFileChooser chooser = new JFileChooser();
-						chooser.setCurrentDirectory(GUIHelper.getCurrentFolder());
+						chooser.setCurrentDirectory(Tools.getCurrentFolder());
 						chooser.setDialogTitle(Text.RESULTS_DIALOG_TITLE);
 						chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 						FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.RESULTS_DIALOG_SELECTION, Text.FILE_EXTENSION_TXT);
@@ -77,11 +77,11 @@ public class ResultsDialog extends JDialog {
 										options,
 										options[1]);
 								if (result == JOptionPane.YES_OPTION) {
-									Tools.storeResults(s, file);
+									ArduSimTools.storeResults(s, file);
 									dispose();
 								}
 							} else {
-								Tools.storeResults(s, file);
+								ArduSimTools.storeResults(s, file);
 								dispose();
 							}
 						}

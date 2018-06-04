@@ -11,16 +11,16 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import org.mavlink.messages.MAV_MODE_FLAG;
 import org.mavlink.messages.MAV_PARAM_TYPE;
 
 import api.pojo.AtomicDoubleArray;
+import api.pojo.FlightMode;
 import api.pojo.LastPositions;
+import api.pojo.RCValues;
 import api.pojo.UAVCurrentData;
 import api.pojo.UAVCurrentStatus;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
-import main.Text;
 import sim.pojo.IncomingMessage;
 import sim.pojo.IncomingMessageQueue;
 
@@ -45,8 +45,7 @@ public class UAVParam {
 	public static final int BAUD_RATE = 57600;
 	
 	// UAV-UAV connection parameters
-	// TCP parameters (on real UAVs)
-	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
+	// TCP (on virtual UAVs)
 	public static final String BROADCAST_IP = "192.168.1.255";	// Broadcast IP
 	public static final int BROADCAST_PORT = 14650;				// Broadcast port
 	public static DatagramSocket[] sendSocket;					// Sending socket
@@ -88,6 +87,9 @@ public class UAVParam {
 	public static volatile double collisionAltitudeDifference = 20;	// (m) Altitude difference to assert that a collision has happened
 	public static double collisionScreenDistance;					// (px) The previous distance, but in screen coordinates
 	public static volatile boolean collisionDetected = false; 		// Can be used to stop protocols when a collision happens
+	
+	// Parameters used to detect when a UAV reaches the last waypoint
+	public static final double LAST_WP_THRESHOLD = 1.0; // (m) Maximum distance considered
 	
 	// Received information
 	public static UAVCurrentData[] uavCurrentData;
@@ -198,8 +200,8 @@ public class UAVParam {
 	public static final int MAV_STATUS_REQUEST_MODE = 1;
 	public static final int MAV_STATUS_ACK_MODE = 2;
 	public static final int MAV_STATUS_ERROR_MODE = 3;
-	public static AtomicReferenceArray<UAVParam.Mode> flightMode; // Current flight mode
-	public static UAVParam.Mode[] newFlightMode;
+	public static AtomicReferenceArray<FlightMode> flightMode; // Current flight mode
+	public static FlightMode[] newFlightMode;
 	public static volatile boolean flightStarted = false;	// Detects when at least one UAV has started to fly
 	public static final int MAV_STATUS_REQUEST_ARM = 4;
 	public static final int MAV_STATUS_ACK_ARM = 5;
@@ -253,171 +255,6 @@ public class UAVParam {
 	// Potentiometer levels for the six flight modes configurable in the remote control (min, used, max)
 	public static final int[][] RC5_MODE_LEVEL = new int[][] {{0, 1000, 1230}, {1231, 1295, 1360},
 		{1361, 1425, 1490}, {1491, 1555, 1620}, {1621, 1685, 1749}, {1750, 1875, 2000}};
-
-	// Ardupilot flight modes
-	public enum Mode {
-
-		STABILIZE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				0, Text.STABILIZE),
-		STABILIZE_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, // only 209, not as the rest (217)
-				0, Text.STABILIZE_ARMED),
-		GUIDED(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				4, Text.GUIDED),
-		GUIDED_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				4, Text.GUIDED_ARMED),
-		AUTO(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				3, Text.AUTO),
-		AUTO_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				3, Text.AUTO_ARMED),
-		LOITER(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				5, Text.LOITER),
-		LOITER_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				5, Text.LOITER_ARMED),
-		RTL(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				6, Text.RTL),
-		RTL_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				6, Text.RTL_ARMED),
-		CIRCLE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				7, Text.CIRCLE),
-		CIRCLE_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				7, Text.CIRCLE_ARMED),
-		POSHOLD(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				16, Text.POSHOLD),
-		POSHOLD_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				16, Text.POSHOLD_ARMED),
-		BRAKE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				17, Text.BRAKE),
-		BRAKE_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				17, Text.BRAKE_ARMED),
-		AVOID_ADSB(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				19, Text.AVOID_ADSB),
-		AVOID_ADSB_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				19, Text.AVOID_ADSB_ARMED),
-		LAND(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				9, Text.LAND),
-		LAND_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				9, Text.LAND_ARMED),
-		THROW(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				18, Text.THROW),
-		DRIFT(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				11, Text.DRIFT),
-		ALT_HOLD(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				2, Text.ALT_HOLD),
-		SPORT(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				13, Text.SPORT),
-		ACRO(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-				+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-				1, Text.ACRO);
-
-		private final int baseMode;
-		private final int customMode;
-		private final String modeName;
-
-		private Mode(int baseMode, int customMode, String modeName) {
-			this.baseMode = baseMode;
-			this.customMode = customMode;
-			this.modeName = modeName;
-		}
-
-		public int getBaseMode() {
-			return baseMode;
-		}
-
-		public int getCustomMode() {
-			return customMode;
-		}
-		
-		public String getMode() {
-			return modeName;
-		}
-
-		/**
-		 * Return the ardupilot flight mode corresponding to the base and custom values.
-		 * <p>If no valid flight mode is found, it returns null. */
-		public static UAVParam.Mode getMode(int base, long custom) {
-			for (Mode p : Mode.values()) {
-				if (p.baseMode == base && p.customMode == custom) {
-					return p;
-				}
-			}
-			return null;
-		}
-	}
 	
 	// Parameters of the UAV or the simulator
 	public enum ControllerParam {

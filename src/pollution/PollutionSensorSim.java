@@ -6,10 +6,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
-import sim.logic.SimTools;
+import api.Copter;
 import smile.interpolation.KrigingInterpolation;
-import smile.interpolation.variogram.*;
-import uavController.UAVParam;
+import smile.interpolation.variogram.GaussianVariogram;
 
 public class PollutionSensorSim implements PollutionSensor {
 	KrigingInterpolation krigData;
@@ -69,7 +68,7 @@ public class PollutionSensorSim implements PollutionSensor {
 
 	@Override
 	public double read() {
-		Point2D.Double location = UAVParam.uavCurrentData[0].getUTMLocation();
+		Point2D.Double location = Copter.getUTMLocation(0);
 		double pointX = location.getX() / PollutionParam.width * dataXSize;
 		double pointY = location.getY() / PollutionParam.length * dataYSize;
 		return krigData.interpolate(pointX, pointY);

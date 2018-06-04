@@ -4,6 +4,20 @@ package swarmprot.logic;
 
 public class SwarmProtText {
 	
+	// Application name
+	public static final String APP_NAME = "ArduSim";
+	
+	// Configuration dialog
+	public static final String CONFIGURATION_DIALOG_TITLE_SWARM = "Swarm Protocol Configuration";
+	public static final String MISSIONS_DIALOG_TITLE = "Select the file(s) with UAVs paths";
+	public static final String MISSIONS_DIALOG_SELECTION_1 = "Google Earth kml File";
+	public static final String FILE_EXTENSION_KML = "kml";
+	public static final String MISSIONS_DIALOG_SELECTION_2 = "Waypoint Files";
+	public static final String FILE_EXTENSION_WAYPOINTS = "waypoints";
+	public static final String BUTTON_SELECT = "...";
+	public static final String MISSIONS_SELECTION_ERROR = "Missions selection warning";
+	public static final String MISSIONS_ERROR_3 = "The kml file is not valid.";
+	
 	public static final String PROTOCOL_TEXT = "Swarm protocol";
 	public static final String LOAD_MISSION_KML = "Loading the .kml file into the master dron";
 	public static final String CONFIGURE_MASTER_MISSION = "Set up the mission in the master dron";
@@ -61,6 +75,9 @@ public class SwarmProtText {
 	public static final String MOVE_TO_WP_COMMON = "Moving to WP ";
 	
 	//Fault messages
+	public static final String FATAL_ERROR = "Fatal error";
+	public static final String UAVS_START_ERROR_1 = "Failed locating the home position of the UAV";
+	public static final String UAVS_START_ERROR_2 = "No valid coordinates could be found to stablish the home of the UAV";
 	public static final String SEND_MISSION_ERROR = "Error sending the mission to the UAV";
 	public static final String LANDING_ERROR = "Impossible to make the landing";
 	public static final String START_MISSION_ERROR = "Error starting the mission of the UAV";
@@ -70,6 +87,7 @@ public class SwarmProtText {
 	
 	//Errors
 	public static final String BAD_INPUT = "Please, check the selected information.";
+	
 
 	
 }

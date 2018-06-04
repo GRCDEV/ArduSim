@@ -1,25 +1,7 @@
 package followme.logic;
 
-import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
-import api.API;
-import api.GUIHelper;
-import api.MissionHelper;
-import api.SwarmHelper;
 import api.pojo.GeoCoordinates;
-import followme.logic.FollowMeParam.FollowMeState;
-import followme.logic.comunication.FollowMeThreadRecive;
-import followme.logic.comunication.FollowMeThreadSend;
-import followme.logic.comunication.Message;
 import followme.logic.comunication.MessageStorage;
-import main.Param;
-import main.Param.SimulatorState;
-import main.Text;
-import sim.logic.SimParam;
-import uavController.UAVParam;
 
 public class FollowerThread extends Thread {
 

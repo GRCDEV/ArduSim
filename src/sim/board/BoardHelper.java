@@ -11,19 +11,21 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import api.GUIHelper;
-import api.MissionHelper;
-import api.SwarmHelper;
+import api.Copter;
+import api.ProtocolHelper;
+import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.LogPoint;
 import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
+import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
@@ -72,19 +74,19 @@ public class BoardHelper {
 		double boardDownLeftUTMY = BoardParam.boardUpLeftUTMY - UTMHeight;
 		double boardDownRightUTMX = BoardParam.boardUpLeftUTMX + UTMWidth;
 		double boardDownRightUTMY = BoardParam.boardUpLeftUTMY - UTMHeight;
-		GeoCoordinates boardLeftUpGeo = GUIHelper.UTMToGeo(boardUpLeftUTMX, boardUpLeftUTMY);
-		GeoCoordinates boardRightUpGeo = GUIHelper.UTMToGeo(boardUpRightUTMX, boardUpRightUTMY);
-		GeoCoordinates boardLeftBottomGeo = GUIHelper.UTMToGeo(boardDownLeftUTMX, boardDownLeftUTMY);
-		GeoCoordinates boardRightBottomGeo = GUIHelper.UTMToGeo(boardDownRightUTMX, boardDownRightUTMY);
+		GeoCoordinates boardLeftUpGeo = Tools.UTMToGeo(boardUpLeftUTMX, boardUpLeftUTMY);
+		GeoCoordinates boardRightUpGeo = Tools.UTMToGeo(boardUpRightUTMX, boardUpRightUTMY);
+		GeoCoordinates boardLeftBottomGeo = Tools.UTMToGeo(boardDownLeftUTMX, boardDownLeftUTMY);
+		GeoCoordinates boardRightBottomGeo = Tools.UTMToGeo(boardDownRightUTMX, boardDownRightUTMY);
 		double minLatitude = Math.min(Math.min(boardLeftBottomGeo.latitude, boardLeftUpGeo.latitude), Math.min(boardRightBottomGeo.latitude, boardRightUpGeo.latitude));
 		double maxLatitude = Math.max(Math.max(boardLeftBottomGeo.latitude, boardLeftUpGeo.latitude), Math.max(boardRightBottomGeo.latitude, boardRightUpGeo.latitude));
 		double minLongitude = Math.min(Math.min(boardLeftBottomGeo.longitude, boardLeftUpGeo.longitude), Math.min(boardRightBottomGeo.longitude, boardRightUpGeo.longitude));
 		double maxLongitude = Math.max(Math.max(boardLeftBottomGeo.longitude, boardLeftUpGeo.longitude), Math.max(boardRightBottomGeo.longitude, boardRightUpGeo.longitude));
 	
 		// UTM and Screen size to be drawn
-		UTMCoordinates upLeftUTMCorner = GUIHelper.geoToUTM(maxLatitude, minLongitude);
-		UTMCoordinates upRightUTMCorner = GUIHelper.geoToUTM(maxLatitude, maxLongitude);
-		UTMCoordinates downLeftUTMCorner = GUIHelper.geoToUTM(minLatitude, minLongitude);
+		UTMCoordinates upLeftUTMCorner = Tools.geoToUTM(maxLatitude, minLongitude);
+		UTMCoordinates upRightUTMCorner = Tools.geoToUTM(maxLatitude, maxLongitude);
+		UTMCoordinates downLeftUTMCorner = Tools.geoToUTM(minLatitude, minLongitude);
 		double imagesUTMTotalWidth = Point2D.distance(upLeftUTMCorner.Easting, upLeftUTMCorner.Northing, upRightUTMCorner.Easting, upRightUTMCorner.Northing);
 		double imagesUTMTotalHeight = Point2D.distance(upLeftUTMCorner.Easting, upLeftUTMCorner.Northing, downLeftUTMCorner.Easting, downLeftUTMCorner.Northing);
 		int imagesPXTotalWidth = (int)(imagesUTMTotalWidth*BoardParam.screenScale);
@@ -102,7 +104,7 @@ public class BoardHelper {
 		double incYY = (downLeftUTMCorner.Northing-upLeftUTMCorner.Northing)*tile1UTMHeight/imagesUTMTotalHeight/2;
 		double tile1UTMCenterY = upLeftUTMCorner.Northing + incYX + incYY;
 	
-		GeoCoordinates tile1GeoCenter = GUIHelper.UTMToGeo(tile1UTMCenterX, tile1UTMCenterY);
+		GeoCoordinates tile1GeoCenter = Tools.UTMToGeo(tile1UTMCenterX, tile1UTMCenterY);
 		int zoom = BoardHelper.getMapZoom(tile1GeoCenter.latitude,
 				tile1GeoCenter.longitude, tile1PXWidth, tile1PXHeight, tile1UTMWidth, tile1UTMHeight);
 	
@@ -137,7 +139,7 @@ public class BoardHelper {
 				UTMHeight = PXHeight/BoardParam.screenScale;
 				double UTMx = originX + incXX*UTMWidth/tile1UTMWidth + incXY*UTMHeight/tile1UTMHeight;
 				double UTMy = originY + incYX*UTMWidth/tile1UTMWidth + incYY*UTMHeight/tile1UTMHeight;
-				tileCenter = GUIHelper.UTMToGeo(UTMx, UTMy);
+				tileCenter = Tools.UTMToGeo(UTMx, UTMy);
 				BoardParam.map[i][j] = new BackgroundMap(tileCenter.latitude,
 						tileCenter.longitude, zoom, PXWidth, PXHeight, UTMx, UTMy);
 				if (BoardParam.map[i][j].img == null) {
@@ -162,9 +164,9 @@ public class BoardHelper {
 					pxHeight,
 					Math.pow(2, zoom));
 			GeoCoordinates upLeftGeo = projection.getGeoLocation(0, 0);
-			UTMCoordinates upLeftUTM = GUIHelper.geoToUTM(upLeftGeo.latitude, upLeftGeo.longitude);
+			UTMCoordinates upLeftUTM = Tools.geoToUTM(upLeftGeo.latitude, upLeftGeo.longitude);
 			GeoCoordinates bottomRightGeo = projection.getGeoLocation(pxWidth, pxHeight);
-			UTMCoordinates bottomRightUTM = GUIHelper.geoToUTM(bottomRightGeo.latitude, bottomRightGeo.longitude);
+			UTMCoordinates bottomRightUTM = Tools.geoToUTM(bottomRightGeo.latitude, bottomRightGeo.longitude);
 			double width, height;
 			width = bottomRightUTM.Easting - upLeftUTM.Easting;
 			height = upLeftUTM.Northing - bottomRightUTM.Northing;
@@ -209,11 +211,8 @@ public class BoardHelper {
 			int numUAVsConnected = BoardHelper.getNumUAVsConnected();
 			if (numUAVsConnected > BoardParam.numUAVsDrawn.get()) {
 				BoardHelper.setScale();
-				if (Param.simulationIsMissionBased) {
-					MissionHelper.rescaleMissionDataStructures();
-				} else {
-					SwarmHelper.rescaleSwarmDataStructures();
-				}
+				ArduSimTools.rescaleDataStructures();
+				ProtocolHelper.selectedProtocolInstance.rescaleDataStructures();
 				BoardHelper.rescaleScaleBar();
 				BoardParam.numUAVsDrawn.set(numUAVsConnected);
 				if (numUAVsConnected == Param.numUAVs) {
@@ -225,18 +224,10 @@ public class BoardHelper {
 			if (BoardParam.rescaleQueries.getAndSet(0) > 0
 					|| (Param.simStatus == SimulatorState.STARTING_UAVS && Param.numMissionUAVs.get() == 0)) {
 				BoardHelper.setScale();
-				if (Param.simulationIsMissionBased) {
-					MissionHelper.rescaleMissionDataStructures();
-				} else {
-					SwarmHelper.rescaleSwarmDataStructures();
-				}
+				ProtocolHelper.selectedProtocolInstance.rescaleDataStructures();
 				BoardHelper.rescaleUAVPath();
 				BoardHelper.rescaleMissions();
-				if (Param.simulationIsMissionBased) {
-					MissionHelper.rescaleMissionResources();
-				} else {
-					SwarmHelper.rescaleSwarmResources();
-				}
+				ProtocolHelper.selectedProtocolInstance.rescaleShownResources();
 				BoardHelper.rescaleScaleBar();	// Gets the scale bar
 			}
 		}
@@ -449,12 +440,11 @@ public class BoardHelper {
 		g.setStroke(BoardParam.STROKE_TRACK);
 		BoardHelper.drawUAVPath(g);
 	
-		// 4. Draw aditional resources
-		if (Param.simulationIsMissionBased) {
-			MissionHelper.drawMissionResources(g, p);
-		} else {
-			SwarmHelper.drawSwarmResources(g, p);
-		}
+		// 4. Draw additional resources
+		ProtocolHelper.selectedProtocolInstance.drawResources(g, p);
+		
+		// 5. Draw collision radius around the UAVs while flying during the experiment
+		BoardHelper.drawCollisionCircle(g);
 	
 		// 5. Draw the UAVs image, identifier and altitude value
 		BoardHelper.drawUAVs(g, p);
@@ -607,6 +597,28 @@ public class BoardHelper {
 					for (int j=0; j<BoardParam.uavPXPathLines[i].size(); j++) {
 						g.draw(BoardParam.uavPXPathLines[i].get(j));
 					}
+				}
+			}
+		}
+	}
+	
+	/** Draws the circle that represents the collision distance around a UAV. */
+	private static void drawCollisionCircle(Graphics2D g) {
+		LogPoint currentPXLocation;
+		Ellipse2D.Double ellipse;
+		int numUAVs = Tools.getNumUAVs();
+		for (int i=0; i<numUAVs; i++) {
+			// Only drawn when there is known current position
+			currentPXLocation = BoardParam.uavCurrentPXLocation[i];
+			if (currentPXLocation != null) {
+				if ((Tools.isExperimentInProgress() || Tools.isExperimentFinished())
+						&& Copter.isFlying(i)) {
+					g.setColor(Color.RED);
+					ellipse = new Ellipse2D.Double(
+							currentPXLocation.x-UAVParam.collisionScreenDistance, currentPXLocation.y-UAVParam.collisionScreenDistance,
+							2*UAVParam.collisionScreenDistance, 2*UAVParam.collisionScreenDistance
+							);
+					g.draw(ellipse);
 				}
 			}
 		}

@@ -1,14 +1,10 @@
 package mbcap.logic;
 
-import api.API;
-import api.GUIHelper;
-import main.Param;
-import main.Param.SimulatorState;
+import api.Copter;
+import api.Tools;
+import api.WaypointReachedListener;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
-import sim.logic.SimParam;
-import uavController.UAVParam;
-import uavController.WaypointReachedListener;
 
 /** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision. */
 
@@ -30,58 +26,50 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 	}
 
 	@Override
+	public int getNumUAV() {
+		return this.numUAV;
+	}
+
+	@Override
 	public void run() {
-		while (Param.simStatus == Param.SimulatorState.CONFIGURING
-				|| Param.simStatus == Param.SimulatorState.CONFIGURING_PROTOCOL
-				|| Param.simStatus == Param.SimulatorState.STARTING_UAVS
-				|| Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED
-				|| Param.simStatus == Param.SimulatorState.SETUP_IN_PROGRESS
-				|| Param.simStatus == Param.SimulatorState.READY_FOR_TEST
-				|| (Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS
-					&& UAVParam.flightMode.get(numUAV).getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING)) {
-			GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+		while (Tools.areUAVsNotAvailable() || Tools.areUAVsReadyForSetup() || Tools.isSetupInProgress()	|| Tools.isSetupFinished()
+				|| (Tools.isExperimentInProgress() && !Copter.isFlying(numUAV))) {
+			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
 		}
 		Beacon selfBeacon = null;
 		byte[] sendBuffer = null;
 		int waitingTime;
 
+		// Send beacons while the UAV is flying during the experiment
 		// The protocol is stopped when two UAVs collide
 		long cicleTime = System.currentTimeMillis();
-		while (
-				Param.simStatus == SimulatorState.TEST_IN_PROGRESS
-				&& UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
-				&& !UAVParam.collisionDetected
-				) {
-			SimulatorState state = Param.simStatus;
-			// Send beacons while the UAV is flying during the experiment
-			if (state == SimulatorState.TEST_IN_PROGRESS) {
-				// Each beacon is sent a number of times before renewing the predicted positions
-				for (int i = 0; i < MBCAPParam.numBeacons; i++) {
-					// The first time it is needed to calculate the predicted positions
-					if (i == 0) {
-						selfBeacon = Beacon.buildToSend(numUAV);
-						MBCAPParam.selfBeacon.set(numUAV, selfBeacon);
-						sendBuffer = selfBeacon.getBuffer();
+		while (Tools.isExperimentInProgress() && Copter.isFlying(numUAV)
+				&& !Tools.isCollisionDetected()) {
+			// Each beacon is sent a number of times before renewing the predicted positions
+			for (int i = 0; i < MBCAPParam.numBeacons; i++) {
+				// The first time it is needed to calculate the predicted positions
+				if (i == 0) {
+					selfBeacon = Beacon.buildToSend(numUAV);
+					MBCAPParam.selfBeacon.set(numUAV, selfBeacon);
+					sendBuffer = selfBeacon.getBuffer();
 
-						// Beacon store for logging purposes
-						if (Param.VERBOSE_STORE
-								&& state == SimulatorState.TEST_IN_PROGRESS
-								&& Param.testEndTime[numUAV] == 0) {
-							MBCAPParam.beaconsStored[numUAV].add(selfBeacon.clone());
-						}
-					} else {
-						// In any other case, only time, state and idAvoiding are updated
-						sendBuffer = selfBeacon.getBufferUpdated();
+					// Beacon store for logging purposes
+					if (Tools.isVerboseStorageEnabled()
+							&& Tools.getExperimentEndTime(numUAV) == 0) {
+						MBCAPParam.beaconsStored[numUAV].add(selfBeacon.clone());
 					}
-					if (!selfBeacon.points.isEmpty()) {
-						API.sendBroadcastMessage(numUAV, sendBuffer);
-					}
+				} else {
+					// In any other case, only time, state and idAvoiding are updated
+					sendBuffer = selfBeacon.getBufferUpdated();
+				}
+				if (!selfBeacon.points.isEmpty()) {
+					Copter.sendBroadcastMessage(numUAV, sendBuffer);
+				}
 
-					cicleTime = cicleTime + MBCAPParam.beaconingPeriod;
-					waitingTime = (int)(cicleTime - System.currentTimeMillis());
-					if (waitingTime > 0) {
-						GUIHelper.waiting(waitingTime);
-					}
+				cicleTime = cicleTime + MBCAPParam.beaconingPeriod;
+				waitingTime = (int)(cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
 				}
 			}
 		}

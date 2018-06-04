@@ -10,18 +10,18 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
+
 import org.javatuples.Triplet;
+
 import com.esotericsoftware.kryo.io.Output;
-import api.API;
-import api.GUIHelper;
-import api.SwarmHelper;
+
+import api.Copter;
+import api.GUI;
+import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
-import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
-import main.Param;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
-import uavController.UAVParam;
 
 public class Talker extends Thread {
 
@@ -61,7 +61,7 @@ public class Talker extends Thread {
 		this.cicleTime = 0;
 		socket = new DatagramSocket();
 		buffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
-		if (Param.IS_REAL_UAV) {
+		if (Tools.isRealUAV()) {
 			socket.setBroadcast(true);
 			packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(SwarmProtParam.BROADCAST_IP_REAL),
 					SwarmProtParam.portTalker);
@@ -74,7 +74,7 @@ public class Talker extends Thread {
 		 * Calculate the take-off altitude, which uses the take-off algorithm (it is not
 		 * the same as the altitude of the mission)
 		 */
-		missionAltitude = API.getUAVMission(SwarmProtParam.posMaster).get(1).getAltitude();
+		missionAltitude = Tools.getUAVMission(SwarmProtParam.posMaster).get(1).getAltitude();
 
 		if (missionAltitude <= 5.0) {
 			takeOffAltitudeStepOne = 2.0;
@@ -108,28 +108,30 @@ public class Talker extends Thread {
 		if (cicleTime == 0) {
 			cicleTime = System.currentTimeMillis();
 		}
+		
+		long selfId = Tools.getIdFromPos(numUAV);
 
 		/**
 		 * Master actions
 		 * ------------------------------------------------------------------------------------------------------
 		 */
-		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+		if (selfId == SwarmProtParam.idMaster) {
 
 			/** PHASE START */
 			// TODO en todos los estados setSwarmState(numuav,"");
 
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_TALKER);
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSTART);
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_TALKER);
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTSTART);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
-				GUIHelper.waiting(SwarmProtParam.waitState);
+				Tools.waiting(SwarmProtParam.waitState);
 			} /** END PHASE START */
 
 			/** PHASE SEND DATA */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_DATA_TALKER);
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSEND_DATA);
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_DATA_TALKER);
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTSEND_DATA);
 			}
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
 				while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
@@ -150,7 +152,7 @@ public class Talker extends Thread {
 								// Information send only to Slaves
 								SwarmProtHelper.sendDataToSlaves(packet, socket);
 							} catch (IOException e) {
-								SwarmHelper.log("Problem in Master START stage");
+								GUI.log("Problem in Master START stage");
 								e.printStackTrace();
 							}
 
@@ -158,7 +160,7 @@ public class Talker extends Thread {
 							cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 							waitingTime = (int) (cicleTime - System.currentTimeMillis());
 							if (waitingTime > 0) {
-								GUIHelper.waiting(waitingTime);
+								Tools.waiting(waitingTime);
 							}
 						}
 					}
@@ -167,11 +169,11 @@ public class Talker extends Thread {
 
 			/** PHASE SEND LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_LIST) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_TALKER);
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSEND_LIST);
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_TALKER);
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTSEND_LIST);
 
 				while (!Listener.semaphore) {
-					GUIHelper.waiting(SwarmProtParam.waitState);
+					Tools.waiting(SwarmProtParam.waitState);
 				}
 
 				uavPosition[] currentPositions = Listener.positionsAndIDs;
@@ -198,11 +200,11 @@ public class Talker extends Thread {
 				System.out.println(" Id del centro: " + center + " Posición del maestro: " + posMasterReo);
 				System.out.println(Arrays.toString(takeoffLocations));
 
-				List<WaypointSimplified> prueba = API.getUAVMissionSimplified(SwarmProtParam.posMaster);
+				List<WaypointSimplified> prueba = Tools.getUAVMissionSimplified(SwarmProtParam.posMaster);
 				if (prueba.size() > SwarmProtParam.maxWaypoints) {
-					GUIHelper.exit(SwarmProtParam.maxWpMes);
+					GUI.exit(SwarmProtParam.maxWpMes);
 				}
-				flightList = new Point3D[Param.numUAVs][prueba.size()];
+				flightList = new Point3D[Tools.getNumUAVs()][prueba.size()];
 				Point3D[] centerMission = new Point3D[prueba.size()];
 
 				boolean found = false;
@@ -321,7 +323,7 @@ public class Talker extends Thread {
 					if (j == masterPosReo) {
 						for (int z = 0; z < SwarmProtParam.flightListPersonalized[numUAV].length; z++) {
 							if (SwarmProtParam.flightListPersonalized[numUAV][z] == null) {
-								GUIHelper.waiting(SwarmProtParam.waitState);
+								Tools.waiting(SwarmProtParam.waitState);
 							}
 						}
 
@@ -335,7 +337,7 @@ public class Talker extends Thread {
 						}
 						for (int d = 0; d < SwarmProtParam.flightListPersonalized[numUAV].length; d++) {
 							// Save each coordinates point in flightListGeo
-							SwarmProtParam.flightListPersonalizedGeo[numUAV][d] = GUIHelper.UTMToGeo(
+							SwarmProtParam.flightListPersonalizedGeo[numUAV][d] = Tools.UTMToGeo(
 									SwarmProtParam.flightListPersonalized[numUAV][d].x,
 									SwarmProtParam.flightListPersonalized[numUAV][d].y);
 						}
@@ -345,7 +347,7 @@ public class Talker extends Thread {
 						try {
 							SwarmProtHelper.sendDataToSlaves(packet, socket);
 						} catch (IOException e) {
-							SwarmHelper.log("Problem in Master SEND LIST stage");
+							GUI.log("Problem in Master SEND LIST stage");
 							e.printStackTrace();
 						}
 					}
@@ -355,19 +357,19 @@ public class Talker extends Thread {
 				cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
-					GUIHelper.waiting(waitingTime);
+					Tools.waiting(waitingTime);
 				}
 
 			} /** END PHASE SEND LIST */
 
 			/** PHASE SEND TAKE OFF */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.SEND_TAKE_OFF + "--> Talker");
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSEND_TAKE_OFF);
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.SEND_TAKE_OFF + "--> Talker");
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTSEND_TAKE_OFF);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
 				// It only listen for his MSJ4
-				GUIHelper.waiting(SwarmProtParam.waitState);
+				Tools.waiting(SwarmProtParam.waitState);
 
 			}
 			/** END PHASE SEND TAKE OFF */
@@ -380,19 +382,19 @@ public class Talker extends Thread {
 
 			/** PHASE START */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
-				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_START_TALKER);
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTSTART);
+				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_START_TALKER);
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTSTART);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				/** MSJ1 */
 				output = new Output(buffer);
 				output.clear();
 				output.writeShort(1);
-				output.writeLong(Param.id[numUAV]);
-				Point2D.Double initialPos = UAVParam.uavCurrentData[numUAV].getUTMLocation();
+				output.writeLong(selfId);
+				Point2D.Double initialPos = Copter.getUTMLocation(numUAV);
 				output.writeDouble(initialPos.x);
 				output.writeDouble(initialPos.y);
-				output.writeDouble(UAVParam.uavCurrentData[numUAV].getHeading());
+				output.writeDouble(Copter.getHeading(numUAV));
 				output.flush();
 
 				packet.setData(buffer, 0, output.position());
@@ -400,7 +402,7 @@ public class Talker extends Thread {
 				try {
 					SwarmProtHelper.sendDataToMaster(packet, socket);
 				} catch (IOException e) {
-					SwarmHelper.log("Problem in Slave START stage");
+					GUI.log("Problem in Slave START stage");
 					e.printStackTrace();
 				}
 
@@ -408,14 +410,14 @@ public class Talker extends Thread {
 				cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
-					GUIHelper.waiting(waitingTime);
+					Tools.waiting(waitingTime);
 				}
 			} /** END PHASE START */
 
 			/** PHASE WAIT LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
-				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_LIST_TALKER);
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTWAIT_LIST);
+				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_LIST_TALKER);
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTWAIT_LIST);
 
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
@@ -426,7 +428,7 @@ public class Talker extends Thread {
 				output = new Output(buffer);
 				output.clear();
 				output.writeShort(7);
-				output.writeLong(Param.id[numUAV]);
+				output.writeLong(selfId);
 				output.flush();
 
 				packet.setData(buffer, 0, output.position());
@@ -435,7 +437,7 @@ public class Talker extends Thread {
 					// Data only for Master
 					SwarmProtHelper.sendDataToMaster(packet, socket);
 				} catch (IOException e) {
-					SwarmHelper.log("Problem in Slave WAIT_LIST stage");
+					GUI.log("Problem in Slave WAIT_LIST stage");
 					e.printStackTrace();
 				}
 
@@ -443,14 +445,14 @@ public class Talker extends Thread {
 				cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
-					GUIHelper.waiting(waitingTime);
+					Tools.waiting(waitingTime);
 				}
 			} /** ENF PHASE WAIT LIST */
 
 			/** PHASE WAIT TAKE OFF */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
-				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_TAKE_OFF_TALKER);
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTWAIT_TAKE_OFF);
+				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_TAKE_OFF_TALKER);
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTWAIT_TAKE_OFF);
 			}
 			int minimodeenvios = 0;
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
@@ -458,7 +460,7 @@ public class Talker extends Thread {
 				output = new Output(buffer);
 				output.clear();
 				output.writeShort(8);
-				output.writeLong(Param.id[numUAV]);
+				output.writeLong(selfId);
 				output.flush();
 
 				packet.setData(buffer, 0, output.position());
@@ -467,7 +469,7 @@ public class Talker extends Thread {
 					// Data only for Master
 					SwarmProtHelper.sendDataToMaster(packet, socket);
 				} catch (IOException e) {
-					SwarmHelper.log("Problem in Slave WAIT_TAKE_OFF stage");
+					GUI.log("Problem in Slave WAIT_TAKE_OFF stage");
 					e.printStackTrace();
 				}
 				minimodeenvios++;
@@ -478,7 +480,7 @@ public class Talker extends Thread {
 				cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
-					GUIHelper.waiting(waitingTime);
+					Tools.waiting(waitingTime);
 				}
 			} /** ENF PHASE WAIT TAKE OFF */
 		}
@@ -490,25 +492,25 @@ public class Talker extends Thread {
 
 		/** PHASE TAKING OFF */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
-			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.TAKING_OFF_COMMON + "--> Talker");
-			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTTAKING_OFF);
+			GUI.log("UAV " + numUAV + ": " + SwarmProtText.TAKING_OFF_COMMON + "--> Talker");
+			GUI.updateprotocolState(numUAV, SwarmProtText.INTTAKING_OFF);
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
-			GUIHelper.waiting(SwarmProtParam.waitState);
+			Tools.waiting(SwarmProtParam.waitState);
 		} /** END PHASE TAKING OFF */
 
 		/** PHASE moveToWP */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
-			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.MOVE_TO_WP + "-->Talker");
-			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
+			GUI.log("UAV " + numUAV + ": " + SwarmProtText.MOVE_TO_WP + "-->Talker");
+			GUI.updateprotocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 		}
 
 		while (SwarmProtParam.WpLast[numUAV][0] != true) {
 
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 				if (missionPointNumber == 1 && SwarmProtParam.fightPrevNext[numUAV][1] != SwarmProtParam.broadcastMAC) {
 
@@ -525,14 +527,14 @@ public class Talker extends Thread {
 							SwarmProtHelper.sendDataToMaster(packet, socket);
 							SwarmProtHelper.sendDataToSlaves(packet, socket);
 						} catch (IOException e) {
-							SwarmHelper.log("Problem in Slave or Master during MOVE_TO_WP stage");
+							GUI.log("Problem in Slave or Master during MOVE_TO_WP stage");
 							e.printStackTrace();
 						}
 						// Timer
 						cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 						waitingTime = (int) (cicleTime - System.currentTimeMillis());
 						if (waitingTime > 0) {
-							GUIHelper.waiting(waitingTime);
+							Tools.waiting(waitingTime);
 						}
 
 					}
@@ -548,7 +550,7 @@ public class Talker extends Thread {
 					missionPointNumber++;
 				}
 				if (missionPointNumber > 1) {
-					API.moveUAV(numUAV, SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP],
+					Copter.moveUAV(numUAV, SwarmProtParam.flightListPersonalizedGeo[numUAV][actualWP],
 							SwarmProtParam.flightListPersonalizedAltGeo[numUAV][actualWP].floatValue(),
 							SwarmProtParam.distToAcceptPointReached, 0.05);
 
@@ -562,12 +564,12 @@ public class Talker extends Thread {
 
 			/** PHASE WP_REACHED */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
-				SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.WP_REACHED + "-->Talker");
-				SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTWP_REACHED);
+				GUI.log("UAV " + numUAV + ": " + SwarmProtText.WP_REACHED + "-->Talker");
+				GUI.updateprotocolState(numUAV, SwarmProtText.INTWP_REACHED);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
 				// Master
-				if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+				if (selfId == SwarmProtParam.idMaster) {
 					// If the master receives confirmation that all slaves have reached the WP, he
 					// sends a message to continue the slaves
 					if (Listener.uavsACK4.size() == Listener.UAVsDetected.size()) {
@@ -584,7 +586,7 @@ public class Talker extends Thread {
 									// Information send only to Slaves
 									SwarmProtHelper.sendDataToSlaves(packet, socket);
 								} catch (IOException e) {
-									SwarmHelper.log("Problem in Master START stage");
+									GUI.log("Problem in Master START stage");
 									e.printStackTrace();
 								}
 
@@ -592,24 +594,24 @@ public class Talker extends Thread {
 								cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 								waitingTime = (int) (cicleTime - System.currentTimeMillis());
 								if (waitingTime > 0) {
-									GUIHelper.waiting(waitingTime);
+									Tools.waiting(waitingTime);
 								}
 
 							}
 							
 						Listener.uavsACK4.clear();
 						SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;
-						SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTMOVE_TO_WP);
+						GUI.updateprotocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 					} else {
-						GUIHelper.waiting(SwarmProtParam.waitState);
+						Tools.waiting(SwarmProtParam.waitState);
 					}
 				} else {// Slave
 					/** ACK4 */
 					output = new Output(buffer);
 					output.clear();
 					output.writeShort(9);
-					output.writeLong(Param.id[numUAV]);
+					output.writeLong(selfId);
 					output.flush();
 
 					packet.setData(buffer, 0, output.position());
@@ -618,7 +620,7 @@ public class Talker extends Thread {
 						SwarmProtHelper.sendDataToMaster(packet, socket);
 
 					} catch (IOException e) {
-						SwarmHelper.log("Problem in Slave WP_REACHED stage");
+						GUI.log("Problem in Slave WP_REACHED stage");
 						e.printStackTrace();
 					}
 
@@ -626,7 +628,7 @@ public class Talker extends Thread {
 					cicleTime = cicleTime + SwarmProtParam.swarmStateWait;
 					waitingTime = (int) (cicleTime - System.currentTimeMillis());
 					if (waitingTime > 0) {
-						GUIHelper.waiting(waitingTime);
+						Tools.waiting(waitingTime);
 					}
 				}
 			} /** END PHASE WP_REACHED */
@@ -641,12 +643,12 @@ public class Talker extends Thread {
 
 		/** PHASE LANDING */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
-			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.LANDING + "-->Talker");
-			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTLANDING_UAV);
+			GUI.log("UAV " + numUAV + ": " + SwarmProtText.LANDING + "-->Talker");
+			GUI.updateprotocolState(numUAV, SwarmProtText.INTLANDING_UAV);
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
-			if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+			if (selfId == SwarmProtParam.idMaster) {
 				output = new Output(buffer);
 				output.clear();
 				output.writeShort(6);
@@ -658,7 +660,7 @@ public class Talker extends Thread {
 					// Data only for Slaves
 					SwarmProtHelper.sendDataToSlaves(packet, socket);
 				} catch (IOException e) {
-					SwarmHelper.log("Problem in Master sending LANDING order");
+					GUI.log("Problem in Master sending LANDING order");
 					e.printStackTrace();
 				}
 
@@ -666,7 +668,7 @@ public class Talker extends Thread {
 				output = new Output(buffer);
 				output.clear();
 				output.writeShort(10);
-				output.writeLong(Param.id[numUAV]);
+				output.writeLong(selfId);
 				output.flush();
 
 				packet.setData(buffer, 0, output.position());
@@ -675,7 +677,7 @@ public class Talker extends Thread {
 					// Data only for Master
 					SwarmProtHelper.sendDataToMaster(packet, socket);
 				} catch (IOException e) {
-					SwarmHelper.log("Problem in Slave LANDING stage");
+					GUI.log("Problem in Slave LANDING stage");
 					e.printStackTrace();
 				}
 
@@ -684,8 +686,8 @@ public class Talker extends Thread {
 
 		/** PHASE FINISH */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.FINISH) {
-			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.FINISH + "--> Talker");
-			SwarmHelper.setSwarmState(numUAV, SwarmProtText.INTFINISH);
+			GUI.log("UAV " + numUAV + ": " + SwarmProtText.FINISH + "--> Talker");
+			GUI.updateprotocolState(numUAV, SwarmProtText.INTFINISH);
 		}
 		/** END PHASE FINISH */
 

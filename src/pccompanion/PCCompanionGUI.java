@@ -27,10 +27,10 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import api.GUIHelper;
+import api.ProtocolHelper;
+import api.Tools;
 import main.Param;
 import main.Text;
-import main.Param.Protocol;
 import main.Param.SimulatorState;
 import sim.gui.VerticalFlowLayout;
 import javax.swing.JComboBox;
@@ -102,7 +102,7 @@ public class PCCompanionGUI {
 		upperPanel.add(lblProtocol, gbc_lblProtocol);
 		
 		protocolComboBox = new JComboBox<String>();
-		for (Protocol p : Protocol.values()) {
+		for (ProtocolHelper.Protocol p : ProtocolHelper.Protocol.values()) {
 			protocolComboBox.addItem(p.getName());
 		}
 		GridBagConstraints gbc_protocolComboBox = new GridBagConstraints();
@@ -121,7 +121,7 @@ public class PCCompanionGUI {
 						JOptionPane.YES_NO_OPTION);
 				if (result == JOptionPane.YES_OPTION) {
 					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-					PCCompanionParam.SELECTED_PROTOCOL.set(Param.Protocol.getProtocolByName((String)protocolComboBox.getSelectedItem()));
+					PCCompanionParam.SELECTED_PROTOCOL.set(ProtocolHelper.Protocol.getProtocolByName((String)protocolComboBox.getSelectedItem()));
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							setupButton.setEnabled(false);
@@ -152,7 +152,7 @@ public class PCCompanionGUI {
 		            public void run() {
 		            	SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								progressTimeLabel.setText(GUIHelper.timeToString(0, count));
+								progressTimeLabel.setText(Tools.timeToString(0, count));
 								count = count + 1000;
 							}
 						});

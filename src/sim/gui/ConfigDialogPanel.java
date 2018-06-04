@@ -25,12 +25,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import api.API;
-import api.GUIHelper;
-import api.MissionHelper;
+import api.GUI;
+import api.ProtocolHelper;
+import api.Tools;
 import api.pojo.Waypoint;
 import main.Param;
-import main.Param.Protocol;
 import main.Param.WirelessModel;
 import main.Text;
 import sim.board.BoardParam;
@@ -126,7 +125,7 @@ public class ConfigDialogPanel extends JPanel {
 							}
 							// Clear the missions and the number of UAV
 							missionsTextField.setText("");
-							API.setLoadedMissions(null);
+							Tools.setLoadedMissionsFromFile(null);
 							UAVsComboBox.removeAllItems();
 						}
 					});
@@ -173,7 +172,7 @@ public class ConfigDialogPanel extends JPanel {
 				// Choose the arducopter executable file
 				JFileChooser chooser;
 				chooser = new JFileChooser();
-				chooser.setCurrentDirectory(GUIHelper.getCurrentFolder());
+				chooser.setCurrentDirectory(Tools.getCurrentFolder());
 				chooser.setDialogTitle(Text.BASE_PATH_DIALOG_TITLE);
 				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				chooser.setMultiSelectionEnabled(false);
@@ -185,8 +184,8 @@ public class ConfigDialogPanel extends JPanel {
 					final File sitlPath = chooser.getSelectedFile();
 					// Only accept executable file
 					if (!sitlPath.canExecute()) {
-						SimTools.println(Text.SITL_ERROR_1);
-						GUIHelper.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_1);
+						GUI.log(Text.SITL_ERROR_1);
+						GUI.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_1);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								UAVsComboBox.removeAllItems();
@@ -197,8 +196,8 @@ public class ConfigDialogPanel extends JPanel {
 					// Copter param file must be in the same folder
 					File paramPath = new File(sitlPath.getParent() + File.separator + SimParam.PARAM_FILE_NAME);
 					if (!paramPath.exists()) {
-						SimTools.println(Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
-						GUIHelper.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
+						GUI.log(Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
+						GUI.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								UAVsComboBox.removeAllItems();
@@ -217,7 +216,7 @@ public class ConfigDialogPanel extends JPanel {
 							if (UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
 								int numUAVs = -1;
 								if (Param.simulationIsMissionBased) {
-									List<Waypoint>[] missions = API.getLoadedMissions();
+									List<Waypoint>[] missions = Tools.getLoadedMissions();
 									if (missions != null
 											&& missions.length > 0) {
 										numUAVs = Math.min(missions.length, UAVParam.initialSpeeds.length);
@@ -276,7 +275,7 @@ public class ConfigDialogPanel extends JPanel {
 				// Select kml file or waypoints files
 				final File[] selection;
 				final JFileChooser chooser = new JFileChooser();
-				chooser.setCurrentDirectory(GUIHelper.getCurrentFolder());
+				chooser.setCurrentDirectory(Tools.getCurrentFolder());
 				chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE);
 				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, Text.FILE_EXTENSION_KML);
@@ -292,17 +291,17 @@ public class ConfigDialogPanel extends JPanel {
 				}
 				if (selection != null && selection.length > 0) {
 					List<Waypoint>[] lists;
-					String extension = GUIHelper.getFileExtension(selection[0]);
+					String extension = Tools.getFileExtension(selection[0]);
 					// Only one "kml" file is accepted
 					if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase()) && selection.length > 1) {
-						GUIHelper.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
+						GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
 						return;
 					}
 					// waypoints files can not be mixed with kml files
 					if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
 						for (int i = 1; i < selection.length; i++) {
-							if (!GUIHelper.getFileExtension(selection[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-								GUIHelper.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
+							if (!Tools.getFileExtension(selection[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+								GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
 								return;
 							}
 						}
@@ -311,20 +310,20 @@ public class ConfigDialogPanel extends JPanel {
 					// kml file selected
 					if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
 						// All missions are loaded from one single file
-						lists = MissionHelper.loadXMLMissionsFile(selection[0]);
+						lists = Tools.loadXMLMissionsFile(selection[0]);
 						if (lists == null) {
-							GUIHelper.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
+							GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 							return;
 						}
 						// Missions are stored
-						API.setLoadedMissions(lists);
+						Tools.setLoadedMissionsFromFile(lists);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								missionsTextField.setText(selection[0].getAbsolutePath());
 								// Update UAVs combobox if arducopter and speeds are already loaded
 								if (SimParam.sitlPath != null
 										&& UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
-									int numUAVs = Math.min(API.getLoadedMissions().length, UAVParam.initialSpeeds.length);
+									int numUAVs = Math.min(Tools.getLoadedMissions().length, UAVParam.initialSpeeds.length);
 									numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
 									UAVsComboBox.removeAllItems();
 									for (int i = 0; i < numUAVs; i++) {
@@ -343,7 +342,7 @@ public class ConfigDialogPanel extends JPanel {
 						// Load each mission from one file
 						int j = 0;
 						for (int i = 0; i < selection.length; i++) {
-							List<Waypoint> current = MissionHelper.loadMissionFile(selection[i].getAbsolutePath());
+							List<Waypoint> current = Tools.loadMissionFile(selection[i].getAbsolutePath());
 							if (current != null) {
 								lists[j] = current;
 								j++;
@@ -351,8 +350,8 @@ public class ConfigDialogPanel extends JPanel {
 						}
 						// If no valid missions were found, just ignore the action
 						if (j == 0) {
-							GUIHelper.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
-							API.setLoadedMissions(null);
+							GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
+							Tools.setLoadedMissionsFromFile(null);
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
 									UAVsComboBox.removeAllItems();
@@ -373,7 +372,7 @@ public class ConfigDialogPanel extends JPanel {
 							}
 						}
 						// The missions are stored
-						API.setLoadedMissions(lists);
+						Tools.setLoadedMissionsFromFile(lists);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								missionsTextField.setText(chooser.getCurrentDirectory().getAbsolutePath());
@@ -381,7 +380,7 @@ public class ConfigDialogPanel extends JPanel {
 								// Update UAVs combobox if arducopter and speeds are already loaded
 								if (SimParam.sitlPath != null
 										&& UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
-									int numUAVs = Math.min(API.getLoadedMissions().length, UAVParam.initialSpeeds.length);
+									int numUAVs = Math.min(Tools.getLoadedMissions().length, UAVParam.initialSpeeds.length);
 									numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
 									UAVsComboBox.removeAllItems();
 									for (int i = 0; i < numUAVs; i++) {
@@ -429,7 +428,7 @@ public class ConfigDialogPanel extends JPanel {
 				final File selection;
 				JFileChooser chooser;
 				chooser = new JFileChooser();
-				chooser.setCurrentDirectory(GUIHelper.getCurrentFolder());
+				chooser.setCurrentDirectory(Tools.getCurrentFolder());
 				chooser.setDialogTitle(Text.SPEEDS_DIALOG_TITLE);
 				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(Text.SPEEDS_DIALOG_SELECTION, Text.FILE_EXTENSION_CSV);
@@ -445,7 +444,7 @@ public class ConfigDialogPanel extends JPanel {
 				if (selection != null) {
 					UAVParam.initialSpeeds = SimTools.loadSpeedsFile(selection.getAbsolutePath());
 					if (UAVParam.initialSpeeds == null) {
-						GUIHelper.warn(Text.SPEEDS_SELECTION_ERROR, Text.SPEEDS_ERROR_1);
+						GUI.warn(Text.SPEEDS_SELECTION_ERROR, Text.SPEEDS_ERROR_1);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								UAVsComboBox.removeAllItems();
@@ -460,7 +459,7 @@ public class ConfigDialogPanel extends JPanel {
 							if (SimParam.sitlPath != null) {
 								int numUAVs = -1;
 								if (Param.simulationIsMissionBased) {
-									List<Waypoint>[] missions = API.getLoadedMissions();
+									List<Waypoint>[] missions = Tools.getLoadedMissions();
 									if (missions != null
 											&& missions.length > 0) {
 										numUAVs = Math.min(missions.length, UAVParam.initialSpeeds.length);
@@ -1137,7 +1136,7 @@ public class ConfigDialogPanel extends JPanel {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				protocolComboBox.removeAllItems();
-				for (Protocol p : Protocol.values()) {
+				for (ProtocolHelper.Protocol p : ProtocolHelper.Protocol.values()) {
 					if (Param.simulationIsMissionBased == p.isMissionBased()) {
 						protocolComboBox.addItem(p.getName());
 					}

@@ -9,16 +9,16 @@ import java.net.SocketException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import com.esotericsoftware.kryo.io.Input;
-import api.API;
-import api.GUIHelper;
-import api.SwarmHelper;
+
+import api.Copter;
+import api.GUI;
+import api.Tools;
+import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
-import main.Param;
-import main.Param.SimulatorState;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
-import uavController.UAVParam;
 
 public class Listener extends Thread {
 
@@ -71,7 +71,7 @@ public class Listener extends Thread {
 			e.printStackTrace();
 		}
 		/** Real UAV */
-		if (Param.IS_REAL_UAV) {
+		if (Tools.isRealUAV()) {
 			this.socketListener = new DatagramSocket(SwarmProtParam.port);
 			this.socketListener.setBroadcast(true);
 
@@ -94,25 +94,24 @@ public class Listener extends Thread {
 		 * if UAV = 0 (which is the master's identifier in simulation))
 		 */
 		
-		while (Param.simStatus == Param.SimulatorState.CONFIGURING
-				|| Param.simStatus == Param.SimulatorState.CONFIGURING_PROTOCOL
-				|| Param.simStatus == Param.SimulatorState.STARTING_UAVS) {
-			GUIHelper.waiting(SwarmProtParam.waitState);
+		while (Tools.areUAVsNotAvailable()) {
+			Tools.waiting(SwarmProtParam.waitState);
 		}
 		
 		// Starting time
 		long startTime = System.currentTimeMillis();
-
+		
+		long selfId = Tools.getIdFromPos(numUAV);
+		
 		/** Master actions ----------------------------------------------------------------------------------- */
-		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
-
+		if (selfId == SwarmProtParam.idMaster) {
 			/** PHASE START */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_LISTENER);
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_LISTENER);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				
-				while(Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED) {
+				while(Tools.areUAVsReadyForSetup()) {
 					try {
 						inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
 						inPacket.setData(inBuffer);
@@ -164,6 +163,8 @@ public class Listener extends Thread {
 //					}
 //				}
 
+				// Setup step starts
+				
 				// Convert HashMap to uavPosition with IDs and initial position
 				Iterator<Map.Entry<Long, uavPosition>> entries;
 				Map.Entry<Long, uavPosition> entry;
@@ -178,8 +179,8 @@ public class Listener extends Thread {
 					i++;
 				}
 				// Set Master ID and initial position to the last position
-				Point2D.Double UTMMaster = UAVParam.uavCurrentData[numUAV].getUTMLocation();
-				Double headingMaster = UAVParam.uavCurrentData[numUAV].getHeading();
+				Point2D.Double UTMMaster = Copter.getUTMLocation(numUAV);
+				Double headingMaster = Copter.getHeading(numUAV);
 				uavPosition masterPosition = new uavPosition();
 				masterPosition.id = SwarmProtParam.idMaster;
 				masterPosition.x = UTMMaster.x;
@@ -191,7 +192,7 @@ public class Listener extends Thread {
 				semaphore = true;
 
 				// How many drones have been detected?
-				SwarmHelper.log(SwarmProtText.DETECTED + UAVsDetected.size() + " UAVs");
+				GUI.log(SwarmProtText.DETECTED + UAVsDetected.size() + " UAVs");
 
 				// Change to next phase
 				SwarmProtParam.state[numUAV] = SwarmProtState.SEND_DATA;
@@ -200,7 +201,7 @@ public class Listener extends Thread {
 
 			/** PHASE SEND DATA */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_DATA_LISTENER);
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_DATA_LISTENER);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
 			
@@ -231,7 +232,7 @@ public class Listener extends Thread {
 
 			/** PHASE SEND LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_LIST) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_LISTENER);
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_LISTENER);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_LIST) {
 				
@@ -264,47 +265,19 @@ public class Listener extends Thread {
 			} /** END PHASE SEND LIST */
 			
 			//Sync time
-			GUIHelper.waiting(3000);
+			Tools.waiting(3000);
 			
-			Param.simStatus = SimulatorState.READY_FOR_TEST;
-			while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
-				GUIHelper.waiting(SwarmProtParam.waitState);
-			}
-
-			/** PHASE SEND TAKE OFF */
-			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
-				SwarmHelper.log("Master " + numUAV + ": " + SwarmProtText.SEND_TAKE_OFF + "--> Listening");
-			}
-			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
-
-				/** Waiting for TAKE_OFF MSJ */
-				try {
-					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
-					inPacket.setData(inBuffer);
-					socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
-					socketListener.receive(inPacket);
-					input = new Input(inPacket.getData());
-					input.setPosition(0);
-					short tipo = input.readShort();
-					long myID = input.readLong();
-					if (tipo == 4 && myID == Param.id[numUAV]) {
-						SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
-					}
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-			}
-			/** END PHASE SEND TAKE OFF */
-
+			SwarmProtParam.setupFinished.set(numUAV, 1);
+			
 			/** Slave actions---------------------------------------------------------------*/
 		} else {
 			/** PHASE_START */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
-				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_START_LISTENER);
+				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_START_LISTENER);
 			}
 			
-			while(Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED) {
-				GUIHelper.waiting(SwarmProtParam.waitState);
+			while(Tools.areUAVsReadyForSetup()) {
+				Tools.waiting(SwarmProtParam.waitState);
 			}
 			
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
@@ -319,7 +292,7 @@ public class Listener extends Thread {
 					input.setPosition(0);
 					short tipo = input.readShort();
 					long myID = input.readLong();
-					if (tipo == 2 && myID == Param.id[numUAV]) {
+					if (tipo == 2 && myID == selfId) {
 						takeOffAltitudeStepOne = input.readDouble();
 						SwarmProtParam.state[numUAV] = SwarmProtState.WAIT_LIST;
 					}
@@ -331,7 +304,7 @@ public class Listener extends Thread {
 			
 			/** PHASE WAIT LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
-				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_LIST_LISTENER);
+				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_LIST_LISTENER);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
 				
@@ -344,7 +317,7 @@ public class Listener extends Thread {
 					short tipo = input.readShort();
 					long myID = input.readLong();
 
-					if (tipo == 3 && myID == Param.id[numUAV]) {
+					if (tipo == 3 && myID == selfId) {
 
 						idPrev = input.readLong();
 						idNext = input.readLong();
@@ -368,7 +341,7 @@ public class Listener extends Thread {
 						SwarmProtParam.flightListPersonalizedAltGeo[numUAV] = new Double[numberOfWp];
 
 						for (int s = 0; s < SwarmProtParam.flightListPersonalized[numUAV].length; s++) {
-							SwarmProtParam.flightListPersonalizedGeo[numUAV][s] = GUIHelper.UTMToGeo(SwarmProtParam.flightListPersonalized[numUAV][s].x, SwarmProtParam.flightListPersonalized[numUAV][s].y);
+							SwarmProtParam.flightListPersonalizedGeo[numUAV][s] = Tools.UTMToGeo(SwarmProtParam.flightListPersonalized[numUAV][s].x, SwarmProtParam.flightListPersonalized[numUAV][s].y);
 							SwarmProtParam.flightListPersonalizedAltGeo[numUAV][s] = SwarmProtParam.flightListPersonalized[numUAV][s].z;
 						}
 
@@ -383,17 +356,45 @@ public class Listener extends Thread {
 
 			/** PHASE WAIT TAKE OFF */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
-				SwarmHelper.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_TAKE_OFF_LISTENER);
+				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_TAKE_OFF_LISTENER);
 			}
 			
-			if(Param.IS_REAL_UAV) {
-				Param.simStatus = SimulatorState.READY_FOR_TEST;
+			SwarmProtParam.setupFinished.set(numUAV, 1);
+		}
+		
+		while(Tools.isSetupInProgress() || Tools.isSetupFinished()) {
+			Tools.waiting(SwarmProtParam.waitState);
+		}
+		
+		/** Master actions ----------------------------------------------------------------------------------- */
+		if (selfId == SwarmProtParam.idMaster) {
+			/** PHASE SEND TAKE OFF */
+			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
+				GUI.log("Master " + numUAV + ": " + SwarmProtText.SEND_TAKE_OFF + "--> Listening");
 			}
-			
-			while(Param.simStatus == SimulatorState.SETUP_IN_PROGRESS || Param.simStatus == SimulatorState.READY_FOR_TEST) {
-				GUIHelper.waiting(SwarmProtParam.waitState);
-			}
+			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
 
+				/** Waiting for TAKE_OFF MSJ */
+				try {
+					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+					inPacket.setData(inBuffer);
+					socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+					socketListener.receive(inPacket);
+					input = new Input(inPacket.getData());
+					input.setPosition(0);
+					short tipo = input.readShort();
+					long myID = input.readLong();
+					if (tipo == 4 && myID == selfId) {
+						SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
+					}
+				} catch (IOException e) {
+					// e.printStackTrace();
+				}
+			}
+			/** END PHASE SEND TAKE OFF */
+			
+			/** Slave actions---------------------------------------------------------------*/
+		} else {
 			// If I'm the first one, I take off directly
 			if (idPrev == SwarmProtParam.broadcastMAC && Talker.semaphoreSlaveACK3) {
 				SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
@@ -410,7 +411,7 @@ public class Listener extends Thread {
 						long myID = input.readLong();
 
 						// If MSJ4 is received, someone has given the order for you to take off
-						if (tipo == 4 && myID == Param.id[numUAV]) {
+						if (tipo == 4 && myID == selfId) {
 							SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
 
 						}
@@ -420,28 +421,379 @@ public class Listener extends Thread {
 					}
 				}
 			}
-			
-			
-			
 
 			/** END PHASE WAIT TAKE OFF */
-
 		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+// TODO comprobar los cambios puestos por Francisco
+//		/** Master actions ----------------------------------------------------------------------------------- */
+//		if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+//
+//			/** PHASE START */
+//			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
+//				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_LISTENER);
+//			}
+//			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
+//
+//				while(Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED) {
+//					try {
+//						inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//						inPacket.setData(inBuffer);
+//						// The socket is unlocked after a given time
+//						socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+//						socketListener.receive(inPacket);
+//						input = new Input(inPacket.getData());
+//						input.setPosition(0);
+//						short tipo = input.readShort();
+//
+//						if (tipo == 1) {
+//							// Read id (MAC on real UAV) of UAVs and write it into Map if is not duplicated
+//							Long idSlave = input.readLong();
+//							uavPosition posiciones = new uavPosition(input.readDouble(), input.readDouble(), idSlave,
+//									input.readDouble());
+//							// ADD to Map the new UAV detected
+//							UAVsDetected.put(idSlave, posiciones);
+//						}
+//					} catch (IOException e) {
+//						System.err.println(SwarmProtText.MASTER_SOCKET_READ_ERROR);
+//						e.printStackTrace();
+//					}
+//				}
+//
+//
+//				// Master wait slave UAVs for 20 seconds
+//				//				while ((System.currentTimeMillis() - startTime) < SwarmProtParam.waitTimeForSlaves) {
+//				//					try {
+//				//						inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//				//						inPacket.setData(inBuffer);
+//				//						// The socket is unlocked after a given time
+//				//						socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+//				//						socketListener.receive(inPacket);
+//				//						input = new Input(inPacket.getData());
+//				//						input.setPosition(0);
+//				//						short tipo = input.readShort();
+//				//
+//				//						if (tipo == 1) {
+//				//							// Read id (MAC on real UAV) of UAVs and write it into Map if is not duplicated
+//				//							Long idSlave = input.readLong();
+//				//							uavPosition posiciones = new uavPosition(input.readDouble(), input.readDouble(), idSlave,
+//				//									input.readDouble());
+//				//							// ADD to Map the new UAV detected
+//				//							UAVsDetected.put(idSlave, posiciones);
+//				//						}
+//				//					} catch (IOException e) {
+//				//						System.err.println(SwarmProtText.MASTER_SOCKET_READ_ERROR);
+//				//						e.printStackTrace();
+//				//					}
+//				//				}
+//
+//				// Convert HashMap to uavPosition with IDs and initial position
+//				Iterator<Map.Entry<Long, uavPosition>> entries;
+//				Map.Entry<Long, uavPosition> entry;
+//				entries = UAVsDetected.entrySet().iterator();
+//				int i = 0;
+//				// +1 to include master ID
+//				positionsAndIDs = new uavPosition[UAVsDetected.size() + 1];
+//
+//				while (entries.hasNext()) {
+//					entry = entries.next();
+//					positionsAndIDs[i] = entry.getValue();
+//					i++;
+//				}
+//				// Set Master ID and initial position to the last position
+//				Point2D.Double UTMMaster = UAVParam.uavCurrentData[numUAV].getUTMLocation();
+//				Double headingMaster = UAVParam.uavCurrentData[numUAV].getHeading();
+//				uavPosition masterPosition = new uavPosition();
+//				masterPosition.id = SwarmProtParam.idMaster;
+//				masterPosition.x = UTMMaster.x;
+//				masterPosition.y = UTMMaster.y;
+//				masterPosition.heading = headingMaster;
+//				positionsAndIDs[positionsAndIDs.length - 1] = masterPosition;
+//
+//				//For flow control
+//				semaphore = true;
+//
+//				// How many drones have been detected?
+//				GUI.log(SwarmProtText.DETECTED + UAVsDetected.size() + " UAVs");
+//
+//				// Change to next phase
+//				SwarmProtParam.state[numUAV] = SwarmProtState.SEND_DATA;
+//
+//			} /** END PHASE START */
+//
+//			/** PHASE SEND DATA */
+//			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
+//				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_DATA_LISTENER);
+//			}
+//			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
+//
+//				/** Waiting ACK2 from all slaves */
+//				try {
+//					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//					inPacket.setData(inBuffer);
+//					socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+//					socketListener.receive(inPacket);
+//					input = new Input(inPacket.getData());
+//					input.setPosition(0);
+//					short tipo = input.readShort();
+//
+//					if (tipo == 7) {
+//						long idSlave = input.readLong();
+//						uavsACK2.put(idSlave, idSlave);
+//					}
+//
+//					if (UAVsDetected.size() == uavsACK2.size()) {
+//						// Change to next phase
+//						SwarmProtParam.state[numUAV] = SwarmProtState.SEND_LIST;
+//					}
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//
+//			} /** END PHASE SEND DATA */
+//
+//			/** PHASE SEND LIST */
+//			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_LIST) {
+//				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_LISTENER);
+//			}
+//			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_LIST) {
+//
+//				/** Waiting ACK3 from all slaves */
+//				try {
+//
+//					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//					inPacket.setData(inBuffer);
+//					socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+//					socketListener.receive(inPacket);
+//					input = new Input(inPacket.getData());
+//					input.setPosition(0);
+//					short tipo = input.readShort();
+//
+//					if (tipo == 8) {
+//						long idSlave = input.readLong();
+//						uavsACK3.put(idSlave, idSlave);
+//					}
+//					if (UAVsDetected.size() == uavsACK3.size()) {
+//						if (idPrevMaster == SwarmProtParam.broadcastMAC) {
+//							SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
+//						} else {
+//							SwarmProtParam.state[numUAV] = SwarmProtState.SEND_TAKE_OFF;
+//						}
+//					}
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//
+//			} /** END PHASE SEND LIST */
+//
+//			//Sync time
+//			Tools.waiting(3000);
+//
+//			Param.simStatus = SimulatorState.READY_FOR_TEST;//TODO modificar la espera por mis cambios
+//			while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+//				Tools.waiting(SwarmProtParam.waitState);
+//			}
+//
+//			/** PHASE SEND TAKE OFF */
+//			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
+//				GUI.log("Master " + numUAV + ": " + SwarmProtText.SEND_TAKE_OFF + "--> Listening");
+//			}
+//			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
+//
+//				/** Waiting for TAKE_OFF MSJ */
+//				try {
+//					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//					inPacket.setData(inBuffer);
+//					socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+//					socketListener.receive(inPacket);
+//					input = new Input(inPacket.getData());
+//					input.setPosition(0);
+//					short tipo = input.readShort();
+//					long myID = input.readLong();
+//					if (tipo == 4 && myID == Param.id[numUAV]) {
+//						SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
+//					}
+//				} catch (IOException e) {
+//					// e.printStackTrace();
+//				}
+//			}
+//			/** END PHASE SEND TAKE OFF */
+//
+//			/** Slave actions---------------------------------------------------------------*/
+//		} else {
+//			/** PHASE_START */
+//			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
+//				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_START_LISTENER);
+//			}
+//			
+//			while(Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED) {
+//				Tools.waiting(SwarmProtParam.waitState);
+//			}
+//			
+//			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
+//				
+//				/** Waiting for MSJ2 */
+//				try {
+//					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//					inPacket.setData(inBuffer);
+//					socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+//					socketListener.receive(inPacket);
+//					input = new Input(inPacket.getData());
+//					input.setPosition(0);
+//					short tipo = input.readShort();
+//					long myID = input.readLong();
+//					if (tipo == 2 && myID == Param.id[numUAV]) {
+//						takeOffAltitudeStepOne = input.readDouble();
+//						SwarmProtParam.state[numUAV] = SwarmProtState.WAIT_LIST;
+//					}
+//
+//				} catch (IOException e) {
+//					// e.printStackTrace();
+//				}
+//			} /** END PHASE START */
+//			
+//			/** PHASE WAIT LIST */
+//			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
+//				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_LIST_LISTENER);
+//			}
+//			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
+//				
+//				try {
+//					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//					inPacket.setData(inBuffer);
+//					socketListener.receive(inPacket);
+//					input = new Input(inPacket.getData());
+//					input.setPosition(0);
+//					short tipo = input.readShort();
+//					long myID = input.readLong();
+//
+//					if (tipo == 3 && myID == Param.id[numUAV]) {
+//
+//						idPrev = input.readLong();
+//						idNext = input.readLong();
+//						// The matrix is ​​filled with the idPrev and idNext (for take off step) of each UAV
+//						SwarmProtParam.fightPrevNext[numUAV][0] = idPrev;
+//						SwarmProtParam.fightPrevNext[numUAV][1] = idNext;
+//
+//						// The number of WP is read to know the loop length
+//						int numberOfWp = input.readInt();
+//						SwarmProtParam.flightListPersonalized[numUAV] = new Point3D[numberOfWp];
+//						SwarmProtParam.flightListPersonalizedAlt[numUAV] = new Double[numberOfWp];
+//
+//						for (int i = 0; i < numberOfWp; i++) {
+//							SwarmProtParam.flightListPersonalized[numUAV][i] = new Point3D(input.readDouble(),
+//									input.readDouble(), input.readDouble());
+//
+//						}
+//
+//						// Initialize the geometric coordinates array and altitude array
+//						SwarmProtParam.flightListPersonalizedGeo[numUAV] = new GeoCoordinates[numberOfWp];
+//						SwarmProtParam.flightListPersonalizedAltGeo[numUAV] = new Double[numberOfWp];
+//
+//						for (int s = 0; s < SwarmProtParam.flightListPersonalized[numUAV].length; s++) {
+//							SwarmProtParam.flightListPersonalizedGeo[numUAV][s] = Tools.UTMToGeo(SwarmProtParam.flightListPersonalized[numUAV][s].x, SwarmProtParam.flightListPersonalized[numUAV][s].y);
+//							SwarmProtParam.flightListPersonalizedAltGeo[numUAV][s] = SwarmProtParam.flightListPersonalized[numUAV][s].z;
+//						}
+//
+//						SwarmProtParam.state[numUAV] = SwarmProtState.WAIT_TAKE_OFF;
+//					} else {
+//
+//					}
+//				} catch (IOException e) {
+//					//e.printStackTrace();
+//				}
+//			} /** END PHASE WAIT LIST */
+//
+//			/** PHASE WAIT TAKE OFF */
+//			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
+//				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_TAKE_OFF_LISTENER);
+//			}
+//			
+//			if(Param.IS_REAL_UAV) {
+//				Param.simStatus = SimulatorState.READY_FOR_TEST;//TODO modificar la espera por mis cambios
+//			}
+			
+//			while(Param.simStatus == SimulatorState.SETUP_IN_PROGRESS || Param.simStatus == SimulatorState.READY_FOR_TEST) {
+//				Tools.waiting(SwarmProtParam.waitState);
+//			}
+//
+//			// If I'm the first one, I take off directly
+//			if (idPrev == SwarmProtParam.broadcastMAC && Talker.semaphoreSlaveACK3) {
+//				SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
+//			}else {
+//				while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
+//					try {
+//						inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
+//						inPacket.setData(inBuffer);
+//						socketListener.setSoTimeout(SwarmProtParam.recTimeOut);
+//						socketListener.receive(inPacket);
+//						input = new Input(inPacket.getData());
+//						input.setPosition(0);
+//						short tipo = input.readShort();
+//						long myID = input.readLong();
+//
+//						// If MSJ4 is received, someone has given the order for you to take off
+//						if (tipo == 4 && myID == Param.id[numUAV]) {
+//							SwarmProtParam.state[numUAV] = SwarmProtState.TAKING_OFF;
+//
+//						}
+//
+//					} catch (IOException e) {
+//						// e.printStackTrace();
+//					}
+//				}
+//			}
+//			
+//			
+//			
+//
+//			/** END PHASE WAIT TAKE OFF */
+//
+//		}
 
 		/** COMMON PHASES OF MASTER AND SLAVE--------------------------------------------------------*/
 
 		/** PHASE TAKING OFF */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
-			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.TAKING_OFF_COMMON + "--> Listening");
+			GUI.log("UAV " + numUAV + ": " + SwarmProtText.TAKING_OFF_COMMON + "--> Listening");
 
-			SwarmProtHelper.takeOffIndividual(numUAV);
+			//Taking Off to first altitude step
+			Copter.takeOff(numUAV, Listener.takeOffAltitudeStepOne);
 		}
 		// Waiting to reach the altitude of the first point step
 		boolean txtPrint = true;
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
-			if (UAVParam.uavCurrentData[numUAV].getZRelative() < takeOffAltitudeStepOne) {
+			if (Copter.getZRelative(numUAV) < takeOffAltitudeStepOne) {
 				if (txtPrint) {
-					SwarmHelper.log("The UAV " + numUAV + " is going to the safety altitude");
+					GUI.log("The UAV " + numUAV + " is going to the safety altitude");
 				}
 				txtPrint = false;
 			} else {
@@ -455,24 +807,24 @@ public class Listener extends Thread {
 		while (SwarmProtParam.WpLast[numUAV][0] != true) {
 			/** PHASE MOVE_TO_WP */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
-				SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.MOVE_TO_WP + "--> Listening");
+				GUI.log("UAV " + numUAV + ": " + SwarmProtText.MOVE_TO_WP + "--> Listening");
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
 				// In this phase only the takeoff is done and nobody's MSJ is expected
-				GUIHelper.waiting(SwarmProtParam.waitState);
+				Tools.waiting(SwarmProtParam.waitState);
 			}
 			/** END PHASE MOVE_TO_WP */
 
 			/** PHASE WP_REACHED */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
-				SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.WP_REACHED + "--> Listening");
+				GUI.log("UAV " + numUAV + ": " + SwarmProtText.WP_REACHED + "--> Listening");
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
 				
 				/** If I am the master, I must wait for the confirmation messages from the slaves when they reach the 
 				 * point correctly (that is when they reach their WP_REACHED phase) 
 				 */
-				if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+				if (selfId == SwarmProtParam.idMaster) {
 					try {
 						inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
 						inPacket.setData(inBuffer);
@@ -500,7 +852,7 @@ public class Listener extends Thread {
 						short tipo = input.readShort();
 						long myID = input.readLong();
 						
-						if (tipo == 5 && myID == Param.id[numUAV]) {
+						if (tipo == 5 && myID == selfId) {
 							SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;
 						}
 					} catch (IOException e) {
@@ -514,11 +866,11 @@ public class Listener extends Thread {
 
 		/** PHASE LANDING */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
-			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.LANDING + "--> Listening");
+			GUI.log("UAV " + numUAV + ": " + SwarmProtText.LANDING + "--> Listening");
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
-			if (Param.id[numUAV] == SwarmProtParam.idMaster) {
+			if (selfId == SwarmProtParam.idMaster) {
 				try {
 					inBuffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
 					inPacket.setData(inBuffer);
@@ -537,7 +889,7 @@ public class Listener extends Thread {
 					// e.printStackTrace();
 				}
 				if(uavsACK5.size() == UAVsDetected.size() ) {
-					API.setMode(numUAV, UAVParam.Mode.LAND_ARMED);
+					Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED);
 				}
 			} else {
 				try {
@@ -552,7 +904,7 @@ public class Listener extends Thread {
 					//I do not put the id because it does not matter, if that order is given it is for all
 					if (tipo == 6) {
 						//Land command
-						API.setMode(numUAV, UAVParam.Mode.LAND_ARMED);
+						Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED);
 					}
 				} catch (IOException e) {
 					// e.printStackTrace();
@@ -560,7 +912,7 @@ public class Listener extends Thread {
 			}
 			
 			//If the flight mode is LAND it means that it has landed and is disarmed
-			if(UAVParam.flightMode.get(numUAV).getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
+			if(!Copter.isFlying(numUAV)) {
 				SwarmProtParam.state[numUAV] = SwarmProtState.FINISH;
 			}
 			
@@ -568,7 +920,7 @@ public class Listener extends Thread {
 		
 		/** PHASE FINISH */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.FINISH) {
-			SwarmHelper.log("UAV " + numUAV + ": " + SwarmProtText.FINISH + "--> Listening");
+			GUI.log("UAV " + numUAV + ": " + SwarmProtText.FINISH + "--> Listening");
 		}
 		/** END PHASE FINISH */
 		

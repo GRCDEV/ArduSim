@@ -7,9 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
 import org.javatuples.Triplet;
@@ -47,9 +45,12 @@ import org.mavlink.messages.ardupilotmega.msg_set_position_target_global_int;
 import org.mavlink.messages.ardupilotmega.msg_statustext;
 import org.mavlink.messages.ardupilotmega.msg_sys_status;
 
-import api.GUIHelper;
+import api.GUI;
+import api.Tools;
+import api.pojo.FlightMode;
 import api.pojo.LogPoint;
 import api.pojo.Point3D;
+import api.pojo.RCValues;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import gnu.io.CommPort;
@@ -58,12 +59,12 @@ import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
+import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavController.UAVParam.Mode;
 
 /** This class implements the communication with the UAV, whether it is real or simulated.
  * <p>The thread applies the communications finite state machine needed to support the MAVLink protocol.
@@ -71,8 +72,6 @@ import uavController.UAVParam.Mode;
 
 public class UAVControllerThread extends Thread {
 	
-	private List<WaypointReachedListener> listeners;
-
 	private int numUAV;			// Id of the UAV
 	private boolean isStarting; // Used to wait until the first valid coordinates set is received
 	private int numTests;		// It allows to check several times if the waypoint has been sent well.
@@ -95,7 +94,6 @@ public class UAVControllerThread extends Thread {
 	private boolean locationReceived = false;
 
 	public UAVControllerThread(int numUAV) throws SocketException {
-		this.listeners = new ArrayList<WaypointReachedListener>();
 		this.numUAV = numUAV;
 		this.isStarting = true;
 		this.numTests = 0;
@@ -118,7 +116,7 @@ public class UAVControllerThread extends Thread {
 				portIdentifier = CommPortIdentifier.getPortIdentifier(UAVParam.SERIAL_PORT);
 
 				if (portIdentifier.isCurrentlyOwned()) {
-					SimTools.println(Text.SERIAL_ERROR_1);
+					GUI.log(Text.SERIAL_ERROR_1);
 				} else {
 					int timeout = 2000;
 					CommPort commPort = portIdentifier.open(this.getClass().getName(), timeout);
@@ -130,7 +128,7 @@ public class UAVControllerThread extends Thread {
 						dout = new DataOutputStream(serialPort.getOutputStream());
 						reader = new MAVLinkReader(din, IMAVLinkMessage.MAVPROT_PACKET_START_V10);
 					} else {
-						SimTools.println(Text.SERIAL_ERROR_2);
+						GUI.log(Text.SERIAL_ERROR_2);
 					}
 				}
 			} catch (NoSuchPortException e) {
@@ -143,7 +141,7 @@ public class UAVControllerThread extends Thread {
 				e.printStackTrace();
 			}
 			if (reader == null) {
-				SimTools.println(Text.SERIAL_ERROR_3);
+				GUI.log(Text.SERIAL_ERROR_3);
 				System.exit(1);
 			}
 
@@ -162,14 +160,9 @@ public class UAVControllerThread extends Thread {
 			}
 
 			if (reader == null) {
-				GUIHelper.exit(Text.TCP_ERROR);
+				GUI.exit(Text.TCP_ERROR);
 			}
 		}
-	}
-	
-	/** Ads a listener for the event: waypoint reached (more than one can be set). */
-	public void setWaypointReached(WaypointReachedListener listener) {
-		this.listeners.add(listener);
 	}
 
 	@Override
@@ -341,7 +334,7 @@ public class UAVControllerThread extends Thread {
 
 			Point2D.Double locationUTM = new Point2D.Double();
 			Point2D.Double locationGeo = new Point2D.Double(message.lon * 0.0000001, message.lat * 0.0000001);
-			UTMCoordinates locationUTMauxiliary = GUIHelper.geoToUTM(locationGeo.y, locationGeo.x);	// Latitude = x
+			UTMCoordinates locationUTMauxiliary = Tools.geoToUTM(locationGeo.y, locationGeo.x);	// Latitude = x
 			// The first time a coordinate set is received, we store the planet region where the UAVs are flying
 			if (SimParam.zone < 0) {
 				SimParam.zone = locationUTMauxiliary.Zone;
@@ -349,15 +342,15 @@ public class UAVControllerThread extends Thread {
 			}
 			locationUTM.setLocation(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing);
 			long time = System.nanoTime();
-			double z = message.alt * 0.001;
-			double heading = (message.hdg * 0.01) * Math.PI / 180;
-
+			
 			// The last few UAV positions are stored for later use in protocols
-			UAVParam.lastLocations[numUAV].updateLastPositions(new Point3D(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z));
+			UAVParam.lastLocations[numUAV].updateLastPositions(new Point3D(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, message.relative_alt * 0.001));
 			// Global horizontal speed estimation
 			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
 			Triplet<Double, Double, Double> speed = Triplet.with(message.vx * 0.01, message.vy * 0.01, message.vz * 0.01);
 			// Update the UAV data, including the acceleration calculus
+			double z = message.alt * 0.001;
+			double heading = (message.hdg * 0.01) * Math.PI / 180;
 			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
 			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z, heading, hSpeed,
@@ -368,12 +361,12 @@ public class UAVControllerThread extends Thread {
 	/** Process a received flight mode and assert that the MAVLink link has been established. */
 	private void processMode() {
 		msg_heartbeat message = (msg_heartbeat) inMsg;
-		UAVParam.Mode prevMode = UAVParam.flightMode.get(numUAV);
+		FlightMode prevMode = UAVParam.flightMode.get(numUAV);
 		// Only process valid mode
 		if (message.base_mode != 0 || message.custom_mode != 0) {
 			// Only process when mode changes
 			if (prevMode == null || prevMode.getBaseMode() != message.base_mode || prevMode.getCustomMode() != message.custom_mode) {
-				UAVParam.Mode mode = UAVParam.Mode.getMode(message.base_mode, message.custom_mode);
+				FlightMode mode = FlightMode.getMode(message.base_mode, message.custom_mode);
 				if (mode != null) {
 					UAVParam.flightMode.set(numUAV, mode);
 					SimTools.updateUAVMAVMode(numUAV, mode.getMode());	// Update the progress dialog
@@ -381,7 +374,7 @@ public class UAVControllerThread extends Thread {
 						UAVParam.flightStarted = true;
 					}
 				} else {
-					SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + message.base_mode + "," + message.custom_mode + ")");
+					GUI.log(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + message.base_mode + "," + message.custom_mode + ")");
 				}
 			}
 			
@@ -452,11 +445,9 @@ public class UAVControllerThread extends Thread {
 		msg_mission_item_reached message = (msg_mission_item_reached) inMsg;
 		// The received value begins in 0
 		UAVParam.currentWaypoint.set(numUAV, message.seq);
-		SimTools.println(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
+		GUI.log(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
 		
-		for (int i=0; i<this.listeners.size(); i++) {
-			this.listeners.get(i).onWaypointReached();
-		}
+		ArduSimTools.triggerWaypointReached(numUAV);
 	}
 
 	/** Process the received message that gets the number of waypoints included in the UAV mission. */
@@ -517,7 +508,7 @@ public class UAVControllerThread extends Thread {
 					}
 				}
 			} else {
-				SimTools.println(SimParam.prefix[numUAV] + Text.IMPOSSIBLE_WAYPOINT_ERROR);
+				GUI.log(SimParam.prefix[numUAV] + Text.IMPOSSIBLE_WAYPOINT_ERROR);
 			}
 		}
 	}
@@ -594,7 +585,7 @@ public class UAVControllerThread extends Thread {
 			break;
 		// Command to change the flight mode to the one stored in the variable UAVParam.newFlightMode[numUAV]
 		case UAVParam.MAV_STATUS_REQUEST_MODE:
-			Mode mode = UAVParam.flightMode.get(numUAV);
+			FlightMode mode = UAVParam.flightMode.get(numUAV);
 			if (mode.getBaseMode() != UAVParam.newFlightMode[numUAV].getBaseMode()
 			|| mode.getCustomMode() != UAVParam.newFlightMode[numUAV]
 					.getCustomMode()) {
@@ -774,7 +765,7 @@ public class UAVControllerThread extends Thread {
 			}
 			break;
 		default:
-			SimTools.println(Text.NOT_REQUESTED_ACK_ERROR
+			GUI.log(Text.NOT_REQUESTED_ACK_ERROR
 					+ " (command=" + message.command + ", result=" + message.result + ")");
 		}
 	}

@@ -15,25 +15,25 @@ import javax.swing.SwingUtilities;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 
-import api.GUIHelper;
+import api.GUI;
+import api.Tools;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
-import uavController.UAVParam;
 
 public class PCCompanionListener extends Thread {
 
 	@Override
 	public void run() {
 		DatagramSocket receiveSocket = null;
-		byte[] receivedBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		byte[] receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		DatagramPacket receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
 		Input input = new Input(receivedBuffer);
 		try {
 			receiveSocket = new DatagramSocket(PCCompanionParam.COMPUTER_PORT);
 			receiveSocket.setBroadcast(true);
 		} catch (SocketException e) {
-			GUIHelper.exit(Text.BIND_ERROR_3);
+			GUI.exit(Text.BIND_ERROR_3);
 		}
 		
 		Map<Long, StatusPacket> receiving = new HashMap<>();
@@ -135,7 +135,7 @@ public class PCCompanionListener extends Thread {
 					time = time + PCCompanionParam.STATUS_CHANGE_CHECK_TIMEOUT;
 				}
 			} catch (KryoException e) {} catch (IOException e) {}
-			receivedBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+			receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 			receivedPacket.setData(receivedBuffer, 0, receivedBuffer.length);
 		}
 		input.close();

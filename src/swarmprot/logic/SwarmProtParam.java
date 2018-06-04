@@ -1,5 +1,8 @@
 package swarmprot.logic;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 
@@ -26,6 +29,9 @@ public class SwarmProtParam {
 	public static int port = 14600; // Simulated broadcast port
 	public static int portTalker = 15100; // Simulated broadcast port
 	public static final int recTimeOut = 500; // The port is unlocked after this time (ms)
+	
+	// Assert if the setup step has finished (0=no, 1=yes)
+	public static AtomicIntegerArray setupFinished;
 
 	// Protocol state included
 	public static SwarmProtState[] state;

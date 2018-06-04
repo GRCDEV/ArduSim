@@ -6,80 +6,89 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.javatuples.Quintet;
+import org.javatuples.Triplet;
 import org.mavlink.messages.MAV_CMD;
 
+import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
+import api.pojo.Point3D;
+import api.pojo.RCValues;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
+import main.ArduSimTools;
 import main.Param;
 import main.Text;
 import mbcap.logic.MBCAPText;
+import sim.board.BoardParam;
 import sim.logic.SimParam;
-import sim.logic.SimTools;
 import sim.pojo.IncomingMessage;
-import uavController.RCValues;
+import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
-/** This class contains exclusively static methods to control the UAV "numUAV" in the arrays included in the application. */
+/** This class contains exclusively static methods to control the UAV "numUAV" in the arrays included in the application.
+ * <p>Methods that start with "API" are single commands, while other methods are complex commands made of several of the previous commands. */
 
-public class API {
-
-	/** API: Sets a new value for a controller or SITL parameter.
+public class Copter {
+	
+	/** API: Sets a new value for a flight controller parameter.
+	 * <p>Parameters that start with "SIM_" are only available on simulation.
 	 * <p>Returns true if the command was successful. */
-	public static boolean setParam(int numUAV, ControllerParam parameter, double value) {
+	public static boolean setParameter(int numUAV, ControllerParam parameter, double value) {
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.newParamValue.set(numUAV, value);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_1_PARAM) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_1_PARAM) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_1 + " " + parameter.getId() + ".");
+			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_1 + " " + parameter.getId() + ".");
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_1 + " " + parameter.getId() + " = " + value);
+			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_1 + " " + parameter.getId() + " = " + value);
 			return true;
 		}
 	}
 	
-	/** API: Gets the value of a controller or SITL parameter.
+	/** API: Gets the value of a flight controller parameter.
+	 * <p>Parameters that start with "SIM_" are only available on simulation.
 	 * <p>Returns the parameter value if the command was successful.
 	 * <p>Returns null if an error happens. */
-	public static Double getParam(int numUAV, ControllerParam parameter) {
+	public static Double getParameter(int numUAV, ControllerParam parameter) {
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_GET_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_2_PARAM) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_2_PARAM) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_2 + " " + parameter.getId() + ".");
+			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_2 + " " + parameter.getId() + ".");
 			return null;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + parameter.getId() + " = " + UAVParam.newParamValue.get(numUAV));
+			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + parameter.getId() + " = " + UAVParam.newParamValue.get(numUAV));
 			return UAVParam.newParamValue.get(numUAV);
 		}
 	}
 
-	/** API: Changes the UAV flight mode.
+	/** API: Changes a UAV flight mode.
 	 * <p>Returns true if the command was successful. */
-	public static boolean setMode(int numUAV, UAVParam.Mode mode) {
+	public static boolean setFlightMode(int numUAV, FlightMode mode) {
 		UAVParam.newFlightMode[numUAV] = mode;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MODE);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_MODE) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_MODE) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_1);
+			GUI.log(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_1);
 			return false;
 		} else {
 			long start = System.currentTimeMillis();
 			boolean changed = false;
-			UAVParam.Mode currentMode;
+			FlightMode currentMode;
 			while (!changed) {
 				currentMode = UAVParam.flightMode.get(numUAV);
 				if (currentMode.getCustomMode() == mode.getCustomMode()) {
@@ -88,7 +97,7 @@ public class API {
 					if (System.currentTimeMillis() - start > UAVParam.MODE_CHANGE_TIMEOUT) {
 						return false;
 					} else {
-						GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+						Tools.waiting(UAVParam.COMMAND_WAIT);
 					}
 				}
 			}
@@ -96,42 +105,113 @@ public class API {
 		}
 	}
 
+	/** API: Gets the last flight mode value provided by a flight controller. */
+	public static FlightMode getFlightMode(int numUAV) {
+		return UAVParam.flightMode.get(numUAV);
+	}
+	
+	/** API: Returns true if the UAV is flying. */
+	public static boolean isFlying(int numUAV) {
+		return !(Copter.getFlightMode(numUAV).getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING);
+	}
+	
 	/** API: Arms the engines.
+	 * <p>Previously, you have to press the hardware switch for safety arm, if available.
+	 * <p>The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
 	 * <p>Returns true if the command was successful. */
 	public static boolean armEngines(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ARM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_ARM) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_ARM) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.ARM_ENGINES_ERROR);
+			GUI.log(SimParam.prefix[numUAV] + Text.ARM_ENGINES_ERROR);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.ARM_ENGINES);
+			GUI.log(SimParam.prefix[numUAV] + Text.ARM_ENGINES);
 			return true;
 		}
 	}
 
-	/** API: Takes off.
+	/** API: Takes off a UAV previously armed.
 	 * <p>altitude. Target altitude over the ground.
+	 * <p>The UAV must be armed and in GUIDED mode.
 	 * <p>Returns true if the command was successful. */
-	public static boolean doTakeOff(int numUAV, double altitude) {
+	public static boolean guidedTakeOff(int numUAV, double altitude) {
 		UAVParam.takeOffAltitude.set(numUAV, altitude);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_TAKE_OFF);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_TAKE_OFF) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_TAKE_OFF) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.TAKE_OFF_ERROR_2);
+			GUI.log(SimParam.prefix[numUAV] + Text.TAKE_OFF_ERROR_2);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.TAKE_OFF);
+			GUI.log(SimParam.prefix[numUAV] + Text.TAKE_OFF);
 			return true;
 		}
 	}
-
+	
+	/** Takes off a UAV and starts the planned mission.
+	 * <p>Previously, you have to press the hardware switch for safety arm, if available.
+	 * <p>The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
+	 * <p>Returns true if all the commands were successful. */
+	public static boolean startMissionFromGround(int numUAV) {
+		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
+		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
+		if (armEngines(numUAV)
+				&& setFlightMode(numUAV, FlightMode.AUTO)
+				&& setHalfThrottle(numUAV)
+				) {
+			return true;
+		}
+		return false;
+	}
+	
+	/** Takes off all the UAVs: changes mode to guided, arms engines, and then performs the guided take off.
+	 * <p>Blocking method. It waits until all the UAVs reach 95% of the target altitude. */
+	public static void takeOffAllUAVs() {
+		List<Waypoint>[] missions = Tools.getLoadedMissions();
+		for (int i = 0; i < Param.numUAVs; i++) {
+			if (!Copter.setFlightMode(i, FlightMode.GUIDED) || !Copter.armEngines(i) || !Copter.guidedTakeOff(i, missions[i].get(1).getAltitude())) {
+				GUI.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[i]);
+			}
+		}
+		// The application must wait until all UAVs reach the planned altitude
+		double targetAltitude;
+		for (int i = 0; i < Param.numUAVs; i++) {
+			targetAltitude = missions[i].get(1).getAltitude();
+			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * targetAltitude) {
+				if (Param.VERBOSE_LOGGING) {
+					GUI.log(SimParam.prefix[i] + Text.ALTITUDE_TEXT
+							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())
+							+ " " + Text.METERS);
+				}
+				Tools.waiting(UAVParam.ALTITUDE_WAIT);
+			}
+		}
+	}
+	
+	/** Takes off until the target altitude: changes mode to guided, arms engines, and then performs the guided take off.
+	 * <p>Blocking method. It waits until the UAV reaches 95% of the target altitude. */
+	public static void takeOff(int numUAV, double altitude) {
+		if (!setFlightMode(numUAV, FlightMode.GUIDED) || !armEngines(numUAV) || !guidedTakeOff(numUAV, altitude)) {
+			GUI.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
+		}
+	
+		// The application must wait until all UAVs reach the planned altitude
+		while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * altitude) {
+			if (Param.VERBOSE_LOGGING) {
+				GUI.log(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
+						+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
+						+ " " + Text.METERS);
+			}
+			Tools.waiting(UAVParam.ALTITUDE_WAIT);
+		}
+	}
+	
 	/** API: Changes the planned flight speed (m/s).
 	 * <p>Returns true if the command was successful. */
 	public static boolean setSpeed(int numUAV, double speed) {
@@ -139,13 +219,13 @@ public class API {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_SPEED);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_SET_SPEED) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_SET_SPEED) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.SPEED_2_ERROR);
+			GUI.log(SimParam.prefix[numUAV] + Text.SPEED_2_ERROR);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.SPEED_2 + " = " + speed);
+			GUI.log(SimParam.prefix[numUAV] + Text.SPEED_2 + " = " + speed);
 			return true;
 		}
 	}
@@ -157,52 +237,51 @@ public class API {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_CURRENT_WP);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_CURRENT_WP) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_CURRENT_WP) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT_ERROR);
+			GUI.log(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT_ERROR);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT + " = " + currentWP);
+			GUI.log(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT + " = " + currentWP);
 			return true;
 		}
 	}
 
-	/** API: Suspends temporally a mission in auto mode, entering on loiter flight mode to force a fast stop.
-	 * <p>Returns true if the command was successful.
-	 * <p>This method already includes the "setThrottle" function. */
+	/** Suspends temporally a mission in AUTO mode, entering on loiter flight mode to force a fast stop.
+	 * <p>Returns true if all the commands were successful. */
 	public static boolean stopUAV(int numUAV) {
-		if (API.setThrottle(numUAV) && setMode(numUAV, UAVParam.Mode.LOITER)) {
+		if (Copter.setHalfThrottle(numUAV) && setFlightMode(numUAV, FlightMode.LOITER)) {
 			long time = System.nanoTime();
 			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
-				GUIHelper.waiting(UAVParam.STABILIZATION_WAIT_TIME);
+				Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
 				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
-					SimTools.println(SimParam.prefix[numUAV] + Text.STOP_ERROR_1);
+					GUI.log(SimParam.prefix[numUAV] + Text.STOP_ERROR_1);
 					return false;
 				}
 			}
 
-			SimTools.println(SimParam.prefix[numUAV] + Text.STOP);
+			GUI.log(SimParam.prefix[numUAV] + Text.STOP);
 			return true;
 		}
-		SimTools.println(SimParam.prefix[numUAV] + Text.STOP_ERROR_2);
+		GUI.log(SimParam.prefix[numUAV] + Text.STOP_ERROR_2);
 		return false;
 	}
 
-	/** API: Moves the throttle stick to half power using RC3.
+	/** API: Moves the throttle stick to half power using the corresponding RC channel.
 	 * <p>Returns true if the command was successful.
-	 * <p>Useful for starting auto flight when being on the ground, and to stabilize altitude when going out of auto mode. */
-	public static boolean setThrottle(int numUAV) {
+	 * <p>Useful for starting auto flight when being on the ground, or to stabilize altitude when going out of auto mode. */
+	public static boolean setHalfThrottle(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE_ERROR);
+			GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE_ERROR);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE);
+			GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE);
 			return true;
 		}
 	}
@@ -211,9 +290,13 @@ public class API {
 	 * <p>Channel values in microseconds. Typically chan1=roll, chan2=pitch, chan3=throttle, chan4=yaw.
 	 * <p>Value 0 means that the control of that channel must be returned to the RC radio.
 	 * <p>Value UINT16_MAX means to ignore this field.
-	 * <p>Standard modulation: 1000 (0%) - 2000 (100%).*/
+	 * <p>Standard modulation: 1000 (0%) - 2000 (100%).
+	 * <p>Values are not applied immediately, but each time a message is received from the flight controller. */
 	public static void channelsOverride(int numUAV, int roll, int pitch, int throttle, int yaw) {
-		UAVParam.rcs[numUAV].set(new RCValues(roll, pitch, throttle, yaw));
+		UAVParam.rcs[numUAV].set(new RCValues(roll, pitch, throttle, yaw));//TODO analizar la frecuencia de recepción de mensajes
+		// y analizar si vale la pena hacer la lectura no bloqueante para enviar esto con más frecuencia y de otra forma
+		// ¿con qué frecuencia aceptaremos el channels override? Hay experimentos que indican que algunos valores se ignoran
+		// si se envian en intervalos menores a 0.393 segundos (quizá una cola fifo con timeout facilite resolver el problema)
 	}
 
 	/** API: Moves the UAV to a new position.
@@ -231,18 +314,18 @@ public class API {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_MOVE_UAV);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_MOVE_UAV_ERROR) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_MOVE_UAV_ERROR) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.MOVING_ERROR_1);
+			GUI.log(SimParam.prefix[numUAV] + Text.MOVING_ERROR_1);
 			return false;
 		} else {
-			UTMCoordinates utm = GUIHelper.geoToUTM(geo.latitude, geo.longitude);
+			UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
 			Point2D.Double destination = new Point2D.Double(utm.Easting, utm.Northing);
 			// Once the command is issued, we have to wait until the UAV approaches to destination
 			while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold
 					|| Math.abs(relAltitude - UAVParam.uavCurrentData[numUAV].getZRelative()) > altThreshold) {
-				GUIHelper.waiting(UAVParam.STABILIZATION_WAIT_TIME);
+				Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
 			}
 			return true;
 		}
@@ -254,13 +337,13 @@ public class API {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_CLEAR_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_CLEAR_WP_LIST) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_CLEAR_WP_LIST) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_DELETE_ERROR);
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_DELETE_ERROR);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_DELETE);
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_DELETE);
 			return true;
 		}
 	}
@@ -272,13 +355,12 @@ public class API {
 	 * <p>The last waypoint can be land or RTL. */
 	public static boolean sendMission(int numUAV, List<Waypoint> list) {
 		if (list == null || list.size() < 2) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_1);
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_1);
 			return false;
 		}
 		// There is a minimum altitude to fly (waypoint 0 is home)
 		if (list.get(1).getAltitude() < UAVParam.MIN_FLYING_ALTITUDE) {
-			SimTools
-			.println(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_2 + "(" + UAVParam.MIN_FLYING_ALTITUDE + " " + Text.METERS+ ").");
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_2 + "(" + UAVParam.MIN_FLYING_ALTITUDE + " " + Text.METERS+ ").");
 			return false;
 		}
 		int current = 0;
@@ -305,42 +387,17 @@ public class API {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SEND_WPS);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_SENDING_WPS) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_SENDING_WPS) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_3);
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_3);
 			return false;
 		} else {
-			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_SENT);
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT);
 			return true;
 		}
 	}
 	
-	/** API: Sets the loaded missions from file/s for the UAVs, in geographic coordinates.
-	 * <p>This method must be used in a really early step to load the mission to be used by the UAV.*/
-	public static void setLoadedMissions(List<Waypoint>[] missions) {
-		UAVParam.missionGeoLoaded = missions;
-	}
-	
-	/** API: Provides the missions loaded from files in geographic coordinates.
-	 * <p>Mission only available once they has been loaded.
-	 * <p>Returns null if not available.*/
-	public static List<Waypoint>[] getLoadedMissions() {
-		return UAVParam.missionGeoLoaded;
-	}
-	
-	/** API: Provides the mission stored in the UAV in geographic coordinates.
-	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/
-	public static List<Waypoint> getUAVMission(int numUAV) {
-		return UAVParam.currentGeoMission[numUAV];
-	}
-	
-	/** API: Provides the simplified mission shown in the screen in UTM coordinates.
-	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/ 
-	public static List<WaypointSimplified> getUAVMissionSimplified(int numUAV) {
-		return UAVParam.missionUTMSimplified.get(numUAV);
-	}
-
 	/** API: Retrieves the mission stored on the UAV.
 	 * <p>Returns true if the command was successful.
 	 * <p>New value available on UAVParam.currentGeoMission[numUAV].
@@ -349,14 +406,14 @@ public class API {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_REQUEST_WP_LIST) {
-			GUIHelper.waiting(UAVParam.COMMAND_WAIT);
+			Tools.waiting(UAVParam.COMMAND_WAIT);
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_SENDING_WPS) {
-			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_GET_ERROR);
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_GET_ERROR);
 			return false;
 		} else {
-			API.simplifyMission(numUAV);
-			SimTools.println(SimParam.prefix[numUAV] + Text.MISSION_GET);
+			Copter.simplifyMission(numUAV);
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_GET);
 			return true;
 		}
 	}
@@ -383,13 +440,13 @@ public class API {
 			case MAV_CMD.MAV_CMD_PAYLOAD_PREPARE_DEPLOY:
 			case MAV_CMD.MAV_CMD_NAV_LOITER_TO_ALT:
 			case MAV_CMD.MAV_CMD_NAV_LAND:
-				utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
+				utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
 				WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
 				missionUTMSimplified.add(swp);
 				break;
 			case MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH:
 				if (!foundFirst) {
-					MissionHelper.log(Text.SIMPLIFYING_WAYPOINT_LIST_ERROR + Param.id[numUAV]);
+					GUI.log(Text.SIMPLIFYING_WAYPOINT_LIST_ERROR + Param.id[numUAV]);
 				} else {
 					WaypointSimplified s = new WaypointSimplified(wp.getNumSeq(),
 							first.x, first.y, UAVParam.RTLAltitude[numUAV]);
@@ -398,11 +455,11 @@ public class API {
 				break;
 			case MAV_CMD.MAV_CMD_NAV_TAKEOFF:
 				// The geographic coordinates have been set by the flight controller
-				utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
+				utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
 				WaypointSimplified twp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
 				missionUTMSimplified.add(twp);
 				if (!foundFirst) {
-					utm = GUIHelper.geoToUTM(wp.getLatitude(), wp.getLongitude());
+					utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
 					first = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
 					foundFirst = true;
 				}
@@ -410,6 +467,86 @@ public class API {
 			}
 		}
 		UAVParam.missionUTMSimplified.set(numUAV, missionUTMSimplified);
+	}
+	
+	/** Deletes the current mission of the UAV, sends a new one, and gets it to be shown on the GUI.
+	 * <p>Blocking method.
+	 * <p>Must be used only once per UAV, and if the UAV must follow a mission.
+	 * <p>Returns true if all the commands were successful.*/
+	public static boolean cleanAndSendMissionToUAV(int numUAV, List<Waypoint> mission) {
+		boolean success = false;
+		if (Copter.clearMission(numUAV)
+				&& Copter.sendMission(numUAV, mission)
+				&& Copter.retrieveMission(numUAV)
+				&& Copter.setCurrentWaypoint(numUAV, 0)) {
+			Param.numMissionUAVs.incrementAndGet();
+			if (!Tools.isRealUAV()) {
+				BoardParam.rescaleQueries.incrementAndGet();
+			}
+			success = true;
+		}
+		return success;
+	}
+	
+	/** Ads a Class as listener for the event: waypoint reached (more than one can be set). */
+	public static void setWaypointReachedListener(WaypointReachedListener listener) {
+		ArduSimTools.listeners.add(listener);
+	}
+	
+	/** API: Gets the current waypoint for a UAV.
+	 * <p><p>Use only when the UAV is performing a planned mission. */
+	public static int getCurrentWaypoint(int numUAV) {
+		return UAVParam.currentWaypoint.get(numUAV);
+	}
+	
+	/** API: Identifies if the UAV has reached the last waypoint of the mission.
+	 * <p>Use only when the UAV is performing a planned mission. */
+	public static boolean isLastWaypointReached(int numUAV) {
+		return UAVParam.lastWaypointReached[numUAV];
+	}
+	
+	/** Lands the UAV if it is close enough to the last waypoint.
+	 * <p>Use only when the UAV is performing a planned mission. */
+	public static void landIfMissionEnded(int numUAV) {
+		String prefix = GUI.getUAVPrefix(numUAV);
+		List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
+		FlightMode mode = Copter.getFlightMode(numUAV);
+		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
+		if (mission != null
+				&& mode != FlightMode.LAND_ARMED
+				&& mode != FlightMode.LAND
+				&& currentWaypoint > 0
+				&& currentWaypoint == mission.get(mission.size()-1).numSeq) {
+			
+			if (!UAVParam.lastWaypointReached[numUAV]) {
+				UAVParam.lastWaypointReached[numUAV] = true;
+				GUI.log(prefix + Text.LAST_WAYPOINT_REACHED);
+			}
+			
+			if (Copter.getUTMLocation(numUAV).distance(mission.get(mission.size()-1)) < UAVParam.LAST_WP_THRESHOLD) {
+				List<Waypoint> missionGeo = Tools.getUAVMission(numUAV);
+				int command = missionGeo.get(missionGeo.size() - 1).getCommand();
+				// There is no need of landing when the last waypoint is the command LAND or when it is RTL under some circumstances
+				if (command != MAV_CMD.MAV_CMD_NAV_LAND
+						&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
+					// Land the UAV when reaches the last waypoint and mark as finished
+					if (Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
+					} else {
+						GUI.log(prefix + Text.LAND_ERROR);
+					}
+				}
+			}
+		}
+	}
+	
+	
+	
+	
+	/** Method that provides the controller thread of an specific UAV.
+	 * <p>Temporary ussage for debugging purposes.
+	 * <p>HANDLE WITH CARE.*/
+	public static UAVControllerThread getController(int numUAV) {
+		return Param.controllers[numUAV];
 	}
 	
 	/** API: Sends a message to the other UAVs.
@@ -421,7 +558,7 @@ public class API {
 				UAVParam.sendSocket[numUAV].send(UAVParam.sendPacket[numUAV]);
 				UAVParam.sentPacket[numUAV]++;
 			} catch (IOException e) {
-				MissionHelper.log(SimParam.prefix[numUAV] + MBCAPText.ERROR_BEACON);
+				GUI.log(SimParam.prefix[numUAV] + MBCAPText.ERROR_BEACON);
 			}
 		} else {
 			long now = System.nanoTime();
@@ -430,7 +567,7 @@ public class API {
 			if (prevMessage != null) {
 				boolean messageWaited = false;
 				while (prevMessage.end > now) {
-					GUIHelper.waiting(UAVParam.MESSAGE_WAITING_TIME);
+					Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 					if (!messageWaited) {
 						UAVParam.packetWaitedPrevSending[numUAV]++;
 						messageWaited = true;
@@ -458,7 +595,7 @@ public class API {
 						}
 					}
 					if (wait) {
-						GUIHelper.waiting(UAVParam.MESSAGE_WAITING_TIME);
+						Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 					} else {
 						mediaIsAvailable = true;
 					}
@@ -512,7 +649,7 @@ public class API {
 	 * <p>Returns null if a fatal error with the socket happens. */
 	public static byte[] receiveMessage(int numUAV) {
 		if (Param.IS_REAL_UAV) {
-			UAVParam.receivePacket[numUAV].setData(new byte[UAVParam.DATAGRAM_MAX_LENGTH], 0, UAVParam.DATAGRAM_MAX_LENGTH);
+			UAVParam.receivePacket[numUAV].setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
 			try {
 				UAVParam.receiveSocket[numUAV].receive(UAVParam.receivePacket[numUAV]);
 				UAVParam.receivedPacket[numUAV]++;
@@ -526,7 +663,7 @@ public class API {
 						// Check for collisions
 						// 1. Wait until at least one message is available
 						if (UAVParam.vBuffer[numUAV].isEmpty()) {
-							GUIHelper.waiting(UAVParam.MESSAGE_WAITING_TIME);
+							Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 						} else {
 							// 2. First iteration through the virtual buffer to check collisions between messages
 							Iterator<IncomingMessage> it = UAVParam.vBuffer[numUAV].iterator();
@@ -538,7 +675,7 @@ public class API {
 							//		and all the process will be repeated again
 							long now = System.nanoTime();
 							while (prev.end > now) {
-								GUIHelper.waiting(UAVParam.MESSAGE_WAITING_TIME);
+								Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 								now = System.nanoTime();
 							}
 							// 2.2. Update the late completely received message finishing time
@@ -597,7 +734,7 @@ public class API {
 						IncomingMessage message = UAVParam.mBuffer[numUAV].peekFirst();
 						long now = System.nanoTime();
 						while (message.end > now) {
-							GUIHelper.waiting(UAVParam.MESSAGE_WAITING_TIME);
+							Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 						}
 						receivedBuffer = UAVParam.mBuffer[numUAV].pollFirst().message;
 					}
@@ -605,11 +742,71 @@ public class API {
 				return receivedBuffer;
 			} else {
 				while (UAVParam.mBuffer[numUAV].isEmpty()) {
-					GUIHelper.waiting(UAVParam.MESSAGE_WAITING_TIME);
+					Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 				}
 				UAVParam.receivedPacket[numUAV]++;
 				return UAVParam.mBuffer[numUAV].pollFirst().message;
 			}
 		}
 	}
+	
+	/** API: Gets the planned speed. */
+	public static double getPlannedSpeed(int numUAV) {
+		return UAVParam.initialSpeeds[numUAV];
+	}
+
+	/** API: Provides the latest received data from the flight controller.
+	 * <p>Long. time.
+	 * <p>Point2D.Double. UTM coordinates.
+	 * <p>double. Absolute altitude.
+	 * <p>double. Speed.
+	 * <p>double. Acceleration. */
+	public static Quintet<Long, java.awt.geom.Point2D.Double, Double, Double, Double> getData(int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getData();
+	}
+
+	/** API: Provides the latest location in UTM meters (x,y) received from the flight controller. */
+	public static Point2D.Double getUTMLocation(int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getUTMLocation();
+	}
+
+	/** API: Provides the latest location in Geographic coordinates (x=longitude,y=latitude) received from the flight controller. */
+	public static Point2D.Double getGeoLocation(int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getGeoLocation();
+	}
+	
+	/** API: Gets n last known locations (x,y,z) of the UAV in UTM coordinates (relative altitude).
+	 * <p>The locations time increases with the position in the array. */
+	public static Point3D[] getLastKnownLocations(int numUAV) {
+		return UAVParam.lastLocations[numUAV].getLastPositions();
+	}
+
+	/** API: Provides the latest relative altitude from the ground (m) received from the flight controller. */
+	public static double getZRelative (int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getZRelative();
+	}
+
+	/** API: Provides the latest altitude (m) received from the flight controller. */
+	public static double getZ (int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getZ();
+	}
+
+	/** API: Provides the latest ground speed (m/s) received from the flight controller. */
+	public static double getSpeed (int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getSpeed();
+	}
+
+	/** API: Provides the latest three axes components of the speed (m/s) reveived from the flight controller. */
+	public static Triplet<Double, Double, Double> getSpeeds(int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getSpeeds();
+	}
+
+	/** API: Provides the latest heading (rad) received from the flight controller. */
+	public static double getHeading (int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getHeading();
+	}
+
+	
+
+	
 }

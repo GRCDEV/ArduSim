@@ -7,16 +7,11 @@ import org.javatuples.Triplet;
 
 import com.esotericsoftware.kryo.io.Input;
 
-import api.API;
-import api.GUIHelper;
-import api.MissionHelper;
-import api.SwarmHelper;
+import api.Copter;
+import api.GUI;
+import api.Tools;
 import api.pojo.GeoCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
-import main.Param;
-import main.Param.SimulatorState;
-import main.Text;
-import sim.logic.SimParam;
 import uavController.UAVParam;
 
 public class SlaveListener extends Thread {
@@ -35,7 +30,7 @@ public class SlaveListener extends Thread {
 	@Override
 	public void run() {
 
-		while (Param.simStatus != SimulatorState.READY_FOR_TEST) {
+		while (!Tools.isSetupFinished()) {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -62,16 +57,17 @@ public class SlaveListener extends Thread {
 			recibirMessage(FollowMeParam.MsgCoordenadas);
 			if (masterReady) {
 				FollowMeParam.uavs[idSlave] = FollowMeState.FOLLOW;
-				SwarmHelper.setSwarmState(idSlave, FollowMeParam.uavs[idSlave].getName());
+				GUI.updateprotocolState(idSlave, FollowMeParam.uavs[idSlave].getName());
 			}
 		}
 		
 		while (FollowMeParam.uavs[idSlave] == FollowMeState.LANDING_FOLLOWERS) {
 			try {
-				Param.controllers[idSlave].msgTarget(
+				Point2D.Double geo = Copter.getGeoLocation(idSlave);
+				Copter.getController(idSlave).msgTarget(
 						FollowMeParam.TypemsgTargetCoordinates,
-						UAVParam.uavCurrentData[idSlave].getGeoLocation().getY(),
-						UAVParam.uavCurrentData[idSlave].getGeoLocation().getX(),
+						geo.getY(),
+						geo.getX(),
 						0.0, 
 						1.0, 
 						false, 
@@ -91,7 +87,7 @@ public class SlaveListener extends Thread {
 		String msg = null;
 		byte[] message = null;
 		Input in = new Input();
-		message = API.receiveMessage(idSlave);
+		message = Copter.receiveMessage(idSlave);
 
 		in.setBuffer(message);
 		int idSender = in.readInt();
@@ -109,7 +105,7 @@ public class SlaveListener extends Thread {
 						}
 					}
 					msg = "Master indica el despegue y la posicion en la formacion sera pos:" + this.posFormacion;
-					takeOffIndividual(idSlave, FollowMeParam.AlturaInitFollowers);
+					Copter.takeOff(idSlave, FollowMeParam.AlturaInitFollowers);
 					takeOff = true;	
 				}
 				break;
@@ -125,13 +121,13 @@ public class SlaveListener extends Thread {
 				speedY = in.readDouble();
 				speedZ = in.readDouble();
 				if (this.masterReady) {
-					Point2D geoActual = UAVParam.uavCurrentData[idSlave].getGeoLocation();
+					Point2D geoActual = Copter.getGeoLocation(idSlave);
 					Resultado res = Formacion.getPosition(FollowMeParam.FormacionLineaHorizontal,
 							new GeoCoordinates(lat, lon), heading,
 							new GeoCoordinates(geoActual.getY(), geoActual.getX()), this.posFormacion,
 							new Triplet<Double, Double, Double>(speedX, speedY, speedZ));
 					try {
-						Param.controllers[idSlave].msgTarget(FollowMeParam.TypemsgTargetCoordinates,
+						Copter.getController(idSlave).msgTarget(FollowMeParam.TypemsgTargetCoordinates,
 								res.getGeo().latitude, res.getGeo().longitude, z, 1.0, false, speedX, speedY, speedZ);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -145,7 +141,7 @@ public class SlaveListener extends Thread {
 			case FollowMeParam.MsgLanding:
 				
 				FollowMeParam.uavs[idSlave] = FollowMeState.LANDING_FOLLOWERS;
-				SwarmHelper.setSwarmState(idSlave, FollowMeParam.uavs[idSlave].getName());
+				GUI.updateprotocolState(idSlave, FollowMeParam.uavs[idSlave].getName());
 				break;
 				
 			default:
@@ -157,22 +153,5 @@ public class SlaveListener extends Thread {
 		System.out.println("SlaveListener "+idSlave+" msg ignorado "+typeMsg);
 		
 
-	}
-
-	public static void takeOffIndividual(int numUAV, double altitude) {
-		// Taking Off to first altitude step
-		if (!API.setMode(numUAV, UAVParam.Mode.GUIDED) || !API.armEngines(numUAV) || !API.doTakeOff(numUAV, altitude)) {
-			GUIHelper.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
-		}
-
-		// The application must wait until all UAVs reach the planned altitude
-		while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * altitude) {
-			if (Param.VERBOSE_LOGGING) {
-				MissionHelper.log(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT + " = "
-						+ String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ()) + " " + Text.METERS);
-			}
-
-			GUIHelper.waiting(UAVParam.ALTITUDE_WAIT);
-		}
 	}
 }

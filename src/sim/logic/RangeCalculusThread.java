@@ -1,6 +1,6 @@
 package sim.logic;
 
-import api.GUIHelper;
+import api.Tools;
 import main.Param;
 import uavController.UAVParam;
 
@@ -19,7 +19,7 @@ public class RangeCalculusThread extends Thread {
 			if (UAVParam.distanceCalculusIsOnline) {
 				for (int i = 0; i < Param.numUAVs - 1; i++) {
 					for (int j = i + 1; j < Param.numUAVs; j++) {
-						isInRange = GUIHelper.isInRange(UAVParam.distances[i][j].get());
+						isInRange = SimTools.isInRange(UAVParam.distances[i][j].get());
 						UAVParam.isInRange[i][j].set(isInRange);
 						UAVParam.isInRange[j][i].set(isInRange);
 					}
@@ -28,7 +28,7 @@ public class RangeCalculusThread extends Thread {
 			checkTime = checkTime + UAVParam.RANGE_CHECK_PERIOD;
 			waitingTime = (int)(checkTime - System.currentTimeMillis());
 			if (waitingTime > 0) {
-				GUIHelper.waiting(waitingTime);
+				Tools.waiting(waitingTime);
 			}
 		}
 	}

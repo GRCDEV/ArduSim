@@ -1,5 +1,6 @@
 package main;
 
+import api.Tools;
 import sim.board.BoardParam;
 import uavController.UAVParam;
 
@@ -17,7 +18,10 @@ public class Text {
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
 	public static final String PROTOCOL_NOT_FOUND_ERROR = "The specified protocol was not found. Valid protocols:";
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
-	
+	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;
+	public static final String PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR = "Unable to retrieve the protocol classes in " + APP_NAME;
+	public static final String PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR = "No valid implementation was found for protocol: ";
+	public static final String PROTOCOL_MANY_IMPLEMENTATIONS_ERROR = "More than one implementation was found for the protocol: ";
 	
 	// Configuration dialog window:
 	public static final String OK = "OK";
@@ -68,7 +72,7 @@ public class Text {
 	public static final String PACKET_COLLISION_DETECTION_ENABLED = "Packet Collision detection enabled:";
 	public static final String BUFFER_SIZE = "Receiving buffer size:";
 	public static final String BUFFER_SIZE_ERROR_1 = "The receiving buffer must be a positive number of bytes.";
-	public static final String BUFFER_SIZE_ERROR_2 = "The receiving buffer must be big enough to store at least one frame (" + UAVParam.DATAGRAM_MAX_LENGTH + ")";
+	public static final String BUFFER_SIZE_ERROR_2 = "The receiving buffer must be big enough to store at least one frame (" + Tools.DATAGRAM_MAX_LENGTH + ")";
 	public static final String WIFI_MODEL = "Wireless communications model:";
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
 	
@@ -95,6 +99,10 @@ public class Text {
 	public static final String COLLISION_DISTANCE_THRESHOLD_ERROR = "The distance to assert collision must be a valid positive number.";
 	public static final String COLLISION_ALTITUDE = "Altitude difference threshold:";
 	public static final String COLLISION_ALTITUDE_THRESHOLD_ERROR = "The altitude difference to assert collision must be a valid positive number.";
+	public static final String COLLISION_DETECTED = "Collision detected!";
+	public static final String COLLISION_TITLE = "Collision detected";
+	public static final String COLLISION_DETECTED_ERROR_1 = "Emergency landing due to the collision between the UAVs";
+	public static final String COLLISION_DETECTED_ERROR_2 = "It is suggested to close the application.\nCollision detected between the UAVs";
 	public static final String WIND = "Wind:";
 	public static final String WIND_DIRECTION = "Direction:";
 	public static final String WIND_SPEED = "Speed:";
@@ -165,6 +173,7 @@ public class Text {
 	public static final String TEST_IN_PROGRESS = "Test in progress...";
 	public static final String TEST_FINISHED = "Test finished.";
 	public static final String SHUTTING_DOWN = "Shutting down...";
+	public static final String CONFIGURATION_IN_PROGRESS = "Configuration in progress...";
 	// Progress shown in the log
 	public static final String USING_RAM_DRIVE = "Using RAM drive for temporary files.";
 	public static final String USING_HARD_DRIVE = "Using physical drive for temporary files.";
@@ -224,6 +233,7 @@ public class Text {
 	public static final String LOG_TOTAL_TIME = "Total time";
 	public static final String LOG_SPEED = "Initial speed";
 	public static final String LOG_BATTERY = "Battery capacity";
+	public static final String MISSION_SUFIX = "mission_AutoCAD.scr";
 	
 	// General options and units
 	public static final String YES_OPTION = "yes";
@@ -259,8 +269,6 @@ public class Text {
 	public static final String UAVS_START_ERROR_3 = Text.APP_NAME + " for Windows requires Cygwin:";
 	public static final String UAVS_START_CYGWIN_ERROR = "Cygwin not found.";
 	public static final String UAVS_START_ERROR_4 = "The running operating system is not compatible with " + Text.APP_NAME + ".";
-	public static final String UAVS_START_ERROR_5 = "Failed locating the home position of the UAV";
-	public static final String UAVS_START_ERROR_6 = "No valid coordinates could be found to stablish the home of the UAV";
 	public static final String THREAD_START_ERROR = "Failed to bind socket to IP.";
 	public static final String INITIAL_CONFIGURATION_ERROR_1 = "Failed forcing GPS data messages on the UAVs";
 	public static final String INITIAL_CONFIGURATION_ERROR_2 = "Failed sending the initial configuration to the UAVs";
@@ -274,6 +282,8 @@ public class Text {
 	public static final String DISMOUNT_DRIVE_ERROR = "Failed dismounting the virtual RAM drive.";
 	public static final String STORE_WARNING = "Store warning";
 	public static final String STORE_QUESTION = "Do you want to overwrite the file?";
+	public static final String LAST_WAYPOINT_REACHED = "Last waypoint reached.";
+	public static final String LAND_ERROR = "Was unable to land.";
 	
 	// System properties
 	public static final String HOME_DIR = "user.home";
@@ -308,7 +318,6 @@ public class Text {
 	public static final String STABILIZE_ALTITUDE = "Altitude control enabled.";
 	public static final String STABILIZE_ALTITUDE_ERROR = "Error getting the altitude control.";
 	public static final String MOVING_ERROR_1 = "Error changing position.";
-	public static final String MOVING_ERROR_2 = "Can't stabilize position in destination position.";
 	public static final String MISSION_DELETE = "Previous mission erased.";
 	public static final String MISSION_DELETE_ERROR = "Error erasing the current mission.";
 	public static final String MISSION_SENT = "Mission sent.";
@@ -366,9 +375,7 @@ public class Text {
 	public static final String STATUS_HEADER = "status";
 	public static final String DIALOG_TITLE = "Warning";
 	public static final String SETUP_WARNING = "Are you sure that the safety switch is armed? (when needed)";
-	
-	
-	
+
 	
 	
 

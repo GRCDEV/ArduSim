@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.javatuples.Triplet;
 
-import api.SwarmHelper;
+import api.GUI;
 import api.pojo.GeoCoordinates;
 import uavController.UAVParam;
 
@@ -47,7 +47,7 @@ public class Formacion {
 		double cosheading = Math.cos(headingMaster);
 
 		if (posFormacion == 0) {
-			SwarmHelper.log("SinH: " + sinheading + " CosH: " + cosheading);
+			GUI.log("SinH: " + sinheading + " CosH: " + cosheading);
 		}
 
 		geo.latitude += cosheading * distanciaEntreDrones * (posFormacion + 1);
@@ -63,7 +63,7 @@ public class Formacion {
 		double cosheading = Math.cos(headingMaster);
 
 		if (posFormacion == 0) {
-			SwarmHelper.log("SinH: " + sinheading + " CosH: " + cosheading);
+			GUI.log("SinH: " + sinheading + " CosH: " + cosheading);
 		}
 
 		geo.latitude += cosheading * distanciaEntreDrones * (posFormacion + 1);
@@ -80,7 +80,7 @@ public class Formacion {
 		double cosheading = Math.cos(headingMaster);
 
 		if (posFormacion == 0) {
-			SwarmHelper.log("SinH: " + sinheading + " CosH: " + cosheading);
+			GUI.log("SinH: " + sinheading + " CosH: " + cosheading);
 		}
 //		Mejorar
 		if (posFormacion % 2 == 0) {

@@ -12,9 +12,8 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import main.Param;
-import main.Text;
-import main.Param.SimulatorState;
+import api.ProtocolHelper;
+import api.Tools;
 import mbcap.logic.MBCAPText;
 
 /** This class generates the dialog to input the configuration of the MBCAP protocol. */
@@ -39,12 +38,12 @@ public class MBCAPConfigDialog extends JDialog {
       buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
       getContentPane().add(buttonPane, BorderLayout.SOUTH);
       {
-        JButton okButton = new JButton(Text.OK);
+        JButton okButton = new JButton(MBCAPText.OK);
         okButton.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
             if(MBCAPGUITools.isValidProtocolConfiguration(panel)) {
               MBCAPGUITools.storeProtocolConfiguration(panel);
-              Param.simStatus = SimulatorState.STARTING_UAVS;
+              Tools.setProtocolConfigured(true);
               dispose();
             }
           }
@@ -53,7 +52,7 @@ public class MBCAPConfigDialog extends JDialog {
         getRootPane().setDefaultButton(okButton);
       }
       {
-        JButton restoreDefaultsButton = new JButton(Text.RESTORE_DEFAULTS);
+        JButton restoreDefaultsButton = new JButton(MBCAPText.RESTORE_DEFAULTS);
         restoreDefaultsButton.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
             MBCAPGUITools.loadDefaultProtocolConfiguration(panel);
@@ -74,7 +73,7 @@ public class MBCAPConfigDialog extends JDialog {
     });
     
     MBCAPGUITools.loadDefaultProtocolConfiguration(panel);
-    this.setTitle(Param.selectedProtocol.getName() + " " + MBCAPText.CONFIGURATION);
+    this.setTitle(ProtocolHelper.selectedProtocol.getName() + " " + MBCAPText.CONFIGURATION);
     this.pack();
     this.setModal(true);
     this.setResizable(false);

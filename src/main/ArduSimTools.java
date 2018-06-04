@@ -1,12 +1,14 @@
 package main;
 
 import java.awt.Shape;
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -15,13 +17,19 @@ import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -34,6 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,10 +60,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.javatuples.Pair;
 
-import api.GUIHelper;
-import api.MissionHelper;
-import api.SwarmHelper;
+import api.Copter;
+import api.GUI;
+import api.ProtocolHelper;
+import api.Tools;
+import api.WaypointReachedListener;
 import api.pojo.AtomicDoubleArray;
+import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.LastPositions;
 import api.pojo.LogPoint;
@@ -61,7 +74,6 @@ import api.pojo.UAVCurrentData;
 import api.pojo.UAVCurrentStatus;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
-import main.Param.Protocol;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
 import pccompanion.PCCompanionGUI;
@@ -71,7 +83,6 @@ import sim.logic.FakeSenderThread;
 import sim.logic.GPSStartThread;
 import sim.logic.InitialConfigurationThread;
 import sim.logic.SimParam;
-import sim.logic.SimTools;
 import sim.pojo.IncomingMessage;
 import sim.pojo.IncomingMessageQueue;
 import sim.pojo.PortScanResult;
@@ -79,11 +90,12 @@ import sim.pojo.WinRegistry;
 import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
-import uavController.UAVParam.Mode;
 
 /** This class contains general tools used by the simulator. */
 
-public class Tools {
+public class ArduSimTools {
+	
+	public static List<WaypointReachedListener> listeners = new ArrayList<WaypointReachedListener>();
 	
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the thread execution must stop. */
@@ -151,20 +163,25 @@ public class Tools {
 					System.exit(1);
 				}
 				String pr = cmdLine.getOptionValue("p");
-				Protocol pro = Protocol.getProtocolByName(pr.trim());
+				ProtocolHelper.Protocol pro = ProtocolHelper.Protocol.getProtocolByName(pr.trim());
 				if (pro == null) {
 					System.out.println(Text.PROTOCOL_NOT_FOUND_ERROR);
-					for (Protocol p : Protocol.values()) {
+					for (ProtocolHelper.Protocol p : ProtocolHelper.Protocol.values()) {
 						System.out.println(p.getName());
 					}
 					System.out.println("\n");
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
-				Param.selectedProtocol = pro;
-				Param.simulationIsMissionBased = Param.selectedProtocol.isMissionBased();
+				ProtocolHelper.selectedProtocol = pro;
+				ProtocolHelper protocolInstance = ArduSimTools.getSelectedProtocolInstance();
+				if (protocolInstance == null) {
+					System.exit(-1);
+				}
+				ProtocolHelper.selectedProtocolInstance = protocolInstance;
+				Param.simulationIsMissionBased = ProtocolHelper.selectedProtocol.isMissionBased();
 				String spe = cmdLine.getOptionValue("s");
-				if (!GUIHelper.isValidPositiveDouble(spe)) {
+				if (!Tools.isValidPositiveDouble(spe)) {
 					System.out.println(Text.SPEED_ERROR + "\n");
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
@@ -184,13 +201,13 @@ public class Tools {
 					System.exit(1);
 				}
 				String periodString = cmdLine.getOptionValue("t");
-				if (!GUIHelper.isValidInteger(periodString) || Integer.parseInt(periodString) > 10000) {
+				if (!Tools.isValidInteger(periodString) || Integer.parseInt(periodString) > 10000) {
 					System.out.println("The period between messages must be a valid positive integer lower or equal to 10000 ms.\n");
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
 				String sizeString = cmdLine.getOptionValue("l");
-				if (!GUIHelper.isValidInteger(sizeString) || Integer.parseInt(sizeString) > 1472) {
+				if (!Tools.isValidInteger(sizeString) || Integer.parseInt(sizeString) > 1472) {
 					System.out.println("The size of the messages must be a valid positive integer lower or equal to 1472 bytes.\n");
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
@@ -210,75 +227,13 @@ public class Tools {
 		return true;
 	}
 
-	/** Loads a mission from file when using a real UAV.
-	 * <p>Priority loading: 1st xml, 2nd waypoints, 3rd txt.
-	 * <p>Only the first valid file/mission found is used.
-	 * <p>Returns null if no valid mission was found. */
-	public static List<Waypoint> loadMission(File parentFolder) {
-		// 1. kml file case
-		File[] files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_KML) && pathname.isFile();
-			}
-		});
-		if (files != null && files.length>0) {
-			// Only one kml file must be on the current folder
-			if (files.length>1) {
-				GUIHelper.exit(Text.MISSIONS_ERROR_6);
-			}
-			List<Waypoint>[] missions = MissionHelper.loadXMLMissionsFile(files[0]);
-			if (missions != null && missions.length>0) {
-				SimTools.println(Text.MISSION_XML_SELECTED + " " + files[0].getName());
-				return missions[0];
-			}
-		}
-		
-		// 2. kml file not found or not valid. waypoints file case
-		files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_WAYPOINTS) && pathname.isFile();
-			}
-		});
-		List<Waypoint> mission;
-		if (files != null && files.length>0) {
-			// Only one waypoints file must be on the current folder
-			if (files.length>1) {
-				GUIHelper.exit(Text.MISSIONS_ERROR_7);
-			}
-			mission = MissionHelper.loadMissionFile(files[0].getAbsolutePath());
-			if (mission != null) {
-				SimTools.println(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
-				return mission;
-			}
-		}
-		
-		// 3. waypoints file not found or not valid. txt file case
-		files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_TXT) && pathname.isFile();
-			}
-		});
-		if (files != null && files.length>0) {
-			// Not checking single txt file existence, as other file types can use the same extension
-			mission = MissionHelper.loadMissionFile(files[0].getAbsolutePath());
-			if (mission != null) {
-				SimTools.println(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
-				return mission;
-			}
-		}
-		return null;
-	}
-	
 	/** Initializes the data structures at the simulator start. */
 	@SuppressWarnings("unchecked")
 	public static void initializeDataStructures() {
 		UAVParam.uavCurrentData = new UAVCurrentData[Param.numUAVs];
 		UAVParam.uavCurrentStatus = new UAVCurrentStatus[Param.numUAVs];
 		UAVParam.lastLocations = new LastPositions[Param.numUAVs];
-		UAVParam.flightMode = new AtomicReferenceArray<Mode>(Param.numUAVs);
+		UAVParam.flightMode = new AtomicReferenceArray<FlightMode>(Param.numUAVs);
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
@@ -296,7 +251,7 @@ public class Tools {
 		UAVParam.flightModeMap = new AtomicIntegerArray[Param.numUAVs];
 		UAVParam.customModeToFlightModeMap = new int[Param.numUAVs][24];
 		
-		UAVParam.newFlightMode = new Mode[Param.numUAVs];
+		UAVParam.newFlightMode = new FlightMode[Param.numUAVs];
 		UAVParam.takeOffAltitude = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newSpeed = new double[Param.numUAVs];
 		UAVParam.newParam = new ControllerParam[Param.numUAVs];
@@ -386,15 +341,15 @@ public class Tools {
 				try {
 					UAVParam.sendSocket[i] = new DatagramSocket();
 					UAVParam.sendSocket[i].setBroadcast(true);
-					UAVParam.sendPacket[i] = new DatagramPacket(new byte[UAVParam.DATAGRAM_MAX_LENGTH],
-							UAVParam.DATAGRAM_MAX_LENGTH,
+					UAVParam.sendPacket[i] = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH],
+							Tools.DATAGRAM_MAX_LENGTH,
 							InetAddress.getByName(UAVParam.BROADCAST_IP),
 							UAVParam.BROADCAST_PORT);
 					UAVParam.receiveSocket[i] = new DatagramSocket(UAVParam.BROADCAST_PORT);
 					UAVParam.receiveSocket[i].setBroadcast(true);
-					UAVParam.receivePacket[i] = new DatagramPacket(new byte[UAVParam.DATAGRAM_MAX_LENGTH], UAVParam.DATAGRAM_MAX_LENGTH);
+					UAVParam.receivePacket[i] = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
 				} catch (SocketException | UnknownHostException e) {
-					GUIHelper.exit(Text.THREAD_START_ERROR);
+					GUI.exit(Text.THREAD_START_ERROR);
 				}
 			}
 		} else {
@@ -434,6 +389,23 @@ public class Tools {
 		UAVParam.sentPacket = new int[Param.numUAVs];
 		UAVParam.receivedPacket = new int[Param.numUAVs];
 		
+	}
+	
+	/** Rescales data structures when the screen scale is modified. */
+	public static void rescaleDataStructures() {
+		// Rescale the collision circles diameter
+		Point2D.Double locationUTM = null;
+		boolean found = false;
+		int numUAVs = Tools.getNumUAVs();
+		for (int i=0; i<numUAVs && !found; i++) {
+			locationUTM = Copter.getUTMLocation(i);
+			if (locationUTM != null) {
+				found = true;
+			}
+		}
+		Point2D.Double a = GUI.locatePoint(locationUTM.x, locationUTM.y);
+		Point2D.Double b = GUI.locatePoint(locationUTM.x + UAVParam.collisionDistance, locationUTM.y);
+		UAVParam.collisionScreenDistance = b.x - a.x;
 	}
 	
 	/** Auxiliary method to get the TCP ports available for SITL instances. */
@@ -564,7 +536,7 @@ public class Tools {
 	        }
 		}
 		if (ids.size() == 0) {
-			GUIHelper.exit(Text.MAC_ERROR);
+			GUI.exit(Text.MAC_ERROR);
 		}
 		return Collections.max(ids);
 	}
@@ -575,13 +547,13 @@ public class Tools {
 		if (SimParam.userIsAdmin) {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled) {
 				// Check if temporal filesystem is already mounted and dismount
-				File ramDiskFile = Tools.checkDriveMountedWindows();
+				File ramDiskFile = ArduSimTools.checkDriveMountedWindows();
 				if (ramDiskFile != null) {
-					if (!Tools.dismountDriveWindows(ramDiskFile.getAbsolutePath())) {
+					if (!ArduSimTools.dismountDriveWindows(ramDiskFile.getAbsolutePath())) {
 						return null;
 					}
 				}
-				ramDiskFile = Tools.mountDriveWindows();
+				ramDiskFile = ArduSimTools.mountDriveWindows();
 				if (ramDiskFile != null) {
 					SimParam.usingRAMDrive = true;
 					return ramDiskFile.getAbsolutePath();
@@ -592,8 +564,8 @@ public class Tools {
 				File ramDiskFile = new File(ramDiskPath);
 				if (ramDiskFile.exists()) {
 					// Check if temporal filesystem is already mounted and dismount
-					if (Tools.checkDriveMountedLinux(ramDiskPath)) {
-						if (!Tools.dismountDriveLinux(ramDiskPath)) {
+					if (ArduSimTools.checkDriveMountedLinux(ramDiskPath)) {
+						if (!ArduSimTools.dismountDriveLinux(ramDiskPath)) {
 							return null;
 						}
 					}
@@ -601,7 +573,7 @@ public class Tools {
 					// Create the folder
 					ramDiskFile.mkdirs();
 				}
-				if (Tools.mountDriveLinux(ramDiskPath)) {
+				if (ArduSimTools.mountDriveLinux(ramDiskPath)) {
 					SimParam.usingRAMDrive = true;
 					return ramDiskPath;
 				}
@@ -685,7 +657,7 @@ public class Tools {
 					s = s.substring(0, s.length()-1);
 				}
 				if (s.endsWith("Done.")) {
-					return Tools.checkDriveMountedWindows();
+					return ArduSimTools.checkDriveMountedWindows();
 				}
 			} catch (IOException e) {
 			}
@@ -819,7 +791,7 @@ public class Tools {
 	
 	/** Checks if the application is stand alone (.jar) or it is running inside an IDE. */
 	public static boolean isRunningFromJar() {
-		String file = Tools.class.getResource("/" + Tools.class.getName().replace('.', '/') + ".class").toString();
+		String file = ArduSimTools.class.getResource("/" + ArduSimTools.class.getName().replace('.', '/') + ".class").toString();
 		if (file.startsWith("jar:")) {
 			return true;
 		} else {
@@ -827,10 +799,204 @@ public class Tools {
 		}
 	}
 	
+	/** Gets an object of the available implementation for the selected protocol.
+	 * <p>Returns null if no valid or more than one implementation were found.
+	 * <p>An error message is already displayed.*/
+	public static ProtocolHelper getSelectedProtocolInstance() {
+		// Target protocol class and object
+		ProtocolHelper protocolLaunched = null;
+
+		// Get all Java classes included in ArduSim
+		List<String> existingClasses = getClasses();
+
+		// Get classes that extend Protocol class, and implement Metodos class
+		if (existingClasses != null && existingClasses.size() > 0) {
+			Class<?>[] validImplementations = getAllImplementations(existingClasses);
+
+			// If valid implementations were found, check if the selected protocol is implemented
+			if (validImplementations.length > 0) {
+				try {
+					ProtocolHelper[] protocolImplementations = getProtocolImplementations(validImplementations, ProtocolHelper.selectedProtocol);
+					if (protocolImplementations == null) {
+						GUI.log(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR + ProtocolHelper.selectedProtocol.getName());
+					} else if (protocolImplementations.length > 1) {
+						GUI.log(Text.PROTOCOL_MANY_IMPLEMENTATIONS_ERROR + ProtocolHelper.selectedProtocol.getName());
+					} else {
+						protocolLaunched = protocolImplementations[0];
+					}
+				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+						| InvocationTargetException | NoSuchMethodException | SecurityException
+						| NoSuchFieldException e) {
+					GUI.log(Text.PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR);
+				}
+			}
+		} else {
+			GUI.log(Text.PROTOCOL_GETTING_CLASSES_ERROR);
+		}
+		return protocolLaunched;
+	}
+	
+	/** Returns the existing Java classes in the jar file or Eclipse project.
+	 * <p>Returns null or empty list if some error happens.*/
+	private static List<String> getClasses() {
+		List<String> existingClasses = null;
+		if (isRunningFromJar()) {
+			// Process the jar file contents when running from a jar file
+			String jar = getJarFile();
+			if (jar != null) {
+				try {
+					existingClasses = getClassNamesFromJar(jar);
+				} catch (Exception e) {}
+			}
+		} else {
+			// Explore .class file tree for class files when running on Eclipse
+			File projectFolder = new File(Tools.getCurrentFolder(), "bin");
+			existingClasses = new ArrayList<>();
+			String projectFolderPath;
+			try {
+				projectFolderPath = projectFolder.getCanonicalPath() + File.separator;
+				int prefixLength = projectFolderPath.length();	// To remove from the classes path
+				getClassNamesFromIDE(existingClasses, projectFolder, prefixLength);
+			} catch (IOException e) {}
+		}
+		return existingClasses;
+	}
+	
+	/** Returns the String representation of the jar File the ArduSim instance is running from (path+name).
+	 * <p>Returns null if some error happens.*/
+	private static String getJarFile() {
+		Class<Main> c = main.Main.class;
+		CodeSource codeSource = c.getProtectionDomain().getCodeSource();
+		String jarFile = null;
+		if (codeSource != null && codeSource.getLocation() != null) {
+			try {
+				jarFile = codeSource.getLocation().toURI().getPath();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+		} else {
+			String path = c.getResource(c.getSimpleName() + ".class").getPath();
+			String jarFilePath = path.substring(path.indexOf(":") + 1, path.indexOf("!"));
+			try {
+				jarFile = URLDecoder.decode(jarFilePath, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return jarFile;
+	}
+	
+	/** Returns the list of classes included in the Jar file.
+	 * <p>Returns null or empty list if some error happens.*/
+	private static List<String> getClassNamesFromJar(String jarFile) throws Exception {
+		List<String> res = new ArrayList<>();
+		JarInputStream jarFileStream = new JarInputStream(new FileInputStream(jarFile));
+		JarEntry jarEntry;
+		while (true) {
+			jarEntry = jarFileStream.getNextJarEntry();
+			if (jarEntry == null) {
+				break;
+			}
+			if ((jarEntry.getName().endsWith(".class"))) {
+				String className = jarEntry.getName().replaceAll("/", "\\.");
+				String myClass = className.substring(0, className.lastIndexOf('.'));
+				res.add(myClass);
+			}
+		}
+		try {
+			if (jarFileStream != null) {
+				jarFileStream.close();
+			}
+		} catch (IOException e) {}
+		return res;
+	}
+	
+	/** Recursively adds classes from the Eclipse project to the existing list.*/
+	private static void getClassNamesFromIDE(List<String> res, File folder, int prefixLength) throws IOException {
+		List<File> dir = new ArrayList<>();
+		String temp, canonicalPath;
+		for (final File fileEntry : folder.listFiles()) {
+	        if (fileEntry.isDirectory()) {
+	            dir.add(fileEntry);
+	        } else {
+	        	canonicalPath = fileEntry.getCanonicalPath();
+	        	if (canonicalPath.toUpperCase().endsWith(".CLASS")) {
+	        		temp = canonicalPath.substring(prefixLength);
+		        	temp = temp.substring(0, temp.lastIndexOf("class") - 1); // Remove also the dot
+		        	temp = temp.replace(File.separator, ".");
+		        	res.add(temp);
+	        	}
+	        }
+	    }
+		for (int i = 0; i < dir.size(); i++) {
+			getClassNamesFromIDE(res, dir.get(i), prefixLength);
+		}
+	}
+	
+	/** Returns all the classes that contain valid implementation of any protocol.
+	 * <p>Returns an array of size 0 if no valid implementations were found.*/
+	private static Class<?>[] getAllImplementations(List<String> existingClasses) {
+		String className;
+		Class<?> currentClass;
+		Map<String, Class<?>> classesMap = new HashMap<>();
+		for (int i = 0; i < existingClasses.size(); i++) {
+			try {
+				className = existingClasses.get(i);
+				// Ignore special case
+				if (!className.toUpperCase().endsWith("WINREGISTRY")) {
+					currentClass = Class.forName(existingClasses.get(i));
+					if (ProtocolHelper.class.isAssignableFrom(currentClass) && !ProtocolHelper.class.equals(currentClass)) {
+						classesMap.put(existingClasses.get(i), currentClass);
+					}
+				}
+			} catch (ClassNotFoundException e) {}
+		}
+		Class<?>[] res = new Class<?>[classesMap.size()];
+		if (classesMap.size() > 0) {
+			int i = 0;
+			Iterator<Class<?>> it = classesMap.values().iterator();
+			while (it.hasNext()) {
+				res[i] = it.next();
+				i++;
+			}
+		}
+		return res;
+	}
+	
+	/** Returns all the implementations of the selected protocol among all available implementations.
+	 * <p>Returns a valid ProtocolHelper object for each implementation.
+	 * <p>Returns null if no valid implementation was found.
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws SecurityException 
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalArgumentException 
+	 * @throws NoSuchFieldException */
+	private static ProtocolHelper[] getProtocolImplementations(Class<?>[] implementations, ProtocolHelper.Protocol selectedProtocol) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+		Class<?> c;
+		ProtocolHelper o;
+		ProtocolHelper[] res = null;
+		List<ProtocolHelper> imp = new ArrayList<>();
+		for (int i = 0; i < implementations.length; i++) {
+			c = implementations[i];
+			o = (ProtocolHelper)c.newInstance();
+			o.setProtocol();
+			if (o.protocol == selectedProtocol) {
+				imp.add(o);
+			}
+		}
+		if (imp.size() > 0) {
+			res = imp.toArray(new ProtocolHelper[imp.size()]);
+		}
+		return res;
+	}
+	
 	/** Starts the virtual UAVs. */
 	public static void startVirtualUAVs(Pair<GeoCoordinates, Double>[] location) {
 		
-		SimTools.println(Text.STARTING_UAVS);
+		GUI.log(Text.STARTING_UAVS);
 		
 		try {
 			// 1. Under Windows, first close the possible running SITL processes
@@ -856,7 +1022,7 @@ public class Tools {
 					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
 					// Delete recursively in case it already exists
 					if (tempFolder.exists()) {
-						Tools.deleteFolder(tempFolder);
+						ArduSimTools.deleteFolder(tempFolder);
 					}
 					if (!tempFolder.mkdir()) {
 						throw new IOException();
@@ -873,7 +1039,7 @@ public class Tools {
 					}
 				}
 			} catch (IOException e) {
-				SimTools.println(Text.UAVS_START_ERROR_2 + "\n" + parentFolder);
+				GUI.log(Text.UAVS_START_ERROR_2 + "\n" + parentFolder);
 				throw new IOException();
 			}
 
@@ -950,14 +1116,14 @@ public class Tools {
 						if (input.ready()) {
 							s = input.readLine();
 							if (Param.VERBOSE_LOGGING) {
-								SimTools.println(SimParam.prefix[i] + s);
+								GUI.log(SimParam.prefix[i] + s);
 							}
 							if (s.contains("Waiting for connection")) {
-								SimTools.println(SimParam.prefix[i] + Text.SITL_UP);
+								GUI.log(SimParam.prefix[i] + Text.SITL_UP);
 								success = true;
 							}
 						} else {
-							GUIHelper.waiting(SimParam.CONSOLE_READ_RETRY_WAITING_TIME);
+							Tools.waiting(SimParam.CONSOLE_READ_RETRY_WAITING_TIME);
 							if (System.nanoTime() - startTime > SimParam.SITL_STARTING_TIMEOUT) {
 								break;
 							}
@@ -973,7 +1139,7 @@ public class Tools {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			GUIHelper.exit(Text.APP_NAME + " " + Text.UAVS_START_ERROR_1);
+			GUI.exit(Text.APP_NAME + " " + Text.UAVS_START_ERROR_1);
 		}
 	}
 
@@ -981,7 +1147,7 @@ public class Tools {
 	public static void deleteFolder (File file) throws IOException {
 		for (File childFile : file.listFiles()) {
 			if (childFile.isDirectory()) {
-				Tools.deleteFolder(childFile);
+				ArduSimTools.deleteFolder(childFile);
 			} else {
 				if (!childFile.delete()) {
 					throw new IOException();
@@ -999,15 +1165,15 @@ public class Tools {
 		if (OS.contains("win")) {
 			Param.runningOperatingSystem = Param.OS_WINDOWS;
 			if (Param.VERBOSE_LOGGING){
-				SimTools.println(Text.OPERATING_SYSTEM_WINDOWS);
+				GUI.log(Text.OPERATING_SYSTEM_WINDOWS);
 			}
 		} else if (OS.contains("nux") || OS.contains("nix") || OS.contains("aix")) {
 			Param.runningOperatingSystem = Param.OS_LINUX;
 			if (Param.VERBOSE_LOGGING){
-				SimTools.println(Text.OPERATING_SYSTEM_LINUX);
+				GUI.log(Text.OPERATING_SYSTEM_LINUX);
 			}
 		} else {
-			GUIHelper.exit(Text.UAVS_START_ERROR_4);
+			GUI.exit(Text.UAVS_START_ERROR_4);
 		}
 	}
 
@@ -1026,16 +1192,16 @@ public class Tools {
 				}
 			}
 			if (SimParam.cygwinPath == null) {
-				GUIHelper.exit(Text.UAVS_START_ERROR_3 + "\n" + SimParam.CYGWIN_PATH1 + " or,\n" + SimParam.CYGWIN_PATH2);
+				GUI.exit(Text.UAVS_START_ERROR_3 + "\n" + SimParam.CYGWIN_PATH1 + " or,\n" + SimParam.CYGWIN_PATH2);
 			}
-			sitlPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
+			sitlPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
 		} else if (Param.runningOperatingSystem == Param.OS_LINUX) {
-			sitlPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_LINUX_FILE_NAME;
+			sitlPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_LINUX_FILE_NAME;
 		}
 		// SITL detection
 		if (Param.runningOperatingSystem == Param.OS_WINDOWS
 				|| Param.runningOperatingSystem == Param.OS_LINUX) {
-			String paramPath = GUIHelper.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.PARAM_FILE_NAME;
+			String paramPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.PARAM_FILE_NAME;
 			File sitlPathFile = new File(sitlPath);
 			File paramPathFile = new File(paramPath);
 			if (sitlPathFile.exists() && sitlPathFile.canExecute() && paramPathFile.exists()) {
@@ -1216,12 +1382,12 @@ public class Tools {
 				}
 			});
 
-			Tools.closeSITL();
+			ArduSimTools.closeSITL();
 		}
 		
 		// 3. Close the application
-		SimTools.println(Text.EXITING);
-		GUIHelper.waiting(SimParam.LONG_WAITING_TIME);
+		GUI.log(Text.EXITING);
+		Tools.waiting(SimParam.LONG_WAITING_TIME);
 		if (Param.IS_REAL_UAV) {
 			String shutdownCommand;
 		    String operatingSystem = System.getProperty("os.name");
@@ -1239,7 +1405,7 @@ public class Tools {
 			    } catch (IOException e) {}
 		    }
 		    else {
-		    	SimTools.println(Text.SHUTDOWN_ERROR);
+		    	GUI.log(Text.SHUTDOWN_ERROR);
 		    }
 		} else {
 			MainWindow.window.mainWindowFrame.dispose();
@@ -1276,14 +1442,14 @@ public class Tools {
 		if (SimParam.usingRAMDrive) {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				// Unmount temporal filesystem
-				if (Tools.checkDriveMountedWindows() != null && !Tools.dismountDriveWindows(SimParam.tempFolderBasePath)) {
+				if (ArduSimTools.checkDriveMountedWindows() != null && !ArduSimTools.dismountDriveWindows(SimParam.tempFolderBasePath)) {
 					System.out.println(Text.DISMOUNT_DRIVE_ERROR);
 				}
 			}
 			
 			if (Param.runningOperatingSystem == Param.OS_LINUX) {
 				// Unmount temporal filesystem and remove folder
-				if (Tools.checkDriveMountedLinux(SimParam.tempFolderBasePath) && !Tools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
+				if (ArduSimTools.checkDriveMountedLinux(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
 					System.out.println(Text.DISMOUNT_DRIVE_ERROR);
 				}
 				File ramDiskFile = new File(SimParam.tempFolderBasePath);
@@ -1315,9 +1481,9 @@ public class Tools {
 				Param.controllers[i] = new UAVControllerThread(i);
 				Param.controllers[i].start();
 			}
-			SimTools.println(Text.CONTROLLERS_STARTED);
+			GUI.log(Text.CONTROLLERS_STARTED);
 		} catch (SocketException e) {
-			GUIHelper.exit(Text.THREAD_START_ERROR);
+			GUI.exit(Text.THREAD_START_ERROR);
 		}
 	}
 	
@@ -1335,7 +1501,7 @@ public class Tools {
 			if (System.nanoTime() - time > UAVParam.MAVLINK_ONLINE_TIMEOUT) {
 				if (Param.IS_REAL_UAV) {
 					if (!error) {
-						SimTools.println(Text.MAVLINK_ERROR);
+						GUI.log(Text.MAVLINK_ERROR);
 						error = true;
 					}
 				} else {
@@ -1343,11 +1509,11 @@ public class Tools {
 				}
 			}
 			if (!allReady) {
-				GUIHelper.waiting(UAVParam.MAVLINK_WAIT);
+				Tools.waiting(UAVParam.MAVLINK_WAIT);
 			}
 		}
 		if (!allReady) {
-			GUIHelper.exit(Text.MAVLINK_ERROR);
+			GUI.exit(Text.MAVLINK_ERROR);
 		}
 	}
 
@@ -1374,13 +1540,13 @@ public class Tools {
 			}
 		}
 		if (GPSStartThread.GPS_FORCED.get() < Param.numUAVs) {
-			GUIHelper.exit(Text.INITIAL_CONFIGURATION_ERROR_1);
+			GUI.exit(Text.INITIAL_CONFIGURATION_ERROR_1);
 		}
 	}
 	
 	/** Waits until GPS is available in all executing UAVs. */
 	public static void getGPSFix() {
-		SimTools.println(Text.WAITING_GPS);
+		GUI.log(Text.WAITING_GPS);
 		long time = System.nanoTime();
 		boolean startProcess = false;
 		boolean error = false;
@@ -1391,7 +1557,7 @@ public class Tools {
 			if (System.nanoTime() - time > UAVParam.GPS_FIX_TIMEOUT) {
 				if (Param.IS_REAL_UAV) {
 					if (!error) {
-						SimTools.println(Text.GPS_FIX_ERROR_2);
+						GUI.log(Text.GPS_FIX_ERROR_2);
 						error = true;
 					}
 				} else {
@@ -1399,13 +1565,13 @@ public class Tools {
 				}
 			}
 			if (!startProcess) {
-				GUIHelper.waiting(UAVParam.GPS_FIX_WAIT);
+				Tools.waiting(UAVParam.GPS_FIX_WAIT);
 			}
 		}
 		if (!startProcess) {
-			GUIHelper.exit(Text.GPS_FIX_ERROR_1);
+			GUI.exit(Text.GPS_FIX_ERROR_1);
 		}
-		SimTools.println(Text.GPS_OK);
+		GUI.log(Text.GPS_OK);
 		if (!Param.IS_REAL_UAV) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -1418,7 +1584,7 @@ public class Tools {
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, retrieves controller configuration, loads missions, etc. */
 	public static void sendBasicConfiguration() {
 		
-		MissionHelper.log(Text.SEND_MISSION);
+		GUI.log(Text.SEND_MISSION);
 		// All UAVs configured on a different thread, but the first
 		InitialConfigurationThread[] threads = null;
 		if (Param.numUAVs > 1) {
@@ -1440,7 +1606,17 @@ public class Tools {
 			}
 		}
 		if (InitialConfigurationThread.UAVS_CONFIGURED.get() < Param.numUAVs) {
-			GUIHelper.exit(Text.INITIAL_CONFIGURATION_ERROR_2);
+			GUI.exit(Text.INITIAL_CONFIGURATION_ERROR_2);
+		}
+	}
+	
+	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event. */
+	public static void triggerWaypointReached(int numUAV) {
+		for (int i = 0; i < ArduSimTools.listeners.size(); i++) {
+			WaypointReachedListener listener = ArduSimTools.listeners.get(i);
+			if (listener.getNumUAV() == numUAV) {
+				listener.onWaypointReached();
+			}
 		}
 	}
 	
@@ -1468,33 +1644,33 @@ public class Tools {
 			}
 			if (percentage != -1 && voltage != -1) {
 				if (Param.IS_REAL_UAV) {
-					SimTools.println(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
+					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
 				} else if (Param.VERBOSE_LOGGING) {
-					SimTools.println(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
+					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
 				}
 			} else if (percentage != -1) {
 				if (Param.IS_REAL_UAV) {
-					SimTools.println(Text.BATTERY_LEVEL + " " + percentage + " %");
+					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " %");
 				} else if (Param.VERBOSE_LOGGING) {
-					SimTools.println(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
+					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
 				}
 			} else if (voltage != -1) {
 				if (Param.IS_REAL_UAV) {
-					SimTools.println(Text.BATTERY_LEVEL + " " + voltage + " V");
+					GUI.log(Text.BATTERY_LEVEL + " " + voltage + " V");
 				} else if (Param.VERBOSE_LOGGING) {
-					SimTools.println(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
+					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
 				}
 			}
 			if (isDepleted) {
 				if (Param.IS_REAL_UAV) {
-					SimTools.println(Text.BATTERY_FAILING2);
+					GUI.log(Text.BATTERY_FAILING2);
 				} else {
 					depleted++;
 				}
 			}
 		}
 		if (!Param.IS_REAL_UAV && depleted > 0) {
-			SimTools.println(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
+			GUI.log(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
 		}
 	}
 	
@@ -1504,7 +1680,7 @@ public class Tools {
 		if (UAVParam.flightStarted) {
 			long latest = 0;
 			for (int i = 0; i < Param.numUAVs; i++) {
-				Mode mode = UAVParam.flightMode.get(i);
+				FlightMode mode = UAVParam.flightMode.get(i);
 				if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
 					if (Param.testEndTime[i] == 0) {
 						Param.testEndTime[i] = System.currentTimeMillis();
@@ -1535,7 +1711,7 @@ public class Tools {
 				maxTime = Param.testEndTime[i];
 			}
 		}
-		if (Param.selectedProtocol != Protocol.NONE) {
+		if (ProtocolHelper.selectedProtocol != ProtocolHelper.Protocol.NONE) {
 			sb.append(Text.LOG_GLOBAL).append(":\n\n");
 		}
 		long totalTime = maxTime - Param.startTime;
@@ -1545,9 +1721,9 @@ public class Tools {
 		}
 
 		// 2. Global times
-		sb.append(Text.LOG_TOTAL_TIME).append(": ").append(GUIHelper.timeToString(0, totalTime)).append("\n");
+		sb.append(Text.LOG_TOTAL_TIME).append(": ").append(Tools.timeToString(0, totalTime)).append("\n");
 		for (int i = 0; i < Param.numUAVs; i++) {
-			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(GUIHelper.timeToString(0, uavsTotalTime[i])).append("\n");
+			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(Tools.timeToString(0, uavsTotalTime[i])).append("\n");
 		}
 
 		return sb.toString();
@@ -1589,7 +1765,7 @@ public class Tools {
 			}
 			sb.append("\n\t").append(Text.RENDER).append(" ").append(SimParam.renderQuality.getName());
 		}
-		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(Param.selectedProtocol.getName());
+		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ProtocolHelper.selectedProtocol.getName());
 		sb.append("\n").append(Text.COMMUNICATIONS);
 		long sentPacketTot = 0;
 		long receivedPacketTot = 0;
@@ -1637,38 +1813,38 @@ public class Tools {
 					}
 				}
 				sb.append("\n\t\t").append(Text.TOT_WAITED_PREV_SENDING).append(" ").append(packetWaitedPrevSendingTot)
-					.append(" (").append(GUIHelper.round((100.0 * packetWaitedPrevSendingTot)/sentPacketTot, 3)).append("%)");
+					.append(" (").append(Tools.round((100.0 * packetWaitedPrevSendingTot)/sentPacketTot, 3)).append("%)");
 				if (UAVParam.carrierSensingEnabled) {
 					long packetWaitedMediaAvailableTot = 0;
 					for (int i = 0; i < Param.numUAVs; i++) {
 						packetWaitedMediaAvailableTot = packetWaitedMediaAvailableTot + UAVParam.packetWaitedMediaAvailable[i];
 					}
 					sb.append("\n\t\t").append(Text.TOT_WAITED_MEDIA_AVAILABLE).append(" ").append(packetWaitedMediaAvailableTot)
-						.append(" (").append(GUIHelper.round((100.0 * packetWaitedMediaAvailableTot)/sentPacketTot, 3)).append("%)");
+						.append(" (").append(Tools.round((100.0 * packetWaitedMediaAvailableTot)/sentPacketTot, 3)).append("%)");
 				}
 				sb.append("\n\t").append(Text.TOT_EQUIVALENT_RECEIVED).append(" ").append(equivalentReceived);
 				sb.append("\n\t\t").append(Text.TOT_OUT_OF_RANGE).append(" ").append(receiverOutOfRangeTot)
-					.append(" (").append(GUIHelper.round((100.0 * receiverOutOfRangeTot)/equivalentReceived, 3)).append("%)");
+					.append(" (").append(Tools.round((100.0 * receiverOutOfRangeTot)/equivalentReceived, 3)).append("%)");
 				sb.append("\n\t\t").append(Text.TOT_LOST_RECEIVER_WAS_SENDING).append(" ").append(receiverWasSendingTot)
-					.append(" (").append(GUIHelper.round((100.0 * receiverWasSendingTot)/equivalentReceived, 3)).append("%)");
+					.append(" (").append(Tools.round((100.0 * receiverWasSendingTot)/equivalentReceived, 3)).append("%)");
 				if (UAVParam.pCollisionEnabled) {
 					sb.append("\n\t\t").append(Text.TOT_VIRTUAL_QUEUE_WAS_FULL).append(" ").append(receiverVirtualQueueFullTot)
-						.append(" (").append(GUIHelper.round((100.0 * receiverVirtualQueueFullTot)/equivalentReceived, 3)).append("%)");
+						.append(" (").append(Tools.round((100.0 * receiverVirtualQueueFullTot)/equivalentReceived, 3)).append("%)");
 				}
 				sb.append("\n\t\t").append(Text.TOT_QUEUE_WAS_FULL).append(" ").append(receiverQueueFullTot)
-					.append(" (").append(GUIHelper.round((100.0 * receiverQueueFullTot)/equivalentReceived, 3)).append("%)");
+					.append(" (").append(Tools.round((100.0 * receiverQueueFullTot)/equivalentReceived, 3)).append("%)");
 				sb.append("\n\t\t").append(Text.TOT_RECEIVED).append(" ").append(successfullyReceivedTot)
-					.append(" (").append(GUIHelper.round((100.0 * successfullyReceivedTot)/equivalentReceived, 3)).append("%)");
+					.append(" (").append(Tools.round((100.0 * successfullyReceivedTot)/equivalentReceived, 3)).append("%)");
 				if (successfullyReceivedTot > 0) {
 					sb.append("\n\t\t\t").append(Text.TOT_REMAINING_IN_BUFFER).append(" ").append(totRemainingInBuffer)
-						.append(" (").append(GUIHelper.round((100.0 * totRemainingInBuffer)/successfullyReceivedTot, 3)).append("%)");
+						.append(" (").append(Tools.round((100.0 * totRemainingInBuffer)/successfullyReceivedTot, 3)).append("%)");
 					sb.append("\n\t\t\t").append(Text.TOT_PROCESSED).append(" ").append(receivedPacketTot)
-						.append(" (").append(GUIHelper.round((100.0 * receivedPacketTot)/successfullyReceivedTot, 3)).append("%)");
+						.append(" (").append(Tools.round((100.0 * receivedPacketTot)/successfullyReceivedTot, 3)).append("%)");
 					if (receivedPacketTot > 0 && UAVParam.pCollisionEnabled) {
 						sb.append("\n\t\t\t\t").append(Text.TOT_DISCARDED_FOR_COLLISION).append(" ").append(discardedForCollisionTot)
-							.append(" (").append(GUIHelper.round((100.0 * discardedForCollisionTot)/receivedPacketTot, 3)).append("%)");
+							.append(" (").append(Tools.round((100.0 * discardedForCollisionTot)/receivedPacketTot, 3)).append("%)");
 						sb.append("\n\t\t\t\t").append(Text.TOT_ENQUEUED_OK).append(" ").append(successfullyEnqueuedTot)
-							.append(" (").append(GUIHelper.round((100.0 * successfullyEnqueuedTot)/receivedPacketTot, 3)).append("%)");
+							.append(" (").append(Tools.round((100.0 * successfullyEnqueuedTot)/receivedPacketTot, 3)).append("%)");
 					}
 				}
 			}
@@ -1743,57 +1919,57 @@ public class Tools {
 					y = sp.y;
 					if (spPrev == null) {
 						// First test location
-						sb1.append(GUIHelper.round(x, 3)).append(",")
-							.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3))
+						sb1.append(Tools.round(x, 3)).append(",")
+							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
 							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
-							.append(",").append(GUIHelper.round(SimParam.uavUTMPath[i].get(j).speed, 3))
-							.append(",").append(GUIHelper.round(a, 3)).append(",0.000,0.000\n");
-						sb2.append(GUIHelper.round(x, 3)).append(",")
-							.append(GUIHelper.round(y, 3)).append("\n");
+							.append(",").append(Tools.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(Tools.round(a, 3)).append(",0.000,0.000\n");
+						sb2.append(Tools.round(x, 3)).append(",")
+							.append(Tools.round(y, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(GUIHelper.round(x, 3)).append(",")
-								.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3)).append("\n");
+							sb3.append(Tools.round(x, 3)).append(",")
+								.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3)).append("\n");
 						}
 						spPrev = sp;
 					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
 						// Moved horizontally
 						d = sp.distance(spPrev);
 						dist = dist + d;
-						sb1.append(GUIHelper.round(x, 3)).append(",")
-							.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3))
+						sb1.append(Tools.round(x, 3)).append(",")
+							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
 							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
-							.append(",").append(GUIHelper.round(SimParam.uavUTMPath[i].get(j).speed, 3))
-							.append(",").append(GUIHelper.round(a, 3)).append(",").append(GUIHelper.round(d, 3))
-							.append(",").append(GUIHelper.round(dist, 3)).append("\n");
-						sb2.append(GUIHelper.round(x, 3)).append(",")
-							.append(GUIHelper.round(y, 3)).append("\n");
+							.append(",").append(Tools.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(Tools.round(a, 3)).append(",").append(Tools.round(d, 3))
+							.append(",").append(Tools.round(dist, 3)).append("\n");
+						sb2.append(Tools.round(x, 3)).append(",")
+							.append(Tools.round(y, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(GUIHelper.round(x, 3)).append(",")
-								.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3)).append("\n");
+							sb3.append(Tools.round(x, 3)).append(",")
+								.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3)).append("\n");
 						}
 						spPrev = sp;
 					} else if (sp.z!=spPrev.z) {
 						// Only moved vertically
-						sb1.append(GUIHelper.round(x, 3)).append(",")
-							.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3))
+						sb1.append(Tools.round(x, 3)).append(",")
+							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
 							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
-							.append(",").append(GUIHelper.round(SimParam.uavUTMPath[i].get(j).speed, 3))
-							.append(",").append(GUIHelper.round(a, 3)).append(",0.0,").append(GUIHelper.round(dist, 3)).append("\n");
+							.append(",").append(Tools.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(Tools.round(a, 3)).append(",0.0,").append(Tools.round(dist, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(GUIHelper.round(x, 3)).append(",")
-								.append(GUIHelper.round(y, 3)).append(",").append(GUIHelper.round(sp.z, 3)).append("\n");
+							sb3.append(Tools.round(x, 3)).append(",")
+								.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3)).append("\n");
 						}
 						spPrev = sp;
 					}
 				}
 				j++;
 			}
-			GUIHelper.storeFile(file1, sb1.toString());
+			Tools.storeFile(file1, sb1.toString());
 			sb2.append("\n");
-			GUIHelper.storeFile(file2, sb2.toString());
+			Tools.storeFile(file2, sb2.toString());
 			if (Param.VERBOSE_STORE) {
 				sb3.append("\n");
-				GUIHelper.storeFile(file3, sb3.toString());
+				Tools.storeFile(file3, sb3.toString());
 			}
 		}
 	}
@@ -1803,7 +1979,7 @@ public class Tools {
 		// Extracting the name of the file without path or extension for later logging
 		String folder = file.getParent();
 		String baseFileName = file.getName();
-		String extension = GUIHelper.getFileExtension(file);
+		String extension = Tools.getFileExtension(file);
 		if (extension.length() > 0) {
 			baseFileName = baseFileName.substring(0, baseFileName.lastIndexOf(extension) - 1); // Remove also the dot
 		}
@@ -1814,17 +1990,16 @@ public class Tools {
 			file = new File(file.toString() + "." + Text.FILE_EXTENSION_TXT);
 		}
 		// Store simulation and protocol progress information and configuration
-		GUIHelper.storeFile(file, results);
+		Tools.storeFile(file, results);
 		
 		// 2. Store the UAV path and general information
-		Tools.storeLogAndPath(folder, baseFileName);
-		// 3. Store protocol specific information
-		if (Param.simulationIsMissionBased) {
-			MissionHelper.logMissionData(folder, baseFileName);
-		} else {
-			SwarmHelper.logSwarmData(folder, baseFileName);
-		}
-		// 4. Store ArduCopter logs if needed
+		ArduSimTools.storeLogAndPath(folder, baseFileName);
+		// 3. Store missions when used
+		logMission(folder, baseFileName);
+		
+		// 4. Store protocol specific information
+		ProtocolHelper.selectedProtocolInstance.logData(folder, baseFileName);
+		// 5. Store ArduCopter logs if needed
 		if (SimParam.arducopterLoggingEnabled) {
 			File logSource, logDestination;
 			File parentFolder = new File(SimParam.tempFolderBasePath);
@@ -1838,6 +2013,37 @@ public class Tools {
 					} catch (IOException e1) {
 					}
 				}
+			}
+		}
+	}
+	
+	/** Logging to file the UAVs mission, in AutoCAD format. */
+	private static void logMission(String folder, String baseFileName) {
+		File file;
+		StringBuilder sb;
+		int j;
+		for (int i=0; i<Param.numUAVs; i++) {
+			file = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.MISSION_SUFIX);
+			sb = new StringBuilder(2000);
+			sb.append("._PLINE\n");
+			j = 0;
+			List<WaypointSimplified> missionUTMSimplified = Tools.getUAVMissionSimplified(i);
+			if (missionUTMSimplified != null && missionUTMSimplified.size() > 1) {
+				WaypointSimplified prev = null;
+				WaypointSimplified current;
+				while (j<missionUTMSimplified.size()) {
+					current = missionUTMSimplified.get(j);
+					if (prev == null) {
+						sb.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
+						prev = current;
+					} else if (!current.equals(prev)) {
+						sb.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
+						prev = current;
+					}
+					j++;
+				}
+				sb.append("\n");
+				Tools.storeFile(file, sb.toString());
 			}
 		}
 	}

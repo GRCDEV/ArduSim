@@ -3,8 +3,13 @@ package mbcap.logic;
 /** This class contains messages used by MBCAP protocol. */
 
 public class MBCAPText {
+	
+	// Application name
+	public static final String APP_NAME = "ArduSim";
 
 	// Configuration dialog window:
+	public static final String OK = "OK";
+	public static final String RESTORE_DEFAULTS = "Restore defaults";
 	public static final String CANCEL = "Cancel";
 	public static final String CONFIGURATION = "configuration";
 	public static final String BEACONING_PARAM = "Beaconing parameters:";
@@ -26,6 +31,7 @@ public class MBCAPText {
 	public static final String RESUME_MODE_DELAY = "Default flight mode resume delay:";
 	public static final String DEADLOCK_TIMEOUT = "Deadlock base timeout:";
 	// Error messages:
+	public static final String VALIDATION_WARNING = "Validation warning";
 	public static final String BEACON_PERIOD_ERROR = "The time between beacons must be a valid positive integer.";
 	public static final String BEACON_REFRESH_ERROR = "The number of beacons repetitions must be a valid positive integer.";
 	public static final String BEACON_EXPIRATION_ERROR = "The beacon expiration time must be a valid positive number.";
@@ -52,21 +58,25 @@ public class MBCAPText {
 
 	// Progress shown in the log or the interaction panel
 	public static final String ENABLING = "Collision avoidance protocol enabled...";
-	public static final String COLLISION_DETECTED = "Collision detected!";
 	public static final String COLLISION_RISK_DETECTED = "Collision avoidance protocol in progress...";
 
 	// Progress dialog
 	public static final String CAP = "CAP";
 
 	// General errors
+	public static final String UAVS_START_ERROR_1 = "Failed locating the home position of the UAV";
+	public static final String UAVS_START_ERROR_2 = "No valid coordinates could be found to stablish the home of the UAV";
 	public static final String WARN_IMAGE_LOAD_ERROR = "The collision warning image could not be loaded.";
 	public static final String ERROR_BEACON = "Error sending a beacon.";
-	public static final String COLLISION_DETECTED_ERROR_1 = "Emergency landing due to the collision between the UAVs";
-	public static final String COLLISION_DETECTED_ERROR_2 = "It is suggested to close the application.\nCollision detected between the UAVs";
-	public static final String COLLISION_TITLE = "Collision detected";
 	public static final String WAYPOINT_LOST = "Current waypoint not found.";
 	public static final String REPOSITION_ERROR_1 = "No information enough to decide where to step aside.";
 	public static final String REPOSITION_ERROR_2 = "The UTM projection zone has not been already defined.";
+	
+	// Units
+	public static final String MILLISECONDS = "ms";
+	public static final String METERS = "m";
+	public static final String SECONDS = "s";
+	public static final String METERS_PER_SECOND = "m/s";
 	
 	// Protocol messages
 	public static final String PROT_TIMED = "Protocol timeout.";
@@ -85,7 +95,6 @@ public class MBCAPText {
 	public static final String GRANT_PERMISSION = "Granting permission to go on to UAV";
 	public static final String MISSION_RESUMED = "Mission resumed. Collision risk avoided with UAV";
 	public static final String SAFE_PLACE = "Safe place reached.";
-	public static final String WAYPOINT_REACHED = "Last waypoint reached.";
 	public static final String LANDING = "Landing due to protocol error.";
 	public static final String LANDING_ERROR = "It was not possible to land.";
 
@@ -104,6 +113,7 @@ public class MBCAPText {
 	public static final String STATE_EMERGENCY_LAND = "Emergency land";
 
 	// Logs stored
+	public static final String UAV_ID = "UAV";
 	public static final String BEACONS_SUFIX = "beacons.csv";
 	public static final String MAX_ERROR_LINES_SUFIX = "max_error_per_beacon.scr";
 	public static final String BEACON_TOTAL_ERROR_SUFIX = "error_per_beacon.csv";
@@ -118,6 +128,10 @@ public class MBCAPText {
 	public static final String X = "x";
 	public static final String Y = "y";
 	public static final String Z = "z";
+	
+	// General errors
+	public static final String START_MISSION_ERROR = "Error starting the mission of the UAVs";
+	public static final String MOVING_ERROR_2 = "Can't stabilize position in destination position.";
 	
 
 }

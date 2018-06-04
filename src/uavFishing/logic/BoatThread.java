@@ -1,6 +1,6 @@
 package uavFishing.logic;
 
-import api.API;
+import api.Copter;
 
 public class BoatThread extends Thread {
 	
@@ -12,7 +12,7 @@ public class BoatThread extends Thread {
 		
 		// Calcular mensaje con posicion barco + velocidad + heading
 				
-		API.sendBroadcastMessage(uavID, message);
+		Copter.sendBroadcastMessage(uavID, message);
 		
 		
 	}

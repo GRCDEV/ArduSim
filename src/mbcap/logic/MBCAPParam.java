@@ -1,5 +1,7 @@
 package mbcap.logic;
 
+import java.awt.BasicStroke;
+import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,7 @@ import mbcap.pojo.ProgressState;
 /** This class contains parameters related to MBCAP protocol. */
 
 public class MBCAPParam {
-
+	
 	// Maximum distance to the last waypoint used to stop calculating future positions
 	public static final double DISTANCE_TO_MISSION_END = 2.0;
 
@@ -62,6 +64,10 @@ public class MBCAPParam {
 	public static final double SAFETY_DISTANCE_RANGE = 1; // (m) Maximum distance to consider that the UAV has reached the safety position
 	public static Point2D.Double[] targetPointUTM;			// Safety position to move towards (UTM coordinates)
 	public static GeoCoordinates[] targetPointGeo;	// Safety position to move towards (Mercator coordinates)
+	// Stabilization parameters (when the UAV is moving aside)
+	public static final double STABILIZATION_SPEED = 0.2;				// (m/s) When it is stopped
+	public static final int STABILIZATION_WAIT_TIME = 200;				// (ms) Passively waiting the UAV to stop
+	public static final long STABILIZATION_TIMEOUT = 30 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 
 	public static long standStillTimeout = 5 * 1000000000l; // (ns) Timeout while the UAV stands still
 	public static long passingTimeout = 3 * 1000000000l; // (ns) Timeout when the UAV starts overtaking the other UAV before checking if it was successful
@@ -71,6 +77,12 @@ public class MBCAPParam {
 	public static final long DEADLOCK_TIMEOUT_BASE = 20 *  1000000000l; // (ns) Added during the calculus
 
 	public static List<Beacon>[] beaconsStored; // To log the sent beacons
+	
+	// Waiting timeout between threads
+	public static final int SHORT_WAITING_TIME = 200; // (ms)
+	
+	// Lines format
+	public static final Stroke STROKE_POINT = new BasicStroke(1f);
 	
 	// MBCAP finite state machine states enumerator
 	public enum MBCAPState {

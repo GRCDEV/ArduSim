@@ -1,79 +1,132 @@
 package uavFishing.logic;
 
+import java.awt.Graphics2D;
+
 import org.javatuples.Pair;
 
-import api.API;
-import api.SwarmHelper;
+import api.Copter;
+import api.GUI;
+import api.ProtocolHelper;
+import api.Tools;
+import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
-import main.Param;
-import main.Param.SimulatorState;
-import uavController.UAVParam.Mode;
+import sim.board.BoardPanel;
 
+public class UavFishingHelper extends ProtocolHelper {
 
-public class UavFishingHelper {
-
-	/** Opens the configuration dialog of the protocol UAVFISHING. */
-	public static void openConfigurationDialog() {
-		SwarmHelper.log("Cargar misión para el barco");
-		
+	@Override
+	public void setProtocol() {
+		this.protocol = ProtocolHelper.Protocol.UAVFISHING;
 	}
 	
-	/** Initializes data structures related to the protocol UAVFISHING. */
-	public static void initializeDataStructures() {} //TODO
+	@Override
+	public boolean loadMission() {
+		return false;
+	}
+
+	@Override
+	public void openConfigurationDialog() {
+		GUI.log("Cargar misión para el barco");
+		Tools.setProtocolConfigured(true);
+	}
+
+	@Override
+	public void initializeDataStructures() {
+		// TODO 
+	}
+
+	@Override
+	public String setInitialState() {
+		// TODO 
+		return null;
+	}
+
+	@Override
+	public void rescaleDataStructures() {
+		// TODO 
+	}
+
+	@Override
+	public void loadResources() {
+		// TODO 
+	}
 	
-	
-	/**
-	 * Gets the initial position of the UAVs from the mission of the master and
-	 * other source for the other UAVs related to the protocol UAVFISHING.
-	 */
-	public static Pair<GeoCoordinates, Double>[] getStartingLocation() {
-		
+	@Override
+	public void rescaleShownResources() {
+		// TODO 
+	}
+
+	@Override
+	public void drawResources(Graphics2D g2, BoardPanel p) {
+		// TODO 
+	}
+
+	@Override
+	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
 		Pair<GeoCoordinates, Double>[] startCoordinatesArray = new Pair[2];
 		startCoordinatesArray[0] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationBoat,0.0);
 		startCoordinatesArray[1] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationUAV,0.0);
 		
 		return startCoordinatesArray;
-	} 
-	
-	//Lanzar los distintos hilos de ejecución
-	public static void launchThreads() {
-		
-		new FisherControllerThread().run();
-		new BoatThread().run();
-		
-		
-		
-	} //TODO
-	
-	
-	public static boolean sendBasicConfig(int numUAV) {
+	}
+
+	@Override
+	public boolean sendInitialConfiguration(int numUAV) {
 		//Enviar, si procede, misión para el dron
 		boolean success = false;
 		//TODO
 		success = true;
-		
+
 		return success;
-	
+	}
+
+	@Override
+	public void startThreads() {
+		new FisherControllerThread().start();
+		new BoatThread().start();
+	}//TODO
+
+	@Override
+	public void setupActionPerformed() {
+//		Param.simStatus = SimulatorState.READY_FOR_TEST;//TODO Francisco ha comentado esto. Estab en el siguiente método y no sirve
+	}
+
+	@Override
+	public void startExperimentActionPerformed() {
+		
+		//Barco
+		Copter.setFlightMode(0, FlightMode.STABILIZE);
+		Copter.armEngines(0);
+		Copter.setFlightMode(0, FlightMode.AUTO);
+		Copter.setHalfThrottle(0);
+		//Dron
+		Copter.setFlightMode(1, FlightMode.STABILIZE);
+		Copter.armEngines(1);//TODO ahora tienes un método para hacer estas tres cosas en la API (Copter)
+		Copter.setFlightMode(1, FlightMode.GUIDED);
+		Copter.guidedTakeOff(1, 25);
+	}//TODO
+
+	@Override
+	public void forceExperimentEnd() {
+		// TODO 
+	}
+
+	@Override
+	public String getExperimentResults() {
+		// TODO 
+		return null;
 	}
 	
-	public static void startTestActionPerformed() {
-		
-		Param.simStatus = SimulatorState.READY_FOR_TEST;
-		//Barco
-		API.setMode(0, Mode.STABILIZE);
-		API.armEngines(0);
-		API.setMode(0, Mode.AUTO);
-		API.setThrottle(0);
-		//Dron
-		API.setMode(1, Mode.STABILIZE);
-		API.armEngines(1);
-		API.setMode(1, Mode.GUIDED);
-		API.doTakeOff(1, 25);
-		
-		
-				
-		
-	}//TODO
+	@Override
+	public String getExperimentConfiguration() {
+		// TODO 
+		return null;
+	}
 	
+	@Override
+	public void logData(String folder, String baseFileName) {
+		// TODO 
+	}
 	
+
 }

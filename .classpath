@@ -36,5 +36,6 @@
 	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-core-1.5.1.jar"/>
 	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-data-1.5.1.jar"/>
 	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-interpolation-1.5.1.jar"/>
+	<classpathentry kind="lib" path="libs/smile-math-1.5.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

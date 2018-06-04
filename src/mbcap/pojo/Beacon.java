@@ -10,12 +10,12 @@ import org.javatuples.Quintet;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+import api.Copter;
+import api.Tools;
 import api.pojo.Point3D;
-import main.Param;
 import mbcap.gui.MBCAPGUIParam;
-import mbcap.logic.MBCAPHelper;
 import mbcap.logic.MBCAPParam;
-import uavController.UAVParam;
+import mbcap.logic.MBCAPv3Helper;
 
 /** This class generates and updates the beacons sent by MBCAP protocol to detect risks of collision.
  * <p>It also allows to convert the object to MAVLink message and viceversa. */
@@ -49,14 +49,14 @@ public class Beacon implements Comparable<Beacon> {
 	 * <p>This method should be immediately followed by the getBuffer() method. */
 	public static Beacon buildToSend(int numUAV) {
 		// 1. Getting the needed information
-		long uavId = Param.id[numUAV];
-		Quintet<Long, java.awt.geom.Point2D.Double, Double, Double, Double> uavcurrentData = UAVParam.uavCurrentData[numUAV].getData();
+		long uavId = Tools.getIdFromPos(numUAV);
+		Quintet<Long, java.awt.geom.Point2D.Double, Double, Double, Double> uavcurrentData = Copter.getData(numUAV);
 		Long time = uavcurrentData.getValue0();
 		Point2D.Double currentLocation = uavcurrentData.getValue1();
 		double currentZ = uavcurrentData.getValue2();
 		double speed = uavcurrentData.getValue3();
 		double acceleration = uavcurrentData.getValue4();
-		List<Point3D> points = MBCAPHelper.getPredictedPath(numUAV, speed, acceleration, currentLocation, currentZ);
+		List<Point3D> points = MBCAPv3Helper.getPredictedPath(numUAV, speed, acceleration, currentLocation, currentZ);
 		MBCAPGUIParam.predictedLocation.set(numUAV, points);
 
 		// 2. Beacon building
@@ -71,7 +71,7 @@ public class Beacon implements Comparable<Beacon> {
 		res.points = points;
 
 		// 3. Buffer building
-		res.sendBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		res.sendBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		res.out = new Output(res.sendBuffer);
 		res.out.clear();
 		res.out.writeLong(res.uavId);

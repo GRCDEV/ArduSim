@@ -2,8 +2,6 @@ package main;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import mbcap.logic.MBCAPText;
-import swarmprot.logic.SwarmProtText;
 import uavController.UAVControllerThread;
 
 /** This class contains general parameters of the application. */
@@ -48,18 +46,12 @@ public class Param {
 	public static volatile int windDirection = Param.DEFAULT_WIND_DIRECTION;
 	public static volatile double windSpeed = Param.DEFAULT_WIND_SPEED;
 
-	// Parameters used to detect when a UAV reaches the last waypoint
-	public static final double LAST_WP_THRESHOLD = 1.0; // (m) Maximum distance considered
-	
 	// Statistics parameters
 	public static volatile long startTime;	// (ms) experiment start in local time
 	public static long[] testEndTime;		// (ms) one UAV experiment finish in local time
 	public static long latestEndTime;		// (ms) experiment finish in local time
 	public static final long STARTING_TIMEOUT = 10000;	// (ms) Time to wait before checking if all UAVs are on the ground 
 
-	// Selected protocol
-	public static volatile Protocol selectedProtocol;
-	
 	// Selected wireless model
 	public static WirelessModel selectedWirelessModel;
 	public static double fixedRange = 800.0;				// (m) Fixed range distance threshold
@@ -147,70 +139,4 @@ public class Param {
 		}
 	}
 	
-	// Protocols enumerator
-	public enum Protocol {
-		NONE(0, Text.PROTOCOL_NONE, true),			// Without protocol, only a mission based experiment can be done
-		MBCAP_V1(1, MBCAPText.MBCAP_V1, true),	// Changes the prediction objective when the UAV reaches a waypoint
-		MBCAP_V2(2, MBCAPText.MBCAP_V2, true),	// Adapts the prediction to the theoretical like a magnet
-		MBCAP_V3(3, MBCAPText.MBCAP_V3, true),	// v2 taking the UAV acceleration into account
-		MBCAP_V4(4, MBCAPText.MBCAP_V4, true),	// v3 with a variable acceleration
-		SWARM_PROT_V1(5, SwarmProtText.PROTOCOL_TEXT, false),
-		FOLLOW_ME_V1(6, "Sigueme", false),
-		POLLUTION(7, "Pollución", false),
-		UAVFISHING(8, "UAV fishing", false);
-		// New protocols should follow the increasing numeration
-
-		private final int id;
-		private final String name;
-		private final boolean isMissionBased;
-		private Protocol(int id, String name, boolean isMissionBased) {
-			this.id = id;
-			this.name= name;
-			this.isMissionBased = isMissionBased;
-		}
-		public int getId() {
-			return this.id;
-		}
-		public String getName() {
-			return this.name;
-		}
-		public boolean isMissionBased() {
-			return this.isMissionBased;
-		}
-		public static Protocol getHighestIdProtocol() {
-			Protocol res = null;
-			for (Protocol p : Protocol.values()) {
-				if (Param.simulationIsMissionBased == p.isMissionBased) {
-					if (res == null) {
-						res = p;
-					} else if (p.getId() > res.getId()) {
-						res = p;
-					}
-				}
-			}
-			return res;
-		}
-		public static String getProtocolNameById(int id) {
-			for (Protocol p : Protocol.values()) {
-				if (p.getId() == id) {
-					return p.getName();
-				}
-			}
-			return "";
-		}
-		/** Returns the protocol given its name.
-		 * <p>Returns null if the protocol was not found. */
-		public static Protocol getProtocolByName(String name) {
-			for (Protocol p : Protocol.values()) {
-				if (p.getName().toUpperCase().equals(name.toUpperCase())) {
-					return p;
-				}
-			}
-			return null;
-		}
-	}
-	
-
-	
-
 }

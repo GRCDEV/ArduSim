@@ -10,10 +10,11 @@ import java.net.SocketException;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Output;
 
-import api.GUIHelper;
+import api.GUI;
+import api.ProtocolHelper;
+import api.Tools;
 import main.Param;
 import main.Text;
-import main.Param.Protocol;
 import main.Param.SimulatorState;
 import uavController.UAVParam;
 
@@ -25,7 +26,7 @@ public class PCCompanionTalker extends Thread {
 		listener.start();
 		
 		DatagramSocket sendSocket = null;
-		byte[] sendBuffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		byte[] sendBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
 		if (Param.IS_PC_COMPANION) {
 			broadcastAddress = UAVParam.BROADCAST_IP;
@@ -40,7 +41,7 @@ public class PCCompanionTalker extends Thread {
 			sendSocket = new DatagramSocket();
 			sendSocket.setBroadcast(true);
 		} catch (SocketException e) {
-			GUIHelper.exit(Text.BIND_ERROR_2);
+			GUI.exit(Text.BIND_ERROR_2);
 		}
 
 		long time = System.currentTimeMillis();
@@ -69,7 +70,7 @@ public class PCCompanionTalker extends Thread {
 
 			sleep = PCCompanionParam.COMMAND_SEND_TIMEOUT - (System.currentTimeMillis() - time);
 			if (sleep > 0) {
-				GUIHelper.waiting((int)sleep);
+				Tools.waiting((int)sleep);
 			}
 			time = time + PCCompanionParam.COMMAND_SEND_TIMEOUT;
 		}
@@ -80,11 +81,11 @@ public class PCCompanionTalker extends Thread {
 	}
 	
 	private void launchProtocolDialog() {
-		Protocol p = PCCompanionParam.SELECTED_PROTOCOL.get();
-		if (p == Protocol.MBCAP_V1
-				|| p == Protocol.MBCAP_V2
-				|| p == Protocol.MBCAP_V3
-				|| p == Protocol.MBCAP_V4) {
+		ProtocolHelper.Protocol p = PCCompanionParam.SELECTED_PROTOCOL.get();
+		if (p == ProtocolHelper.Protocol.MBCAP_V1
+				|| p == ProtocolHelper.Protocol.MBCAP_V2
+				|| p == ProtocolHelper.Protocol.MBCAP_V3
+				|| p == ProtocolHelper.Protocol.MBCAP_V4) {
 			MBCAPDialog.mbcap = new MBCAPDialog(PCCompanionGUI.companion.assistantFrame);
 			MBCAPDialog.mbcap.setModalityType(ModalityType.APPLICATION_MODAL);
 			MBCAPDialog.mbcap.setVisible(true);

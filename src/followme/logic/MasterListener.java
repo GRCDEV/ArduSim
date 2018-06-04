@@ -6,8 +6,8 @@ import java.util.Set;
 
 import com.esotericsoftware.kryo.io.Input;
 
-import api.API;
-import api.SwarmHelper;
+import api.Copter;
+import api.GUI;
 import followme.logic.FollowMeParam.FollowMeState;
 import main.Param;
 import main.Param.SimulatorState;
@@ -32,7 +32,7 @@ public class MasterListener extends Thread {
 
 		if (FollowMeParam.uavs[FollowMeParam.posMaster] == FollowMeState.START) {
 			FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.LISTEN_ID;
-			SwarmHelper.setSwarmState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
+			GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		}
 
 		while (FollowMeParam.uavs[FollowMeParam.posMaster] == FollowMeState.LISTEN_ID) {
@@ -45,10 +45,10 @@ public class MasterListener extends Thread {
 		while (FollowMeParam.uavs[FollowMeParam.posMaster] == FollowMeState.WAIT_TAKE_OFF_MASTER) {
 			// Escuchar IDs Ready
 			recibirMessage(FollowMeParam.MsgReady);
-			SwarmHelper.log("Size idDetectados: "+idDetectados.size()+" slaveReady: "+slaveReady.size());
+			GUI.log("Size idDetectados: "+idDetectados.size()+" slaveReady: "+slaveReady.size());
 			if (idDetectados.size() == slaveReady.size()) {
 				FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.READY_TO_START;
-				SwarmHelper.setSwarmState(FollowMeParam.posMaster,
+				GUI.updateprotocolState(FollowMeParam.posMaster,
 						FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 			}
 		}
@@ -63,7 +63,7 @@ public class MasterListener extends Thread {
 		byte[] message = null;
 		Input in = new Input();
 		int idSlave;
-		message = API.receiveMessage(FollowMeParam.posMaster);
+		message = Copter.receiveMessage(FollowMeParam.posMaster);
 
 		in.setBuffer(message);
 		int idSender = in.readInt();
@@ -79,7 +79,7 @@ public class MasterListener extends Thread {
 				for (int i : FollowMeParam.posFormacion.values()) {
 					m += "" + i + ",";
 				}
-				SwarmHelper.log("IDs detectados: " + m);
+				GUI.log("IDs detectados: " + m);
 				break;
 			case FollowMeParam.MsgReady:
 				idSlave = in.readInt();

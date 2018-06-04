@@ -1,16 +1,16 @@
 package followme.logic;
 
+import java.awt.geom.Point2D;
 import java.util.Arrays;
+
+import org.javatuples.Triplet;
 
 import com.esotericsoftware.kryo.io.Output;
 
-import api.API;
-import api.SwarmHelper;
+import api.Copter;
+import api.GUI;
+import api.Tools;
 import followme.logic.FollowMeParam.FollowMeState;
-import followme.logic.comunication.Message;
-import main.Param;
-import main.Param.SimulatorState;
-import uavController.UAVParam;
 
 public class MasterTalker extends Thread {
 
@@ -31,9 +31,9 @@ public class MasterTalker extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			if(Param.simStatus == SimulatorState.READY_FOR_TEST) {
+			if(Tools.isSetupFinished()) {
 				FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.WAIT_TAKE_OFF_MASTER;
-				SwarmHelper.setSwarmState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
+				GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 			}
 		}
 		// Estado del simulador SETUP
@@ -64,7 +64,7 @@ public class MasterTalker extends Thread {
 
 	private void enviarMessage(int typeMsg) {
 		String msg = null;
-		byte[] buffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		byte[] buffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		Output out = new Output(buffer);
 
 		out.writeInt(idMaster);
@@ -93,13 +93,15 @@ public class MasterTalker extends Thread {
 		case FollowMeParam.MsgCoordenadas:
 			
 			double lat, lon, heading, z, speedX, speedY, speedZ;
-			lat = UAVParam.uavCurrentData[FollowMeParam.posMaster].getGeoLocation().getY();
-			lon = UAVParam.uavCurrentData[FollowMeParam.posMaster].getGeoLocation().getX();
-			heading = UAVParam.uavCurrentData[FollowMeParam.posMaster].getHeading();
-			z = UAVParam.uavCurrentData[FollowMeParam.posMaster].getZ();
-			speedX = UAVParam.uavCurrentData[FollowMeParam.posMaster].getSpeeds().getValue0();
-			speedY = UAVParam.uavCurrentData[FollowMeParam.posMaster].getSpeeds().getValue1();
-			speedZ = UAVParam.uavCurrentData[FollowMeParam.posMaster].getSpeeds().getValue2();
+			Point2D.Double geo = Copter.getGeoLocation(FollowMeParam.posMaster);
+			lat = geo.getY();
+			lon = geo.getX();
+			heading = Copter.getHeading(FollowMeParam.posMaster);
+			z = Copter.getZRelative(FollowMeParam.posMaster);
+			Triplet<Double, Double, Double> speed = Copter.getSpeeds(FollowMeParam.posMaster);
+			speedX = speed.getValue0();
+			speedY = speed.getValue1();
+			speedZ = speed.getValue2();
 			out.writeDouble(lat);
 			out.writeDouble(lon);
 			out.writeDouble(heading);
@@ -122,7 +124,7 @@ public class MasterTalker extends Thread {
 		out.flush();
 		byte[] message = Arrays.copyOf(buffer, out.position());
 		System.out.println("Enviado" + idMaster + "-->\t" + msg);
-		API.sendBroadcastMessage(idMaster, message);
+		Copter.sendBroadcastMessage(idMaster, message);
 		out.clear();
 
 	}

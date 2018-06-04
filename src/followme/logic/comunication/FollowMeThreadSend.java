@@ -4,9 +4,9 @@ import java.util.Arrays;
 
 import com.esotericsoftware.kryo.io.Output;
 
-import api.API;
+import api.Copter;
+import api.Tools;
 import followme.logic.FollowMeParam;
-import uavController.UAVParam;
 
 public class FollowMeThreadSend extends Thread {
 
@@ -21,7 +21,7 @@ public class FollowMeThreadSend extends Thread {
 	@SuppressWarnings("resource")
 	@Override
 	public void run() {
-		byte[] buffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		byte[] buffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		Output out = new Output(buffer);
 
 		int replicacion = 2;

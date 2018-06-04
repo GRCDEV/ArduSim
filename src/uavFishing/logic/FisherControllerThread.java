@@ -1,8 +1,6 @@
 package uavFishing.logic;
 
-import main.Param;
-import main.Param.SimulatorState;
-import api.API;
+import api.Tools;
 
 public class FisherControllerThread extends Thread{
 	
@@ -12,7 +10,7 @@ public class FisherControllerThread extends Thread{
 	@Override
 	public void run() {
 		
-		while(Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+		while(Tools.isExperimentInProgress()) {
 			
 			angle += UavFishingParam.heading;
 			

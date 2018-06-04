@@ -4,12 +4,10 @@ import java.util.Arrays;
 
 import com.esotericsoftware.kryo.io.Output;
 
-import api.API;
-import api.SwarmHelper;
+import api.Copter;
+import api.GUI;
+import api.Tools;
 import followme.logic.FollowMeParam.FollowMeState;
-import main.Param;
-import main.Param.SimulatorState;
-import uavController.UAVParam;
 
 public class SlaveTalker extends Thread {
 
@@ -22,9 +20,9 @@ public class SlaveTalker extends Thread {
 	@Override
 	public void run() {
 
-		SwarmHelper.setSwarmState(idSlave, FollowMeParam.uavs[idSlave].getName());
+		GUI.updateprotocolState(idSlave, FollowMeParam.uavs[idSlave].getName());
 
-		while (Param.simStatus != SimulatorState.READY_FOR_TEST) {
+		while (!Tools.isSetupFinished()) {
 			enviarMessage(FollowMeParam.MsgIDs);
 			try {
 				Thread.sleep(1000);
@@ -36,7 +34,7 @@ public class SlaveTalker extends Thread {
 
 		if (FollowMeParam.uavs[idSlave] == FollowMeState.START) {
 			FollowMeParam.uavs[idSlave] = FollowMeState.WAIT_TAKE_OFF_SLAVE;
-			SwarmHelper.setSwarmState(idSlave, FollowMeParam.uavs[idSlave].getName());
+			GUI.updateprotocolState(idSlave, FollowMeParam.uavs[idSlave].getName());
 		}
 
 		while (FollowMeParam.uavs[idSlave] != FollowMeState.WAIT_TAKE_OFF_SLAVE) {
@@ -55,7 +53,7 @@ public class SlaveTalker extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			if (UAVParam.uavCurrentData[idSlave].getZ() >= FollowMeParam.AlturaInitFollowers * 0.98) {
+			if (Copter.getZRelative(idSlave) >= FollowMeParam.AlturaInitFollowers * 0.98) {
 				enviarMessage(FollowMeParam.MsgReady);
 			}
 		}
@@ -66,7 +64,7 @@ public class SlaveTalker extends Thread {
 
 	private void enviarMessage(int typeMsg) {
 		String msg = null;
-		byte[] buffer = new byte[UAVParam.DATAGRAM_MAX_LENGTH];
+		byte[] buffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		Output out = new Output(buffer);
 
 		out.writeInt(idSlave);
@@ -86,7 +84,7 @@ public class SlaveTalker extends Thread {
 		out.flush();
 		byte[] message = Arrays.copyOf(buffer, out.position());
 		System.out.println("Enviado" + idSlave + "-->\t" + msg);
-		API.sendBroadcastMessage(idSlave, message);
+		Copter.sendBroadcastMessage(idSlave, message);
 		out.clear();
 	}
 }

@@ -1,7 +1,7 @@
 package sim.logic;
 
-import api.API;
-import api.GUIHelper;
+import api.Copter;
+import api.Tools;
 import main.Param;
 
 public class FakeSenderThread extends Thread {
@@ -23,8 +23,8 @@ public class FakeSenderThread extends Thread {
 		byte[] message = new byte[messageSize];
 //		long cicleTime = System.currentTimeMillis();
 		while (Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS) {
-			API.sendBroadcastMessage(numUAV, message);
-			GUIHelper.waiting(period);
+			Copter.sendBroadcastMessage(numUAV, message);
+			Tools.waiting(period);
 			
 //			cicleTime = cicleTime + period;
 //			waitingTime = (int)(cicleTime - System.currentTimeMillis());

@@ -16,13 +16,14 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import api.GUIHelper;
+import api.Tools;
 import api.pojo.GeoCoordinates;
 
 public class PollutionConfigDialog extends JDialog {
+
+	private static final long serialVersionUID = 1L;
 	JTextField startLatField;
 	JTextField startLongField;
 	JTextField altitudeField;
@@ -76,13 +77,13 @@ public class PollutionConfigDialog extends JDialog {
 		pollutionDataLabel = new JLabel("Pollution data: "); // TODO Add text helper file
 		isSimulationCheckBox = new JCheckBox("Simulation", true); // TODO Add text helper file
 		pollutionDataField = new JTextField();
-		pollutionDataButton = new JButton(main.Text.BUTTON_SELECT);
+		pollutionDataButton = new JButton("...");
 		pollutionDataButton.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser();
-				chooser.setCurrentDirectory(GUIHelper.getCurrentFolder());
+				chooser.setCurrentDirectory(Tools.getCurrentFolder());
 				chooser.setDialogTitle("Select pollution data file"); // TODO Add text helper file
 				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				chooser.setMultiSelectionEnabled(false);
@@ -223,6 +224,7 @@ public class PollutionConfigDialog extends JDialog {
 			PollutionParam.altitude = Double.parseDouble(altitudeField.getText());
 			PollutionParam.pollutionDataFile = pollutionDataField.getText();
 			PollutionParam.isSimulation = isSimulationCheckBox.isSelected();
+			Tools.setProtocolConfigured(true);
 			dispose();
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);

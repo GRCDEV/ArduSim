@@ -11,13 +11,11 @@ import javax.swing.SwingUtilities;
 
 import org.javatuples.Pair;
 
-import api.API;
-import api.GUIHelper;
-import api.MissionHelper;
-import api.SwarmHelper;
+import api.GUI;
+import api.ProtocolHelper;
+import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.Waypoint;
-import main.Param.Protocol;
 import main.Param.SimulatorState;
 import sim.board.BoardHelper;
 import sim.gui.ConfigDialog;
@@ -44,36 +42,31 @@ public class Main {
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 		// Parse the command line arguments
-		if (!Tools.parseArgs(args)) {
+		if (!ArduSimTools.parseArgs(args)) {
 			return;
 		}
 
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
-		Tools.detectOS();
+		ArduSimTools.detectOS();
 		if (Param.IS_REAL_UAV) {
 			// 1. We need to make constant the parameters shown in the GUI
 			Param.numUAVs = 1;	// Always one UAV per Raspberry Pi or whatever the device where the application is deployed
 
 			// 2. Establish the identifier of the UAV
 			Param.id = new long[Param.numUAVs];
-			Param.id[0] = Tools.getRealId();
+			Param.id[0] = ArduSimTools.getRealId();
 
 			// 3. Mission file loading
 			// The mission is loaded from a file on the same folder as the jar file
-			boolean loadMission;
-			if (Param.simulationIsMissionBased) {
-				loadMission = MissionHelper.loadMission();
-			} else {
-				loadMission = SwarmHelper.loadMission();
-			}
-			File parentFolder = GUIHelper.getCurrentFolder();
+			boolean loadMission = ProtocolHelper.selectedProtocolInstance.loadMission();
+			File parentFolder = Tools.getCurrentFolder();
 			if (loadMission) {
 				List<Waypoint> mission = Tools.loadMission(parentFolder);
 				if (mission == null) {
-					GUIHelper.exit(Text.MISSION_NOT_FOUND);
+					GUI.exit(Text.MISSION_NOT_FOUND);
 				}
-				API.setLoadedMissions(new List[] {mission});
+				Tools.setLoadedMissionsFromFile(new List[] {mission});
 			}
 			
 			// 4. Start threads for waiting to commands to start the setup and start steps of the experiment
@@ -83,18 +76,18 @@ public class Main {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;
 
-			Tools.locateSITL();
-			Tools.checkAdminPrivileges();
+			ArduSimTools.locateSITL();
+			ArduSimTools.checkAdminPrivileges();
 			try {
-				UAVParam.mavPort = Tools.getSITLPorts();
+				UAVParam.mavPort = ArduSimTools.getSITLPorts();
 				if (UAVParam.mavPort.length < UAVParam.MAX_SITL_INSTANCES) {
-					GUIHelper.warn(Text.PORT_ERROR, Text.PORT_ERROR_1 + UAVParam.mavPort.length + " " + Text.UAV_ID + "s");
+					GUI.warn(Text.PORT_ERROR, Text.PORT_ERROR_1 + UAVParam.mavPort.length + " " + Text.UAV_ID + "s");
 				}
 			} catch (InterruptedException | ExecutionException e) {
-				GUIHelper.exit(Text.PORT_ERROR_2);
+				GUI.exit(Text.PORT_ERROR_2);
 			}
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
-				Tools.checkImdiskInstalled();
+				ArduSimTools.checkImdiskInstalled();
 			}
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -103,19 +96,15 @@ public class Main {
 			});
 			// Waiting the configuration to be finished
 			while (Param.simStatus == SimulatorState.CONFIGURING) {
-				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
 
 			// 2. Opening the configuration dialog of the protocol under test
 			if (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
-				if (Param.simulationIsMissionBased) {
-					MissionHelper.openMissionConfigurationDialog();
-				} else {
-					SwarmHelper.openSwarmConfigurationDialog();
-				}
+				ProtocolHelper.selectedProtocolInstance.openConfigurationDialog();
 				// Waiting the protocol configuration to be finished
 				while (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
-					GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+					Tools.waiting(SimParam.SHORT_WAITING_TIME);
 				}
 			}
 
@@ -128,16 +117,12 @@ public class Main {
 		}
 
 		// 4. Data structures initializing
-		Tools.initializeDataStructures();
-		if (Param.simulationIsMissionBased) {
-			MissionHelper.initializeMissionDataStructures();
-		} else {
-			SwarmHelper.initializeSwarmDataStructures();
-		}
+		ArduSimTools.initializeDataStructures();
+		ProtocolHelper.selectedProtocolInstance.initializeDataStructures();
 		// Waiting the main window to be built
 		if (!Param.IS_REAL_UAV) {
 			while (MainWindow.boardPanel == null || MainWindow.buttonsPanel == null) {
-				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
 
 			// 5. Initial GUI configuration and launch the progress dialog
@@ -156,45 +141,41 @@ public class Main {
 			});
 			// Waiting the progress dialog to be built
 			while (!SimParam.progressShowing || MainWindow.progressDialog == null) {
-				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
 
 			// 6. Load needed resources
 			SimTools.loadUAVImage();
-			if (Param.simulationIsMissionBased) {
-				MissionHelper.loadMissionResources();
-			} else {
-				SwarmHelper.loadSwarmResources();
-			}
+			ProtocolHelper.selectedProtocolInstance.loadResources();
 		}
 		// Configuration feedback
-		SimTools.println(Text.PROTOCOL_IN_USE + " " + Param.selectedProtocol.getName());
+		GUI.log(Text.PROTOCOL_IN_USE + " " + ProtocolHelper.selectedProtocol.getName());
 		if (!Param.IS_REAL_UAV) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
 							|| Param.runningOperatingSystem == Param.OS_LINUX)) {
-				SimTools.println(Text.USING_RAM_DRIVE);
+				GUI.log(Text.USING_RAM_DRIVE);
 			} else {
-				SimTools.println(Text.USING_HARD_DRIVE);
+				GUI.log(Text.USING_HARD_DRIVE);
 			}
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				if (SimParam.userIsAdmin && !SimParam.imdiskIsInstalled) {
-					SimTools.println(Text.INSTALL_IMDISK);
+					GUI.log(Text.INSTALL_IMDISK);
 				}
 				if (!SimParam.userIsAdmin) {
 					if (SimParam.imdiskIsInstalled) {
-						SimTools.println(Text.USE_ADMIN);
+						GUI.log(Text.USE_ADMIN);
 					} else {
-						SimTools.println(Text.INSTALL_IMDISK_USE_ADMIN);
+						GUI.log(Text.INSTALL_IMDISK_USE_ADMIN);
 					}
 				}
 			}
 			if (Param.runningOperatingSystem == Param.OS_LINUX && !SimParam.userIsAdmin) {
-				SimTools.println(Text.USE_ROOT);
+				GUI.log(Text.USE_ROOT);
 			}
-			SimTools.println(Text.WIRELESS_MODEL_IN_USE + " " + Param.selectedWirelessModel.getName());
+			GUI.log(Text.WIRELESS_MODEL_IN_USE + " " + Param.selectedWirelessModel.getName());
 			if (Param.windSpeed != 0.0) {
-				SimTools.println(Text.SIMULATED_WIND_SPEED + " " + Param.windSpeed);
+				GUI.log(Text.SIMULATED_WIND_SPEED + " " + Param.windSpeed);
 			}
 		}
 
@@ -204,27 +185,22 @@ public class Main {
 		// 8. Startup of the virtual UAVs
 		if (!Param.IS_REAL_UAV) {
 			BoardHelper.buildWindImage(MainWindow.boardPanel);
-			Pair<GeoCoordinates, Double>[] start;
-			if (Param.simulationIsMissionBased) {
-				start = MissionHelper.getMissionStartingLocation();
-			} else {
-				start = SwarmHelper.getSwarmStartingLocation();
-			}
-			SimParam.tempFolderBasePath = Tools.defineTemporaryFolder();
+			Pair<GeoCoordinates, Double>[] start = ProtocolHelper.selectedProtocolInstance.setStartingLocation();
+			SimParam.tempFolderBasePath = ArduSimTools.defineTemporaryFolder();
 			if (SimParam.tempFolderBasePath == null) {
-				GUIHelper.exit(Text.TEMP_PATH_ERROR);
+				GUI.exit(Text.TEMP_PATH_ERROR);
 			}
-			Tools.startVirtualUAVs(start);
+			ArduSimTools.startVirtualUAVs(start);
 		}
 
 		// 9. Start UAV controllers, wait for MAVLink link, wait for GPS fix, and send basic configuration
-		Tools.startUAVControllers();
-		Tools.waitMAVLink();
+		ArduSimTools.startUAVControllers();
+		ArduSimTools.waitMAVLink();
 		if (!Param.IS_REAL_UAV) {
-			Tools.forceGPS();
+			ArduSimTools.forceGPS();
 		}
-		Tools.getGPSFix();//TODO descomentar
-		Tools.sendBasicConfiguration();
+		ArduSimTools.getGPSFix();//TODO descomentar
+		ArduSimTools.sendBasicConfiguration();
 		
 		// 10. Set communications online, and start collision detection if needed
 		if (!Param.IS_REAL_UAV && Param.numUAVs > 1) {
@@ -236,11 +212,7 @@ public class Main {
 		}
 		
 		// 11. Launch the threads of the protocol under test
-		if (Param.simulationIsMissionBased) {
-			MissionHelper.launchMissionThreads();
-		} else {
-			SwarmHelper.launchSwarmThreads();
-		}
+		ProtocolHelper.selectedProtocolInstance.startThreads();
 
 		// 12. Build auxiliary elements to be drawn and prepare the user interaction
 		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
@@ -249,7 +221,7 @@ public class Main {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
-			GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+			Tools.waiting(SimParam.SHORT_WAITING_TIME);
 		}
 		if (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
 			if (!Param.IS_REAL_UAV) {
@@ -267,22 +239,19 @@ public class Main {
 				if (Param.simulationIsMissionBased) {
 					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
 				} else {
-					SimTools.println(Text.WAITING_FOR_USER);
+					GUI.log(Text.WAITING_FOR_USER);
 				}
 			}
 			while (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
-				GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
 
 			// 13. Apply the configuration step, only if the program is not being closed (state SHUTTING_DOWN)
 			if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
-				if (Param.simulationIsMissionBased) {
-					Param.simStatus = SimulatorState.READY_FOR_TEST;
-				} else {
-					SwarmHelper.swarmSetupActionPerformed();
-				}
+				ProtocolHelper.selectedProtocolInstance.setupActionPerformed();
+				Param.simStatus = SimulatorState.READY_FOR_TEST;
 				while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
-					GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+					Tools.waiting(SimParam.SHORT_WAITING_TIME);
 				}
 
 				// 14. Waiting for the user to start the experiment, only if the program is not being closed
@@ -294,10 +263,10 @@ public class Main {
 								MainWindow.buttonsPanel.startTestButton.setEnabled(true);
 							}
 						});
-						SimTools.println(Text.WAITING_FOR_USER);
+						GUI.log(Text.WAITING_FOR_USER);
 					}
 					while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
-						GUIHelper.waiting(SimParam.SHORT_WAITING_TIME);
+						Tools.waiting(SimParam.SHORT_WAITING_TIME);
 					}
 
 					// 15. Start the experiment, only if the program is not being closed
@@ -316,14 +285,14 @@ public class Main {
 
 
 						Param.startTime = System.currentTimeMillis();
-						SimTools.println(Text.TEST_START);
+						GUI.log(Text.TEST_START);
 						if (!Param.IS_REAL_UAV) {
 							timer = new Timer();
 							timer.scheduleAtFixedRate(new TimerTask() {
 								long time = Param.startTime;
 								public void run() {
 									if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-										final String timeString = GUIHelper.timeToString(Param.startTime, time);
+										final String timeString = Tools.timeToString(Param.startTime, time);
 										time = time + 1000;
 										SwingUtilities.invokeLater(new Runnable() {
 											public void run() {
@@ -341,11 +310,7 @@ public class Main {
 								}
 							}, 0, 1000);	// Once each second, without initial waiting time
 						}
-						if (Param.simulationIsMissionBased) {
-							MissionHelper.startMissionTestActionPerformed();
-						} else {
-							SwarmHelper.startSwarmTestActionPerformed();
-						}
+						ProtocolHelper.selectedProtocolInstance.startExperimentActionPerformed();
 						
 						// 16. Waiting while the experiment is is progress and detecting the experiment end
 						int check = 0;
@@ -353,18 +318,14 @@ public class Main {
 						while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 							// Check the battery level periodically
 							if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
-								Tools.checkBatteryLevel();
+								ArduSimTools.checkBatteryLevel();
 							}
 							check++;
-							if (Param.simulationIsMissionBased) {
-								// Land all the UAVs when they reach the last waypoint
-								MissionHelper.detectMissionEnd();
-							} else {
-								SwarmHelper.detectSwarmEnd();
-							}
+							// Force the UAVs to land if needed
+							ProtocolHelper.selectedProtocolInstance.forceExperimentEnd();
 							// Detects if all UAVs are on the ground in order to finish the experiment
 							if (checkEnd) {
-								if (Tools.isTestFinished()) {
+								if (ArduSimTools.isTestFinished()) {
 									Param.simStatus = SimulatorState.TEST_FINISHED;
 								}
 							} else {
@@ -373,15 +334,15 @@ public class Main {
 								}
 							}
 							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-								GUIHelper.waiting(SimParam.LONG_WAITING_TIME);
+								Tools.waiting(SimParam.LONG_WAITING_TIME);
 							}
 						}
 
 						// 17. Wait for the user to close the simulator, only if the program is not being closed
 						if (Param.simStatus == SimulatorState.TEST_FINISHED) {
-							SimTools.println(GUIHelper.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
+							GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 							if (!Param.IS_REAL_UAV) {
-								SimTools.println(Text.WAITING_FOR_USER);
+								GUI.log(Text.WAITING_FOR_USER);
 								SwingUtilities.invokeLater(new Runnable() {
 									public void run() {
 										MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED);
@@ -391,30 +352,20 @@ public class Main {
 
 							// Gather information to show the results dialog
 							String res = null;//después terminar revisión interfaz prot y nombre clases
-							res = Tools.getTestResults();
-							if (Param.selectedProtocol != Protocol.NONE) {
-								String s = null;
-								if (Param.simulationIsMissionBased) {
-									s = MissionHelper.getMissionTestResults();
-								} else {
-									s = SwarmHelper.getSwarmTestResults();
-								}
+							res = ArduSimTools.getTestResults();
+							if (ProtocolHelper.selectedProtocol != ProtocolHelper.Protocol.NONE) {
+								String s = ProtocolHelper.selectedProtocolInstance.getExperimentResults();
 								if (s != null && s.length() > 0) {
-									res += "\n" + Param.selectedProtocol.getName() + ":\n\n";
+									res += "\n" + ProtocolHelper.selectedProtocol.getName() + ":\n\n";
 									res += s;
 								}
 							}
 							
-							res += Tools.getTestGlobalConfiguration();
-							if (Param.selectedProtocol != Protocol.NONE) {
-								String s = null;
-								if (Param.simulationIsMissionBased) {
-									s = MissionHelper.getMissionProtocolConfig();
-								} else {
-									s = SwarmHelper.getSwarmProtocolConfig();
-								}
+							res += ArduSimTools.getTestGlobalConfiguration();
+							if (ProtocolHelper.selectedProtocol != ProtocolHelper.Protocol.NONE) {
+								String s = ProtocolHelper.selectedProtocolInstance.getExperimentConfiguration();
 								if (s != null && s.length() > 0) {
-									res += "\n\n" + Param.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
+									res += "\n\n" + ProtocolHelper.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
 									res += s;
 								}
 							}
@@ -425,8 +376,8 @@ public class Main {
 								String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
 										+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
 										+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
-								Tools.storeResults(res2, new File(GUIHelper.getCurrentFolder(), fileName));
-								Tools.shutdown();	// Closes the simulator
+								ArduSimTools.storeResults(res2, new File(Tools.getCurrentFolder(), fileName));
+								ArduSimTools.shutdown();	// Closes the simulator
 							} else {
 								SwingUtilities.invokeLater(new Runnable() {
 									public void run() {

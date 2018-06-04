@@ -10,7 +10,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import main.Text;
 import mbcap.logic.MBCAPText;
 
 /** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog. */
@@ -73,7 +72,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(beaconingPeriodTextField, gbc_beaconingPeriodTextField);
 		beaconingPeriodTextField.setColumns(10);
 
-		JLabel lblMs_1 = new JLabel(Text.MILLISECONDS);
+		JLabel lblMs_1 = new JLabel(MBCAPText.MILLISECONDS);
 		lblMs_1.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblMs_1 = new GridBagConstraints();
 		gbc_lblMs_1.anchor = GridBagConstraints.WEST;
@@ -120,7 +119,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(beaconExpirationTimeTextField, gbc_beaconExpirationTimeTextField);
 		beaconExpirationTimeTextField.setColumns(10);
 
-		JLabel lblS = new JLabel(Text.SECONDS);
+		JLabel lblS = new JLabel(MBCAPText.SECONDS);
 		lblS.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS = new GridBagConstraints();
 		gbc_lblS.anchor = GridBagConstraints.WEST;
@@ -148,7 +147,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(beaconFlyingTimeTextField, gbc_beaconFlyingTimeTextField);
 		beaconFlyingTimeTextField.setColumns(10);
 
-		JLabel lblS_1 = new JLabel(Text.SECONDS);
+		JLabel lblS_1 = new JLabel(MBCAPText.SECONDS);
 		lblS_1.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_1 = new GridBagConstraints();
 		gbc_lblS_1.anchor = GridBagConstraints.WEST;
@@ -176,7 +175,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(hopTimeTextField, gbc_hopTimeTextField);
 		hopTimeTextField.setColumns(10);
 
-		JLabel lblS_5 = new JLabel(Text.SECONDS);
+		JLabel lblS_5 = new JLabel(MBCAPText.SECONDS);
 		lblS_5.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_5 = new GridBagConstraints();
 		gbc_lblS_5.anchor = GridBagConstraints.WEST;
@@ -204,7 +203,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(minSpeedTextField, gbc_minSpeedTextField);
 		minSpeedTextField.setColumns(10);
 
-		JLabel lblMs_2 = new JLabel(Text.METERS_PER_SECOND);
+		JLabel lblMs_2 = new JLabel(MBCAPText.METERS_PER_SECOND);
 		lblMs_2.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblMs_2 = new GridBagConstraints();
 		gbc_lblMs_2.insets = new Insets(0, 0, 5, 0);
@@ -241,7 +240,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(collisionRiskDistanceTextField, gbc_collisionRiskDistanceTextField);
 		collisionRiskDistanceTextField.setColumns(10);
 
-		JLabel lblM_1 = new JLabel(Text.METERS);
+		JLabel lblM_1 = new JLabel(MBCAPText.METERS);
 		lblM_1.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblM_1 = new GridBagConstraints();
 		gbc_lblM_1.anchor = GridBagConstraints.WEST;
@@ -269,7 +268,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(collisionRiskAltitudeDifferenceTextField, gbc_collisionRiskAltitudeDifferenceTextField);
 		collisionRiskAltitudeDifferenceTextField.setColumns(10);
 
-		JLabel lblM_2 = new JLabel(Text.METERS);
+		JLabel lblM_2 = new JLabel(MBCAPText.METERS);
 		lblM_2.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblM_2 = new GridBagConstraints();
 		gbc_lblM_2.anchor = GridBagConstraints.WEST;
@@ -297,7 +296,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(maxTimeTextField, gbc_maxTimeTextField);
 		maxTimeTextField.setColumns(10);
 
-		JLabel lblS_9 = new JLabel(Text.SECONDS);
+		JLabel lblS_9 = new JLabel(MBCAPText.SECONDS);
 		lblS_9.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_9 = new GridBagConstraints();
 		gbc_lblS_9.anchor = GridBagConstraints.WEST;
@@ -325,7 +324,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(reactionDistanceTextField, gbc_reactionDistanceTextField);
 		reactionDistanceTextField.setColumns(10);
 
-		JLabel lblM_3 = new JLabel(Text.METERS);
+		JLabel lblM_3 = new JLabel(MBCAPText.METERS);
 		lblM_3.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblM_3 = new GridBagConstraints();
 		gbc_lblM_3.anchor = GridBagConstraints.WEST;
@@ -353,7 +352,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(riskCheckPeriodTextField, gbc_riskCheckPeriodTextField);
 		riskCheckPeriodTextField.setColumns(10);
 
-		JLabel lblS_3 = new JLabel(Text.SECONDS);
+		JLabel lblS_3 = new JLabel(MBCAPText.SECONDS);
 		lblS_3.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_3 = new GridBagConstraints();
 		gbc_lblS_3.anchor = GridBagConstraints.WEST;
@@ -381,7 +380,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(safePlaceDistanceTextField, gbc_safePlaceDistanceTextField);
 		safePlaceDistanceTextField.setColumns(10);
 
-		JLabel lblM_4 = new JLabel(Text.METERS);
+		JLabel lblM_4 = new JLabel(MBCAPText.METERS);
 		lblM_4.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblM_4 = new GridBagConstraints();
 		gbc_lblM_4.anchor = GridBagConstraints.WEST;
@@ -409,7 +408,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(standStillTimeTextField, gbc_standStillTimeTextField);
 		standStillTimeTextField.setColumns(10);
 
-		JLabel lblS_6 = new JLabel(Text.SECONDS);
+		JLabel lblS_6 = new JLabel(MBCAPText.SECONDS);
 		lblS_6.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_6 = new GridBagConstraints();
 		gbc_lblS_6.anchor = GridBagConstraints.WEST;
@@ -437,7 +436,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(passingTimeTextField, gbc_passingTimeTextField);
 		passingTimeTextField.setColumns(10);
 
-		JLabel lblS_7 = new JLabel(Text.SECONDS);
+		JLabel lblS_7 = new JLabel(MBCAPText.SECONDS);
 		lblS_7.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_7 = new GridBagConstraints();
 		gbc_lblS_7.anchor = GridBagConstraints.WEST;
@@ -465,7 +464,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(solvedTimeTextField, gbc_solvedTimeTextField);
 		solvedTimeTextField.setColumns(10);
 
-		JLabel lblS_8 = new JLabel(Text.SECONDS);
+		JLabel lblS_8 = new JLabel(MBCAPText.SECONDS);
 		lblS_8.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_8 = new GridBagConstraints();
 		gbc_lblS_8.anchor = GridBagConstraints.WEST;
@@ -493,7 +492,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(deadlockTimeoutTextField, gbc_deadlockTimeoutTextField);
 		deadlockTimeoutTextField.setColumns(10);
 
-		JLabel lblS_4 = new JLabel(Text.SECONDS);
+		JLabel lblS_4 = new JLabel(MBCAPText.SECONDS);
 		lblS_4.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblS_4 = new GridBagConstraints();
 		gbc_lblS_4.anchor = GridBagConstraints.WEST;

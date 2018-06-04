@@ -1,6 +1,6 @@
 package sim.logic;
 
-import api.API;
+import api.Copter;
 import main.Param;
 
 public class FakeReceiverThread extends Thread {
@@ -18,7 +18,7 @@ public class FakeReceiverThread extends Thread {
 	public void run() {
 		
 		while (Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS) {
-			API.receiveMessage(numUAV);
+			Copter.receiveMessage(numUAV);
 		}
 	}
 

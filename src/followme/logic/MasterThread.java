@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import api.SwarmHelper;
 import followme.logic.FollowMeParam.FollowMeState;
 import followme.logic.comunication.FollowMeThreadRecive;
 import followme.logic.comunication.FollowMeThreadSend;
@@ -15,7 +14,6 @@ import followme.logic.comunication.MessageStorage;
 import main.Param;
 import main.Param.SimulatorState;
 import uavController.UAVParam;
-import uavController.UAVParam.Mode;
 
 public class MasterThread extends Thread {
 

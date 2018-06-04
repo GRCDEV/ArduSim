@@ -22,9 +22,8 @@ import javax.swing.SwingUtilities;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
-import main.Tools;
+import main.ArduSimTools;
 import sim.logic.SimParam;
-import swarm.SwarmText;
 
 /** This class generates the panel used to interact with the application, which is inside the main window. */
 
@@ -121,7 +120,7 @@ public class MainWindowButtonsPanel extends JPanel {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							MainWindow.buttonsPanel.setupButton.setEnabled(false);
-							MainWindow.buttonsPanel.statusLabel.setText(SwarmText.CONFIGURATION_IN_PROGRESS);
+							MainWindow.buttonsPanel.statusLabel.setText(Text.CONFIGURATION_IN_PROGRESS);
 							Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
 						}
 					});
@@ -159,7 +158,7 @@ public class MainWindowButtonsPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				(new Thread(new Runnable() {
 					public void run() {
-						Tools.shutdown();
+						ArduSimTools.shutdown();
 					}
 				})).start();
 			}

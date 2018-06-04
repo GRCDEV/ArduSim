@@ -12,7 +12,7 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
-import api.GUIHelper;
+import api.GUI;
 import main.Param;
 import main.Text;
 import sim.logic.SimParam;
@@ -42,7 +42,7 @@ public class ConfigDialogWindPanel extends JPanel {
 			g.dispose();
 			this.repaint();
 		} catch (IOException e) {
-			GUIHelper.exit(Text.ARROW_IMAGE_LOAD_ERROR);
+			GUI.exit(Text.ARROW_IMAGE_LOAD_ERROR);
 		}
 	}
 

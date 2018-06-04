@@ -1,54 +1,42 @@
 package swarmprot.gui;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JFormattedTextField;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.text.NumberFormatter;
-
-import api.API;
-import api.GUIHelper;
-import api.MissionHelper;
-import api.pojo.Waypoint;
-import main.Param;
-import main.Text;
-import swarm.SwarmText;
-import swarmprot.logic.SwarmProtParam;
-import swarmprot.logic.SwarmProtText;
-import uavController.UAVParam;
-import main.Param.SimulatorState;
-import sim.logic.SimParam;
-import sim.logic.SimTools;
-
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.event.ActionEvent;
-import java.awt.GridLayout;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.NumberFormatter;
 
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import javax.swing.JSpinner;
-import javax.swing.JSeparator;
-import java.awt.Color;
+import api.GUI;
+import api.Tools;
+import api.pojo.Waypoint;
+import swarmprot.logic.SwarmProtParam;
+import swarmprot.logic.SwarmProtText;
 
 public class SwarmConfig extends JDialog {
 
+	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
 	private JTextField missionsTextField;
 	JSpinner spinnerGround;
@@ -99,19 +87,19 @@ public class SwarmConfig extends JDialog {
 			missionsTextField.setColumns(10);
 		}
 		{
-			JButton btnMap = new JButton(Text.BUTTON_SELECT);
+			JButton btnMap = new JButton(SwarmProtText.BUTTON_SELECT);
 			btnMap.addActionListener(new ActionListener() {
 				@SuppressWarnings("unchecked")
 				public void actionPerformed(ActionEvent e) {
 					// Select kml file or waypoints files
 					final File selection;
 					final JFileChooser chooser = new JFileChooser();
-					chooser.setCurrentDirectory(GUIHelper.getCurrentFolder());
-					chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE);
+					chooser.setCurrentDirectory(Tools.getCurrentFolder());
+					chooser.setDialogTitle(SwarmProtText.MISSIONS_DIALOG_TITLE);
 					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-					FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, Text.FILE_EXTENSION_KML);
+					FileNameExtensionFilter filter1 = new FileNameExtensionFilter(SwarmProtText.MISSIONS_DIALOG_SELECTION_1, SwarmProtText.FILE_EXTENSION_KML);
 					chooser.addChoosableFileFilter(filter1);
-					FileNameExtensionFilter filter2 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, Text.FILE_EXTENSION_WAYPOINTS);
+					FileNameExtensionFilter filter2 = new FileNameExtensionFilter(SwarmProtText.MISSIONS_DIALOG_SELECTION_2, SwarmProtText.FILE_EXTENSION_WAYPOINTS);
 					chooser.addChoosableFileFilter(filter2);
 					chooser.setAcceptAllFileFilterUsed(false);
 					chooser.setMultiSelectionEnabled(false);
@@ -120,16 +108,17 @@ public class SwarmConfig extends JDialog {
 					} else {
 						selection = null;
 					}
+					int numUAVs = Tools.getNumUAVs();
 					if (selection != null) {
 						List<Waypoint>[] lists;
 						List<Waypoint> mission;
-						String extension = GUIHelper.getFileExtension(selection);
+						String extension = Tools.getFileExtension(selection);
 						// kml file selected
-						if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
+						if (extension.toUpperCase().equals(SwarmProtText.FILE_EXTENSION_KML.toUpperCase())) {
 							// All missions are loaded from one single file
-							lists = MissionHelper.loadXMLMissionsFile(selection);
+							lists = Tools.loadXMLMissionsFile(selection);
 							if (lists == null) {
-								GUIHelper.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
+								GUI.warn(SwarmProtText.MISSIONS_SELECTION_ERROR, SwarmProtText.MISSIONS_ERROR_3);
 								return;
 							}
 							// Missions are stored
@@ -137,12 +126,12 @@ public class SwarmConfig extends JDialog {
 							
 							if (mission != null) {
 								/** The master is assigned the first mission in the list */
-								List<Waypoint>[] missions = new ArrayList[Param.numUAVs];
+								List<Waypoint>[] missions = new ArrayList[numUAVs];
 								missions[SwarmProtParam.posMaster] = mission;
-								API.setLoadedMissions(missions);
+								Tools.setLoadedMissionsFromFile(missions);
 
 							} else {
-								JOptionPane.showMessageDialog(null, Text.MISSIONS_ERROR_3, Text.MISSIONS_SELECTION_ERROR,
+								JOptionPane.showMessageDialog(null, SwarmProtText.MISSIONS_ERROR_3, SwarmProtText.MISSIONS_SELECTION_ERROR,
 										JOptionPane.WARNING_MESSAGE);
 
 								return;
@@ -156,18 +145,18 @@ public class SwarmConfig extends JDialog {
 						}
 
 						// One or more waypoints files selected
-						if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+						if (extension.toUpperCase().equals(SwarmProtText.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
 							// Load one mission from one file
-							List<Waypoint> current = MissionHelper.loadMissionFile(selection.getAbsolutePath());
+							List<Waypoint> current = Tools.loadMissionFile(selection.getAbsolutePath());
 							
 							// The mission is stored
 							if (current != null) {
 								/** The master is assigned the first mission in the list */
-								List<Waypoint>[] missions = new ArrayList[Param.numUAVs];
+								List<Waypoint>[] missions = new ArrayList[numUAVs];
 								missions[SwarmProtParam.posMaster] = current;
-								API.setLoadedMissions(missions);
+								Tools.setLoadedMissionsFromFile(missions);
 							} else {
-								JOptionPane.showMessageDialog(null, Text.MISSIONS_ERROR_3, Text.MISSIONS_SELECTION_ERROR,
+								JOptionPane.showMessageDialog(null, SwarmProtText.MISSIONS_ERROR_3, SwarmProtText.MISSIONS_SELECTION_ERROR,
 										JOptionPane.WARNING_MESSAGE);
 
 								return;
@@ -255,9 +244,9 @@ public class SwarmConfig extends JDialog {
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
-				if(API.getLoadedMissions() != null ) {
+				if(Tools.getLoadedMissions() != null ) {
 					//Acepta la configuración y cambia el estado
-					Param.simStatus = SimulatorState.STARTING_UAVS;
+					Tools.setProtocolConfigured(true);
 					Double groud = (Double) spinnerGround.getValue();
 					Double air = (Double) spinnerFlight.getValue();
 					SwarmProtParam.initialDistanceBetweenUAV = groud.intValue();
@@ -281,7 +270,7 @@ public class SwarmConfig extends JDialog {
 			}
 		});
 		
-		this.setTitle(SwarmText.CONFIGURATION_DIALOG_TITLE_SWARM);
+		this.setTitle(SwarmProtText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);

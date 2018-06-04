@@ -4,7 +4,7 @@ import java.util.NoSuchElementException;
 
 import com.esotericsoftware.kryo.io.Input;
 
-import api.API;
+import api.Copter;
 import followme.logic.FollowMeParam;
 
 public class FollowMeThreadRecive extends Thread {

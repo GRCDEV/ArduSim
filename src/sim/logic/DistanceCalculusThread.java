@@ -1,6 +1,6 @@
 package sim.logic;
 
-import api.GUIHelper;
+import api.Tools;
 import main.Param;
 import uavController.UAVParam;
 
@@ -27,7 +27,7 @@ public class DistanceCalculusThread extends Thread {
 			checkTime = checkTime + UAVParam.distanceCalculusPeriod;
 			waitingTime = (int)(checkTime - System.currentTimeMillis());
 			if (waitingTime > 0) {
-				GUIHelper.waiting(waitingTime);
+				Tools.waiting(waitingTime);
 			}
 		}
 		UAVParam.distanceCalculusIsOnline = false;
