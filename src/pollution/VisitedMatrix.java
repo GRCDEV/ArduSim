@@ -20,8 +20,8 @@ public class VisitedMatrix {
 		visited.get(a).add(b);
 	}
 	
-	void contains(Point p) {
-		contains(p.getX(), p.getY());
+	boolean contains(Point p) {
+		return contains(p.getX(), p.getY());
 	}
 	boolean contains(int a, int b) {
 		if (visited.containsKey(a)) return visited.get(a).contains(b);

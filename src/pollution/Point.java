@@ -59,6 +59,17 @@ public class Point {
 	}
 	
 	/**
+	 * Checks if the point would be contained within a grid of specified size.
+	 * @param sizeX x axis size of the grid.
+	 * @param sizeY y axis size of the grid.
+	 * @return True if the point is in the grid, false otherwise.
+	 */
+	public boolean isInside(int sizeX, int sizeY) {
+		if (x < 0 || x >= sizeX || y < 0 || y >= sizeY) return false;
+		return true;
+	}
+	
+	/**
 	 * @return The x
 	 */
 	public int getX() {

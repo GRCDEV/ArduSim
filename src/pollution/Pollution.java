@@ -1,19 +1,15 @@
 package pollution;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MoveAction;
-
 import api.*;
-import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
-import sim.logic.SimTools;
 import smile.data.SparseDataset;
-import uavController.UAVParam;
 
 public class Pollution extends Thread {
 	
-	VisitedMatrix sVisited;
+	//VisitedMatrix sVisited;
+	boolean [][] visited;
 	
-	public static api.pojo.UTMCoordinates origin;
+	public static UTMCoordinates origin;
 	int sizeX, sizeY;
 	
 	// Move to a point within the grid
@@ -38,8 +34,7 @@ public class Pollution extends Thread {
 	
 	enum stateType {
 		SEARCH,
-		EXPLORE_START,
-		EXPLORE_NEXT,
+		EXPLORE,
 		HOME
 	}
 	
@@ -49,11 +44,11 @@ public class Pollution extends Thread {
 		// TODO Implement PdUC
 		//long startTime = System.currentTimeMillis();
 		
-		Point p1, p2, centre;
+		Point p1, p2;
 		double m1, m2;
 		
 		
-		sVisited = new VisitedMatrix();
+		//sVisited = new VisitedMatrix();
 		
 		// Calculate grid size and origin
 		sizeX = (int) ((double) PollutionParam.width * PollutionParam.density);
@@ -61,6 +56,9 @@ public class Pollution extends Thread {
 		origin = api.Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
 		origin.Easting -= PollutionParam.width/2.0;
 		origin.Northing -= PollutionParam.length/2.0;
+		
+		// new booleans are initialized to false by default, this is what we want
+		visited = new boolean[sizeX][sizeY];
 		
 		/* Wait until takeoff has finished */
 		try {
@@ -83,44 +81,46 @@ public class Pollution extends Thread {
 		// Initial measurements
 		m1 = PollutionParam.sensor.read();
 		PollutionParam.measurements.set(p1.getX(), p1.getY(), m1);
-		sVisited.add(p1);
+		//sVisited.add(p1);
+		visited[p1.getX()][p1.getY()] = true;
 		
 		p2 = p1.copy();
-		p2.addY(1);
-		move(p2);
-		m2 = PollutionParam.sensor.read();
-		PollutionParam.measurements.set(p2.getX(), p2.getY(), m2);
+		p2.addY(1);		
 		
-		
-		stateType state = stateType.EXPLORE_START;
+		stateType state = stateType.SEARCH;
 		boolean isMax = false;
+		boolean found;
+		Point pTemp;
 		
 		while (state != stateType.HOME) {
 			switch (state) {
 			case SEARCH:
-				//TODO Read Pollution
-				//m2 = PollutionParam.sensor.read();
-				//PollutionParam.measurements.set(point.x, point.y, measurement);
-				//TODO Chemotaxis + PSO
-				while(!isMax) {
-					if(m2 - m1 > PollutionParam.pThreshold) {
-						// Run
-						p1 = p2.copy();
-						p2.add(p2.distVector(p1));
-					} else {
-						// Tumble
-						for(int i = -1; i < 2; i++)
-							for(int j = -1; j< 2; j++) {
-								//if(sVisited.contains(p)) {}
-							}
-					}
-				}
+				// Read Pollution
+				move(p2);
+				m2 = PollutionParam.sensor.read();
+				PollutionParam.measurements.set(p2.getX(), p2.getY(), m2);
+				visited[p2.getX()][p2.getY()] = true;
 				
-				//TODO if isMax
-				break;
-			case EXPLORE_START:
+				// Chemotaxis + PSO
+				if(m2 - m1 > PollutionParam.pThreshold) {
+					// Run
+					p1 = p2.copy();
+					p2.add(p2.distVector(p1));
+				} else {
+					// Tumble
+					found = false;
+					for(int i = -1; i < 2 && !found; i++)
+						for(int j = -1; j< 2 && !found; j++) {
+							pTemp = new Point(p1.getX() + i, p1.getY() + j);
+							if(!(visited[pTemp.getX()][pTemp.getY()] || pTemp.isInside(sizeX, sizeY))) {
+								p2 = pTemp;
+								found = true;
+							}
+						}
+					if(!found) state = stateType.EXPLORE;
+				}
+			case EXPLORE:
 				//TODO Calculate round path
-			case EXPLORE_NEXT:
 				//TODO Calculate next step
 				//TODO Move & read
 				//TODO if isMax
