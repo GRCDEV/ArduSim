@@ -118,6 +118,11 @@ public class PollutionHelper extends ProtocolHelper {
 	public void logData(String folder, String baseFileName) {
 		// TODO 
 	}
+
+	@Override
+	public void openPCCompanionDialog() {
+		// TODO 
+	}
 	
 
 }

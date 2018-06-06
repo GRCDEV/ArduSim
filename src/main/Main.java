@@ -369,33 +369,28 @@ public class Main {
 		}
 
 		// Gather information to show the results dialog
-		String res = null;//después terminar revisión interfaz prot y nombre clases
+		String res = null;
 		res = ArduSimTools.getTestResults();
-		if (!ProtocolHelper.selectedProtocol.equals(ProtocolHelper.noneProtocolName)) {
-			String s = ProtocolHelper.selectedProtocolInstance.getExperimentResults();
-			if (s != null && s.length() > 0) {
-				res += "\n" + ProtocolHelper.selectedProtocol + ":\n\n";
-				res += s;
-			}
+		String s = ProtocolHelper.selectedProtocolInstance.getExperimentResults();
+		if (s != null && s.length() > 0) {
+			res += "\n" + ProtocolHelper.selectedProtocol + ":\n\n";
+			res += s;
 		}
 		res += ArduSimTools.getTestGlobalConfiguration();
-		if (!ProtocolHelper.selectedProtocol.equals(ProtocolHelper.noneProtocolName)) {
-			String s = ProtocolHelper.selectedProtocolInstance.getExperimentConfiguration();
-			if (s != null && s.length() > 0) {
-				res += "\n\n" + ProtocolHelper.selectedProtocol + " " + Text.CONFIGURATION + ":\n";
-				res += s;
-			}
+		s = ProtocolHelper.selectedProtocolInstance.getExperimentConfiguration();
+		if (s != null && s.length() > 0) {
+			res += "\n\n" + ProtocolHelper.selectedProtocol + " " + Text.CONFIGURATION + ":\n";
+			res += s;
 		}
-
-		final String res2 = res;
 		if (Param.IS_REAL_UAV) {
 			Calendar cal = Calendar.getInstance();
 			String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
 					+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
 					+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
-			ArduSimTools.storeResults(res2, new File(Tools.getCurrentFolder(), fileName));
+			ArduSimTools.storeResults(res, new File(Tools.getCurrentFolder(), fileName));
 			ArduSimTools.shutdown();	// Closes the simulator
 		} else {
+			final String res2 = res;
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true);

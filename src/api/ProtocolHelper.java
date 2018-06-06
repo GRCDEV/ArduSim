@@ -43,7 +43,7 @@ public abstract class ProtocolHelper {
 	/** Rescales specific data structures of the protocol when the visualization scale changes. */
 	public abstract void rescaleDataStructures();
 	
-	/** Loads resorces to be shown on screen. */
+	/** Loads resources to be shown on screen. */
 	public abstract void loadResources();
 	
 	/** Rescales for visualization the resources used in protocol, each time the visualization scale changes. */
@@ -88,5 +88,10 @@ public abstract class ProtocolHelper {
 	 * <p>baseFileName. Base name that must be prepended to the final file name.*/
 	public abstract void logData(String folder, String baseFileName);
 	
+	/** Opens a configuration dialog for protocol specific parameters.
+	 * <p>The dialog will be constructed in the GUI thread (avoid heavy calculations).
+	 * <p>When the dialog is accepted please use the following command:
+	 * <p>api.Tools.setProtocolConfigured(true); */
+	public abstract void openPCCompanionDialog();
 	
 }

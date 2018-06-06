@@ -19,6 +19,7 @@ import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.ArduSimTools;
 import main.Param;
+import main.StartExperimentThread;
 import main.Text;
 import mbcap.logic.MBCAPText;
 import sim.board.BoardParam;
@@ -154,9 +155,46 @@ public class Copter {
 		}
 	}
 	
+	/** Takes off all the UAVs running on the same machine and starts the planned missions.
+	 * <p>Concurrent method (all UAVs start the mission at the same time).
+	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
+	 * <p>The UAVs must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
+	 * <p>Returns true if all the commands were successful. */
+	public static boolean startMissionsFromGround() {
+		// Starts the movement of each UAV by arming engines, setting auto mode, and throttle to stabilize altitude.
+		// All UAVs start the experiment in different threads, but the first
+		StartExperimentThread[] threads = null;
+		int numUAVs = Tools.getNumUAVs();
+		if (numUAVs > 1) {
+			threads = new StartExperimentThread[numUAVs - 1];
+			for (int i=1; i<numUAVs; i++) {
+				threads[i-1] = new StartExperimentThread(i, null);
+			}
+			for (int i=1; i<numUAVs; i++) {
+				threads[i-1].start();
+			}
+		}
+		if (Copter.startMissionFromGround(0)) {
+			StartExperimentThread.UAVS_TESTING.incrementAndGet();
+		}
+		if (numUAVs > 1) {
+			for (int i=1; i<numUAVs; i++) {
+				try {
+					threads[i-1].join();
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		if (StartExperimentThread.UAVS_TESTING.get() < numUAVs) {
+			return false;
+		}
+		return true;
+	}
+	
+	
 	/** Takes off a UAV and starts the planned mission.
-	 * <p>Previously, you have to press the hardware switch for safety arm, if available.
-	 * <p>The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
+	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
+	 * <p>The UAV must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
 	 * <p>Returns true if all the commands were successful. */
 	public static boolean startMissionFromGround(int numUAV) {
 		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
@@ -170,22 +208,57 @@ public class Copter {
 		return false;
 	}
 	
-	/** Takes off all the UAVs one by one: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Blocking method. It waits until all the UAVs reach 95% of the target altitude.
+	/** Takes off all the UAVs: changes mode to guided, arms engines, and then performs the guided take off.
+	 * <p>Non blocking method.
+	 * <p>altitudes. Array with the target relative altitude for all the UAVs (be sure that altitudes.length == Tools.getNumUAVs()).
 	 * <p>Returns true if all the commands were successful. */
-	public static boolean takeOffAllUAVs() {
-		List<Waypoint>[] missions = Tools.getLoadedMissions();
-		for (int i = 0; i < Param.numUAVs; i++) {
-			if (!Copter.setFlightMode(i, FlightMode.GUIDED) || !Copter.armEngines(i) || !Copter.guidedTakeOff(i, missions[i].get(1).getAltitude())) {
-				GUI.log(Text.TAKE_OFF_ERROR_1 + " " + Param.id[i]);
-				return false;
+	public static boolean takeOffAllUAVsNonBlocking(double[] altitudes) {
+		int numUAVs = Tools.getNumUAVs();
+		if (altitudes.length != numUAVs) {
+			return false;
+		}
+		// Starts the movement of each UAV by setting guided mode, arming engines, and throttle to stabilize altitude.
+		// All UAVs start the experiment in different threads, but the first
+		StartExperimentThread[] threads = null;
+		if (numUAVs > 1) {
+			threads = new StartExperimentThread[numUAVs - 1];
+			for (int i=1; i<numUAVs; i++) {
+				threads[i-1] = new StartExperimentThread(i, altitudes[i]);
+			}
+			for (int i=1; i<numUAVs; i++) {
+				threads[i-1].start();
 			}
 		}
-		// The application must wait until all UAVs reach the planned altitude
-		double targetAltitude;
+		if (Copter.takeOffNonBlocking(0, altitudes[0])) {
+			StartExperimentThread.UAVS_TESTING.incrementAndGet();
+		}
+		if (numUAVs > 1) {
+			for (int i=1; i<numUAVs; i++) {
+				try {
+					threads[i-1].join();
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		if (StartExperimentThread.UAVS_TESTING.get() < numUAVs) {
+			return false;
+		}
+		return true;
+	}
+	
+	/** Takes off all the UAVs one by one: changes mode to guided, arms engines, and then performs the guided take off.
+	 * <p>Blocking method. It waits until all the UAVs reach 95% of the target relative altitude.
+	 * <p>altitudes. Array with the target relative altitude for all the UAVs (be sure that altitudes.length == Tools.getNumUAVs()).
+	 * <p>Returns true if all the commands were successful. */
+	public static boolean takeOffAllUAVs(double[] altitudes) {
+		if (altitudes.length != Tools.getNumUAVs()) {
+			return false;
+		}
+		if (!Copter.takeOffAllUAVsNonBlocking(altitudes)) {
+			return false;
+		}
 		for (int i = 0; i < Param.numUAVs; i++) {
-			targetAltitude = missions[i].get(1).getAltitude();
-			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * targetAltitude) {
+			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * altitudes[i]) {
 				if (Param.VERBOSE_LOGGING) {
 					GUI.log(SimParam.prefix[i] + Text.ALTITUDE_TEXT
 							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())
@@ -197,16 +270,25 @@ public class Copter {
 		return true;
 	}
 	
-	/** Takes off until the target altitude: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Blocking method. It waits until the UAV reaches 95% of the target altitude.
+	/** Takes off until the target relative altitude: changes mode to guided, arms engines, and then performs the guided take off.
+	 * <p>Non blocking method.
 	 * <p>Returns true if the command was successful. */
-	public static boolean takeOff(int numUAV, double altitude) {
+	public static boolean takeOffNonBlocking(int numUAV, double altitude) {
 		if (!setFlightMode(numUAV, FlightMode.GUIDED) || !armEngines(numUAV) || !guidedTakeOff(numUAV, altitude)) {
 			GUI.log(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
 			return false;
 		}
+		return true;
+	}
 	
-		// The application must wait until all UAVs reach the planned altitude
+	/** Takes off until the target relative altitude: changes mode to guided, arms engines, and then performs the guided take off.
+	 * <p>Blocking method. It waits until the UAV reaches 95% of the target relative altitude.
+	 * <p>Returns true if the command was successful. */
+	public static boolean takeOff(int numUAV, double altitude) {
+		if (!takeOffNonBlocking(numUAV, altitude)) {
+			return false;
+		}
+
 		while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * altitude) {
 			if (Param.VERBOSE_LOGGING) {
 				GUI.log(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT

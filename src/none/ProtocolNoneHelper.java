@@ -112,4 +112,7 @@ public class ProtocolNoneHelper extends ProtocolHelper {
 		// Simulation parameters
 		Tools.setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
 	}
+
+	@Override
+	public void openPCCompanionDialog() {}
 }

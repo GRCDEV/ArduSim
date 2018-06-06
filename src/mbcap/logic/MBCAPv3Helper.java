@@ -268,32 +268,8 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 	@Override
 	public void startExperimentActionPerformed() {
-		// Starts the movement of each UAV by arming engines, setting auto mode, and throttle to stabilize altitude.
-		// All UAVs start the experiment in different threads, but the first
-		StartMissionThread[] threads = null;
-		int numUAVs = Tools.getNumUAVs();
-		if (numUAVs > 1) {
-			threads = new StartMissionThread[numUAVs - 1];
-			for (int i=1; i<numUAVs; i++) {
-				threads[i-1] = new StartMissionThread(i);
-			}
-			for (int i=1; i<numUAVs; i++) {
-				threads[i-1].start();
-			}
-		}
-		if (Copter.startMissionFromGround(0)) {
-			StartMissionThread.UAVS_TESTING.incrementAndGet();
-		}
-		if (numUAVs > 1) {
-			for (int i=1; i<numUAVs; i++) {
-				try {
-					threads[i-1].join();
-				} catch (InterruptedException e) {
-				}
-			}
-		}
-		if (StartMissionThread.UAVS_TESTING.get() < numUAVs) {
-			GUI.exit(MBCAPText.START_MISSION_ERROR);
+		if (!Copter.startMissionsFromGround()) {
+			GUI.warn(this.protocolString, MBCAPText.START_MISSION_ERROR);
 		}
 	}
 
@@ -593,6 +569,12 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		}
 	}
 
+	@Override
+	public void openPCCompanionDialog() {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon. */
 	private static Pair<Point2D.Double, Point2D.Double> beaconErrorCalculation(
 			PointTime[] realUAVPath, List<PointTime>[] predictedLocations, int predictedPos,
@@ -1400,9 +1382,5 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		// Returns the safe place in UTM coordinates
 		return new Point2D.Double(x, y);
 	}
-	
-	
-	
-	
-	
+
 }

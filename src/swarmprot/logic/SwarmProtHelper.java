@@ -345,6 +345,11 @@ public class SwarmProtHelper extends ProtocolHelper {
 	public void logData(String folder, String baseFileName) {
 		// TODO 
 	}
+	
+	@Override
+	public void openPCCompanionDialog() {
+		// TODO 
+	}
 
 	/** Send a packet to all Slaves */
 	public static void sendDataToSlaves(DatagramPacket packet, DatagramSocket socket) throws IOException {
@@ -382,6 +387,8 @@ public class SwarmProtHelper extends ProtocolHelper {
 			socket.send(packet);
 		}
 	}
+
+	
 	
 
 }
