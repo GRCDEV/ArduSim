@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.javatuples.Pair;
@@ -347,7 +348,7 @@ public class SwarmProtHelper extends ProtocolHelper {
 	}
 	
 	@Override
-	public void openPCCompanionDialog() {
+	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
 		// TODO 
 	}
 

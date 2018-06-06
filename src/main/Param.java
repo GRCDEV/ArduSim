@@ -9,10 +9,10 @@ import uavController.UAVControllerThread;
 public class Param {
 	
 	// The experiment is done in simulator or on a real UAV?
-	public static volatile boolean IS_REAL_UAV;
+	public static volatile boolean isRealUAV;
 	
 	// The application is being run as a PC companion
-	public static volatile boolean IS_PC_COMPANION;
+	public static volatile boolean isPCCompanion;
 
 	// Number of UAVs to be simulated
 	public static int numUAVs;

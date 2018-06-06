@@ -134,7 +134,7 @@ public class ArduSimTools {
 			if (con.toUpperCase().equals("TRUE")) {
 				pcCompanion = true;
 			}
-			Param.IS_PC_COMPANION = pcCompanion;
+			Param.isPCCompanion = pcCompanion;
 			if (pcCompanion && (cmdLine.hasOption("r") || cmdLine.hasOption("doFake"))) {
 				System.out.println(Text.COMPANION_ERROR + "\n");
 				myHelp.printHelp(usageCommand, options);
@@ -155,11 +155,11 @@ public class ArduSimTools {
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
-				Param.IS_REAL_UAV = Boolean.parseBoolean(iRU.toLowerCase());
+				Param.isRealUAV = Boolean.parseBoolean(iRU.toLowerCase());
 			} else {
-				Param.IS_REAL_UAV = false;
+				Param.isRealUAV = false;
 			}
-			if (Param.IS_REAL_UAV) {
+			if (Param.isRealUAV) {
 				if (!cmdLine.hasOption("p") || !cmdLine.hasOption("s")) {
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
@@ -276,7 +276,7 @@ public class ArduSimTools {
 
 		Param.testEndTime = new long[Param.numUAVs];
 		
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			// Prepare matrix to brighten the background map image
 			for (int i=0; i<256; i++) {
 				BoardParam.brightness[i] = (short)(128+i/2);
@@ -321,7 +321,7 @@ public class ArduSimTools {
 			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
 			
-			if (!Param.IS_REAL_UAV) {
+			if (!Param.isRealUAV) {
 				UAVParam.MissionPx[i] = new ArrayList<Shape>();
 				BoardParam.uavPXPathLines[i] = new ArrayList<Shape>(SimParam.PATH_INITIAL_SIZE);
 				
@@ -335,7 +335,7 @@ public class ArduSimTools {
 		}
 		
 		// UAV to UAV communication structures
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			UAVParam.sendSocket = new DatagramSocket[Param.numUAVs];
 			UAVParam.sendPacket = new DatagramPacket[Param.numUAVs];
 			UAVParam.receiveSocket = new DatagramSocket[Param.numUAVs];
@@ -1386,7 +1386,7 @@ public class ArduSimTools {
 	/** Closes the SITL simulator instances, and the application. Also the Cygwin consoles if using Windows. */
 	public static void shutdown() {
 		// 1. Ask for confirmation if the experiment has not started or finished
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			boolean reallyClose = true;
 			if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 				Object[] options = {Text.YES_OPTION, Text.NO_OPTION};
@@ -1407,7 +1407,7 @@ public class ArduSimTools {
 
 		// 2. Change the status and close SITL
 		Param.simStatus = SimulatorState.SHUTTING_DOWN;
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.exitButton.setEnabled(false);
@@ -1421,7 +1421,7 @@ public class ArduSimTools {
 		// 3. Close the application
 		GUI.log(Text.EXITING);
 		Tools.waiting(SimParam.LONG_WAITING_TIME);
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			String shutdownCommand;
 		    String operatingSystem = System.getProperty("os.name");
 
@@ -1532,7 +1532,7 @@ public class ArduSimTools {
 
 			// On simulation, stop if error happens and they are not online
 			if (System.nanoTime() - time > UAVParam.MAVLINK_ONLINE_TIMEOUT) {
-				if (Param.IS_REAL_UAV) {
+				if (Param.isRealUAV) {
 					if (!error) {
 						GUI.log(Text.MAVLINK_ERROR);
 						error = true;
@@ -1588,7 +1588,7 @@ public class ArduSimTools {
 				startProcess = true;
 			}
 			if (System.nanoTime() - time > UAVParam.GPS_FIX_TIMEOUT) {
-				if (Param.IS_REAL_UAV) {
+				if (Param.isRealUAV) {
 					if (!error) {
 						GUI.log(Text.GPS_FIX_ERROR_2);
 						error = true;
@@ -1605,7 +1605,7 @@ public class ArduSimTools {
 			GUI.exit(Text.GPS_FIX_ERROR_1);
 		}
 		GUI.log(Text.GPS_OK);
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.UAVS_ONLINE);
@@ -1657,7 +1657,7 @@ public class ArduSimTools {
 	public static void checkBatteryLevel() {
 		int depleted = 0;
 		double alarmLevel;
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			alarmLevel = UAVParam.LIPO_BATTERY_ALARM_VOLTAGE;
 		} else {
 			alarmLevel = UAVParam.VIRT_BATTERY_ALARM_VOLTAGE;
@@ -1676,33 +1676,33 @@ public class ArduSimTools {
 				isDepleted = true;
 			}
 			if (percentage != -1 && voltage != -1) {
-				if (Param.IS_REAL_UAV) {
+				if (Param.isRealUAV) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
 				} else if (Param.VERBOSE_LOGGING) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
 				}
 			} else if (percentage != -1) {
-				if (Param.IS_REAL_UAV) {
+				if (Param.isRealUAV) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " %");
 				} else if (Param.VERBOSE_LOGGING) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
 				}
 			} else if (voltage != -1) {
-				if (Param.IS_REAL_UAV) {
+				if (Param.isRealUAV) {
 					GUI.log(Text.BATTERY_LEVEL + " " + voltage + " V");
 				} else if (Param.VERBOSE_LOGGING) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
 				}
 			}
 			if (isDepleted) {
-				if (Param.IS_REAL_UAV) {
+				if (Param.isRealUAV) {
 					GUI.log(Text.BATTERY_FAILING2);
 				} else {
 					depleted++;
 				}
 			}
 		}
-		if (!Param.IS_REAL_UAV && depleted > 0) {
+		if (!Param.isRealUAV && depleted > 0) {
 			GUI.log(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
 		}
 	}
@@ -1766,7 +1766,7 @@ public class ArduSimTools {
 	/** Builds a String with the experiment parameters. */
 	public static String getTestGlobalConfiguration() {
 		StringBuilder sb = new StringBuilder(2000);
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
 			sb.append("\n\t").append(Text.LOG_SPEED).append(UAVParam.initialSpeeds[0]).append(Text.METERS_PER_SECOND);
 		} else {
@@ -1807,7 +1807,7 @@ public class ArduSimTools {
 			sentPacketTot = sentPacketTot + UAVParam.sentPacket[i];
 			receivedPacketTot = receivedPacketTot + UAVParam.receivedPacket[i];
 		}
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			sb.append("\n\t").append(Text.BROADCAST_IP).append(" ").append(UAVParam.BROADCAST_IP);
 			sb.append("\n\t").append(Text.BROADCAST_PORT).append(" ").append(UAVParam.BROADCAST_PORT);
 			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);

@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 
 import org.javatuples.Pair;
 
@@ -363,7 +364,7 @@ public class FollowMeHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openPCCompanionDialog() {
+	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
 		// TODO 
 	}
 	

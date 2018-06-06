@@ -54,7 +54,7 @@ public class Main {
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
 		ArduSimTools.detectOS();
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			// 1. We need to make constant the parameters shown in the GUI
 			Param.numUAVs = 1;	// Always one UAV per Raspberry Pi or whatever the device where the application is deployed
 			Param.numUAVsTemp.set(1);
@@ -138,7 +138,7 @@ public class Main {
 		ArduSimTools.initializeDataStructures();
 		ProtocolHelper.selectedProtocolInstance.initializeDataStructures();
 		// Waiting the main window to be built
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			while (MainWindow.boardPanel == null || MainWindow.buttonsPanel == null) {
 				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
@@ -166,7 +166,7 @@ public class Main {
 		}
 		// Configuration feedback
 		GUI.log(Text.PROTOCOL_IN_USE + " " + ProtocolHelper.selectedProtocol);
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
 							|| Param.runningOperatingSystem == Param.OS_LINUX)) {
@@ -199,7 +199,7 @@ public class Main {
 		SimTools.update();
 
 		// 8. Startup of the virtual UAVs
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			BoardHelper.buildWindImage(MainWindow.boardPanel);
 			Pair<GeoCoordinates, Double>[] start = ProtocolHelper.selectedProtocolInstance.setStartingLocation();
 			SimParam.tempFolderBasePath = ArduSimTools.defineTemporaryFolder();
@@ -212,14 +212,14 @@ public class Main {
 		// 9. Start UAV controllers, wait for MAVLink link, wait for GPS fix, and send basic configuration
 		ArduSimTools.startUAVControllers();
 		ArduSimTools.waitMAVLink();
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			ArduSimTools.forceGPS();
 		}
 		ArduSimTools.getGPSFix();//TODO descomentar
 		ArduSimTools.sendBasicConfiguration();
 		
 		// 10. Set communications online, and start collision detection if needed
-		if (!Param.IS_REAL_UAV && Param.numUAVs > 1) {
+		if (!Param.isRealUAV && Param.numUAVs > 1) {
 			// Calculus of the distance between UAVs
 			new DistanceCalculusThread().start();
 			// Communications range calculation enable
@@ -234,7 +234,7 @@ public class Main {
 		
 		// 11. Launch the threads of the protocol under test and wait the GUI to be built
 		ProtocolHelper.selectedProtocolInstance.startThreads();
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
@@ -247,7 +247,7 @@ public class Main {
 		// 12. Build auxiliary elements to be drawn and prepare the user interaction
 		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			BoardHelper.downloadBackground();
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -275,7 +275,7 @@ public class Main {
 		}
 
 		// 14. Waiting for the user to start the experiment
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
@@ -302,7 +302,7 @@ public class Main {
 
 		Param.startTime = System.currentTimeMillis();
 		GUI.log(Text.TEST_START);
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			timer = new Timer();
 			timer.scheduleAtFixedRate(new TimerTask() {
 				long time = Param.startTime;
@@ -359,7 +359,7 @@ public class Main {
 
 		// 17. Wait for the user to close the simulator, only if the program is not being closed
 		GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			GUI.log(Text.WAITING_FOR_USER);
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -382,7 +382,7 @@ public class Main {
 			res += "\n\n" + ProtocolHelper.selectedProtocol + " " + Text.CONFIGURATION + ":\n";
 			res += s;
 		}
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			Calendar cal = Calendar.getInstance();
 			String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
 					+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)

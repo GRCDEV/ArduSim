@@ -2,6 +2,8 @@ package uavFishing.logic;
 
 import java.awt.Graphics2D;
 
+import javax.swing.JFrame;
+
 import org.javatuples.Pair;
 
 import api.Copter;
@@ -129,7 +131,7 @@ public class UavFishingHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openPCCompanionDialog() {
+	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
 		// TODO 
 	}
 	

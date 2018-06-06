@@ -55,7 +55,7 @@ public class InitialConfigurationThread extends Thread {
 			return;
 		}
 		
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			// Disable logging to speed up simulation
 			if (!SimParam.arducopterLoggingEnabled && !Copter.setParameter(numUAV, ControllerParam.LOGGING, 0)) {
 				return;

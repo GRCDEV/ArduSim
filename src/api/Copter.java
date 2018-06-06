@@ -675,7 +675,7 @@ public class Copter {
 	/** API: Sends a message to the other UAVs.
 	 * <p>Blocking method.*/
 	public static void sendBroadcastMessage(int numUAV, byte[] message) {
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			UAVParam.sendPacket[numUAV].setData(message);
 			try {
 				UAVParam.sendSocket[numUAV].send(UAVParam.sendPacket[numUAV]);
@@ -771,7 +771,7 @@ public class Copter {
 	 * <p>Blocking method.
 	 * <p>Returns null if a fatal error with the socket happens. */
 	public static byte[] receiveMessage(int numUAV) {
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			UAVParam.receivePacket[numUAV].setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
 			try {
 				UAVParam.receiveSocket[numUAV].receive(UAVParam.receivePacket[numUAV]);

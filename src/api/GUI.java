@@ -35,7 +35,7 @@ public class GUI {
 		}
 		System.out.println(res);
 		// Update GUI only when using simulator and the main window is already loaded
-		if (!Param.IS_REAL_UAV && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
+		if (!Param.isRealUAV && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.logArea.append(res + "\n");
@@ -55,7 +55,7 @@ public class GUI {
 	 * <p>The label is only updated when performing simulations. */
 	public static void updateGlobalInformation(final String text) {
 		// Update GUI only when using simulator
-		if (!Param.IS_REAL_UAV) {
+		if (!Param.isRealUAV) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(text);
@@ -81,12 +81,13 @@ public class GUI {
 	 * <p>On a real UAV shows the message in console and exits.
 	 * <p>On simulation, the message is shown in a dialog, virtual UAVs are stopped and exits. */
 	public static void exit(String message) {
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			System.out.println(Text.FATAL_ERROR + ": " + message);
 		} else {
 			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
 			if (Param.simStatus != SimulatorState.CONFIGURING
-				&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
+				&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL
+				&& !Param.isPCCompanion) {
 				ArduSimTools.closeSITL();
 			}
 		}
@@ -95,7 +96,7 @@ public class GUI {
 
 	/** Warns the user with a dialog when performing simulations. On a real UAV the console is used. */
 	public static void warn(String title, String message) {
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			System.out.println(title + ": " + message);
 		} else {
 			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);

@@ -99,7 +99,7 @@ public class UAVControllerThread extends Thread {
 		this.numTests = 0;
 
 		// Connection through serial port on a real UAV
-		if(Param.IS_REAL_UAV) {
+		if(Param.isRealUAV) {
 			reader = null;
 			// It is necessary to identify the serial port (/dev/ttyAMA0)
 			Properties properties = System.getProperties();

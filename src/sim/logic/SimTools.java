@@ -347,7 +347,7 @@ public class SimTools {
 		SimTools.cleanQueue();
 		ActionListener taskPerformer = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				if (Param.IS_REAL_UAV) {
+				if (Param.isRealUAV) {
 					SimTools.storePath();
 				} else {
 					MainWindow.boardPanel.repaint();

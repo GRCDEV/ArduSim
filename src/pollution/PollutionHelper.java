@@ -2,6 +2,8 @@ package pollution;
 
 import java.awt.Graphics2D;
 
+import javax.swing.JFrame;
+
 import org.javatuples.Pair;
 
 import api.Copter;
@@ -120,7 +122,7 @@ public class PollutionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openPCCompanionDialog() {
+	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
 		// TODO 
 	}
 	

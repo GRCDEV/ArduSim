@@ -46,7 +46,7 @@ public class Tools {
 	
 	/** Returns true if the protocol is running on an real UAV or false if a simulation is being performed. */
 	public static boolean isRealUAV() {
-		return Param.IS_REAL_UAV;
+		return Param.isRealUAV;
 	}
 	
 	/** Returns the number of UAVs that are running on the same machine.
@@ -162,7 +162,7 @@ public class Tools {
 							// Waypoint 0 is home and current
 							// Waypoint 1 is take off
 							if (j==0) {
-								if (Param.IS_REAL_UAV) {
+								if (Param.isRealUAV) {
 									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
 									missions[i].add(wp);
@@ -176,7 +176,7 @@ public class Tools {
 									missions[i].add(wp);
 								}
 							} else {
-								if (Param.IS_REAL_UAV) {
+								if (Param.isRealUAV) {
 									wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
 											lat, lon, z, 1);
@@ -220,7 +220,7 @@ public class Tools {
 		}
 		// Check if there are at least take off and a waypoint to define a mission (first line is header, and wp0 is home)
 		// During simulation an additional waypoint is needed in order to stablish the starting location
-		if (list==null || (Param.IS_REAL_UAV && list.size()<4) || (!Param.IS_REAL_UAV && list.size()<5)) {
+		if (list==null || (Param.isRealUAV && list.size()<4) || (!Param.isRealUAV && list.size()<5)) {
 			GUI.log(Text.FILE_PARSING_ERROR_1);
 			return null;
 		}
@@ -268,14 +268,14 @@ public class Tools {
 				if (numSeq == 1) {
 					if ((frame != MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT
 							|| command != MAV_CMD.MAV_CMD_NAV_TAKEOFF
-							|| (Param.IS_REAL_UAV && param7 <= 0))) {
+							|| (Param.isRealUAV && param7 <= 0))) {
 						GUI.log(Text.FILE_PARSING_ERROR_5);
 						return null;
 					}
 					wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 					mission.add(wp);
 				} else {
-					if (Param.IS_REAL_UAV) {
+					if (Param.isRealUAV) {
 						wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 						mission.add(wp);
 					} else {

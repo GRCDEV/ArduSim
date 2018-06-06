@@ -1,21 +1,22 @@
 package pccompanion;
 
-import java.awt.Dialog.ModalityType;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 
+import javax.swing.SwingUtilities;
+
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.GUI;
+import api.ProtocolHelper;
 import api.Tools;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
-import mbcap.logic.MBCAPText;
 import uavController.UAVParam;
 
 public class PCCompanionTalker extends Thread {
@@ -28,7 +29,7 @@ public class PCCompanionTalker extends Thread {
 		DatagramSocket sendSocket = null;
 		byte[] sendBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
-		if (Param.IS_PC_COMPANION) {
+		if (Param.isPCCompanion) {
 			broadcastAddress = UAVParam.BROADCAST_IP;
 		} else {
 			broadcastAddress = UAVParam.MAV_NETWORK_IP;
@@ -77,20 +78,13 @@ public class PCCompanionTalker extends Thread {
 		output.close();
 		sendSocket.close();
 		
-		this.launchProtocolDialog();
-	}
-	
-	private void launchProtocolDialog() {
-		String p = PCCompanionParam.SELECTED_PROTOCOL.get();
-		if (p.equals(MBCAPText.MBCAP_V1) || p.equals(MBCAPText.MBCAP_V2)
-				|| p.equals(MBCAPText.MBCAP_V3) || p.equals(MBCAPText.MBCAP_V4)) {
-			MBCAPDialog.mbcap = new MBCAPDialog(PCCompanionGUI.companion.assistantFrame);
-			MBCAPDialog.mbcap.setModalityType(ModalityType.APPLICATION_MODAL);
-			MBCAPDialog.mbcap.setVisible(true);
-			
-			// Listen for protocol data packets
-			MBCAPDialog.mbcap.listenForPackets();
-		}
+		// Launch the protocol dialog for PC Companion
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ProtocolHelper.selectedProtocolInstance.openPCCompanionDialog(PCCompanionGUI.companion.assistantFrame);
+			}
+		});
 	}
 
 }

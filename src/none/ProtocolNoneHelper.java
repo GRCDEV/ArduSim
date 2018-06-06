@@ -2,6 +2,8 @@ package none;
 
 import java.awt.Graphics2D;
 
+import javax.swing.JFrame;
+
 import org.javatuples.Pair;
 
 import api.GUI;
@@ -114,5 +116,5 @@ public class ProtocolNoneHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openPCCompanionDialog() {}
+	public void openPCCompanionDialog(JFrame PCCompanionFrame) {}
 }

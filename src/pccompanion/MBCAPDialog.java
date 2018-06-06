@@ -13,6 +13,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -20,20 +24,16 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import api.GUI;
+import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.Point3D;
-import main.Text;
 import main.Param.SimulatorState;
+import main.Text;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPText;
 import mbcap.pojo.Beacon;
 import sim.gui.VerticalFlowLayout;
 import uavController.UAVParam;
-
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 
 public class MBCAPDialog extends JDialog {
 
@@ -56,7 +56,7 @@ public class MBCAPDialog extends JDialog {
 
 	public MBCAPDialog(Frame owner) {
 		super(owner);
-		setTitle(PCCompanionParam.SELECTED_PROTOCOL.get());
+		setTitle(ProtocolHelper.selectedProtocol);
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
 		{
@@ -106,10 +106,16 @@ public class MBCAPDialog extends JDialog {
 			
 			
 		}
+		
+		this.setModalityType(ModalityType.APPLICATION_MODAL);
+		this.setVisible(true);
+		
+		// Listen for protocol data packets
+		this.listenForPackets();
 	}
 
 	/** Updates a UAV row with information received within the protocol. */
-	public void updateRow(Beacon beacon) {
+	private void updateRow(Beacon beacon) {
 		int pos = -1;
 		boolean found = false;
 		for (int i = 0; i < shown.length && !found; i++) {
@@ -176,7 +182,7 @@ public class MBCAPDialog extends JDialog {
 	}
 
 	/** Listens for data packets on this protocol. */
-	public void listenForPackets() {
+	private void listenForPackets() {
 		byte[] array;
 		Beacon b;
 		try {

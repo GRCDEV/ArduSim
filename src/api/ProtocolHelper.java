@@ -2,6 +2,8 @@ package api;
 
 import java.awt.Graphics2D;
 
+import javax.swing.JFrame;
+
 import org.javatuples.Pair;
 
 import api.pojo.GeoCoordinates;
@@ -90,8 +92,7 @@ public abstract class ProtocolHelper {
 	
 	/** Opens a configuration dialog for protocol specific parameters.
 	 * <p>The dialog will be constructed in the GUI thread (avoid heavy calculations).
-	 * <p>When the dialog is accepted please use the following command:
-	 * <p>api.Tools.setProtocolConfigured(true); */
-	public abstract void openPCCompanionDialog();
+	 * <p>PCCompanionFrame can be set as the owner of the dialog if needed. */
+	public abstract void openPCCompanionDialog(JFrame PCCompanionFrame);
 	
 }

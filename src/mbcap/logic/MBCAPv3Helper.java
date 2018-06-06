@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import javax.imageio.ImageIO;
+import javax.swing.JFrame;
 
 import org.javatuples.Pair;
 
@@ -35,6 +36,7 @@ import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.PointTime;
 import mbcap.pojo.ProgressState;
+import pccompanion.MBCAPDialog;
 import sim.board.BoardPanel;
 
 public class MBCAPv3Helper extends ProtocolHelper {
@@ -570,9 +572,8 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openPCCompanionDialog() {
-		// TODO Auto-generated method stub
-		
+	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
+		MBCAPDialog.mbcap = new MBCAPDialog(PCCompanionFrame);
 	}
 	
 	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon. */

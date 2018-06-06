@@ -21,8 +21,6 @@ public class Text {
 	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;
 	public static final String PROTOCOL_GETTING_PROT_CLASSES_ERROR = "Unable to retrieve classes implementing protocols in " + APP_NAME;
 	public static final String PROTOCOL_LOADING_ERROR = "Unable to load existing protocols in " + APP_NAME + ". At least one protocol must be implemented.";
-	
-	
 	public static final String PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR = "Unable to retrieve instances for the current protocol classes in " + APP_NAME;
 	public static final String PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR = "No valid implementation was found for protocol: ";
 	public static final String PROTOCOL_MANY_IMPLEMENTATIONS_ERROR = "More than one implementation was found for the protocol: ";
@@ -376,8 +374,7 @@ public class Text {
 	public static final String IP_HEADER = "IP";
 	public static final String STATUS_HEADER = "status";
 	public static final String DIALOG_TITLE = "Warning";
-	public static final String SETUP_WARNING = "Are you sure that the safety switch is armed? (when needed)";
-
+	public static final String SETUP_WARNING = "Are you sure that the safety switch is armed?";
 	
 	
 

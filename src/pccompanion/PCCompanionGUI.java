@@ -27,8 +27,10 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
+import main.ArduSimTools;
 import main.Param;
 import main.Text;
 import main.Param.SimulatorState;
@@ -121,7 +123,11 @@ public class PCCompanionGUI {
 						JOptionPane.YES_NO_OPTION);
 				if (result == JOptionPane.YES_OPTION) {
 					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-					PCCompanionParam.SELECTED_PROTOCOL.set((String)protocolComboBox.getSelectedItem());
+					ProtocolHelper.selectedProtocol = (String)protocolComboBox.getSelectedItem();
+					ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
+					if (ProtocolHelper.selectedProtocolInstance == null) {
+						GUI.exit(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR);
+					}
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							setupButton.setEnabled(false);
@@ -220,7 +226,7 @@ public class PCCompanionGUI {
 		final String idString = "" + id;
 		final String mac;
 		final String ip = IP;
-		if (Param.IS_PC_COMPANION) {
+		if (Param.isPCCompanion) {
 			BigInteger bi = new BigInteger(Long.toString(id & ~(1L << 63)));
 		    if (id < 0) bi = bi.setBit(64);
 		    String m = bi.toString(16);

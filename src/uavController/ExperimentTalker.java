@@ -23,7 +23,7 @@ public class ExperimentTalker extends Thread {
 		DatagramSocket sendSocket = null;
 		byte[] sendBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
-		if (Param.IS_REAL_UAV) {
+		if (Param.isRealUAV) {
 			broadcastAddress = UAVParam.BROADCAST_IP;
 		} else {
 			broadcastAddress = UAVParam.MAV_NETWORK_IP;
