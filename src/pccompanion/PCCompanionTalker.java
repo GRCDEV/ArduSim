@@ -11,11 +11,11 @@ import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.GUI;
-import api.ProtocolHelper;
 import api.Tools;
 import main.Param;
-import main.Text;
 import main.Param.SimulatorState;
+import main.Text;
+import mbcap.logic.MBCAPText;
 import uavController.UAVParam;
 
 public class PCCompanionTalker extends Thread {
@@ -81,11 +81,9 @@ public class PCCompanionTalker extends Thread {
 	}
 	
 	private void launchProtocolDialog() {
-		ProtocolHelper.Protocol p = PCCompanionParam.SELECTED_PROTOCOL.get();
-		if (p == ProtocolHelper.Protocol.MBCAP_V1
-				|| p == ProtocolHelper.Protocol.MBCAP_V2
-				|| p == ProtocolHelper.Protocol.MBCAP_V3
-				|| p == ProtocolHelper.Protocol.MBCAP_V4) {
+		String p = PCCompanionParam.SELECTED_PROTOCOL.get();
+		if (p.equals(MBCAPText.MBCAP_V1) || p.equals(MBCAPText.MBCAP_V2)
+				|| p.equals(MBCAPText.MBCAP_V3) || p.equals(MBCAPText.MBCAP_V4)) {
 			MBCAPDialog.mbcap = new MBCAPDialog(PCCompanionGUI.companion.assistantFrame);
 			MBCAPDialog.mbcap.setModalityType(ModalityType.APPLICATION_MODAL);
 			MBCAPDialog.mbcap.setVisible(true);

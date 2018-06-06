@@ -170,13 +170,15 @@ public class Copter {
 		return false;
 	}
 	
-	/** Takes off all the UAVs: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Blocking method. It waits until all the UAVs reach 95% of the target altitude. */
-	public static void takeOffAllUAVs() {
+	/** Takes off all the UAVs one by one: changes mode to guided, arms engines, and then performs the guided take off.
+	 * <p>Blocking method. It waits until all the UAVs reach 95% of the target altitude.
+	 * <p>Returns true if all the commands were successful. */
+	public static boolean takeOffAllUAVs() {
 		List<Waypoint>[] missions = Tools.getLoadedMissions();
 		for (int i = 0; i < Param.numUAVs; i++) {
 			if (!Copter.setFlightMode(i, FlightMode.GUIDED) || !Copter.armEngines(i) || !Copter.guidedTakeOff(i, missions[i].get(1).getAltitude())) {
-				GUI.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[i]);
+				GUI.log(Text.TAKE_OFF_ERROR_1 + " " + Param.id[i]);
+				return false;
 			}
 		}
 		// The application must wait until all UAVs reach the planned altitude
@@ -192,13 +194,16 @@ public class Copter {
 				Tools.waiting(UAVParam.ALTITUDE_WAIT);
 			}
 		}
+		return true;
 	}
 	
 	/** Takes off until the target altitude: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Blocking method. It waits until the UAV reaches 95% of the target altitude. */
-	public static void takeOff(int numUAV, double altitude) {
+	 * <p>Blocking method. It waits until the UAV reaches 95% of the target altitude.
+	 * <p>Returns true if the command was successful. */
+	public static boolean takeOff(int numUAV, double altitude) {
 		if (!setFlightMode(numUAV, FlightMode.GUIDED) || !armEngines(numUAV) || !guidedTakeOff(numUAV, altitude)) {
-			GUI.exit(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
+			GUI.log(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
+			return false;
 		}
 	
 		// The application must wait until all UAVs reach the planned altitude
@@ -210,6 +215,7 @@ public class Copter {
 			}
 			Tools.waiting(UAVParam.ALTITUDE_WAIT);
 		}
+		return true;
 	}
 	
 	/** API: Changes the planned flight speed (m/s).
@@ -529,7 +535,7 @@ public class Copter {
 				// There is no need of landing when the last waypoint is the command LAND or when it is RTL under some circumstances
 				if (command != MAV_CMD.MAV_CMD_NAV_LAND
 						&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
-					// Land the UAV when reaches the last waypoint and mark as finished
+					// Land the UAV when reaches the last waypoint
 					if (Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
 					} else {
 						GUI.log(prefix + Text.LAND_ERROR);
@@ -539,8 +545,43 @@ public class Copter {
 		}
 	}
 	
+	/** Lands a UAVs if it is flying.
+	 * <p>Blocking method.
+	 * <p>Returns true if the command was successful or not needed. */
+	public static boolean landUAV(int numUAV) {
+		if (Copter.isFlying(numUAV)) {
+			if (!setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
+				return false;
+			}
+			while (Copter.getFlightMode(numUAV) != FlightMode.LAND_ARMED
+					&& Copter.getFlightMode(numUAV) != FlightMode.LAND) {
+				Tools.waiting(UAVParam.COMMAND_WAIT);
+			}
+		}
+		return true;
+	}
 	
-	
+	/** Lands all the UAVs that are flying.
+	 * <p>Blocking method.
+	 * <p>Returns true if the commands were successful or not needed. */
+	public static boolean landAllUAVs() {
+		List<Integer> landing = new ArrayList<>();
+		for (int i=0; i<Param.numUAVs; i++) {
+			if (Copter.isFlying(i)) {
+				landing.add(i);
+				if (!setFlightMode(i, FlightMode.LAND_ARMED)) {
+					return false;
+				}
+			}
+		}
+		for (int i = 0; i< landing.size(); i++) {
+			while (Copter.getFlightMode(landing.get(i)) != FlightMode.LAND_ARMED
+					&& Copter.getFlightMode(landing.get(i)) != FlightMode.LAND) {
+				Tools.waiting(UAVParam.COMMAND_WAIT);
+			}
+		}
+		return true;
+	}
 	
 	/** Method that provides the controller thread of an specific UAV.
 	 * <p>Temporary ussage for debugging purposes.
@@ -805,8 +846,6 @@ public class Copter {
 	public static double getHeading (int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getHeading();
 	}
-
-	
 
 	
 }

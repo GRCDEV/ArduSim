@@ -30,7 +30,7 @@ public class SwarmProtHelper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocol = ProtocolHelper.Protocol.SWARM_PROT_V1;
+		this.protocolString = SwarmProtText.PROTOCOL_TEXT;
 	}
 	
 	@Override

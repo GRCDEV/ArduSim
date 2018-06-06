@@ -1,4 +1,4 @@
-package mbcap.gui;
+package none;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -19,19 +19,19 @@ import mbcap.logic.MBCAPText;
 
 /** This class generates the dialog to input the configuration of the MBCAP protocol. */
 
-public class MBCAPConfigDialog extends JDialog {
+public class NoneConfigDialog extends JDialog {
 
   private static final long serialVersionUID = 1L;
   private final JPanel contentPanel = new JPanel();
-  private MBCAPConfigDialogPanel panel;
+  private NoneConfigDialogPanel panel;
 
-  public MBCAPConfigDialog() {
+  public NoneConfigDialog() {
     getContentPane().setLayout(new BorderLayout());
     contentPanel.setLayout(new FlowLayout());
     contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
     getContentPane().add(contentPanel, BorderLayout.CENTER);
     {
-      panel = new MBCAPConfigDialogPanel();
+      panel = new NoneConfigDialogPanel();
       contentPanel.add(panel);
     }
     {
@@ -42,8 +42,8 @@ public class MBCAPConfigDialog extends JDialog {
         JButton okButton = new JButton(MBCAPText.OK);
         okButton.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
-            if(MBCAPGUITools.isValidProtocolConfiguration(panel)) {
-              MBCAPGUITools.storeProtocolConfiguration(panel);
+            if(ProtocolNoneHelper.isValidProtocolConfiguration(panel)) {
+              ProtocolNoneHelper.storeProtocolConfiguration(panel);
               Tools.setProtocolConfigured(true);
               SwingUtilities.invokeLater(new Runnable() {
 				@Override
@@ -58,15 +58,6 @@ public class MBCAPConfigDialog extends JDialog {
         buttonPane.add(okButton);
         getRootPane().setDefaultButton(okButton);
       }
-      {
-        JButton restoreDefaultsButton = new JButton(MBCAPText.RESTORE_DEFAULTS);
-        restoreDefaultsButton.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-            MBCAPGUITools.loadDefaultProtocolConfiguration(panel);
-          }
-        });
-        buttonPane.add(restoreDefaultsButton);
-      }
     }
     
     //  If the dialog is closed, then it closes the whole program
@@ -79,7 +70,6 @@ public class MBCAPConfigDialog extends JDialog {
       }
     });
     
-    MBCAPGUITools.loadDefaultProtocolConfiguration(panel);
     this.setTitle(ProtocolHelper.selectedProtocol + " " + MBCAPText.CONFIGURATION);
     this.pack();
     this.setModal(true);

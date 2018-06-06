@@ -56,7 +56,7 @@ public class MBCAPDialog extends JDialog {
 
 	public MBCAPDialog(Frame owner) {
 		super(owner);
-		setTitle(PCCompanionParam.SELECTED_PROTOCOL.get().getName());
+		setTitle(PCCompanionParam.SELECTED_PROTOCOL.get());
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
 		{

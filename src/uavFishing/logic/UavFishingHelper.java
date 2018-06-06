@@ -16,7 +16,7 @@ public class UavFishingHelper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocol = ProtocolHelper.Protocol.UAVFISHING;
+		this.protocolString = "Fishing";
 	}
 	
 	@Override

@@ -26,7 +26,7 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocol = ProtocolHelper.Protocol.FOLLOW_ME_V1;
+		this.protocolString = "Follow me";
 	}
 	
 	@Override

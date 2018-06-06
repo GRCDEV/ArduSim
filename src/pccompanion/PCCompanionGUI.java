@@ -102,8 +102,8 @@ public class PCCompanionGUI {
 		upperPanel.add(lblProtocol, gbc_lblProtocol);
 		
 		protocolComboBox = new JComboBox<String>();
-		for (ProtocolHelper.Protocol p : ProtocolHelper.Protocol.values()) {
-			protocolComboBox.addItem(p.getName());
+		for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {
+			protocolComboBox.addItem(ProtocolHelper.ProtocolNames[i]);
 		}
 		GridBagConstraints gbc_protocolComboBox = new GridBagConstraints();
 		gbc_protocolComboBox.insets = new Insets(0, 0, 0, 5);
@@ -121,7 +121,7 @@ public class PCCompanionGUI {
 						JOptionPane.YES_NO_OPTION);
 				if (result == JOptionPane.YES_OPTION) {
 					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-					PCCompanionParam.SELECTED_PROTOCOL.set(ProtocolHelper.Protocol.getProtocolByName((String)protocolComboBox.getSelectedItem()));
+					PCCompanionParam.SELECTED_PROTOCOL.set((String)protocolComboBox.getSelectedItem());
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							setupButton.setEnabled(false);

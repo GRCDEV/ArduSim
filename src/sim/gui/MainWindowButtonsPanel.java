@@ -113,26 +113,24 @@ public class MainWindowButtonsPanel extends JPanel {
 		gbc_progressDialogButton.gridy = 0;
 		buttonsPanel.add(progressDialogButton, gbc_progressDialogButton);
 		
-		if (!Param.simulationIsMissionBased) {
-			setupButton = new JButton(Text.SWARM_BASED_CONFIGURATION);
-			setupButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							MainWindow.buttonsPanel.setupButton.setEnabled(false);
-							MainWindow.buttonsPanel.statusLabel.setText(Text.CONFIGURATION_IN_PROGRESS);
-							Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-						}
-					});
-				}
-			});
-			GridBagConstraints gbc_setupButton = new GridBagConstraints();
-			gbc_setupButton.anchor = GridBagConstraints.NORTH;
-			gbc_setupButton.insets = new Insets(0, 0, 0, 5);
-			gbc_setupButton.gridx = 1;
-			gbc_setupButton.gridy = 0;
-			buttonsPanel.add(setupButton, gbc_setupButton);
-		}
+		setupButton = new JButton(Text.SWARM_BASED_CONFIGURATION);
+		setupButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						MainWindow.buttonsPanel.setupButton.setEnabled(false);
+						MainWindow.buttonsPanel.statusLabel.setText(Text.CONFIGURATION_IN_PROGRESS);
+						Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
+					}
+				});
+			}
+		});
+		GridBagConstraints gbc_setupButton = new GridBagConstraints();
+		gbc_setupButton.anchor = GridBagConstraints.NORTH;
+		gbc_setupButton.insets = new Insets(0, 0, 0, 5);
+		gbc_setupButton.gridx = 1;
+		gbc_setupButton.gridy = 0;
+		buttonsPanel.add(setupButton, gbc_setupButton);
 
 		startTestButton = new JButton(Text.START_TEST);
 		startTestButton.addActionListener(new ActionListener() {

@@ -19,7 +19,11 @@ public class Text {
 	public static final String PROTOCOL_NOT_FOUND_ERROR = "The specified protocol was not found. Valid protocols:";
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
 	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;
-	public static final String PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR = "Unable to retrieve the protocol classes in " + APP_NAME;
+	public static final String PROTOCOL_GETTING_PROT_CLASSES_ERROR = "Unable to retrieve classes implementing protocols in " + APP_NAME;
+	public static final String PROTOCOL_LOADING_ERROR = "Unable to load existing protocols in " + APP_NAME + ". At least one protocol must be implemented.";
+	
+	
+	public static final String PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR = "Unable to retrieve instances for the current protocol classes in " + APP_NAME;
 	public static final String PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR = "No valid implementation was found for protocol: ";
 	public static final String PROTOCOL_MANY_IMPLEMENTATIONS_ERROR = "More than one implementation was found for the protocol: ";
 	
@@ -30,14 +34,10 @@ public class Text {
 	public static final String CONFIGURATION_DIALOG_TITLE = "Simulator configuration";
 	public static final String SIMULATION_PARAMETERS = "Simulation parameters:";
 	public static final String GENERAL_PARAMETERS = "General parameters";
-	public static final String SIMULATION_TYPE = "Type of simulation:";
-	public static final String SIMULATION_MISSION_BASED = "Mission based";
-	public static final String SIMULATION_SWARM = "UAV swarm";
 	public static final String ARDUCOPTER_PATH = "ArduCopter path:";
 	public static final String BASE_PATH_DIALOG_TITLE = "Select the SITL arducopter executable file";
 	public static final String BASE_PATH_DIALOG_SELECTION = "ArduCopter file";
-	public static final String BASE_PATH_DIALOG_EXTENSION = "elf";
-	public static final String MISSIONS_SELECTION = "UAV mission file(s):";
+	public static final String BASE_PATH_DIALOG_EXTENSION = "exe";
 	public static final String MISSIONS_DIALOG_TITLE = "Select the file(s) with UAVs paths";
 	public static final String MISSIONS_DIALOG_SELECTION_1 = "Google Earth kml File";
 	public static final String FILE_EXTENSION_KML = "kml";
@@ -161,7 +161,7 @@ public class Text {
 	public static final String EXIT = "Exit";
 	public static final String WAITING_MAVLINK = "Waiting for MAVLink connection...";
 	public static final String WAITING_GPS = "Waiting for GPS fix...";
-	public static final String WAITING_MISSION_UPLOAD = "Waiting for mission upload...";
+	public static final String WAITING_CONFIGURATION_UPLOAD = "Waiting for initial configuration upload...";
 	public static final String COPYRIGHT = "\u00A9 Google";
 	public static final String DRAWING_PANEL = "Drawing panel";
 	public static final String LOADING_UAV_IMAGE_ERROR = "The UAV image could not be loaded.";
@@ -188,6 +188,8 @@ public class Text {
 	public static final String SITL_UP = "SITL instance is up.";
 	public static final String CONTROLLERS_STARTED = "UAVs controllers started...";
 	public static final String GPS_OK = "GPS fix acquired...";
+	public static final String COMMUNICATIONS_ONLINE = "Simulated communications online...";
+	public static final String COLLISION_DETECTION_ONLINE = "Collision detection online...";
 	public static final String SEND_MISSION = "Setting missions if needed...";
 	public static final String WAITING_FOR_USER = "Waiting for user interaction.";
 	public static final String TAKING_OFF = "Take off in progress...";

@@ -1,24 +1,30 @@
-package sim.logic;
+package none;
 
 import java.awt.Graphics2D;
 
 import org.javatuples.Pair;
 
-import api.Copter;
+import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.GeoCoordinates;
-import main.Param;
+import main.Text;
+import mbcap.logic.MBCAPv3Helper;
 import sim.board.BoardPanel;
-import sim.board.BoardParam;
 
 /** Implementation of the protocol NONE to allow the user to simply follow missions. */
 
 public class ProtocolNoneHelper extends ProtocolHelper {
+	
+	private MBCAPv3Helper copy;
+	
+	public ProtocolNoneHelper() {
+		this.copy = new MBCAPv3Helper();
+	}
 
 	@Override
 	public void setProtocol() {
-		this.protocol = ProtocolHelper.Protocol.NONE;
+		this.protocolString = "None";
 	}
 
 	@Override
@@ -27,16 +33,12 @@ public class ProtocolNoneHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {//TODO completar la implementación
-		// TODO Auto-generated method stub
-
+	public void openConfigurationDialog() {
+		new NoneConfigDialog();
 	}
 
 	@Override
-	public void initializeDataStructures() {
-		// TODO Auto-generated method stub
-
-	}
+	public void initializeDataStructures() {}
 
 	@Override
 	public String setInitialState() {
@@ -57,25 +59,12 @@ public class ProtocolNoneHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.copy.setStartingLocation();
 	}
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-		boolean success = false;
-		// Erases, sends and retrieves the planned mission. Blocking procedure
-		if (Copter.clearMission(numUAV)
-				&& Copter.sendMission(numUAV, Tools.getLoadedMissions()[numUAV])
-				&& Copter.retrieveMission(numUAV)
-				&& Copter.setCurrentWaypoint(numUAV, 0)) {
-			Param.numMissionUAVs.incrementAndGet();
-			if (!Param.IS_REAL_UAV) {
-				BoardParam.rescaleQueries.incrementAndGet();
-			}
-			success = true;
-		}
-		return success;
+		return this.copy.sendInitialConfiguration(numUAV);
 	}
 
 	@Override
@@ -86,14 +75,12 @@ public class ProtocolNoneHelper extends ProtocolHelper {
 
 	@Override
 	public void startExperimentActionPerformed() {
-		// TODO Auto-generated method stub
-
+		this.copy.startExperimentActionPerformed();
 	}
 
 	@Override
 	public void forceExperimentEnd() {
-		// TODO Auto-generated method stub
-
+		this.copy.forceExperimentEnd();
 	}
 
 	@Override
@@ -109,4 +96,20 @@ public class ProtocolNoneHelper extends ProtocolHelper {
 	@Override
 	public void logData(String folder, String baseFileName) {}
 
+	/** Checks the validity of the configuration of the protocol. */
+	public static boolean isValidProtocolConfiguration(NoneConfigDialogPanel panel) {
+		// Simulation parameters
+		String validating = panel.missionsTextField.getText();
+		if (validating==null || validating.length()==0) {
+			GUI.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
+			return false;
+		}
+		return true;
+	}
+	
+	/** Stores the configuration of the protocol in variables. */
+	public static void storeProtocolConfiguration(NoneConfigDialogPanel panel) {
+		// Simulation parameters
+		Tools.setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
+	}
 }

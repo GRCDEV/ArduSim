@@ -40,6 +40,7 @@ public class BoardParam {
 	public static volatile BufferedImage scaleBarImage = null;
 	
 	// Lines format
+	public static final Stroke STROKE_POINT = new BasicStroke(1f);
 	public static final Stroke STROKE_TRACK = new BasicStroke(3f);
 	private static final float[] DASHING_PATTERN = { 2f, 2f };
 	public static final Stroke STROKE_WP_LIST = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f,

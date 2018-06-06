@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.security.CodeSource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Formatter;
@@ -76,6 +77,7 @@ import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
+import none.ProtocolNoneHelper;
 import pccompanion.PCCompanionGUI;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
@@ -162,24 +164,25 @@ public class ArduSimTools {
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
-				String pr = cmdLine.getOptionValue("p");
-				ProtocolHelper.Protocol pro = ProtocolHelper.Protocol.getProtocolByName(pr.trim());
-				if (pro == null) {
-					System.out.println(Text.PROTOCOL_NOT_FOUND_ERROR);
-					for (ProtocolHelper.Protocol p : ProtocolHelper.Protocol.values()) {
-						System.out.println(p.getName());
+				String pr = cmdLine.getOptionValue("p").trim();
+				boolean found = false;
+				for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
+					if (ProtocolHelper.ProtocolNames[i].equals(pr)) {
+						found = true;
 					}
+				}
+				if (!found) {
+					System.out.println(Text.PROTOCOL_NOT_FOUND_ERROR);
 					System.out.println("\n");
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
-				ProtocolHelper.selectedProtocol = pro;
+				ProtocolHelper.selectedProtocol = pr;
 				ProtocolHelper protocolInstance = ArduSimTools.getSelectedProtocolInstance();
 				if (protocolInstance == null) {
 					System.exit(-1);
 				}
 				ProtocolHelper.selectedProtocolInstance = protocolInstance;
-				Param.simulationIsMissionBased = ProtocolHelper.selectedProtocol.isMissionBased();
 				String spe = cmdLine.getOptionValue("s");
 				if (!Tools.isValidPositiveDouble(spe)) {
 					System.out.println(Text.SPEED_ERROR + "\n");
@@ -805,35 +808,72 @@ public class ArduSimTools {
 	public static ProtocolHelper getSelectedProtocolInstance() {
 		// Target protocol class and object
 		ProtocolHelper protocolLaunched = null;
-
+		Class<?>[] validImplementations = ProtocolHelper.ProtocolClasses;
+		if (validImplementations != null && validImplementations.length > 0) {
+			try {
+				ProtocolHelper[] protocolImplementations = getProtocolImplementationInstances(validImplementations, ProtocolHelper.selectedProtocol);
+				if (protocolImplementations == null) {
+					GUI.log(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR + ProtocolHelper.selectedProtocol);
+				} else if (protocolImplementations.length > 1) {
+					GUI.log(Text.PROTOCOL_MANY_IMPLEMENTATIONS_ERROR + ProtocolHelper.selectedProtocol);
+				} else {
+					protocolLaunched = protocolImplementations[0];
+				}
+			} catch (InstantiationException | IllegalAccessException e) {
+				GUI.log(Text.PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR);
+			}
+		}
+		return protocolLaunched;
+	}
+	
+	/** Gets all classes that extend ProtocolHelper or implement a protocol.
+	 * <p>Returns null or an array of size 0 if no valid implementations were found. */
+	private static Class<?>[] getAnyProtocolImplementations() {
+		Class<?>[] res = null;
 		// Get all Java classes included in ArduSim
 		List<String> existingClasses = getClasses();
-
-		// Get classes that extend Protocol class, and implement Metodos class
+		// Get classes that extend ProtocolHelper class
 		if (existingClasses != null && existingClasses.size() > 0) {
-			Class<?>[] validImplementations = getAllImplementations(existingClasses);
-
-			// If valid implementations were found, check if the selected protocol is implemented
-			if (validImplementations.length > 0) {
-				try {
-					ProtocolHelper[] protocolImplementations = getProtocolImplementations(validImplementations, ProtocolHelper.selectedProtocol);
-					if (protocolImplementations == null) {
-						GUI.log(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR + ProtocolHelper.selectedProtocol.getName());
-					} else if (protocolImplementations.length > 1) {
-						GUI.log(Text.PROTOCOL_MANY_IMPLEMENTATIONS_ERROR + ProtocolHelper.selectedProtocol.getName());
-					} else {
-						protocolLaunched = protocolImplementations[0];
-					}
-				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException | NoSuchMethodException | SecurityException
-						| NoSuchFieldException e) {
-					GUI.log(Text.PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR);
-				}
-			}
+			res = getAllImplementations(existingClasses);
 		} else {
 			GUI.log(Text.PROTOCOL_GETTING_CLASSES_ERROR);
 		}
-		return protocolLaunched;
+		if (res.length == 0) {
+			GUI.log(Text.PROTOCOL_GETTING_PROT_CLASSES_ERROR);
+		}
+		return res;
+	}
+	
+	/** Loads the implemented protocols and retrieves the name of each one.
+	 * <p>Protocol names are case-sensitive.
+	 * <p>Returns null if no valid implementations were found. */
+	public static String[] loadProtocols() {
+		// First store the identifier of None protocol
+		ProtocolNoneHelper noneInstance = new ProtocolNoneHelper();
+		noneInstance.setProtocol();
+		ProtocolHelper.noneProtocolName = noneInstance.protocolString;
+		String[] names = null;
+		Class<?>[] validImplementations = ArduSimTools.getAnyProtocolImplementations();
+		if (validImplementations != null && validImplementations.length > 0) {
+			ProtocolHelper.ProtocolClasses = validImplementations;
+			// Avoiding more than one implementation of the same protocol
+			Map<String, String> imp = new HashMap<>();
+			ProtocolHelper protocol;
+			try {
+				for (int i = 0; i < validImplementations.length; i++) {
+					protocol = (ProtocolHelper)validImplementations[i].newInstance();
+					protocol.setProtocol();
+					imp.put(protocol.protocolString, protocol.protocolString);
+				}
+				if (imp.size() > 0) {
+					names = imp.values().toArray(new String[imp.size()]);
+					Arrays.sort(names);
+				}
+			} catch (InstantiationException | IllegalAccessException e) {
+				GUI.log(Text.PROTOCOL_LOADING_ERROR);
+			}
+		}
+		return names;
 	}
 	
 	/** Returns the existing Java classes in the jar file or Eclipse project.
@@ -964,17 +1004,10 @@ public class ArduSimTools {
 		return res;
 	}
 	
-	/** Returns all the implementations of the selected protocol among all available implementations.
+	/** Returns an instance for all the implementations of the selected protocol among all available implementations.
 	 * <p>Returns a valid ProtocolHelper object for each implementation.
-	 * <p>Returns null if no valid implementation was found.
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 * @throws SecurityException 
-	 * @throws NoSuchMethodException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalArgumentException 
-	 * @throws NoSuchFieldException */
-	private static ProtocolHelper[] getProtocolImplementations(Class<?>[] implementations, ProtocolHelper.Protocol selectedProtocol) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, NoSuchFieldException {
+	 * <p>Returns null if no valid implementation was found. */
+	private static ProtocolHelper[] getProtocolImplementationInstances(Class<?>[] implementations, String selectedProtocol) throws InstantiationException, IllegalAccessException {
 		Class<?> c;
 		ProtocolHelper o;
 		ProtocolHelper[] res = null;
@@ -983,7 +1016,7 @@ public class ArduSimTools {
 			c = implementations[i];
 			o = (ProtocolHelper)c.newInstance();
 			o.setProtocol();
-			if (o.protocol == selectedProtocol) {
+			if (o.protocolString.equals(selectedProtocol)) {
 				imp.add(o);
 			}
 		}
@@ -1711,9 +1744,10 @@ public class ArduSimTools {
 				maxTime = Param.testEndTime[i];
 			}
 		}
-		if (ProtocolHelper.selectedProtocol != ProtocolHelper.Protocol.NONE) {
+		if (!ProtocolHelper.selectedProtocol.equals(ProtocolHelper.noneProtocolName)) {
 			sb.append(Text.LOG_GLOBAL).append(":\n\n");
 		}
+		
 		long totalTime = maxTime - Param.startTime;
 		long[] uavsTotalTime = new long[Param.numUAVs];
 		for (int i = 0; i < Param.numUAVs; i++) {
@@ -1765,7 +1799,7 @@ public class ArduSimTools {
 			}
 			sb.append("\n\t").append(Text.RENDER).append(" ").append(SimParam.renderQuality.getName());
 		}
-		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ProtocolHelper.selectedProtocol.getName());
+		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ProtocolHelper.selectedProtocol);
 		sb.append("\n").append(Text.COMMUNICATIONS);
 		long sentPacketTot = 0;
 		long receivedPacketTot = 0;

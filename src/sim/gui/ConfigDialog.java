@@ -12,10 +12,9 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import api.ProtocolHelper;
 import main.Param;
-import main.Text;
 import main.Param.SimulatorState;
+import main.Text;
 import sim.logic.SimTools;
 
 /** This class generates de dialog to input the application general configuration. */
@@ -45,11 +44,7 @@ public class ConfigDialog extends JDialog {
 					public void actionPerformed(ActionEvent e) {
 						if (SimTools.isValidConfiguration(panel)) {
 							SimTools.storeConfiguration(panel);
-							if (ProtocolHelper.selectedProtocol != ProtocolHelper.Protocol.NONE) {
-								Param.simStatus = SimulatorState.CONFIGURING_PROTOCOL;
-							} else {
-								Param.simStatus = SimulatorState.STARTING_UAVS;
-							}
+							Param.simStatus = SimulatorState.CONFIGURING_PROTOCOL;
 							dispose();
 						}
 					}

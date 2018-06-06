@@ -105,7 +105,9 @@ public class SlaveListener extends Thread {
 						}
 					}
 					msg = "Master indica el despegue y la posicion en la formacion sera pos:" + this.posFormacion;
-					Copter.takeOff(idSlave, FollowMeParam.AlturaInitFollowers);
+					if (!Copter.takeOff(idSlave, FollowMeParam.AlturaInitFollowers)) {
+						//TODO tratar el error
+					}
 					takeOff = true;	
 				}
 				break;

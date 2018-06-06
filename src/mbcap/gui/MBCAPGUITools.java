@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities;
 import api.GUI;
 import api.Tools;
 import api.pojo.Point3D;
+import main.Text;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.logic.MBCAPText;
@@ -25,8 +26,15 @@ public class MBCAPGUITools {
 
 	/** Checks the validity of the configuration of the protocol. */
 	public static boolean isValidProtocolConfiguration(MBCAPConfigDialogPanel panel) {
+		// Simulation parameters
+		String validating = panel.missionsTextField.getText();
+		if (validating==null || validating.length()==0) {
+			GUI.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
+			return false;
+		}
+		
 		// Beaconing parameters
-		String validating = (String) panel.beaconingPeriodTextField.getText();
+		validating = (String) panel.beaconingPeriodTextField.getText();
 		if (!Tools.isValidInteger(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_PERIOD_ERROR);
 			return false;
@@ -162,6 +170,9 @@ public class MBCAPGUITools {
 
 	/** Stores the configuration of the protocol in variables. */
 	public static void storeProtocolConfiguration(MBCAPConfigDialogPanel panel) {
+		// Simulation parameters
+		Tools.setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
+		
 		// Beaconing parameters
 		MBCAPParam.beaconingPeriod = Integer.parseInt((String) panel.beaconingPeriodTextField.getText());
 		MBCAPParam.numBeacons = Integer.parseInt((String) panel.numBeaconsTextField.getText());

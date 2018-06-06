@@ -444,7 +444,10 @@ public class BoardHelper {
 		ProtocolHelper.selectedProtocolInstance.drawResources(g, p);
 		
 		// 5. Draw collision radius around the UAVs while flying during the experiment
-		BoardHelper.drawCollisionCircle(g);
+		if (UAVParam.collisionCheckEnabled) {
+			g.setStroke(BoardParam.STROKE_POINT);
+			BoardHelper.drawCollisionCircle(g);
+		}
 	
 		// 5. Draw the UAVs image, identifier and altitude value
 		BoardHelper.drawUAVs(g, p);
@@ -470,8 +473,8 @@ public class BoardHelper {
 					g.drawString(Text.WAITING_GPS, 10, SimParam.boardPXHeight-10);
 				}
 				
-			} else if (Param.simulationIsMissionBased) {
-				g.drawString(Text.WAITING_MISSION_UPLOAD, 10, SimParam.boardPXHeight-10);
+			} else {
+				g.drawString(Text.WAITING_CONFIGURATION_UPLOAD, 10, SimParam.boardPXHeight-10);
 			}
 		} else {
 			g.drawString(Text.COPYRIGHT, 10, SimParam.boardPXHeight-10);

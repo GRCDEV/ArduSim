@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import javax.imageio.ImageIO;
-import javax.swing.SwingUtilities;
 
 import org.javatuples.Pair;
 
@@ -42,7 +41,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocol = ProtocolHelper.Protocol.MBCAP_V3;
+		this.protocolString = MBCAPText.MBCAP_V3;
 	}
 	
 	@Override
@@ -52,11 +51,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 	@Override
 	public void openConfigurationDialog() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new MBCAPConfigDialog();
-			}
-		});
+		new MBCAPConfigDialog();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -802,11 +797,11 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			posNextWaypoint = currentLocation.getValue1();
 			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 			// Calculate the rest of the points depending on the protocol version
-			if (ProtocolHelper.selectedProtocol == ProtocolHelper.Protocol.MBCAP_V1
-					|| ProtocolHelper.selectedProtocol == ProtocolHelper.Protocol.MBCAP_V2
-					|| ProtocolHelper.selectedProtocol == ProtocolHelper.Protocol.MBCAP_V3) {
+			if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V1)
+					|| ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V2)
+					|| ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3)) {
 				MBCAPv3Helper.getPredictedLocationsV1(numUAV, speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
-			} else if (ProtocolHelper.selectedProtocol == ProtocolHelper.Protocol.MBCAP_V4) {
+			} else if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V4)) {
 				MBCAPv3Helper.getPredictedLocationsV2(numUAV, speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
 			}
 		}
@@ -818,14 +813,14 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	private static Pair<Point2D.Double, Integer> getCurrentLocation(int numUAV, List<WaypointSimplified> mission, Point2D.Double currentUTMLocation, int posNextWaypoint) {
 		Point2D.Double baseLocation = null;
 		int nextWaypointPosition = posNextWaypoint;
-		if (ProtocolHelper.selectedProtocol.getId() == 1) { // MBCAP v1
+		if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V1)) { // MBCAP v1
 			// The next waypoint position has been already set
 			// The first predicted position is the current coordinates
 			baseLocation = currentUTMLocation;
 
-		} else if (ProtocolHelper.selectedProtocol.getId() == 2
-				|| ProtocolHelper.selectedProtocol.getId() == 3
-				|| ProtocolHelper.selectedProtocol.getId() == 4) {
+		} else if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V2)
+				|| ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3)
+				|| ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V4)) {
 			// MBCAP v2, MBCAP v3 or MBCAP v4
 			if (MBCAPParam.projectPath.get(numUAV) == 0) {
 				// The next waypoint position has been already set
@@ -941,10 +936,10 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		List<Double> distances = new ArrayList<Double>(MBCAPParam.DISTANCES_SIZE);
 		double totalDistance = 0.0;
 		// MBCAP v1 or MBCAP v2 (no acceleration present)
-		if (ProtocolHelper.selectedProtocol.getId() == 1 || ProtocolHelper.selectedProtocol.getId() == 2
-				|| (ProtocolHelper.selectedProtocol.getId() == 3 && acceleration == 0.0)) {
+		if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V1) || ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V2)
+				|| (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3) && acceleration == 0.0)) {
 			totalDistance = MBCAPParam.beaconFlyingTime * speed;
-		} else if (ProtocolHelper.selectedProtocol.getId() == 3) {
+		} else if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3)) {
 			// MBCAP v3 (constant acceleration present)
 			totalDistance = acceleration*MBCAPParam.beaconFlyingTime*MBCAPParam.beaconFlyingTime/2.0
 					+ speed*MBCAPParam.beaconFlyingTime;
@@ -971,8 +966,8 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		double incDistance = 0.0;
 		double prevSegmentsLength = 0.0;
 
-		if (ProtocolHelper.selectedProtocol.getId() ==1 || ProtocolHelper.selectedProtocol.getId() == 2
-				|| (ProtocolHelper.selectedProtocol.getId() == 3 && acceleration == 0.0)) {
+		if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V1) || ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V2)
+				|| (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3) && acceleration == 0.0)) {
 			incDistance = totalDistance / remainingLocations;
 		}
 
@@ -992,8 +987,8 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			nextWaypoint = mission.get(posNextWaypoint);
 			currentSegmentLength = distances.get(i);
 
-			if (ProtocolHelper.selectedProtocol.getId() == 1 || ProtocolHelper.selectedProtocol.getId() == 2
-					|| (ProtocolHelper.selectedProtocol.getId() == 3	&& acceleration == 0)) {
+			if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V1) || ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V2)
+					|| (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3) && acceleration == 0)) {
 				remainingSegment = Math.min(currentSegmentLength, totalDistance - distanceAcum + prevRemainingSegment);
 
 				// Following the current segment
@@ -1014,7 +1009,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				posNextWaypoint++;
 				prevWaypoint = nextWaypoint;
 				locations = 0;
-			} else if (ProtocolHelper.selectedProtocol.getId() == 3) {
+			} else if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3)) {
 				// the distance increment has to be calculated each time
 				double maxAcumDistance = Math.min(currentSegmentLength + prevSegmentsLength, totalDistance);
 				double maxTotalTime = (-speed + Math.sqrt(speed*speed + 2*acceleration*maxAcumDistance))/acceleration;

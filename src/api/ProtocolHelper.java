@@ -5,82 +5,21 @@ import java.awt.Graphics2D;
 import org.javatuples.Pair;
 
 import api.pojo.GeoCoordinates;
-import main.Param;
-import main.Text;
-import mbcap.logic.MBCAPText;
 import sim.board.BoardPanel;
-import swarmprot.logic.SwarmProtText;
 
 public abstract class ProtocolHelper {
 	
+	// Available protocols
+	public static Class<?>[] ProtocolClasses;
+	public static volatile String[] ProtocolNames = null;
+	public static volatile String noneProtocolName = null;
+	
 	// Selected protocol
-	public static volatile Protocol selectedProtocol;
+	public static volatile String selectedProtocol;
 	public static volatile ProtocolHelper selectedProtocolInstance;
 	
-	// Protocols enumerator
-	public enum Protocol {
-		NONE(0, Text.PROTOCOL_NONE, true),			// Without protocol, only a mission based experiment can be done
-		MBCAP_V1(1, MBCAPText.MBCAP_V1, true),	// Changes the prediction objective when the UAV reaches a waypoint
-		MBCAP_V2(2, MBCAPText.MBCAP_V2, true),	// Adapts the prediction to the theoretical like a magnet
-		MBCAP_V3(3, MBCAPText.MBCAP_V3, true),	// v2 taking the UAV acceleration into account
-		MBCAP_V4(4, MBCAPText.MBCAP_V4, true),	// v3 with a variable acceleration
-		SWARM_PROT_V1(5, SwarmProtText.PROTOCOL_TEXT, false),
-		FOLLOW_ME_V1(6, "Sigueme", false),
-		POLLUTION(7, "Pollución", false),
-		UAVFISHING(8, "UAV fishing", false);
-		// New protocols should follow the increasing numeration
-
-		private final int id;
-		private final String name;
-		private final boolean isMissionBased;
-		private Protocol(int id, String name, boolean isMissionBased) {
-			this.id = id;
-			this.name= name;
-			this.isMissionBased = isMissionBased;
-		}
-		public int getId() {
-			return this.id;
-		}
-		public String getName() {
-			return this.name;
-		}
-		public boolean isMissionBased() {
-			return this.isMissionBased;
-		}
-		public static Protocol getHighestIdProtocol() {
-			Protocol res = null;
-			for (Protocol p : Protocol.values()) {
-				if (Param.simulationIsMissionBased == p.isMissionBased) {
-					if (res == null) {
-						res = p;
-					} else if (p.getId() > res.getId()) {
-						res = p;
-					}
-				}
-			}
-			return res;
-		}
-		public static String getProtocolNameById(int id) {
-			for (Protocol p : Protocol.values()) {
-				if (p.getId() == id) {
-					return p.getName();
-				}
-			}
-			return "";
-		}
-		/** Returns the protocol given its name.
-		 * <p>Returns null if the protocol was not found. */
-		public static Protocol getProtocolByName(String name) {
-			for (Protocol p : Protocol.values()) {
-				if (p.getName().toUpperCase().equals(name.toUpperCase())) {
-					return p;
-				}
-			}
-			return null;
-		}
-	}
-	
-	public ProtocolHelper.Protocol protocol = null;
+	// Protocol identifier
+	public String protocolString = null;
 	
 	/** Assign a protocol to this implementation. It is mandatory to do this. Sentence similar to:
 	 * <p>this.protocol = ProtocolHelper.Protocol.SOME_PROTOCOL; */
@@ -90,6 +29,7 @@ public abstract class ProtocolHelper {
 	public abstract boolean loadMission();
 	
 	/** Opens a configuration dialog for protocol specific parameters.
+	 * <p>The dialog will be constructed in the GUI thread (avoid heavy calculations).
 	 * <p>When the dialog is accepted please use the following command:
 	 * <p>api.Tools.setProtocolConfigured(true); */
 	public abstract void openConfigurationDialog();

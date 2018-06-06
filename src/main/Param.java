@@ -13,12 +13,10 @@ public class Param {
 	
 	// The application is being run as a PC companion
 	public static volatile boolean IS_PC_COMPANION;
-	
-	// Whether the experiment is mission based or not
-	public static boolean simulationIsMissionBased;
 
 	// Number of UAVs to be simulated
 	public static int numUAVs;
+	public static AtomicInteger numUAVsTemp = new AtomicInteger();	// Used as semaphore to modify numUAVs in configuration dialogs
 	
 	// Unique UAV identifier that must be used on protocols, based on MAC address (simple enumeration while in simulator)
 	public static long[] id;

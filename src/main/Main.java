@@ -45,6 +45,11 @@ public class Main {
 		if (!ArduSimTools.parseArgs(args)) {
 			return;
 		}
+		String[] existingProtocols = ArduSimTools.loadProtocols();
+		if (existingProtocols == null) {
+			return;
+		}
+		ProtocolHelper.ProtocolNames = existingProtocols;
 
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
@@ -52,6 +57,7 @@ public class Main {
 		if (Param.IS_REAL_UAV) {
 			// 1. We need to make constant the parameters shown in the GUI
 			Param.numUAVs = 1;	// Always one UAV per Raspberry Pi or whatever the device where the application is deployed
+			Param.numUAVsTemp.set(1);
 
 			// 2. Establish the identifier of the UAV
 			Param.id = new long[Param.numUAVs];
@@ -75,6 +81,7 @@ public class Main {
 		} else {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;
+			Param.numUAVs = -1;
 
 			ArduSimTools.locateSITL();
 			ArduSimTools.checkAdminPrivileges();
@@ -98,13 +105,24 @@ public class Main {
 			while (Param.simStatus == SimulatorState.CONFIGURING) {
 				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
+			if (Param.numUAVs != Param.numUAVsTemp.get()) {
+				Param.numUAVs = Param.numUAVsTemp.get();
+			}
 
 			// 2. Opening the configuration dialog of the protocol under test
 			if (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
-				ProtocolHelper.selectedProtocolInstance.openConfigurationDialog();
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						ProtocolHelper.selectedProtocolInstance.openConfigurationDialog();
+					}
+				});
+				
 				// Waiting the protocol configuration to be finished
 				while (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
 					Tools.waiting(SimParam.SHORT_WAITING_TIME);
+				}
+				if (Param.numUAVs != Param.numUAVsTemp.get()) {
+					Param.numUAVs = Param.numUAVsTemp.get();
 				}
 			}
 
@@ -130,9 +148,7 @@ public class Main {
 				public void run() {
 					MainWindow.buttonsPanel.logArea.setText(Text.STARTING_ENVIRONMENT + "\n");
 					MainWindow.buttonsPanel.progressDialogButton.setEnabled(false);
-					if (!Param.simulationIsMissionBased) {
-						MainWindow.buttonsPanel.setupButton.setEnabled(false);
-					}
+					MainWindow.buttonsPanel.setupButton.setEnabled(false);
 					MainWindow.buttonsPanel.startTestButton.setEnabled(false);
 					MainWindow.buttonsPanel.statusLabel.setText(Text.STARTING_ENVIRONMENT);
 					MainWindow.progressDialog = new ProgressDialog(MainWindow.window.mainWindowFrame);
@@ -149,7 +165,7 @@ public class Main {
 			ProtocolHelper.selectedProtocolInstance.loadResources();
 		}
 		// Configuration feedback
-		GUI.log(Text.PROTOCOL_IN_USE + " " + ProtocolHelper.selectedProtocol.getName());
+		GUI.log(Text.PROTOCOL_IN_USE + " " + ProtocolHelper.selectedProtocol);
 		if (!Param.IS_REAL_UAV) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
@@ -204,193 +220,189 @@ public class Main {
 		
 		// 10. Set communications online, and start collision detection if needed
 		if (!Param.IS_REAL_UAV && Param.numUAVs > 1) {
-			(new DistanceCalculusThread()).start();
-			(new RangeCalculusThread()).start();
+			// Calculus of the distance between UAVs
+			new DistanceCalculusThread().start();
+			// Communications range calculation enable
+			new RangeCalculusThread().start();
+			GUI.log(Text.COMMUNICATIONS_ONLINE);
+			// Collision check enable
 			if (UAVParam.collisionCheckEnabled) {
 				(new CollisionDetector()).start();
+				GUI.log(Text.COLLISION_DETECTION_ONLINE);
 			}
 		}
 		
-		// 11. Launch the threads of the protocol under test
+		// 11. Launch the threads of the protocol under test and wait the GUI to be built
 		ProtocolHelper.selectedProtocolInstance.startThreads();
-
-		// 12. Build auxiliary elements to be drawn and prepare the user interaction
-		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
-		//      AND the drawing scale is calculated
 		if (Param.IS_REAL_UAV) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
 			Tools.waiting(SimParam.SHORT_WAITING_TIME);
 		}
-		if (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
-			if (!Param.IS_REAL_UAV) {
-				BoardHelper.downloadBackground();
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						if (Param.simulationIsMissionBased) {
-							MainWindow.buttonsPanel.startTestButton.setEnabled(true);
-						} else {
-							MainWindow.buttonsPanel.setupButton.setEnabled(true);
-						}
-						MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_FLY);
-					}
-				});
-				if (Param.simulationIsMissionBased) {
-					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-				} else {
-					GUI.log(Text.WAITING_FOR_USER);
+		if (Param.simStatus != SimulatorState.UAVS_CONFIGURED) {
+			return;
+		}
+		
+		// 12. Build auxiliary elements to be drawn and prepare the user interaction
+		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
+		//      AND the drawing scale is calculated
+		if (!Param.IS_REAL_UAV) {
+			BoardHelper.downloadBackground();
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.setupButton.setEnabled(true);
+					MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_FLY);
 				}
-			}
-			while (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
-				Tools.waiting(SimParam.SHORT_WAITING_TIME);
-			}
+			});
+			GUI.log(Text.WAITING_FOR_USER);
+		}
+		while (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
+			Tools.waiting(SimParam.SHORT_WAITING_TIME);
+		}
+		if (Param.simStatus != SimulatorState.SETUP_IN_PROGRESS) {
+			return;
+		}
 
-			// 13. Apply the configuration step, only if the program is not being closed (state SHUTTING_DOWN)
-			if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
-				ProtocolHelper.selectedProtocolInstance.setupActionPerformed();
-				Param.simStatus = SimulatorState.READY_FOR_TEST;
-				while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
-					Tools.waiting(SimParam.SHORT_WAITING_TIME);
+		// 13. Apply the configuration step
+		ProtocolHelper.selectedProtocolInstance.setupActionPerformed();
+		Param.simStatus = SimulatorState.READY_FOR_TEST;
+		while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
+			Tools.waiting(SimParam.SHORT_WAITING_TIME);
+		}
+		if (Param.simStatus != SimulatorState.READY_FOR_TEST) {
+			return;
+		}
+
+		// 14. Waiting for the user to start the experiment
+		if (!Param.IS_REAL_UAV) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
+					MainWindow.buttonsPanel.startTestButton.setEnabled(true);
 				}
+			});
+			GUI.log(Text.WAITING_FOR_USER);
+		}
+		while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+			Tools.waiting(SimParam.SHORT_WAITING_TIME);
+		}
+		if (Param.simStatus != SimulatorState.TEST_IN_PROGRESS) {
+			return;
+		}
 
-				// 14. Waiting for the user to start the experiment, only if the program is not being closed
-				if (Param.simStatus == SimulatorState.READY_FOR_TEST) {
-					if (!Param.IS_REAL_UAV) {
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
-								MainWindow.buttonsPanel.startTestButton.setEnabled(true);
-							}
-						});
-						GUI.log(Text.WAITING_FOR_USER);
-					}
-					while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
-						Tools.waiting(SimParam.SHORT_WAITING_TIME);
-					}
-
-					// 15. Start the experiment, only if the program is not being closed
-					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-						// TODO remove new threads and clean the console parameters (args)
-						if (UAVParam.doFakeSending) {
-							for (int i = 0; i < Param.numUAVs; i++) {
-								(new FakeSenderThread(i)).start();
-								(new FakeReceiverThread(i)).start();
-							}
-						}
-						
-
-
-
-
-
-						Param.startTime = System.currentTimeMillis();
-						GUI.log(Text.TEST_START);
-						if (!Param.IS_REAL_UAV) {
-							timer = new Timer();
-							timer.scheduleAtFixedRate(new TimerTask() {
-								long time = Param.startTime;
-								public void run() {
-									if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-										final String timeString = Tools.timeToString(Param.startTime, time);
-										time = time + 1000;
-										SwingUtilities.invokeLater(new Runnable() {
-											public void run() {
-												MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
-											}
-										});
-									} else {
-										SwingUtilities.invokeLater(new Runnable() {
-											public void run() {
-												MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
-											}
-										});
-										timer.cancel();
-									}
-								}
-							}, 0, 1000);	// Once each second, without initial waiting time
-						}
-						ProtocolHelper.selectedProtocolInstance.startExperimentActionPerformed();
-						
-						// 16. Waiting while the experiment is is progress and detecting the experiment end
-						int check = 0;
-						boolean checkEnd = false;
-						while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-							// Check the battery level periodically
-							if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
-								ArduSimTools.checkBatteryLevel();
-							}
-							check++;
-							// Force the UAVs to land if needed
-							ProtocolHelper.selectedProtocolInstance.forceExperimentEnd();
-							// Detects if all UAVs are on the ground in order to finish the experiment
-							if (checkEnd) {
-								if (ArduSimTools.isTestFinished()) {
-									Param.simStatus = SimulatorState.TEST_FINISHED;
-								}
-							} else {
-								if (System.currentTimeMillis() - Param.startTime > Param.STARTING_TIMEOUT) {
-									checkEnd = true;
-								}
-							}
-							if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-								Tools.waiting(SimParam.LONG_WAITING_TIME);
-							}
-						}
-
-						// 17. Wait for the user to close the simulator, only if the program is not being closed
-						if (Param.simStatus == SimulatorState.TEST_FINISHED) {
-							GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
-							if (!Param.IS_REAL_UAV) {
-								GUI.log(Text.WAITING_FOR_USER);
-								SwingUtilities.invokeLater(new Runnable() {
-									public void run() {
-										MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED);
-									}
-								});
-							}
-
-							// Gather information to show the results dialog
-							String res = null;//después terminar revisión interfaz prot y nombre clases
-							res = ArduSimTools.getTestResults();
-							if (ProtocolHelper.selectedProtocol != ProtocolHelper.Protocol.NONE) {
-								String s = ProtocolHelper.selectedProtocolInstance.getExperimentResults();
-								if (s != null && s.length() > 0) {
-									res += "\n" + ProtocolHelper.selectedProtocol.getName() + ":\n\n";
-									res += s;
-								}
-							}
-							
-							res += ArduSimTools.getTestGlobalConfiguration();
-							if (ProtocolHelper.selectedProtocol != ProtocolHelper.Protocol.NONE) {
-								String s = ProtocolHelper.selectedProtocolInstance.getExperimentConfiguration();
-								if (s != null && s.length() > 0) {
-									res += "\n\n" + ProtocolHelper.selectedProtocol.getName() + " " + Text.CONFIGURATION + ":\n";
-									res += s;
-								}
-							}
-
-							final String res2 = res;
-							if (Param.IS_REAL_UAV) {
-								Calendar cal = Calendar.getInstance();
-								String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
-										+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
-										+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
-								ArduSimTools.storeResults(res2, new File(Tools.getCurrentFolder(), fileName));
-								ArduSimTools.shutdown();	// Closes the simulator
-							} else {
-								SwingUtilities.invokeLater(new Runnable() {
-									public void run() {
-										new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true);
-									}
-								});
-							}
-
-							// Now, the user must close the application, even to do a new experiment
-						}
-					}
-				}
+		// 15. Start the experiment, only if the program is not being closed
+		// TODO remove new threads and clean the console parameters (args)
+		if (UAVParam.doFakeSending) {
+			for (int i = 0; i < Param.numUAVs; i++) {
+				(new FakeSenderThread(i)).start();
+				(new FakeReceiverThread(i)).start();
 			}
 		}
+
+		Param.startTime = System.currentTimeMillis();
+		GUI.log(Text.TEST_START);
+		if (!Param.IS_REAL_UAV) {
+			timer = new Timer();
+			timer.scheduleAtFixedRate(new TimerTask() {
+				long time = Param.startTime;
+				public void run() {
+					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+						final String timeString = Tools.timeToString(Param.startTime, time);
+						time = time + 1000;
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
+							}
+						});
+					} else {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
+							}
+						});
+						timer.cancel();
+					}
+				}
+			}, 0, 1000);	// Once each second, without initial waiting time
+		}
+		ProtocolHelper.selectedProtocolInstance.startExperimentActionPerformed();
+
+		// 16. Waiting while the experiment is is progress and detecting the experiment end
+		int check = 0;
+		boolean checkEnd = false;
+		while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+			// Check the battery level periodically
+			if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
+				ArduSimTools.checkBatteryLevel();
+			}
+			check++;
+			// Force the UAVs to land if needed
+			ProtocolHelper.selectedProtocolInstance.forceExperimentEnd();
+			// Detects if all UAVs are on the ground in order to finish the experiment
+			if (checkEnd) {
+				if (ArduSimTools.isTestFinished()) {
+					Param.simStatus = SimulatorState.TEST_FINISHED;
+				}
+			} else {
+				if (System.currentTimeMillis() - Param.startTime > Param.STARTING_TIMEOUT) {
+					checkEnd = true;
+				}
+			}
+			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+				Tools.waiting(SimParam.LONG_WAITING_TIME);
+			}
+		}
+		if (Param.simStatus != SimulatorState.TEST_FINISHED) {
+			return;
+		}
+
+		// 17. Wait for the user to close the simulator, only if the program is not being closed
+		GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
+		if (!Param.IS_REAL_UAV) {
+			GUI.log(Text.WAITING_FOR_USER);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED);
+				}
+			});
+		}
+
+		// Gather information to show the results dialog
+		String res = null;//después terminar revisión interfaz prot y nombre clases
+		res = ArduSimTools.getTestResults();
+		if (!ProtocolHelper.selectedProtocol.equals(ProtocolHelper.noneProtocolName)) {
+			String s = ProtocolHelper.selectedProtocolInstance.getExperimentResults();
+			if (s != null && s.length() > 0) {
+				res += "\n" + ProtocolHelper.selectedProtocol + ":\n\n";
+				res += s;
+			}
+		}
+		res += ArduSimTools.getTestGlobalConfiguration();
+		if (!ProtocolHelper.selectedProtocol.equals(ProtocolHelper.noneProtocolName)) {
+			String s = ProtocolHelper.selectedProtocolInstance.getExperimentConfiguration();
+			if (s != null && s.length() > 0) {
+				res += "\n\n" + ProtocolHelper.selectedProtocol + " " + Text.CONFIGURATION + ":\n";
+				res += s;
+			}
+		}
+
+		final String res2 = res;
+		if (Param.IS_REAL_UAV) {
+			Calendar cal = Calendar.getInstance();
+			String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
+					+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
+					+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
+			ArduSimTools.storeResults(res2, new File(Tools.getCurrentFolder(), fileName));
+			ArduSimTools.shutdown();	// Closes the simulator
+		} else {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true);
+				}
+			});
+		}
+
+		// Now, the user must close the application, even to do a new experiment
 	}
 }

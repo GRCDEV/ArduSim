@@ -19,11 +19,9 @@ import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
-import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
-import api.pojo.FlightMode;
 import api.pojo.LogPoint;
 import main.Param;
 import main.Text;
@@ -32,7 +30,6 @@ import main.Param.SimulatorState;
 import main.Param.WirelessModel;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam;
-import mbcap.logic.MBCAPText;
 import sim.board.BoardParam;
 import sim.gui.ConfigDialogPanel;
 import sim.gui.MainWindow;
@@ -106,13 +103,6 @@ public class SimTools {
 			GUI.warn(Text.VALIDATION_WARNING, Text.SITL_ERROR_3);
 			return false;
 		}
-		if (Param.simulationIsMissionBased) {
-			validating = panel.missionsTextField.getText();
-			if (validating==null || validating.length()==0) {
-				GUI.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
-				return false;
-			}
-		}
 		validating = panel.speedsTextField.getText();
 		if (validating==null || validating.length()==0) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.SPEEDS_ERROR_2);
@@ -159,8 +149,7 @@ public class SimTools {
 		}
 		
 		//  Protocol parameter. Is there a valid implementation?
-		String protocol = (String)panel.protocolComboBox.getSelectedItem();
-		ProtocolHelper.selectedProtocol = ProtocolHelper.Protocol.getProtocolByName(protocol);
+		ProtocolHelper.selectedProtocol = (String)panel.protocolComboBox.getSelectedItem();
 		ProtocolHelper protocolInstance = ArduSimTools.getSelectedProtocolInstance();
 		if (protocolInstance == null) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR + (String)panel.protocolComboBox.getSelectedItem());
@@ -234,7 +223,7 @@ public class SimTools {
 	/** Stores the configuration of the experiment in variables */
 	public static void storeConfiguration(ConfigDialogPanel panel) {
 		//  Simulation parameters
-		Param.numUAVs = Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem());
+		Param.numUAVsTemp.set(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
 
 		//  Performance parameters
 		BoardParam.screenDelay = Integer.parseInt((String)panel.screenDelayTextField.getText());
@@ -255,8 +244,7 @@ public class SimTools {
 		}
 
 		//  Protocol parameters
-		String protocol = (String)panel.protocolComboBox.getSelectedItem();
-		ProtocolHelper.selectedProtocol = ProtocolHelper.Protocol.getProtocolByName(protocol);
+		ProtocolHelper.selectedProtocol = (String)panel.protocolComboBox.getSelectedItem();
 		ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
 
 		//  UAV to UAV communications parameters
@@ -312,12 +300,8 @@ public class SimTools {
 				panel.batteryTextField.setEnabled(false);
 				
 				//  Protocol parameters
-				ProtocolHelper.selectedProtocol = ProtocolHelper.Protocol.getHighestIdProtocol();
-				for (int i=0; i<panel.protocolComboBox.getItemCount(); i++) {
-					if (((String)panel.protocolComboBox.getItemAt(i)).equals(ProtocolHelper.selectedProtocol.getName())) {
-						panel.protocolComboBox.setSelectedIndex(i);
-					}
-				}
+				ProtocolHelper.selectedProtocol = ProtocolHelper.ProtocolNames[ProtocolHelper.ProtocolNames.length - 1];
+				panel.protocolComboBox.setSelectedIndex(ProtocolHelper.ProtocolNames.length - 1);
 				
 				//  UAV to UAV communications parameters
 				panel.carrierSensingCheckBox.setSelected(UAVParam.carrierSensingEnabled);
@@ -422,18 +406,6 @@ public class SimTools {
 		}
 	}
 	
-	/** Lands the UAVs when a collision happens. */
-	public static void landAllUAVs() {
-		for (int i=0; i<Param.numUAVs; i++) {
-			if (Copter.setFlightMode(i, FlightMode.LAND_ARMED)) {
-				GUI.log(SimParam.prefix[i] + MBCAPText.LANDING);
-				
-			} else {
-				GUI.log(SimParam.prefix[i] + MBCAPText.LANDING_ERROR);
-			}
-		}
-	}//TODO mover a Copter y comprobar que está volando
-
 	/** Checks if the data packet must arrive to the destination depending on distance and the wireless model used (only used on simulation). */
 	public static boolean isInRange(double distance) {
 		switch (Param.selectedWirelessModel) {

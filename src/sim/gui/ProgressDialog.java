@@ -45,7 +45,7 @@ public class ProgressDialog extends JDialog {
 			for (int i = 0; i < Param.numUAVs; i++) {
 				panels[i] = new ProgressDialogPanel();
 				panels[i].numUAVLabel.setText("" + Param.id[i]);
-				if (ProtocolHelper.selectedProtocol == ProtocolHelper.Protocol.NONE) {
+				if (ProtocolHelper.selectedProtocol.equals(ProtocolHelper.noneProtocolName)) {
 					panels[i].lblProtState.setText("");
 					panels[i].protStateLabel.setText("");
 				} else {

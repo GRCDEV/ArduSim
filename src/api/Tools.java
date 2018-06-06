@@ -56,6 +56,12 @@ public class Tools {
 		return Param.numUAVs;
 	}
 	
+	/** Sets the number of UAVs that will be simulated.
+	 * <p>Only use it in the protocol configuration dialog, and when a parameter limits the number of UAVs that must be simulated. */
+	public static void setNumUAVs(int numUAVs) {
+		Param.numUAVsTemp.set(numUAVs);
+	}
+	
 	/** Returns the ID of a UAV.
 	 * <p>On real UAV returns a value based on the MAC address.
 	 * <p>On virtual UAV returns the position of the UAV in the arrays used by the simulator. */

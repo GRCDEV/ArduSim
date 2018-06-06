@@ -10,10 +10,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -28,30 +27,25 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
-import api.pojo.Waypoint;
 import main.Param;
 import main.Param.WirelessModel;
 import main.Text;
 import sim.board.BoardParam;
 import sim.logic.SimParam;
-import sim.logic.SimTools;
 import sim.logic.SimParam.RenderQuality;
+import sim.logic.SimTools;
 import uavController.UAVParam;
-import javax.swing.JCheckBox;
 
 /** This class generates the panel with the general configuration parameters shown in the configuration dialog. */
 
 public class ConfigDialogPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	public JComboBox<String> simulationTypeComboBox;
 	public JTextField screenDelayTextField;
 	public JTextField minScreenMovementTextField;
 	public JCheckBox loggingEnabledCheckBox;
 	public JComboBox<String> renderQualityComboBox;
 	public JTextField arducopterPathTextField;
-	public JTextField missionsTextField;
-	private JButton missionsButton;
 	public JTextField speedsTextField;
 	public JTextField fixedRangeTextField;
 	public JComboBox<String> UAVsComboBox;
@@ -75,9 +69,9 @@ public class ConfigDialogPanel extends JPanel {
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 5 };
-		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31 };
+		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31 };
 		gridBagLayout.columnWeights = new double[] { 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
 				Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 
@@ -89,58 +83,6 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblSimulationParameters.gridx = 0;
 		gbc_lblSimulationParameters.gridy = 0;
 		add(lblSimulationParameters, gbc_lblSimulationParameters);
-		
-		JLabel lblTypeOfSimulation = new JLabel(Text.SIMULATION_TYPE);
-		lblTypeOfSimulation.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblTypeOfSimulation = new GridBagConstraints();
-		gbc_lblTypeOfSimulation.gridwidth = 3;
-		gbc_lblTypeOfSimulation.insets = new Insets(0, 0, 5, 5);
-		gbc_lblTypeOfSimulation.anchor = GridBagConstraints.EAST;
-		gbc_lblTypeOfSimulation.gridx = 1;
-		gbc_lblTypeOfSimulation.gridy = 1;
-		add(lblTypeOfSimulation, gbc_lblTypeOfSimulation);
-		
-		simulationTypeComboBox = new JComboBox<String>();
-		simulationTypeComboBox.addItem(Text.SIMULATION_MISSION_BASED);
-		simulationTypeComboBox.addItem(Text.SIMULATION_SWARM);
-		simulationTypeComboBox.setSelectedIndex(0); // Before using the listener or an error will occur
-		if (((String)simulationTypeComboBox.getSelectedItem()).equals(Text.SIMULATION_MISSION_BASED)) {
-			Param.simulationIsMissionBased = true;
-		} else {
-			Param.simulationIsMissionBased = false;
-		}
-		simulationTypeComboBox.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				// Changed the type of the simulation
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					final boolean simulationIsMissionBased =  ((String)simulationTypeComboBox.getSelectedItem()).equals(Text.SIMULATION_MISSION_BASED);
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							if (simulationIsMissionBased) {
-								Param.simulationIsMissionBased = true;
-								missionsButton.setEnabled(true);
-							} else {
-								Param.simulationIsMissionBased = false;
-								missionsButton.setEnabled(false);
-							}
-							// Clear the missions and the number of UAV
-							missionsTextField.setText("");
-							Tools.setLoadedMissionsFromFile(null);
-							UAVsComboBox.removeAllItems();
-						}
-					});
-					// Update the protocols list
-					loadProtocols(Param.simulationIsMissionBased);
-				}
-			}
-		});
-		GridBagConstraints gbc_simulationTypeComboBox = new GridBagConstraints();
-		gbc_simulationTypeComboBox.gridwidth = 3;
-		gbc_simulationTypeComboBox.insets = new Insets(0, 0, 5, 5);
-		gbc_simulationTypeComboBox.fill = GridBagConstraints.HORIZONTAL;
-		gbc_simulationTypeComboBox.gridx = 4;
-		gbc_simulationTypeComboBox.gridy = 1;
-		add(simulationTypeComboBox, gbc_simulationTypeComboBox);
 
 		JLabel lblArducopterPath = new JLabel(Text.ARDUCOPTER_PATH);
 		lblArducopterPath.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -149,7 +91,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblVmsBasePath.anchor = GridBagConstraints.EAST;
 		gbc_lblVmsBasePath.insets = new Insets(0, 0, 5, 5);
 		gbc_lblVmsBasePath.gridx = 1;
-		gbc_lblVmsBasePath.gridy = 2;
+		gbc_lblVmsBasePath.gridy = 1;
 		add(lblArducopterPath, gbc_lblVmsBasePath);
 
 		arducopterPathTextField = new JTextField();
@@ -159,7 +101,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_pathTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_pathTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_pathTextField.gridx = 4;
-		gbc_pathTextField.gridy = 2;
+		gbc_pathTextField.gridy = 1;
 		add(arducopterPathTextField, gbc_pathTextField);
 		arducopterPathTextField.setColumns(10);
 		if (SimParam.sitlPath != null) {
@@ -180,225 +122,71 @@ public class ConfigDialogPanel extends JPanel {
 				if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 					chooser.setFileFilter(new FileNameExtensionFilter(Text.BASE_PATH_DIALOG_SELECTION, Text.BASE_PATH_DIALOG_EXTENSION));
 				}
-				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-					final File sitlPath = chooser.getSelectedFile();
-					// Only accept executable file
-					if (!sitlPath.canExecute()) {
-						GUI.log(Text.SITL_ERROR_1);
-						GUI.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_1);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								UAVsComboBox.removeAllItems();
-							}
-						});
-						return;
-					}
-					// Copter param file must be in the same folder
-					File paramPath = new File(sitlPath.getParent() + File.separator + SimParam.PARAM_FILE_NAME);
-					if (!paramPath.exists()) {
-						GUI.log(Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
-						GUI.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								UAVsComboBox.removeAllItems();
-							}
-						});
-						return;
-					}
-
-					SimParam.sitlPath = sitlPath.getAbsolutePath();
-					SimParam.paramPath = paramPath.getAbsolutePath();
+				if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
+					return;
+				}
+				
+				final File sitlPath = chooser.getSelectedFile();
+				// Only accept executable file
+				if (!sitlPath.canExecute()) {
+					GUI.log(Text.SITL_ERROR_1);
+					GUI.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_1);
+					SimParam.sitlPath = null;
+					SimParam.paramPath = null;
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							arducopterPathTextField.setText(sitlPath.getAbsolutePath());
-
-							// Update UAVs combobox if missions and speeds are already loaded
-							if (UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
-								int numUAVs = -1;
-								if (Param.simulationIsMissionBased) {
-									List<Waypoint>[] missions = Tools.getLoadedMissions();
-									if (missions != null
-											&& missions.length > 0) {
-										numUAVs = Math.min(missions.length, UAVParam.initialSpeeds.length);
-										numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
-									}
-								} else {
-									numUAVs = Math.min(UAVParam.initialSpeeds.length, UAVParam.mavPort.length);
-								}
-								if (numUAVs != -1) {
-									UAVsComboBox.removeAllItems();
-									for (int i = 0; i < numUAVs; i++) {
-										UAVsComboBox.addItem("" + (i + 1));
-									}
-									UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
-								}
-							}
+							arducopterPathTextField.setText("");
+							UAVsComboBox.removeAllItems();
 						}
 					});
+					return;
 				}
+				// Copter param file must be in the same folder
+				File paramPath = new File(sitlPath.getParent() + File.separator + SimParam.PARAM_FILE_NAME);
+				if (!paramPath.exists()) {
+					GUI.log(Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
+					GUI.warn(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
+					SimParam.sitlPath = null;
+					SimParam.paramPath = null;
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							arducopterPathTextField.setText("");
+							UAVsComboBox.removeAllItems();
+						}
+					});
+					return;
+				}
+
+				SimParam.sitlPath = sitlPath.getAbsolutePath();
+				SimParam.paramPath = paramPath.getAbsolutePath();
+				
+				int n = -1;
+				if (UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
+					n = Math.min(UAVParam.mavPort.length, UAVParam.initialSpeeds.length);
+					
+					
+				}
+				final int numUAVs = n;
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						arducopterPathTextField.setText(sitlPath.getAbsolutePath());
+						// Update UAVs combobox if speeds are already loaded
+						if (numUAVs != -1) {
+							UAVsComboBox.removeAllItems();
+							for (int i = 0; i < numUAVs; i++) {
+								UAVsComboBox.addItem("" + (i + 1));
+							}
+							UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
+						}
+					}
+				});
 			}
 		});
 		GridBagConstraints gbc_pathButton = new GridBagConstraints();
 		gbc_pathButton.insets = new Insets(0, 0, 5, 0);
 		gbc_pathButton.gridx = 7;
-		gbc_pathButton.gridy = 2;
+		gbc_pathButton.gridy = 1;
 		add(basePathButton, gbc_pathButton);
-
-		JLabel lblmissions = new JLabel(Text.MISSIONS_SELECTION);
-		lblmissions.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblPathsXmlFile = new GridBagConstraints();
-		gbc_lblPathsXmlFile.anchor = GridBagConstraints.EAST;
-		gbc_lblPathsXmlFile.gridwidth = 3;
-		gbc_lblPathsXmlFile.insets = new Insets(0, 0, 5, 5);
-		gbc_lblPathsXmlFile.gridx = 1;
-		gbc_lblPathsXmlFile.gridy = 3;
-		add(lblmissions, gbc_lblPathsXmlFile);
-
-		missionsTextField = new JTextField();
-		missionsTextField.setEditable(false);
-		GridBagConstraints gbc_xmlTextField = new GridBagConstraints();
-		gbc_xmlTextField.gridwidth = 3;
-		gbc_xmlTextField.insets = new Insets(0, 0, 5, 5);
-		gbc_xmlTextField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmlTextField.gridx = 4;
-		gbc_xmlTextField.gridy = 3;
-		add(missionsTextField, gbc_xmlTextField);
-		missionsTextField.setColumns(10);
-
-		missionsButton = new JButton(Text.BUTTON_SELECT);
-		if (!Param.simulationIsMissionBased) {
-			missionsButton.setEnabled(false);
-		}
-		missionsButton.addActionListener(new ActionListener() {
-			@SuppressWarnings("unchecked")
-			public void actionPerformed(ActionEvent e) {
-				// Select kml file or waypoints files
-				final File[] selection;
-				final JFileChooser chooser = new JFileChooser();
-				chooser.setCurrentDirectory(Tools.getCurrentFolder());
-				chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE);
-				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, Text.FILE_EXTENSION_KML);
-				chooser.addChoosableFileFilter(filter1);
-				FileNameExtensionFilter filter2 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, Text.FILE_EXTENSION_WAYPOINTS);
-				chooser.addChoosableFileFilter(filter2);
-				chooser.setAcceptAllFileFilterUsed(false);
-				chooser.setMultiSelectionEnabled(true);
-				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-					selection = chooser.getSelectedFiles();
-				} else {
-					selection = null;
-				}
-				if (selection != null && selection.length > 0) {
-					List<Waypoint>[] lists;
-					String extension = Tools.getFileExtension(selection[0]);
-					// Only one "kml" file is accepted
-					if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase()) && selection.length > 1) {
-						GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
-						return;
-					}
-					// waypoints files can not be mixed with kml files
-					if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-						for (int i = 1; i < selection.length; i++) {
-							if (!Tools.getFileExtension(selection[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-								GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
-								return;
-							}
-						}
-					}
-
-					// kml file selected
-					if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
-						// All missions are loaded from one single file
-						lists = Tools.loadXMLMissionsFile(selection[0]);
-						if (lists == null) {
-							GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
-							return;
-						}
-						// Missions are stored
-						Tools.setLoadedMissionsFromFile(lists);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								missionsTextField.setText(selection[0].getAbsolutePath());
-								// Update UAVs combobox if arducopter and speeds are already loaded
-								if (SimParam.sitlPath != null
-										&& UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
-									int numUAVs = Math.min(Tools.getLoadedMissions().length, UAVParam.initialSpeeds.length);
-									numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
-									UAVsComboBox.removeAllItems();
-									for (int i = 0; i < numUAVs; i++) {
-										UAVsComboBox.addItem("" + (i + 1));
-									}
-									UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
-								}
-							}
-						});
-					}
-
-					// One or more waypoints files selected
-					if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-
-						lists = new ArrayList[selection.length];
-						// Load each mission from one file
-						int j = 0;
-						for (int i = 0; i < selection.length; i++) {
-							List<Waypoint> current = Tools.loadMissionFile(selection[i].getAbsolutePath());
-							if (current != null) {
-								lists[j] = current;
-								j++;
-							}
-						}
-						// If no valid missions were found, just ignore the action
-						if (j == 0) {
-							GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
-							Tools.setLoadedMissionsFromFile(null);
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									UAVsComboBox.removeAllItems();
-								}
-							});
-							return;
-						}
-						// The array must be resized if some file was incorrect
-						if (j != selection.length) {
-							List<Waypoint>[] aux = lists;
-							lists = new ArrayList[j];
-							int m = 0;
-							for (int k = 0; k < selection.length; k++) {
-								if (aux[k] != null) {
-									lists[m] = aux[k];
-									m++;
-								}
-							}
-						}
-						// The missions are stored
-						Tools.setLoadedMissionsFromFile(lists);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								missionsTextField.setText(chooser.getCurrentDirectory().getAbsolutePath());
-
-								// Update UAVs combobox if arducopter and speeds are already loaded
-								if (SimParam.sitlPath != null
-										&& UAVParam.initialSpeeds != null && UAVParam.initialSpeeds.length > 0) {
-									int numUAVs = Math.min(Tools.getLoadedMissions().length, UAVParam.initialSpeeds.length);
-									numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
-									UAVsComboBox.removeAllItems();
-									for (int i = 0; i < numUAVs; i++) {
-										UAVsComboBox.addItem("" + (i + 1));
-									}
-									UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
-								}
-							}
-						});
-					}
-				}
-			}
-		});
-		GridBagConstraints gbc_pathsButton = new GridBagConstraints();
-		gbc_pathsButton.insets = new Insets(0, 0, 5, 0);
-		gbc_pathsButton.gridx = 7;
-		gbc_pathsButton.gridy = 3;
-		add(missionsButton, gbc_pathsButton);
 
 		JLabel lblSpeedsFile = new JLabel(Text.SPEEDS_FILE);
 		lblSpeedsFile.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -407,7 +195,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblSpeedsFile.gridwidth = 3;
 		gbc_lblSpeedsFile.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSpeedsFile.gridx = 1;
-		gbc_lblSpeedsFile.gridy = 4;
+		gbc_lblSpeedsFile.gridy = 2;
 		add(lblSpeedsFile, gbc_lblSpeedsFile);
 
 		speedsTextField = new JTextField();
@@ -417,7 +205,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_speedsTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_speedsTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_speedsTextField.gridx = 4;
-		gbc_speedsTextField.gridy = 4;
+		gbc_speedsTextField.gridy = 2;
 		add(speedsTextField, gbc_speedsTextField);
 		speedsTextField.setColumns(10);
 
@@ -435,67 +223,56 @@ public class ConfigDialogPanel extends JPanel {
 				chooser.addChoosableFileFilter(filter);
 				chooser.setAcceptAllFileFilterUsed(false);
 				chooser.setMultiSelectionEnabled(false);
-				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-					selection = chooser.getSelectedFile();
-				} else {
-					selection = null;
+				if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
+					return;
 				}
-
-				if (selection != null) {
-					UAVParam.initialSpeeds = SimTools.loadSpeedsFile(selection.getAbsolutePath());
-					if (UAVParam.initialSpeeds == null) {
-						GUI.warn(Text.SPEEDS_SELECTION_ERROR, Text.SPEEDS_ERROR_1);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								UAVsComboBox.removeAllItems();
-							}
-						});
-						return;
-					}
+				
+				selection = chooser.getSelectedFile();
+				UAVParam.initialSpeeds = SimTools.loadSpeedsFile(selection.getAbsolutePath());
+				if (UAVParam.initialSpeeds == null) {
+					GUI.warn(Text.SPEEDS_SELECTION_ERROR, Text.SPEEDS_ERROR_1);
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							speedsTextField.setText(selection.getName());
-							// Update UAVs combobox if arducopter and missions are already loaded
-							if (SimParam.sitlPath != null) {
-								int numUAVs = -1;
-								if (Param.simulationIsMissionBased) {
-									List<Waypoint>[] missions = Tools.getLoadedMissions();
-									if (missions != null
-											&& missions.length > 0) {
-										numUAVs = Math.min(missions.length, UAVParam.initialSpeeds.length);
-										numUAVs = Math.min(numUAVs, UAVParam.mavPort.length);
-									}
-								} else {
-									numUAVs = Math.min(UAVParam.initialSpeeds.length, UAVParam.mavPort.length);
-								}
-								if (numUAVs != -1) {
-									UAVsComboBox.removeAllItems();
-									for (int i = 0; i < numUAVs; i++) {
-										UAVsComboBox.addItem("" + (i + 1));
-									}
-									UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
-								}
-							}
+							UAVsComboBox.removeAllItems();
 						}
 					});
+					return;
 				}
+				int n = -1;
+				if (SimParam.sitlPath != null) {
+					n = Math.min(UAVParam.initialSpeeds.length, UAVParam.mavPort.length);
+				}
+				final int numUAVs = n;
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						speedsTextField.setText(selection.getName());
+						// Update UAVs combobox if arducopter is already located
+						if (numUAVs != -1) {
+							UAVsComboBox.removeAllItems();
+							for (int i = 0; i < numUAVs; i++) {
+								UAVsComboBox.addItem("" + (i + 1));
+							}
+							UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
+						}
+					}
+				});
 			}
 		});
 		GridBagConstraints gbc_speedsButton = new GridBagConstraints();
 		gbc_speedsButton.insets = new Insets(0, 0, 5, 0);
 		gbc_speedsButton.gridx = 7;
-		gbc_speedsButton.gridy = 4;
+		gbc_speedsButton.gridy = 2;
 		add(speedsButton, gbc_speedsButton);
 
-		JLabel lblNumberOfVms = new JLabel(Text.UAV_NUMBER);
-		lblNumberOfVms.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblNumberOfVms = new GridBagConstraints();
-		gbc_lblNumberOfVms.gridwidth = 3;
-		gbc_lblNumberOfVms.anchor = GridBagConstraints.EAST;
-		gbc_lblNumberOfVms.insets = new Insets(0, 0, 5, 5);
-		gbc_lblNumberOfVms.gridx = 1;
-		gbc_lblNumberOfVms.gridy = 5;
-		add(lblNumberOfVms, gbc_lblNumberOfVms);
+		JLabel lblNumberOfUAVs = new JLabel(Text.UAV_NUMBER);
+		lblNumberOfUAVs.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblNumberOfUAVs = new GridBagConstraints();
+		gbc_lblNumberOfUAVs.gridwidth = 3;
+		gbc_lblNumberOfUAVs.anchor = GridBagConstraints.EAST;
+		gbc_lblNumberOfUAVs.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNumberOfUAVs.gridx = 1;
+		gbc_lblNumberOfUAVs.gridy = 3;
+		add(lblNumberOfUAVs, gbc_lblNumberOfUAVs);
 
 		UAVsComboBox = new JComboBox<String>();
 		GridBagConstraints gbc_UAVsComboBox = new GridBagConstraints();
@@ -503,7 +280,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_UAVsComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_UAVsComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_UAVsComboBox.gridx = 4;
-		gbc_UAVsComboBox.gridy = 5;
+		gbc_UAVsComboBox.gridy = 3;
 		add(UAVsComboBox, gbc_UAVsComboBox);
 
 		JLabel lblVisualizationParameters = new JLabel(Text.PERFORMANCE_PARAMETERS);
@@ -512,7 +289,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblVisualizationParameters.gridwidth = 4;
 		gbc_lblVisualizationParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblVisualizationParameters.gridx = 0;
-		gbc_lblVisualizationParameters.gridy = 6;
+		gbc_lblVisualizationParameters.gridy = 4;
 		add(lblVisualizationParameters, gbc_lblVisualizationParameters);
 
 		JLabel lblTimeBetweenScreen = new JLabel(Text.SCREEN_REFRESH_RATE);
@@ -522,7 +299,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblTimeBetweenScreen.gridwidth = 4;
 		gbc_lblTimeBetweenScreen.insets = new Insets(0, 0, 5, 5);
 		gbc_lblTimeBetweenScreen.gridx = 1;
-		gbc_lblTimeBetweenScreen.gridy = 7;
+		gbc_lblTimeBetweenScreen.gridy = 5;
 		add(lblTimeBetweenScreen, gbc_lblTimeBetweenScreen);
 
 		screenDelayTextField = new JTextField();
@@ -532,7 +309,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_screenDelayTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_screenDelayTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_screenDelayTextField.gridx = 5;
-		gbc_screenDelayTextField.gridy = 7;
+		gbc_screenDelayTextField.gridy = 5;
 		add(screenDelayTextField, gbc_screenDelayTextField);
 		screenDelayTextField.setColumns(10);
 
@@ -542,7 +319,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMs.anchor = GridBagConstraints.WEST;
 		gbc_lblMs.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMs.gridx = 6;
-		gbc_lblMs.gridy = 7;
+		gbc_lblMs.gridy = 5;
 		add(lblMs, gbc_lblMs);
 
 		JLabel lblMinimumMovementOf = new JLabel(Text.REDRAW_DISTANCE);
@@ -552,7 +329,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMinimumMovementOf.gridwidth = 4;
 		gbc_lblMinimumMovementOf.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMinimumMovementOf.gridx = 1;
-		gbc_lblMinimumMovementOf.gridy = 8;
+		gbc_lblMinimumMovementOf.gridy = 6;
 		add(lblMinimumMovementOf, gbc_lblMinimumMovementOf);
 
 		minScreenMovementTextField = new JTextField();
@@ -562,7 +339,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_minScreenMovementTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_minScreenMovementTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_minScreenMovementTextField.gridx = 5;
-		gbc_minScreenMovementTextField.gridy = 8;
+		gbc_minScreenMovementTextField.gridy = 6;
 		add(minScreenMovementTextField, gbc_minScreenMovementTextField);
 		minScreenMovementTextField.setColumns(10);
 
@@ -572,7 +349,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblPixels.anchor = GridBagConstraints.WEST;
 		gbc_lblPixels.insets = new Insets(0, 0, 5, 5);
 		gbc_lblPixels.gridx = 6;
-		gbc_lblPixels.gridy = 8;
+		gbc_lblPixels.gridy = 6;
 		add(lblPixels, gbc_lblPixels);
 		
 		JLabel lblLoggingEnabled = new JLabel(Text.LOGGING);
@@ -582,7 +359,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblLoggingEnabled.anchor = GridBagConstraints.EAST;
 		gbc_lblLoggingEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_lblLoggingEnabled.gridx = 0;
-		gbc_lblLoggingEnabled.gridy = 9;
+		gbc_lblLoggingEnabled.gridy = 7;
 		add(lblLoggingEnabled, gbc_lblLoggingEnabled);
 		
 		loggingEnabledCheckBox = new JCheckBox();
@@ -590,7 +367,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_loggingEnabledCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_loggingEnabledCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_loggingEnabledCheckBox.gridx = 4;
-		gbc_loggingEnabledCheckBox.gridy = 9;
+		gbc_loggingEnabledCheckBox.gridy = 7;
 		add(loggingEnabledCheckBox, gbc_loggingEnabledCheckBox);
 		
 		JLabel lblBattery = new JLabel(Text.BATTERY);
@@ -600,7 +377,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblBattery.anchor = GridBagConstraints.EAST;
 		gbc_lblBattery.insets = new Insets(0, 0, 5, 5);
 		gbc_lblBattery.gridx = 0;
-		gbc_lblBattery.gridy = 10;
+		gbc_lblBattery.gridy = 8;
 		add(lblBattery, gbc_lblBattery);
 		
 		batteryCheckBox = new JCheckBox();
@@ -628,7 +405,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_batteryCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_batteryCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_batteryCheckBox.gridx = 4;
-		gbc_batteryCheckBox.gridy = 10;
+		gbc_batteryCheckBox.gridy = 8;
 		add(batteryCheckBox, gbc_batteryCheckBox);
 		
 		batteryTextField = new JTextField();
@@ -637,7 +414,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_batteryTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_batteryTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_batteryTextField.gridx = 5;
-		gbc_batteryTextField.gridy = 10;
+		gbc_batteryTextField.gridy = 8;
 		add(batteryTextField, gbc_batteryTextField);
 		batteryTextField.setColumns(10);
 		
@@ -647,7 +424,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblmah.anchor = GridBagConstraints.WEST;
 		gbc_lblmah.insets = new Insets(0, 0, 5, 5);
 		gbc_lblmah.gridx = 6;
-		gbc_lblmah.gridy = 10;
+		gbc_lblmah.gridy = 8;
 		add(lblmah, gbc_lblmah);
 		
 		JLabel renderQualityLabel = new JLabel(Text.RENDER);
@@ -657,7 +434,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_renderQualityLabel.gridwidth = 3;
 		gbc_renderQualityLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_renderQualityLabel.gridx = 1;
-		gbc_renderQualityLabel.gridy = 11;
+		gbc_renderQualityLabel.gridy = 9;
 		add(renderQualityLabel, gbc_renderQualityLabel);
 		
 		renderQualityComboBox = new JComboBox<String>();
@@ -683,7 +460,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_renderQualityComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_renderQualityComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_renderQualityComboBox.gridx = 4;
-		gbc_renderQualityComboBox.gridy = 11;
+		gbc_renderQualityComboBox.gridy = 9;
 		add(renderQualityComboBox, gbc_renderQualityComboBox);
 
 		JLabel lblProtocolParameters = new JLabel(Text.UAV_PROTOCOL_USED);
@@ -692,18 +469,28 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblProtocolParameters.gridwidth = 4;
 		gbc_lblProtocolParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblProtocolParameters.gridx = 0;
-		gbc_lblProtocolParameters.gridy = 12;
+		gbc_lblProtocolParameters.gridy = 10;
 		add(lblProtocolParameters, gbc_lblProtocolParameters);
 
 		protocolComboBox = new JComboBox<String>();
-		loadProtocols(Param.simulationIsMissionBased);
+		for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {
+			protocolComboBox.addItem(ProtocolHelper.ProtocolNames[i]);
+		}
+//		for (ProtocolHelper.Protocol p : ProtocolHelper.Protocol.values()) {
+//			protocolComboBox.addItem(p.getName());
+//		}
+//		SwingUtilities.invokeLater(new Runnable() {
+//			public void run() {
+//				protocolComboBox.setSelectedIndex(protocolComboBox.getItemCount() - 1);
+//			}
+//		});
 
 		GridBagConstraints gbc_protocolComboBox = new GridBagConstraints();
 		gbc_protocolComboBox.gridwidth = 3;
 		gbc_protocolComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_protocolComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_protocolComboBox.gridx = 4;
-		gbc_protocolComboBox.gridy = 12;
+		gbc_protocolComboBox.gridy = 10;
 		add(protocolComboBox, gbc_protocolComboBox);
 		
 		JLabel lblUav = new JLabel(Text.COMMUNICATIONS);
@@ -712,7 +499,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblUav.gridwidth = 6;
 		gbc_lblUav.insets = new Insets(0, 0, 5, 5);
 		gbc_lblUav.gridx = 0;
-		gbc_lblUav.gridy = 13;
+		gbc_lblUav.gridy = 11;
 		add(lblUav, gbc_lblUav);
 		
 		JLabel lblP = new JLabel(Text.CARRIER_SENSING);
@@ -722,7 +509,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblP.gridwidth = 4;
 		gbc_lblP.insets = new Insets(0, 0, 5, 5);
 		gbc_lblP.gridx = 0;
-		gbc_lblP.gridy = 14;
+		gbc_lblP.gridy = 12;
 		add(lblP, gbc_lblP);
 		
 		carrierSensingCheckBox = new JCheckBox();
@@ -730,7 +517,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_carrierSensingCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_carrierSensingCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_carrierSensingCheckBox.gridx = 4;
-		gbc_carrierSensingCheckBox.gridy = 14;
+		gbc_carrierSensingCheckBox.gridy = 12;
 		add(carrierSensingCheckBox, gbc_carrierSensingCheckBox);
 		
 		JLabel lblDgh = new JLabel(Text.PACKET_COLLISION_DETECTION);
@@ -740,7 +527,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDgh.gridwidth = 4;
 		gbc_lblDgh.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDgh.gridx = 0;
-		gbc_lblDgh.gridy = 15;
+		gbc_lblDgh.gridy = 13;
 		add(lblDgh, gbc_lblDgh);
 		
 		pCollisionDetectionCheckBox = new JCheckBox();
@@ -748,7 +535,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_pCollisionDetectionCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_pCollisionDetectionCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_pCollisionDetectionCheckBox.gridx = 4;
-		gbc_pCollisionDetectionCheckBox.gridy = 15;
+		gbc_pCollisionDetectionCheckBox.gridy = 13;
 		add(pCollisionDetectionCheckBox, gbc_pCollisionDetectionCheckBox);
 		
 		JLabel lblJ = new JLabel(Text.BUFFER_SIZE);
@@ -758,7 +545,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblJ.gridwidth = 5;
 		gbc_lblJ.insets = new Insets(0, 0, 5, 5);
 		gbc_lblJ.gridx = 0;
-		gbc_lblJ.gridy = 16;
+		gbc_lblJ.gridy = 14;
 		add(lblJ, gbc_lblJ);
 		
 		receivingBufferSizeTextField = new JTextField();
@@ -767,7 +554,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_receivingBufferSizeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_receivingBufferSizeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_receivingBufferSizeTextField.gridx = 5;
-		gbc_receivingBufferSizeTextField.gridy = 16;
+		gbc_receivingBufferSizeTextField.gridy = 14;
 		add(receivingBufferSizeTextField, gbc_receivingBufferSizeTextField);
 		receivingBufferSizeTextField.setColumns(10);
 		
@@ -777,7 +564,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblBytes.anchor = GridBagConstraints.WEST;
 		gbc_lblBytes.insets = new Insets(0, 0, 5, 5);
 		gbc_lblBytes.gridx = 6;
-		gbc_lblBytes.gridy = 16;
+		gbc_lblBytes.gridy = 14;
 		add(lblBytes, gbc_lblBytes);
 
 		JLabel lblWirelessModelParameters = new JLabel(Text.WIFI_MODEL);
@@ -787,7 +574,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblWirelessRangeParameters.gridwidth = 4;
 		gbc_lblWirelessRangeParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblWirelessRangeParameters.gridx = 0;
-		gbc_lblWirelessRangeParameters.gridy = 17;
+		gbc_lblWirelessRangeParameters.gridy = 15;
 		add(lblWirelessModelParameters, gbc_lblWirelessRangeParameters);
 
 		wirelessModelComboBox = new JComboBox<String>();
@@ -819,7 +606,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_wirelessModelComboBox.insets = new Insets(0, 0, 5, 0);
 		gbc_wirelessModelComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_wirelessModelComboBox.gridx = 4;
-		gbc_wirelessModelComboBox.gridy = 17;
+		gbc_wirelessModelComboBox.gridy = 15;
 		add(wirelessModelComboBox, gbc_wirelessModelComboBox);
 
 		JLabel lblFixedRangeDistance = new JLabel(Text.FIXED_RANGE_DISTANCE);
@@ -829,7 +616,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblFixedRangeDistance.gridwidth = 4;
 		gbc_lblFixedRangeDistance.insets = new Insets(0, 0, 5, 5);
 		gbc_lblFixedRangeDistance.gridx = 1;
-		gbc_lblFixedRangeDistance.gridy = 18;
+		gbc_lblFixedRangeDistance.gridy = 16;
 		add(lblFixedRangeDistance, gbc_lblFixedRangeDistance);
 
 		fixedRangeTextField = new JTextField();
@@ -839,7 +626,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_rangeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_rangeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_rangeTextField.gridx = 5;
-		gbc_rangeTextField.gridy = 18;
+		gbc_rangeTextField.gridy = 16;
 		add(fixedRangeTextField, gbc_rangeTextField);
 		fixedRangeTextField.setColumns(10);
 
@@ -849,7 +636,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM_5.anchor = GridBagConstraints.WEST;
 		gbc_lblM_5.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM_5.gridx = 6;
-		gbc_lblM_5.gridy = 18;
+		gbc_lblM_5.gridy = 16;
 		add(lblM_5, gbc_lblM_5);
 		
 		JLabel lblJ_1 = new JLabel(Text.COLLISION);
@@ -858,7 +645,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblJ_1.gridwidth = 5;
 		gbc_lblJ_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblJ_1.gridx = 0;
-		gbc_lblJ_1.gridy = 19;
+		gbc_lblJ_1.gridy = 17;
 		add(lblJ_1, gbc_lblJ_1);
 		
 		JLabel lblJ_2 = new JLabel(Text.COLLISION_ENABLE);
@@ -868,7 +655,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblJ_2.gridwidth = 4;
 		gbc_lblJ_2.insets = new Insets(0, 0, 5, 5);
 		gbc_lblJ_2.gridx = 0;
-		gbc_lblJ_2.gridy = 20;
+		gbc_lblJ_2.gridy = 18;
 		add(lblJ_2, gbc_lblJ_2);
 		
 		collisionDetectionCheckBox = new JCheckBox();
@@ -894,7 +681,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionDetectionCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_collisionDetectionCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionDetectionCheckBox.gridx = 4;
-		gbc_collisionDetectionCheckBox.gridy = 20;
+		gbc_collisionDetectionCheckBox.gridy = 18;
 		add(collisionDetectionCheckBox, gbc_collisionDetectionCheckBox);
 		
 		JLabel lblC = new JLabel(Text.COLLISION_PERIOD);
@@ -904,7 +691,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblC.gridwidth = 4;
 		gbc_lblC.insets = new Insets(0, 0, 5, 5);
 		gbc_lblC.gridx = 1;
-		gbc_lblC.gridy = 21;
+		gbc_lblC.gridy = 19;
 		add(lblC, gbc_lblC);
 		
 		collisionCheckPeriodTextField = new JTextField();
@@ -913,7 +700,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionCheckPeriodTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionCheckPeriodTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionCheckPeriodTextField.gridx = 5;
-		gbc_collisionCheckPeriodTextField.gridy = 21;
+		gbc_collisionCheckPeriodTextField.gridy = 19;
 		add(collisionCheckPeriodTextField, gbc_collisionCheckPeriodTextField);
 		collisionCheckPeriodTextField.setColumns(10);
 		
@@ -923,7 +710,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblS.anchor = GridBagConstraints.WEST;
 		gbc_lblS.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS.gridx = 6;
-		gbc_lblS.gridy = 21;
+		gbc_lblS.gridy = 19;
 		add(lblS, gbc_lblS);
 		
 		JLabel lblC_1 = new JLabel(Text.COLLISION_DISTANCE);
@@ -933,7 +720,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblC_1.gridwidth = 5;
 		gbc_lblC_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblC_1.gridx = 0;
-		gbc_lblC_1.gridy = 22;
+		gbc_lblC_1.gridy = 20;
 		add(lblC_1, gbc_lblC_1);
 		
 		collisionDistanceTextField = new JTextField();
@@ -942,7 +729,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionDistanceTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionDistanceTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionDistanceTextField.gridx = 5;
-		gbc_collisionDistanceTextField.gridy = 22;
+		gbc_collisionDistanceTextField.gridy = 20;
 		add(collisionDistanceTextField, gbc_collisionDistanceTextField);
 		collisionDistanceTextField.setColumns(10);
 		
@@ -952,7 +739,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM.anchor = GridBagConstraints.WEST;
 		gbc_lblM.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM.gridx = 6;
-		gbc_lblM.gridy = 22;
+		gbc_lblM.gridy = 20;
 		add(lblM, gbc_lblM);
 		
 		JLabel lblH = new JLabel(Text.COLLISION_ALTITUDE);
@@ -962,7 +749,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblH.gridwidth = 5;
 		gbc_lblH.insets = new Insets(0, 0, 5, 5);
 		gbc_lblH.gridx = 0;
-		gbc_lblH.gridy = 23;
+		gbc_lblH.gridy = 21;
 		add(lblH, gbc_lblH);
 		
 		collisionAltitudeTextField = new JTextField();
@@ -971,7 +758,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionAltitudeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionAltitudeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionAltitudeTextField.gridx = 5;
-		gbc_collisionAltitudeTextField.gridy = 23;
+		gbc_collisionAltitudeTextField.gridy = 21;
 		add(collisionAltitudeTextField, gbc_collisionAltitudeTextField);
 		collisionAltitudeTextField.setColumns(10);
 		
@@ -981,7 +768,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM_1.anchor = GridBagConstraints.WEST;
 		gbc_lblM_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM_1.gridx = 6;
-		gbc_lblM_1.gridy = 23;
+		gbc_lblM_1.gridy = 21;
 		add(lblM_1, gbc_lblM_1);
 
 		JLabel lblNewLabel = new JLabel(Text.WIND);
@@ -990,7 +777,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblNewLabel.anchor = GridBagConstraints.WEST;
 		gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNewLabel.gridx = 0;
-		gbc_lblNewLabel.gridy = 24;
+		gbc_lblNewLabel.gridy = 22;
 		add(lblNewLabel, gbc_lblNewLabel);
 		
 		windCheckBox = new JCheckBox("");
@@ -1018,7 +805,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_windCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_windCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_windCheckBox.gridx = 2;
-		gbc_windCheckBox.gridy = 24;
+		gbc_windCheckBox.gridy = 22;
 		add(windCheckBox, gbc_windCheckBox);
 
 		JLabel lblDirection = new JLabel(Text.WIND_DIRECTION);
@@ -1027,7 +814,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDirection.anchor = GridBagConstraints.EAST;
 		gbc_lblDirection.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDirection.gridx = 3;
-		gbc_lblDirection.gridy = 26;
+		gbc_lblDirection.gridy = 24;
 		add(lblDirection, gbc_lblDirection);
 
 		final ConfigDialogWindPanel windDirPanel = new ConfigDialogWindPanel();
@@ -1035,7 +822,7 @@ public class ConfigDialogPanel extends JPanel {
 		GridBagConstraints gbc_windDirPanel = new GridBagConstraints();
 		gbc_windDirPanel.insets = new Insets(0, 0, 5, 5);
 		gbc_windDirPanel.gridx = 4;
-		gbc_windDirPanel.gridy = 26;
+		gbc_windDirPanel.gridy = 24;
 		add(windDirPanel, gbc_windDirPanel);
 
 		windDirTextField = new JTextField();
@@ -1088,7 +875,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_windDirTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_windDirTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_windDirTextField.gridx = 5;
-		gbc_windDirTextField.gridy = 26;
+		gbc_windDirTextField.gridy = 24;
 		add(windDirTextField, gbc_windDirTextField);
 		windDirTextField.setColumns(10);
 
@@ -1098,7 +885,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDegrees.anchor = GridBagConstraints.WEST;
 		gbc_lblDegrees.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDegrees.gridx = 6;
-		gbc_lblDegrees.gridy = 26;
+		gbc_lblDegrees.gridy = 24;
 		add(lblDegrees, gbc_lblDegrees);
 
 		JLabel lblSpeedms = new JLabel(Text.WIND_SPEED);
@@ -1107,7 +894,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblSpeedms.anchor = GridBagConstraints.EAST;
 		gbc_lblSpeedms.insets = new Insets(0, 0, 0, 5);
 		gbc_lblSpeedms.gridx = 3;
-		gbc_lblSpeedms.gridy = 27;
+		gbc_lblSpeedms.gridy = 25;
 		add(lblSpeedms, gbc_lblSpeedms);
 
 		windSpeedTextField = new JTextField();
@@ -1118,7 +905,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_windSpeedTextField.insets = new Insets(0, 0, 0, 5);
 		gbc_windSpeedTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_windSpeedTextField.gridx = 5;
-		gbc_windSpeedTextField.gridy = 27;
+		gbc_windSpeedTextField.gridy = 25;
 		add(windSpeedTextField, gbc_windSpeedTextField);
 		windSpeedTextField.setColumns(10);
 
@@ -1128,26 +915,8 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMs_1.anchor = GridBagConstraints.WEST;
 		gbc_lblMs_1.insets = new Insets(0, 0, 0, 5);
 		gbc_lblMs_1.gridx = 6;
-		gbc_lblMs_1.gridy = 27;
+		gbc_lblMs_1.gridy = 25;
 		add(lblMs_1, gbc_lblMs_1);
-	}
-	
-	private void loadProtocols(boolean isMissionBased) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				protocolComboBox.removeAllItems();
-				for (ProtocolHelper.Protocol p : ProtocolHelper.Protocol.values()) {
-					if (Param.simulationIsMissionBased == p.isMissionBased()) {
-						protocolComboBox.addItem(p.getName());
-					}
-				}
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						protocolComboBox.setSelectedIndex(protocolComboBox.getItemCount() - 1);
-					}
-				});
-			}
-		});
 	}
 
 }

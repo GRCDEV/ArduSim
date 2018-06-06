@@ -1,9 +1,11 @@
 package sim.logic;
 
+import api.Copter;
 import api.GUI;
 import api.Tools;
 import main.Param;
 import main.Text;
+import mbcap.logic.MBCAPText;
 import uavController.UAVParam;
 
 public class CollisionDetector extends Thread {
@@ -30,7 +32,9 @@ public class CollisionDetector extends Thread {
 							GUI.updateGlobalInformation(Text.COLLISION_DETECTED);
 							// The protocols must be stopped
 							UAVParam.collisionDetected = true;
-							SimTools.landAllUAVs();
+							if (!Copter.landAllUAVs()) {
+								GUI.log(MBCAPText.LANDING_ERROR);
+							}
 							// Advising the user
 							GUI.warn(Text.COLLISION_TITLE, Text.COLLISION_DETECTED_ERROR_2 + " " + i + " - " + j);
 						}

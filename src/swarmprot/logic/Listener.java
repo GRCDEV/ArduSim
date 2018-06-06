@@ -786,7 +786,9 @@ public class Listener extends Thread {
 			GUI.log("UAV " + numUAV + ": " + SwarmProtText.TAKING_OFF_COMMON + "--> Listening");
 
 			//Taking Off to first altitude step
-			Copter.takeOff(numUAV, Listener.takeOffAltitudeStepOne);
+			if (!Copter.takeOff(numUAV, Listener.takeOffAltitudeStepOne)) {
+				//TODO tratar el error
+			}
 		}
 		// Waiting to reach the altitude of the first point step
 		boolean txtPrint = true;

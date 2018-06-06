@@ -12,6 +12,12 @@ public class MBCAPText {
 	public static final String RESTORE_DEFAULTS = "Restore defaults";
 	public static final String CANCEL = "Cancel";
 	public static final String CONFIGURATION = "configuration";
+	
+	public static final String SIMULATION_PARAMETERS = "Simulation parameters:";
+	public static final String MISSIONS_SELECTION = "UAV mission file(s):";
+	public static final String BUTTON_SELECT = "...";
+	public static final String UAV_NUMBER = "Number of UAVs:";
+	
 	public static final String BEACONING_PARAM = "Beaconing parameters:";
 	public static final String BEACON_INTERVAL = "Beacon interval:";
 	public static final String BEACON_REFRESH = "Beacon renewal rate:";
@@ -95,8 +101,7 @@ public class MBCAPText {
 	public static final String GRANT_PERMISSION = "Granting permission to go on to UAV";
 	public static final String MISSION_RESUMED = "Mission resumed. Collision risk avoided with UAV";
 	public static final String SAFE_PLACE = "Safe place reached.";
-	public static final String LANDING = "Landing due to protocol error.";
-	public static final String LANDING_ERROR = "It was not possible to land.";
+	public static final String LANDING_ERROR = "It was not possible to land all the UAVs.";
 
 	// Protocol versions
 	public static final String MBCAP_V1 = "MBCAP v1";

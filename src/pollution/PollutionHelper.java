@@ -13,7 +13,7 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocol = ProtocolHelper.Protocol.POLLUTION;
+		this.protocolString = "Chemotaxis";
 	}
 	
 	@Override
@@ -91,7 +91,9 @@ public class PollutionHelper extends ProtocolHelper {
 	@Override
 	public void startExperimentActionPerformed() {
 		/* Takeoff */
-		Copter.takeOff(0, PollutionParam.altitude);
+		if (!Copter.takeOff(0, PollutionParam.altitude)) {
+			//TODO tratar el error
+		}
 		PollutionParam.ready = true;
 	}
 
