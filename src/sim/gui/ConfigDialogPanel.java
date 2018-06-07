@@ -252,7 +252,6 @@ public class ConfigDialogPanel extends JPanel {
 							for (int i = 0; i < numUAVs; i++) {
 								UAVsComboBox.addItem("" + (i + 1));
 							}
-							UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
 						}
 					}
 				});
@@ -639,7 +638,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM_5.gridy = 16;
 		add(lblM_5, gbc_lblM_5);
 		
-		JLabel lblJ_1 = new JLabel(Text.COLLISION);
+		JLabel lblJ_1 = new JLabel(Text.COLLISION_PARAMETERS);
 		GridBagConstraints gbc_lblJ_1 = new GridBagConstraints();
 		gbc_lblJ_1.anchor = GridBagConstraints.WEST;
 		gbc_lblJ_1.gridwidth = 5;
@@ -771,7 +770,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM_1.gridy = 21;
 		add(lblM_1, gbc_lblM_1);
 
-		JLabel lblNewLabel = new JLabel(Text.WIND);
+		JLabel lblNewLabel = new JLabel(Text.WIND_PARAMETERS);
 		GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
 		gbc_lblNewLabel.gridwidth = 2;
 		gbc_lblNewLabel.anchor = GridBagConstraints.WEST;
@@ -801,11 +800,21 @@ public class ConfigDialogPanel extends JPanel {
 				}
 			}
 		});
+		
+		JLabel lblF = new JLabel(Text.WIND_ENABLE);
+		lblF.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblF = new GridBagConstraints();
+		gbc_lblF.anchor = GridBagConstraints.EAST;
+		gbc_lblF.gridwidth = 4;
+		gbc_lblF.insets = new Insets(0, 0, 5, 5);
+		gbc_lblF.gridx = 0;
+		gbc_lblF.gridy = 23;
+		add(lblF, gbc_lblF);
 		GridBagConstraints gbc_windCheckBox = new GridBagConstraints();
 		gbc_windCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_windCheckBox.insets = new Insets(0, 0, 5, 5);
-		gbc_windCheckBox.gridx = 2;
-		gbc_windCheckBox.gridy = 22;
+		gbc_windCheckBox.gridx = 4;
+		gbc_windCheckBox.gridy = 23;
 		add(windCheckBox, gbc_windCheckBox);
 
 		JLabel lblDirection = new JLabel(Text.WIND_DIRECTION);
@@ -917,6 +926,45 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMs_1.gridx = 6;
 		gbc_lblMs_1.gridy = 25;
 		add(lblMs_1, gbc_lblMs_1);
+		
+		UAVsComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					int numUAVs = Integer.parseInt((String)e.getItem());
+					if (numUAVs == 1) {
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								carrierSensingCheckBox.setEnabled(false);
+								pCollisionDetectionCheckBox.setEnabled(false);
+								receivingBufferSizeTextField.setEnabled(false);
+								wirelessModelComboBox.setEnabled(false);
+								fixedRangeTextField.setEnabled(false);
+								collisionDetectionCheckBox.setEnabled(false);
+								collisionCheckPeriodTextField.setEnabled(false);
+								collisionDistanceTextField.setEnabled(false);
+								collisionAltitudeTextField.setEnabled(false);
+							}
+						});
+					} else {
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								carrierSensingCheckBox.setEnabled(true);
+								pCollisionDetectionCheckBox.setEnabled(true);
+								receivingBufferSizeTextField.setEnabled(true);
+								wirelessModelComboBox.setEnabled(true);
+								fixedRangeTextField.setEnabled(true);
+								collisionDetectionCheckBox.setEnabled(true);
+								collisionCheckPeriodTextField.setEnabled(true);
+								collisionDistanceTextField.setEnabled(true);
+								collisionAltitudeTextField.setEnabled(true);
+							}
+						});
+					}
+				}
+			}
+		});
 	}
 
 }

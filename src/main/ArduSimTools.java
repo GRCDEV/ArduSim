@@ -1883,7 +1883,7 @@ public class ArduSimTools {
 				}
 			}
 			
-			sb.append("\n").append(Text.COLLISION);
+			sb.append("\n").append(Text.COLLISION_PARAMETERS);
 			boolean collisionCheck = UAVParam.collisionCheckEnabled;
 			sb.append("\n\t").append(Text.COLLISION_ENABLE).append(" ");
 			if (collisionCheck) {

@@ -2,7 +2,7 @@ package api.pojo;
 
 import java.awt.geom.Point2D;
 
-/** This class generates a 3 dimensions point.
+/** This class generates a 3 dimensional point.
  * <p>The distance between two points does not include the third coordinate. */
 
 public class Point3D extends Point2D.Double {

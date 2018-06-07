@@ -1,6 +1,6 @@
 package api.pojo;
 
-/** This class generates a simplified waypoint, including only coordinates and the sequence number. */
+/** This class generates a simplified waypoint, including only coordinates and the sequence number in the waypoints that form the mission. */
 
 public class WaypointSimplified extends Point3D {
 	private static final long serialVersionUID = 1L;

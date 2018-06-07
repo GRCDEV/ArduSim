@@ -6,9 +6,11 @@ import java.awt.geom.Point2D;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import api.pojo.StatusPacket;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
+import pccompanion.PCCompanionParam;
 import main.ArduSimTools;
 import sim.board.BoardHelper;
 import sim.gui.MainWindow;
@@ -117,6 +119,11 @@ public class GUI {
 	/** Provides the Color associated to a UAV and that should be used to draw protocol elements. */
 	public static Color getUAVColor(int numUAV) {
 		return SimParam.COLOR[numUAV % SimParam.COLOR.length];
+	}
+	
+	/** Provides a list with the UAVs detected by the PCCompanion to be used by the protocol dialog. */
+	public static StatusPacket[] getDetectedUAVs() {
+		return PCCompanionParam.connectedUAVs.get();
 	}
 
 }

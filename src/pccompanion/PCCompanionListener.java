@@ -17,6 +17,7 @@ import com.esotericsoftware.kryo.io.Input;
 
 import api.GUI;
 import api.Tools;
+import api.pojo.StatusPacket;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
@@ -99,7 +100,7 @@ public class PCCompanionListener extends Thread {
 //							connected[i] = entries[i].getValue();
 //						}
 						Collection<StatusPacket> col = receiving.values();
-						MBCAPDialog.connectedUAVs.compareAndSet(null, col.toArray(new StatusPacket[col.size()]));
+						PCCompanionParam.connectedUAVs.compareAndSet(null, col.toArray(new StatusPacket[col.size()]));
 						it = receiving.entrySet().iterator();
 						boolean allReady = true;
 						while (it.hasNext() && allReady) {

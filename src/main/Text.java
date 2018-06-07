@@ -89,7 +89,7 @@ public class Text {
 	public static final String TOT_ENQUEUED_OK = "Valid and used:";
 	
 	
-	public static final String COLLISION = "UAV Collision detection parameters:";
+	public static final String COLLISION_PARAMETERS = "UAV Collision detection parameters:";
 	public static final String COLLISION_ENABLE = "Enable collision detection:";
 	public static final String COLLISION_PERIOD = "Check period:";
 	public static final String COLLISION_PERIOD_ERROR = "The collision check period must be a valid positive number.";
@@ -102,6 +102,8 @@ public class Text {
 	public static final String COLLISION_DETECTED_ERROR_1 = "Emergency landing due to the collision between the UAVs";
 	public static final String COLLISION_DETECTED_ERROR_2 = "It is suggested to close the application.\nCollision detected between the UAVs";
 	public static final String WIND = "Wind:";
+	public static final String WIND_PARAMETERS = "Wind parameters:";
+	public static final String WIND_ENABLE = "Enable wind:";
 	public static final String WIND_DIRECTION = "Direction:";
 	public static final String WIND_SPEED = "Speed:";
 	// Error messages:

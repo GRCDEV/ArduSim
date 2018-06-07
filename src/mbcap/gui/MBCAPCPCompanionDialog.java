@@ -1,4 +1,4 @@
-package pccompanion;
+package mbcap.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -9,7 +9,6 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -27,6 +26,7 @@ import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.Point3D;
+import api.pojo.StatusPacket;
 import main.Param.SimulatorState;
 import main.Text;
 import mbcap.logic.MBCAPParam;
@@ -35,15 +35,14 @@ import mbcap.pojo.Beacon;
 import sim.gui.VerticalFlowLayout;
 import uavController.UAVParam;
 
-public class MBCAPDialog extends JDialog {
+public class MBCAPCPCompanionDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	public static volatile MBCAPDialog mbcap = null;
+	public static volatile MBCAPCPCompanionDialog mbcap = null;
 
-	public static AtomicReference<StatusPacket[]> connectedUAVs = new AtomicReference<>();
 	private StatusPacket[] connected;
-	private List<StatusPacket> adding = new ArrayList<StatusPacket>();
+	private List<StatusPacket> adding = new ArrayList<>();
 	private volatile StatusPacket[] shown = null;
 
 	private JTable table;
@@ -52,9 +51,9 @@ public class MBCAPDialog extends JDialog {
 	private JPanel panel_2;
 	
 	@SuppressWarnings("unused")
-	private MBCAPDialog() {}
+	private MBCAPCPCompanionDialog() {}
 
-	public MBCAPDialog(Frame owner) {
+	public MBCAPCPCompanionDialog(Frame owner) {
 		super(owner);
 		setTitle(ProtocolHelper.selectedProtocol);
 		setBounds(100, 100, 450, 300);
@@ -87,7 +86,9 @@ public class MBCAPDialog extends JDialog {
 			panel_2.setLayout(new BorderLayout(0, 0));
 			panel_2.add(panel_1);
 
-			connected = MBCAPDialog.connectedUAVs.get();
+			
+			
+			connected = GUI.getDetectedUAVs();
 			int count = 0;
 			for (int i = 0; i < connected.length; i++) {
 				if (connected[i].status == SimulatorState.READY_FOR_TEST

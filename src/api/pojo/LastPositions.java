@@ -2,7 +2,7 @@ package api.pojo;
 
 import java.util.Arrays;
 
-/** This class allows the developer to get access to the last few locations of a UAV.
+/** This class allows the developer to get access to the last few locations of a UAV in UTM coordinates.
  * <p>The locations stored time increases with the position on the array. */
 
 public class LastPositions {
@@ -29,8 +29,8 @@ public class LastPositions {
 		}
 	}
 	
-	/** Retrieves the last known positions of the UAV. */
-	public synchronized Point3D[] getLastPositions() {
+	/** Retrieves the last known positions of the UAV in UTM coordinates. */
+	public synchronized Point3D[] getLastUTMPositions() {
 		return Arrays.copyOf(this.pos, this.pos.length);
 	}
 	

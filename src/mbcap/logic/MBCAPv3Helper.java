@@ -29,6 +29,7 @@ import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
+import mbcap.gui.MBCAPCPCompanionDialog;
 import mbcap.gui.MBCAPConfigDialog;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.gui.MBCAPGUITools;
@@ -36,7 +37,6 @@ import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.PointTime;
 import mbcap.pojo.ProgressState;
-import pccompanion.MBCAPDialog;
 import sim.board.BoardPanel;
 
 public class MBCAPv3Helper extends ProtocolHelper {
@@ -573,7 +573,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
-		MBCAPDialog.mbcap = new MBCAPDialog(PCCompanionFrame);
+		MBCAPCPCompanionDialog.mbcap = new MBCAPCPCompanionDialog(PCCompanionFrame);
 	}
 	
 	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon. */

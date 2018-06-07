@@ -41,16 +41,17 @@ public class Main {
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
-		// Parse the command line arguments
-		if (!ArduSimTools.parseArgs(args)) {
-			return;
-		}
 		String[] existingProtocols = ArduSimTools.loadProtocols();
 		if (existingProtocols == null) {
 			return;
 		}
 		ProtocolHelper.ProtocolNames = existingProtocols;
-
+		
+		// Parse the command line arguments
+		if (!ArduSimTools.parseArgs(args)) {
+			return;
+		}
+		
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
 		ArduSimTools.detectOS();

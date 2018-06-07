@@ -1,6 +1,6 @@
 package api.pojo;
 
-/** This class generates a point for each of the UAV locations during its movement, including tiem, heading, etc. */
+/** This class generates a point for each of the UAV locations during its movement, including time, heading, etc. */
 
 public class LogPoint extends Point3D {
 	

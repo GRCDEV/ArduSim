@@ -1,6 +1,9 @@
 package pccompanion;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+import api.pojo.StatusPacket;
 
 public class PCCompanionParam {
 
@@ -13,4 +16,7 @@ public class PCCompanionParam {
 	public static AtomicLong lastStartCommandTime = null;		// (ms) Time of the last Start command received
 	public static final int STATUS_CHANGE_CHECK_TIMEOUT = 200;	// (ms) Between checks about the status of the UAVs connected
 	public static final int MAX_TIME_SINCE_LAST_START_COMMAND = 5 * COMMAND_SEND_TIMEOUT;// (ms) Time to detect that all UAVs have started the experiment
+	
+	// List of UAVs detected when the Setup button is pressed
+	public static AtomicReference<StatusPacket[]> connectedUAVs = new AtomicReference<>();
 }

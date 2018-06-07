@@ -901,7 +901,7 @@ public class Copter {
 	/** API: Gets n last known locations (x,y,z) of the UAV in UTM coordinates (relative altitude).
 	 * <p>The locations time increases with the position in the array. */
 	public static Point3D[] getLastKnownLocations(int numUAV) {
-		return UAVParam.lastLocations[numUAV].getLastPositions();
+		return UAVParam.lastLocations[numUAV].getLastUTMPositions();
 	}
 
 	/** API: Provides the latest relative altitude from the ground (m) received from the flight controller. */

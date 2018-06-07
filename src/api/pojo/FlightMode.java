@@ -4,6 +4,8 @@ import org.mavlink.messages.MAV_MODE_FLAG;
 
 import main.Text;
 
+/** UAV flight modes available. */
+
 public enum FlightMode {
 	STABILIZE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
 			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED

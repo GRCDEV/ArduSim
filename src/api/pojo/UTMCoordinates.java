@@ -1,5 +1,7 @@
 package api.pojo;
 
+/** This class generates a point in UTM coordinates in meters. */
+
 public class UTMCoordinates {
 
   public double Easting;
