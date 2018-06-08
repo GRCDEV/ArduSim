@@ -6,7 +6,6 @@ import smile.data.SparseDataset;
 
 public class Pollution extends Thread {
 	
-	//VisitedMatrix sVisited;
 	boolean [][] visited;
 	
 	public static UTMCoordinates origin;
@@ -20,24 +19,6 @@ public class Pollution extends Thread {
 		Copter.moveUAV(0, Tools.UTMToGeo(origin.Easting + (x * PollutionParam.density), origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
 	}
 	
-	//HashMap<Double, HashMap<Double, Double>> data;
-	/*
-	void addData(double x, double y, double v) {
-		HashMap<Double, Double> aux;
-		aux = data.get(x);
-		if (aux == null) {
-			data.put(x, new HashMap<Double, Double>());
-		}
-		data.get(x).put(y, v);
-	}
-	*/
-	
-	enum stateType {
-		SEARCH,
-		EXPLORE,
-		HOME
-	}
-	
 
 	@Override
 	public void run() {
@@ -46,10 +27,7 @@ public class Pollution extends Thread {
 		
 		Point p1, p2;
 		double m1, m2;
-		
-		
-		//sVisited = new VisitedMatrix();
-		
+				
 		// Calculate grid size and origin
 		sizeX = (int) ((double) PollutionParam.width * PollutionParam.density);
 		sizeY = (int) ((double) PollutionParam.length * PollutionParam.density);
@@ -87,14 +65,13 @@ public class Pollution extends Thread {
 		p2 = p1.copy();
 		p2.addY(1);		
 		
-		stateType state = stateType.SEARCH;
 		boolean isMax = false;
 		boolean found;
+		boolean finished = false;
 		Point pTemp;
 		
-		while (state != stateType.HOME) {
-			switch (state) {
-			case SEARCH:
+		while(!finished) {
+			if(!isMax) {
 				// Read Pollution
 				move(p2);
 				m2 = PollutionParam.sensor.read();
@@ -117,22 +94,14 @@ public class Pollution extends Thread {
 								found = true;
 							}
 						}
-					if(!found) state = stateType.EXPLORE;
+					if(!found) isMax = true;
 				}
-			case EXPLORE:
-				//TODO Calculate round path
-				//TODO Calculate next step
-				//TODO Move & read
-				//TODO if isMax
-				break;
-			case HOME:
-				//TODO Return to starting position
-				break;
+			} else {
+				
 			}
 		}
 		
-		//addData(point.getX(), point.getY(), measurement);
-		//PollutionParam.measurements.set((int) point.getX(), (int) point.getY(), measurement);
+		// TODO Go home
 		
 	}
 	
