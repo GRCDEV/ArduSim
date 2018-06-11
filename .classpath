@@ -37,5 +37,11 @@
 	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-data-1.5.1.jar"/>
 	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-interpolation-1.5.1.jar"/>
 	<classpathentry kind="lib" path="libs/smile-math-1.5.1.jar"/>
+	<classpathentry kind="lib" path="libs/sigar.jar" sourcepath="libs/hyperic-sigar-1.6.4-src.zip">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/sigar_javadoc.zip!/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="ArduSim/src"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -170,7 +170,7 @@ public class Main {
 		if (!Param.isRealUAV) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
-							|| Param.runningOperatingSystem == Param.OS_LINUX)) {
+							|| Param.runningOperatingSystem == Param.OS_LINUX)) {//TODO add support for MAC OS
 				GUI.log(Text.USING_RAM_DRIVE);
 			} else {
 				GUI.log(Text.USING_HARD_DRIVE);

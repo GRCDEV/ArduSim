@@ -5,8 +5,10 @@ import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
@@ -77,6 +79,7 @@ import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
+import main.cpuHelper.CPUData;
 import none.ProtocolNoneHelper;
 import pccompanion.PCCompanionGUI;
 import sim.board.BoardParam;
@@ -165,6 +168,9 @@ public class ArduSimTools {
 					System.exit(1);
 				}
 				String pr = cmdLine.getOptionValue("p").trim();
+				
+//				aqui//TODO
+				
 				boolean found = false;
 				for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
 					if (ProtocolHelper.ProtocolNames[i].equals(pr)) {
@@ -228,6 +234,24 @@ public class ArduSimTools {
 			System.exit(1);
 		}
 		return true;
+	}
+	
+	/** Dynamically loads a Windows library. */
+	public static void loadDll(String name) throws IOException {
+		// File copy to temporary folder
+	    InputStream in = Main.class.getResourceAsStream(name);
+	    byte[] buffer = new byte[1024];
+	    int read = -1;
+	    File temp = new File(new File(System.getProperty("java.io.tmpdir")),name);
+	    FileOutputStream fos = new FileOutputStream(temp);
+	    while((read = in.read(buffer)) != -1) {
+	        fos.write(buffer, 0, read);
+	    }
+	    fos.close();
+	    in.close();
+	    temp.deleteOnExit();
+	    // File load from temporary folder
+	    System.load(temp.getAbsolutePath());
 	}
 
 	/** Initializes the data structures at the simulator start. */
@@ -537,7 +561,7 @@ public class ArduSimTools {
 					}
 				} catch (IOException e) {}
 	        }
-		}
+		}//TODO add support for MAC OS
 		if (ids.size() == 0) {
 			GUI.exit(Text.MAC_ERROR);
 		}
@@ -580,7 +604,7 @@ public class ArduSimTools {
 					SimParam.usingRAMDrive = true;
 					return ramDiskPath;
 				}
-			}
+			}//TODO add support for MAC OS
 		}
 		
 		// When it is not possible, use physical storage
@@ -940,8 +964,13 @@ public class ArduSimTools {
 			}
 			if ((jarEntry.getName().endsWith(".class"))) {
 				String className = jarEntry.getName().replaceAll("/", "\\.");
-				String myClass = className.substring(0, className.lastIndexOf('.'));
-				res.add(myClass);
+				if (!className.startsWith("smile.") && !className.startsWith("ch.ethz")
+						&& !className.startsWith("com.esotericsoftware") && !className.startsWith("org.objenesis")
+						&& !className.startsWith("org.javatuples") && !className.startsWith("gnu.io")
+						&& !className.startsWith("org.apache") && !className.startsWith("org.mavlink")
+						&& !className.startsWith("org.objectweb") && !className.startsWith("org.hyperic")) {
+					res.add(className.substring(0, className.lastIndexOf('.')));
+				}
 			}
 		}
 		try {
@@ -1132,7 +1161,7 @@ public class ArduSimTools {
 					} else {
 						commandLine.add(SimParam.paramPath);
 					}
-				}
+				}//TODO add support for MAC OS
 				
 				ProcessBuilder pb = new ProcessBuilder(commandLine);
 				if (Param.runningOperatingSystem == Param.OS_LINUX) {
@@ -1205,7 +1234,7 @@ public class ArduSimTools {
 			if (Param.VERBOSE_LOGGING){
 				GUI.log(Text.OPERATING_SYSTEM_LINUX);
 			}
-		} else {
+		} else {//TODO add support for MAC OS
 			GUI.exit(Text.UAVS_START_ERROR_4);
 		}
 	}
@@ -1241,7 +1270,7 @@ public class ArduSimTools {
 				SimParam.sitlPath = sitlPath;
 				SimParam.paramPath = paramPath;
 			}
-		}
+		}//TODO add support for MAC OS
 	}
 	
 	/** Detects whether the program is executed with root/administrator privileges. */
@@ -1294,7 +1323,7 @@ public class ArduSimTools {
 			} catch (IOException e) {
 				// If fails starting the process, for sure the execution doesn't have root privileges
 			}
-		}
+		}//TODO add support for MAC OS
 		SimParam.userIsAdmin = false;
 	}
 
@@ -1489,7 +1518,7 @@ public class ArduSimTools {
 				if (ramDiskFile.exists()) {
 					ramDiskFile.delete();
 				}
-			}
+			}//TODO add support for MAC OS
 		} else {
 			if (SimParam.tempFolderBasePath != null) {
 				File parentFolder = new File(SimParam.tempFolderBasePath);
@@ -1943,8 +1972,8 @@ public class ArduSimTools {
 				if (j == 0) {
 					a = 0.0;
 				} else {
-					a = (SimParam.uavUTMPath[i].get(j).speed - SimParam.uavUTMPath[i].get(j-1).speed)/
-							(SimParam.uavUTMPath[i].get(j).time - SimParam.uavUTMPath[i].get(j-1).time)*1000000000l;
+					a = (sp.speed - SimParam.uavUTMPath[i].get(j-1).speed)/
+							(sp.time - SimParam.uavUTMPath[i].get(j-1).time)*1000000000l;
 				}
 
 				// Considers only not repeated locations and under test
@@ -1955,7 +1984,7 @@ public class ArduSimTools {
 						// First test location
 						sb1.append(Tools.round(x, 3)).append(",")
 							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
-							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
+							.append(",").append(sp.time)
 							.append(",").append(Tools.round(SimParam.uavUTMPath[i].get(j).speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.000,0.000\n");
 						sb2.append(Tools.round(x, 3)).append(",")
@@ -2028,12 +2057,19 @@ public class ArduSimTools {
 		
 		// 2. Store the UAV path and general information
 		ArduSimTools.storeLogAndPath(folder, baseFileName);
-		// 3. Store missions when used
-		logMission(folder, baseFileName);
 		
-		// 4. Store protocol specific information
+		// 3. Store missions when used
+		ArduSimTools.logMission(folder, baseFileName);
+		
+		// 4. Store CPU utilization
+		if (Param.measureCPUEnabled) {
+			ArduSimTools.logCPUUtilization(folder, baseFileName);
+		}
+		
+		// 5. Store protocol specific information
 		ProtocolHelper.selectedProtocolInstance.logData(folder, baseFileName);
-		// 5. Store ArduCopter logs if needed
+		
+		// 6. Store ArduCopter logs if needed
 		if (SimParam.arducopterLoggingEnabled) {
 			File logSource, logDestination;
 			File parentFolder = new File(SimParam.tempFolderBasePath);
@@ -2080,6 +2116,19 @@ public class ArduSimTools {
 				Tools.storeFile(file, sb.toString());
 			}
 		}
+	}
+	
+	/** Logging to file the CPU utilization. */
+	private static void logCPUUtilization(String folder, String baseFileName) {
+		File file = new File(folder, baseFileName + "_" + Text.CPU_SUFIX);
+		StringBuilder sb = new StringBuilder(2000);
+		sb.append("time(s),GlobalCPU(%),JavaCPU(%),JavaCPU(%oneCore),ArduSimState\n");
+		CPUData data = Param.cpu.poll();
+		while (data != null) {
+			sb.append(data.time).append(",").append(Tools.round(data.globalCPU, 1)).append(",").append(data.processCPU/Param.numCPUs).append(",").append(data.processCPU).append(",").append(data.simState).append("\n");
+			data = Param.cpu.poll();
+		}
+		Tools.storeFile(file, sb.toString());
 	}
 
 }

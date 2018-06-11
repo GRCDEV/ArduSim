@@ -10,6 +10,8 @@ import java.awt.event.WindowEvent;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
 import main.Param;
@@ -22,17 +24,19 @@ import sim.logic.SimTools;
 public class ConfigDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
-	private final JPanel contentPanel = new JPanel();
 	private ConfigDialogPanel panel;
 
 	public ConfigDialog() {
 		getContentPane().setLayout(new BorderLayout());
-		contentPanel.setLayout(new FlowLayout());
-		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		getContentPane().add(contentPanel, BorderLayout.CENTER);
 		{
 			panel = new ConfigDialogPanel();
-			contentPanel.add(panel);
+			panel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		}
+		
+		{
+			JScrollPane scrollPane = new JScrollPane(panel);
+			getContentPane().add(scrollPane, BorderLayout.CENTER);
+			
 		}
 		{
 			JPanel buttonPane = new JPanel();
@@ -75,8 +79,17 @@ public class ConfigDialog extends JDialog {
 
 		this.setTitle(Text.CONFIGURATION_DIALOG_TITLE);
 		SimTools.loadDefaultConfiguration(panel);
+		
 		this.pack();
-		this.setResizable(false);
+		System.out.println(this.getWidth() + "," + this.getHeight());
+		this.setSize(this.getWidth() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue(),
+				this.getHeight() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue());
+		System.out.println(this.getWidth() + "," + this.getHeight());
+		if (this.getHeight() > 750) {
+			this.setSize(this.getWidth(), 750);
+		} else  {
+			this.setResizable(false);
+		}
 		this.setModal(true);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);

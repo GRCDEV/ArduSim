@@ -55,6 +55,7 @@ public class Text {
 	public static final String BATTERY = "Restrict battery capacity:";
 	public static final String BATTERY_SIZE = "Battery capacity:";
 	public static final String BATTERY_THRESHOLD = "Low level battery threshold:";
+	public static final String CPU_MEASUREMENT_ENABLED = "Measure CPU use:";
 	public static final String RENDER = "Rendering quality:";
 	public static final String RENDER_QUALITY1 = "Maximum performance";
 	public static final String RENDER_QUALITY2 = "Text smoothed";
@@ -87,8 +88,6 @@ public class Text {
 	public static final String TOT_PROCESSED = "Processed:";
 	public static final String TOT_DISCARDED_FOR_COLLISION = "Discarded due to collisions:";
 	public static final String TOT_ENQUEUED_OK = "Valid and used:";
-	
-	
 	public static final String COLLISION_PARAMETERS = "UAV Collision detection parameters:";
 	public static final String COLLISION_ENABLE = "Enable collision detection:";
 	public static final String COLLISION_PERIOD = "Check period:";
@@ -139,6 +138,10 @@ public class Text {
 	public static final String BIND_ERROR_1 = "Unable to bind port to receive commands from the computer assistant.";
 	public static final String BIND_ERROR_2 = "Unable to open socket to send status information to the computer assistant.";
 	public static final String BIND_ERROR_3 = "Unable to bind port to receive status information from the UAVs.";
+	public static final String CPU_ERROR_1 = "Unable to load the Windows library needed to analyze CPU usage. CPU analysis disabled.";
+	public static final String CPU_ERROR_2 = "Unable to retrieve the number of CPU cores available. CPU analysis disabled.";
+	public static final String CPU_ERROR_3 = "Unable to retrieve ArduSim process Id. CPU analysis disabled.";
+	public static final String CPU_ERROR_4 = "Unable to retrieve CPU usage data. CPU analysis disabled.";
 	public static final String SHUTDOWN_ERROR = "Operating system not supported.";
 	
 	// Progress dialog window:
@@ -236,6 +239,7 @@ public class Text {
 	public static final String LOG_SPEED = "Initial speed";
 	public static final String LOG_BATTERY = "Battery capacity";
 	public static final String MISSION_SUFIX = "mission_AutoCAD.scr";
+	public static final String CPU_SUFIX = "CPU.txt";
 	
 	// General options and units
 	public static final String YES_OPTION = "yes";

@@ -618,8 +618,7 @@ public class Copter {
 				if (command != MAV_CMD.MAV_CMD_NAV_LAND
 						&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
 					// Land the UAV when reaches the last waypoint
-					if (Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
-					} else {
+					if (!Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
 						GUI.log(prefix + Text.LAND_ERROR);
 					}
 				}

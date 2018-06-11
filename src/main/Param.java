@@ -1,7 +1,9 @@
 package main;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import main.cpuHelper.CPUData;
 import uavController.UAVControllerThread;
 
 /** This class contains general parameters of the application. */
@@ -36,6 +38,7 @@ public class Param {
 	// Running Operating System
 	public static final int OS_WINDOWS = 0;
 	public static final int OS_LINUX = 1;
+	public static final int OS_MAC = 2;
 	public static volatile int runningOperatingSystem;
 	
 	// Wind parameters
@@ -54,6 +57,13 @@ public class Param {
 	public static WirelessModel selectedWirelessModel;
 	public static double fixedRange = 800.0;				// (m) Fixed range distance threshold
 	public static final double FIXED_MAX_RANGE = 1500.0;	// (m) Fixed range maximum distance accepted
+	
+	// CPU usage parameters
+	public static boolean measureCPUEnabled;			// Whether the CPU utilization must be measured or not
+	public static int numCPUs;							// Number of cores available
+	public static ConcurrentLinkedQueue<CPUData> cpu = new ConcurrentLinkedQueue<>();	// CPU usage data
+	public static final int CPU_CHECK_PERIOD = 1;		// (s) Time between measurements
+	public static final long CPU_CONSOLE_TIMEOUT = 50;	// (ms) Timeout waiting the console to read a line when retrieving CPU usage data
 	
 	// Simulator state
 	public static volatile SimulatorState simStatus;
@@ -136,5 +146,7 @@ public class Param {
 			return null;
 		}
 	}
+
+	
 	
 }

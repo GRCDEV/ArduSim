@@ -28,6 +28,7 @@ import main.Text;
 import main.ArduSimTools;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
+import main.cpuHelper.CPUUsageThread;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam;
 import sim.board.BoardParam;
@@ -242,7 +243,13 @@ public class SimTools {
 		if (UAVParam.batteryLowLevel % 50 != 0) {
 			UAVParam.batteryLowLevel = (UAVParam.batteryLowLevel / 50 + 1) * 50;	// Multiple of 50 roof value
 		}
-
+		if (panel.cpuCheckBox.isSelected()) {
+			Param.measureCPUEnabled = true;
+			new CPUUsageThread().start();
+		} else {
+			Param.measureCPUEnabled = false;
+		}
+		
 		//  Protocol parameters
 		ProtocolHelper.selectedProtocol = (String)panel.protocolComboBox.getSelectedItem();
 		ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
