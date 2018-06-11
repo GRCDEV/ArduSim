@@ -85,8 +85,8 @@ public class ConfigDialog extends JDialog {
 		this.setSize(this.getWidth() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue(),
 				this.getHeight() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue());
 		System.out.println(this.getWidth() + "," + this.getHeight());
-		if (this.getHeight() > 750) {
-			this.setSize(this.getWidth(), 750);
+		if (this.getHeight() > 740) {
+			this.setSize(this.getWidth(), 740);
 		} else  {
 			this.setResizable(false);
 		}

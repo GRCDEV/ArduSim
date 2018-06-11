@@ -491,9 +491,9 @@ public class ConfigDialogPanel extends JPanel {
 		add(lblProtocolParameters, gbc_lblProtocolParameters);
 
 		protocolComboBox = new JComboBox<String>();
-//		for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {//TODO descomentar estas tres líneas
-//			protocolComboBox.addItem(ProtocolHelper.ProtocolNames[i]);
-//		}
+		for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {
+			protocolComboBox.addItem(ProtocolHelper.ProtocolNames[i]);
+		}
 		
 //		SwingUtilities.invokeLater(new Runnable() {
 //			public void run() {
