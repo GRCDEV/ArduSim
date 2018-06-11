@@ -2,6 +2,10 @@ package sim.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -85,8 +89,18 @@ public class ConfigDialog extends JDialog {
 		this.setSize(this.getWidth() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue(),
 				this.getHeight() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue());
 		System.out.println(this.getWidth() + "," + this.getHeight());
-		if (this.getHeight() > 740) {
-			this.setSize(this.getWidth(), 740);
+		
+		
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice gd = ge.getDefaultScreenDevice();
+		GraphicsConfiguration config = gd.getDefaultConfiguration();
+		int top = Toolkit.getDefaultToolkit().getScreenInsets(config).top;
+		int bottom = Toolkit.getDefaultToolkit().getScreenInsets(config).bottom;
+		int upperBar = this.getHeight() - this.getContentPane().getHeight();
+		int height = config.getBounds().height - top - bottom - upperBar;
+		
+		if (this.getHeight() > height) {
+			this.setSize(this.getWidth(), height-10);
 		} else  {
 			this.setResizable(false);
 		}
