@@ -1,8 +1,10 @@
 package sim.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -62,27 +64,30 @@ public class ProgressDialog extends JDialog {
 			contentPanel.add(scrollPane);
 		}
 
-		// Adapting and moving the dialog towards the bottom-left corner
-		pack();
+		// Adapting and moving the dialog towards the bottom-right corner
+		this.pack();
+		
 		GraphicsDevice gd = mainWindow.getGraphicsConfiguration().getDevice();
-
 		GraphicsConfiguration config = gd.getDefaultConfiguration();
 
 		int top = Toolkit.getDefaultToolkit().getScreenInsets(config).top;
 		int bottom = Toolkit.getDefaultToolkit().getScreenInsets(config).bottom;
 		int right = Toolkit.getDefaultToolkit().getScreenInsets(config).right;
 
-		int upperBar = getHeight() - getContentPane().getHeight();
-		int maxHeight = config.getBounds().height - top - bottom - upperBar;
+		Container c = this.getContentPane();
+		Point pt = c.getLocation();
+		pt = SwingUtilities.convertPoint(c,  pt, this);
+		int maxHeight = config.getBounds().height - top - bottom - pt.y;
 		
 		// The width may need more room for the side bar
-		int dialogWidth = 280;
-		if (maxHeight < getHeight()) {
+		int dialogWidth = SimParam.DIALOG_WIDTH;
+		if (maxHeight < this.getHeight()) {
 			dialogWidth = dialogWidth + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue();
 		}
-		int dialogHeight = Math.min(getHeight(), maxHeight);
+		int dialogHeight = Math.min(this.getHeight(), maxHeight);
 		setSize(dialogWidth, dialogHeight);
-		setLocation(config.getBounds().x + config.getBounds().width - right - dialogWidth, config.getBounds().y + config.getBounds().height - dialogHeight - top - bottom);
+		setLocation(config.getBounds().x + config.getBounds().width - right - dialogWidth, config.getBounds().y + config.getBounds().height - this.getHeight() - top - bottom);
+		
 		setResizable(false);
 		setAlwaysOnTop(true);
 

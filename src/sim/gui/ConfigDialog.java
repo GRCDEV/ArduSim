@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -39,6 +40,7 @@ public class ConfigDialog extends JDialog {
 		
 		{
 			JScrollPane scrollPane = new JScrollPane(panel);
+			scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 			getContentPane().add(scrollPane, BorderLayout.CENTER);
 			
 		}
@@ -85,11 +87,8 @@ public class ConfigDialog extends JDialog {
 		SimTools.loadDefaultConfiguration(panel);
 		
 		this.pack();
-		System.out.println(this.getWidth() + "," + this.getHeight());
 		this.setSize(this.getWidth() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue(),
 				this.getHeight() + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue());
-		System.out.println(this.getWidth() + "," + this.getHeight());
-		
 		
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice gd = ge.getDefaultScreenDevice();
@@ -100,7 +99,7 @@ public class ConfigDialog extends JDialog {
 		int height = config.getBounds().height - top - bottom - upperBar;
 		
 		if (this.getHeight() > height) {
-			this.setSize(this.getWidth(), height-10);
+			this.setSize(this.getWidth(), height);
 		} else  {
 			this.setResizable(false);
 		}

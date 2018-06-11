@@ -169,8 +169,6 @@ public class ArduSimTools {
 				}
 				String pr = cmdLine.getOptionValue("p").trim();
 				
-//				aqui//TODO
-				
 				boolean found = false;
 				for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
 					if (ProtocolHelper.ProtocolNames[i].equals(pr)) {

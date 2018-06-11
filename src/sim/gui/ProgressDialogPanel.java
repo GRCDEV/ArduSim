@@ -1,15 +1,14 @@
 package sim.gui;
 
-import javax.swing.JPanel;
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import main.Text;
-
-import java.awt.Dimension;
 
 /** This class generates a panel with real time information gathered from the UAV on real time. */
 
@@ -26,8 +25,6 @@ public class ProgressDialogPanel extends JPanel {
 	public JLabel protStateLabel;
 
 	public ProgressDialogPanel() {
-		setMinimumSize(new Dimension(235, 150));
-		setSize(new Dimension(235, 173));
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 0, 0, 0, 0 };
 		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };

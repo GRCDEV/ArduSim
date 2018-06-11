@@ -153,4 +153,7 @@ public class SimParam {
 	// Prefix added to log lines to identify each UAV
 	public static String[] prefix;
 	
+	// Progress dialog parameters
+	public static final int DIALOG_WIDTH = 280; // (px) Desired dialog width
+	
 }

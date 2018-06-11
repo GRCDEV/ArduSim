@@ -64,6 +64,9 @@ public class MainWindow {
 		mainWindowFrame.getContentPane().add(buttonsPanel);
 		mainWindowFrame.getContentPane().add(boardPanel);
 
+		if (Param.runningOperatingSystem != Param.OS_WINDOWS) {
+			mainWindowFrame.setUndecorated(true);
+		}
 		mainWindowFrame.pack();
 
 		//  Adapting the window to the screen size
@@ -71,11 +74,12 @@ public class MainWindow {
 		int right = Toolkit.getDefaultToolkit().getScreenInsets(config).right;
 		int top = Toolkit.getDefaultToolkit().getScreenInsets(config).top;
 		int bottom = Toolkit.getDefaultToolkit().getScreenInsets(config).bottom;
-		int upperBar = mainWindowFrame.getHeight() - mainWindowFrame.getContentPane().getHeight();
+		
 		int width = config.getBounds().width - left - right;
-		int height = config.getBounds().height - top - bottom - upperBar;
-		mainWindowFrame.setResizable(false);
+		int height = config.getBounds().height - top - bottom;
 		mainWindowFrame.setSize(width, height);
+//		mainWindowFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		mainWindowFrame.setResizable(false);
 
 		mainWindowFrame.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		mainWindowFrame.addWindowListener(new WindowAdapter() {
