@@ -239,6 +239,13 @@ public class Text {
 	public static final String LOG_SPEED = "Initial speed";
 	public static final String LOG_BATTERY = "Battery capacity";
 	public static final String MISSION_SUFIX = "mission_AutoCAD.scr";
+	public static final String PATH_SUFIX = "path.csv";
+	public static final String PATH_2D_SUFIX = "path_AutoCAD.scr";
+	public static final String PATH_3D_SUFIX = "path_AutoCAD3d.scr";
+	public static final String MOBILITY_NS2_SUFIX_2D = "mobility_NS2.txt";
+	public static final String MOBILITY_NS2_SUFIX_3D = "mobility_NS2_3D.txt";
+	public static final String MOBILITY_OMNET_SUFIX_2D = "mobility_OMNeT.txt";
+	public static final String MOBILITY_OMNET_SUFIX_3D = "mobility_OMNeT_3D.txt";
 	public static final String CPU_SUFIX = "CPU.txt";
 	
 	// General options and units

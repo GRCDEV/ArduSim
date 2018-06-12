@@ -1943,11 +1943,13 @@ public class ArduSimTools {
 		LogPoint sp;
 		LogPoint spPrev;
 		Double x, y, a;
+		long firstTime = Long.MAX_VALUE;
+		long lastTime = 0;
 		for (int i=0; i<Param.numUAVs; i++) {
-			file1 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_path.csv");
+			file1 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_SUFIX);
 			sb1 = new StringBuilder(2000);
 			sb1.append("x(m),y(m),z(m),t(arbitrary ns),s(m/s),a(m/s\u00B2),\u0394d(m),d(m)\n");
-			file2 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_path_AutoCAD.scr");
+			file2 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_2D_SUFIX);
 			sb2 = new StringBuilder(2000);
 			sb2.append("._PLINE\n");
 
@@ -1958,7 +1960,7 @@ public class ArduSimTools {
 			y = x = null;
 			
 			if (Param.VERBOSE_STORE) {
-				file3 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_path_AutoCAD3d.scr");
+				file3 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
 				sb3 = new StringBuilder(2000);
 				sb3.append("._3DPOLY\n");
 
@@ -1975,7 +1977,10 @@ public class ArduSimTools {
 				}
 
 				// Considers only not repeated locations and under test
-				if (SimParam.uavUTMPath[i].get(j).inTest) {
+				if (sp.inTest) {
+					if (sp.time > lastTime) {
+						lastTime = sp.time;
+					}
 					x = sp.x;
 					y = sp.y;
 					if (spPrev == null) {
@@ -1992,14 +1997,18 @@ public class ArduSimTools {
 								.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3)).append("\n");
 						}
 						spPrev = sp;
+						// Getting global test stating time
+						if (sp.time < firstTime) {
+							firstTime = sp.time;
+						}
 					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
 						// Moved horizontally
 						d = sp.distance(spPrev);
 						dist = dist + d;
 						sb1.append(Tools.round(x, 3)).append(",")
 							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
-							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
-							.append(",").append(Tools.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(sp.time)
+							.append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",").append(Tools.round(d, 3))
 							.append(",").append(Tools.round(dist, 3)).append("\n");
 						sb2.append(Tools.round(x, 3)).append(",")
@@ -2013,8 +2022,8 @@ public class ArduSimTools {
 						// Only moved vertically
 						sb1.append(Tools.round(x, 3)).append(",")
 							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
-							.append(",").append(SimParam.uavUTMPath[i].get(j).time)
-							.append(",").append(Tools.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+							.append(",").append(sp.time)
+							.append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.0,").append(Tools.round(dist, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
 							sb3.append(Tools.round(x, 3)).append(",")
@@ -2033,6 +2042,63 @@ public class ArduSimTools {
 				Tools.storeFile(file3, sb3.toString());
 			}
 		}
+		
+		// Storing mobility files
+		File file4, file5, file6, file7;
+		StringBuilder sb4, sb5, sb6, sb7;
+		double time;
+		boolean firstData;
+		file6 = new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_2D);
+		file7 =new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_3D);
+		sb6 = new StringBuilder(2000);
+		sb7 = new StringBuilder(2000);
+		for (int i = 0; i < Param.numUAVs; i++) {
+			file4 = new File(folder, baseFileName + "_" + Text.MOBILITY_NS2_SUFIX_2D);
+			file5 = new File(folder, baseFileName + "_" + Text.MOBILITY_NS2_SUFIX_3D);
+			sb4 = new StringBuilder(2000);
+			sb5 = new StringBuilder(2000);
+			firstData = true;
+			for (int j = 0; j < SimParam.uavUTMPath[i].size(); j++) {
+				sp = SimParam.uavUTMPath[i].get(j);
+				if (sp.time - firstTime >= 0 && sp.time <= lastTime) {
+					time = sp.time * 0.000000001;
+					if (firstData) {
+						// Adding 0 point
+						sb4.append("$node_(0) set X_ ").append(sp.x).append("\n");
+						sb4.append("$node_(0) set Y_ ").append(sp.y).append("\n");
+						sb5.append("$node_(0) set X_ ").append(sp.x).append("\n");
+						sb5.append("$node_(0) set Y_ ").append(sp.y).append("\n");
+						sb5.append("$node_(0) set Z_ ").append(sp.z).append("\n");
+						// At the beginning we may need to add a 0 time point
+						if (sp.time != firstTime) {
+							sb4.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
+							sb4.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
+							sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
+							sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
+							sb5.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(sp.z).append("\n");
+						}
+						firstData = false;
+					} else {
+						sb4.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
+						sb4.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
+						sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
+						sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
+						sb5.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(sp.z).append("\n");
+					}
+				}
+			}
+			Tools.storeFile(file4, sb4.toString());
+			Tools.storeFile(file5, sb5.toString());
+			
+			
+			
+			
+			
+			
+			
+		}
+		
+		
 	}
 	
 	/** Stores the experiment results. */
