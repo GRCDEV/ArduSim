@@ -559,7 +559,37 @@ public class ArduSimTools {
 					}
 				} catch (IOException e) {}
 	        }
-		}//TODO add support for MAC OS
+		} else if (Param.runningOperatingSystem == Param.OS_MAC) {
+			Formatter formatter;
+			String hexId;
+			byte[] mac;
+			//NetworkInterface ni;
+			InetAddress ip;
+			
+			try {
+				ip = InetAddress.getLocalHost();
+				NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+				mac = network.getHardwareAddress();
+				
+				if (mac != null) {
+					formatter = new Formatter();
+					for (byte b : mac) {
+						formatter.format("%02X", b);
+					}
+					hexId = formatter.toString();
+					formatter.close();
+					ids.add(Long.parseUnsignedLong(hexId, 16));
+				}
+				
+				
+			} catch (SocketException e1) {
+			} catch (NumberFormatException e1) {
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+		}
+		//TODO add support for MAC OS
+		
 		if (ids.size() == 0) {
 			GUI.exit(Text.MAC_ERROR);
 		}
@@ -602,7 +632,26 @@ public class ArduSimTools {
 					SimParam.usingRAMDrive = true;
 					return ramDiskPath;
 				}
-			}//TODO add support for MAC OS
+			}
+			if (Param.runningOperatingSystem == Param.OS_MAC) {
+				String ramDiskPath = "/tmp/" + SimParam.RAM_DRIVE_NAME;
+				File ramDiskFile = new File(ramDiskPath);
+				if (ramDiskFile.exists()) {
+					// Check if temporal filesystem is already mounted and dismount
+					if (ArduSimTools.checkDriveMountedLinux(ramDiskPath)) {
+						if (!ArduSimTools.dismountDriveLinux(ramDiskPath)) {
+							return null;
+						}
+					}
+				} else {
+					// Create the folder
+					ramDiskFile.mkdirs();
+				}
+				if (ArduSimTools.mountDriveLinux(ramDiskPath)) {
+					SimParam.usingRAMDrive = true;
+					return ramDiskPath;
+				}
+			}
 		}
 		
 		// When it is not possible, use physical storage
@@ -1089,7 +1138,7 @@ public class ArduSimTools {
 					}
 					
 					// Trying to speed up locating files on the RAM drive (under Linux)
-					if (SimParam.usingRAMDrive && Param.runningOperatingSystem == Param.OS_LINUX) {
+					if (SimParam.usingRAMDrive && (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)) {
 						file1 = new File(SimParam.sitlPath);
 						file2 = new File(tempFolder, file1.getName());
 						Files.copy(file1.toPath(), file2.toPath());
@@ -1138,7 +1187,7 @@ public class ArduSimTools {
 					}
 				}
 				// Under Linux, launch arducopter command:
-				if (Param.runningOperatingSystem == Param.OS_LINUX) {
+				if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 					commandLine.clear();
 					if (SimParam.usingRAMDrive) {
 						commandLine.add((new File(tempFolder, (new File(SimParam.sitlPath)).getName())).getAbsolutePath());
@@ -1159,10 +1208,10 @@ public class ArduSimTools {
 					} else {
 						commandLine.add(SimParam.paramPath);
 					}
-				}//TODO add support for MAC OS
+				}
 				
 				ProcessBuilder pb = new ProcessBuilder(commandLine);
-				if (Param.runningOperatingSystem == Param.OS_LINUX) {
+				if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 					pb.directory(new File(SimParam.tempFolderBasePath, SimParam.TEMP_FOLDER_PREFIX + i));
 				}
 				SimParam.processes[i] = pb.start();
@@ -1232,7 +1281,12 @@ public class ArduSimTools {
 			if (Param.VERBOSE_LOGGING){
 				GUI.log(Text.OPERATING_SYSTEM_LINUX);
 			}
-		} else {//TODO add support for MAC OS
+		}else if (OS.contains("mac")) {
+			Param.runningOperatingSystem = Param.OS_MAC;
+			if (Param.VERBOSE_LOGGING){
+				GUI.log(Text.OPERATING_SYSTEM_MAC);
+			}
+		} else {
 			GUI.exit(Text.UAVS_START_ERROR_4);
 		}
 	}
@@ -1255,12 +1309,12 @@ public class ArduSimTools {
 				GUI.exit(Text.UAVS_START_ERROR_3 + "\n" + SimParam.CYGWIN_PATH1 + " or,\n" + SimParam.CYGWIN_PATH2);
 			}
 			sitlPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
-		} else if (Param.runningOperatingSystem == Param.OS_LINUX) {
+		} else if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 			sitlPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_LINUX_FILE_NAME;
 		}
 		// SITL detection
 		if (Param.runningOperatingSystem == Param.OS_WINDOWS
-				|| Param.runningOperatingSystem == Param.OS_LINUX) {
+				|| Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 			String paramPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.PARAM_FILE_NAME;
 			File sitlPathFile = new File(sitlPath);
 			File paramPathFile = new File(paramPath);
@@ -1289,7 +1343,7 @@ public class ArduSimTools {
 				// If fails writing the file, for sure the execution doesn't have administrator privileges
 			}
 		}
-		if (Param.runningOperatingSystem == Param.OS_LINUX) {
+		if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 			String userName = System.getProperty("user.name");
 			if (userName.equals("root")) {
 				SimParam.userIsAdmin = true;
@@ -1507,7 +1561,7 @@ public class ArduSimTools {
 				}
 			}
 			
-			if (Param.runningOperatingSystem == Param.OS_LINUX) {
+			if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 				// Unmount temporal filesystem and remove folder
 				if (ArduSimTools.checkDriveMountedLinux(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
 					System.out.println(Text.DISMOUNT_DRIVE_ERROR);
