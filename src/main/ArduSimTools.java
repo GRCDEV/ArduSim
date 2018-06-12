@@ -1503,24 +1503,17 @@ public class ArduSimTools {
 		GUI.log(Text.EXITING);
 		Tools.waiting(SimParam.LONG_WAITING_TIME);
 		if (Param.isRealUAV) {
-			String shutdownCommand;
-		    String operatingSystem = System.getProperty("os.name");
-
-		    if (operatingSystem.startsWith("Linux") || operatingSystem.startsWith("Mac")) {
-		        shutdownCommand = "sudo shutdown -h now";
-		        try {
-			    	Runtime.getRuntime().exec(shutdownCommand);
+			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
+				try {
+			    	Runtime.getRuntime().exec("shutdown.exe -s -t 0");
 			    } catch (IOException e) {}
-		    }
-		    else if (operatingSystem.startsWith("Win")) {
-		        shutdownCommand = "shutdown.exe -s -t 0";
-		        try {
-			    	Runtime.getRuntime().exec(shutdownCommand);
+			} else if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
+				try {
+			    	Runtime.getRuntime().exec("sudo shutdown -h now");
 			    } catch (IOException e) {}
-		    }
-		    else {
-		    	GUI.log(Text.SHUTDOWN_ERROR);
-		    }
+			} else {
+				GUI.log(Text.SHUTDOWN_ERROR);
+			}
 		} else {
 			MainWindow.window.mainWindowFrame.dispose();
 		}

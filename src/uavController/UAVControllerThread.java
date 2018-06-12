@@ -939,10 +939,10 @@ public class UAVControllerThread extends Thread {
 		if (mode == 1) {
 			message.type_mask = bX | bY | bZ;
 			setCoordinates = true;
-		} if (mode == 2) {
+		} else if (mode == 2) {
 			message.type_mask = bVx | bVy | bVz;
 			setSpeed = true;
-		} if (mode ==3) {
+		} else if (mode ==3) {
 			message.type_mask = bX | bY | bZ | bVx | bVy | bVz;
 			setCoordinates = true;
 			setSpeed = true;
