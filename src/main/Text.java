@@ -244,8 +244,8 @@ public class Text {
 	public static final String PATH_3D_SUFIX = "path_AutoCAD3d.scr";
 	public static final String MOBILITY_NS2_SUFIX_2D = "mobility_NS2.txt";
 	public static final String MOBILITY_NS2_SUFIX_3D = "mobility_NS2_3D.txt";
-	public static final String MOBILITY_OMNET_SUFIX_2D = "mobility_OMNeT.txt";
-	public static final String MOBILITY_OMNET_SUFIX_3D = "mobility_OMNeT_3D.txt";
+	public static final String MOBILITY_OMNET_SUFIX_2D = "mobility_OMNeT-INET-BoonMotionModel.txt";
+	public static final String MOBILITY_OMNET_SUFIX_3D = "mobility_OMNeT-INET-BoonMotionModel_3D.txt";
 	public static final String CPU_SUFIX = "CPU.txt";
 	
 	// General options and units

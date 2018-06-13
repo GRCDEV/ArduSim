@@ -1989,7 +1989,7 @@ public class ArduSimTools {
 		StringBuilder sb1, sb2, sb3;
 		LogPoint sp;
 		LogPoint spPrev;
-		Double x, y, a;
+		Double x, y, z, a;
 		long firstTime = Long.MAX_VALUE;
 		long lastTime = 0;
 		for (int i=0; i<Param.numUAVs; i++) {
@@ -2004,7 +2004,7 @@ public class ArduSimTools {
 			double dist = 0; // Accumulated distance to origin
 			double d;
 			spPrev = null;
-			y = x = null;
+			z = y = x = null;
 			
 			if (Param.VERBOSE_STORE) {
 				file3 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
@@ -2028,20 +2028,17 @@ public class ArduSimTools {
 					if (sp.time > lastTime) {
 						lastTime = sp.time;
 					}
-					x = sp.x;
-					y = sp.y;
+					x = Tools.round(sp.x, 3);
+					y = Tools.round(sp.y, 3);
+					z = Tools.round(sp.z, 3);
 					if (spPrev == null) {
 						// First test location
-						sb1.append(Tools.round(x, 3)).append(",")
-							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
-							.append(",").append(sp.time)
-							.append(",").append(Tools.round(SimParam.uavUTMPath[i].get(j).speed, 3))
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.time)
+							.append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.000,0.000\n");
-						sb2.append(Tools.round(x, 3)).append(",")
-							.append(Tools.round(y, 3)).append("\n");
+						sb2.append(x).append(",").append(y).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(Tools.round(x, 3)).append(",")
-								.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3)).append("\n");
+							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
 						// Getting global test stating time
@@ -2052,29 +2049,22 @@ public class ArduSimTools {
 						// Moved horizontally
 						d = sp.distance(spPrev);
 						dist = dist + d;
-						sb1.append(Tools.round(x, 3)).append(",")
-							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
-							.append(",").append(sp.time)
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.time)
 							.append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",").append(Tools.round(d, 3))
 							.append(",").append(Tools.round(dist, 3)).append("\n");
-						sb2.append(Tools.round(x, 3)).append(",")
-							.append(Tools.round(y, 3)).append("\n");
+						sb2.append(x).append(",").append(y).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(Tools.round(x, 3)).append(",")
-								.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3)).append("\n");
+							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
 					} else if (sp.z!=spPrev.z) {
 						// Only moved vertically
-						sb1.append(Tools.round(x, 3)).append(",")
-							.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3))
-							.append(",").append(sp.time)
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.time)
 							.append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.0,").append(Tools.round(dist, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
-							sb3.append(Tools.round(x, 3)).append(",")
-								.append(Tools.round(y, 3)).append(",").append(Tools.round(sp.z, 3)).append("\n");
+							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
 					}
@@ -2100,52 +2090,83 @@ public class ArduSimTools {
 		sb6 = new StringBuilder(2000);
 		sb7 = new StringBuilder(2000);
 		for (int i = 0; i < Param.numUAVs; i++) {
-			file4 = new File(folder, baseFileName + "_" + Text.MOBILITY_NS2_SUFIX_2D);
-			file5 = new File(folder, baseFileName + "_" + Text.MOBILITY_NS2_SUFIX_3D);
+			file4 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_2D);
+			file5 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_3D);
 			sb4 = new StringBuilder(2000);
 			sb5 = new StringBuilder(2000);
 			firstData = true;
+			double t;
+			spPrev = null;
 			for (int j = 0; j < SimParam.uavUTMPath[i].size(); j++) {
 				sp = SimParam.uavUTMPath[i].get(j);
-				if (sp.time - firstTime >= 0 && sp.time <= lastTime) {
-					time = sp.time * 0.000000001;
+				if (sp.inTest && sp.time - firstTime >= 0 && sp.time <= lastTime) {
+					time = (sp.time - firstTime) * 0.000000001;
+					t = Tools.round(time, 9);
+					x = Tools.round(sp.x, 2);
+					y = Tools.round(sp.y, 2);
+					z = Tools.round(sp.z, 2);
 					if (firstData) {
 						// Adding 0 point
-						sb4.append("$node_(0) set X_ ").append(sp.x).append("\n");
-						sb4.append("$node_(0) set Y_ ").append(sp.y).append("\n");
-						sb5.append("$node_(0) set X_ ").append(sp.x).append("\n");
-						sb5.append("$node_(0) set Y_ ").append(sp.y).append("\n");
-						sb5.append("$node_(0) set Z_ ").append(sp.z).append("\n");
+						sb4.append("$node_(0) set X_ ").append(x).append("\n");
+						sb4.append("$node_(0) set Y_ ").append(y).append("\n");
+						sb5.append("$node_(0) set X_ ").append(x).append("\n");
+						sb5.append("$node_(0) set Y_ ").append(y).append("\n");
+						sb5.append("$node_(0) set Z_ ").append(z).append("\n");
+						sb6.append("0 ").append(x).append(" ").append(y);
+						sb7.append("0 ").append(x).append(" ").append(y).append(" ").append(z);
 						// At the beginning we may need to add a 0 time point
 						if (sp.time != firstTime) {
-							sb4.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
-							sb4.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
-							sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
-							sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
-							sb5.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(sp.z).append("\n");
+							sb4.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
+							sb4.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
+							sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
+							sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
+							sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
+							sb6.append(" ").append(t).append(" ").append(x).append(" ").append(y);
+							sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
 						}
+						spPrev = sp;
 						firstData = false;
-					} else {
-						sb4.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
-						sb4.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
-						sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(sp.x).append("\n");
-						sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(sp.y).append("\n");
-						sb5.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(sp.z).append("\n");
+					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
+						sb4.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
+						sb4.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
+						sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
+						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
+						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
+						sb6.append(" ").append(t).append(" ").append(x).append(" ").append(y);
+						sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+						spPrev = sp;
+					} else if (sp.z!=spPrev.z) {
+						sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
+						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
+						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
+						sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+						spPrev = sp;
 					}
 				}
 			}
+			if (spPrev.time < lastTime) {
+				t = Tools.round((lastTime - firstTime) * 0.000000001, 9);
+				x = Tools.round(spPrev.x, 2);
+				y = Tools.round(spPrev.y, 2);
+				z = Tools.round(spPrev.z, 2);
+				sb4.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
+				sb4.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
+				sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
+				sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
+				sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
+				sb6.append(" ").append(t).append(" ").append(x).append(" ").append(y);
+				sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+			}
+			
 			Tools.storeFile(file4, sb4.toString());
 			Tools.storeFile(file5, sb5.toString());
 			
-			
-			
-			
-			
-			
-			
+			sb6.append("\n");
+			sb7.append("\n");
 		}
 		
-		
+		Tools.storeFile(file6, sb6.toString());
+		Tools.storeFile(file7, sb7.toString());
 	}
 	
 	/** Stores the experiment results. */
