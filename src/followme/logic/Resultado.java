@@ -56,7 +56,5 @@ public class Resultado {
 	public void setSpeedZ(double speedZ) {
 		this.speedZ = speedZ;
 	}
-
-	
 	
 }

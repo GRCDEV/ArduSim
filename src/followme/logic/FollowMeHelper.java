@@ -7,6 +7,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -27,9 +30,9 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocolString = "Follow me";
+		this.protocolString = FollowMeText.PROTOCOL_TEXT;
 	}
-	
+
 	@Override
 	public boolean loadMission() {
 		return false;
@@ -37,9 +40,9 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void openConfigurationDialog() {
-		GUI.log("SwarmConfigurationDialog --> Mas tarde");
+		// GUI.log("SwarmConfigurationDialog --> Mas tarde");
 		// Cargar fichero de logs msg
-		GUI.log("Cargando Archivo");
+		// GUI.log("Cargando Archivo");
 
 		String SEPARATOR = ",";
 		String pathFile = "fileLogMsg/2018-2-15-14-30-48logs_msg.txt";
@@ -62,7 +65,7 @@ public class FollowMeHelper extends ProtocolHelper {
 				f = fileChooser.getSelectedFile();
 
 			}
-			System.out.println(f.getPath());
+			// System.out.println(f.getPath());
 			fr = new FileReader(f);
 
 			br = new BufferedReader(fr);
@@ -113,10 +116,10 @@ public class FollowMeHelper extends ProtocolHelper {
 		}
 
 		FollowMeParam.recurso.set(headingInterpolar(recurso));
-		
+
 		Tools.setProtocolConfigured(true);
 	}
-	
+
 	private static RecursoCompartido headingInterpolar(RecursoCompartido recurso) {
 		RecursoCompartido rc = null;
 		rc = recurso;
@@ -190,16 +193,12 @@ public class FollowMeHelper extends ProtocolHelper {
 		return rc;
 	}
 
-
 	@Override
 	public void initializeDataStructures() {
 		int numUAVs = Tools.getNumUAVs();
 		FollowMeParam.uavs = new FollowMeState[numUAVs];
-
 		for (int i = 0; i < numUAVs; i++) {
 			FollowMeParam.uavs[i] = FollowMeState.START;
-			GUI.updateprotocolState(i, FollowMeParam.uavs[i].getName());
-
 		}
 
 		// Analyze which UAV is master
@@ -229,28 +228,27 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public String setInitialState() {
-		// TODO 
-		return null;
+		return FollowMeParam.uavs[0].getName();
 	}
 
 	@Override
 	public void rescaleDataStructures() {
-		// TODO 
+		// TODO
 	}
 
 	@Override
 	public void loadResources() {
-		// TODO 
+		// TODO
 	}
-	
+
 	@Override
 	public void rescaleShownResources() {
-		// TODO 
+		// TODO
 	}
 
 	@Override
 	public void drawResources(Graphics2D g2, BoardPanel p) {
-		// TODO 
+		// TODO
 	}
 
 	@Override
@@ -261,7 +259,7 @@ public class FollowMeHelper extends ProtocolHelper {
 		iniLocation[1] = Pair.with(new GeoCoordinates(39.482111, -0.346857), 0.0);
 		for (int i = 1; i < Tools.getNumUAVs() - 1; i++) {
 			iniLocation[i + 1] = Pair.with(new GeoCoordinates(iniLocation[1].getValue0().latitude, /*- (0.00001 * i)*/
-					iniLocation[1].getValue0().longitude + (0.0002 * i)), 0.0);
+					iniLocation[1].getValue0().longitude + (0.00002 * i)), 0.0);
 		}
 		return iniLocation;
 	}
@@ -275,14 +273,14 @@ public class FollowMeHelper extends ProtocolHelper {
 	public void startThreads() {
 		if (Tools.isRealUAV()) {
 			if (FollowMeParam.realUAVisMaster) {
-//				MasterMando sendTh = new MasterMando();
-//				sendTh.start();
-//				SwarmHelper.log("Thread send start");
-//				MasterThread masterTh = new MasterThread();
-//				masterTh.start();
+				// MasterMando sendTh = new MasterMando();
+				// sendTh.start();
+				// SwarmHelper.log("Thread send start");
+				// MasterThread masterTh = new MasterThread();
+				// masterTh.start();
 			} else {
-//				FollowerThread followerTh = new FollowerThread(0);
-//				followerTh.start();
+				// FollowerThread followerTh = new FollowerThread(0);
+				// followerTh.start();
 			}
 		} else {
 			for (int i = 0; i < Tools.getNumUAVs(); i++) {
@@ -303,9 +301,10 @@ public class FollowMeHelper extends ProtocolHelper {
 				} else {
 					// FollowerThread followerTh = new FollowerThread(i);
 					// followerTh.start();
+
 					SlaveTalker slaveTalker = new SlaveTalker(i);
 					SlaveListener slaveListener = new SlaveListener(i);
-					GUI.log("Iniciando Slave "+i);
+					GUI.log("Iniciando Slave " + i);
 					slaveTalker.start();
 					slaveListener.start();
 
@@ -324,56 +323,50 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void setupActionPerformed() {
-		
+		while (!FollowMeParam.setupFinished) {
+			Tools.waiting(100);
+		}
 	}
 
 	@Override
 	public void startExperimentActionPerformed() {
 		// SwarmHelper.log("startSwarmTestActionPerformed ");
-		GUI.log("Ready for test...");
+		// GUI.log("Ready for test...");
 		// Param.simStatus = SimulatorState.READY_FOR_TEST;
 
 		// Param.simStatus = SimulatorState.READY_FOR_TEST;
 		// Modo de vuelo Loiter / Loiter_Armed
 		// UAVParam.flightMode.set(0, Mode.LOITER);
-		if (!Copter.armEngines(0) || !Copter.setFlightMode(0, FlightMode.LOITER) || !Copter.setHalfThrottle(0)) {
-			// Tratar el fallo
-		}
+//		if (!Copter.armEngines(0) || !Copter.setFlightMode(0, FlightMode.LOITER) || !Copter.setHalfThrottle(0)) {
+//			// Tratar el fallo
+//		}
 	}
 
 	@Override
 	public void forceExperimentEnd() {
-		// TODO 
+		// TODO
 	}
 
 	@Override
 	public String getExperimentResults() {
-		// TODO 
+		// TODO
 		return null;
 	}
 
 	@Override
 	public String getExperimentConfiguration() {
-		// TODO 
+		// TODO
 		return null;
 	}
 
 	@Override
 	public void logData(String folder, String baseFileName) {
-		// TODO 
+		// TODO
 	}
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
-		// TODO 
+		// TODO
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 }
