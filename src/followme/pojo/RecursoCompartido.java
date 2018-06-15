@@ -1,4 +1,4 @@
-package followme.logic;
+package followme.pojo;
 
 public class RecursoCompartido {
 

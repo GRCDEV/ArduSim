@@ -14,11 +14,13 @@ public class FollowMeText {
 	public static final String SEND_ID = "Send ID";
 	public static final String WAIT_TAKE_OFF_SLAVE = "Wait Take Off Slave";
 	public static final String TAKE_OFF = "Take Off";
+	public static final String GOTO_POSITION = "GOTO POSITION";
 	public static final String WAIT_MASTER = "Wait Master";
 	public static final String FOLLOW = "Follow";
 	public static final String LANDING_FOLLOWERS = "Landing";
 	
 	public static final String FINISH = "Finish UAV";
+
 
 	
 }

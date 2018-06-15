@@ -2,9 +2,11 @@ package followme.logic;
 
 import java.awt.geom.Point2D;
 
-public class Formacion {
+import api.pojo.GeoCoordinates;
 
-	private Formacion() {
+public class Formation {
+
+	private Formation() {
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -180,15 +182,15 @@ public class Formacion {
 //		return vel;
 //	}
 //
-//	public static double distanceMeters(GeoCoordinates geo1, GeoCoordinates geo2) {
-//		double R = 6378.137; // Radius of earth in KM
-//		double dLat = geo2.latitude * Math.PI / 180 - geo1.latitude * Math.PI / 180;
-//		double dLon = geo2.longitude * Math.PI / 180 - geo1.longitude * Math.PI / 180;
-//		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(geo1.latitude * Math.PI / 180)
-//				* Math.cos(geo2.latitude * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-//		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-//		double d = R * c;
-//		return d * 1000; // meters
-//	}
+	public static double distanceMeters(GeoCoordinates geo1, GeoCoordinates geo2) {
+		double R = 6378.137; // Radius of earth in KM
+		double dLat = geo2.latitude * Math.PI / 180 - geo1.latitude * Math.PI / 180;
+		double dLon = geo2.longitude * Math.PI / 180 - geo1.longitude * Math.PI / 180;
+		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(geo1.latitude * Math.PI / 180)
+				* Math.cos(geo2.latitude * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		double d = R * c;
+		return d * 1000; // meters
+	}
 
 }

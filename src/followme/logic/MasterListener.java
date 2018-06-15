@@ -13,15 +13,12 @@ public class MasterListener extends Thread {
 
 	private int idMaster;
 	private HashMap<Integer, Integer> slaveReady;
-	private int contador;
-
 	public MasterListener(int idMaster) {
 		this.idMaster = idMaster;
 		if (FollowMeParam.posMaster != idMaster) {
 			System.err.println("Master id distinto");
 		}
 		slaveReady = new HashMap<>();
-		contador = 5;
 	}
 
 	@Override
@@ -53,10 +50,7 @@ public class MasterListener extends Thread {
 				}
 				GUI.log("IDs detectados: " + m + "]");
 			}
-//			else {
-//				System.out.println("MasterListener recibe un mensaje no esperado de SlaveTalker" + idSender
-//						+ " de tipo " + FollowMeParam.getTypeMessage(typeMsg));
-//			}
+
 		}
 		
 		while (FollowMeParam.uavs[idMaster] != FollowMeState.WAIT_TAKE_OFF_MASTER) {
@@ -86,122 +80,8 @@ public class MasterListener extends Thread {
 		FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.READY_TO_START;
 		GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		
-//		while (!Tools.isExperimentInProgress()) {
-//			Tools.waiting(200);
-//		}
 
 		GUI.log("MasterListener Finaliza");
 
 	}
-
-//	public void run1() {
-//
-//		if (FollowMeParam.uavs[FollowMeParam.posMaster] == FollowMeState.START) {
-//			FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.LISTEN_ID;
-//			GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
-//		}
-//
-//		while (FollowMeParam.uavs[FollowMeParam.posMaster] == FollowMeState.LISTEN_ID) {
-//			// Escuchar nuevos IDs
-//			// recibirMessage(FollowMeParam.MsgIDs);
-//			String msg = null;
-//			byte[] message = null;
-//			Input in = new Input();
-//			int idSlave;
-//			message = Copter.receiveMessage(FollowMeParam.posMaster); /// Espera bloqueante
-//
-//			in.setBuffer(message);
-//			int idSender = in.readInt();
-//			int typeMsg = in.readInt();
-//			if (typeMsg == FollowMeParam.MsgIDs) {
-//				msg = "Id nuevo: " + idSender;
-//				idDetectados.add(idSender);
-//				FollowMeParam.posFormacion.put(idSender, idSender);
-//				String m = "[";
-//				for (int i : FollowMeParam.posFormacion.values()) {
-//					m += "" + i + ",";
-//				}
-//				GUI.log("IDs detectados: " + m);
-//				System.out.println("MasterListener " + FollowMeParam.posMaster + "<--" + idSender + ": " + msg);
-//			}
-//
-//		}
-//
-//		while (FollowMeParam.uavs[FollowMeParam.posMaster] == FollowMeState.WAIT_TAKE_OFF_MASTER) {
-//			// Escuchar IDs Ready
-//			// recibirMessage(FollowMeParam.MsgReady);
-//
-//			String msg = null;
-//			byte[] message = null;
-//			Input in = new Input();
-//			int idSlave;
-//			message = Copter.receiveMessage(FollowMeParam.posMaster); /// Espera bloqueante
-//
-//			in.setBuffer(message);
-//			int idSender = in.readInt();
-//			int typeMsg = in.readInt();
-//			if (typeMsg == FollowMeParam.MsgReady) {
-//				idSlave = in.readInt();
-//				msg = "Slave Ready: " + idSlave + " total: [";
-//				slaveReady.put(idSlave, idSlave);
-//				for (int i : slaveReady.values()) {
-//					msg += "" + i + ",";
-//				}
-//				System.out.println("MasterListener " + FollowMeParam.posMaster + "<--" + idSender + ": " + msg);
-//			}
-//
-//			GUI.log("Size idDetectados: " + idDetectados.size() + " slaveReady: " + slaveReady.size());
-//			if (idDetectados.size() == slaveReady.size()) {
-//				FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.READY_TO_START;
-//				GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
-//			}
-//		}
-//		System.out.println("Fin MasterListener");
-//
-//	}
-
-//	private void recibirMessage(int type) {
-//
-//		String msg = null;
-//		byte[] message = null;
-//		Input in = new Input();
-//		int idSlave;
-//		message = Copter.receiveMessage(FollowMeParam.posMaster);
-//
-//		in.setBuffer(message);
-//		int idSender = in.readInt();
-//		int typeMsg = in.readInt();
-//		if (typeMsg == type) {
-//			switch (typeMsg) {
-//			case FollowMeParam.MsgIDs:
-//				idSlave = in.readInt();
-//				msg = "Id nuevo: " + idSlave;
-//				idDetectados.add(idSlave);
-//				FollowMeParam.posFormacion.put(idSlave, idSlave);
-//				String m = "[";
-//				for (int i : FollowMeParam.posFormacion.values()) {
-//					m += "" + i + ",";
-//				}
-//				GUI.log("IDs detectados: " + m);
-//				break;
-//			case FollowMeParam.MsgReady:
-//				idSlave = in.readInt();
-//				msg = "Slave Ready: " + idSlave + " total: [";
-//				slaveReady.put(idSlave, idSlave);
-//				for (int i : slaveReady.values()) {
-//					msg += "" + i + ",";
-//				}
-//				break;
-//			default:
-//				msg = "" + typeMsg;
-//				break;
-//			}
-//			if (!msg.isEmpty())
-//				System.out.println("MasterListener " + FollowMeParam.posMaster + "<--" + idSender + ": " + msg);
-//		} else {
-//			System.out
-//					.println("MasterListener " + FollowMeParam.posMaster + "<--" + idSender + ": ignorado " + typeMsg);
-//
-//		}
-//	}
 }

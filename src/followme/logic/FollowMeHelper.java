@@ -7,9 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -17,14 +14,13 @@ import javax.swing.JFrame;
 
 import org.javatuples.Pair;
 
-import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
-import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
-import api.pojo.UTMCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
+import followme.pojo.Nodo;
+import followme.pojo.RecursoCompartido;
 import sim.board.BoardPanel;
 
 public class FollowMeHelper extends ProtocolHelper {
@@ -46,7 +42,6 @@ public class FollowMeHelper extends ProtocolHelper {
 		// GUI.log("Cargando Archivo");
 
 		String SEPARATOR = ",";
-		String pathFile = "fileLogMsg/2018-2-15-14-30-48logs_msg.txt";
 		RecursoCompartido recurso = new RecursoCompartido();
 
 		BufferedReader br = null;
@@ -98,7 +93,6 @@ public class FollowMeHelper extends ProtocolHelper {
 
 				recurso.put(n);
 				long t = Long.parseLong(fields[1]);
-				long diferencia = t - time;
 				time = t;
 
 				line = br.readLine();
@@ -124,7 +118,6 @@ public class FollowMeHelper extends ProtocolHelper {
 	private static RecursoCompartido headingInterpolar(RecursoCompartido recurso) {
 		RecursoCompartido rc = null;
 		rc = recurso;
-		Nodo n = null;
 		rc.bubbleSort();
 
 		ArrayList<Nodo> listaAux = new ArrayList<Nodo>();
@@ -149,7 +142,6 @@ public class FollowMeHelper extends ProtocolHelper {
 		// Calcular heading para todos los type 1 que se encuentrean entre 2 type 0
 
 		int x = 0, y = 0;
-		int num = 0;
 		while (listaAux.get(x).type != 0 && x < listaAux.size())
 			x++;
 		y = x + 1;
@@ -178,15 +170,9 @@ public class FollowMeHelper extends ProtocolHelper {
 				x++;
 				listaAux.get(x).heading = headingX + ((listaAux.get(x).time - timeX) * (headingDif) / (timeDif));
 			}
-
 			x = y;
 			y = x + 1;
-
 		}
-
-		// for (int k = 0; k < 10; k++) {
-		// listaAux.get(k).print();
-		// }
 		for (Nodo nodo : listaAux) {
 			rc.put(nodo);
 		}
@@ -288,11 +274,6 @@ public class FollowMeHelper extends ProtocolHelper {
 		} else {
 			for (int i = 0; i < Tools.getNumUAVs(); i++) {
 				if (i == FollowMeParam.posMaster) {
-					// SendOrderThread sendTh = new SendOrderThread();
-					// sendTh.start();
-					// SwarmHelper.log("Thread send start");
-					// MasterThread masterTh = new MasterThread();
-					// masterTh.start();
 					MasterTalker masterTalker = new MasterTalker(i);
 					MasterListener masterListener = new MasterListener(i);
 					MasterMando masterMando = new MasterMando();
@@ -302,9 +283,6 @@ public class FollowMeHelper extends ProtocolHelper {
 					masterMando.start();
 
 				} else {
-					// FollowerThread followerTh = new FollowerThread(i);
-					// followerTh.start();
-
 					SlaveTalker slaveTalker = new SlaveTalker(i);
 					SlaveListener slaveListener = new SlaveListener(i);
 					GUI.log("Iniciando Slave " + i);
@@ -314,14 +292,6 @@ public class FollowMeHelper extends ProtocolHelper {
 				}
 			}
 		}
-
-		// UAV 0 is master
-
-		// FollowerThread followerTh;
-		// for (int i = 1; i < Param.numUAVs; i++) {
-		// followerTh = new FollowerThread(i);
-		// followerTh.start();
-		// }
 	}
 
 	@Override
@@ -333,17 +303,7 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void startExperimentActionPerformed() {
-		// SwarmHelper.log("startSwarmTestActionPerformed ");
-		// GUI.log("Ready for test...");
-		// Param.simStatus = SimulatorState.READY_FOR_TEST;
-
-		// Param.simStatus = SimulatorState.READY_FOR_TEST;
-		// Modo de vuelo Loiter / Loiter_Armed
-		// UAVParam.flightMode.set(0, Mode.LOITER);
-		// if (!Copter.armEngines(0) || !Copter.setFlightMode(0, FlightMode.LOITER) ||
-		// !Copter.setHalfThrottle(0)) {
-		// // Tratar el fallo
-		// }
+		
 	}
 
 	@Override

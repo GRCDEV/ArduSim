@@ -3,6 +3,8 @@ package followme.logic;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import followme.pojo.RecursoCompartido;
+
 public class FollowMeParam {
 	
 	public static volatile boolean setupFinished = false;
@@ -63,12 +65,13 @@ public class FollowMeParam {
 		// Followers
 		SEND_ID((short) 7, FollowMeText.SEND_ID),
 		WAIT_TAKE_OFF_SLAVE((short) 8, FollowMeText.WAIT_TAKE_OFF_SLAVE), 
-		TAKE_OFF((short) 9,	FollowMeText.TAKE_OFF), 
-		WAIT_MASTER((short) 10, FollowMeText.WAIT_MASTER), 
-		FOLLOW((short) 11,	FollowMeText.FOLLOW), 
-		LANDING_FOLLOWERS((short) 12, FollowMeText.LANDING_FOLLOWERS),
+		TAKE_OFF((short) 9,	FollowMeText.TAKE_OFF),
+		GOTO_POSITION((short) 10, FollowMeText.GOTO_POSITION),
+		WAIT_MASTER((short) 11, FollowMeText.WAIT_MASTER), 
+		FOLLOW((short) 12,	FollowMeText.FOLLOW), 
+		LANDING_FOLLOWERS((short) 13, FollowMeText.LANDING_FOLLOWERS),
 
-		FINISH((short) 13, FollowMeText.FINISH);
+		FINISH((short) 14, FollowMeText.FINISH);
 
 		private final short id;
 		private final String name;

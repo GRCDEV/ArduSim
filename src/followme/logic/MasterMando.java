@@ -5,6 +5,8 @@ import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
 import followme.logic.FollowMeParam.FollowMeState;
+import followme.pojo.Nodo;
+import followme.pojo.RecursoCompartido;
 
 public class MasterMando extends Thread {
 

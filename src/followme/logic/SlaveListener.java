@@ -63,13 +63,13 @@ public class SlaveListener extends Thread {
 
 				switch (FollowMeParam.FormacionUsada) {
 				case FollowMeParam.FormacionLinea:
-					offset = Formacion.getOffsetLineal(posFormacion);
+					offset = Formation.getOffsetLineal(posFormacion);
 					break;
 				case FollowMeParam.FormacionMatriz:
-					offset = Formacion.getOffsetMatrix(posFormacion, size);
+					offset = Formation.getOffsetMatrix(posFormacion, size);
 					break;
 				case FollowMeParam.FormacionCircular:
-					offset = Formacion.getOffsetCircular(posFormacion, size);
+					offset = Formation.getOffsetCircular(posFormacion, size);
 					break;
 				default:
 					break;
