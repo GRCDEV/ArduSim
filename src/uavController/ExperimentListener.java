@@ -40,25 +40,44 @@ public class ExperimentListener extends Thread {
 					receiveSocket.setSoTimeout(PCCompanionParam.RECEIVE_TIMEOUT);
 				}
 				try {
+					receivedPacket.setData(new byte[Tools.DATAGRAM_MAX_LENGTH]);
 					receiveSocket.receive(receivedPacket);
 					input.setBuffer(receivedPacket.getData());
-					SimulatorState receivedState = SimulatorState.getStateById(input.readInt());
-					if (receivedState != null) {
-						if (receivedState == SimulatorState.SETUP_IN_PROGRESS
-								&& Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
-							Param.simStatus = receivedState;
-						}
-						
-						if (receivedState == SimulatorState.TEST_IN_PROGRESS) {
-							if (PCCompanionParam.lastStartCommandTime == null) {
-								PCCompanionParam.lastStartCommandTime = new AtomicLong(System.currentTimeMillis());
-							} else {
-								PCCompanionParam.lastStartCommandTime.set(System.currentTimeMillis());
-							}
-							if (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+					switch (input.readInt()) {
+					// Change simulation state command
+					case PCCompanionParam.CHANGE_STATE_COMMAND:
+						SimulatorState receivedState = SimulatorState.getStateById(input.readInt());
+						if (receivedState != null) {
+							if (receivedState == SimulatorState.SETUP_IN_PROGRESS
+									&& Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
 								Param.simStatus = receivedState;
 							}
+							
+							if (receivedState == SimulatorState.TEST_IN_PROGRESS) {
+								if (PCCompanionParam.lastStartCommandTime == null) {
+									PCCompanionParam.lastStartCommandTime = new AtomicLong(System.currentTimeMillis());
+								} else {
+									PCCompanionParam.lastStartCommandTime.set(System.currentTimeMillis());
+								}
+								if (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+									Param.simStatus = receivedState;
+								}
+							}
 						}
+						break;
+					// Emergency action command
+					case PCCompanionParam.EMERGENCY_COMMAND:
+						int command = input.readInt();
+						if (command == PCCompanionParam.ACTION_RECOVER_CONTROL) {
+//							solo una vez y contemplar errores y cerrar hilo tras el comando
+						}
+						if (command == PCCompanionParam.ACTION_RTL) {
+							
+						}
+						if (command == PCCompanionParam.ACTION_LAND) {
+							
+						}
+						break;
 					}
 				} catch (SocketTimeoutException e) {
 					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS

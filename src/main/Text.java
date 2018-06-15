@@ -157,8 +157,7 @@ public class Text {
 	
 	// Main window:
 	public static final String CONFIGURATION_PANEL = "Configuration panel";
-	public static final String MISSION_BASED_CONFIGURATION = "Take off";
-	public static final String SWARM_BASED_CONFIGURATION = "Setup";
+	public static final String SETUP_TEST = "Setup";
 	public static final String SHOW_PROGRESS = "Show progress";
 	public static final String START_TEST = "Start test";
 	public static final String EXIT = "Exit";
@@ -383,6 +382,7 @@ public class Text {
 	// PC Companion
 	public static final String NUM_UAVS_COUNTER = " UAVs connected";
 	public static final String PROTOCOL = "Protocol:";
+	public static final String EMERGENCY_ACTIONS = "Emergency actions";
 	public static final String IDENTIFIER_HEADER = "identifier";
 	public static final String MAC_HEADER = "MAC";
 	public static final String IP_HEADER = "IP";

@@ -30,6 +30,7 @@ import javax.swing.table.TableColumnModel;
 import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
+import api.pojo.FlightMode;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
@@ -38,6 +39,7 @@ import sim.gui.VerticalFlowLayout;
 import javax.swing.JComboBox;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.Font;
 
 public class PCCompanionGUI {
 	
@@ -59,6 +61,10 @@ public class PCCompanionGUI {
 	private JLabel lblProtocol;
 	
 	private volatile int connected = 0;
+	private JLabel lblEm;
+	private JButton buttonRecoverControl;
+	private JButton buttonRTL;
+	private JButton buttonLand;
 
 	public PCCompanionGUI() {
 		initialize();
@@ -75,31 +81,34 @@ public class PCCompanionGUI {
 		JPanel upperPanel = new JPanel();
 		assistantFrame.getContentPane().add(upperPanel, BorderLayout.NORTH);
 		GridBagLayout gbl_upperPanel = new GridBagLayout();
-		gbl_upperPanel.columnWidths = new int[]{0, 0, 145, 0, 0, 0, 0, 0};
-		gbl_upperPanel.rowHeights = new int[]{35, 0};
-		gbl_upperPanel.columnWeights = new double[]{0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_upperPanel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_upperPanel.columnWidths = new int[]{0, 0, 0, 0, 145, 0, 0, 0, 0, 0};
+		gbl_upperPanel.rowHeights = new int[]{35, 0, 0};
+		gbl_upperPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_upperPanel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		upperPanel.setLayout(gbl_upperPanel);
 		
 		numUAVsLabel = new JLabel("" + this.connected);
 		GridBagConstraints gbc_numUAVsLabel = new GridBagConstraints();
-		gbc_numUAVsLabel.insets = new Insets(0, 5, 0, 5);
+		gbc_numUAVsLabel.insets = new Insets(0, 5, 5, 5);
 		gbc_numUAVsLabel.gridx = 0;
 		gbc_numUAVsLabel.gridy = 0;
 		upperPanel.add(numUAVsLabel, gbc_numUAVsLabel);
 		
 		JLabel textLabel = new JLabel(Text.NUM_UAVS_COUNTER);
 		GridBagConstraints gbc_textLabel = new GridBagConstraints();
-		gbc_textLabel.insets = new Insets(0, 0, 0, 5);
+		gbc_textLabel.gridwidth = 3;
+		gbc_textLabel.anchor = GridBagConstraints.WEST;
+		gbc_textLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_textLabel.gridx = 1;
 		gbc_textLabel.gridy = 0;
 		upperPanel.add(textLabel, gbc_textLabel);
 		
 		lblProtocol = new JLabel(Text.PROTOCOL);
+		lblProtocol.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblProtocol = new GridBagConstraints();
-		gbc_lblProtocol.insets = new Insets(0, 0, 0, 5);
+		gbc_lblProtocol.insets = new Insets(0, 0, 5, 5);
 		gbc_lblProtocol.anchor = GridBagConstraints.EAST;
-		gbc_lblProtocol.gridx = 3;
+		gbc_lblProtocol.gridx = 5;
 		gbc_lblProtocol.gridy = 0;
 		upperPanel.add(lblProtocol, gbc_lblProtocol);
 		
@@ -108,13 +117,13 @@ public class PCCompanionGUI {
 			protocolComboBox.addItem(ProtocolHelper.ProtocolNames[i]);
 		}
 		GridBagConstraints gbc_protocolComboBox = new GridBagConstraints();
-		gbc_protocolComboBox.insets = new Insets(0, 0, 0, 5);
+		gbc_protocolComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_protocolComboBox.fill = GridBagConstraints.HORIZONTAL;
-		gbc_protocolComboBox.gridx = 4;
+		gbc_protocolComboBox.gridx = 6;
 		gbc_protocolComboBox.gridy = 0;
 		upperPanel.add(protocolComboBox, gbc_protocolComboBox);
 		
-		setupButton = new JButton(Text.SWARM_BASED_CONFIGURATION);
+		setupButton = new JButton(Text.SETUP_TEST);
 		setupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
@@ -138,8 +147,8 @@ public class PCCompanionGUI {
 			}
 		});
 		GridBagConstraints gbc_setupButton = new GridBagConstraints();
-		gbc_setupButton.insets = new Insets(0, 0, 0, 5);
-		gbc_setupButton.gridx = 5;
+		gbc_setupButton.insets = new Insets(0, 0, 5, 5);
+		gbc_setupButton.gridx = 7;
 		gbc_setupButton.gridy = 0;
 		upperPanel.add(setupButton, gbc_setupButton);
 		
@@ -167,8 +176,8 @@ public class PCCompanionGUI {
 			}
 		});
 		GridBagConstraints gbc_startButton = new GridBagConstraints();
-		gbc_startButton.insets = new Insets(0, 0, 0, 5);
-		gbc_startButton.gridx = 6;
+		gbc_startButton.insets = new Insets(0, 0, 5, 0);
+		gbc_startButton.gridx = 8;
 		gbc_startButton.gridy = 0;
 		upperPanel.add(startButton, gbc_startButton);
 		tableModel = new DefaultTableModel(0, 0);
@@ -210,6 +219,78 @@ public class PCCompanionGUI {
 		
 		setupButton.setEnabled(false);
 		startButton.setEnabled(false);
+		
+		buttonRecoverControl = new JButton("Recover Control");
+		buttonRecoverControl.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				PCCompanionParam.action.set(PCCompanionParam.ACTION_RECOVER_CONTROL);
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						buttonRecoverControl.setEnabled(false);
+						buttonRTL.setEnabled(false);
+						buttonLand.setEnabled(false);
+					}
+				});
+			}
+		});
+		GridBagConstraints gbc_buttonRecoverControl = new GridBagConstraints();
+		gbc_buttonRecoverControl.insets = new Insets(0, 0, 0, 5);
+		gbc_buttonRecoverControl.gridx = 1;
+		gbc_buttonRecoverControl.gridy = 1;
+		upperPanel.add(buttonRecoverControl, gbc_buttonRecoverControl);
+		
+		buttonRTL = new JButton(FlightMode.RTL.getMode());
+		buttonRTL.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				PCCompanionParam.action.set(PCCompanionParam.ACTION_RTL);
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						buttonRecoverControl.setEnabled(false);
+						buttonRTL.setEnabled(false);
+						buttonLand.setEnabled(false);
+					}
+				});
+			}
+		});
+		GridBagConstraints gbc_buttonRTL = new GridBagConstraints();
+		gbc_buttonRTL.fill = GridBagConstraints.HORIZONTAL;
+		gbc_buttonRTL.insets = new Insets(0, 0, 0, 5);
+		gbc_buttonRTL.gridx = 2;
+		gbc_buttonRTL.gridy = 1;
+		upperPanel.add(buttonRTL, gbc_buttonRTL);
+		
+		buttonLand = new JButton(FlightMode.LAND.getMode());
+		buttonLand.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				PCCompanionParam.action.set(PCCompanionParam.ACTION_LAND);
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						buttonRecoverControl.setEnabled(false);
+						buttonRTL.setEnabled(false);
+						buttonLand.setEnabled(false);
+					}
+				});
+			}
+		});
+		GridBagConstraints gbc_buttonLand = new GridBagConstraints();
+		gbc_buttonLand.insets = new Insets(0, 0, 0, 5);
+		gbc_buttonLand.fill = GridBagConstraints.HORIZONTAL;
+		gbc_buttonLand.gridx = 3;
+		gbc_buttonLand.gridy = 1;
+		upperPanel.add(buttonLand, gbc_buttonLand);
+		
+		lblEm = new JLabel(Text.EMERGENCY_ACTIONS);
+		lblEm.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblEm = new GridBagConstraints();
+		gbc_lblEm.gridwidth = 5;
+		gbc_lblEm.anchor = GridBagConstraints.WEST;
+		gbc_lblEm.insets = new Insets(0, 0, 0, 5);
+		gbc_lblEm.gridx = 4;
+		gbc_lblEm.gridy = 1;
+		upperPanel.add(lblEm, gbc_lblEm);
 		
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		assistantFrame.setLocation(dim.width/2-assistantFrame.getSize().width/2, 0);

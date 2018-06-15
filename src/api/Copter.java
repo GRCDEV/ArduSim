@@ -374,6 +374,12 @@ public class Copter {
 		}
 	}
 	
+	/** API: Cancels the overriding of the remote control output.
+	 * <p>Re*/
+	
+	
+	
+	
 	/** API: Overrides the remote control output.
 	 * <p>Channel values in microseconds. Typically chan1=roll, chan2=pitch, chan3=throttle, chan4=yaw.
 	 * <p>Value 0 means that the control of that channel must be returned to the RC radio.

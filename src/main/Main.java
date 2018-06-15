@@ -217,7 +217,6 @@ public class Main {
 			ArduSimTools.forceGPS();
 		}
 		ArduSimTools.getGPSFix();//TODO descomentar
-		ArduSimTools.sendBasicConfiguration();
 		
 		// 10. Set communications online, and start collision detection if needed
 		if (!Param.isRealUAV && Param.numUAVs > 1) {
@@ -233,7 +232,15 @@ public class Main {
 			}
 		}
 		
-		// 11. Launch the threads of the protocol under test and wait the GUI to be built
+		// 11. Send basic UAV configuration and wait the communications to be online
+		ArduSimTools.sendBasicConfiguration();
+		if (!Param.isRealUAV && Param.numUAVs > 1) {
+			while (!SimParam.communicationsOnline) {
+				Tools.waiting(SimParam.SHORT_WAITING_TIME);
+			}
+		}
+		
+		// 12. Launch the threads of the protocol under test and wait the GUI to be built
 		ProtocolHelper.selectedProtocolInstance.startThreads();
 		if (Param.isRealUAV) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
@@ -245,7 +252,7 @@ public class Main {
 			return;
 		}
 		
-		// 12. Build auxiliary elements to be drawn and prepare the user interaction
+		// 13. Build auxiliary elements to be drawn and prepare the user interaction
 		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
 		if (!Param.isRealUAV) {
@@ -265,7 +272,7 @@ public class Main {
 			return;
 		}
 
-		// 13. Apply the configuration step
+		// 14. Apply the configuration step
 		ProtocolHelper.selectedProtocolInstance.setupActionPerformed();
 		Param.simStatus = SimulatorState.READY_FOR_TEST;
 		while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
@@ -275,7 +282,7 @@ public class Main {
 			return;
 		}
 
-		// 14. Waiting for the user to start the experiment
+		// 15. Waiting for the user to start the experiment
 		if (!Param.isRealUAV) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -292,7 +299,7 @@ public class Main {
 			return;
 		}
 
-		// 15. Start the experiment, only if the program is not being closed
+		// 16. Start the experiment, only if the program is not being closed
 		// TODO remove new threads and clean the console parameters (args)
 		if (UAVParam.doFakeSending) {
 			for (int i = 0; i < Param.numUAVs; i++) {
@@ -329,7 +336,7 @@ public class Main {
 		}
 		ProtocolHelper.selectedProtocolInstance.startExperimentActionPerformed();
 
-		// 16. Waiting while the experiment is is progress and detecting the experiment end
+		// 17. Waiting while the experiment is is progress and detecting the experiment end
 		int check = 0;
 		boolean checkEnd = false;
 		while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
@@ -358,7 +365,7 @@ public class Main {
 			return;
 		}
 
-		// 17. Wait for the user to close the simulator, only if the program is not being closed
+		// 18. Wait for the user to close the simulator, only if the program is not being closed
 		GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 		if (!Param.isRealUAV) {
 			GUI.log(Text.WAITING_FOR_USER);

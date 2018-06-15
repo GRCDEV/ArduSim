@@ -113,7 +113,7 @@ public class MainWindowButtonsPanel extends JPanel {
 		gbc_progressDialogButton.gridy = 0;
 		buttonsPanel.add(progressDialogButton, gbc_progressDialogButton);
 		
-		setupButton = new JButton(Text.SWARM_BASED_CONFIGURATION);
+		setupButton = new JButton(Text.SETUP_TEST);
 		setupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {

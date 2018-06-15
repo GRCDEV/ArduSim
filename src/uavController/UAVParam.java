@@ -247,9 +247,14 @@ public class UAVParam {
 	public static final int MAV_STATUS_THROTTLE_ON = 32;
 	public static final int MAV_STATUS_THROTTLE_ON_ERROR = 33;
 	public static int[] stabilizationThrottle;	// By default is 1500 (altitude stabilized)
-	public static final int MAV_STATUS_MOVE_UAV = 34;
-	public static final int MAV_STATUS_ACK_MOVE_UAV = 35;
-	public static final int MAV_STATUS_MOVE_UAV_ERROR = 36;
+	public static final int MAV_STATUS_RECOVER_CONTROL = 34;
+	public static final int MAV_STATUS_RECOVER_ERROR = 35;
+//	public static final AtomicBooleanA
+//	usar variable para deshabilitar el override cuando se haya recobrado el control de un UAV específico
+	
+	public static final int MAV_STATUS_MOVE_UAV = 36;
+	public static final int MAV_STATUS_ACK_MOVE_UAV = 37;
+	public static final int MAV_STATUS_MOVE_UAV_ERROR = 38;
 	public static float[][] newLocation;	// [latitude, longitude, relative altitude] where to move the UAV
 	
 	// Potentiometer levels for the six flight modes configurable in the remote control (min, used, max)

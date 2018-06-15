@@ -17,6 +17,7 @@ public class RangeCalculusThread extends Thread {
 				|| Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS) {
 			boolean isInRange;
 			if (UAVParam.distanceCalculusIsOnline) {
+				SimParam.communicationsOnline = true;
 				for (int i = 0; i < Param.numUAVs - 1; i++) {
 					for (int j = i + 1; j < Param.numUAVs; j++) {
 						isInRange = SimTools.isInRange(UAVParam.distances[i][j].get());

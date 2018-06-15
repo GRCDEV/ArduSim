@@ -48,43 +48,61 @@ public class PCCompanionTalker extends Thread {
 		long time = System.currentTimeMillis();
 		long sleep;
 		boolean send;
-		while (true) {
-			if (!listener.isAlive()) {
-				break;
+		boolean dialogAlreadyOpened = false;
+		while (Param.simStatus != SimulatorState.TEST_FINISHED
+				&& Param.simStatus != SimulatorState.SHUTTING_DOWN) {
+			if (listener.isAlive()) {
+				// Send simulation states
+				if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS
+						|| Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+					send = true;
+				} else {
+					send = false;
+				}
+				if (send) {
+					try {
+						output.clear();
+						output.writeInt(PCCompanionParam.CHANGE_STATE_COMMAND);
+						output.writeInt(Param.simStatus.getStateId());
+						sentPacket.setData(sendBuffer, 0, output.position());
+						sendSocket.send(sentPacket);
+					} catch (KryoException e) {} catch (IOException e) {}
+				}
+				
+				// Send emergency command when needed
+				if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
+						&& PCCompanionParam.action.get() != PCCompanionParam.ACTION_NONE) {
+					try {
+						output.clear();
+						output.writeInt(PCCompanionParam.EMERGENCY_COMMAND);
+						output.writeInt(PCCompanionParam.action.get());
+						sentPacket.setData(sendBuffer, 0, output.position());
+						sendSocket.send(sentPacket);
+					} catch (KryoException e) {} catch (IOException e) {}
+				}
+			} else {
+				if (!dialogAlreadyOpened) {
+					// Launch the protocol dialog for PC Companion
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							ProtocolHelper.selectedProtocolInstance.openPCCompanionDialog(PCCompanionGUI.companion.assistantFrame);
+						}
+					});
+					dialogAlreadyOpened = true;
+				}
 			}
 			
-			if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS
-					|| Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-				send = true;
-			} else {
-				send = false;
-			}
-
-			if (send) {
-				try {
-					output.clear();
-					output.writeInt(Param.simStatus.getStateId());
-					sentPacket.setData(sendBuffer, 0, output.position());
-					sendSocket.send(sentPacket);
-				} catch (KryoException e) {} catch (IOException e) {}
-			}
-
 			sleep = PCCompanionParam.COMMAND_SEND_TIMEOUT - (System.currentTimeMillis() - time);
 			if (sleep > 0) {
 				Tools.waiting((int)sleep);
 			}
 			time = time + PCCompanionParam.COMMAND_SEND_TIMEOUT;
 		}
-		output.close();
+		output.close();// Code execution will never get here
 		sendSocket.close();
 		
-		// Launch the protocol dialog for PC Companion
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				ProtocolHelper.selectedProtocolInstance.openPCCompanionDialog(PCCompanionGUI.companion.assistantFrame);
-			}
-		});
+		
 	}
 
 }

@@ -18,6 +18,9 @@ public class SimParam {
 	// Whether the progress dialog is showing or not
 	public static volatile boolean progressShowing = false;
 	
+	// Detects when the communications are online
+	public static volatile boolean communicationsOnline = false;
+	
 	// Performance parameters
 	public static volatile boolean arducopterLoggingEnabled = false;
 	// Rendering quality levels
