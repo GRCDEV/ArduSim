@@ -43,6 +43,14 @@ public class Formacion {
 			return new Point2D.Double(-horiz, vert);
 		}
 	}
+	
+	public static Point2D.Double getOffsetCircular(int posFormation, int numSlaves){
+		double angulo = 2*Math.PI / numSlaves;
+		double vert = Math.sin(angulo * posFormation)* FollowMeParam.DistanciaSeparacionRadio;
+		double horiz = Math.cos(angulo * posFormation) *FollowMeParam.DistanciaSeparacionRadio;
+		
+		return new Point2D.Double(horiz, vert);
+	}
 
 //	public static Resultado getPosition(int type, GeoCoordinates geoMaster, double headingMaster,
 //			int posFormacion, int numSlaves) {

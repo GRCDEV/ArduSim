@@ -24,10 +24,12 @@ public class FollowMeParam {
 	public static final double AlturaInitFollowers = 10.0;
 	public static final double AlturaMiminaFollowers = 0.75;
 	public static final double AlturaInitSend = 0.5;
-	public static final long TiempoMaxExperimento = 60000 * 5;
+	public static final long TiempoMaxExperimento = 60000 * 2;
 	
-	public static final int DistanciaSeparacionHorizontal = 20;
+	public static final int DistanciaSeparacionHorizontal = 50;
 	public static final int DistanciaSeparacionVertical = 20;
+	public static final double DistanciaSeparacionRadio = 100;
+
 
 	public static final int FormacionLinea = 0;
 	public static final int FormacionMatriz = 1;

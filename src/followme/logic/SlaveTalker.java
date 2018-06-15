@@ -69,9 +69,10 @@ public class SlaveTalker extends Thread {
 			Tools.waiting(1000);
 		}
 		
-		while (FollowMeParam.uavs[numUAV] == FollowMeState.WAIT_TAKE_OFF_SLAVE
-				|| FollowMeParam.uavs[numUAV] == FollowMeState.TAKE_OFF) {
-			Tools.waiting(200);
+		if (FollowMeParam.uavs[numUAV] == FollowMeState.TAKE_OFF) {
+			Copter.takeOff(numUAV, FollowMeParam.AlturaInitFollowers);
+			FollowMeParam.uavs[numUAV] = FollowMeState.WAIT_MASTER;
+			GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 		}
 		
 		while (FollowMeParam.uavs[numUAV] == FollowMeState.WAIT_MASTER) {

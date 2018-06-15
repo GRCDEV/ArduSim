@@ -23,6 +23,7 @@ import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
+import api.pojo.UTMCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
 import sim.board.BoardPanel;
 
@@ -255,11 +256,13 @@ public class FollowMeHelper extends ProtocolHelper {
 	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
 		Pair<GeoCoordinates, Double>[] iniLocation = new Pair[Tools.getNumUAVs()];
 
-		iniLocation[0] = Pair.with(new GeoCoordinates(39.482588, -0.345971), 0.0);
-		iniLocation[1] = Pair.with(new GeoCoordinates(39.482111, -0.346857), 0.0);
+		GeoCoordinates geoMaster = new GeoCoordinates(39.482588, -0.345971);
+		GeoCoordinates geoSlave = new GeoCoordinates(39.482111, -0.346857);
+		iniLocation[0] = Pair.with(geoMaster, 0.0);
+		iniLocation[1] = Pair.with(geoSlave, 0.0);
+		GeoCoordinates geoSep = new GeoCoordinates(0, 0.00002);
 		for (int i = 1; i < Tools.getNumUAVs() - 1; i++) {
-			iniLocation[i + 1] = Pair.with(new GeoCoordinates(iniLocation[1].getValue0().latitude, /*- (0.00001 * i)*/
-					iniLocation[1].getValue0().longitude + (0.00002 * i)), 0.0);
+			iniLocation[i + 1] = Pair.with(new GeoCoordinates(geoSlave.latitude, geoSlave.longitude), 0.0);
 		}
 		return iniLocation;
 	}
@@ -337,9 +340,10 @@ public class FollowMeHelper extends ProtocolHelper {
 		// Param.simStatus = SimulatorState.READY_FOR_TEST;
 		// Modo de vuelo Loiter / Loiter_Armed
 		// UAVParam.flightMode.set(0, Mode.LOITER);
-//		if (!Copter.armEngines(0) || !Copter.setFlightMode(0, FlightMode.LOITER) || !Copter.setHalfThrottle(0)) {
-//			// Tratar el fallo
-//		}
+		// if (!Copter.armEngines(0) || !Copter.setFlightMode(0, FlightMode.LOITER) ||
+		// !Copter.setHalfThrottle(0)) {
+		// // Tratar el fallo
+		// }
 	}
 
 	@Override
