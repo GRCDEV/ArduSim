@@ -2,6 +2,7 @@ package followme.logic;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.esotericsoftware.kryo.io.Input;
 
@@ -17,13 +18,14 @@ public class SlaveListener extends Thread {
 	private int numUAV;
 	private long idSlave;
 	private int idMaster;
+	private AtomicReference<Point2D.Double> point;
 
 	private int[] idsFormacion;
 
-	public SlaveListener(int numUAV) {
+	public SlaveListener(int numUAV, AtomicReference<Point2D.Double> point) {
 		this.numUAV = numUAV;
 		this.idSlave = Tools.getIdFromPos(numUAV);
-
+		this.point = point;
 	}
 
 	@Override
@@ -44,6 +46,7 @@ public class SlaveListener extends Thread {
 		int idSender, typeRecibido;
 		boolean received = false;
 		Point2D.Double offset = null;
+		double x = 0, y = 0, heading = 0;
 		while (!received) {
 			message = Copter.receiveMessage(numUAV); /// Espera bloqueante
 			in.setBuffer(message);
@@ -52,6 +55,9 @@ public class SlaveListener extends Thread {
 			if (typeRecibido == FollowMeParam.MsgTakeOff) {
 				idMaster = idSender;
 				int size = in.readInt();
+				x = in.readDouble();
+				y = in.readDouble();
+				heading = in.readDouble();
 				idsFormacion = in.readInts(size);
 				// Precálculo de la formación
 				int posFormacion = -1;
@@ -60,6 +66,8 @@ public class SlaveListener extends Thread {
 						posFormacion = i;
 					}
 				} // TODO acción si no lo encuentra
+				
+				
 
 				switch (FollowMeParam.FormacionUsada) {
 				case FollowMeParam.FormacionLinea:
@@ -84,12 +92,37 @@ public class SlaveListener extends Thread {
 			// "+idSender+" Msg tipo: "+FollowMeParam.getTypeMessage(typeRecibido));
 			// }
 		}
-		
+
 		while (FollowMeParam.uavs[numUAV] == FollowMeState.TAKE_OFF) {
 			message = Copter.receiveMessage(numUAV);
 		}
+		
+		//TODO Fase pruebas
+		heading = -Math.PI/2;
+		//////////////////////
+
+		double incX, incY;
+		incY = offset.y * Math.cos(heading) - offset.x * Math.sin(heading);
+		incX = offset.x * Math.cos(heading) + offset.y * Math.sin(heading);
+
+		x += incX;
+		y += incY;
+		point.set(new Point2D.Double(x,y));
+		GeoCoordinates geo = Tools.UTMToGeo(x, y);
 
 		
+		
+		try {
+			Copter.getController(numUAV).msgTarget(FollowMeParam.TypemsgTargetCoordinates, geo.latitude, geo.longitude,
+					FollowMeParam.AlturaInitFollowers, 1.0, false, 0.0, 0.0, 0.0);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		while (FollowMeParam.uavs[numUAV] == FollowMeState.GOTO_POSITION) {
+			message = Copter.receiveMessage(numUAV);
+		}
 
 		received = false;
 		while (!received) {
@@ -98,7 +131,7 @@ public class SlaveListener extends Thread {
 			idSender = in.readInt();
 			typeRecibido = in.readInt();
 			if (idSender == idMaster && typeRecibido == FollowMeParam.MsgCoordenadas) {
-				double x, y, heading, z, speedX, speedY, speedZ;
+				double  z, speedX, speedY, speedZ;
 				x = in.readDouble();
 				y = in.readDouble();
 				heading = in.readDouble();
@@ -107,14 +140,13 @@ public class SlaveListener extends Thread {
 				speedY = in.readDouble();
 				speedZ = in.readDouble();
 
-				double incX, incY;
 				incY = offset.y * Math.cos(heading) - offset.x * Math.sin(heading);
 				incX = offset.x * Math.cos(heading) + offset.y * Math.sin(heading);
 
 				x += incX;
 				y += incY;
 
-				GeoCoordinates geo = Tools.UTMToGeo(x, y);
+				geo = Tools.UTMToGeo(x, y);
 
 				try {
 					Copter.getController(numUAV).msgTarget(FollowMeParam.TypemsgTargetCoordinates, geo.latitude,
@@ -133,21 +165,20 @@ public class SlaveListener extends Thread {
 
 		received = false;
 		while (!received) {
-			
+
 			long t = System.currentTimeMillis();
-			
+
 			message = Copter.receiveMessage(numUAV); /// Espera bloqueante
-			
+
 			if (System.currentTimeMillis() - t > 3000) {
 				System.out.println(numUAV);
 			}
-			
-			
+
 			in.setBuffer(message);
 			idSender = in.readInt();
 			typeRecibido = in.readInt();
 			if (idSender == idMaster && typeRecibido == FollowMeParam.MsgCoordenadas) {
-				double x, y, heading, z, speedX, speedY, speedZ;
+				double  z, speedX, speedY, speedZ;
 				x = in.readDouble();
 				y = in.readDouble();
 				heading = in.readDouble();
@@ -156,19 +187,14 @@ public class SlaveListener extends Thread {
 				speedY = in.readDouble();
 				speedZ = in.readDouble();
 
-				double incX, incY;
 				incY = offset.y * Math.cos(heading) - offset.x * Math.sin(heading);
 				incX = offset.x * Math.cos(heading) + offset.y * Math.sin(heading);
 
 				x += incX;
 				y += incY;
 
-				GeoCoordinates geo = Tools.UTMToGeo(x, y);
+				geo = Tools.UTMToGeo(x, y);
 
-				double speed = Copter.getSpeed(numUAV);
-				if (speed < 0.1) {
-					System.err.println("Slave " + numUAV + " parado");
-				}
 				try {
 					Copter.getController(numUAV).msgTarget(FollowMeParam.TypemsgTargetCoordinates, geo.latitude,
 							geo.longitude, z, 1.0, false, speedX, speedY, speedZ);

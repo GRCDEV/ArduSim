@@ -44,12 +44,19 @@ public class MasterTalker extends Thread {
 			idsFormacion[i++] = p;
 		}
 		
+		double lat, lon, heading, z, speedX, speedY, speedZ;
+		Point2D.Double utm = Copter.getUTMLocation(FollowMeParam.posMaster);
+		heading = Copter.getHeading(FollowMeParam.posMaster);
+		
 		while (FollowMeParam.uavs[idMaster] == FollowMeState.WAIT_TAKE_OFF_MASTER) {
 			buffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 			out.setBuffer(buffer);
 			out.writeInt(idMaster);
 			out.writeInt(FollowMeParam.MsgTakeOff);
 			out.writeInt(idsFormacion.length);
+			out.writeDouble(utm.x);
+			out.writeDouble(utm.y);
+			out.writeDouble(heading);
 			out.writeInts(idsFormacion);
 			out.flush();
 			byte[] message = Arrays.copyOf(buffer, out.position());
@@ -83,14 +90,15 @@ public class MasterTalker extends Thread {
 		FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.SENDING;
 		GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		
+
+		
 		while (Copter.getFlightMode(idMaster) != FlightMode.LAND_ARMED
 				&& Copter.getFlightMode(idMaster) != FlightMode.LAND) {
 			buffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 			out.setBuffer(buffer);;
 			out.writeInt(idMaster);
 			out.writeInt(FollowMeParam.MsgCoordenadas);
-			double lat, lon, heading, z, speedX, speedY, speedZ;
-			Point2D.Double utm = Copter.getUTMLocation(FollowMeParam.posMaster);
+			utm = Copter.getUTMLocation(FollowMeParam.posMaster);
 			heading = Copter.getHeading(FollowMeParam.posMaster);
 			z = Copter.getZRelative(FollowMeParam.posMaster);
 			Triplet<Double, Double, Double> speed = Copter.getSpeeds(FollowMeParam.posMaster);

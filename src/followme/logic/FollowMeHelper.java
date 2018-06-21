@@ -1,12 +1,14 @@
 package followme.logic;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -283,8 +285,9 @@ public class FollowMeHelper extends ProtocolHelper {
 					masterMando.start();
 
 				} else {
-					SlaveTalker slaveTalker = new SlaveTalker(i);
-					SlaveListener slaveListener = new SlaveListener(i);
+					AtomicReference<Point2D.Double> point = new AtomicReference<Point2D.Double>(null);;
+					SlaveTalker slaveTalker = new SlaveTalker(i,point);
+					SlaveListener slaveListener = new SlaveListener(i,point);
 					GUI.log("Iniciando Slave " + i);
 					slaveTalker.start();
 					slaveListener.start();
