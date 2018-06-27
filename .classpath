@@ -43,5 +43,7 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="ArduSim/src"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="libs/org.slf4j.slf4j-api-1.7.25.jar"/>
+	<classpathentry kind="lib" path="libs/org.slf4j.slf4j-simple-1.7.25.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

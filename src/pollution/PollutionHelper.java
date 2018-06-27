@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 import org.javatuples.Pair;
 
 import api.Copter;
+import api.GUI;
 import api.ProtocolHelper;
 import api.pojo.GeoCoordinates;
 import sim.board.BoardPanel;
@@ -32,12 +33,14 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public void initializeDataStructures() {
+		GUI.log("Pollution sensor setup.");
 		try {
 			PollutionParam.sensor = PollutionParam.isSimulation ? new PollutionSensorSim() : null;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		GUI.log("Pollution sensor setup done.");
 		PollutionParam.ready = false;
 	}//TODO
 
@@ -70,6 +73,7 @@ public class PollutionHelper extends ProtocolHelper {
 	@Override
 	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
 		Pair<GeoCoordinates, Double> startCoordinates = new Pair<GeoCoordinates, Double>(PollutionParam.startLocation, 0.0);
+		@SuppressWarnings("unchecked")
 		Pair<GeoCoordinates, Double>[] startCoordinatesArray = new Pair[1];
 		startCoordinatesArray[0] = startCoordinates;
 		return startCoordinatesArray;

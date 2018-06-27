@@ -35,7 +35,7 @@ public class Point {
 	 * Make a deep copy of this object
 	 * @return A deep copy of the object.
 	 */
-	public Point copy() {
+	public Point clone() {
 		return new Point(x, y);
 	}
 	
@@ -48,14 +48,34 @@ public class Point {
 		return new Point(x - p.x, y - p.y);
 	}
 	
+	public double distance(Point p) {
+		int a = this.x - p.x;
+		int b = this.y - p.y;
+		return Math.sqrt(a*a + b*b);
+	}
+	
 	/**
 	 * Adds a Point to this Point.
 	 * Useful for adding Points representing distance vectors.
 	 * @param p The Point to add to this object.
+	 * @return Itself to allow chaining.
 	 */
-	public void add(Point p) {
+	public Point add(Point p) {
 		x += p.x;
 		y += p.y;
+		return this;
+	}
+	
+	/**
+	 * Adds to the x and y components of the Point.
+	 * @param x The x to add.
+	 * @param y The y to add.
+	 * @return
+	 */
+	public Point add(int x, int y) {
+		this.x += x;
+		this.y += y;
+		return this;
 	}
 	
 	/**
@@ -96,15 +116,19 @@ public class Point {
 	/**
 	 * Add to x
 	 * @param i Amount to add to x
+	 * @return Itself to allow chaining.
 	 */
-	public void addX(int i) {
+	public Point addX(int i) {
 		this.x += i;
+		return this;
 	}
 	/**
 	 * Add to y
 	 * @param i Amount to add to y
+	 * @return Itself to allow chaining.
 	 */
-	public void addY(int i) {
+	public Point addY(int i) {
 		this.y += i;
+		return this;
 	}
 }
