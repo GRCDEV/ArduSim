@@ -7,6 +7,8 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
 import api.Copter;
+import api.Tools;
+import api.pojo.UTMCoordinates;
 import smile.interpolation.KrigingInterpolation;
 import smile.interpolation.variogram.GaussianVariogram;
 
@@ -69,8 +71,9 @@ public class PollutionSensorSim implements PollutionSensor {
 	@Override
 	public double read() {
 		Point2D.Double location = Copter.getUTMLocation(0);
-		double pointX = location.getX() / PollutionParam.width * dataXSize;
-		double pointY = location.getY() / PollutionParam.length * dataYSize;
+		UTMCoordinates startLocation = Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
+		double pointX = (location.getX() - startLocation.Easting) / PollutionParam.length * dataYSize;
+		double pointY = (location.getY() - startLocation.Northing) / PollutionParam.length * dataYSize;
 		return krigData.interpolate(pointX, pointY);
 	}
 

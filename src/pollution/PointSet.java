@@ -55,9 +55,9 @@ public class PointSet {
 		return al.toArray(new Point[0]);
 	}
 	
+	@Override
 	public String toString() {
-		Arrays.deepToString(this.toArray());
-		return null;
+		return Arrays.deepToString(this.toArray());
 	}
 	
 	public Iterator<Point> iterator() {

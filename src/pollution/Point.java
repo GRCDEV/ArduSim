@@ -18,8 +18,9 @@ public class Point {
 	/**
 	 * @return The serialised data.
 	 */
+	@Override
 	public String toString() {
-		return x + ", " + y;
+		return "[" + x + ", " + y + "]";
 	}
 	
 	/**

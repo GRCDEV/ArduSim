@@ -59,24 +59,24 @@ public class PollutionConfigDialog extends JDialog {
 		JLabel startLatLabel = new JLabel("Start latitude: "); // TODO Add text helper file
 		JLabel startLongLabel = new JLabel("Start longitude: "); // TODO Add text helper file
 		JLabel altitudeLabel = new JLabel("Altitude: "); // TODO Add text helper file
-		startLatField = new JTextField("0", 10);
-		startLongField = new JTextField("0", 10);
-		altitudeField = new JTextField("0", 10);
+		startLatField = new JTextField("39.482768", 10);
+		startLongField = new JTextField("-0.346753", 10);
+		altitudeField = new JTextField("20", 10);
 		
 		// Size components
 		JLabel widthLabel = new JLabel("Width (m): "); // TODO Add text helper file
 		JLabel lengthLabel = new JLabel("Length (m): "); // TODO Add text helper file
 		JLabel densityLabel = new JLabel("Density (mpm): "); // TODO Add text helper file
 		densityLabel.setToolTipText("Metres per measurement"); // TODO Add text helper file
-		widthField = new JTextField("0", 5);
-		lengthField = new JTextField("0", 5);
-		densityField = new JTextField("0", 5);
+		widthField = new JTextField("1000", 5);
+		lengthField = new JTextField("1000", 5);
+		densityField = new JTextField("100", 5);
 		densityField.setToolTipText("Metres per measurement"); // TODO Add text helper file
 		
 		// Simulation components
 		pollutionDataLabel = new JLabel("Pollution data: "); // TODO Add text helper file
 		isSimulationCheckBox = new JCheckBox("Simulation", true); // TODO Add text helper file
-		pollutionDataField = new JTextField();
+		pollutionDataField = new JTextField("pollution.txt");
 		pollutionDataButton = new JButton("...");
 		pollutionDataButton.addActionListener(new ActionListener() {
 			

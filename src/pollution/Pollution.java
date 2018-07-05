@@ -27,7 +27,7 @@ public class Pollution extends Thread {
 		m = PollutionParam.sensor.read();
 		PollutionParam.measurements.set(p.getX(), p.getY(), m);
 		visited[p.getX()][p.getY()] = true;
-		GUI.log("[" + p.getX() + ", " + p.getY() + "] = " + m);
+		GUI.log("Read: [" + p.getX() + ", " + p.getY() + "] = " + m);
 		return m;
 	}
 	
@@ -39,6 +39,11 @@ public class Pollution extends Thread {
 		
 		Point p1, p2;
 		double m1, m2;
+		Point pTemp;
+		int round, radius;
+		int i, j;
+		PointSet points;
+		Iterator<Point> pts;
 				
 		// Calculate grid size and origin
 		sizeX = (int) ((double) PollutionParam.width / PollutionParam.density);
@@ -78,9 +83,7 @@ public class Pollution extends Thread {
 		boolean isMax = false;
 		boolean found;
 		//boolean finished = false;
-		Point pTemp;
-		int round, radius;
-		PointSet points;
+
 		
 		/* Main loop */
 		while(!isMax) {
@@ -109,20 +112,59 @@ public class Pollution extends Thread {
 					// Tumble
 					GUI.log("Chemotaxis: Tumble");
 					found = false;
-					for(int i = -1; i < 2 && !found; i++)
-						for(int j = -1; j< 2 && !found; j++) {
+					
+					points = new PointSet();
+					for(i = -1; i < 2; i++)
+						for(j = -1; j< 2; j++) {
 							pTemp = new Point(p1.getX() + i, p1.getY() + j);
-							if(!(visited[pTemp.getX()][pTemp.getY()] || pTemp.isInside(sizeX, sizeY))) {
-								p2 = pTemp;
-								found = true;
-								
-								// Measure next step
-								m2 = moveAndRead(p2);
+							if(pTemp.isInside(sizeX, sizeY) && !(visited[pTemp.getX()][pTemp.getY()])) points.add(pTemp);
+						}
+					
+					if(!points.isEmpty()) {
+						pts = points.iterator();
+						
+						// -- Get closest point
+						Point pt, minPt;
+						double dist, minDist;
+						
+						// ---- First element is temporary closest point
+						minPt = pts.next();
+						minDist = p2.distance(minPt);
+						// ---- Iterate through all elements to find closest point
+						while(pts.hasNext()) {
+							pt = pts.next();
+							dist = p2.distance(pt);
+							//GUI	.log(pt.toString() + " > " + dist);
+							if (dist < minDist) {
+								minDist = dist;
+								minPt = pt;
 							}
 						}
-					if(!found) {
+						
+						// ---- Read closest point
+						p2 = minPt;
+						m2 = moveAndRead(p2);
+					} else {
 						isMax = true;
 					}
+					
+					
+					
+//					for(i = -1; i < 2 && !found; i++)
+//						for(j = -1; j< 2 && !found; j++) {
+//							pTemp = new Point(p1.getX() + i, p1.getY() + j);
+//							//GUI.log("\t" + pTemp);
+//							if(!(visited[pTemp.getX()][pTemp.getY()]) && pTemp.isInside(sizeX, sizeY)) {
+//								p2 = pTemp;
+//								found = true;
+//								//GUI.log("\tFound");
+//								// Measure next step
+//								m2 = moveAndRead(p2);
+//							}
+//						}
+//					if(!found) {
+//						isMax = true;
+//					}
 				}
 			} 
 			
@@ -134,8 +176,7 @@ public class Pollution extends Thread {
 			radius = 3;
 			
 			points = new PointSet();
-			Point auxPoint;
-			Iterator<Point> pts;
+			//p2 = p1.clone();
 			
 			// Measure until radius covers all the grid
 			while(isMax && (radius < sizeX || radius < sizeY)) {
@@ -144,26 +185,29 @@ public class Pollution extends Thread {
 				
 				// Generate points for this round
 				// -- Generate corner points
-				auxPoint = p1.clone().add(radius, radius); // Top-right
-				if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
-				auxPoint = p1.clone().add(-radius, radius); // Top-left
-				if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
-				auxPoint = p1.clone().add(radius, -radius); // Bottom-right
-				if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
-				auxPoint = p1.clone().add(-radius, -radius); // Bottom-left
-				if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
+				pTemp = p1.clone().add(radius, radius); // Top-right
+				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
+				pTemp = p1.clone().add(-radius, radius); // Top-left
+				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
+				pTemp = p1.clone().add(radius, -radius); // Bottom-right
+				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
+				pTemp = p1.clone().add(-radius, -radius); // Bottom-left
+				if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
 				
 				// -- Generate points (except corners)
-				for(int i = (-radius) + round; i < radius; i+= round) {
-					auxPoint = p1.clone().add(i, radius); // Top
-					if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
-					auxPoint = p1.clone().add(i, -radius); // Bottom
-					if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
-					auxPoint = p1.clone().add(-radius, i); // Left
-					if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
-					auxPoint = p1.clone().add(radius, i); // Right
-					if(!visited[auxPoint.getX()][auxPoint.getY()] && auxPoint.isInside(sizeX, sizeY)) points.add(auxPoint);
+				for(i = (-radius) + round; i < radius; i+= round) {
+					pTemp = p1.clone().add(i, radius); // Top
+					if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
+					pTemp = p1.clone().add(i, -radius); // Bottom
+					if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
+					pTemp = p1.clone().add(-radius, i); // Left
+					if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
+					pTemp = p1.clone().add(radius, i); // Right
+					if(pTemp.isInside(sizeX, sizeY) && !visited[pTemp.getX()][pTemp.getY()]) points.add(pTemp);
 				}
+				
+				//GUI.log(points.toString());
+				
 				
 				// Iterate until all points have been visited or a new maximum is found
 				while(!points.isEmpty() && isMax) {
@@ -175,11 +219,12 @@ public class Pollution extends Thread {
 					
 					// ---- First element is temporary closest point
 					minPt = pts.next();
-					minDist = p1.distance(minPt);
+					minDist = p2.distance(minPt);
 					// ---- Iterate through all elements to find closest point
 					while(pts.hasNext()) {
 						pt = pts.next();
-						dist = p1.distance(pt);
+						dist = p2.distance(pt);
+						//GUI	.log(pt.toString() + " > " + dist);
 						if (dist < minDist) {
 							minDist = dist;
 							minPt = pt;
