@@ -10,8 +10,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 
+import api.Copter;
 import api.GUI;
 import api.Tools;
+import api.pojo.FlightMode;
 import main.Param;
 import main.Param.SimulatorState;
 import pccompanion.PCCompanionParam;
@@ -32,6 +34,7 @@ public class ExperimentListener extends Thread {
 			GUI.exit(Text.BIND_ERROR_1);
 		}
 		
+		outerloop:
 		while (true) {
 			try {
 				if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
@@ -65,17 +68,47 @@ public class ExperimentListener extends Thread {
 							}
 						}
 						break;
-					// Emergency action command
+					// Emergency action command (applied only once)
 					case PCCompanionParam.EMERGENCY_COMMAND:
 						int command = input.readInt();
+						boolean commandFound = false;
+						boolean commandSuccess = false;
 						if (command == PCCompanionParam.ACTION_RECOVER_CONTROL) {
-//							solo una vez y contemplar errores y cerrar hilo tras el comando
+							commandFound = true;
+							if (Copter.returnRCControl(0)) {
+								commandSuccess = true;
+							} else {
+								
+							}
 						}
 						if (command == PCCompanionParam.ACTION_RTL) {
-							
+							commandFound = true;
+							if (Copter.setFlightMode(0, FlightMode.RTL_ARMED)) {
+								commandSuccess = true;
+							} else {
+								
+							}
 						}
 						if (command == PCCompanionParam.ACTION_LAND) {
-							
+							commandFound = true;
+							if (Copter.setFlightMode(0, FlightMode.LAND_ARMED)) {
+								commandSuccess = true;
+							} else {
+								
+							}
+						}
+						if (commandFound) {
+							if (commandSuccess) {
+								GUI.log(Text.EMERGENCY_SUCCESS);
+								break outerloop;
+							} else {
+								GUI.log(Text.EMERGENCY_FAILED + " " + command);
+								//TODO por contemplar qué hacer si hay error
+								// Probablemente será necesario obligar a los desarrolladores a implementar una función sobre la acción a
+								//  tomar cuando se aplica el comando de emergencia
+							}
+						} else {
+							GUI.log(Text.EMERGENCY_NOT_FOUND + " " + command);
 						}
 						break;
 					}

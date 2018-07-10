@@ -563,7 +563,7 @@ public class UAVControllerThread extends Thread {
 	/** Process a new command. */
 	private void processCommand() {
 		switch (UAVParam.MAVStatus.get(numUAV)) {
-		// Command to take control of the UAV using RC3 (throttle)
+		// Command to take control of the UAV using (half throttle)
 		case UAVParam.MAV_STATUS_THROTTLE_ON:
 			try {
 				msgSetThrottle(UAVParam.stabilizationThrottle[numUAV]);
@@ -571,6 +571,17 @@ public class UAVControllerThread extends Thread {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON_ERROR);
+			}
+			break;
+		case UAVParam.MAV_STATUS_RECOVER_CONTROL:
+			try {
+				msgReturnRCControl();
+				// Now the RC channels will not be overriden by ArduSim
+				UAVParam.overrideOn.set(0, 0);
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_RECOVER_ERROR);
 			}
 			break;
 		// Command to move the UAV to a safe position stored in the variable UAVParam.newLocation[numUAV]
@@ -791,41 +802,6 @@ public class UAVControllerThread extends Thread {
 		this.sendMessage(message.encode());
 	}
 	
-	/** Restricted method for API ussage. Please, don't use it.
-	 * <p>Value 0 returns control to the RC.
-	 * <p>UINT16_MAX avoids changing that channel.*/
-	private void msgrcChannelsOverride(int roll, int pitch, int throttle, int yaw) throws IOException {
-		msg_rc_channels_override message = new msg_rc_channels_override();
-		// Initially, only trim values
-		int[] values = new int[] {UAVParam.RCtrimValue[numUAV].get(0), UAVParam.RCtrimValue[numUAV].get(1),
-				UAVParam.RCtrimValue[numUAV].get(2), UAVParam.RCtrimValue[numUAV].get(3),
-				UAVParam.RCtrimValue[numUAV].get(4), UAVParam.RCtrimValue[numUAV].get(5),
-				UAVParam.RCtrimValue[numUAV].get(6), UAVParam.RCtrimValue[numUAV].get(7)};
-		// New roll, pitch, throttle, and yaw values
-		values[UAVParam.RCmapRoll.get(numUAV)-1] = roll;
-		values[UAVParam.RCmapPitch.get(numUAV)-1] = pitch;
-		values[UAVParam.RCmapThrottle.get(numUAV)-1] = throttle;
-		values[UAVParam.RCmapYaw.get(numUAV)-1] = yaw;
-		// Flight mode
-		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
-		if (fltmode != -1) {
-			values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
-		}
-		message.chan1_raw = values[0];
-		message.chan2_raw = values[1];
-		message.chan3_raw = values[2];
-		message.chan4_raw = values[3];
-		message.chan5_raw = values[4];
-		message.chan6_raw = values[5];
-		message.chan7_raw = values[6];
-		message.chan8_raw = values[7];
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
 	/** Sending new flight mode message. */
 	private void msgSetMode() throws IOException {
 		// Currently, it should be better to use a msg_command_long, but SITL does not support it on MAVLink v1 and this solution depends on the compilation (ardupilot, PX4,...)
@@ -920,7 +896,7 @@ public class UAVControllerThread extends Thread {
 		// Alternativamente se puede probar lo de la función msgMoveUAV()
 		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
 		message.time_boot_ms = System.currentTimeMillis();
-		message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;// TODO probando
+		message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;// TODO probando, sacar el método de aquí
 		int bX = 1;// bit 0// TODO sacar esto a un enum
 		int bY = 2;
 		int bZ = 4;
@@ -1112,8 +1088,61 @@ public class UAVControllerThread extends Thread {
 		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
 		this.sendMessage(message.encode());
 	}
+	
+	/** Sending 0 to all RCs returns control to the remote controler. */
+	private void msgReturnRCControl() throws IOException {
+		msg_rc_channels_override message = new msg_rc_channels_override();
+		message.chan1_raw = 0;
+		message.chan2_raw = 0;
+		message.chan3_raw = 0;
+		message.chan4_raw = 0;
+		message.chan5_raw = 0;
+		message.chan6_raw = 0;
+		message.chan7_raw = 0;
+		message.chan8_raw = 0;
+		message.sysId = UAVParam.gcsId.get(numUAV);
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		message.target_system = UAVParam.mavId.get(numUAV);
+		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		this.sendMessage(message.encode());
+	}
+	
+	/** Restricted method for API usage. Please, don't use it.
+	 * <p>Value 0 returns control to the RC.
+	 * <p>UINT16_MAX avoids changing that channel.*/
+	private void msgrcChannelsOverride(int roll, int pitch, int throttle, int yaw) throws IOException {
+		msg_rc_channels_override message = new msg_rc_channels_override();
+		// Initially, only trim values
+		int[] values = new int[] {UAVParam.RCtrimValue[numUAV].get(0), UAVParam.RCtrimValue[numUAV].get(1),
+				UAVParam.RCtrimValue[numUAV].get(2), UAVParam.RCtrimValue[numUAV].get(3),
+				UAVParam.RCtrimValue[numUAV].get(4), UAVParam.RCtrimValue[numUAV].get(5),
+				UAVParam.RCtrimValue[numUAV].get(6), UAVParam.RCtrimValue[numUAV].get(7)};
+		// New roll, pitch, throttle, and yaw values
+		values[UAVParam.RCmapRoll.get(numUAV)-1] = roll;
+		values[UAVParam.RCmapPitch.get(numUAV)-1] = pitch;
+		values[UAVParam.RCmapThrottle.get(numUAV)-1] = throttle;
+		values[UAVParam.RCmapYaw.get(numUAV)-1] = yaw;
+		// Flight mode
+		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
+		if (fltmode != -1) {
+			values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
+		}
+		message.chan1_raw = values[0];
+		message.chan2_raw = values[1];
+		message.chan3_raw = values[2];
+		message.chan4_raw = values[3];
+		message.chan5_raw = values[4];
+		message.chan6_raw = values[5];
+		message.chan7_raw = values[6];
+		message.chan8_raw = values[7];
+		message.sysId = UAVParam.gcsId.get(numUAV);
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		message.target_system = UAVParam.mavId.get(numUAV);
+		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		this.sendMessage(message.encode());
+	}
 
-	/** Sending a message to move the UAV to a safe position. */
+	/** Sending a message to move the UAV to a safe position in guided flight mode. */
 	private void msgMoveUAV() throws IOException {
 		msg_mission_item message = new msg_mission_item();
 		message.frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT;

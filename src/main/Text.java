@@ -330,6 +330,9 @@ public class Text {
 	public static final String STOP_ERROR_2 = "Error stopping.";
 	public static final String STABILIZE_ALTITUDE = "Altitude control enabled.";
 	public static final String STABILIZE_ALTITUDE_ERROR = "Error getting the altitude control.";
+	public static final String RETURN_RC_CONTROL = "Control returned to the remote controller.";
+	public static final String RETURN_RC_CONTROL_ERROR = "Error returning control to the remote controller.";
+	public static final String RC_CHANNELS_OVERRIDE_FORBIDEN_ERROR = "Overriding RC channels is not allowed.";
 	public static final String MOVING_ERROR_1 = "Error changing position.";
 	public static final String MISSION_DELETE = "Previous mission erased.";
 	public static final String MISSION_DELETE_ERROR = "Error erasing the current mission.";
@@ -382,6 +385,7 @@ public class Text {
 	// PC Companion
 	public static final String NUM_UAVS_COUNTER = " UAVs connected";
 	public static final String PROTOCOL = "Protocol:";
+	public static final String RECOVER_CONTROL = "Recover control";
 	public static final String EMERGENCY_ACTIONS = "Emergency actions";
 	public static final String IDENTIFIER_HEADER = "identifier";
 	public static final String MAC_HEADER = "MAC";
@@ -389,6 +393,9 @@ public class Text {
 	public static final String STATUS_HEADER = "status";
 	public static final String DIALOG_TITLE = "Warning";
 	public static final String SETUP_WARNING = "Are you sure that the safety switch is armed?";
+	public static final String EMERGENCY_NOT_FOUND = "Emergency command not found.";
+	public static final String EMERGENCY_SUCCESS = "Emergency command applied successfully:";
+	public static final String EMERGENCY_FAILED = "Emergency command failed:";
 	
 	
 

@@ -134,7 +134,7 @@ public class Main {
 				}
 			});
 		}
-
+		
 		// 4. Data structures initializing
 		ArduSimTools.initializeDataStructures();
 		ProtocolHelper.selectedProtocolInstance.initializeDataStructures();
@@ -170,7 +170,7 @@ public class Main {
 		if (!Param.isRealUAV) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
-							|| Param.runningOperatingSystem == Param.OS_LINUX)) {//TODO add support for MAC OS
+							|| Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)) {
 				GUI.log(Text.USING_RAM_DRIVE);
 			} else {
 				GUI.log(Text.USING_HARD_DRIVE);
@@ -349,7 +349,7 @@ public class Main {
 			ProtocolHelper.selectedProtocolInstance.forceExperimentEnd();
 			// Detects if all UAVs are on the ground in order to finish the experiment
 			if (checkEnd) {
-				if (ArduSimTools.isTestFinished()) {
+				if (ArduSimTools.isTestFinished()) {// TODO descomentar tras hacer pruebas en el poli
 					Param.simStatus = SimulatorState.TEST_FINISHED;
 				}
 			} else {

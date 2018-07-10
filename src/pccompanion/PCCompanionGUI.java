@@ -2,11 +2,9 @@ package pccompanion;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Toolkit;
 import java.math.BigInteger;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -40,6 +38,9 @@ import javax.swing.JComboBox;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Font;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 
 public class PCCompanionGUI {
 	
@@ -74,8 +75,11 @@ public class PCCompanionGUI {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		assistantFrame = new JFrame();
-		assistantFrame.setBounds(100, 100, 650, 300);
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice gd = ge.getDefaultScreenDevice();
+		GraphicsConfiguration config = gd.getDefaultConfiguration();
+		assistantFrame = new JFrame(config);
+		assistantFrame.setBounds(100, 100, 700, 300);
 		assistantFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JPanel upperPanel = new JPanel();
@@ -159,6 +163,9 @@ public class PCCompanionGUI {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						startButton.setEnabled(false);
+						buttonRecoverControl.setEnabled(true);
+						buttonRTL.setEnabled(true);
+						buttonLand.setEnabled(true);
 					}
 				});
 				Timer timer = new Timer();
@@ -220,7 +227,8 @@ public class PCCompanionGUI {
 		setupButton.setEnabled(false);
 		startButton.setEnabled(false);
 		
-		buttonRecoverControl = new JButton("Recover Control");
+		buttonRecoverControl = new JButton(Text.RECOVER_CONTROL);
+		buttonRecoverControl.setEnabled(false);
 		buttonRecoverControl.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_RECOVER_CONTROL);
@@ -241,6 +249,7 @@ public class PCCompanionGUI {
 		upperPanel.add(buttonRecoverControl, gbc_buttonRecoverControl);
 		
 		buttonRTL = new JButton(FlightMode.RTL.getMode());
+		buttonRTL.setEnabled(false);
 		buttonRTL.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_RTL);
@@ -262,6 +271,7 @@ public class PCCompanionGUI {
 		upperPanel.add(buttonRTL, gbc_buttonRTL);
 		
 		buttonLand = new JButton(FlightMode.LAND.getMode());
+		buttonLand.setEnabled(false);
 		buttonLand.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_LAND);
@@ -292,9 +302,7 @@ public class PCCompanionGUI {
 		gbc_lblEm.gridy = 1;
 		upperPanel.add(lblEm, gbc_lblEm);
 		
-		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		assistantFrame.setLocation(dim.width/2-assistantFrame.getSize().width/2, 0);
-		
+		assistantFrame.setLocation(config.getBounds().width/2 - assistantFrame.getSize().width/2, 0);
 		assistantFrame.setVisible(true);
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 		(new PCCompanionTalker()).start();

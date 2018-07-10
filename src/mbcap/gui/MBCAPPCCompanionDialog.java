@@ -3,10 +3,6 @@ package mbcap.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Frame;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,18 +24,17 @@ import api.Tools;
 import api.pojo.Point3D;
 import api.pojo.StatusPacket;
 import main.Param.SimulatorState;
-import main.Text;
+import mbcap.logic.MBCAPPCCompanionListener;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPText;
 import mbcap.pojo.Beacon;
 import sim.gui.VerticalFlowLayout;
-import uavController.UAVParam;
 
-public class MBCAPCPCompanionDialog extends JDialog {
+public class MBCAPPCCompanionDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 
-	public static volatile MBCAPCPCompanionDialog mbcap = null;
+	public static volatile MBCAPPCCompanionDialog mbcap = null;
 
 	private StatusPacket[] connected;
 	private List<StatusPacket> adding = new ArrayList<>();
@@ -51,9 +46,9 @@ public class MBCAPCPCompanionDialog extends JDialog {
 	private JPanel panel_2;
 	
 	@SuppressWarnings("unused")
-	private MBCAPCPCompanionDialog() {}
+	private MBCAPPCCompanionDialog() {}
 
-	public MBCAPCPCompanionDialog(Frame owner) {
+	public MBCAPPCCompanionDialog(Frame owner) {
 		super(owner);
 		setTitle(ProtocolHelper.selectedProtocol);
 		setBounds(100, 100, 450, 300);
@@ -108,15 +103,15 @@ public class MBCAPCPCompanionDialog extends JDialog {
 			
 		}
 		
-		this.setModalityType(ModalityType.APPLICATION_MODAL);
+		this.setModalityType(ModalityType.MODELESS);
 		this.setVisible(true);
 		
 		// Listen for protocol data packets
-		this.listenForPackets();
+		new MBCAPPCCompanionListener(this);
 	}
 
 	/** Updates a UAV row with information received within the protocol. */
-	private void updateRow(Beacon beacon) {
+	public void updateRow(Beacon beacon) {
 		int pos = -1;
 		boolean found = false;
 		for (int i = 0; i < shown.length && !found; i++) {
@@ -180,30 +175,6 @@ public class MBCAPCPCompanionDialog extends JDialog {
 	    if (this.getWidth() < prevWidth) {
 	    	this.setSize(prevWidth, this.getHeight());
 	    }
-	}
-
-	/** Listens for data packets on this protocol. */
-	private void listenForPackets() {
-		byte[] array;
-		Beacon b;
-		try {
-			@SuppressWarnings("resource")
-			DatagramSocket s = new DatagramSocket(UAVParam.BROADCAST_PORT);
-			s.setBroadcast(true);
-			DatagramPacket p = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
-			while (true) {
-				p.setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
-				try {
-					s.receive(p);
-					array = p.getData();
-					b = Beacon.getBeacon(array);
-					updateRow(b);
-				} catch (IOException e) {}
-			}
-//			s.close();
-		} catch (SocketException e) {
-			GUI.exit(Text.THREAD_START_ERROR);
-		}
 	}
 
 }

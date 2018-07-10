@@ -301,7 +301,9 @@ public class InitialConfigurationThread extends Thread {
 		
 		// Set STABILIZE flight mode if needed
 		if (Copter.getFlightMode(numUAV) != FlightMode.STABILIZE) {
-			Copter.setFlightMode(numUAV, FlightMode.STABILIZE);
+			if (!Copter.setFlightMode(numUAV, FlightMode.STABILIZE)) {
+				return;
+			}
 		}
 		
 		if (!ProtocolHelper.selectedProtocolInstance.sendInitialConfiguration(numUAV)) {

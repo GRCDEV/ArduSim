@@ -29,7 +29,7 @@ import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
-import mbcap.gui.MBCAPCPCompanionDialog;
+import mbcap.gui.MBCAPPCCompanionDialog;
 import mbcap.gui.MBCAPConfigDialog;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.gui.MBCAPGUITools;
@@ -573,7 +573,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
-		MBCAPCPCompanionDialog.mbcap = new MBCAPCPCompanionDialog(PCCompanionFrame);
+		MBCAPPCCompanionDialog.mbcap = new MBCAPPCCompanionDialog(PCCompanionFrame);
 	}
 	
 	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon. */

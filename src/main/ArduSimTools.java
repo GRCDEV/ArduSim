@@ -290,6 +290,7 @@ public class ArduSimTools {
 		UAVParam.lastWaypointReached = new boolean[Param.numUAVs];
 		
 		UAVParam.rcs = new AtomicReference[Param.numUAVs];
+		UAVParam.overrideOn = new AtomicIntegerArray(Param.numUAVs);
 		
 		SimParam.uavUTMPathReceiving = new ArrayBlockingQueue[Param.numUAVs];
 		SimParam.uavUTMPath = new ArrayList[Param.numUAVs];	// Useful for logging purposes
@@ -339,6 +340,7 @@ public class ArduSimTools {
 			UAVParam.lastWaypointReached[i] = false;
 			
 			UAVParam.rcs[i] = new AtomicReference<>();
+			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
 			
 			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);

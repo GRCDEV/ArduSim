@@ -68,18 +68,6 @@ public class PCCompanionTalker extends Thread {
 						sendSocket.send(sentPacket);
 					} catch (KryoException e) {} catch (IOException e) {}
 				}
-				
-				// Send emergency command when needed
-				if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
-						&& PCCompanionParam.action.get() != PCCompanionParam.ACTION_NONE) {
-					try {
-						output.clear();
-						output.writeInt(PCCompanionParam.EMERGENCY_COMMAND);
-						output.writeInt(PCCompanionParam.action.get());
-						sentPacket.setData(sendBuffer, 0, output.position());
-						sendSocket.send(sentPacket);
-					} catch (KryoException e) {} catch (IOException e) {}
-				}
 			} else {
 				if (!dialogAlreadyOpened) {
 					// Launch the protocol dialog for PC Companion
@@ -91,6 +79,18 @@ public class PCCompanionTalker extends Thread {
 					});
 					dialogAlreadyOpened = true;
 				}
+			}
+			
+			// Send emergency command when needed
+			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
+					&& PCCompanionParam.action.get() != PCCompanionParam.ACTION_NONE) {
+				try {
+					output.clear();
+					output.writeInt(PCCompanionParam.EMERGENCY_COMMAND);
+					output.writeInt(PCCompanionParam.action.get());
+					sentPacket.setData(sendBuffer, 0, output.position());
+					sendSocket.send(sentPacket);
+				} catch (KryoException e) {} catch (IOException e) {}
 			}
 			
 			sleep = PCCompanionParam.COMMAND_SEND_TIMEOUT - (System.currentTimeMillis() - time);

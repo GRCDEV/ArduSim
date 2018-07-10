@@ -51,6 +51,7 @@ public class ExperimentTalker extends Thread {
 				|| Param.simStatus == SimulatorState.READY_FOR_TEST) {
 				finish = false;
 			} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+				// Inform that the experiment has started for some time before stopping the thread
 				if (PCCompanionParam.lastStartCommandTime != null
 						&& (System.currentTimeMillis() - PCCompanionParam.lastStartCommandTime.get() > PCCompanionParam.MAX_TIME_SINCE_LAST_START_COMMAND)) {
 					finish = true;

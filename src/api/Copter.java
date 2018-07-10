@@ -201,7 +201,7 @@ public class Copter {
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
 		if (armEngines(numUAV)
 				&& setFlightMode(numUAV, FlightMode.AUTO)
-				&& setHalfThrottle(numUAV)
+				&& setHalfThrottle(numUAV)  //TODO descomentar tras hacer pruebas en el poli
 				) {
 			return true;
 		}
@@ -360,23 +360,41 @@ public class Copter {
 	 * <p>Returns true if the command was successful.
 	 * <p>Useful for starting auto flight when being on the ground, or to stabilize altitude when going out of auto mode. */
 	public static boolean setHalfThrottle(int numUAV) {
-		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
-		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
-				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
-			Tools.waiting(UAVParam.COMMAND_WAIT);
+		if (UAVParam.overrideOn.get(numUAV) == 1) {
+			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
+			while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
+					&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
+				Tools.waiting(UAVParam.COMMAND_WAIT);
+			}
+			if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
+				GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE_ERROR);
+				return false;
+			} else {
+				GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE);
+				return true;
+			}
 		}
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
-			GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE_ERROR);
-			return false;
-		} else {
-			GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE);
-			return true;
-		}
+		GUI.log(SimParam.prefix[numUAV] + Text.RC_CHANNELS_OVERRIDE_FORBIDEN_ERROR);
+		return false;
 	}
 	
 	/** API: Cancels the overriding of the remote control output.
-	 * <p>Re*/
-	
+	 * <p>Returns true if the command was successful.
+	 * <p>Emergency action used in the PCCompanion to return to it the control of the overriden RCs. */
+	public static boolean returnRCControl(int numUAV) {
+		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_RECOVER_CONTROL);
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
+				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_RECOVER_ERROR) {
+			Tools.waiting(UAVParam.COMMAND_WAIT);
+		}
+		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_RECOVER_ERROR) {
+			GUI.log(SimParam.prefix[numUAV] + Text.RETURN_RC_CONTROL_ERROR);
+			return false;
+		} else {
+			GUI.log(SimParam.prefix[numUAV] + Text.RETURN_RC_CONTROL);
+			return true;
+		}
+	}
 	
 	
 	
@@ -387,7 +405,10 @@ public class Copter {
 	 * <p>Standard modulation: 1000 (0%) - 2000 (100%).
 	 * <p>Values are not applied immediately, but each time a message is received from the flight controller. */
 	public static void channelsOverride(int numUAV, int roll, int pitch, int throttle, int yaw) {
-		UAVParam.rcs[numUAV].set(new RCValues(roll, pitch, throttle, yaw));//TODO analizar la frecuencia de recepción de mensajes
+		if (UAVParam.overrideOn.get(numUAV) == 1) {
+			UAVParam.rcs[numUAV].set(new RCValues(roll, pitch, throttle, yaw));
+		}
+		//TODO analizar la frecuencia de recepción de mensajes
 		// y analizar si vale la pena hacer la lectura no bloqueante para enviar esto con más frecuencia y de otra forma
 		// ¿con qué frecuencia aceptaremos el channels override? Hay experimentos que indican que algunos valores se ignoran
 		// si se envian en intervalos menores a 0.393 segundos (quizá una cola fifo con timeout facilite resolver el problema)

@@ -249,8 +249,7 @@ public class UAVParam {
 	public static int[] stabilizationThrottle;	// By default is 1500 (altitude stabilized)
 	public static final int MAV_STATUS_RECOVER_CONTROL = 34;
 	public static final int MAV_STATUS_RECOVER_ERROR = 35;
-//	public static final AtomicBooleanA
-//	usar variable para deshabilitar el override cuando se haya recobrado el control de un UAV específico
+	public static AtomicIntegerArray overrideOn;	// ([0,1]) 1 = RC Channels can be overridden
 	
 	public static final int MAV_STATUS_MOVE_UAV = 36;
 	public static final int MAV_STATUS_ACK_MOVE_UAV = 37;
@@ -304,31 +303,40 @@ public class UAVParam {
 		RCMAP_ROLL("RCMAP_ROLL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),				// RC channel used for roll
 		RCMAP_PITCH("RCMAP_PITCH", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),				// RC channel used for pitch
 		RCMAP_THROTTLE("RCMAP_THROTTLE", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// RC channel used for throttle
+		DZ_THROTTLE("THR_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Dead zone above and below mid throttle for speed control in AltHold, Loiter or PosHold flight modes
 		RCMAP_YAW("RCMAP_YAW", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// RC channel used for yaw
-		MAX_RC1("RC1_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC1 (typically, roll)
-		TRIM_RC1("RC1_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC1 (typically, roll)
-		MIN_RC1("RC1_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC1 (typically, roll)
-		MAX_RC2("RC2_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC2 (typically, pitch)
-		TRIM_RC2("RC2_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC2 (typically, pitch)
-		MIN_RC2("RC2_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC2 (typically, pitch)
-		MAX_RC3("RC3_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC3 (typically, throttle)
-		TRIM_RC3("RC3_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC3 (typically, throttle)
-		MIN_RC3("RC3_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC3 (typically, throttle)
-		MAX_RC4("RC4_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC4 (typically, yaw)
-		TRIM_RC4("RC4_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC4 (typically, yaw)
-		MIN_RC4("RC4_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC4 (typically, yaw)
-		MAX_RC5("RC5_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC5 (always, flight mode)
-		TRIM_RC5("RC5_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC5 (always, flight mode)
-		MIN_RC5("RC5_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC5 (always, flight mode)
-		MAX_RC6("RC6_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC6
-		TRIM_RC6("RC6_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC6
-		MIN_RC6("RC6_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC6
-		MAX_RC7("RC7_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC7
-		TRIM_RC7("RC7_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC7
-		MIN_RC7("RC7_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC7
-		MAX_RC8("RC8_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Maximum value for RC8
-		TRIM_RC8("RC8_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Trim value for RC8
-		MIN_RC8("RC8_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// Minimum value for RC8
+		MAX_RC1("RC1_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC1 (typically, roll)
+		TRIM_RC1("RC1_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC1 (typically, roll)
+		MIN_RC1("RC1_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC1 (typically, roll)
+		DZ_RC1("RC1_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom (typically, roll)
+		MAX_RC2("RC2_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC2 (typically, pitch)
+		TRIM_RC2("RC2_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC2 (typically, pitch)
+		MIN_RC2("RC2_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC2 (typically, pitch)
+		DZ_RC2("RC2_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom (typically, pitch)
+		MAX_RC3("RC3_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC3 (typically, throttle)
+		TRIM_RC3("RC3_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC3 (typically, throttle)
+		MIN_RC3("RC3_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC3 (typically, throttle)
+		DZ_RC3("RC3_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom (typically, throttle)
+		MAX_RC4("RC4_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC4 (typically, yaw)
+		TRIM_RC4("RC4_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC4 (typically, yaw)
+		MIN_RC4("RC4_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC4 (typically, yaw)
+		DZ_RC4("RC4_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom (typically, yaw)
+		MAX_RC5("RC5_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC5 (always, flight mode)
+		TRIM_RC5("RC5_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC5 (always, flight mode)
+		MIN_RC5("RC5_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC5 (always, flight mode)
+		DZ_RC5("RC5_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom (always, flight mode)
+		MAX_RC6("RC6_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC6
+		TRIM_RC6("RC6_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC6
+		MIN_RC6("RC6_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC6
+		DZ_RC6("RC6_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom
+		MAX_RC7("RC7_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC7
+		TRIM_RC7("RC7_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC7
+		MIN_RC7("RC7_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC7
+		DZ_RC7("RC7_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom
+		MAX_RC8("RC8_MAX", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Maximum value for RC8
+		TRIM_RC8("RC8_TRIM", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Trim value for RC8
+		MIN_RC8("RC8_MIN", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),					// (us) Minimum value for RC8
+		DZ_RC8("RC8_DZ", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),						// (us) Dead zone around trim or bottom
 		FLTMODE1("FLTMODE1", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 1 (x<=1230)
 		FLTMODE2("FLTMODE2", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 2 (1230<x<=1360)
 		FLTMODE3("FLTMODE3", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),					// Flight custom mode for RC level 3 (1360<x<=1490)
