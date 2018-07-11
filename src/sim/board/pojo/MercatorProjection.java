@@ -72,7 +72,7 @@ public class MercatorProjection {
     return new Point2D.Double(x, y);
   }
 
-  /** Método auxiliar para obtener la posición en pantalla de un punto */
+  /** Auxiliary method to get the screen location of a geographic coordinates set. */
   private Point2D.Double projectLocation(double latitude, double longitude) {
     double px = this.projectionWidth / 2 + longitude * this.pixelsPerLonDegree;
     double siny = Math.sin(deg2rad(latitude));

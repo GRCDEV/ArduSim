@@ -300,14 +300,6 @@ public class Main {
 		}
 
 		// 16. Start the experiment, only if the program is not being closed
-		// TODO remove new threads and clean the console parameters (args)
-		if (UAVParam.doFakeSending) {
-			for (int i = 0; i < Param.numUAVs; i++) {
-				(new FakeSenderThread(i)).start();
-				(new FakeReceiverThread(i)).start();
-			}
-		}
-
 		Param.startTime = System.currentTimeMillis();
 		GUI.log(Text.TEST_START);
 		if (!Param.isRealUAV) {

@@ -100,7 +100,6 @@ public class UAVParam {
 	public static LastPositions[] lastLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Startup parameters
-	public static volatile boolean doFakeSending;		// Do fake communications among the UAVs
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
 	public static final double MIN_FLYING_ALTITUDE = 5;	// (m) Minimum relative initial flight altitude
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off

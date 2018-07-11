@@ -105,22 +105,16 @@ public class ArduSimTools {
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the thread execution must stop. */
 	public static boolean parseArgs(String[] args) {
-		String usageCommand = "java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-doFake -t <arg> -l <arg>] [-h]";
+		String usageCommand = "java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-h]";
 		Option control = Option.builder("c").longOpt("pccompanion").required(true).desc("whether running as a PC companion for real UAVs (true) or not (false)").hasArg(true).build();
 		Option realUAV = Option.builder("r").longOpt("realUAV").required(false).desc("whether running in real UAV (true) or not (false)").hasArg(true).build();
 		Option protocol = Option.builder("p").longOpt("protocol").required(false).desc("selected protocol when running in real UAV").hasArg(true).build();
 		Option sp = Option.builder("s").longOpt("speed").required(false).desc("UAV speed (m/s)").hasArg(true).build();
-		Option periodOption = Option.builder("t").longOpt("period").required(false).desc("period between messages (ms)").hasArg(true).build();
-		Option sizeOption = Option.builder("l").longOpt("length").required(false).desc("message length (bytes)").hasArg(true).build();
-		Option doFakeSendingOption = new Option("doFake", "if true, it activates fake threads to simulate communications behavior.");
 		Options options = new Options();
 		options.addOption(control);
 		options.addOption(realUAV);
 		options.addOption(protocol);
 		options.addOption(sp);
-		options.addOption(periodOption);
-		options.addOption(sizeOption);
-		options.addOption(doFakeSendingOption);
 		Option help = Option.builder("h").longOpt("help").required(false).desc("ussage help").hasArg(false).build();
 		options.addOption(help);
 		CommandLineParser parser = new DefaultParser();
@@ -167,11 +161,11 @@ public class ArduSimTools {
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
-				String pr = cmdLine.getOptionValue("p").trim();
+				String pr = cmdLine.getOptionValue("p").trim().toUpperCase();
 				
 				boolean found = false;
 				for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
-					if (ProtocolHelper.ProtocolNames[i].equals(pr)) {
+					if (ProtocolHelper.ProtocolNames[i].toUpperCase().equals(pr)) {
 						found = true;
 					}
 				}
@@ -182,11 +176,11 @@ public class ArduSimTools {
 					System.exit(1);
 				}
 				ProtocolHelper.selectedProtocol = pr;
-				ProtocolHelper protocolInstance = ArduSimTools.getSelectedProtocolInstance();
-				if (protocolInstance == null) {
+				ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
+				if (ProtocolHelper.selectedProtocolInstance == null) {
 					System.exit(-1);
 				}
-				ProtocolHelper.selectedProtocolInstance = protocolInstance;
+				
 				String spe = cmdLine.getOptionValue("s");
 				if (!Tools.isValidPositiveDouble(spe)) {
 					System.out.println(Text.SPEED_ERROR + "\n");
@@ -200,30 +194,6 @@ public class ArduSimTools {
 			if (cmdLine.hasOption("h")) {
 				myHelp.printHelp(usageCommand, options);
 				System.exit(0);
-			}
-			if (cmdLine.hasOption("doFake")) {
-				UAVParam.doFakeSending = true;
-				if (!cmdLine.hasOption("t") || !cmdLine.hasOption("l")) {
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-				String periodString = cmdLine.getOptionValue("t");
-				if (!Tools.isValidInteger(periodString) || Integer.parseInt(periodString) > 10000) {
-					System.out.println("The period between messages must be a valid positive integer lower or equal to 10000 ms.\n");
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-				String sizeString = cmdLine.getOptionValue("l");
-				if (!Tools.isValidInteger(sizeString) || Integer.parseInt(sizeString) > 1472) {
-					System.out.println("The size of the messages must be a valid positive integer lower or equal to 1472 bytes.\n");
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-
-				FakeSenderThread.period = Integer.parseInt(periodString);
-				FakeSenderThread.messageSize = Integer.parseInt(sizeString);
-			} else {
-				UAVParam.doFakeSending = false;
 			}
 		} catch (ParseException e1) {
 			System.out.println(e1.getMessage() + "\n");
