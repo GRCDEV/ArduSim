@@ -4,7 +4,7 @@ ArduSim is a novel flight simulator on real-time, oriented to the development of
 
 The Communication with multicopters uses the MAVLink protocol, a *de facto* standard for current flight controllers, which makes the deployment of a new protocol on real UAVs a trivial task.
 
-The communication among multicopters emulates an Ad-hoc WiFi network link in the 5 GHz frequency band, where all the data packets are broadcasted.
+The communication among multicopters emulates an Ad-hoc WiFi network link in the 5 GHz frequency band, where all the data packets are broadcasted. ArduSim is prepared to include new wireless models in future versions.
 
 At this moment, documentation is being generated and very incomplete.
 
