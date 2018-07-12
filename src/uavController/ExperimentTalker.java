@@ -14,7 +14,7 @@ import api.Tools;
 import main.Param;
 import main.Text;
 import main.Param.SimulatorState;
-import pccompanion.PCCompanionParam;
+import pccompanion.logic.PCCompanionParam;
 
 public class ExperimentTalker extends Thread {
 

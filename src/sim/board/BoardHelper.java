@@ -26,12 +26,12 @@ import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
 import main.ArduSimTools;
+import main.InitialConfigurationThread;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
 import sim.board.pojo.MercatorProjection;
 import sim.gui.MainWindow;
-import sim.logic.InitialConfigurationThread;
 import sim.logic.SimParam;
 import uavController.UAVParam;
 

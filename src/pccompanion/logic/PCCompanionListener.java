@@ -1,4 +1,4 @@
-package pccompanion;
+package pccompanion.logic;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -20,6 +20,7 @@ import api.Tools;
 import api.pojo.StatusPacket;
 import main.Param;
 import main.Param.SimulatorState;
+import pccompanion.gui.PCCompanionGUI;
 import main.Text;
 
 public class PCCompanionListener extends Thread {

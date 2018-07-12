@@ -1,6 +1,6 @@
 package api;
 
-/** Implementing this interface enables a Class to execute code each time the UAV reaches a waypoint. */
+/** Implementing this interface enables a Class to execute code each time the UAV "numUAV" reaches a waypoint. */
 
 public interface WaypointReachedListener {
 	

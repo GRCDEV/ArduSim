@@ -1,11 +1,9 @@
-package api.pojo;
+package uavController;
 
 import java.awt.geom.Point2D;
 
 import org.javatuples.Quintet;
 import org.javatuples.Triplet;
-
-import uavController.UAVParam;
 
 /** This class generates and object that contains the most recent information received from the UAV. */
 

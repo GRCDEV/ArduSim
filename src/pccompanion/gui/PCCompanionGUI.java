@@ -1,4 +1,4 @@
-package pccompanion;
+package pccompanion.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -33,6 +33,8 @@ import main.ArduSimTools;
 import main.Param;
 import main.Text;
 import main.Param.SimulatorState;
+import pccompanion.logic.PCCompanionParam;
+import pccompanion.logic.PCCompanionTalker;
 import sim.gui.VerticalFlowLayout;
 import javax.swing.JComboBox;
 import java.awt.event.ActionListener;

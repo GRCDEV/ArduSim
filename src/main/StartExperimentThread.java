@@ -16,7 +16,7 @@ public class StartExperimentThread extends Thread {
 	@SuppressWarnings("unused")
 	private StartExperimentThread() {}
 	
-	/** Starts the experimient in auto mode if altitude==null, otherwise starts with general takeoff in guided mode. */
+	/** Starts the experiment in auto mode if altitude==null, otherwise starts with general takeoff in guided mode. */
 	public StartExperimentThread(int numUAV, Double altitude) {
 		this.numUAV = numUAV;
 		this.altitude = altitude;

@@ -1,4 +1,4 @@
-package pccompanion;
+package pccompanion.logic;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -16,6 +16,7 @@ import api.ProtocolHelper;
 import api.Tools;
 import main.Param;
 import main.Param.SimulatorState;
+import pccompanion.gui.PCCompanionGUI;
 import main.Text;
 import uavController.UAVParam;
 

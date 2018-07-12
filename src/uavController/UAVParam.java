@@ -17,8 +17,6 @@ import api.pojo.AtomicDoubleArray;
 import api.pojo.FlightMode;
 import api.pojo.LastPositions;
 import api.pojo.RCValues;
-import api.pojo.UAVCurrentData;
-import api.pojo.UAVCurrentStatus;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import sim.pojo.IncomingMessage;

@@ -1,4 +1,4 @@
-package pccompanion;
+package pccompanion.logic;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;

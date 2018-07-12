@@ -16,7 +16,7 @@ import api.Tools;
 import api.pojo.FlightMode;
 import main.Param;
 import main.Param.SimulatorState;
-import pccompanion.PCCompanionParam;
+import pccompanion.logic.PCCompanionParam;
 import main.Text;
 
 public class ExperimentListener extends Thread {

@@ -1,4 +1,4 @@
-package sim.logic;
+package main;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -6,8 +6,7 @@ import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
 import api.pojo.FlightMode;
-import main.Param;
-import main.Text;
+import sim.logic.SimParam;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
