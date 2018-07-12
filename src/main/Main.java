@@ -357,7 +357,7 @@ public class Main {
 			return;
 		}
 
-		// 18. Wait for the user to close the simulator, only if the program is not being closed
+		// 18. Assert that the experiment has finished
 		GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 		if (!Param.isRealUAV) {
 			GUI.log(Text.WAITING_FOR_USER);
@@ -368,7 +368,7 @@ public class Main {
 			});
 		}
 
-		// Gather information to show the results dialog
+		// 19. Gather information to show the results dialog
 		String res = null;
 		res = ArduSimTools.getTestResults();
 		String s = ProtocolHelper.selectedProtocolInstance.getExperimentResults();

@@ -103,7 +103,7 @@ public class ArduSimTools {
 	public static List<WaypointReachedListener> listeners = new ArrayList<WaypointReachedListener>();
 	
 	/** Parses the command line of the simulator.
-	 * <p>Returns false if running a PC companion and the thread execution must stop. */
+	 * <p>Returns false if running a PC companion and the main thread execution must stop. */
 	public static boolean parseArgs(String[] args) {
 		String usageCommand = "java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-h]";
 		Option control = Option.builder("c").longOpt("pccompanion").required(true).desc("whether running as a PC companion for real UAVs (true) or not (false)").hasArg(true).build();
