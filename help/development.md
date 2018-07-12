@@ -4,11 +4,47 @@
 
 ## ArduSim architecture
 
+roles
+
 layers
+![architectureVirtual](architectureVirtual.png)
+
+![architectureReal](architectureReal.png)
+
 
 ## Packages structure
 
 copter, simulator, pc companion and protocols
+
+* main
+* sim
+* pccompaniom
+* uavController
+* api
+* files
+* ...
+
+## main
+
+
+## sim
+
+
+## pccompanion
+
+
+## uavController
+
+
+## api
+
+
+## files
+
+
+
+
+
 
 ## Application workflow
 

@@ -1,4 +1,4 @@
-# Deployment on real devices - Raspberry Pi 3 example
+# Deployment on real devices - Raspberry Pi 3
 
 The first deployment of a protocol requieres to configure hardware and software. On later deployments it will be enough to copy the .jar executable file.
 
