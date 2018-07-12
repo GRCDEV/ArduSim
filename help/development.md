@@ -77,7 +77,7 @@ This is the most important package and includes the following elements:
 
 * pojo. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
 * WaypointReachedListener interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
-* Copter. Includes methods to gather flight information from the multicopter or perform actions like changing the flight mode, as explained in detail in [7.2 UAV control](#markdown-header-7.2-uav-control)
+* Copter. Includes methods to gather flight information from the multicopter or perform actions like changing the flight mode, as explained in detail in [7.2 UAV control](#markdown-header-7\.2-uav-control)
 * GUI.
 * Tools.
 
