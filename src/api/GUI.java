@@ -20,11 +20,6 @@ import sim.logic.SimParam;
 
 public class GUI {
 	
-	/** Returns a prefix that identifies the UAV that is performing a command for logging purposses. */
-	public static String getUAVPrefix(int numUAV) {
-		return SimParam.prefix[numUAV];
-	}
-	
 	/** Sends information to the main window log and console.
 	 * <p>The window log is only updated when performing simulations. */
 	public static void log(String text) {
@@ -106,11 +101,6 @@ public class GUI {
 		
 	}
 	
-	/** Returns true if UTM to Geographic coordinates calculations can be performed, it is, when the UTM zone has been detected. */
-	public static boolean isUTMZoneSet() {
-		return SimParam.zone >= 0;
-	}
-
 	/** Locates a UTM point on the screen, using the current screen scale. */
 	public static Point2D.Double locatePoint(double inUTMX, double inUTMY) {
 		return BoardHelper.locatePoint(inUTMX, inUTMY);

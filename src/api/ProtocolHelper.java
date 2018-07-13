@@ -71,7 +71,8 @@ public abstract class ProtocolHelper {
 	 * <p>Must be a blocking method until the setup process if finished.*/
 	public abstract void setupActionPerformed();
 	
-	/** Starts the experiment, moving the UAVs if needed. */
+	/** Starts the experiment.
+	 * <p>Must NOT be a blocking method, just should force a protocol thread to move the UAV. */
 	public abstract void startExperimentActionPerformed();
 	
 	/** Analyzes if the experiment must be finished and applies measures to make the UAVs land.

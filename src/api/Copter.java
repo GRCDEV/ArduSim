@@ -623,7 +623,7 @@ public class Copter {
 	/** Lands the UAV if it is close enough to the last waypoint.
 	 * <p>Use only when the UAV is performing a planned mission. */
 	public static void landIfMissionEnded(int numUAV) {
-		String prefix = GUI.getUAVPrefix(numUAV);
+		String prefix = Copter.getUAVPrefix(numUAV);
 		List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
 		FlightMode mode = Copter.getFlightMode(numUAV);
 		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
@@ -953,6 +953,11 @@ public class Copter {
 	/** API: Provides the latest heading (rad) received from the flight controller. */
 	public static double getHeading (int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getHeading();
+	}
+
+	/** Returns a prefix that identifies the UAV that is performing a command for logging purposes. */
+	public static String getUAVPrefix(int numUAV) {
+		return SimParam.prefix[numUAV];
 	}
 
 	

@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
+import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.Point3D;
@@ -302,7 +303,7 @@ public class MBCAPGUITools {
 		MBCAPParam.progress[numUAV].add(new ProgressState(state, System.currentTimeMillis()));
 
 		// Update the log in the main window
-		GUI.log(GUI.getUAVPrefix(numUAV) + MBCAPText.CAP + " = " + state.getName());
+		GUI.log(Copter.getUAVPrefix(numUAV) + MBCAPText.CAP + " = " + state.getName());
 		// Update the progress dialog
 		GUI.updateprotocolState(numUAV, state.getName());
 	}

@@ -749,7 +749,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				}
 			}
 			if (!found) {
-				GUI.log(GUI.getUAVPrefix(numUAV) + MBCAPText.WAYPOINT_LOST);
+				GUI.log(Copter.getUAVPrefix(numUAV) + MBCAPText.WAYPOINT_LOST);
 				return predictedPath;
 			}
 			
@@ -1259,11 +1259,11 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	public static boolean needsToMoveAside(int numUAV, List<Point3D> avoidPredictedLocations) {
 		// Errors detection
 		if (avoidPredictedLocations == null || avoidPredictedLocations.size() <= 1) {
-			GUI.log(GUI.getUAVPrefix(numUAV) + MBCAPText.REPOSITION_ERROR_1);
+			GUI.log(Copter.getUAVPrefix(numUAV) + MBCAPText.REPOSITION_ERROR_1);
 			return false;
 		}
-		if (!GUI.isUTMZoneSet()) {
-			GUI.log(GUI.getUAVPrefix(numUAV) + MBCAPText.REPOSITION_ERROR_2);
+		if (!Tools.isUTMZoneSet()) {
+			GUI.log(Copter.getUAVPrefix(numUAV) + MBCAPText.REPOSITION_ERROR_2);
 			return false;
 		}
 

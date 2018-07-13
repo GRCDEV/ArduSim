@@ -50,7 +50,7 @@ public class CollisionDetectorThread extends Thread {
 
 		int waitingTime;
 		boolean isRealUAV = Tools.isRealUAV();
-		String prefix = GUI.getUAVPrefix(numUAV);
+		String prefix = Copter.getUAVPrefix(numUAV);
 		// If two UAVs collide, then the protocol stops. Also, it stops when the experiment finishes
 		while (!Tools.isCollisionDetected() && Tools.isExperimentInProgress()) {
 			// Analyze received information while flying
