@@ -156,7 +156,7 @@ functions
 
 ### 7.2 UAV control
 
-functions
+functions (including beta in controller class)
 
 ### 7.3 GUI integration
 

@@ -1,8 +1,8 @@
-# Deployment on real devices - Raspberry Pi 3
+# Deployment on real devices - Raspberry Pi 3 b+
 
 The first deployment of a protocol requieres to configure hardware and software. On later deployments it will be enough to copy the .jar executable file.
 
-You are supposed to previously have a Pixhawk controlled multicopter and a Raspberry Pi 3 attached to it.
+You are supposed to previously have a Pixhawk controlled multicopter and a Raspberry Pi 3 b+ with Raspbian OS attached to it.
 
 ## Table of contents
 
@@ -36,21 +36,23 @@ We have to follow two steps to successfully configure the Raspberry Pi 3. First,
 
 #### Enabling serial port
 
-The **ttyAMA0** serial port is disabled by default on the Raspberry Pi model 3 (not in the previous versions) to enable the bluetooth output through the GPIO connector, so we need to disable bluetooth to have that port available again. Edit the file */boot/config.txt/* and add this two lines (the first one could already be there):
-
-    set enable_uart=1
-    dtoverlay=pi3-miniuart-bt
-
-Next, restart the device and check that the *ttyAMA0* port is available again with the next command:
-
-    ls -l /dev
-
-Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to run the Raspbian configuration utility with the next command, and disable console output to the serial port, but keeping the serial hardware enabled. Go to: *"Interfacing Options" - "Serial"*.
+Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to keep the serial port enabled while disabling the output. Open the GUI tool in "Preferences", and enable "Serial Port" and disable "Serial Console" in the "Interfaces" tab. Alternatively, you can use the console utility with the following commands. Then go to *"Interfacing Options" - "Serial"* and enable it, but then you must check the file */boot/cmdline.txt* after reboot and remove the text *"console=serial0,115200"* if found.
 
     sudo apt-get update
     sudo raspi-config
 
-After rebooting and just to be sure, it is good idea check if the file */boot/cmdline.txt* contains *"console=serial0,115200"* for output, deleting this piece of text if it exists.
+Finally we have to enable the **ttyAMA0** serial port, which is disabled by default on the Raspberry Pi model 3 (not in the previous versions) to be able to use the bluetooth output through the GPIO connector, so we need to swap serial and bluetooth ports. Edit the file */boot/config.txt/* and add this two lines (the first one could already be there):
+
+    enable_uart=1
+    dtoverlay=pi3-miniuart-bt
+
+Alternatively, you can completely disable bluetooth with this overlay:
+
+    dtoverlay=pi3-disable-bt
+
+Next, restart the device and check that the *ttyAMA0* port is available again with the next command (a line must show: serial0 -> ttyAMA0):
+
+    ls -l /dev
 
 #### Enabling serial communication for ArduSim
 
@@ -76,7 +78,7 @@ Ardusim uses [RXTX library](http://rxtx.qbang.org/wiki/index.php/Main_Page) from
         export JAVA_HOME="/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt"
         export PATH=$PATH:$JAVA_HOME/bin
         export CLASSPATH=/home/pi/javalibs/RXTXcomm.jar
-        export LD_LIBRARY_PATH=/home/pi/lib
+        export LD_LIBRARY_PATH=/home/pi/libs
 
     As in step 3, check the installed Java path.
 
@@ -92,46 +94,82 @@ Finally, restart the Raspberry pi 3 for the changes to take effect.
 
 ### Wireless ad-hoc network
 
-1. Change the regulatory region to yours with the *Raspberry Pi Configuration*  tool, on the tab *Localisation*, option *set wifi region*, and then restart the device. You must inquire if your country allows to stablish an Ad-hoc network in the 5 GHz band with these commands:
+1. Check the regulatory region used for the WiFi adapter and allowed frequencies:
 
-        iw reg get (shows current limitations)
-        iwlist wlan1 channel (shows allowed frequencies)
+        iw reg get (shows current limitations and the country set)
+        iwlist wlan0 channel (shows allowed frequencies)
 
-    One or both commands will show your limitations on different frequency ranges. You are not allowed to do an Ad-hoc network on a specific frequency if a text like *"no-IBSS"* appears. In that case, you should try on the 2.4 GHz band.
+    One or both commands will show the limitations on different frequency ranges. You are not allowed to do an Ad-hoc network on a specific frequency if a text like *"no-IBSS"* appears.
+    
+    If your current region is applied and it is forbidden to stablish an Ad-hoc network in the 5 GHz frequency band you should use the 2.4 GHz band. Otherwise,if your region is not applied, you must change it with the *Raspberry Pi Configuration*  tool, on the tab *Localisation*, option *set wifi region*, and then restart the device.
 
-2. Network configuration. Our setup is done in the 5.18 GHz frequency (channel 36), and the wireless adapter identifier was wlan1, so edit wlan1 configuration in the file */etc/network/interfaces* and leave others adapters untoched:
+2. Network configuration. Raspbian Jessie and Stretch have changed the way a network is configured. The file */etc/network/interfaces* must remain untouched. Please, generate the file */etc/network/interfaces.d/wlan0* with the following content:
 
-        auto wlan1
-        iface wlan1 inet static
+        auto wlan0
+        iface wlan0 inet static
         address 192.168.1.2
         netmask 255.255.255.0
-        wireless-mode ad-hoc
         wireless-channel 36
         wireless-essid NETWORK_NAME
+        wireless-mode ad-hoc
 
-    We use a static network address named *NETWORK_NAME*. You have to change the network address for each multicopter used in the group/swarm.
+    Now edit the file */etc/dhcpcd.conf* and add the following command at the end of the file:
+    
+        denyinterfaces wlan0
 
-    We found that Raspbian changes randomly the wireless adapter identifier when using more than one at the same time. As the Raspberry Pi 3 already has an integrated 2.4 GHz adapter and we use an external 5 GHz adapter, this issue avoids ArduSim from working adequately sometimes. To solve this issue, you have to fix the adapters identifier editing the file */lib/udev/rules.d/75-persistent-net-generator.rules* and replace the corresponding line with:
+    Finally restart the Raspberry Pi. This way we leave the loopback interface untouched, and ethernet connection under DHCP control. We use a static network address named *NETWORK_NAME*. You also have to change the network address for each multicopter used in the group/swarm. We have found that the network manager makes a mess and thinks that the regulatory domain (WiFi country) is unset when using Raspbian in desktop mode. Don't care about it, as you can check, the Ad-hoc network is up and functioning once you restart the device (network manager becomes useless).
+
+    May be you are using other wireless adapters. If this is the case, we found that Raspbian changes randomly the wireless adapter identifier when using more than one at the same time. This issue could avoid ArduSim from working adequately sometimes. To solve it, you have to fix the adapters identifier editing the file */lib/udev/rules.d/75-persistent-net-generator.rules* and replace the corresponding line with:
 
         KERNEL!="eth*[0-9]|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", \
 
-Then, unplug the external adapter and restart the device, turn it on, and when it has fully booted plug in the adapter. /etc/udev/rules.d/70-persistent-net.rules should be created with definitions for persistent rules for wlan0 and wlan1. Now check that the configuration already set in this chapter is applied to the correct wlanX adapter.
-
+    Then, unplug the external adapter and restart the device, and when it has fully booted plug in the  external adapter. /etc/udev/rules.d/70-persistent-net.rules should be created with definitions for persistent rules for wlan0 and wlan1. Now check that the configuration already set in this chapter is applied to the correct wlanX adapter.
 
 ### ArduSim autostart
 
-You can start ArduSim with a remote SSH connection from a computer once the multicopter and the Raspberry Pi 3 are turned on, but it is more practical to start ArduSim automatically on the Raspberry startup. To do so, we wrote a simple script (*start.sh*)with the following content:
+You can start ArduSim with a remote SSH connection from a computer once the multicopter and the Raspberry Pi 3 are turned on, but it is more practical to start ArduSim automatically on the Raspberry startup. To do so, we wrote a simple service (*start.service*) with the following content:
 
-    #!/bin/bash
-    java -jar /home/pi/Desktop/ArduSim.jar 2>&1 | tee -a /home/pi/Desktop/log.txt
+    [Unit]
+    Description=ArduSim
+    After=network-online.target
+    Wants=network-online.target
+    
+    [Service]
+    Type=oneshot
+    RemainAfterExit=true
+    ExecStart=/sbin/ifconfig wlan0
+    ExecStart=/sbin/iwconfig wlan0
+    ExecStart=/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/bin/java -jar /home/pi/Desktop/ArduSim.jar -c false -r true -p "PROTOCOL" -s 2.5
+    WorkingDirectory=/home/pi/Desktop/
+    StandardOutput=syslog
+    StandardError=syslog
+    SyslogIdentifier=ardusim
+    Restart=no
+    User=pi
+    
+    [Install]
+    WantedBy=multi-user.target
 
-These command allows us to execute the application and, at the same time, shows and stores the standard output in a file.
+This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol *"PROTOCOL"*, and with a maximum speed of 2.5 m/s for the multicopter. The first two *ExecStart* commands are optional and could be used for debugging purposes, as it shows the configuration of the WiFi adapter and let's you check if the ad-hoc network is correctly configured at system startup.
 
-We found an additional problem with the wireless ad-hoc network. It seems that the wireless regulatory region is set after the adapter uses this configuration. It changes successfully to ad-hoc mode, but it can't change to 5.18 GHz frequency at the same time. To solve this issue, we included another line just before the execution of the application, in the same script (*start.sh*):
+To store the output of ArduSim to a file, we also need to specify th target file to the system log service. Create the file */etc/rsyslog.d/ardusim.conf* with the following content:
 
-    echo sudoerpassword | sudo -S iwconfig wlan1 freq 5.18G
+    if $programname == 'ardusim' then /home/pi/Desktop/ArduSim.log
+    if $programname == 'ardusim' then ~
 
-The script will run each time the Raspberry Pi 3 start, just adding the following line to the end of the file */home/pi/.config/lxsession/LXDE-pi/autostart*:
+Each time the service writes something to the stdout or sterr, it will be redirected to the specified file. To enable modifications restart the logging service:
 
-    @/usr/bin/lxterminal -e /home/pi/Desktop/inicio.sh
+    sudo systemctl restart rsyslog
 
+Next, copy the service file and test it to be sure that it is working:
+
+    sudo chmod 644 start.service
+    sudo cp start.service /etc/systemd/system/start.service
+    sudo systemctl daemon-reload
+    sudo systemctl start start.service
+
+Check the content of the file */home/pi/Desktop/Ardusim.log* to be sure that the service is working fine. If the service fails or behaves unexpectedly, stop the service an repeat the previous commands, but the first, until the service works fine. Then, use the following command to enable the service on startup:
+
+    sudo systemctl enable start.service
+
+Finally, restart the device and check the log file to be sure that ArduSim has started with the system. Don't forget to store a mission file with ArduSim if the protocol under test requires it.

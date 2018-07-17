@@ -16,7 +16,7 @@ At this moment, documentation is being generated and very incomplete.
 
 [ArduSim usage](#markdown-header-ardusim-usage)
 
-[Deployment on real devices](#markdown-header-deployment-on-real-devices---raspberry-pi-3)
+[Deployment on real devices](#markdown-header-deployment-on-real-devices---raspberry-pi-3-b+)
 
 [Copyright information](#markdown-header-copyright-information)
 
@@ -46,7 +46,7 @@ ArduSim can be executed with the following command line:
 
 
 
-## Deployment on real devices - Raspberry Pi 3
+## Deployment on real devices - Raspberry Pi 3 b+
 
 You can deploy the implemented protocol on real UAVs just changing the ArduSim execution parameters, as explained before. In order to do this, the real multicopter must meet the following requirements:
 

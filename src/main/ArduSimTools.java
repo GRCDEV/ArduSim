@@ -131,7 +131,7 @@ public class ArduSimTools {
 				pcCompanion = true;
 			}
 			Param.isPCCompanion = pcCompanion;
-			if (pcCompanion && (cmdLine.hasOption("r") || cmdLine.hasOption("doFake"))) {
+			if (pcCompanion && (cmdLine.hasOption("r") || cmdLine.hasOption("p") || cmdLine.hasOption("s"))) {
 				System.out.println(Text.COMPANION_ERROR + "\n");
 				myHelp.printHelp(usageCommand, options);
 				System.exit(1);
@@ -160,11 +160,12 @@ public class ArduSimTools {
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
-				String pr = cmdLine.getOptionValue("p").trim().toUpperCase();
+				String pr = cmdLine.getOptionValue("p").trim();
+				String pr2 = pr.toUpperCase();
 				
 				boolean found = false;
 				for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
-					if (ProtocolHelper.ProtocolNames[i].toUpperCase().equals(pr)) {
+					if (ProtocolHelper.ProtocolNames[i].toUpperCase().equals(pr2)) {
 						found = true;
 					}
 				}
@@ -1059,11 +1060,12 @@ public class ArduSimTools {
 		ProtocolHelper o;
 		ProtocolHelper[] res = null;
 		List<ProtocolHelper> imp = new ArrayList<>();
+		String pr = selectedProtocol.toUpperCase();
 		for (int i = 0; i < implementations.length; i++) {
 			c = implementations[i];
 			o = (ProtocolHelper)c.newInstance();
 			o.setProtocol();
-			if (o.protocolString.equals(selectedProtocol)) {
+			if (o.protocolString.toUpperCase().equals(pr)) {
 				imp.add(o);
 			}
 		}
