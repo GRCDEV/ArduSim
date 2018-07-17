@@ -41,47 +41,19 @@ The following image shows the architecture of the application when running on a 
 
 The Eclipse project in organized in packages. We suggest to enable the hierarchical presentation of packages in Eclipse to easyly understand the project structure, which includes the following packages:
 
-* main
-* sim
-* pccompaniom
-* uavController
-* api
-* files
-* ...
+* **main**. This package includes the main method that runs the application (*Main.java*) as well as general parameters (*Param.java*) and text shown in GUI or messages (*Text.java*).
+* **sim**. This package includes the parameters, logic and GUI related to simulation but to to the execution on a real multicopter.
+* **pccompanion**. This package includes the parameters and GUI needed by the PC Companion, as well as the threads needed to communicate with the real multicopters.
+* **uavController**. This package includes the parameters related to the real or virtual multicopter, the thread needed to control it, and the threads needed to communicate with the PC Companion.
+* **api**. This is the most important package and includes the following elements:
 
-The developer only has to care about the package *api*, but a simple explanation for each package follows:
-
-### main
-
-This package includes the main method that runs the application (*Main.java*) as well as general parameters (*Param.java*) and text shown in GUI or messages (*Text.java*).
-
-### sim
-
-This package includes the parameters, logic and GUI related to simulation but to to the execution on a real multicopter.
-
-### pccompanion
-
-This package includes the parameters and GUI needed by the PC Companion, as well as the threads needed to communicate with the real multicopters.
-
-### uavController
-
-This package includes the parameters related to the real or virtual multicopter, the thread needed to control it, and the threads needed to communicate with the PC Companion.
-
-### files
-
-This package includes resources used when ArduSim is used as a Simulator.
-
-### api
-
-This is the most important package and includes the following elements:
-
-* pojo. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
-* WaypointReachedListener interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
-* Copter. Includes methods to gather flight information from the multicopter or perform actions, like changing the flight mode, as explained in detail in "[7.2 UAV control](#markdown-header-72-uav-control)" section.
-* GUI. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[7.3 GUI integration](#markdown-header-73-gui-integration)" section.
-* Tools. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[7.4 Available utilities](#markdown-header-74-available-utilities)" section.
-
-### protocol packages (...)
+    * pojo. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
+    * WaypointReachedListener interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
+    * Copter. Includes methods to gather flight information from the multicopter or perform actions, like changing the flight mode, as explained in detail in "[7.2 UAV control](#markdown-header-72-uav-control)" section.
+    * GUI. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[7.3 GUI integration](#markdown-header-73-gui-integration)" section.
+    * Tools. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[7.4 Available utilities](#markdown-header-74-available-utilities)" section.
+    * files. This package includes resources used when ArduSim is used as a Simulator.
+* **... (protocol packages)**
 
 Each new protocol must be selfcontained in an independent package. This way, the protocol code will be fully independent from ArduSim code, making it easyly understandable for other programmers.
 
