@@ -46,7 +46,6 @@ The Eclipse project in organized in packages. We suggest to enable the hierarchi
 * **pccompanion**. This package includes the parameters and GUI needed by the PC Companion, as well as the threads needed to communicate with the real multicopters.
 * **uavController**. This package includes the parameters related to the real or virtual multicopter, the thread needed to control it, and the threads needed to communicate with the PC Companion.
 * **api**. This is the most important package and includes the following elements:
-
     * pojo. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
     * WaypointReachedListener interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
     * Copter. Includes methods to gather flight information from the multicopter or perform actions, like changing the flight mode, as explained in detail in "[7.2 UAV control](#markdown-header-72-uav-control)" section.
@@ -59,12 +58,12 @@ Each new protocol must be selfcontained in an independent package. This way, the
 
 Several protocols have been already included in ArduSim:
 
-* None. Completed. Mission based. This protocol simply makes the multicopters to follow a planned mission.
-* MBCAP. Completed. Mission based. It avoids collisions among multicopters that are following a planned mission, as explained in the paper "MBCAP: Mission Based Collision Avoidance Protocol for UAVs (doi: 10.1109/AINA.2018.00090)".
-* Swarm protocol. Almost completed. Swarm based. It makes a swarm to follow a mission stored in one of them while keeping the formation. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
-* Chemotaxis. Almost completed. Single multicopter. It enables a multicopter to dynamically move around an area looking for a hotspot using a sensor (e.g. heat on wildfires, pollution peaks,...).
-* Follow Me. In progress. Swarm based. A swarm follows a multicopter that is manually controlled by a pilot.
-* Fishing. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.
+* **None**. Completed. Mission based. This protocol simply makes the multicopters to follow a planned mission.
+* **MBCAP**. Completed. Mission based. It avoids collisions among multicopters that are following a planned mission, as explained in the paper "MBCAP: Mission Based Collision Avoidance Protocol for UAVs (doi: 10.1109/AINA.2018.00090)".
+* **Swarm protocol**. Almost completed. Swarm based. It makes a swarm to follow a mission stored in one of them while keeping the formation. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
+* **Chemotaxis**. Almost completed. Single multicopter. It enables a multicopter to dynamically move around an area looking for a hotspot using a sensor (e.g. heat on wildfires, pollution peaks,...).
+* **Follow Me**. In progress. Swarm based. A swarm follows a multicopter that is manually controlled by a pilot.
+* **Fishing**. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.
 
 Please, feel free to reuse code from this protocols when developing a new one. "None" is the better starting point developing a protocol where all the multicopters must follow a planned mission, while "Swarm protocol" is more adecuate when developing a protocol for a swarm.
 
