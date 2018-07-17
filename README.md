@@ -1,6 +1,6 @@
 # ArduSim
 
-ArduSim is a novel flight simulator on real-time, oriented to the development of communications protocols, and flight coordination protocols among multicopters performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements.
+ArduSim is a novel real-time flight simulator, oriented to the development of communications protocols, and flight coordination protocols among multicopters performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements.
 
 The Communication with multicopters uses the MAVLink protocol, a *de facto* standard for current flight controllers, which makes the deployment of a new protocol on real UAVs a trivial task.
 
@@ -42,7 +42,7 @@ ArduSim can be executed with the following command line:
 
 [//]: # (Recomendar ejecutar como root administrador para usar disco ram)
 [//]: # (En una terminal de linux o windows)
-
+[//]: # (Al guardar lo del diálogo results, indicar los ficheros que se guardan con su contenido)
 
 
 

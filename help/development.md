@@ -109,38 +109,49 @@ There are another two differences compared to a "UAV agent". First, a set of pic
 
 ## 6 Protocol implementation
 
-To start a new protocol, the developer creates a new package to contain the corresponding Java classes. Then, the first step consists in create a new class that "extends" "*src.api.ProtocolHelper.java*". This class forces the developer to implement the functions already mentioned, to integrate the protocol in ArduSim. An extended explanation of the functions follows:
+To start a new protocol, the developer creates a new package (*ProtocolName*) to contain the corresponding Java classes. Then, the first step consists in create a new class that "extends" "*api.ProtocolHelper.java*". This class forces the developer to implement the functions already mentioned, to integrate the protocol in ArduSim. An extended explanation of the functions follows:
 
-* **setProtocol()**.
-* **openConfigurationDialog()**.
-* **openPCCompanionDialog()**.
-* **loadMission()**.
-* **initializeDataStructures()**.
-* **loadResources()**.
-* **setStartingLocation()**.
-* **sendInitialConfiguration()**.
-* **startThreads()**.
-* **setupActionPerformed()**.
-* **startExperimentActionPeformed()**.
-* **forceExperimentEnd()**.
-* **getExperimentResults()**.
-* **getExperimentConfiguration()**.
-* **logData**.
-* **setInitialState()**.
-* **rescaleDataStructures()**.
-* **rescaleShownResources()**.
-* **drawResources()**.
+* *void* **setProtocol()**. Assign a String name to the protocol to enable the implementation, using the variable *this.protocol*.
+* *void* **openConfigurationDialog()**. It opens a dialog implemented by the protocol developer and that allows the user to input parameters related to the protocol. Always remember to issue the command *api.Tools.setProtocolConfigured(true);* to force the simlator to open the main window.
+* *void* **openPCCompanionDialog(** *JFrame* **)**. Optional. This method enables the developer to implement a dialog to analyze the behavior of the protocol on the PC Companion, when the protocol is deployed in real multicopters. If using this method, an additional thread must be implemented to update the information shown in the dialog, based on the data packets that are being broadcasted from the real UAVs. The thread must be started once the dialog is completely built.
+* *boolean* **loadMission()**. On a real multicopter it must return true if and only if a planned mission must be followed by the UAV. The mission file must be stored beside ArduSim jar file.
+* *void* **initializeDataStructures()**. The protocol being developed will need several variables shared among threads that should be declared following the package structure shown below. This method allows to initialize the variables once the number of UAVs running in the same machine is known (more than one if a simulation is performed).
+* *void* **loadResources()**. Optional. Used to load from file elements that the protocol will draw in screen.
+* *Pair<GeoCoordinates, Double>[]* **setStartingLocation()**. Used to set the location where the multicopters appear in simulation, including latitude, longitude and heading. By default, they appear at 0 absolute altitude.
+* *boolean* **sendInitialConfiguration(** *int* **)**. Reads from the multicopter any additional configuration values needed by the protocol and sends to it any command needed to configure it.
+* *void* **startThreads()**. This method is used to start the threads used by the protocol. Then,ArduSim waits the user to press the setup button. In general, the threads must use methods included in *api.Tools* to wait until the setup or start button is pressed before performing any action.
+* *void* **setupActionPerformed()**. This method must wait until any action required for the setup step is finished. It is more addecuate to simply wait until the protocol threads finish the action using a shared concurrent variable than implementing here the actions, as the may require the use of more than one thread.
+* *void* **startExperimentActionPeformed()**. It is useful to perform the takeoff or start a mission from the ground. In the protocol needs to perform additional actions over the UAV, it is recommended to do it in the protocol threads to allow this thread to check periodically if the experiment finishes. In the first case, that threads should wait until a shared variable is changed when the takeoff process finishes, while in the second case the control over the multicopter is released immediately after the mission start, so the protocol must have its own logic to decide when to take control over the multicopter.
+* *void* **forceExperimentEnd()**. Optional. An experiment is considered to be finished when all UAVs land and stop engines. Once the previous method finishes, this one is issued periodically and allows to land the UAVs to finish the experiment if a condition is met, for example, when the UAV is following a planned mission and is close enough to the last waypoint (*api.Copter.landIfMissionEnded(int)*). The protocol may issue other actions to land the UAV from other threads. In that case, this method could be left unimplemented.
+* *String* **getExperimentResults()**. Optional. Allows to add data related to the protocol to the information shown in the results dialog.
+* *String* **getExperimentConfiguration()**.Optional. The developer has the option to show the value of the parameters used in the protocol in the results dialog so they could be stored to be able to reproduce the same experiment again.
+* *void* **logData(** String, String **)**. Optional. Stores information gathered by the protocol during the experiment.
+* *String* **setInitialState()**. Optional. ArduSim can show a String representing the state of the protocol for each UAV in the Progress Dialog. This method sets the initial value or initial state of the protocol when the multicopter is ready to fly.
+* *void* **rescaleDataStructures()**. Optional. Used when additional elements are drawn in screen by the protocol. It rescales data structures used for drawing when the drawing scale changes.
+* *void* **rescaleShownResources()**.Optional. Used when additional elements are drawn in screen by the protocol. It rescales the resources (images) used for drawing when the drawing scale changes.
+* *void* **drawResources(** Graphics2D, BoardPanel **)**. Optional. Periodically draws the resources used in the protocol in the Graphics2D element of the specified BoardPanel.
 
+The recommended package structure for the protocol follows:
 
-
-protocol available when extends Helper and setProtocol
-
-explain protocol integration functions
+* **gui**. This package should contain graphical elements, such as the dialog used to input values for the protocol parameters or the dialog used in the PC Companion when deploying the protocol in real multicopters. The later is optional.
+* **logic**. It should contain classes related to the protocolo logic, for example:
+    * *ProtocolNameHelper.java*. The protocol implementation already detailed.
+    * *ProtocolNameParam.java*. Declaration of variables needed by the protocol. Please, see other protocol as example.
+    * *ProtocolNameText.java*. Texts used in GUI or messages for the protocol.
+    * *ProtocolNamePCCompanionThread.java*. Thread that can be implemented to update data in the dialog used by the PC Companion, if implemented.
+    * *ProtocolNameOtherThreads.java*. Threads needed by the protocol. If more than one multicopter is needed and they have to communicate among them, then at least one thread to talk and another to listen to other UAVs must be implemented. Remember that the listener thread must listen always even when no data packets are expected to avoid the buffer to fill with undesired packets.
+* **pojo**. Should contain classes to define objects useful for the protocol and used in the previous packages.
 
 ## 7 Implementation details
 
+This sections includes several details the way ArduSim implements relevant elements needed by the developer, and some implementation recommendations to make the same code work in virtual and real multicopters, which would make the code more clear and easy to re-use. 
 
 ### 7.1 UAV-to-UAV Communications
+
+An abstraction layer has been implemented to 
+
+
+
 
 functions
 
@@ -159,4 +170,3 @@ functions in Tools.java
 ### 7.4 Implementation recomendations
 
 how to use the same code for real and virtual UAVs
-package structure
