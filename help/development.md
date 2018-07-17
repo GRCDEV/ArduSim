@@ -112,6 +112,25 @@ There are another two differences compared to a "UAV agent". First, a set of pic
 To start a new protocol, the developer creates a new package to contain the corresponding Java classes. Then, the first step consists in create a new class that "extends" "*src.api.ProtocolHelper.java*". This class forces the developer to implement the functions already mentioned, to integrate the protocol in ArduSim. An extended explanation of the functions follows:
 
 * **setProtocol()**.
+* **openConfigurationDialog()**.
+* **openPCCompanionDialog()**.
+* **loadMission()**.
+* **initializeDataStructures()**.
+* **loadResources()**.
+* **setStartingLocation()**.
+* **sendInitialConfiguration()**.
+* **startThreads()**.
+* **setupActionPerformed()**.
+* **startExperimentActionPeformed()**.
+* **forceExperimentEnd()**.
+* **getExperimentResults()**.
+* **getExperimentConfiguration()**.
+* **logData**.
+* **setInitialState()**.
+* **rescaleDataStructures()**.
+* **rescaleShownResources()**.
+* **drawResources()**.
+
 
 
 protocol available when extends Helper and setProtocol
