@@ -40,7 +40,6 @@ public class SlaveListener extends Thread {
 		FollowMeParam.uavs[numUAV] = FollowMeState.SEND_ID;
 		GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 
-		// Recibir MsgTakeOff
 		byte[] message;
 		Input in = new Input();
 		int idSender, typeRecibido;
@@ -98,7 +97,8 @@ public class SlaveListener extends Thread {
 		}
 		
 		//TODO Fase pruebas
-		heading = -Math.PI/2;
+		//heading = -Math.PI/2;
+		//heading = -Math.PI/4;
 		//////////////////////
 
 		double incX, incY;

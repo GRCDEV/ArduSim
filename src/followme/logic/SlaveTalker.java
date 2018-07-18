@@ -4,14 +4,11 @@ import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.tools.Tool;
-
 import com.esotericsoftware.kryo.io.Output;
 
 import api.Copter;
 import api.GUI;
 import api.Tools;
-import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
 

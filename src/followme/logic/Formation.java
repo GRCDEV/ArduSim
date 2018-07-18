@@ -9,7 +9,9 @@ public class Formation {
 	private Formation() {
 		// TODO Auto-generated constructor stub
 	}
-	
+	/* API: Parametros introducidos, posicion en la formacion, numero de UAVs esclavos
+	 * 		Devuelve el offset, de la posicion a ala que pertenece el identificador en una matriz de esclavos.
+	 */
 	public static Point2D.Double getOffsetMatrix(int posFormation, int numSlaves) {
 		int posMasterLineal = (numSlaves + 1) / 2;
 		int l = (int)Math.ceil(Math.sqrt(numSlaves + 1));
@@ -36,6 +38,11 @@ public class Formation {
 		return new Point2D.Double(distX, distY);
 	}
 	
+	/* API:	Parametros de entrada posicion en una linea
+	 * 		Devuelve el offset, de la posicion que adopta dependiendo el numero indicado.
+	 * 		Los UAV esclavos se reparten a los extremos del master 
+	 */
+	
 	public static Point2D.Double getOffsetLineal(int posFormation) {
 		double vert = -FollowMeParam.DistanciaSeparacionVertical;
 		double horiz = FollowMeParam.DistanciaSeparacionHorizontal * ((int) (posFormation + 2) / 2);
@@ -46,6 +53,9 @@ public class Formation {
 		}
 	}
 	
+	/* API: PArametros de entrada la posicin en el circulo alrededero del master, numero de esclavo al formar el circulo
+	 * 		Devuelve el offset, de la posicion que el esclavo adopta para realizar un cirrculo alrededor del master
+	 * */
 	public static Point2D.Double getOffsetCircular(int posFormation, int numSlaves){
 		double angulo = 2*Math.PI / numSlaves;
 		double vert = Math.sin(angulo * posFormation)* FollowMeParam.DistanciaSeparacionRadio;
