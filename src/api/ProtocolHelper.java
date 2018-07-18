@@ -77,8 +77,8 @@ public abstract class ProtocolHelper {
 	 * <p>Must NOT be a blocking method, just should force a protocol thread to move the UAV. */
 	public abstract void startExperimentActionPerformed();
 	
-	/** Optional: Analyzes if the experiment must be finished and applies measures to make the UAVs land.
-	 * <p>For example, it can be finished when the user presses a button.
+	/** Optional: Periodically issued to analyze if the experiment must be finished and to apply measures to make the UAVs land.
+	 * <p>For example, it can be finished when the user presses a button, the UAV is approaching to a location or ending a mission.
 	 * <p>Finally, ArduSim stops the experiment when all the UAVs landed.*/
 	public abstract void forceExperimentEnd();
 	

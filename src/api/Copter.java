@@ -117,7 +117,7 @@ public class Copter {
 	}
 	
 	/** API: Arms the engines.
-	 * <p>Previously, you have to press the hardware switch for safety arm, if available.
+	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
 	 * <p>The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
 	 * <p>Returns true if the command was successful. */
 	public static boolean armEngines(int numUAV) {
@@ -137,7 +137,7 @@ public class Copter {
 
 	/** API: Takes off a UAV previously armed.
 	 * <p>altitude. Target altitude over the ground.
-	 * <p>The UAV must be armed and in GUIDED mode.
+	 * <p>The UAV must be in GUIDED mode and armed.
 	 * <p>Returns true if the command was successful. */
 	public static boolean guidedTakeOff(int numUAV, double altitude) {
 		UAVParam.takeOffAltitude.set(numUAV, altitude);
@@ -195,6 +195,7 @@ public class Copter {
 	/** Takes off a UAV and starts the planned mission.
 	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
 	 * <p>The UAV must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
+	 * <p>Issues three commands: armEngines, setFlightMode --> AUTO, and setHalfThrottle.
 	 * <p>Returns true if all the commands were successful. */
 	public static boolean startMissionFromGround(int numUAV) {
 		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
@@ -380,7 +381,8 @@ public class Copter {
 	
 	/** API: Cancels the overriding of the remote control output.
 	 * <p>Returns true if the command was successful.
-	 * <p>Emergency action used in the PCCompanion to return to it the control of the overriden RCs. */
+	 * <p>This function can be used only once, and since then the RC channels can not be overridden any more.
+	 * <p>Function already used in the PCCompanion to return the control of any overridden RCs. */
 	public static boolean returnRCControl(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_RECOVER_CONTROL);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -396,10 +398,9 @@ public class Copter {
 		}
 	}
 	
-	
-	
 	/** API: Overrides the remote control output.
 	 * <p>Channel values in microseconds. Typically chan1=roll, chan2=pitch, chan3=throttle, chan4=yaw.
+	 * <p>By default, channels can be overridden, but the functionality can be disabled by the command "returnRCControl".
 	 * <p>Value 0 means that the control of that channel must be returned to the RC radio.
 	 * <p>Value UINT16_MAX means to ignore this field.
 	 * <p>Standard modulation: 1000 (0%) - 2000 (100%).
@@ -419,10 +420,10 @@ public class Copter {
 	 * <p>relAltitude. Relative altitude the UAV has to move to.
 	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
 	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
-	 * <p>Blocking method.
+	 * <p>The method may return control immediately or in more than 200 ms depending on the reaction of the flight controller
 	 * <p>Returns true if the command was successful.
 	 * <p>The UAV must be in guided mode. */
-	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold, double altThreshold) {
+	public static boolean moveUAVNonBlocking(int numUAV, GeoCoordinates geo, float relAltitude) {
 		UAVParam.newLocation[numUAV][0] = (float)geo.latitude;
 		UAVParam.newLocation[numUAV][1] = (float)geo.longitude;
 		UAVParam.newLocation[numUAV][2] = relAltitude;
@@ -435,15 +436,32 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.MOVING_ERROR_1);
 			return false;
 		} else {
-			UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
-			Point2D.Double destination = new Point2D.Double(utm.Easting, utm.Northing);
-			// Once the command is issued, we have to wait until the UAV approaches to destination
-			while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold
-					|| Math.abs(relAltitude - UAVParam.uavCurrentData[numUAV].getZRelative()) > altThreshold) {
-				Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
-			}
 			return true;
 		}
+	}
+	
+	/** API: Moves the UAV to a new position.
+	 * <p>geo. Geographic coordinates the UAV has to move to.
+	 * <p>relAltitude. Relative altitude the UAV has to move to.
+	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
+	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
+	 * <p>Blocking method. It waits until the UAV is close enough of the target location.
+	 * <p>Returns true if the command was successful.
+	 * <p>The UAV must be in guided mode. */
+	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold, double altThreshold) {
+		if (!Copter.moveUAVNonBlocking(numUAV, geo, relAltitude)) {
+			return false;
+		}
+		
+		UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
+		Point2D.Double destination = new Point2D.Double(utm.Easting, utm.Northing);
+		// Once the command is issued, we have to wait until the UAV approaches to destination.
+		// No timeout is defined to reach the destination, as it would depend on speed and distance
+		while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold
+				|| Math.abs(relAltitude - UAVParam.uavCurrentData[numUAV].getZRelative()) > altThreshold) {
+			Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
+		}
+		return true;
 	}
 
 	/** API: Removes the current mission from the UAV.
@@ -621,24 +639,27 @@ public class Copter {
 	}
 	
 	/** Lands the UAV if it is close enough to the last waypoint.
+	 * <p>This method can be launched periodically, it only informs once when the last waypoint is reached, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
 	 * <p>Use only when the UAV is performing a planned mission. */
-	public static void landIfMissionEnded(int numUAV) {
+	public static void landIfMissionEnded(int numUAV, double distanceThreshold) {
 		String prefix = Copter.getUAVPrefix(numUAV);
 		List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
 		FlightMode mode = Copter.getFlightMode(numUAV);
 		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
+		// Last waypoint reached, if the flight controller informs that the current waypoint is the last one
 		if (mission != null
 				&& mode != FlightMode.LAND_ARMED
 				&& mode != FlightMode.LAND
 				&& currentWaypoint > 0
 				&& currentWaypoint == mission.get(mission.size()-1).numSeq) {
 			
+			// Only inform that the last waypoint has been reached once
 			if (!UAVParam.lastWaypointReached[numUAV]) {
 				UAVParam.lastWaypointReached[numUAV] = true;
 				GUI.log(prefix + Text.LAST_WAYPOINT_REACHED);
 			}
-			
-			if (Copter.getUTMLocation(numUAV).distance(mission.get(mission.size()-1)) < UAVParam.LAST_WP_THRESHOLD) {
+			// Only when the UAV is really close to the last waypoint force it to land
+			if (Copter.getUTMLocation(numUAV).distance(mission.get(mission.size()-1)) < distanceThreshold) {
 				List<Waypoint> missionGeo = Tools.getUAVMission(numUAV);
 				int command = missionGeo.get(missionGeo.size() - 1).getCommand();
 				// There is no need of landing when the last waypoint is the command LAND or when it is RTL under some circumstances
@@ -654,45 +675,46 @@ public class Copter {
 	}
 	
 	/** Lands a UAVs if it is flying.
-	 * <p>Blocking method.
-	 * <p>Returns true if the command was successful or not needed. */
+	 * <p>Returns true if the command was successful, or even not needed because the UAV was not flying. */
 	public static boolean landUAV(int numUAV) {
 		if (Copter.isFlying(numUAV)) {
 			if (!setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
 				return false;
 			}
-			while (Copter.getFlightMode(numUAV) != FlightMode.LAND_ARMED
-					&& Copter.getFlightMode(numUAV) != FlightMode.LAND) {
-				Tools.waiting(UAVParam.COMMAND_WAIT);
-			}
+//			// The following code is necessary for a possible race condition (not now, as setFlightMode solves the problem)
+//			while (Copter.getFlightMode(numUAV) != FlightMode.LAND_ARMED
+//					&& Copter.getFlightMode(numUAV) != FlightMode.LAND) {aqui
+//				Tools.waiting(UAVParam.COMMAND_WAIT);
+//			}
 		}
 		return true;
 	}
 	
 	/** Lands all the UAVs that are flying.
-	 * <p>Blocking method.
-	 * <p>Returns true if the commands were successful or not needed. */
+	 * <p>Returns true if all the commands were successful, or even not needed because one or more UAVs were not flying. */
 	public static boolean landAllUAVs() {
-		List<Integer> landing = new ArrayList<>();
+//		List<Integer> landing = new ArrayList<>();// Race condition solved in setFlightMode method
 		for (int i=0; i<Param.numUAVs; i++) {
 			if (Copter.isFlying(i)) {
-				landing.add(i);
+//				landing.add(i);
 				if (!setFlightMode(i, FlightMode.LAND_ARMED)) {
 					return false;
 				}
 			}
 		}
-		for (int i = 0; i< landing.size(); i++) {
-			while (Copter.getFlightMode(landing.get(i)) != FlightMode.LAND_ARMED
-					&& Copter.getFlightMode(landing.get(i)) != FlightMode.LAND) {
-				Tools.waiting(UAVParam.COMMAND_WAIT);
-			}
-		}
+//		int numUAV;
+//		for (int i = 0; i< landing.size(); i++) {
+//			numUAV = landing.get(i);
+//			while (Copter.getFlightMode(numUAV) != FlightMode.LAND_ARMED
+//					&& Copter.getFlightMode(numUAV) != FlightMode.LAND) {
+//				Tools.waiting(UAVParam.COMMAND_WAIT);
+//			}
+//		}
 		return true;
 	}
 	
 	/** Method that provides the controller thread of an specific UAV.
-	 * <p>Temporary ussage for debugging purposes.
+	 * <p>Temporary usage for debugging purposes.
 	 * <p>HANDLE WITH CARE.*/
 	public static UAVControllerThread getController(int numUAV) {
 		return Param.controllers[numUAV];

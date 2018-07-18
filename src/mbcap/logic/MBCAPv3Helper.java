@@ -38,6 +38,7 @@ import mbcap.pojo.Beacon;
 import mbcap.pojo.PointTime;
 import mbcap.pojo.ProgressState;
 import sim.board.BoardPanel;
+import uavController.UAVParam;
 
 public class MBCAPv3Helper extends ProtocolHelper {
 
@@ -280,7 +281,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		// When the UAVs are close to the last waypoint a LAND command is issued
 		int numUAVs = Tools.getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
-			Copter.landIfMissionEnded(i);
+			Copter.landIfMissionEnded(i, UAVParam.LAST_WP_THRESHOLD);
 		}
 	}
 

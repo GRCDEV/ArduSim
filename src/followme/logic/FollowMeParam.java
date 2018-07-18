@@ -38,10 +38,6 @@ public class FollowMeParam {
 	public static final int FormacionCircular = 3;
 	public static final int FormacionUsada = FormacionMatriz;
 
-	public static final int TypemsgTargetCoordinates = 1;
-	public static final int TypemsgTargetSpeeds = 2;
-	public static final int TypemsgTargetCoordinatesAndSpeeds = 3;
-
 	public static int posMaster = -1;
 
 	public static boolean realUAVisMaster = false;

@@ -113,8 +113,7 @@ public class SlaveListener extends Thread {
 		
 		
 		try {
-			Copter.getController(numUAV).msgTarget(FollowMeParam.TypemsgTargetCoordinates, geo.latitude, geo.longitude,
-					FollowMeParam.AlturaInitFollowers, 1.0, false, 0.0, 0.0, 0.0);
+			Copter.getController(numUAV).msgTarget(geo.latitude, geo.longitude, FollowMeParam.AlturaInitFollowers, null, null, null);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -149,8 +148,7 @@ public class SlaveListener extends Thread {
 				geo = Tools.UTMToGeo(x, y);
 
 				try {
-					Copter.getController(numUAV).msgTarget(FollowMeParam.TypemsgTargetCoordinates, geo.latitude,
-							geo.longitude, z, 1.0, false, speedX, speedY, speedZ);
+					Copter.getController(numUAV).msgTarget(geo.latitude, geo.longitude, z, null, null, null);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -196,8 +194,7 @@ public class SlaveListener extends Thread {
 				geo = Tools.UTMToGeo(x, y);
 
 				try {
-					Copter.getController(numUAV).msgTarget(FollowMeParam.TypemsgTargetCoordinates, geo.latitude,
-							geo.longitude, z, 1.0, false, speedX, speedY, speedZ);
+					Copter.getController(numUAV).msgTarget(geo.latitude, geo.longitude, z, null, null, null);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

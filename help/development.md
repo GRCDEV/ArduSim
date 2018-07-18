@@ -107,7 +107,13 @@ The function "*setStartingLocation()*" provides the starting location of the mul
 
 There are another two differences compared to a "UAV agent". First, a set of pictures are downloaded from Google Static Maps to integrate the background image, which is geopositioned on the theoretical location of the virtual UAVs. Second, storing the experiment results is optional.
 
-## 6 Protocol implementation
+## 6 Development environment
+
+DOWNLOAD OF PROJECT IN ECLIPSE AND INTEGRATION WITH arducopter...
+
+
+
+## 7 Protocol implementation
 
 To start a new protocol, the developer creates a new package (*ProtocolName*) to contain the corresponding Java classes. Then, the first step consists in create a new class that "extends" "*api.ProtocolHelper.java*". This class forces the developer to implement the functions already mentioned, to integrate the protocol in ArduSim. An extended explanation of the functions follows:
 
@@ -142,31 +148,75 @@ The recommended package structure for the protocol follows:
     * *ProtocolNameOtherThreads.java*. Threads needed by the protocol. If more than one multicopter is needed and they have to communicate among them, then at least one thread to talk and another to listen to other UAVs must be implemented. Remember that the listener thread must listen always even when no data packets are expected to avoid the buffer to fill with undesired packets.
 * **pojo**. Should contain classes to define objects useful for the protocol and used in the previous packages.
 
-## 7 Implementation details
+## 8 Implementation details
 
 This sections includes several details the way ArduSim implements relevant elements needed by the developer, and some implementation recommendations to make the same code work in virtual and real multicopters, which would make the code more clear and easy to re-use. 
 
-### 7.1 UAV-to-UAV Communications
+### 8.1 UAV-to-UAV Communications
 
-An abstraction layer has been implemented to 
+Real multicopters use WiFi to broadcast UDP messages among them. On the other hand, broadcast is simulated among virtual UAVs when ArduSim is run as a simulator. In order to make the same code valid for both roles, an abstraction layer has been implemented over communications. Two functions have been implemented that help the developer to ignore communication details:
+
+* *void* **api.Copter.sendBroadcastMessage(** *int, byte[]* **)**. A multicopter sends a broadcast message to other UAVs encoded in a byte array. Please, remember that broadcast messages are also received by the sender, and they must be explicitly ignored in the sender.
+* *byte[]* **api.Copter.receiveMessage(** *int* **)**. A multicopter receives the next message sent from another UAV. The method blocks until a message is received, as in a real socket. Please, make the listener thread to listen continuously for new packets to avoid the buffer to fill. You would loose data updates, keeping in buffer old messages. Moreover, when ArduSim is run as a simulator, performance issues may happen for a few seconds when you start to read messages while the buffer is flushed and many UAVs are simulated at the same time.
+
+### 8.2 UAV control
+
+The Java Class *api.Copter.java* includes several functions to send commands to the multicopter and to retrieve information already gathered from it. Most commands return a boolean meaning whether the command was successfully completed or not, which allows the developer to treat errors at a higher level. An integer value represents the position of the multicopter in the array of UAVs running in the same machine (one in a real UAV, and many in simulation).
+
+Command functions:
+
+* *boolean* **setParameter(** *int, ControllerParam, double* **)**.
+* *Double* **getParameter(** *int, ControllerParam* **)**.
+* *boolean* **setFlightMode(** *int, FlightMode* **)**.
+* *boolean* **armEngines(** *int* **)**.
+* *boolean* **guidedTakeOff(** *int, double* **)**.
+* *boolean* **setHalfThrottle(** *int* **)**.
+* *void* **channelsOverride(** *int, int, int, int, int* **)**.
+* *boolean* **returnRCControl(** *int* **)**.
+* *boolean* **setSpeed(** *int, double* **)**.
+* *boolean* **moveUAVNonBlocking(** *int, GeoCoordinates, float* **)**.
+* *boolean* **moveUAV(** *int, GeoCoordinates, float, double, double* **)**.
+* *boolean* **clearMission(** *int* **)**.
+* *boolean* **sendMission(** *int, List<Waypoint>* **)**.
+* *boolean* **retrieveMission(** *int* **)**.
+* *boolean* **setCurrentWaypoint(** *int, int* **)**.
+
+Complex command functions. These functions have been built combining functions from the previous list to perform more complex tasks:
+
+* *boolean* **startMissionFromGround(** *int** **)**.
+* *boolean* **startMissionsFromGround()**.
+* *boolean* **takeOffNonBlocking(** *int, double* **)**.
+* *boolean* **takeOff(** *int, double* **)**.
+* *boolean* **takeOffAllUAVsNonBlocking(** *double[]* **)**.
+* *boolean* **takeOffAllUAVs(** *double[]* **)**.
+* *boolean* **stopUAV(** *int* **)**.
+* *void* **landIfMissionEnded(** *int, double* **)**.
+* *boolean* **landUAV(** *int* **)**.
+* *boolean* **landAllUAVs()**.
+* *boolean* **landAllUAVs()**.
+* *boolean* **cleanAndSendMissionToUAV(** *int, List<Waypoint>* **)**.
+
+Information retrieval functions:
+
+* *FlightMode* **getFlightMode(** *int* **)**.
+* *boolean* **isFlying(** *int* **)**.
+* *void* **setWaypointReachedListener(** *WaypointReachedListener* **)**.
+* *int* **getCurrentWaypoint(** *int* **)**.
+* *boolean* **isLastWaypointReached(** *int* **)**.
+
+Experimental functions not directly included in *api.Copter.java* Class:
+
+* *void* **getController(** *int* **).msgTarget(** *int, 
 
 
-
-
-functions
-
-### 7.2 UAV control
-
-functions (including beta in controller class)
-
-### 7.3 GUI integration
+### 8.3 GUI integration
 
 showing progress and drawing additional resources
 
-### 7.4 Available utilities
+### 8.4 Available utilities
 
 functions in Tools.java
 
-### 7.4 Implementation recomendations
+### 8.5 Implementation recomendations
 
 how to use the same code for real and virtual UAVs
