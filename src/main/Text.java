@@ -31,7 +31,7 @@ public class Text {
 	public static final String BUTTON_SELECT = "...";
 	public static final String CONFIGURATION_DIALOG_TITLE = "Simulator configuration";
 	public static final String SIMULATION_PARAMETERS = "Simulation parameters:";
-	public static final String GENERAL_PARAMETERS = "General parameters";
+	public static final String GENERAL_PARAMETERS = "General parameters:";
 	public static final String ARDUCOPTER_PATH = "ArduCopter path:";
 	public static final String BASE_PATH_DIALOG_TITLE = "Select the SITL arducopter executable file";
 	public static final String BASE_PATH_DIALOG_SELECTION = "ArduCopter file";
@@ -61,6 +61,8 @@ public class Text {
 	public static final String RENDER_QUALITY2 = "Text smoothed";
 	public static final String RENDER_QUALITY3 = "Text and lines smoothed";
 	public static final String RENDER_QUALITY4 = "Maximum quality";
+	public static final String VERBOSE_LOGGING_ENABLE = "Enable verbose logging:";
+	public static final String VERBOSE_STORAGE_ENABLE = "Enable verbose storage:";
 	public static final String UAV_PROTOCOL_USED = "UAV synchronization protocol:";
 	public static final String COMMUNICATIONS = "UAV to UAV communications parameters:";
 	public static final String BROADCAST_IP = "Broadcast IP address:";

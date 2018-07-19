@@ -27,10 +27,10 @@ public class Param {
 	public static AtomicInteger numMissionUAVs = new AtomicInteger();
 	
 	// Verbose logging?
-	public static final boolean VERBOSE_LOGGING = false;
+	public static volatile boolean verboseLogging;
 	
 	// Store additional information in files?
-	public static final boolean VERBOSE_STORE = true;
+	public static volatile boolean verboseStore;
 	
 	// Array containing the UAV controllers. Useful to set a listener to detect when a waypoint is reached, if needed.
 	public static UAVControllerThread[] controllers;

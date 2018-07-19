@@ -38,7 +38,7 @@ public class SlaveListener extends Thread {
 		}
 
 		FollowMeParam.uavs[numUAV] = FollowMeState.SEND_ID;
-		GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
+		GUI.updateProtocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 
 		byte[] message;
 		Input in = new Input();
@@ -83,7 +83,7 @@ public class SlaveListener extends Thread {
 				}
 				// TODO comprobar que offset != null
 				FollowMeParam.uavs[numUAV] = FollowMeState.TAKE_OFF;
-				GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
+				GUI.updateProtocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 				received = true;
 			}
 			// else {
@@ -159,7 +159,7 @@ public class SlaveListener extends Thread {
 		}
 
 		FollowMeParam.uavs[numUAV] = FollowMeState.FOLLOW;
-		GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
+		GUI.updateProtocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 
 		received = false;
 		while (!received) {
@@ -209,7 +209,7 @@ public class SlaveListener extends Thread {
 		}
 
 		FollowMeParam.uavs[numUAV] = FollowMeState.LANDING_FOLLOWERS;
-		GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
+		GUI.updateProtocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 
 		GUI.log("SlaveListener " + idSlave + " Finaliza");
 

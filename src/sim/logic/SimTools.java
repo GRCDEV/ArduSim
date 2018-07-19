@@ -250,6 +250,10 @@ public class SimTools {
 			Param.measureCPUEnabled = false;
 		}
 		
+		// General parameters
+		Param.verboseLogging = panel.chckbxLogging.isSelected();
+		Param.verboseStore = panel.chckbxStorage.isSelected();
+		
 		//  Protocol parameters
 		ProtocolHelper.selectedProtocol = (String)panel.protocolComboBox.getSelectedItem();
 		ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();

@@ -45,7 +45,7 @@ public class GUI {
 	
 	/** Returns true if verbose logging feature is enabled. */
 	public static boolean isVerboseLoggingEnabled() {
-		return Param.VERBOSE_LOGGING;
+		return Param.verboseLogging;
 	}
 	
 	/** Sends information to the main window upper-right corner label when a protocol needs it.
@@ -63,7 +63,7 @@ public class GUI {
 	
 	/** Updates the protocol state on the progress dialog.
 	 * <p>The progress dialog is only updated when performing simulations. */
-	public static void updateprotocolState(final int numUAV, final String state) {
+	public static void updateProtocolState(final int numUAV, final String state) {
 		// Update GUI only when using simulator
 		if (MainWindow.progressDialog != null) {
 			SwingUtilities.invokeLater(new Runnable() {

@@ -617,7 +617,7 @@ public class Tools {
 	/** Returns true if verbose store feature is enabled.
 	 * <p>If set to true, the developer can store additional file(s) for non relevant information. */
 	public static boolean isVerboseStorageEnabled() {
-		return Param.VERBOSE_STORE;
+		return Param.verboseStore;
 	}
 
 	/** Makes the thread wait for ms milliseconds. */

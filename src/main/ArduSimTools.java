@@ -1196,7 +1196,7 @@ public class ArduSimTools {
 					while (!success) {
 						if (input.ready()) {
 							s = input.readLine();
-							if (Param.VERBOSE_LOGGING) {
+							if (Param.verboseLogging) {
 								GUI.log(SimParam.prefix[i] + s);
 							}
 							if (s.contains("Waiting for connection")) {
@@ -1245,17 +1245,17 @@ public class ArduSimTools {
 		String OS = System.getProperty("os.name").toLowerCase();
 		if (OS.contains("win")) {
 			Param.runningOperatingSystem = Param.OS_WINDOWS;
-			if (Param.VERBOSE_LOGGING){
+			if (Param.verboseLogging){
 				GUI.log(Text.OPERATING_SYSTEM_WINDOWS);
 			}
 		} else if (OS.contains("nux") || OS.contains("nix") || OS.contains("aix")) {
 			Param.runningOperatingSystem = Param.OS_LINUX;
-			if (Param.VERBOSE_LOGGING){
+			if (Param.verboseLogging){
 				GUI.log(Text.OPERATING_SYSTEM_LINUX);
 			}
 		}else if (OS.contains("mac")) {
 			Param.runningOperatingSystem = Param.OS_MAC;
-			if (Param.VERBOSE_LOGGING){
+			if (Param.verboseLogging){
 				GUI.log(Text.OPERATING_SYSTEM_MAC);
 			}
 		} else {
@@ -1724,19 +1724,19 @@ public class ArduSimTools {
 			if (percentage != -1 && voltage != -1) {
 				if (Param.isRealUAV) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
-				} else if (Param.VERBOSE_LOGGING) {
+				} else if (Param.verboseLogging) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
 				}
 			} else if (percentage != -1) {
 				if (Param.isRealUAV) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " %");
-				} else if (Param.VERBOSE_LOGGING) {
+				} else if (Param.verboseLogging) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
 				}
 			} else if (voltage != -1) {
 				if (Param.isRealUAV) {
 					GUI.log(Text.BATTERY_LEVEL + " " + voltage + " V");
-				} else if (Param.VERBOSE_LOGGING) {
+				} else if (Param.verboseLogging) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
 				}
 			}
@@ -1815,6 +1815,18 @@ public class ArduSimTools {
 		if (Param.isRealUAV) {
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
 			sb.append("\n\t").append(Text.LOG_SPEED).append(UAVParam.initialSpeeds[0]).append(Text.METERS_PER_SECOND);
+			sb.append("\n\t").append(Text.VERBOSE_LOGGING_ENABLE).append(" ");
+			if (Param.verboseLogging) {
+				sb.append(Text.OPTION_ENABLED);
+			} else {
+				sb.append(Text.OPTION_DISABLED);
+			}
+			sb.append("\n\t").append(Text.VERBOSE_STORAGE_ENABLE).append(" ");
+			if (Param.verboseStore) {
+				sb.append(Text.OPTION_ENABLED);
+			} else {
+				sb.append(Text.OPTION_DISABLED);
+			}
 		} else {
 			sb.append("\n").append(Text.SIMULATION_PARAMETERS);
 			sb.append("\n\t").append(Text.UAV_NUMBER).append(" ").append(Param.numUAVs);
@@ -1844,6 +1856,19 @@ public class ArduSimTools {
 				sb.append(Text.NO_OPTION);
 			}
 			sb.append("\n\t").append(Text.RENDER).append(" ").append(SimParam.renderQuality.getName());
+			sb.append("\n").append(Text.GENERAL_PARAMETERS);
+			sb.append("\n\t").append(Text.VERBOSE_LOGGING_ENABLE).append(" ");
+			if (Param.verboseLogging) {
+				sb.append(Text.OPTION_ENABLED);
+			} else {
+				sb.append(Text.OPTION_DISABLED);
+			}
+			sb.append("\n\t").append(Text.VERBOSE_STORAGE_ENABLE).append(" ");
+			if (Param.verboseStore) {
+				sb.append(Text.OPTION_ENABLED);
+			} else {
+				sb.append(Text.OPTION_DISABLED);
+			}
 		}
 		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ProtocolHelper.selectedProtocol);
 		sb.append("\n").append(Text.COMMUNICATIONS);
@@ -1957,8 +1982,10 @@ public class ArduSimTools {
 
 	/** Logs to files the UAV path and general information. */
 	public static void storeLogAndPath(String folder, String baseFileName) {
-		File file1, file2, file3;
-		StringBuilder sb1, sb2, sb3;
+		File file1, file2;
+		File file3 = null;
+		StringBuilder sb1, sb2;
+		StringBuilder sb3 = null;
 		LogPoint sp;
 		LogPoint spPrev;
 		Double x, y, z, a;
@@ -1978,7 +2005,7 @@ public class ArduSimTools {
 			spPrev = null;
 			z = y = x = null;
 			
-			if (Param.VERBOSE_STORE) {
+			if (Param.verboseStore) {
 				file3 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
 				sb3 = new StringBuilder(2000);
 				sb3.append("._3DPOLY\n");
@@ -2009,7 +2036,7 @@ public class ArduSimTools {
 							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.000,0.000\n");
 						sb2.append(x).append(",").append(y).append("\n");
-						if (Param.VERBOSE_STORE) {
+						if (Param.verboseStore) {
 							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
@@ -2026,7 +2053,7 @@ public class ArduSimTools {
 							.append(",").append(Tools.round(a, 3)).append(",").append(Tools.round(d, 3))
 							.append(",").append(Tools.round(dist, 3)).append("\n");
 						sb2.append(x).append(",").append(y).append("\n");
-						if (Param.VERBOSE_STORE) {
+						if (Param.verboseStore) {
 							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
@@ -2035,7 +2062,7 @@ public class ArduSimTools {
 						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.heading)
 							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.0,").append(Tools.round(dist, 3)).append("\n");
-						if (Param.VERBOSE_STORE) {
+						if (Param.verboseStore) {
 							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
@@ -2046,7 +2073,7 @@ public class ArduSimTools {
 			Tools.storeFile(file1, sb1.toString());
 			sb2.append("\n");
 			Tools.storeFile(file2, sb2.toString());
-			if (Param.VERBOSE_STORE) {
+			if (Param.verboseStore) {
 				sb3.append("\n");
 				Tools.storeFile(file3, sb3.toString());
 			}

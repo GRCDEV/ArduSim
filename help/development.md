@@ -10,7 +10,7 @@ ArduSim is able to run performing three different roles:
 * UAV agent. The application runs on a Raspberry Pi 3 attached to a multicopter. The experiment is controlled from a PC Companion.
 * PC Companion. The application runs on a Laptop and allows to control an experiment followed by any number of multicopters.
 
-The code needed to run the PC Companion is completed and needs no further modification. When the protocol developer follows the included [recomendations](#markdown-header-implementation-recomendations), the same code used for simulation is also valid for a real multicopter, which makes the deployment on real devices somewhat trial. In order to make it possible, the multicopters are assigned a unique identifier (ID) based on their MAC address, or a number starting in zero if ArduSim behaves as a simulator.
+The code needed to run the PC Companion is completed and needs no further modification. When the protocol developer follows the included [recomendations](#markdown-header-85-implementation-recomendations), the same code used for simulation is also valid for a real multicopter, which makes the deployment on real devices somewhat trial. In order to make it possible, the multicopters are assigned a unique identifier (ID) based on their MAC address, or a number starting in zero if ArduSim behaves as a simulator.
 
 ### 2 Simulator
 
@@ -48,9 +48,9 @@ The Eclipse project in organized in packages. We suggest to enable the hierarchi
 * **api**. This is the most important package and includes the following elements:
     * pojo. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
     * WaypointReachedListener interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
-    * Copter. Includes methods to gather flight information from the multicopter or perform actions, like changing the flight mode, as explained in detail in "[7.2 UAV control](#markdown-header-72-uav-control)" section.
-    * GUI. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[7.3 GUI integration](#markdown-header-73-gui-integration)" section.
-    * Tools. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[7.4 Available utilities](#markdown-header-74-available-utilities)" section.
+    * Copter. Includes methods to gather flight information from the multicopter or perform actions, like changing the flight mode, as explained in detail in "[8.2 UAV control](#markdown-header-82-uav-control)" section.
+    * GUI. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[8.3 GUI integration](#markdown-header-83-gui-integration)" section.
+    * Tools. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[8.4 Available utilities](#markdown-header-84-available-utilities)" section.
     * files. This package includes resources used when ArduSim is used as a Simulator.
 * **... (protocol packages)**
 
@@ -73,7 +73,7 @@ As explained in section "[1 ArduSim architecture](#markdown-header-1-Ardusim-arc
 
 ![workflow](ArduSimworkflow.svg)
 
-Rectangular boxes represent the functions included in section "[6 Protocol implementation](#markdown-header-6-protocol-implementation)" that must be implemented by the developer, while comments are automatic processes performed by ArduSim.
+Rectangular boxes represent the functions included in section "[7 Protocol implementation](#markdown-header-7-protocol-implementation)" that must be implemented by the developer, while comments are automatic processes performed by ArduSim.
 
 ArduSim starts loading the implemented protocols and parsing the command line to know which role will it run among other parameters.
 
@@ -95,7 +95,7 @@ Once the experiment is finished, the methods "*getExperimentResults()*" and "*ge
 
 ### 5.3 Simulator
 
-The most important difference between "UAV agent" and "Simulator" roles implementation is the number of multicopters that run in the same machine, one in the former and many in the later. It is highly suggested to store data in array variables with the length of the number of UAVs that run in the machine, so in the real UAV the array length will be 1 and the code will be valid for both roles. Good implementation examples can be found in "MBCAP" and "Swarm protocol" protocols. A function is provided to know which ID (multicopter) corresponds to a specific position in the array, as detailed in section "[7.4 Available utilities](#markdown-header-74-available-utilities)". This function will provide the ID of the multicopter when running on a real UAV, as the array has a length of 1. On the other hand, no function is provided to get a UAV location in the array given the ID, as it will always be 0 in the real UAV and in simulation the ID is equivalent to the position in the array.
+The most important difference between "UAV agent" and "Simulator" roles implementation is the number of multicopters that run in the same machine, one in the former and many in the later. It is highly suggested to store data in array variables with the length of the number of UAVs that run in the machine, so in the real UAV the array length will be 1 and the code will be valid for both roles. Good implementation examples can be found in "MBCAP" and "Swarm protocol" protocols. A function is provided to know which ID (multicopter) corresponds to a specific position in the array, as detailed in section "[8.4 Available utilities](#markdown-header-84-available-utilities)". This function will provide the ID of the multicopter when running on a real UAV, as the array has a length of 1. On the other hand, no function is provided to get a UAV location in the array given the ID, as it will always be 0 in the real UAV and in simulation the ID is equivalent to the position in the array.
 
 When ArduSim is run, it also checks if the computer meets some requirements and opens a general configuration dialog. There, the user can set many simulation parameters, as well as the maximum flight speed for each virtual multicopter. Then, when the configuration is set, the function "*openConfigurationDialog()*" may launch a dialog to introduce values for parameters of the protocol under development. Next, planned missions are loaded for the multicopters specified by the protocol.
 
@@ -200,31 +200,51 @@ Follows a list of information retrieval functions that don't need to communicate
 * *FlightMode* **getFlightMode(** *int* **)**. This method provides the current flight mode of the multicopter.
 * *boolean* **isFlying(** *int* **)**. It reports whether the multicopter is flying or not (on the ground and engines off).
 * *Quintet<Long, Point2D.Double, Double, Double, Double>* **getData(** *int* **)**. This method gives the most up-to-date data received from the flight controller, including coordinates, speed, acceleration and the moment they were received from the flight controller.
-* *Point2D.Double* **getUTMLocation(** *int* **)**. It provides only the latest UTM coordinates.
-* *GeoCoordinates* **getGeoLocation(** *int* **)**. In this case, it provides the geographic coordinates (latitude and longitude).
-* *Point3D[]* **getLastKnownLocations(** *int* **)**. This function gives 
-* *double* **getZRelative(** *int* **)**.
-* *double* **getZ(** *int* **)**.
-* *double* **getSpeed(** *int* **)**.
-* *Triplet<Double, Double, Double>* **getSpeeds(** *int* **)**.
+* *Point2D.Double* **getUTMLocation(** *int* **)**. It provides only the current UTM coordinates.
+* *GeoCoordinates* **getGeoLocation(** *int* **)**. In this case, it provides the current geographic coordinates (latitude and longitude).
+* *Point3D[]* **getLastKnownLocations(** *int* **)**. This function gives the last known locations of the UAV in ascending order.
+* *double* **getZRelative(** *int* **)**. It provides the current relative altitude over the home location.
+* *double* **getZ(** *int* **)**. It provides the current absolute altitude over the sea level.
+* *double* **getSpeed(** *int* **)**. This method gives the current flight speed.
+* *Triplet<Double, Double, Double>* **getSpeeds(** *int* **)**. In this case, the current flight speed for the three cartesian axes is provided.
 * *double* **getPlannedSpeed(** *int* **)**. This method provides the maximum flying speed used by the flight controller. In a mission, it is the constant speed it will follow through a straight line, and in GUIDED flight mode it is the maximum speed adopted by the flight controller while executing commands.
-* *double* **getHeading(** *int* **)**.
+* *double* **getHeading(** *int* **)**. This method gives the current yaw or heading of the multicopter.
 * *void* **setWaypointReachedListener(** *WaypointReachedListener* **)**. Any Java Class can implement *WaypointReachedListener* as *mbcap.logic.BeaconingThread* does. Then, using this method that Class would be able to apply some logic each time the flight controller detects that a waypoint has been reached. Useful for UAVs that follow a planned mission.
 * *int* **getCurrentWaypoint(** *int* **)**. It provides the identifier of the current waypoint of the mission. Useful for UAVs that follow a planned mission.
 * *boolean* **isLastWaypointReached(** *int* **)**. It asserts if the last waypoint of the mission has been reached. Useful for UAVs that follow a planned mission.
-* *String* **getUAVPrefix(** *int* **)**.
+* *String* **getUAVPrefix(** *int* **)**. This function builds a String with convenience text that should be prepended to any message that a multicopter could publish with the function *api.GUI.log(String)*.
 
 Experimental functions not directly included in *api.Copter.java* Class:
 
-* *void* **getController(** *int* **).msgTarget(** *Double, Double, Double, Double, Double, Double* **)**.
-* *void* **msgYaw(** *float* **)**.
-
+* *void* **getController(** *int* **).msgTarget(** *Double, Double, Double, Double, Double, Double* **)**. This function allows to move a UAV in GUIDED flight mode towards a set of coordinates, or at a certain speed. Speed based motion has not been tested already and this function is experimental.
+* *void* **msgYaw(** *float* **)**. This function allows to modify the yaw or heading of the multicopter. This function has not been tested already and is experimental.
 
 ### 8.3 GUI integration
 
-showing progress and drawing additional resources
+A few functions have been implemented to update the data already shown in the GUI, and to allow the developer to introduce new elements in the drawing panel.
+
+The next list of functions allow the developer to update the GUI, and even close ArduSim when an unexpected behavior is detected, showing a message before closing the application.
+
+* *void* **log(** *String* **)**. This method shows a message in console. Furthermore, is ArduSim runs as a simulator, the same message is shown in the log in the upper left corner of the main window.
+* *boolean* **isVerboseLoggingEnabled()**. It returns true if console and GUI logging is performed in verbose mode. This helper can be useful to show some messages of the protocol only in that mode.
+* *void* **updateProtocolState(** *int, String* **)**. The progress dialog shows general information for each running virtual UAV. This function is used to show there the current estate of the protocol to compare the behavior when different UAVs are in a different state.
+* *void* **updateGlobalInformation(** *String* **)**. On the upper right corner of the main window, below the interaction buttons, there is a String where you can show any information with this function.
+* *void* **warn(** *String, String* **)**. On a real UAV it writes a mesage to console, while in simulation it opens a dialog to warn the user.
+* *void* **exit(** *String* **)**. The behavior is the same as the previous method, but additionally it closes ArduSim with a error code. If ArduSim runs as a simulator, before exiting all SITL instances are closed and temporary files are removed.
+
+The following functions are useful to draw new elements in the main panel using the methods *loadResources())*,  *drawResources(Graphics2D, BoardPanel)*, *rescaleDataStructures()*, and *rescaleShownResources()* in the protocol implementation, as explained in section "[7 Protocol implementation](#markdown-header-7-protocol-implementation)".
+
+* *Point2D.Double* **locatePoint(** *double, double* **)**. It provides the screen coordinates of a point given its UTM coordinates.
+* *Color* **getUAVColor(** *int* **)**. It provides the Color assigned to a UAV to be used to draw linear elements on the screen.
+
+The last function may be used in the PC Companion dialog, if implemented, to get a list of UAVs detected. It is useful to build the GUI before launching a thread to update it depending on the present UAVs.
+
+* *StatusPacket[]* **getDetectedUAVs()**. Returns an array with the number of detected UAVs as size, of an object with the ID of the multicopters. A usage example can be found in the protocol MBCAP.
 
 ### 8.4 Available utilities
+
+
+
 
 functions in Tools.java
 

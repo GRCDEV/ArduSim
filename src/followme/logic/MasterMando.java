@@ -63,7 +63,7 @@ public class MasterMando extends Thread {
 				tfin = n.time;
 				Copter.setFlightMode(FollowMeParam.posMaster, FlightMode.LAND_ARMED);
 				FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.LANDING_MASTER;
-				GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
+				GUI.updateProtocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 				
 				//GUI.log("Mode Master " + FlightMode.LAND_ARMED);
 				break;

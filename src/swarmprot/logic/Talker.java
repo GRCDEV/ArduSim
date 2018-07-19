@@ -122,7 +122,7 @@ public class Talker extends Thread {
 
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_START_TALKER);
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTSTART);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTSTART);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				Tools.waiting(SwarmProtParam.waitState);
@@ -131,7 +131,7 @@ public class Talker extends Thread {
 			/** PHASE SEND DATA */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
 				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_DATA_TALKER);
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTSEND_DATA);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTSEND_DATA);
 			}
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
 				while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_DATA) {
@@ -170,7 +170,7 @@ public class Talker extends Thread {
 			/** PHASE SEND LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_LIST) {
 				GUI.log("Master " + numUAV + ": " + SwarmProtText.MASTER_SEND_LIST_TALKER);
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTSEND_LIST);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTSEND_LIST);
 
 				while (!Listener.semaphore) {
 					Tools.waiting(SwarmProtParam.waitState);
@@ -365,7 +365,7 @@ public class Talker extends Thread {
 			/** PHASE SEND TAKE OFF */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
 				GUI.log("Master " + numUAV + ": " + SwarmProtText.SEND_TAKE_OFF + "--> Talker");
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTSEND_TAKE_OFF);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTSEND_TAKE_OFF);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.SEND_TAKE_OFF) {
 				// It only listen for his MSJ4
@@ -383,7 +383,7 @@ public class Talker extends Thread {
 			/** PHASE START */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_START_TALKER);
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTSTART);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTSTART);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.START) {
 				/** MSJ1 */
@@ -417,7 +417,7 @@ public class Talker extends Thread {
 			/** PHASE WAIT LIST */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
 				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_LIST_TALKER);
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTWAIT_LIST);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTWAIT_LIST);
 
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_LIST) {
@@ -452,7 +452,7 @@ public class Talker extends Thread {
 			/** PHASE WAIT TAKE OFF */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
 				GUI.log("Slave " + numUAV + ": " + SwarmProtText.SLAVE_WAIT_TAKE_OFF_TALKER);
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTWAIT_TAKE_OFF);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTWAIT_TAKE_OFF);
 			}
 			int minimodeenvios = 0;
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WAIT_TAKE_OFF) {
@@ -493,7 +493,7 @@ public class Talker extends Thread {
 		/** PHASE TAKING OFF */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
 			GUI.log("UAV " + numUAV + ": " + SwarmProtText.TAKING_OFF_COMMON + "--> Talker");
-			GUI.updateprotocolState(numUAV, SwarmProtText.INTTAKING_OFF);
+			GUI.updateProtocolState(numUAV, SwarmProtText.INTTAKING_OFF);
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.TAKING_OFF) {
@@ -503,14 +503,14 @@ public class Talker extends Thread {
 		/** PHASE moveToWP */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
 			GUI.log("UAV " + numUAV + ": " + SwarmProtText.MOVE_TO_WP + "-->Talker");
-			GUI.updateprotocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
+			GUI.updateProtocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 		}
 
 		while (SwarmProtParam.WpLast[numUAV][0] != true) {
 
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.MOVE_TO_WP) {
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 				if (missionPointNumber == 1 && SwarmProtParam.fightPrevNext[numUAV][1] != SwarmProtParam.broadcastMAC) {
 
@@ -565,7 +565,7 @@ public class Talker extends Thread {
 			/** PHASE WP_REACHED */
 			if (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
 				GUI.log("UAV " + numUAV + ": " + SwarmProtText.WP_REACHED + "-->Talker");
-				GUI.updateprotocolState(numUAV, SwarmProtText.INTWP_REACHED);
+				GUI.updateProtocolState(numUAV, SwarmProtText.INTWP_REACHED);
 			}
 			while (SwarmProtParam.state[numUAV] == SwarmProtState.WP_REACHED) {
 				// Master
@@ -601,7 +601,7 @@ public class Talker extends Thread {
 							
 						Listener.uavsACK4.clear();
 						SwarmProtParam.state[numUAV] = SwarmProtState.MOVE_TO_WP;
-						GUI.updateprotocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
+						GUI.updateProtocolState(numUAV, SwarmProtText.INTMOVE_TO_WP);
 
 					} else {
 						Tools.waiting(SwarmProtParam.waitState);
@@ -644,7 +644,7 @@ public class Talker extends Thread {
 		/** PHASE LANDING */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
 			GUI.log("UAV " + numUAV + ": " + SwarmProtText.LANDING + "-->Talker");
-			GUI.updateprotocolState(numUAV, SwarmProtText.INTLANDING_UAV);
+			GUI.updateProtocolState(numUAV, SwarmProtText.INTLANDING_UAV);
 		}
 
 		while (SwarmProtParam.state[numUAV] == SwarmProtState.LANDING) {
@@ -687,7 +687,7 @@ public class Talker extends Thread {
 		/** PHASE FINISH */
 		if (SwarmProtParam.state[numUAV] == SwarmProtState.FINISH) {
 			GUI.log("UAV " + numUAV + ": " + SwarmProtText.FINISH + "--> Talker");
-			GUI.updateprotocolState(numUAV, SwarmProtText.INTFINISH);
+			GUI.updateProtocolState(numUAV, SwarmProtText.INTFINISH);
 		}
 		/** END PHASE FINISH */
 

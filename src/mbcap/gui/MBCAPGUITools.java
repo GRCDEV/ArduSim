@@ -305,7 +305,7 @@ public class MBCAPGUITools {
 		// Update the log in the main window
 		GUI.log(Copter.getUAVPrefix(numUAV) + MBCAPText.CAP + " = " + state.getName());
 		// Update the progress dialog
-		GUI.updateprotocolState(numUAV, state.getName());
+		GUI.updateProtocolState(numUAV, state.getName());
 	}
 
 }

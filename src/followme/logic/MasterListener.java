@@ -30,7 +30,7 @@ public class MasterListener extends Thread {
 		}
 		
 		FollowMeParam.uavs[idMaster] = FollowMeState.LISTEN_ID;
-		GUI.updateprotocolState(idMaster, FollowMeParam.uavs[idMaster].getName());
+		GUI.updateProtocolState(idMaster, FollowMeParam.uavs[idMaster].getName());
 		
 		Input in = new Input();
 		byte[] message;
@@ -78,7 +78,7 @@ public class MasterListener extends Thread {
 		
 		FollowMeParam.setupFinished = true;
 		FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.READY_TO_START;
-		GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
+		GUI.updateProtocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		
 
 		GUI.log("MasterListener Finaliza");

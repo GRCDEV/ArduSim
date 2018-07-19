@@ -59,7 +59,7 @@ public class SlaveTalker extends Thread {
 		if (FollowMeParam.uavs[numUAV] == FollowMeState.TAKE_OFF) {
 			Copter.takeOff(numUAV, FollowMeParam.AlturaInitFollowers / 2);
 			FollowMeParam.uavs[numUAV] = FollowMeState.GOTO_POSITION;
-			GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
+			GUI.updateProtocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 		}
 
 		double dist;
@@ -81,7 +81,7 @@ public class SlaveTalker extends Thread {
 		} while (0.5 < dist);
 
 		FollowMeParam.uavs[numUAV] = FollowMeState.WAIT_MASTER;
-		GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
+		GUI.updateProtocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 
 		while (FollowMeParam.uavs[numUAV] == FollowMeState.WAIT_MASTER) {
 			// Enviar MsgReady

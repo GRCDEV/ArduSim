@@ -31,7 +31,7 @@ public class MasterTalker extends Thread {
 		}
 		
 		FollowMeParam.uavs[idMaster] = FollowMeState.WAIT_TAKE_OFF_MASTER;
-		GUI.updateprotocolState(idMaster, FollowMeParam.uavs[idMaster].getName());
+		GUI.updateProtocolState(idMaster, FollowMeParam.uavs[idMaster].getName());
 		
 		byte[] buffer;
 		Output out = new Output();
@@ -67,14 +67,14 @@ public class MasterTalker extends Thread {
 		}
 		
 		FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.TAKE_OFF;
-		GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
+		GUI.updateProtocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		
 		while (Copter.getZRelative(FollowMeParam.posMaster) < FollowMeParam.AlturaInitSend) {
 			Tools.waiting(200);
 		}
 		
 		FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.SENDING;
-		GUI.updateprotocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
+		GUI.updateProtocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		
 
 		

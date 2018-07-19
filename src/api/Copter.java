@@ -261,7 +261,7 @@ public class Copter {
 		}
 		for (int i = 0; i < Param.numUAVs; i++) {
 			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * altitudes[i]) {
-				if (Param.VERBOSE_LOGGING) {
+				if (Param.verboseLogging) {
 					GUI.log(SimParam.prefix[i] + Text.ALTITUDE_TEXT
 							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())
 							+ " " + Text.METERS);
@@ -292,7 +292,7 @@ public class Copter {
 		}
 
 		while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * altitude) {
-			if (Param.VERBOSE_LOGGING) {
+			if (Param.verboseLogging) {
 				GUI.log(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
 						+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
 						+ " " + Text.METERS);
