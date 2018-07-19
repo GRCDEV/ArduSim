@@ -48,6 +48,7 @@ import org.mavlink.messages.ardupilotmega.msg_sys_status;
 import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
+import api.pojo.GeoCoordinates;
 import api.pojo.LogPoint;
 import api.pojo.Point3D;
 import api.pojo.RCValues;
@@ -333,8 +334,8 @@ public class UAVControllerThread extends Thread {
 			}
 
 			Point2D.Double locationUTM = new Point2D.Double();
-			Point2D.Double locationGeo = new Point2D.Double(message.lon * 0.0000001, message.lat * 0.0000001);
-			UTMCoordinates locationUTMauxiliary = Tools.geoToUTM(locationGeo.y, locationGeo.x);	// Latitude = x
+			GeoCoordinates locationGeo = new GeoCoordinates(message.lat * 0.0000001, message.lon * 0.0000001);
+			UTMCoordinates locationUTMauxiliary = Tools.geoToUTM(locationGeo.latitude, locationGeo.longitude);	// Latitude = x
 			// The first time a coordinate set is received, we store the planet region where the UAVs are flying
 			if (SimParam.zone < 0) {
 				SimParam.zone = locationUTMauxiliary.Zone;

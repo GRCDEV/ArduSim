@@ -5,12 +5,14 @@ import java.awt.geom.Point2D;
 import org.javatuples.Quintet;
 import org.javatuples.Triplet;
 
+import api.pojo.GeoCoordinates;
+
 /** This class generates and object that contains the most recent information received from the UAV. */
 
 public class UAVCurrentData {
 
 	private long time;					// (ns) Local time when the location was retrieved from the UAV
-	private Point2D.Double locationGeo;	// (degrees) longitude,latitude coordinates (x=longitude)
+	private GeoCoordinates locationGeo;	// (degrees) longitude,latitude coordinates
 	private Point2D.Double locationUTM;	// (m) X,Y UTM coordinates
 	private double z, zRelative;		// (m) Altitude
 	private Triplet<Double, Double, Double> speed;	// (m/s) Current speed in the three axes
@@ -19,7 +21,7 @@ public class UAVCurrentData {
 	private double heading;				// (rad) Current heading
 
 	/** Updates the UAV object data. */
-	public synchronized void update(long time, Point2D.Double locationGeo, Point2D.Double locationUTM, double z,
+	public synchronized void update(long time, GeoCoordinates locationGeo, Point2D.Double locationUTM, double z,
 			double zRelative, Triplet<Double, Double, Double> speed, double groundSpeed, double heading) {
 		this.locationGeo = locationGeo;
 		this.locationUTM = locationUTM;
@@ -73,9 +75,9 @@ public class UAVCurrentData {
 	
 	/** Returns the current location in Geographic coordinates.
 	 * <p>x=longitude, y=latitude. */
-	public synchronized Point2D.Double getGeoLocation() {
+	public synchronized GeoCoordinates getGeoLocation() {
 		if (locationGeo == null) return locationGeo;
-		else return new Point2D.Double(this.locationGeo.x, this.locationGeo.y);
+		else return new GeoCoordinates(this.locationGeo.latitude, this.locationGeo.longitude);
 	}
 
 	/** Returns the current relative altitude (m). */

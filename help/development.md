@@ -165,10 +165,10 @@ The Java Class *api.Copter.java* includes several functions to send commands to 
 
 Command functions:
 
-* *boolean* **setParameter(** *int, ControllerParam, double* **)**.
-* *Double* **getParameter(** *int, ControllerParam* **)**.
-* *boolean* **setFlightMode(** *int, FlightMode* **)**.
-* *boolean* **armEngines(** *int* **)**.
+* *boolean* **setParameter(** *int, ControllerParam, double* **)**. The developer can modify one of the parameters of the flight controller as included in *uavController.UAVParam.ControllerParam* enumerator. The most appropriate place would be the function *sendInitialConfiguration(int)* of the protocol implementation, before starting the protocol threads (see section "[5 Application workflow](#markdown-header-5-application-workflow)").
+* *Double* **getParameter(** *int, ControllerParam* **)**. Parameter values can be retrieved from the flight controller at any time, but again the most appropriate place is the method *sendInitialConfiguration(int)*.
+* *boolean* **setFlightMode(** *int, FlightMode* **)**. It changes the flight mode as defined in *api.pojo.FlightMode*.
+* *boolean* **armEngines(** *int* **)**. Arms the engines so the flight could be started. The multicopter must be in an armable flight mode.
 * *boolean* **guidedTakeOff(** *int, double* **)**.
 * *boolean* **setHalfThrottle(** *int* **)**.
 * *void* **channelsOverride(** *int, int, int, int, int* **)**.
@@ -196,17 +196,29 @@ Complex command functions. These functions have been built combining functions f
 * *boolean* **landAllUAVs()**.
 * *boolean* **cleanAndSendMissionToUAV(** *int, List<Waypoint>* **)**.
 
-Information retrieval functions:
+Follows a list of information retrieval functions that don't need to communicate with the flight controller. The data could be slightly outdated, as this information is retrieved periodically.
 
-* *FlightMode* **getFlightMode(** *int* **)**.
-* *boolean* **isFlying(** *int* **)**.
+* *FlightMode* **getFlightMode(** *int* **)**. Provides the current flight mode of the multicopter.
+* *boolean* **isFlying(** *int* **)**. Reports whether the multicopter is flying or not (on the ground and engines off).
+* *Quintet<Long, Point2D.Double, Double, Double, Double>* **getData(** *int* **)**.
+* *Point2D.Double* **getUTMLocation(** *int* **)**.
+* *GeoCoordinates* **getGeoLocation(** *int* **)**.
+* *Point3D[]* **getLastKnownLocations(** *int* **)**.
+* *double* **getZRelative(** *int* **)**.
+* *double* **getZ(** *int* **)**.
+* *double* **getSpeed(** *int* **)**.
+* *Triplet<Double, Double, Double>* **getSpeeds(** *int* **)**.
+* *double* **getPlannedSpeed(** *int* **)**.
+* *double* **getHeading(** *int* **)**.
 * *void* **setWaypointReachedListener(** *WaypointReachedListener* **)**.
 * *int* **getCurrentWaypoint(** *int* **)**.
 * *boolean* **isLastWaypointReached(** *int* **)**.
+* *String* **getUAVPrefix(** *int* **)**.
 
 Experimental functions not directly included in *api.Copter.java* Class:
 
-* *void* **getController(** *int* **).msgTarget(** *int, 
+* *void* **getController(** *int* **).msgTarget(** *Double, Double, Double, Double, Double, Double* **)**.
+* *void* **msgYaw(** *float* **)**.
 
 
 ### 8.3 GUI integration

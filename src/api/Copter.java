@@ -512,10 +512,10 @@ public class Copter {
 		for (int i = 0; i < list.size(); i++) {
 			UAVParam.currentGeoMission[numUAV].add(list.get(i).clone());
 		}
-		Point2D.Double geo = UAVParam.uavCurrentData[numUAV].getGeoLocation();
+		GeoCoordinates geo = UAVParam.uavCurrentData[numUAV].getGeoLocation();
 		// The take off waypoint must be modified to include current coordinates
-		UAVParam.currentGeoMission[numUAV].get(1).setLatitude(geo.y);
-		UAVParam.currentGeoMission[numUAV].get(1).setLongitude(geo.x);
+		UAVParam.currentGeoMission[numUAV].get(1).setLatitude(geo.latitude);
+		UAVParam.currentGeoMission[numUAV].get(1).setLongitude(geo.longitude);
 		
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SEND_WPS);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -941,8 +941,8 @@ public class Copter {
 		return UAVParam.uavCurrentData[numUAV].getUTMLocation();
 	}
 
-	/** API: Provides the latest location in Geographic coordinates (x=longitude,y=latitude) received from the flight controller. */
-	public static Point2D.Double getGeoLocation(int numUAV) {
+	/** API: Provides the latest location in Geographic coordinates received from the flight controller. */
+	public static GeoCoordinates getGeoLocation(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getGeoLocation();
 	}
 	

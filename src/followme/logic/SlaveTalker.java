@@ -9,6 +9,7 @@ import com.esotericsoftware.kryo.io.Output;
 import api.Copter;
 import api.GUI;
 import api.Tools;
+import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
 
@@ -61,16 +62,18 @@ public class SlaveTalker extends Thread {
 			GUI.updateprotocolState(numUAV, FollowMeParam.uavs[numUAV].getName());
 		}
 
-		double dist = 99999;
+		double dist;
 		Point2D.Double pDestino = null;
 		while (point.get() == null) {
 			Tools.waiting(100);
 		}
 		pDestino = point.get();
-		UTMCoordinates UTMActual = Tools.geoToUTM(Copter.getGeoLocation(numUAV).y, Copter.getGeoLocation(numUAV).x);
+		GeoCoordinates geoActual;
+		UTMCoordinates UTMActual;
 
 		do {
-			UTMActual = Tools.geoToUTM(Copter.getGeoLocation(numUAV).y, Copter.getGeoLocation(numUAV).x);
+			geoActual = Copter.getGeoLocation(numUAV);
+			UTMActual = Tools.geoToUTM(geoActual.latitude, geoActual.longitude);
 			dist = Math.sqrt(
 					Math.pow((pDestino.x - UTMActual.Easting), 2) + Math.pow((pDestino.y - UTMActual.Northing), 2));
 //			System.out.println("Slave " + numUAV + ": " + dist + " m");
