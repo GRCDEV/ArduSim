@@ -138,6 +138,7 @@ public class Copter {
 	/** API: Takes off a UAV previously armed.
 	 * <p>altitude. Target altitude over the ground.
 	 * <p>The UAV must be in GUIDED mode and armed.
+	 * * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
 	 * <p>Returns true if the command was successful. */
 	public static boolean guidedTakeOff(int numUAV, double altitude) {
 		UAVParam.takeOffAltitude.set(numUAV, altitude);
@@ -416,13 +417,13 @@ public class Copter {
 	}
 
 	/** API: Moves the UAV to a new position.
+	 * <p>The UAV must be in GUIDED flight mode.
 	 * <p>geo. Geographic coordinates the UAV has to move to.
 	 * <p>relAltitude. Relative altitude the UAV has to move to.
 	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
 	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
 	 * <p>The method may return control immediately or in more than 200 ms depending on the reaction of the flight controller
-	 * <p>Returns true if the command was successful.
-	 * <p>The UAV must be in guided mode. */
+	 * <p>Returns true if the command was successful. */
 	public static boolean moveUAVNonBlocking(int numUAV, GeoCoordinates geo, float relAltitude) {
 		UAVParam.newLocation[numUAV][0] = (float)geo.latitude;
 		UAVParam.newLocation[numUAV][1] = (float)geo.longitude;
@@ -441,13 +442,13 @@ public class Copter {
 	}
 	
 	/** API: Moves the UAV to a new position.
+	 * <p>The UAV must be in GUIDED flight mode.
 	 * <p>geo. Geographic coordinates the UAV has to move to.
 	 * <p>relAltitude. Relative altitude the UAV has to move to.
 	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
 	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
 	 * <p>Blocking method. It waits until the UAV is close enough of the target location.
-	 * <p>Returns true if the command was successful.
-	 * <p>The UAV must be in guided mode. */
+	 * <p>Returns true if the command was successful. */
 	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold, double altThreshold) {
 		if (!Copter.moveUAVNonBlocking(numUAV, geo, relAltitude)) {
 			return false;
@@ -533,8 +534,8 @@ public class Copter {
 	
 	/** API: Retrieves the mission stored on the UAV.
 	 * <p>Returns true if the command was successful.
-	 * <p>New value available on UAVParam.currentGeoMission[numUAV].
-	 * <p>Simplified version of the mission in UTM coordinates available on UAVParam.missionUTMSimplified[numUAV]. */
+	 * <p>New value available on api.Tools.getUAVMission(numUAV).
+	 * <p>Simplified version of the mission in UTM coordinates available on api.Tools.getUAVMissionSimplified(numUAV). */
 	public static boolean retrieveMission(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK

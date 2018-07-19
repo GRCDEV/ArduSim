@@ -161,58 +161,57 @@ Real multicopters use WiFi to broadcast UDP messages among them. On the other ha
 
 ### 8.2 UAV control
 
-The Java Class *api.Copter.java* includes several functions to send commands to the multicopter and to retrieve information already gathered from it. Most commands return a boolean meaning whether the command was successfully completed or not, which allows the developer to treat errors at a higher level. An integer value represents the position of the multicopter in the array of UAVs running in the same machine (one in a real UAV, and many in simulation).
+The Java Class *api.Copter.java* includes several functions to send commands to the multicopter and to retrieve information already gathered from it. Most commands return a boolean meaning whether the command was successfully completed or not, which allows the developer to treat errors at a higher level. An integer value represents the position of the multicopter the command is applied to in the array of UAVs running in the same machine (one in a real UAV, and many in simulation).
 
-Command functions:
+Simple command functions:
 
 * *boolean* **setParameter(** *int, ControllerParam, double* **)**. The developer can modify one of the parameters of the flight controller as included in *uavController.UAVParam.ControllerParam* enumerator. The most appropriate place would be the function *sendInitialConfiguration(int)* of the protocol implementation, before starting the protocol threads (see section "[5 Application workflow](#markdown-header-5-application-workflow)").
 * *Double* **getParameter(** *int, ControllerParam* **)**. Parameter values can be retrieved from the flight controller at any time, but again the most appropriate place is the method *sendInitialConfiguration(int)*.
 * *boolean* **setFlightMode(** *int, FlightMode* **)**. It changes the flight mode as defined in *api.pojo.FlightMode*.
-* *boolean* **armEngines(** *int* **)**. Arms the engines so the flight could be started. The multicopter must be in an armable flight mode.
-* *boolean* **guidedTakeOff(** *int, double* **)**.
-* *boolean* **setHalfThrottle(** *int* **)**.
-* *void* **channelsOverride(** *int, int, int, int, int* **)**.
-* *boolean* **returnRCControl(** *int* **)**.
-* *boolean* **setSpeed(** *int, double* **)**.
-* *boolean* **moveUAVNonBlocking(** *int, GeoCoordinates, float* **)**.
-* *boolean* **moveUAV(** *int, GeoCoordinates, float, double, double* **)**.
-* *boolean* **clearMission(** *int* **)**.
-* *boolean* **sendMission(** *int, List<Waypoint>* **)**.
-* *boolean* **retrieveMission(** *int* **)**.
-* *boolean* **setCurrentWaypoint(** *int, int* **)**.
+* *boolean* **armEngines(** *int* **)**. It arms the engines so the flight could be started. The multicopter must be on the ground and in an armable flight mode. On a real UAV, the hardware switch for safety arm must be pressed, if available.
+* *boolean* **guidedTakeOff(** *int, double* **)**. It takes off to the target relative altitude. The multicopter must be in GUIDED flight mode and armed.
+* *boolean* **setHalfThrottle(** *int* **)**. To start a mission, the throttle value must be moved from the minimum value (default value) to a higher value, once the engines are armed and the flight mode is set to AUTO. This method rises the throttle value overriding the corresponding channel of the remote control. Moreover, it set yaw, pitch and roll to their trim (middle) value to keep the UAV static in the horizontal plane. Channel override is enabled by default and cannot be enabled again once used the function *returnRCControl(int)*.
+* *void* **channelsOverride(** *int, int, int, int, int* **)**. It allows to simulate the joysticks of the remote control, providing values for yaw, pitch, roll and throttle. Commands must be issued at least once a second in a loop or the control could be returned to the real remote. Channel override is enabled by default and cannot be enabled again once used the function *returnRCControl(int)*.
+* *boolean* **returnRCControl(** *int* **)**. It allows to release the control of the flight to the remote control, canceling the channels overriding. It is used by the PC Companion and may be used by any protocol, but be aware, it can only be used once and a pilot must be ready and with the remote control turned on or the multicopter would crash!
+* *boolean* **setSpeed(** *int, double* **)**. It modifies the planned flight speed, it is, the maximum flight speed for the multicopter. In a mission, it is the constant speed it will follow through a straight line, and in GUIDED flight mode it is the maximum speed adopted by the flight controller while executing commands.
+* *boolean* **moveUAVNonBlocking(** *int, GeoCoordinates, float* **)**. It send a command to go to a specific location in GUIDED flight mode.
+* *boolean* **moveUAV(** *int, GeoCoordinates, float, double, double* **)**. It performs the same way as the previous method but additionaly it blocks until the multicopter approaches enough to the destination.
+* *boolean* **clearMission(** *int* **)**. It removes the mission stored in the flight controller, if any.
+* *boolean* **sendMission(** *int, List<Waypoint>* **)**. It sends a new mission to the flight controller. We recommend to remove the current mission before sending a new one.
+* *boolean* **retrieveMission(** *int* **)**. Recovers the mission stored in the flight controller and makes it available with the function *api.Tools.getUAVMission(int)*. It also updates the simplified mission shown on screen, also available with the function *api.Tools.getUAVMissionSimplified(int)*.
+* *boolean* **setCurrentWaypoint(** *int, int* **)**. It changes the current waypoint in the mission the UAV has to follow.
 
 Complex command functions. These functions have been built combining functions from the previous list to perform more complex tasks:
 
-* *boolean* **startMissionFromGround(** *int** **)**.
-* *boolean* **startMissionsFromGround()**.
-* *boolean* **takeOffNonBlocking(** *int, double* **)**.
-* *boolean* **takeOff(** *int, double* **)**.
-* *boolean* **takeOffAllUAVsNonBlocking(** *double[]* **)**.
-* *boolean* **takeOffAllUAVs(** *double[]* **)**.
-* *boolean* **stopUAV(** *int* **)**.
-* *void* **landIfMissionEnded(** *int, double* **)**.
-* *boolean* **landUAV(** *int* **)**.
-* *boolean* **landAllUAVs()**.
-* *boolean* **landAllUAVs()**.
-* *boolean* **cleanAndSendMissionToUAV(** *int, List<Waypoint>* **)**.
+* *boolean* **startMissionFromGround(** *int** **)**. It takes off and starts the planned mission stored in the flight controller. The multicopter must be on the ground and in an armable flight mode. On a real UAV, the hardware switch for safety arm must be pressed, if available.
+* *boolean* **startMissionsFromGround()**. It takes off all the UAVs at the same time and starts the planned missions stored in the flight controllers. The multicopters must be on the ground and in an armable flight mode. On real UAVs, the hardware switch for safety arm must be pressed, if available.
+* *boolean* **takeOffNonBlocking(** *int, double* **)**. It performs all the needed actions to take off without waiting to reach the target altitude. The multicopter must be on the ground and not armed.
+* *boolean* **takeOff(** *int, double* **)**. It also performs the take off but waits until the multicopter reaches the target altitude. The multicopter must be on the ground and not armed.
+* *boolean* **takeOffAllUAVsNonBlocking(** *double[]* **)**. It takes off all the UAVs at the same time as in function *takeOffNonBlocking(int, double)*.
+* *boolean* **takeOffAllUAVs(** *double[]* **)**. It takes off all the UAVs at the same time as in function *takeOff(int, double)*.
+* *boolean* **stopUAV(** *int* **)**. It sharply stops the multicopter in flight while performing a planned mission. The mission can be resumed later changing to AUTO flight mode.
+* *void* **landIfMissionEnded(** *int, double* **)**. This method lands the multicopter if it is close enough to the last waypoint, and can be launched periodically. Useful for UAVs that follow a planned mission.
+* *boolean* **landUAV(** *int* **)**. This method is used to land a UAV.
+* *boolean* **landAllUAVs()**. In this case, all the UAVs receive the land command.
+* *boolean* **cleanAndSendMissionToUAV(** *int, List<Waypoint>* **)**. It deletes the current mission of the UAV, sends a new one, and retrieves it from the flight controller to show it on the GUI, using three simple command functions.
 
 Follows a list of information retrieval functions that don't need to communicate with the flight controller. The data could be slightly outdated, as this information is retrieved periodically.
 
-* *FlightMode* **getFlightMode(** *int* **)**. Provides the current flight mode of the multicopter.
-* *boolean* **isFlying(** *int* **)**. Reports whether the multicopter is flying or not (on the ground and engines off).
-* *Quintet<Long, Point2D.Double, Double, Double, Double>* **getData(** *int* **)**.
-* *Point2D.Double* **getUTMLocation(** *int* **)**.
-* *GeoCoordinates* **getGeoLocation(** *int* **)**.
-* *Point3D[]* **getLastKnownLocations(** *int* **)**.
+* *FlightMode* **getFlightMode(** *int* **)**. This method provides the current flight mode of the multicopter.
+* *boolean* **isFlying(** *int* **)**. It reports whether the multicopter is flying or not (on the ground and engines off).
+* *Quintet<Long, Point2D.Double, Double, Double, Double>* **getData(** *int* **)**. This method gives the most up-to-date data received from the flight controller, including coordinates, speed, acceleration and the moment they were received from the flight controller.
+* *Point2D.Double* **getUTMLocation(** *int* **)**. It provides only the latest UTM coordinates.
+* *GeoCoordinates* **getGeoLocation(** *int* **)**. In this case, it provides the geographic coordinates (latitude and longitude).
+* *Point3D[]* **getLastKnownLocations(** *int* **)**. This function gives 
 * *double* **getZRelative(** *int* **)**.
 * *double* **getZ(** *int* **)**.
 * *double* **getSpeed(** *int* **)**.
 * *Triplet<Double, Double, Double>* **getSpeeds(** *int* **)**.
-* *double* **getPlannedSpeed(** *int* **)**.
+* *double* **getPlannedSpeed(** *int* **)**. This method provides the maximum flying speed used by the flight controller. In a mission, it is the constant speed it will follow through a straight line, and in GUIDED flight mode it is the maximum speed adopted by the flight controller while executing commands.
 * *double* **getHeading(** *int* **)**.
-* *void* **setWaypointReachedListener(** *WaypointReachedListener* **)**.
-* *int* **getCurrentWaypoint(** *int* **)**.
-* *boolean* **isLastWaypointReached(** *int* **)**.
+* *void* **setWaypointReachedListener(** *WaypointReachedListener* **)**. Any Java Class can implement *WaypointReachedListener* as *mbcap.logic.BeaconingThread* does. Then, using this method that Class would be able to apply some logic each time the flight controller detects that a waypoint has been reached. Useful for UAVs that follow a planned mission.
+* *int* **getCurrentWaypoint(** *int* **)**. It provides the identifier of the current waypoint of the mission. Useful for UAVs that follow a planned mission.
+* *boolean* **isLastWaypointReached(** *int* **)**. It asserts if the last waypoint of the mission has been reached. Useful for UAVs that follow a planned mission.
 * *String* **getUAVPrefix(** *int* **)**.
 
 Experimental functions not directly included in *api.Copter.java* Class:

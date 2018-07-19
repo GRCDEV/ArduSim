@@ -82,7 +82,6 @@ import none.ProtocolNoneHelper;
 import pccompanion.gui.PCCompanionGUI;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
-import sim.logic.FakeSenderThread;
 import sim.logic.GPSStartThread;
 import sim.logic.SimParam;
 import sim.pojo.IncomingMessage;
@@ -1968,7 +1967,7 @@ public class ArduSimTools {
 		for (int i=0; i<Param.numUAVs; i++) {
 			file1 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_SUFIX);
 			sb1 = new StringBuilder(2000);
-			sb1.append("x(m),y(m),z(m),t(arbitrary ns),s(m/s),a(m/s\u00B2),\u0394d(m),d(m)\n");
+			sb1.append("x(m),y(m),z(m),heading(rad),t(arbitrary ns),s(m/s),a(m/s\u00B2),\u0394d(m),d(m)\n");
 			file2 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_2D_SUFIX);
 			sb2 = new StringBuilder(2000);
 			sb2.append("._PLINE\n");
@@ -2006,8 +2005,8 @@ public class ArduSimTools {
 					z = Tools.round(sp.z, 3);
 					if (spPrev == null) {
 						// First test location
-						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.time)
-							.append(",").append(Tools.round(sp.speed, 3))
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.heading)
+							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.000,0.000\n");
 						sb2.append(x).append(",").append(y).append("\n");
 						if (Param.VERBOSE_STORE) {
@@ -2022,8 +2021,8 @@ public class ArduSimTools {
 						// Moved horizontally
 						d = sp.distance(spPrev);
 						dist = dist + d;
-						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.time)
-							.append(",").append(Tools.round(sp.speed, 3))
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.heading)
+							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",").append(Tools.round(d, 3))
 							.append(",").append(Tools.round(dist, 3)).append("\n");
 						sb2.append(x).append(",").append(y).append("\n");
@@ -2033,8 +2032,8 @@ public class ArduSimTools {
 						spPrev = sp;
 					} else if (sp.z!=spPrev.z) {
 						// Only moved vertically
-						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.time)
-							.append(",").append(Tools.round(sp.speed, 3))
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.heading)
+							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.0,").append(Tools.round(dist, 3)).append("\n");
 						if (Param.VERBOSE_STORE) {
 							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
