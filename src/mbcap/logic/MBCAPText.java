@@ -76,7 +76,6 @@ public class MBCAPText {
 	public static final String ERROR_BEACON = "Error sending a beacon.";
 	public static final String WAYPOINT_LOST = "Current waypoint not found.";
 	public static final String REPOSITION_ERROR_1 = "No information enough to decide where to step aside.";
-	public static final String REPOSITION_ERROR_2 = "The UTM projection zone has not been already defined.";
 	
 	// Units
 	public static final String MILLISECONDS = "ms";

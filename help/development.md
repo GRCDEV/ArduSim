@@ -245,17 +245,68 @@ The last function may be used in the PC Companion dialog, if implemented, to get
 
 Many functions have been implemented in Class *api.Tools.java* to help the developer to interact with ArduSim and the multicopters.
 
-* *boolean* **isRealUAV()**.
+The first list includes helper functions to know which is the current step of the execution of ArduSim:
+
+* *boolean* **areUAVsAvailable()**.
+* *boolean* **areUAVsReadyForSetup()**.
+* *boolean* **isSetupInProgress()**.
+* *boolean* **isSetupFinished()**.
+* *boolean* **isExperimentInProgress()**.
+* *boolean* **isExperimentFinished()**.
+
+Now follow commands needed to coordinate each protocol with ArduSim:
+
 * *void* **setNumUAVs(** *int* **)**.
 * *int* **getNumUAVs()**.
+* *boolean* **isRealUAV()**.
 * *long* **getIdFromPos(** *int* **)**.
 * *void* **setProtocolConfigured()**.
+* *void* **waiting(** *int* **)**.
+
+The developer can load missions from files to be followed by the multicopters. Moreover, they can be accessed later on:
+
+* *List<Waypoint>* **loadMission(** *File* **)**.
+* *List<Waypoint>[]* **loadXMLMissionsFile(** *File* **)**.
+* *List<Waypoint>* **loadMissionFile(** *String* **)**.
+* *void* **setLoadedMissionsFromFile(** *List<Waypoint>[]* **)**.
+* *List<Waypoint>[]* **getLoadedMissions()**.
+* *List<Waypoint>* **getUAVMission()**.
+* *List<WaypointSimplified>* **getUAVMissionSimplified(** *int* **)**.
+
+ArduSim can detect possible collisions among UAVs:
+
+* *boolean* **isCollisionCheckEnabled()**.
+* *double* **getCollisionHorizontalDistance()**.
+* *double* **getCollisionVerticalDistance()**.
+* *boolean* **isCollisionDetected()**.
+
+The flight controller uses geographic coordinates, but they are not useful to calculate distances. These functions are provided to transform between geographic and UTM coordinates:
+
+* *GeoCoordinates* **UTMToGeo(** *double, double* **)**.
+* *UTMCoordinates* **geoToUTM(** *double, double* **)**.
+
+The following functions help to validate values introduced by the user in a dialog:
+
+
+* *boolean* **isValidPort(** *String* **)**.
+* *boolean* **isValidInteger(** *String* **)**.
+* *boolean* **isValidDouble(** *String* **)**.
+* *boolean* **isValidPositiveDouble(** *String* **)**.
+
+Finally, we include several functions to retrieve information, and to store specific protocol data when the experiment finishes:
+
+* *long* **getExperimentStartTime()**.
+* *long* **getExperimentEndTime(** *int* **)**.
+* *String* **timeToString(** *long, long* **)**.
+* *double* **round(** *double, int* **)**.
+* *List<LogPoint>* **getUTMPath(** *int* **)**.
+* *File* **getCurrentFolder()**.
+* *String* **getFileExtension(** *File* **)**.
+* *void* **storeFile(** *File, String* **)**.
+* *boolean* **isVerboseStorageEnabled()**.
 
 
 
-
-
-functions in Tools.java
 
 ### 8.5 Implementation recomendations
 

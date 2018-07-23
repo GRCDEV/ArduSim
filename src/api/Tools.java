@@ -645,10 +645,5 @@ public class Tools {
 	public static List<LogPoint> getUTMPath(int numUAV) {
 		return SimParam.uavUTMPath[numUAV];
 	}
-
-	/** Returns true if UTM to Geographic coordinates calculations can be performed, it is, when the UTM zone has been detected. */
-	public static boolean isUTMZoneSet() {
-		return SimParam.zone >= 0;
-	}
 	
 }

@@ -1263,10 +1263,6 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			GUI.log(Copter.getUAVPrefix(numUAV) + MBCAPText.REPOSITION_ERROR_1);
 			return false;
 		}
-		if (!Tools.isUTMZoneSet()) {
-			GUI.log(Copter.getUAVPrefix(numUAV) + MBCAPText.REPOSITION_ERROR_2);
-			return false;
-		}
 
 		Point2D.Double currentUTMLocation = Copter.getUTMLocation(numUAV);
 
