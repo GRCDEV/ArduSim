@@ -26,7 +26,7 @@ public class MasterMando extends Thread {
 
 		recurso = FollowMeParam.recurso.get();
 		Copter.setFlightMode(FollowMeParam.posMaster, FlightMode.LOITER);
-		System.out.println("Inicio PrintTh");
+		GUI.log("Inicio PrintTh");
 		long tfin = 0;
 		long tSysIni = System.nanoTime();
 		Nodo n = recurso.pop(type);
@@ -71,8 +71,7 @@ public class MasterMando extends Thread {
 		} while (n != null || n.next != null);
 		
 		
-		
-		System.out.println("T final:" + ((System.nanoTime() - tSysIni) / 1000000) + " \t fin-ini: " + tfin / 1000000);
+		GUI.log("T final:" + ((System.nanoTime() - tSysIni) / 1000000) + " \t fin-ini: " + tfin / 1000000);
 		
 	}
 

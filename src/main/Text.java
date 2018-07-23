@@ -283,6 +283,7 @@ public class Text {
 	public static final String UAVS_START_ERROR_3 = Text.APP_NAME + " for Windows requires Cygwin:";
 	public static final String UAVS_START_CYGWIN_ERROR = "Cygwin not found.";
 	public static final String UAVS_START_ERROR_4 = "The running operating system is not compatible with " + Text.APP_NAME + ".";
+	public static final String UAVS_START_ERROR_5 = "Virtual UAV starting timeout running instance:";
 	public static final String THREAD_START_ERROR = "Failed to bind socket to IP.";
 	public static final String INITIAL_CONFIGURATION_ERROR_1 = "Failed forcing GPS data messages on the UAVs";
 	public static final String INITIAL_CONFIGURATION_ERROR_2 = "Failed sending the initial configuration to the UAVs";

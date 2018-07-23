@@ -4,12 +4,14 @@ import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.SyncFailedException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.DatagramPacket;
@@ -131,7 +133,7 @@ public class ArduSimTools {
 			}
 			Param.isPCCompanion = pcCompanion;
 			if (pcCompanion && (cmdLine.hasOption("r") || cmdLine.hasOption("p") || cmdLine.hasOption("s"))) {
-				System.out.println(Text.COMPANION_ERROR + "\n");
+				GUI.log(Text.COMPANION_ERROR + "\n");
 				myHelp.printHelp(usageCommand, options);
 				System.exit(1);
 			}
@@ -169,8 +171,7 @@ public class ArduSimTools {
 					}
 				}
 				if (!found) {
-					System.out.println(Text.PROTOCOL_NOT_FOUND_ERROR);
-					System.out.println("\n");
+					GUI.log(Text.PROTOCOL_NOT_FOUND_ERROR + "\n\n");
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
@@ -182,7 +183,7 @@ public class ArduSimTools {
 				
 				String spe = cmdLine.getOptionValue("s");
 				if (!Tools.isValidPositiveDouble(spe)) {
-					System.out.println(Text.SPEED_ERROR + "\n");
+					GUI.log(Text.SPEED_ERROR + "\n");
 					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
@@ -195,7 +196,7 @@ public class ArduSimTools {
 				System.exit(0);
 			}
 		} catch (ParseException e1) {
-			System.out.println(e1.getMessage() + "\n");
+			GUI.log(e1.getMessage() + "\n");
 			HelpFormatter myHelp = new HelpFormatter();
 			myHelp.printHelp(usageCommand, options);
 			System.exit(1);
@@ -666,7 +667,7 @@ public class ArduSimTools {
 				}
 			}
 			if (freeDrive == null) {
-				System.out.println(Text.MOUNT_DRIVE_ERROR_1);
+				GUI.log(Text.MOUNT_DRIVE_ERROR_1);
 				return null;
 			}
 			
@@ -707,7 +708,7 @@ public class ArduSimTools {
 			} catch (IOException e) {
 			}
 		} else {
-			System.out.println(Text.MOUNT_DRIVE_ERROR_2);
+			GUI.log(Text.MOUNT_DRIVE_ERROR_2);
 		}
 		return null;
 	}
@@ -1214,7 +1215,7 @@ public class ArduSimTools {
 					e.printStackTrace();
 				}
 				if (!success) {
-					System.out.println("Falla la instancia: " + i);
+					GUI.log(Text.UAVS_START_ERROR_5 + " " + i);
 					throw new IOException();
 				}
 			}
@@ -1473,6 +1474,9 @@ public class ArduSimTools {
 		
 		// 3. Close the application
 		GUI.log(Text.EXITING);
+		try {
+			FileDescriptor.out.sync();
+		} catch (SyncFailedException e1) {}
 		Tools.waiting(SimParam.LONG_WAITING_TIME);
 		if (Param.isRealUAV) {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
@@ -1522,14 +1526,14 @@ public class ArduSimTools {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				// Unmount temporal filesystem
 				if (ArduSimTools.checkDriveMountedWindows() != null && !ArduSimTools.dismountDriveWindows(SimParam.tempFolderBasePath)) {
-					System.out.println(Text.DISMOUNT_DRIVE_ERROR);
+					GUI.log(Text.DISMOUNT_DRIVE_ERROR);
 				}
 			}
 			
 			if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 				// Unmount temporal filesystem and remove folder
 				if (ArduSimTools.checkDriveMountedLinux(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
-					System.out.println(Text.DISMOUNT_DRIVE_ERROR);
+					GUI.log(Text.DISMOUNT_DRIVE_ERROR);
 				}
 				File ramDiskFile = new File(SimParam.tempFolderBasePath);
 				if (ramDiskFile.exists()) {

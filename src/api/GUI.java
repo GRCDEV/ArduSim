@@ -31,6 +31,7 @@ public class GUI {
 			res = text;
 		}
 		System.out.println(res);
+		System.out.flush();
 		// Update GUI only when using simulator and the main window is already loaded
 		if (!Param.isRealUAV && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
 			SwingUtilities.invokeLater(new Runnable() {
@@ -80,6 +81,7 @@ public class GUI {
 	public static void exit(String message) {
 		if (Param.isRealUAV) {
 			System.out.println(Text.FATAL_ERROR + ": " + message);
+			System.out.flush();
 		} else {
 			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
 			if (Param.simStatus != SimulatorState.CONFIGURING
@@ -95,6 +97,7 @@ public class GUI {
 	public static void warn(String title, String message) {
 		if (Param.isRealUAV) {
 			System.out.println(title + ": " + message);
+			System.out.flush();
 		} else {
 			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
 		}

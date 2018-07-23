@@ -1,5 +1,7 @@
 package followme.pojo;
 
+import api.GUI;
+
 public class Nodo {
 	public int type;
 	public long time;
@@ -41,10 +43,10 @@ public class Nodo {
 	public void print() {
 		// TODO Auto-generated method stub
 		if(type == 0) {
-			System.out.println("Nodo - type: "+type+" time: "+time+" easting: "+easting+" northing: "+northing+" z: "+z
+			GUI.log("Nodo - type: "+type+" time: "+time+" easting: "+easting+" northing: "+northing+" z: "+z
 					+" zRel: "+zRel+" speed: "+speed+" heading: "+heading+" next: "+(next!=null));
 		}else if (type == 1){
-			System.out.println("Nodo - type: "+type+" time: "+time+" chan1: "+chan1+" chan2: "+chan2+" chan3: "+chan3+" chan4: "+chan4+" heading: "+heading+" next: "+(next!=null));
+			GUI.log("Nodo - type: "+type+" time: "+time+" chan1: "+chan1+" chan2: "+chan2+" chan3: "+chan3+" chan4: "+chan4+" heading: "+heading+" next: "+(next!=null));
 		}
 		
 	}

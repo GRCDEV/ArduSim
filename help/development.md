@@ -52,7 +52,7 @@ The Eclipse project in organized in packages. We suggest to enable the hierarchi
     * GUI. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[8.3 GUI integration](#markdown-header-83-gui-integration)" section.
     * Tools. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[8.4 Available utilities](#markdown-header-84-available-utilities)" section.
     * files. This package includes resources used when ArduSim is used as a Simulator.
-* **... (protocol packages)**
+* **... (protocols packages)**
 
 Each new protocol must be selfcontained in an independent package. This way, the protocol code will be fully independent from ArduSim code, making it easyly understandable for other programmers.
 

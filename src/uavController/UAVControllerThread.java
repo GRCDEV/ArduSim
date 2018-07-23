@@ -928,7 +928,7 @@ public class UAVControllerThread extends Thread {
 			message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
 			this.sendMessage(message.encode());
 		} else {
-			System.out.println("You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete.");
+			GUI.log("You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete.");
 			return;
 		}
 	}

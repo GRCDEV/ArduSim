@@ -203,7 +203,7 @@ public class Copter {
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
 		if (armEngines(numUAV)
 				&& setFlightMode(numUAV, FlightMode.AUTO)
-				&& setHalfThrottle(numUAV)  //TODO descomentar tras hacer pruebas en el poli
+				&& setHalfThrottle(numUAV)
 				) {
 			return true;
 		}

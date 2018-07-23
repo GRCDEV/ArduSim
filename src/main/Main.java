@@ -24,8 +24,6 @@ import sim.gui.ProgressDialog;
 import sim.gui.ResultsDialog;
 import sim.logic.CollisionDetector;
 import sim.logic.DistanceCalculusThread;
-import sim.logic.FakeReceiverThread;
-import sim.logic.FakeSenderThread;
 import sim.logic.RangeCalculusThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
@@ -341,7 +339,7 @@ public class Main {
 			ProtocolHelper.selectedProtocolInstance.forceExperimentEnd();
 			// Detects if all UAVs are on the ground in order to finish the experiment
 			if (checkEnd) {
-				if (ArduSimTools.isTestFinished()) {// TODO descomentar tras hacer pruebas en el poli
+				if (ArduSimTools.isTestFinished()) {
 					Param.simStatus = SimulatorState.TEST_FINISHED;
 				}
 			} else {

@@ -67,7 +67,7 @@ public class Listener extends Thread {
 		try {
 			socketListener = new DatagramSocket();
 		} catch (SocketException e) {
-			System.err.println(SwarmProtText.MASTER_SOCKET_ERROR);
+			GUI.log(SwarmProtText.MASTER_SOCKET_ERROR);
 			e.printStackTrace();
 		}
 		/** Real UAV */
@@ -131,7 +131,7 @@ public class Listener extends Thread {
 							UAVsDetected.put(idSlave, posiciones);
 						}
 					} catch (IOException e) {
-						System.err.println(SwarmProtText.MASTER_SOCKET_READ_ERROR);
+						GUI.log(SwarmProtText.MASTER_SOCKET_READ_ERROR);
 						e.printStackTrace();
 					}
 				}

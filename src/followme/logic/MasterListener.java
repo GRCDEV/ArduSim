@@ -16,7 +16,7 @@ public class MasterListener extends Thread {
 	public MasterListener(int idMaster) {
 		this.idMaster = idMaster;
 		if (FollowMeParam.posMaster != idMaster) {
-			System.err.println("Master id distinto");
+			GUI.log("Master id distinto");
 		}
 		slaveReady = new HashMap<>();
 	}

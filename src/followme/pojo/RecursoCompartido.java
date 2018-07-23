@@ -1,5 +1,7 @@
 package followme.pojo;
 
+import api.GUI;
+
 public class RecursoCompartido {
 
 	public Nodo primero = null;
@@ -72,7 +74,7 @@ public class RecursoCompartido {
 	}
 
 	public void bubbleSort() {
-		System.out.println("Ordenando si es posible");
+		GUI.log("Ordenando si es posible");
 		if (length > 1) {
 	        boolean cambio;
 	        do {
@@ -83,7 +85,7 @@ public class RecursoCompartido {
 	            while ( siguiente != null ) {
 	                if (actual.getTime() > siguiente.getTime()) {
 	                    cambio = true;
-	                    System.out.println("Se ha cambiado 1 nodo!");
+	                    GUI.log("Se ha cambiado 1 nodo!");
 	                    if ( anterior != null ) {
 	                    	Nodo sig = siguiente.next;
 	                        anterior.next = siguiente;

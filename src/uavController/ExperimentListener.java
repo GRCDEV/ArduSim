@@ -1,5 +1,6 @@
 package uavController;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -34,6 +35,7 @@ public class ExperimentListener extends Thread {
 			GUI.exit(Text.BIND_ERROR_1);
 		}
 		
+		int command;
 		outerloop:
 		while (true) {
 			try {
@@ -46,7 +48,8 @@ public class ExperimentListener extends Thread {
 					receivedPacket.setData(new byte[Tools.DATAGRAM_MAX_LENGTH]);
 					receiveSocket.receive(receivedPacket);
 					input.setBuffer(receivedPacket.getData());
-					switch (input.readInt()) {
+					command = input.readInt();
+					switch (command) {
 					// Change simulation state command
 					case PCCompanionParam.CHANGE_STATE_COMMAND:
 						SimulatorState receivedState = SimulatorState.getStateById(input.readInt());
@@ -70,28 +73,32 @@ public class ExperimentListener extends Thread {
 						break;
 					// Emergency action command (applied only once)
 					case PCCompanionParam.EMERGENCY_COMMAND:
-						int command = input.readInt();
+						int emergency = input.readInt();
 						boolean commandFound = false;
 						boolean commandSuccess = false;
-						if (command == PCCompanionParam.ACTION_RECOVER_CONTROL) {
+						String action = null;
+						if (emergency == PCCompanionParam.ACTION_RECOVER_CONTROL) {
 							commandFound = true;
 							if (Copter.returnRCControl(0)) {
+								action = Text.RECOVER_CONTROL;
 								commandSuccess = true;
 							} else {
 								
 							}
 						}
-						if (command == PCCompanionParam.ACTION_RTL) {
+						if (emergency == PCCompanionParam.ACTION_RTL) {
 							commandFound = true;
 							if (Copter.setFlightMode(0, FlightMode.RTL_ARMED)) {
+								action = Text.RTL;
 								commandSuccess = true;
 							} else {
 								
 							}
 						}
-						if (command == PCCompanionParam.ACTION_LAND) {
+						if (emergency == PCCompanionParam.ACTION_LAND) {
 							commandFound = true;
 							if (Copter.setFlightMode(0, FlightMode.LAND_ARMED)) {
+								action = Text.LAND;
 								commandSuccess = true;
 							} else {
 								
@@ -99,25 +106,21 @@ public class ExperimentListener extends Thread {
 						}
 						if (commandFound) {
 							if (commandSuccess) {
-								GUI.log(Text.EMERGENCY_SUCCESS);
+								GUI.log(Text.EMERGENCY_SUCCESS + " " + action);
+								FileDescriptor.out.sync();//TODO stop the Raspberry Pi 
 								break outerloop;
 							} else {
-								GUI.log(Text.EMERGENCY_FAILED + " " + command);
+								GUI.log(Text.EMERGENCY_FAILED + " " + emergency);
 								//TODO por contemplar qué hacer si hay error
 								// Probablemente será necesario obligar a los desarrolladores a implementar una función sobre la acción a
 								//  tomar cuando se aplica el comando de emergencia
 							}
 						} else {
-							GUI.log(Text.EMERGENCY_NOT_FOUND + " " + command);
+							GUI.log(Text.EMERGENCY_NOT_FOUND + " " + emergency);
 						}
 						break;
 					}
 				} catch (SocketTimeoutException e) {
-					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
-							&& PCCompanionParam.lastStartCommandTime != null
-							&& (System.currentTimeMillis() - PCCompanionParam.lastStartCommandTime.get() > PCCompanionParam.MAX_TIME_SINCE_LAST_START_COMMAND)) {
-						break;
-					}
 				} catch (KryoException e) {}
 			} catch (IOException e) {}
 			receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];

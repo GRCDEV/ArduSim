@@ -180,16 +180,16 @@ public class Talker extends Thread {
 
 				// TODO INICIO (Quitar, solo sirve para medir algoritmo despegue)
 				long inicio = System.currentTimeMillis();
-				System.out.println("Tiempo de inicio: " + inicio);
+				GUI.log("Tiempo de inicio: " + inicio);
 
-				System.out.println("Iniciales: " + Arrays.toString(currentPositions));
+				GUI.log("Iniciales: " + Arrays.toString(currentPositions));
 
 				// Calculation of formation flying
 				Triplet<Long, Integer, uavPosition[]> resultArray = getFormation(currentPositions);
 
 				// TODO Para medir tiempo algoritmo de despegue
 				long fin = System.currentTimeMillis();
-				System.out.println("Tiempo de fin: " + fin + " resultado: " + (fin - inicio));
+				GUI.log("Tiempo de fin: " + fin + " resultado: " + (fin - inicio));
 				// TODO FIN
 
 				@SuppressWarnings("unused")
@@ -197,8 +197,8 @@ public class Talker extends Thread {
 				long center = resultArray.getValue0();
 				uavPosition[] takeoffLocations = resultArray.getValue2();
 
-				System.out.println(" Id del centro: " + center + " Posición del maestro: " + posMasterReo);
-				System.out.println(Arrays.toString(takeoffLocations));
+				GUI.log(" Id del centro: " + center + " Posición del maestro: " + posMasterReo);
+				GUI.log(Arrays.toString(takeoffLocations));
 
 				List<WaypointSimplified> prueba = Tools.getUAVMissionSimplified(SwarmProtParam.posMaster);
 				if (prueba.size() > SwarmProtParam.maxWaypoints) {
@@ -754,7 +754,7 @@ public class Talker extends Thread {
 				if (i == 1) {
 					// System.out.println("Centro: " + currentCenter + " acum: " + acum + " en i: "
 					// + i);
-					System.out.println(Arrays.toString(mix));
+					GUI.log(Arrays.toString(mix));
 				}
 
 				if (bestForCurrentCenter == null || acum < dOfCurrentCenter) {
