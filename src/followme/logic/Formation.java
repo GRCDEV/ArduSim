@@ -2,6 +2,7 @@ package followme.logic;
 
 import java.awt.geom.Point2D;
 
+import api.GUI;
 import api.pojo.GeoCoordinates;
 
 public class Formation {
@@ -13,6 +14,8 @@ public class Formation {
 	 * 		Devuelve el offset, de la posicion a ala que pertenece el identificador en una matriz de esclavos.
 	 */
 	public static Point2D.Double getOffsetMatrix(int posFormation, int numSlaves) {
+		
+		//GUI.log("Position Formation:"+ String.valueOf(posFormation) + "-NumSlaves:" + String.valueOf(numSlaves) );
 		int posMasterLineal = (numSlaves + 1) / 2;
 		int l = (int)Math.ceil(Math.sqrt(numSlaves + 1));
 		
@@ -35,6 +38,9 @@ public class Formation {
 		double distX = (posSlaveX - posMasterX) * FollowMeParam.DistanciaSeparacionHorizontal;
 		double distY = (posSlaveY - posMasterY) * FollowMeParam.DistanciaSeparacionHorizontal;
 		
+		//Point2D.Double offset = null;
+
+		GUI.log("Position Formation:"+ String.valueOf(posFormation) + "-NumSlaves:" + String.valueOf(numSlaves) +"Resultados: distX=" + String.valueOf(distX) + "distY=" +String.valueOf(distY) );
 		return new Point2D.Double(distX, distY);
 	}
 	
