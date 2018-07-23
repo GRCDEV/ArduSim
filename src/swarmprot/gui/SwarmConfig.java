@@ -246,7 +246,7 @@ public class SwarmConfig extends JDialog {
 				
 				if(Tools.getLoadedMissions() != null ) {
 					//Acepta la configuración y cambia el estado
-					Tools.setProtocolConfigured(true);
+					Tools.setProtocolConfigured();
 					Double groud = (Double) spinnerGround.getValue();
 					Double air = (Double) spinnerFlight.getValue();
 					SwarmProtParam.initialDistanceBetweenUAV = groud.intValue();

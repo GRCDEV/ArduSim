@@ -114,7 +114,7 @@ public class FollowMeHelper extends ProtocolHelper {
 
 		FollowMeParam.recurso.set(headingInterpolar(recurso));
 
-		Tools.setProtocolConfigured(true);
+		Tools.setProtocolConfigured();
 	}
 
 	private static RecursoCompartido headingInterpolar(RecursoCompartido recurso) {

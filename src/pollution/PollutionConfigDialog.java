@@ -224,7 +224,7 @@ public class PollutionConfigDialog extends JDialog {
 			PollutionParam.altitude = Double.parseDouble(altitudeField.getText());
 			PollutionParam.pollutionDataFile = pollutionDataField.getText();
 			PollutionParam.isSimulation = isSimulationCheckBox.isSelected();
-			Tools.setProtocolConfigured(true);
+			Tools.setProtocolConfigured();
 			dispose();
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);

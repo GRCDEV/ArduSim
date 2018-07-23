@@ -94,7 +94,7 @@ public class Listener extends Thread {
 		 * if UAV = 0 (which is the master's identifier in simulation))
 		 */
 		
-		while (Tools.areUAVsNotAvailable()) {
+		while (!Tools.areUAVsAvailable()) {
 			Tools.waiting(SwarmProtParam.waitState);
 		}
 		

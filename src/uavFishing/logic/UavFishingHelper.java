@@ -29,7 +29,7 @@ public class UavFishingHelper extends ProtocolHelper {
 	@Override
 	public void openConfigurationDialog() {
 		GUI.log("Cargar misión para el barco");
-		Tools.setProtocolConfigured(true);
+		Tools.setProtocolConfigured();
 	}
 
 	@Override

@@ -44,7 +44,7 @@ public class MBCAPConfigDialog extends JDialog {
           public void actionPerformed(ActionEvent e) {
             if(MBCAPGUITools.isValidProtocolConfiguration(panel)) {
               MBCAPGUITools.storeProtocolConfiguration(panel);
-              Tools.setProtocolConfigured(true);
+              Tools.setProtocolConfigured();
               SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {

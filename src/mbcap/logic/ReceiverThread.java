@@ -23,10 +23,15 @@ public class ReceiverThread extends Thread {
 
 	@Override
 	public void run() {
-		while (Tools.areUAVsNotAvailable() || Tools.areUAVsReadyForSetup() || Tools.isSetupInProgress()	|| Tools.isSetupFinished()
-				|| (Tools.isExperimentInProgress() && !Copter.isFlying(numUAV))) {
+		while (!Tools.isExperimentInProgress() || !Copter.isFlying(numUAV)) {
 			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
 		}
+		
+		
+//		while (!Tools.areUAVsAvailable() || Tools.areUAVsReadyForSetup() || Tools.isSetupInProgress()	|| Tools.isSetupFinished()
+//				|| (Tools.isExperimentInProgress() && !Copter.isFlying(numUAV))) {
+//			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
+//		}
 		
 		long expirationCheckTime = System.currentTimeMillis();
 		long selfId = Tools.getIdFromPos(numUAV);

@@ -243,6 +243,15 @@ The last function may be used in the PC Companion dialog, if implemented, to get
 
 ### 8.4 Available utilities
 
+Many functions have been implemented in Class *api.Tools.java* to help the developer to interact with ArduSim and the multicopters.
+
+* *boolean* **isRealUAV()**.
+* *void* **setNumUAVs(** *int* **)**.
+* *int* **getNumUAVs()**.
+* *long* **getIdFromPos(** *int* **)**.
+* *void* **setProtocolConfigured()**.
+
+
 
 
 

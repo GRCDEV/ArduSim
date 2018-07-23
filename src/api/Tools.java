@@ -71,15 +71,15 @@ public class Tools {
 	
 	/** Use this function to assert that the configuration of the protocol has finished when the corresponding dialog is closed.
 	 * <p>In order the parameters of the protocol to work properly, please establish default values for all of them to be used automatically when ArduSim is loaded. */
-	public static void setProtocolConfigured(boolean isConfigured) {
+	public static void setProtocolConfigured() {
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 	}
 	
-	/** Returns true while the UAVs are starting and without valid coordinates. Phase 1. */
-	public static boolean areUAVsNotAvailable() {
-		return Param.simStatus == Param.SimulatorState.STARTING_UAVS
-				|| Param.simStatus == Param.SimulatorState.CONFIGURING_PROTOCOL
-				|| Param.simStatus == Param.SimulatorState.CONFIGURING;
+	/** Returns true if the UAVs are located (GPS fix) and prepared to receive commands. Phase 1. */
+	public static boolean areUAVsAvailable() {
+		return Param.simStatus != Param.SimulatorState.STARTING_UAVS
+				&& Param.simStatus != Param.SimulatorState.CONFIGURING_PROTOCOL
+				&& Param.simStatus != Param.SimulatorState.CONFIGURING;
 	}
 	
 	/** Returns true if the UAVs are available and ready for the setup step, which has not been started jet. Phase 2. */

@@ -44,7 +44,7 @@ public class NoneConfigDialog extends JDialog {
           public void actionPerformed(ActionEvent e) {
             if(ProtocolNoneHelper.isValidProtocolConfiguration(panel)) {
               ProtocolNoneHelper.storeProtocolConfiguration(panel);
-              Tools.setProtocolConfigured(true);
+              Tools.setProtocolConfigured();
               SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
