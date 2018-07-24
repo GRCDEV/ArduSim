@@ -148,7 +148,7 @@ public class NoneConfigDialogPanel extends JPanel {
 					// Missions are stored
 					Tools.setLoadedMissionsFromFile(lists);
 					// The number of UAVs is updated
-					final int numUAVs = Math.min(Tools.getLoadedMissions().length, Param.numUAVs);
+					final int numUAVs = Math.min(Tools.getLoadedMissions().length, Tools.getNumUAVs());
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							missionsTextField.setText(selection[0].getAbsolutePath());
@@ -201,7 +201,7 @@ public class NoneConfigDialogPanel extends JPanel {
 					// Missions are stored
 					Tools.setLoadedMissionsFromFile(lists);
 					// The number of UAVs is updated
-					final int numUAVs = Math.min(Tools.getLoadedMissions().length, Param.numUAVs);
+					final int numUAVs = Math.min(Tools.getLoadedMissions().length, Tools.getNumUAVs());
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							missionsTextField.setText(chooser.getCurrentDirectory().getAbsolutePath());

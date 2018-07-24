@@ -138,6 +138,7 @@ public class ArduSimTools {
 				System.exit(1);
 			}
 			if (pcCompanion) {
+				Param.isRealUAV = false;
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						PCCompanionGUI.companion = new PCCompanionGUI();
@@ -560,7 +561,6 @@ public class ArduSimTools {
 				e.printStackTrace();
 			}
 		}
-		//TODO add support for MAC OS
 		
 		if (ids.size() == 0) {
 			GUI.exit(Text.MAC_ERROR);

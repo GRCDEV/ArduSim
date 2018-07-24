@@ -44,7 +44,7 @@ public class Tools {
 	// TCP parameter: maximum size of the byte array used on messages
 	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
 	
-	/** Returns true if the protocol is running on an real UAV or false if a simulation is being performed. */
+	/** Returns true if the protocol is running on an real UAV or false if a simulation is being performed or ArduSim runs as a PC Companion. */
 	public static boolean isRealUAV() {
 		return Param.isRealUAV;
 	}
@@ -75,24 +75,24 @@ public class Tools {
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 	}
 	
-	/** Returns true if the UAVs are located (GPS fix) and prepared to receive commands. Phase 1. */
+	/** Returns true if the UAVs are located (GPS fix) and prepared to receive commands. */
 	public static boolean areUAVsAvailable() {
 		return Param.simStatus != Param.SimulatorState.STARTING_UAVS
 				&& Param.simStatus != Param.SimulatorState.CONFIGURING_PROTOCOL
 				&& Param.simStatus != Param.SimulatorState.CONFIGURING;
 	}
 	
-	/** Returns true if the UAVs are available and ready for the setup step, which has not been started jet. Phase 2. */
+	/** Returns true if the UAVs are available and ready for the setup step, which has not been started jet. */
 	public static boolean areUAVsReadyForSetup() {
 		return Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED;
 	}
 	
-	/** Returns true while the setup step is in progress. Phase 3. */
+	/** Returns true while the setup step is in progress. */
 	public static boolean isSetupInProgress() {
 		return Param.simStatus == Param.SimulatorState.SETUP_IN_PROGRESS;
 	}
 	
-	/** Returns true if the setup step has finished but the experiment has not started. Phase 4. */
+	/** Returns true if the setup step has finished but the experiment has not started. */
 	public static boolean isSetupFinished() {
 		return Param.simStatus == Param.SimulatorState.READY_FOR_TEST;
 	}
@@ -102,7 +102,7 @@ public class Tools {
 		return Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS;
 	}
 	
-	/** Returns true if the experiment is finished. */
+	/** Returns true if the experiment is finished (all UAVs running in the same machine have landed). */
 	public static boolean isExperimentFinished() {
 		return Param.simStatus == Param.SimulatorState.TEST_FINISHED;
 	}
@@ -363,7 +363,8 @@ public class Tools {
 	}
 	
 	/** Sets the loaded missions from file/s for the UAVs, in geographic coordinates.
-	 * <p>Missions must be loaded and set in the protocol configuration dialog when needed.*/
+	 * <p>Missions must be loaded and set in the protocol configuration dialog when needed.
+	 * <p>Please, check that the length of the array is the same as the number of running UAVs in the same machine.*/
 	public static void setLoadedMissionsFromFile(List<Waypoint>[] missions) {
 		UAVParam.missionGeoLoaded = missions;
 	}
@@ -376,7 +377,7 @@ public class Tools {
 	}
 
 	/** Provides the mission currently stored in the UAV in geographic coordinates.
-	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/
+	 * <p>Mission only available if it is previously sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int). This steps can be performed automatically with the function api.Copter.cleanAndSendMissionToUAV().*/
 	public static List<Waypoint> getUAVMission(int numUAV) {
 		return UAVParam.currentGeoMission[numUAV];
 	}
@@ -409,7 +410,7 @@ public class Tools {
 	
 	/** Transforms UTM coordinates to Geographic coordinates. 
 	 *  <p>Example: Tools.UTMToGeo(312915.84, 4451481.33).
-	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, in order to get the zone and the letter of the UTM projection, available on GUIParam.zone and GUIParam.letter. */
+	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, in order to get the zone and the letter of the UTM projection. */
 	public static GeoCoordinates UTMToGeo(double Easting, double Northing) {
 		double latitude;
 		double longitude;
@@ -486,7 +487,7 @@ public class Tools {
 		return h + ":" + String.format("%02d", m) + ":" + String.format("%02d", s);
 	}
 
-	/** Round a double number to "places" decimal digits. */
+	/** Rounds a double number to "places" decimal digits. */
 	public static double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
 	    BigDecimal bd = new BigDecimal(Double.toString(value));
