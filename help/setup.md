@@ -1,6 +1,6 @@
 # ArduSim setup
 
-This Eclipse Oxygen project includes the ArduSim simulator implementation. Once the project is cloned locally, please generate the .jar executable file.
+This Eclipse Oxygen project includes the ArduSim simulator implementation. Once the project is cloned locally, and the protocol is tested you can generate the .jar executable file and perform simulations outside Eclipse.
 
 ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) as an internal module, a program oriented to simulate a single drone, so it is also needed to install SITL, and to compile an executable multicopter from it. Once finished the compilation (see instructions below) just copy the executable multicopter next to the java file and the simulator will automatically notice the multicopter file.
 
