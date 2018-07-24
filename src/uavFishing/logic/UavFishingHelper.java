@@ -28,7 +28,8 @@ public class UavFishingHelper extends ProtocolHelper {
 
 	@Override
 	public void openConfigurationDialog() {
-		GUI.log("Cargar misión para el barco");
+		GUI.log("Mostrando Ventana de Configuración");
+		
 		Tools.setProtocolConfigured();
 	}
 
@@ -65,10 +66,18 @@ public class UavFishingHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
+		@SuppressWarnings("unchecked")
 		Pair<GeoCoordinates, Double>[] startCoordinatesArray = new Pair[2];
 		startCoordinatesArray[0] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationBoat,0.0);
 		startCoordinatesArray[1] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationUAV,0.0);
 		
+		UavFishingParam.vOrigin = new double [2];
+		UavFishingParam.vOrigin[0] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).Easting - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).Easting;
+		UavFishingParam.vOrigin[1] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).Northing - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).Northing;
+		
+		UavFishingParam.vOrigin = VectorMath.getUnitaryVector(UavFishingParam.vOrigin);
+		UavFishingParam.vOrigin[0] *= UavFishingParam.radius;
+		UavFishingParam.vOrigin[1] *= UavFishingParam.radius;
 		return startCoordinatesArray;
 	}
 
@@ -84,8 +93,11 @@ public class UavFishingHelper extends ProtocolHelper {
 
 	@Override
 	public void startThreads() {
-		new FisherControllerThread().start();
-		new BoatThread().start();
+		
+		new FisherControllerThread(UavFishingParam.fisherID).start();
+		new FisherReceiverThread(UavFishingParam.fisherID).start();
+		new BoatThread(UavFishingParam.boatID).start();
+		
 	}//TODO
 
 	@Override
