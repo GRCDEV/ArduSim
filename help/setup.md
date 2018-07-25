@@ -6,13 +6,13 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 ## Table of contents
 
-[System requirements](#markdown-header-1-system-requirements)
+[1 System requirements](#markdown-header-1-system-requirements)
 
-[Eclipse IDE integration](#markdown-header-2-eclipse-ide-integration)
+[2 Eclipse IDE integration](#markdown-header-2-eclipse-ide-integration)
 
-[SITL setup in Windows](#markdown-header-3-sitl-setup-in-windows)
+[3 SITL setup in Windows](#markdown-header-3-sitl-setup-in-windows)
 
-[SITL setup in Linux](#markdown-header-4-sitl-setup-in-linux)
+[4 SITL setup in Linux](#markdown-header-4-sitl-setup-in-linux)
 
 ## 1 System requirements
 
