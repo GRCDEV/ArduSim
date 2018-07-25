@@ -1,8 +1,8 @@
 # ArduSim
 
-ArduSim is a novel real-time flight simulator, oriented to the development of communications protocols, and flight coordination protocols among multicopters performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements.
+ArduSim is a novel real-time flight simulator, oriented to the development of communications and flight coordination protocols among multicopters, performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements.
 
-The Communication with multicopters uses the MAVLink protocol, a *de facto* standard for current flight controllers, which makes the deployment of a new protocol on real UAVs a trivial task.
+The Communication with multicopters uses the MAVLink protocol, a *de facto* standard for current open flight controllers, which makes the deployment of a new protocol on real UAVs a trivial task.
 
 The communication among multicopters emulates an Ad-hoc WiFi network link in the 5 GHz frequency band, where all the data packets are broadcasted. ArduSim is prepared to include new wireless models in future versions.
 
@@ -16,7 +16,9 @@ At this moment, documentation is being generated and incomplete.
 
 [ArduSim usage](#markdown-header-ardusim-usage)
 
-[Deployment on real devices](#markdown-header-deployment-on-real-devices---raspberry-pi-3-b+)
+[Deployment on real devices](#markdown-header-deployment-on-real-devices---raspberry-pi-3-b\+)
+
+[Citation](#markdown-header-citation)
 
 [Copyright information](#markdown-header-copyright-information)
 
@@ -54,7 +56,7 @@ Follow [this link](help/deployment.md) for detailed instruction.
 
 ## Citation
 
-An [article](https://doi.org/10.1016/j.simpat.2018.06.009) was published in the journal *Simulation Modelling Practice and Theory (SIMPAT)* detailing most characteristics of ArduSim and validating its performance. Since then, many improvements have been made, including traces output in OMNeT++ and NS2 format.
+The article *[ArduSim: Accurate and real-time multicopter simulation](https://doi.org/10.1016/j.simpat.2018.06.009)* was published in the journal *Simulation Modelling Practice and Theory (SIMPAT)* detailing most characteristics of ArduSim and validating its performance. Since then, many improvements have been made, including traces output in OMNeT++ and NS2 format.
 
 If you plan to use ArduSim in your projects, please cite this repository and the journal article.
 
