@@ -6,15 +6,15 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 ## Table of contents
 
-[System requirements](#markdown-header-system-requirements)
+[System requirements](#markdown-header-1-system-requirements)
 
-[Eclipse IDE integration](#markdown-header-eclipse-ide-integration)
+[Eclipse IDE integration](#markdown-header-2-eclipse-ide-integration)
 
-[SITL setup in Windows](#markdown-header-sitl-setup-in-windows)
+[SITL setup in Windows](#markdown-header-3-sitl-setup-in-windows)
 
-[SITL setup in Linux](#markdown-header-sitl-setup-in-linux)
+[SITL setup in Linux](#markdown-header-4-sitl-setup-in-linux)
 
-## System requirements
+## 1 System requirements
 
 ###### Minimal:
 
@@ -42,11 +42,11 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * ImDisk Virtual Disk Driver (under Windows)
 
-## Eclipse IDE integration
+## 2 Eclipse IDE integration
 
 ArduSim and the included protocols have been developed with Eclipse Oxygen IDE. This section explains how to prepare the developing environment, once Eclipse is correctly installed.
 
-### Clone the repository
+### 2.1 Clone the repository
 
 Open Git perspective: *Window --> Perspective --> Open Perspective --> Other... --> Git*.
 
@@ -60,7 +60,7 @@ Now copy the following URI in the configuration window and enter your user name 
 
 Finally, select the master branch and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
 
-### Import the Eclipse project
+### 2.2 Import the Eclipse project
 
 The project must be imported in Eclipse to be able to edit its content. First, open the resources perspective: *Window --> Perspective --> Open Perspective --> Other... --> Resource*.
 
@@ -72,7 +72,7 @@ We recommend to show packages in hierarchical order in *Package explorer* tab. O
 
 *Git Staging* and *Git Repositories* tabs can also be shown to check periodically if a new version of ArduSim has been released.
 
-### Copy necessary files
+### 2.3 Copy necessary files
 
 ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.param*. These files must be put in a place easy to find in order to execute simulations when running the *.jar* file. If you put them in the root of the Eclipse project (by default: */home/user_name/git/ardusim*), ArduSim will automatically find them when running from Eclipse IDE, avoiding to manually select the *arducopter* file each time it is launched.
 
@@ -88,7 +88,7 @@ You can create a mission file in *Google Earth* and test the simulator with the 
 
 A protocol can be tested directly in Eclipse or from a executable *.jar* file. In the second case, with the propper configuration (see next sections), we suggest to execute the *.jar* file as Administrator/root. This way, temporary files will be stored in a RAM drive, which will increase ArduSim scalability, on the number of virtual multicopters, when using a slow hard drive.
 
-## SITL setup in Windows
+## 3 SITL setup in Windows
 
 The next steps must be followed in order to compile a multicopter. Alternatively you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/sitl-native-on-windows.html), possibly more updated, but it suggest to install JSBSim simulator that is not needed for the correct functioning of ArduSim. This is the reason why we suggest to not use the script mentioned in the web page to install SITL, it is better to do it manually.
 
@@ -151,7 +151,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters. This setup speeds up the execution when running ArduSim on a computer with a slow hard drive.
 
 
-## SITL setup in Linux
+## 4 SITL setup in Linux
 
 The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal.
 
