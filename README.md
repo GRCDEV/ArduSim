@@ -16,7 +16,7 @@ At this moment, documentation is being generated and incomplete.
 
 [ArduSim usage](#markdown-header-ardusim-usage)
 
-[Deployment on real devices](#markdown-header-deployment-on-real-devices---raspberry-pi-3-b)
+[Deployment on real devices](#markdown-header-deployment-on-real-devices-raspberry-pi-3-b)
 
 [Citation](#markdown-header-citation)
 
