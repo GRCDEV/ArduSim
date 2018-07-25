@@ -46,7 +46,7 @@ The ArduSim simulator has been designed to facilitate the deployment of the impl
 
 When running ArduSim in Raspberry Pi 3, all the simulation-dependent software elements are disabled merely by changing an execution parameter, which makes the deployment of a newly developed protocol somewhat trivial.
 
-The requirements to deploy on a real device are shown in the [Deployment on real devices - Raspberry Pi 3](help/deployment.md) section.
+The requirements to deploy on a real device are shown in the [Deployment on real devices - Raspberry Pi 3](deployment.md) section.
 
 The following image shows the architecture of the application when running on a real device.
 
