@@ -50,15 +50,15 @@ ArduSim and the included protocols have been developed with Eclipse Oxygen IDE. 
 
 Open Git perspective: *Window --> Perspective --> Open Perspective --> Other... --> Git*.
 
-Use the button of the picture to clone the repository:
+Use the button of the picture to start clonning the repository:
 
 ![clone button](clonebutton.png)
 
-Now copy the following URI in the configuration window and enter your user and password:
+Now copy the following URI in the configuration window and enter your user name and password:
 
     https://frafabco@bitbucket.org/frafabco/ardusim.git
 
-Next, select the master branch and leave all the remaining options by default. Please, take note where the repository is going to be cloned.
+Finally, select the master branch and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
 
 ### Import the Eclipse project
 
@@ -70,11 +70,11 @@ Finally, change to the default perspective: *Window --> Perspective -->Open Pers
 
 We recommend to show packages in hierarchical order in *Package explorer* tab. Open the dropdown menu and select *Package Presentation --> Hierarchical*.
 
-*Git Staging* and *Git Repositories* tabs can also be shown to make it periodically check if a new version of ArduSim has been released.
+*Git Staging* and *Git Repositories* tabs can also be shown to check periodically if a new version of ArduSim has been released.
 
 ### Copy necessary files
 
-ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.param*. These files must be put in a place easy to find in order to execute simulations. It is easy to copy them to the root of the Eclipse project. This way, ArduSim will automatically find them, avoiding to manually select the *arducopter* file each time it is launched, something useful specially when running ArduSim under Eclipse.
+ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.param*. These files must be put in a place easy to find in order to execute simulations when running the *.jar* file. If you put them in the root of the Eclipse project (by default: */home/user_name/git/ardusim*), ArduSim will automatically find them when running from Eclipse IDE, avoiding to manually select the *arducopter* file each time it is launched.
 
 Several temporary files are generated when using ArduSim for simulations. Please, close ArduSim with the enabled button and not in the *Console* tab of Eclipse to force ArduSim to remove the temporary files before exiting.
 
@@ -90,15 +90,15 @@ A protocol can be tested directly in Eclipse or from a executable *.jar* file. I
 
 ## SITL setup in Windows
 
-The next steps must be followed in order to compile a multicopter. Alternatively you can follow the instructions included in the [official web](http://ardupilot.org/dev/docs/sitl-native-on-windows.html), possibly more updated, but it is not necessary to install JSBSim simulator as suggested there, to the correct functioning of ArduSim. This is the reason why we suggest to not use the script mentioned in the web page to install SITL, it is better to do it manually.
+The next steps must be followed in order to compile a multicopter. Alternatively you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/sitl-native-on-windows.html), possibly more updated, but it suggest to install JSBSim simulator that is not needed for the correct functioning of ArduSim. This is the reason why we suggest to not use the script mentioned in the web page to install SITL, it is better to do it manually.
 
 1. Install [Java](https://www.java.com/es/download/) if not present.
 
-2. MAVProxy. [Download](http://firmware.ardupilot.org/Tools/MAVProxy/MAVProxySetup-latest.exe) and install with default configuration options. This application is required for arducopter compilation and will no longer be used.
+2. MAVProxy. [Download](http://firmware.ardupilot.org/Tools/MAVProxy/MAVProxySetup-latest.exe) and install it with the default configuration options. This application is required for arducopter compilation and will no longer be used.
 
-3. Cygwin. Linux type command line emulator that enables us to compile the multicopter.
+3. Cygwin. It is a Linux type command line emulator that enables us to compile the multicopter.
 
-    1. Download and run Cygwin [64-bit](https://cygwin.com/setup-x86_64.exe) or [32 bit](https://cygwin.com/setup-x86.exe) installer. Accept all the prompts (including default file locations) until you reach the Select Packages dialog. There, with a left clic select the packages listed below (search for each one using the text in the "Name" field):
+    1. Download and run Cygwin [64-bit](https://cygwin.com/setup-x86_64.exe) or [32 bit](https://cygwin.com/setup-x86.exe) installer and accept all the prompts (including default file locations) until you reach the Select Packages dialog. There, with a left clic select the packages listed below (search for each one using the text in the "Name" field):
 
         Name | Category/Name/Description
         --- | ---
@@ -116,12 +116,12 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         python2-devel | Python - python2-devel: Python2 language interpreter
         procps | System - procps-ng: System and process monitoring utilities
 
-    2. When all the packages are selected, click through the rest of the prompts and accept all other default options (including the additional dependencies) until the end of the setup. From now we will use *Cygwin* to refer indistinctly to the 32 (*Cygwin*) and 64 bits (*Cygwin64*) installed program and folders.
+    2. When all the packages are selected, click through the rest of the prompts and accept all other default options (including the additional dependencies). From now, we will use *Cygwin* to refer indistinctly to the 32 (*Cygwin*) and 64 bits (*Cygwin64*) installed program and folders.
    
 4. Set up folders/paths in Cygwin. This procedure makes it easy to execute simulated vehicles under SITL (sim_vehicle.py will be found from anywhere), but it is not strictly needed to just compile a multicopter, if the next steps are followed.
 
     1. Open a *Cygwin terminal* from the desktop to initialize user files and close it.
-    2. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, so the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
+    2. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, as the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later all the carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
 
             export PATH=$PATH:$HOME/ardupilot/Tools/autotest
 
@@ -146,14 +146,14 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         make sitl -j4
         sim_vehicle.py -w
 
-    Once fully loaded, use "Ctrl+C" to close the running program. The second line builds the multicopter firmware *arducopter.elf*, and the third one uses MAVProxy to finally build the multicopter executable file *arducopter.exe* located in *C:\cygwin\home\user_name\ardupilot\build\sitl\bin*. Copy that file next to the ArduSim *.jar* file, and also the file *C:\cygwin\home\user_name\ardupilot\Tools\autotest\default_params\copter.param* to finish the basic setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
+    Once fully loaded, use "Ctrl+D" to close the running program. The second line builds the multicopter firmware *arducopter.elf*, and the third one uses MAVProxy to finally build the multicopter executable file *arducopter.exe* located in *C:\cygwin\home\user_name\ardupilot\build\sitl\bin*. Copy that file next to the ArduSim *.jar* file, and also the file *C:\cygwin\home\user_name\ardupilot\Tools\autotest\default_params\copter.param* to finish the basic setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
 
-8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters, a setup that speeds up the execution when running ArduSim on a computer with a slow hard drive.
+8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters. This setup speeds up the execution when running ArduSim on a computer with a slow hard drive.
 
 
 ## SITL setup in Linux
 
-The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal.
+The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal.
 
 1. Install Java if not present.
 
@@ -163,7 +163,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         sudo apt-get update
         sudo apt-get install oracle-java8-installer
     
-    On RPM based systems (CentOS, Fedora, ...) you must go to the [Oracle official download page](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html), accept the license agreement, and download the appropriate file. The, execute the following command, changing the version number accordingly to the download one:
+    On RPM based systems (CentOS, Fedora, ...) you must go to the [Oracle official download page](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html), accept the license agreement, and download the appropriate file. Then, execute the following command, changing the version number accordingly to the downloaded one:
     
         sudo yum localinstall jre-8u162-linux-x64.rpm
 
@@ -177,7 +177,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
     
         sudo yum install git
 
-3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal go to your home folder (*/home/user_name*) input this lines:
+3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal go to your home folder (*/home/user_name*) and input this lines:
 
         git clone git://github.com/ArduPilot/ardupilot.git
         cd ardupilot
@@ -211,4 +211,4 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         cd $HOME/ardupilot/ArduCopter
         sim_vehicle.py -w
 
-    Once fully loaded, use "Ctrl+C" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *$HOME/ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *$HOME/ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
+    Once fully loaded, use "Ctrl+D" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *$HOME/ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *$HOME/ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.

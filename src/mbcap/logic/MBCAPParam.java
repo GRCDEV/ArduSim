@@ -45,11 +45,13 @@ public class MBCAPParam {
 	public static AtomicIntegerArray projectPath;		// 1 means project, 0 means do not project
 
 	// Collision risk detection parameters
-	public static double collisionRiskDistance = 20; // (m) Distance between points to assert collision risk (UTM coordinates)
+	//TODO the next value must be 20 meters
+	public static double collisionRiskDistance = 12; // (m) Distance between points to assert collision risk (UTM coordinates)
 	public static double collisionRiskScreenDistance; // (px) The previous distance, but in screen coordinates
 	public static long collisionRiskTime = 1 * hopTimeNS; // (ns) Half of the time range to assert collision risk
 	public static double collisionRiskAltitudeDifference = 50; // (m) Altitude difference to assert collision risk
-	public static double reactionDistance = 90; // (m) Distance between the UAV and the collision risk point to assert collision risk
+	//TODO the next value must be 90 meters
+	public static double reactionDistance = 15; // (m) Distance between the UAV and the collision risk point to assert collision risk
 	public static long riskCheckPeriod = 2 * 1000000000l; // (ns) Time between risk collision checks
 	public static AtomicReferenceArray<Beacon> selfBeacon;
 	// Beacons transmitted by the broker to the CollisionDetector
@@ -59,7 +61,8 @@ public class MBCAPParam {
 	public static Map<Long, Point2D.Double>[] impactLocationPX;
 	
 	// Parameters related to the actions undertaken when a collision risk takes place
-	public static double safePlaceDistance = 20; // (m) Minimum safety distance to the other UAV path
+	//TODO the next value must be 20 meters
+	public static double safePlaceDistance = 17; // (m) Minimum safety distance to the other UAV path
 	public static final double PRECISION_MARGIN = 0.5; // (m) In case a precision error occurs
 	public static final double SAFETY_DISTANCE_RANGE = 1; // (m) Maximum distance to consider that the UAV has reached the safety position
 	public static Point2D.Double[] targetPointUTM;			// Safety position to move towards (UTM coordinates)

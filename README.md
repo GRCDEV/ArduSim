@@ -6,7 +6,7 @@ The Communication with multicopters uses the MAVLink protocol, a *de facto* stan
 
 The communication among multicopters emulates an Ad-hoc WiFi network link in the 5 GHz frequency band, where all the data packets are broadcasted. ArduSim is prepared to include new wireless models in future versions.
 
-At this moment, documentation is being generated and very incomplete.
+At this moment, documentation is being generated and incomplete.
 
 ## Table of contents
 
@@ -46,17 +46,17 @@ ArduSim can be executed with the following command line:
 
 
 
-## Deployment on real devices - Raspberry Pi 3 b+
+## Deployment on real devices - Raspberry Pi 3 B+
 
-You can deploy the implemented protocol on real UAVs just changing the ArduSim execution parameters, as explained before. In order to do this, the real multicopter must meet the following requirements:
+You can deploy the implemented protocol on real UAVs just changing the ArduSim execution parameters, as explained before.
 
+Follow [this link](help/deployment.md) for detailed instruction.
 
+## Citation
 
-As an example, in [this link](help/deployment.md) you can follow detailed instructions to setup de deployment on a muticopter with Pixhawk flight controller, with a Raspberry Pi 3 attached to it.  
+An [article](https://doi.org/10.1016/j.simpat.2018.06.009) was published in the journal *Simulation Modelling Practice and Theory (SIMPAT)* detailing most characteristics of ArduSim and validating its performance. Since then, many improvements have been made, including traces output in OMNeT++ and NS2 format.
 
-## Cite
-
-[//]: # (Explicar cómo citar, indicando el journal cuando se publique)
+If you plan to use ArduSim in your projects, please cite this repository and the journal article.
 
 ## Copyright information
 
