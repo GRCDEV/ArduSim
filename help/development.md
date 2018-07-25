@@ -13,7 +13,9 @@ The code needed to run the PC Companion is completed and needs no further modifi
 ### 2 Simulator
 
 To simulate a great number of UAVs simultaneously, we have used the SITL application as a basic development module. SITL contains control code resembling a real UAV, simulating its physical and flying properties with great accuracy. A SITL instance is executed for each virtual UAV, and it runs together with its physical engine on a single process, as seen in the following image:
+
 ![architectureVirtual](architectureVirtual.png)
+
 The proposed simulation platform relies on a multiagent simulation architecture that implements a high-level control logic above SITL itself.
 
 ArduSim includes the simulation of packet broadcasting between UAVs (*Simulated broadcast*), and the detection of possible collisions (*UAV Collision detector*).
@@ -33,6 +35,7 @@ When running ArduSim in Raspberry Pi 3, all the simulation-dependent software el
 The requirements to deploy on a real device are shown in the [Deployment on real devices - Raspberry Pi 3](help/deployment.md) section.
 
 The following image shows the architecture of the application when running on a real device.
+
 ![architectureReal](architectureReal.png)
 
 ## 4 Packages structure
