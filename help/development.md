@@ -270,9 +270,9 @@ The first list includes helper functions to know which is the current state of t
     Two code examples follow. The first and second examples wait until the setup step starts, but the second option could cause a race condition if the programmer decides to skip the setup step. The third case waits from the beginning until the experiment starts, and until the multicopter starts the flight.
     
     ```java
-    while(!api.Tools.areUAVsAvailable() || api.Tools.areUAVsReadyForSetup()) {
-        api.Tools.waiting(time);
-    }
+while(!api.Tools.areUAVsAvailable() || api.Tools.areUAVsReadyForSetup()) {
+    api.Tools.waiting(time);
+}
     ```
 
 ```java
