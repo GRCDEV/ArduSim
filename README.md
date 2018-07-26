@@ -6,7 +6,11 @@ The Communication with multicopters uses the MAVLink protocol, a *de facto* stan
 
 The communication among multicopters emulates an Ad-hoc WiFi network link in the 5 GHz frequency band, where all the data packets are broadcasted. ArduSim is prepared to include new wireless models in future versions.
 
-At this moment, documentation is being generated and incomplete.
+Ardusim was developed by [Francisco Fabra](mailto:frafabco@cam.upv.es), Phd student in the [Grupo de Redes de Computadores (GRC)](http://www.grc.upv.es/) research group of [Departamento de Informática de Sistemas y Computadores (DISCA)](http://www.upv.es/entidades/DISCA/index-es.html) department of [Universitat Politècnica de València](http://www.upv.es/) university. Supervisor: [Carlos T. Calafate](http://www.grc.upv.es/calafate/).
+
+At this moment, documentation is being generated and incomplete. The next picture shows 72 multicopters following elliptical missions like electrons of an atom.
+
+![Ejemplo ArduSim](help/atomo.png)
 
 ## Table of contents
 
@@ -32,31 +36,17 @@ Follow [this link](help/development.md) for detailed instructions.
 
 ## ArduSim usage
 
-ArduSim can be executed with the following command line:
-
-    java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-h]
-
-... diferentiate three roles as explained in the previous section
-
-
-
-
-
-[//]: # (Recomendar ejecutar como root administrador para usar disco ram)
-[//]: # (En una terminal de linux o windows)
-[//]: # (Al guardar lo del diálogo results, indicar los ficheros que se guardan con su contenido)
-
-
+Follow [this link](help/usage.md) for detailed instructions.
 
 ## Deployment on real devices - Raspberry Pi 3 B+
 
-You can deploy the implemented protocol on real UAVs just changing the ArduSim execution parameters, as explained before.
+You can deploy the implemented protocol on real UAVs just changing the ArduSim execution parameters, as explained in the [previous section](help/usage.md).
 
 Follow [this link](help/deployment.md) for detailed instruction.
 
 ## Citation
 
-The article *[ArduSim: Accurate and real-time multicopter simulation](https://doi.org/10.1016/j.simpat.2018.06.009)* was published in the journal *Simulation Modelling Practice and Theory (SIMPAT)* detailing most characteristics of ArduSim and validating its performance. Since then, many improvements have been made, including traces output in OMNeT++ and NS2 format.
+The article *[ArduSim: Accurate and real-time multicopter simulation](https://doi.org/10.1016/j.simpat.2018.06.009)* was published in the journal [Simulation Modelling Practice and Theory (SIMPAT)](https://www.journals.elsevier.com/simulation-modelling-practice-and-theory) detailing most characteristics of ArduSim and validating its performance. Since then, many improvements have been made, including traces output in OMNeT++ and NS2 format.
 
 If you plan to use ArduSim in your projects, please cite this repository and the journal article.
 
