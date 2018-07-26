@@ -42,7 +42,7 @@ Follow [this link](help/usage.md) for detailed instructions.
 
 You can deploy the implemented protocol on real UAVs just changing the ArduSim execution parameters, as explained in the [previous section](help/usage.md).
 
-Follow [this link](help/deployment.md) for detailed instruction.
+Follow [this link](help/deployment.md) for detailed instructions.
 
 ## Citation
 
