@@ -6,13 +6,13 @@ You are supposed to previously own a Pixhawk controlled multicopter, and a Raspb
 
 ## Table of contents
 
-[Hardware setup](#markdown-header-hardware-setup)
+[Hardware setup](#markdown-header-1-hardware-setup)
 
-[Software setup](#markdown-header-software-setup)
+[Software setup](#markdown-header-2-software-setup)
 
-## Hardware setup
+## 1 Hardware setup
 
-### Raspberry - Pixhawk serial link
+### 1.1 Raspberry - Pixhawk serial link
 
 ArduSim communicates with the flight controller through serial port, so we need to stablish a connection between them.
 
@@ -21,16 +21,16 @@ A Pixhawk controller has two telemetry ports, one tipically used by one telemetr
 ![cable](DF13cable.jpg)
 
 
-### Wireless ad-hoc network
+### 1.2 Wireless ad-hoc network
 
 Regarding the communication among multicopters, we need to create an Ad-hoc network among them.
 
 On a previous work ([On the impact of inter-UAV communications interference in the 2.4 GHz band](http://ieeexplore.ieee.org/document/7986413/)), we found that most of the remote controls available in the market jam the 2.4 GHz frequency band, so it is convenient to use an external WiFi adapter to use the 5 GHz band on Raspberry Pi 1, 2, and 3. We used an Alfa AWUS051NH dual band adapter on our setup. Rasbian already has this adapter driver, so we didn't need to install it.
 
 
-## Software setup
+## 2 Software setup
 
-### Raspberry - Pixhawk serial link
+### 2.1 Raspberry - Pixhawk serial link
 
 We have to follow two steps to successfully configure the Raspberry Pi 3. First, we have to enable the serial port link, and then we have to install the library that ArduSim uses to connect to the flight controller through the serial port.
 
@@ -92,7 +92,7 @@ Ardusim uses [RXTX library](http://rxtx.qbang.org/wiki/index.php/Main_Page) from
 Finally, restart the Raspberry pi 3 for the changes to take effect.
 
 
-### Wireless ad-hoc network
+### 2.2 Wireless ad-hoc network
 
 1. Check the regulatory region used for the WiFi adapter and allowed frequencies:
 
@@ -125,7 +125,7 @@ Finally, restart the Raspberry pi 3 for the changes to take effect.
 
     Then, unplug the external adapter and restart the device, and when it has fully booted plug in the  external adapter. /etc/udev/rules.d/70-persistent-net.rules should be created with definitions for persistent rules for wlan0 and wlan1. Now check that the configuration already set in this chapter is applied to the correct wlanX adapter.
 
-### ArduSim autostart
+### 2.3 ArduSim autostart
 
 You can start ArduSim with a remote SSH connection from a computer once the multicopter and the Raspberry Pi 3 are turned on, but it is more practical to start ArduSim automatically on the Raspberry startup. To do so, we wrote a simple service (*start.service*) with the following content:
 
