@@ -899,14 +899,16 @@ public class ArduSimTools {
 		Class<?>[] validImplementations = ArduSimTools.getAnyProtocolImplementations();
 		if (validImplementations != null && validImplementations.length > 0) {
 			ProtocolHelper.ProtocolClasses = validImplementations;
-			// Avoiding more than one implementation of the same protocol
+			// Avoiding more than one implementation of the same protocol and avoiding implementations without name
 			Map<String, String> imp = new HashMap<>();
 			ProtocolHelper protocol;
 			try {
 				for (int i = 0; i < validImplementations.length; i++) {
 					protocol = (ProtocolHelper)validImplementations[i].newInstance();
 					protocol.setProtocol();
-					imp.put(protocol.protocolString, protocol.protocolString);
+					if (protocol.protocolString != null) {
+						imp.put(protocol.protocolString, protocol.protocolString);
+					}
 				}
 				if (imp.size() > 0) {
 					names = imp.values().toArray(new String[imp.size()]);
@@ -1022,7 +1024,7 @@ public class ArduSimTools {
 		}
 	}
 	
-	/** Returns all the classes that contain valid implementation of any protocol.
+	/** Returns all the classes that contain a valid implementation of any protocol.
 	 * <p>Returns an array of size 0 if no valid implementations were found.*/
 	private static Class<?>[] getAllImplementations(List<String> existingClasses) {
 		String className;
