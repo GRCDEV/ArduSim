@@ -18,7 +18,7 @@ We suggest to run ArduSim as Administrator (Windows, requires Imdisk Virtual Dis
 
 ArduSim starts showing the following dialog:
 
-![ArduSim configuration dialog](config.jpg)
+![ArduSim configuration dialog](config.png)
 
 
 
