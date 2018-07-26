@@ -27,8 +27,8 @@ import sim.logic.DistanceCalculusThread;
 import sim.logic.RangeCalculusThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
-import uavController.ExperimentListener;
-import uavController.ExperimentTalker;
+import uavController.TestListener;
+import uavController.TestTalker;
 import uavController.UAVParam;
 
 /** This class contains the main method and the chronological logic followed by the whole application. */
@@ -75,8 +75,8 @@ public class Main {
 			}
 			
 			// 4. Start threads for waiting to commands to start the setup and start steps of the experiment
-			(new ExperimentTalker()).start();
-			(new ExperimentListener()).start();
+			(new TestTalker()).start();
+			(new TestListener()).start();
 		} else {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;

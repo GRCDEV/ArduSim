@@ -20,7 +20,7 @@ import main.Param.SimulatorState;
 import pccompanion.logic.PCCompanionParam;
 import main.Text;
 
-public class ExperimentListener extends Thread {
+public class TestListener extends Thread {
 
 	@Override
 	public void run() {

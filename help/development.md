@@ -19,8 +19,8 @@ This document explains in detail how to develop a new protocol in ArduSim.
 ArduSim is able to run performing three different roles:
 
 * Simulator. The application runs on a PC and uses a SITL instance for each virtual multicopter that it simulates. A GUI is used to control the experiment.
-* UAV agent. The application runs on a Raspberry Pi 3 attached to a multicopter. The experiment is controlled from a PC Companion.
-* PC Companion. The application runs on a Laptop and allows to control an experiment followed by any number of multicopters.
+* UAV agent. The application runs on a Raspberry Pi 3 B+ attached to a multicopter. The experiment is controlled from a PC Companion.
+* PC Companion. The application runs on a Laptop and allows to control an experiment followed by any number of real multicopters.
 
 The code needed to run the PC Companion is completed and needs no further modification. When the protocol developer follows the included [recomendations](#markdown-header-55-implementation-recomendations), the same code used for simulation is also valid for a real multicopter, which makes the deployment on real devices somewhat trial. In order to make it possible, the multicopters are assigned a unique identifier (ID) based on their MAC address, or a number starting in zero if ArduSim behaves as a simulator.
 
@@ -34,9 +34,9 @@ The proposed simulation platform relies on a multiagent simulation architecture 
 
 ArduSim includes the simulation of packet broadcasting between UAVs (*Simulated broadcast*), and the detection of possible collisions (*UAV Collision detector*).
 
-Each virtual multicopter is composed of an agent in charge of controlling the UAV behaviour, and the different threads required for the protocol being tested. The communication between UAVs requires a minimum of two threads, one for sending data packets (*Listener*), and another one for their reception (*Talker*). It is highly recommended that the thread *Listener* keeps always listening for new data packets to avoid CPU overhead when virtual buffers are full. In that situation many calculations are performed to process all stored packets. Furthermore, up-to-date packets are discarded, and older packets are used, as in a real link (in a real WiFi adapter new packets are discarded if the buffer is full and the application receives that old packets when it starts to receive).
+Each virtual multicopter is composed of an agent in charge of controlling the UAV behaviour, and the different threads required for the protocol being tested. The communication between UAVs requires a minimum of two threads, one for sending data packets (*Talker*), and another one for their reception (*Listener*). When ArdSim is used as a simulator, it is highly recommended that the thread *Listener* keeps always listening for new data packets to avoid CPU overhead when virtual buffers are full. In that situation many calculations are performed to process all stored packets. Furthermore, up-to-date packets are discarded, and older packets are used, as in a real link (in a real WiFi adapter new packets are discarded if the buffer is full, and the application receives that old packets when it starts to receive).
 
-An ArduSim agent includes a SITL instance, and a thread (Controller) in charge of sending commands to the multicopter, and of receiving the information that it generates.
+An ArduSim agent includes a SITL instance, and a thread (*Controller*) in charge of sending commands to the multicopter, and of receiving the information that it generates.
 
 The protocol under development can run more threads to control the behavior of the multicopter, like *Protocol logic*, but it is highly recommended to control the multicopter from the thread *Listener* if the multicopter behavior depends on the information received from other multicopters, to avoid any lag between the moment it receives information and the moment when the control action is applied.
 
@@ -44,7 +44,7 @@ The protocol under development can run more threads to control the behavior of t
 
 The ArduSim simulator has been designed to facilitate the deployment of the implemented protocols in real UAVs.
 
-When running ArduSim in Raspberry Pi 3, all the simulation-dependent software elements are disabled merely by changing an execution parameter, which makes the deployment of a newly developed protocol somewhat trivial.
+When running ArduSim in a Raspberry Pi 3 B+, all the simulation-dependent software elements are disabled merely by changing an execution parameter, which makes the deployment of a newly developed protocol somewhat trivial.
 
 The requirements to deploy on a real device are shown in the [Deployment on real devices - Raspberry Pi 3 B+](deployment.md) section.
 
@@ -52,21 +52,25 @@ The following image shows the architecture of the application when running on a 
 
 ![architectureReal](architectureReal.png)
 
+If the threads of the protocol are programmed following the recomendation, the deployment is trivial, as the architecture remains the same.
+
+Two new threads (*Test Listener* and *Test Talker*) communicate with the PC Companion. When commands to start the setup step or the experiment are received from the PC Companion, the thread *Test Listener* sends to the flight controller the appropriate commands the same way the thread *GUIControl* does when performing a simulation.
+
 ## 2 Packages structure
 
-The Eclipse project in organized in packages. We suggest to enable the hierarchical presentation of packages in Eclipse to easyly understand the project structure, which includes the following packages:
+The Eclipse project in organized in packages. We suggest to enable the hierarchical presentation of packages in Eclipse to easily understand the project structure, which includes the following high level packages:
 
 * **main**. This package includes the main method that runs the application (*Main.java*) as well as general parameters (*Param.java*) and text shown in GUI or messages (*Text.java*).
-* **sim**. This package includes the parameters, logic and GUI related to simulation but to to the execution on a real multicopter.
+* **sim**. This package includes the parameters, logic and GUI related to simulation but not to the execution on a real multicopter.
 * **pccompanion**. This package includes the parameters and GUI needed by the PC Companion, as well as the threads needed to communicate with the real multicopters.
 * **uavController**. This package includes the parameters related to the real or virtual multicopter, the thread needed to control it, and the threads needed to communicate with the PC Companion.
-* **api**. This is the most important package and includes the following elements:
-    * pojo. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
-    * WaypointReachedListener interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
-    * Copter. Includes methods to gather flight information from the multicopter or perform actions, like changing the flight mode, as explained in detail in "[5.2 UAV control](#markdown-header-52-uav-control)" section.
-    * GUI. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[5.3 GUI integration](#markdown-header-53-gui-integration)" section.
-    * Tools. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[5.4 Available utilities](#markdown-header-54-available-utilities)" section.
-    * files. This package includes resources used when ArduSim is used as a Simulator.
+* **api**. This is the most important package for the developer and it includes the following elements:
+    * *pojo*. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
+    * *WaypointReachedListener.java* interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
+    * *Copter.java*. Includes methods to gather flight information from the multicopter or perform actions, like changing the flight mode, as explained in detail in "[5.2 UAV control](#markdown-header-52-uav-control)" section.
+    * *GUI.java*. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[5.3 GUI integration](#markdown-header-53-gui-integration)" section.
+    * *Tools.java*. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[5.4 Available utilities](#markdown-header-54-available-utilities)" section.
+    * *files*. This package includes resources used when ArduSim is used as a Simulator.
 * **... (protocols packages)**
 
 Each new protocol must be selfcontained in an independent package. This way, the protocol code will be fully independent from ArduSim code, making it easyly understandable for other programmers.
@@ -126,7 +130,7 @@ There are another two differences compared to a "UAV agent". First, a set of pic
 
 To start a new protocol, the developer creates a new package (*ProtocolName*) to contain the corresponding Java classes. Then, the first step consists in create a new class that "extends" "*api.ProtocolHelper.java*". This class forces the developer to implement the functions already mentioned, to integrate the protocol in ArduSim. An extended explanation of the functions follows:
 
-* *void* **setProtocol()**. Assign a String name to the protocol to enable the implementation, using the variable *this.protocol*.
+* `void setProtocol()`. Assign a String name to the protocol to enable the implementation, using the variable *this.protocol*.
 * *void* **openConfigurationDialog()**. It opens a dialog implemented by the protocol developer and that allows the user to input parameters related to the protocol. Always remember to issue the command *api.Tools.setProtocolConfigured(true);* to force the simlator to open the main window.
 * *void* **openPCCompanionDialog(** *JFrame* **)**. Optional. This method enables the developer to implement a dialog to analyze the behavior of the protocol on the PC Companion, when the protocol is deployed in real multicopters. If using this method, an additional thread must be implemented to update the information shown in the dialog, based on the data packets that are being broadcasted from the real UAVs. The thread must be started once the dialog is completely built.
 * *boolean* **loadMission()**. On a real multicopter it must return true if and only if a planned mission must be followed by the UAV. The mission file must be stored beside ArduSim jar file.
