@@ -106,13 +106,10 @@ At any moment, the user can start actions to take control over the multicopters 
 
 ArduSim assigns an unique ID to the multicopter and then loads the planned mission from a file `loadMission()`, if the protocol needs it. Then, the method `initializeDataStructures()` is launched, where the developer can initialize the variables needed by the protocol taking into account the number of multicopters being run in the same ArduSim instance (one in this case, but many for simulations).
 
-The logging of path followed by the multicopter is started and the application waits until the multicopter is located by the GPS system. Some information is retrieved from the UAV and the planned mission is sent to it, if the protocol needs it. Next, the function `sendInitialConfiguration()` may be used to retrieve more information or send commands to the multicopter needed before starting the threads of the protocol with the function `startThreads()`. We recommend to retrieve any needed UAV configuration in this step. Please remember that the threads are started here, but they execution probably must wait until the user presses the "Setup" and/or "Start" buttons, when the functions `setupActionPerformed()` and `startExperimentActionPerformed()` are run. This can be achieved with the following code:
+The logging of path followed by the multicopter is started and the application waits until the multicopter is located by the GPS system. Some information is retrieved from the UAV and the planned mission is sent to it, if the protocol needs it. Next, the function `sendInitialConfiguration()` may be used to retrieve more information or send commands to the multicopter needed before starting the threads of the protocol with the function `startThreads()`. We recommend to retrieve any needed UAV configuration in this step. Please remember that the threads are started here, but they execution probably must wait until the user presses the "Setup" and/or "Start" buttons, when the functions `setupActionPerformed()` and `startExperimentActionPerformed()` are run. This can be achieved with the functions explained at the beginning of section "[5.4 Available utilities](#markdown-header-54-available-utilities)". They are solely enough to coordinate the threads with ArduSim.
 
-```java
-while(!api.Tools.areUAVsAvailable() || api.Tools.areUAVsReadyForSetup()) {
-api.Tools.waiting(time);
-}
-```
+
+
 
 The experiment is finished when the multicopter lands and engines stop. Some protocols will land the UAV automatically, but others could finish while the UAV is flying. In the second case, the function "*forceExperimentEnd()*" must be implemented to detect the end of the experiment and land the multicopter.
 
@@ -272,6 +269,26 @@ The first list includes helper functions to know which is the current state of t
 * *boolean* **isSetupFinished()**. The setup step is finished and the UAVs are ready to start the experiment.
 * *boolean* **isExperimentInProgress()**. This method returns true if the experiment is in progress.
 * *boolean* **isExperimentFinished()**. Finally, this method return true if the experiment has ended, it is, if all the UAVs running in this machine have landed.
+
+Two code examples follow. The first and second examples wait until the setup step starts, but the second option could cause a race condition if the programmer decides to skip the setup step. The third case waits from the beginning until the experiment starts, and until the multicopter starts the flight.
+
+```java
+while(!api.Tools.areUAVsAvailable() || api.Tools.areUAVsReadyForSetup()) {
+    api.Tools.waiting(time);
+}
+```
+
+```java
+while(!api.Tools.isSetupInProgress()) {
+    api.Tools.waiting(time);
+}
+```
+
+```java
+while (!Tools.isExperimentInProgress() || !Copter.isFlying(numUAV)) {
+    Tools.waiting(time);
+}
+```
 
 Now follow commands needed to coordinate each protocol with ArduSim:
 
