@@ -269,22 +269,22 @@ The first list includes helper functions to know which is the current state of t
 
     Two code examples follow. The first and second examples wait until the setup step starts, but the second option could cause a race condition if the programmer decides to skip the setup step. The third case waits from the beginning until the experiment starts, and until the multicopter starts the flight.
     
+        ```java
+        while(!api.Tools.areUAVsAvailable() || api.Tools.areUAVsReadyForSetup()) {
+            api.Tools.waiting(time);
+        }
+        ```
+
     ```java
-while(!api.Tools.areUAVsAvailable() || api.Tools.areUAVsReadyForSetup()) {
-    api.Tools.waiting(time);
-}
+    while(!api.Tools.isSetupInProgress()) {
+        api.Tools.waiting(time);
+    }
     ```
 
 ```java
-while(!api.Tools.isSetupInProgress()) {
-    api.Tools.waiting(time);
-}
-```
-
-```java
-while (!Tools.isExperimentInProgress() || !Copter.isFlying(numUAV)) {
-    Tools.waiting(time);
-}
+    while (!Tools.isExperimentInProgress() || !Copter.isFlying(numUAV)) {
+        Tools.waiting(time);
+    }
 ```
 
 Now follow commands needed to coordinate each protocol with ArduSim:
