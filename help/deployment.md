@@ -1,6 +1,6 @@
 # Deployment on real devices - Raspberry Pi 3 B+
 
-The first deployment of a protocol requieres to configure hardware and software of one or more real multicopters. On later deployments, it will be enough to copy some files to the Raspberry Pi as detailed in [this link](setup.md/#markdown-header-23-copy-necessary-files).
+The first deployment of a protocol requieres to configure hardware and software of one or more real multicopters. On later deployments, it will be enough to copy some files to the Raspberry Pi as detailed in [this link](setup.md#markdown-header-23-copy-necessary-files).
 
 You are supposed to previously own a Pixhawk controlled multicopter, and a Raspberry Pi 3 B+ with Raspbian OS attached to it.
 
