@@ -1,8 +1,8 @@
 # Deployment on real devices - Raspberry Pi 3 B+
 
-The first deployment of a protocol requieres to configure hardware and software of one or more real multicopters. On later deployments, it will be enough to copy some files to the Raspberry Pi as detailed in [this link](setup.md#markdown-header-23-copy-necessary-files).
+The first deployment of a protocol requieres to configure hardware and software of one or more real multicopters. On later deployments, it will be enough to copy some files to the Raspberry Pi as detailed in [this link](setup.md).
 
-You are supposed to previously own a Pixhawk controlled multicopter, and a Raspberry Pi 3 B+ with Raspbian OS attached to it.
+You are supposed to previously own a Pixhawk controlled multicopter, and a Raspberry Pi 3 B+ with Raspbian OS to be attached to it.
 
 ## Table of contents
 
@@ -16,7 +16,7 @@ You are supposed to previously own a Pixhawk controlled multicopter, and a Raspb
 
 ArduSim communicates with the flight controller through serial port, so we need to stablish a connection between them.
 
-A Pixhawk controller has two telemetry ports, one tipically used by one telemetry wireless transmitter and another available. On the other hand, a Raspberry Pi 3 has a 40 pins GPIO where we can connect the telemetry port as a serial 3.3V link, with a cable similar to the one shown on the next image (it needs modifications), following the instructions in the following [link](http://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html).
+A Pixhawk controller has two telemetry ports, one tipically used by one telemetry wireless transmitter and another available. On the other hand, a Raspberry Pi 3 B+ has a 40 pins GPIO where we can connect the telemetry port as a serial 3.3V link, with a cable similar to the one shown on the next image (it needs modifications), following the instructions in this [link](http://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html).
 
 ![cable](DF13cable.jpg)
 
@@ -24,7 +24,7 @@ A Pixhawk controller has two telemetry ports, one tipically used by one telemetr
 
 Regarding the communication among multicopters, we need to create an Ad-hoc network among them.
 
-On a previous work ([On the impact of inter-UAV communications interference in the 2.4 GHz band](http://ieeexplore.ieee.org/document/7986413/)), we found that most of the remote controls available in the market jam the 2.4 GHz frequency band, so it is convenient to use an external WiFi adapter to use the 5 GHz band on Raspberry Pi 1, 2, and 3. We used an Alfa AWUS051NH dual band adapter on our setup. Rasbian already has this adapter driver, so we didn't need to install it.
+On a previous work ([On the impact of inter-UAV communications interference in the 2.4 GHz band](http://ieeexplore.ieee.org/document/7986413/)), we found that most of the remote controls available in the market jam the 2.4 GHz frequency band, so it is convenient to use an external WiFi adapter to use the 5 GHz band on the Raspberry Pi 3 B+. We used an Alfa AWUS051NH dual band adapter on our setup. Rasbian already has this adapter driver, so we didn't need to install it.
 
 ## 2 Software setup
 
