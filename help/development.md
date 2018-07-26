@@ -78,13 +78,13 @@ Each new protocol must be selfcontained in an independent package. This way, the
 Several protocols have been already included in ArduSim:
 
 * **None**. Completed. Mission based. This protocol simply makes the multicopters to follow a planned mission.
-* **MBCAP**. Completed. Mission based. It avoids collisions among multicopters that are following a planned mission, as explained in the paper "MBCAP: Mission Based Collision Avoidance Protocol for UAVs (doi: 10.1109/AINA.2018.00090)".
-* **Swarm protocol**. Almost completed. Swarm based. It makes a swarm to follow a mission stored in one of them while keeping the formation. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
+* **MBCAP**. Completed. Mission based. It avoids collisions among multicopters that are following a planned mission, as explained in the paper "MBCAP: Mission Based Collision Avoidance Protocol for UAVs (doi: 10.1109/AINA.2018.00090)", presented in the conference "Advanced Information Networking and Applications (AINA 2018)".
+* **Swarm protocol**. Almost completed. Swarm based. It makes a swarm to follow a mission stored in one of them while keeping the formation stable. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
 * **Chemotaxis**. Almost completed. Single multicopter. It enables a multicopter to dynamically move around an area looking for a hotspot using a sensor (e.g. heat on wildfires, pollution peaks,...).
 * **Follow Me**. In progress. Swarm based. A swarm follows a multicopter that is manually controlled by a pilot.
 * **Fishing**. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.
 
-Please, feel free to reuse code from this protocols when developing a new one. "None" is the better starting point developing a protocol where all the multicopters must follow a planned mission, while "Swarm protocol" is more adecuate when developing a protocol for a swarm.
+Please, feel free to reuse code from this protocols while developing a new one. "None" is the better starting point developing a protocol where all the multicopters must follow a planned mission, while "Swarm protocol" is more adecuate when developing a protocol for a swarm.
 
 ## 3 Application workflow
 
@@ -94,19 +94,25 @@ As explained in section "[1 ArduSim architecture](#markdown-header-1-ardusim-arc
 
 Rectangular boxes represent the functions included in section "[4 Protocol implementation](#markdown-header-4-protocol-implementation)" that must be implemented by the developer, while comments are automatic processes performed by ArduSim.
 
-ArduSim starts loading the implemented protocols and parsing the command line to know which role will it run among other parameters.
+ArduSim starts loading the implemented protocols and parsing the command line to know which role will it run, among other parameters.
 
 ### 3.1 PC Companion
 
-First of all, communications are set online. Then, when the user presses the "Setup" button the command is issued and the real multicopters execute the "*setupActionPerformed()*" method. Once the setup process is completed the user can start the experiment with the corresponding button and the multicopters execute the method "*startExperimentActionPerformed()*". Immediately, if the developer needs it, a dialog can be opened with the function "*openPCCompanionDialog()*" where the user could analize the data packets sent among the multicopters.
+First of all, communications are set online. Then, when the user presses the "Setup" button the command is issued and the detected real multicopters execute the `setupActionPerformed()` method. Once the setup process is completed, the user can start the experiment with the corresponding button, and the multicopters execute the method `startExperimentActionPerformed()`. Immediately, if the developer needs it, a dialog can be opened with the function `openPCCompanionDialog()` where the user could analize the data packets sent among the multicopters.
 
-At any moment, the user can start actions to take control over the multicopters if the protocol behavior is unexpected, like land or return to the launch location.
+At any moment, the user can start actions to take control over the multicopters if the protocol behavior is unexpected, like land or return to the launch location (RTL).
 
 ### 3.2 UAV agent
 
-ArduSim assigns an unique ID to the multicopter and then loads the planned mission from a file "*loadMission()*", if the protocol needs it. Then, the method "*initializeDataStructures()*" is launched, where the developer can initialize the variables needed by the protocol taking into account the number of multicopters being run in the same ArduSim instance (one in this case, but many for simulations).
+ArduSim assigns an unique ID to the multicopter and then loads the planned mission from a file `loadMission()`, if the protocol needs it. Then, the method `initializeDataStructures()` is launched, where the developer can initialize the variables needed by the protocol taking into account the number of multicopters being run in the same ArduSim instance (one in this case, but many for simulations).
 
-The path followed by the multicopter that is logged for further analysis is started and the application waits until the multicopter is located by the GPS system. Some information is retrieved from the UAV and the planned mission is sent to it if needed by the protocol. Next, the function "*sendInitialConfiguration()*" can be used to retrieve more information or send commands to the multicopter needed before starting the threads of the protocol with the function "*startThreads()*". We recommend to retrieve UAV configuration in this step. Please remember that the threads are started here, but they execution probably must wait until the user presses the "Setup" and/or "Start" buttons, when the functions "*setupActionPerformed()*" and "*startExperimentActionPerformed()*" are run.
+The logging of path followed by the multicopter is started and the application waits until the multicopter is located by the GPS system. Some information is retrieved from the UAV and the planned mission is sent to it, if the protocol needs it. Next, the function `sendInitialConfiguration()` may be used to retrieve more information or send commands to the multicopter needed before starting the threads of the protocol with the function `startThreads()`. We recommend to retrieve any needed UAV configuration in this step. Please remember that the threads are started here, but they execution probably must wait until the user presses the "Setup" and/or "Start" buttons, when the functions `setupActionPerformed()` and `startExperimentActionPerformed()` are run. This can be achieved with the following code:
+
+```java
+while(!api.Tools.areUAVsAvailable() || api.Tools.areUAVsReadyForSetup()) {
+api.Tools.waiting(time);
+}
+```
 
 The experiment is finished when the multicopter lands and engines stop. Some protocols will land the UAV automatically, but others could finish while the UAV is flying. In the second case, the function "*forceExperimentEnd()*" must be implemented to detect the end of the experiment and land the multicopter.
 
