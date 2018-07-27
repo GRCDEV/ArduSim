@@ -20,7 +20,41 @@ ArduSim starts showing the following dialog:
 
 ![ArduSim configuration dialog](config.png)
 
-This dialog allows to introduce several simulation parameters
+This dialog allows to introduce several simulation parameters:
+
+* Simulation parameters:
+
+    *ArduCopter path*.
+    *Speeds file*.
+    *Number of UAVs*.
+
+* Performance parameters:
+
+    *Screen refresh rate*.
+    *Minimum screen redraw distance*.
+    *Enable arducopter logging*.
+    *Restrict battery capacity*.
+    Measure CPU usage*.
+    Rendering quality*.
+
+* General parameters:
+
+    *Enable verbose logging*.
+    *
+
+* UAV synchronization protocol:
+
+
+* UAV to UAV communications parameters:
+
+
+* UAV Collision detection parameters:
+
+
+* Wind parameters:
+
+
+al aceptar...
 
 
 ### 1.2 Protocol configuration

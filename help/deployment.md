@@ -30,7 +30,7 @@ On a previous work ([On the impact of inter-UAV communications interference in t
 
 ### 2.1 Raspberry - Pixhawk serial link
 
-We have to follow two steps to successfully configure the Raspberry Pi 3. First, we have to enable the serial port link, and then we have to install the library that ArduSim uses to connect to the flight controller through the serial port.
+We have to follow two steps to successfully configure the Raspberry Pi 3 B+. First, we have to enable the serial port link, and then we have to install the library that ArduSim uses to connect to the flight controller through the serial port.
 
 #### Enabling serial port
 
