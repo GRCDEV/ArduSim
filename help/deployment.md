@@ -24,7 +24,7 @@ A Pixhawk controller has two telemetry ports, one tipically used by one telemetr
 
 Regarding the communication among multicopters, we need to create an Ad-hoc network among them.
 
-On a previous work ([On the impact of inter-UAV communications interference in the 2.4 GHz band](http://ieeexplore.ieee.org/document/7986413/)), we found that most of the remote controls available in the market jam the 2.4 GHz frequency band, so it is convenient to use an external WiFi adapter to use the 5 GHz band on the Raspberry Pi 3 B+. We used an Alfa AWUS051NH dual band adapter on our setup. Rasbian already has this adapter driver, so we didn't need to install it.
+On a previous work ([On the impact of inter-UAV communications interference in the 2.4 GHz band](http://ieeexplore.ieee.org/document/7986413/)), we found that most of the remote controls available in the market jam the 2.4 GHz frequency band, so it is convenient to use the 5 GHz band on the Raspberry Pi 3 B+. If you plan to use a previous version of Raspberry Pi, then you would have to use an external adapter capable of running in Ad-hoc mode in the 5 GHz band.
 
 ## 2 Software setup
 

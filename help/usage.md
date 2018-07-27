@@ -20,7 +20,7 @@ ArduSim starts showing the following dialog:
 
 ![ArduSim configuration dialog](config.png)
 
-
+This dialog allows to introduce several simulation parameters
 
 
 ### 1.2 Protocol configuration
