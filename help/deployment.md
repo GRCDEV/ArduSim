@@ -34,7 +34,7 @@ We have to follow two steps to successfully configure the Raspberry Pi 3 B+. Fir
 
 #### Enabling serial port
 
-Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to keep the serial port enabled while disabling the output. Open the GUI tool in "Preferences", and enable "Serial Port" and disable "Serial Console" in the "Interfaces" tab. Alternatively, you can use the console utility with the following commands. Then go to *"Interfacing Options" - "Serial"* and enable it, but then you must check the file */boot/cmdline.txt* after reboot and remove the text *"console=serial0,115200"* if found.
+Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to keep the serial port enabled while disabling the output. Open the GUI tool in "Preferences-->Raspberry pi configuration", and enable "Serial Port" and disable "Serial Console" in the "Interfaces" tab. Alternatively, you can use the console utility with the following commands. Then go to *"Interfacing Options" - "Serial"* and enable it, but then you must check the file */boot/cmdline.txt* after reboot and remove the text *"console=serial0,115200"* if found.
 
     sudo apt-get update
     sudo raspi-config

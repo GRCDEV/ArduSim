@@ -84,7 +84,7 @@ public class UAVControllerThread extends Thread {
 	private SerialPort serialPort;
 	private DataInputStream din;
 	private DataOutputStream dout;
-	private MAVLinkReader reader;
+	private MAVLinkReader reader = null;
 	private MAVLinkMessage inMsg;
 	
 	/** Indicates when the UAV connects with the application (MAVLink ready). */
@@ -93,6 +93,9 @@ public class UAVControllerThread extends Thread {
 	/** Indicates when the UAV sends valid coordinates. */
 	private int receivedGPSOnline = 0;
 	private boolean locationReceived = false;
+	
+	@SuppressWarnings("unused")
+	private UAVControllerThread() {}
 
 	public UAVControllerThread(int numUAV) throws SocketException {
 		this.numUAV = numUAV;
@@ -101,7 +104,6 @@ public class UAVControllerThread extends Thread {
 
 		// Connection through serial port on a real UAV
 		if(Param.isRealUAV) {
-			reader = null;
 			// It is necessary to identify the serial port (/dev/ttyAMA0)
 			Properties properties = System.getProperties();
 			String currentPorts = properties.getProperty(UAVParam.SERIAL_CONTROLLER_NAME, UAVParam.SERIAL_PORT);
@@ -149,7 +151,6 @@ public class UAVControllerThread extends Thread {
 		} else {
 			// Connection through TCP in the simulator
 			this.port = UAVParam.mavPort[numUAV];
-			reader = null;
 			try {
 				socket = new Socket(UAVParam.MAV_NETWORK_IP, this.port);
 				socket.setTcpNoDelay(true);
