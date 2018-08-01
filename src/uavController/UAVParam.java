@@ -38,7 +38,6 @@ public class UAVParam {
 	public static final int PORT_CHECK_TIMEOUT = 200;	// (ms) Timeout while checking if a port is available
 	public static Integer[] mavPort;					// List of ports really used by SITL instances
 	// Serial port (on real UAVs)
-	public static final String SERIAL_CONTROLLER_NAME = "gnu.io.rxtx.SerialPorts";
 	public static final String SERIAL_PORT = "/dev/ttyAMA0";
 	public static final int BAUD_RATE = 57600;
 	

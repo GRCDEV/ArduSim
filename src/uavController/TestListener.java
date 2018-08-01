@@ -21,23 +21,25 @@ import pccompanion.logic.PCCompanionParam;
 import main.Text;
 
 public class TestListener extends Thread {
+	
+	private static byte[] receivedBuffer;
+	private static DatagramSocket receiveSocket = null;
+	private static DatagramPacket receivedPacket;
+	private static Input input;
+	
+	public TestListener() throws SocketException {
+		receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
+		receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
+		input = new Input(receivedBuffer);
+		receiveSocket = new DatagramSocket(PCCompanionParam.UAV_PORT);
+		receiveSocket.setBroadcast(true);
+	}
 
 	@Override
 	public void run() {
-		DatagramSocket receiveSocket = null;
-		byte[] receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
-		DatagramPacket receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
-		Input input = new Input(receivedBuffer);
-		try {
-			receiveSocket = new DatagramSocket(PCCompanionParam.UAV_PORT);
-			receiveSocket.setBroadcast(true);
-		} catch (SocketException e) {
-			GUI.exit(Text.BIND_ERROR_1);
-		}
-		
 		int command;
-		outerloop:
-		while (true) {
+		boolean goOn = true;
+		while (goOn) {
 			try {
 				if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
 						|| Param.simStatus == SimulatorState.TEST_FINISHED
@@ -58,7 +60,7 @@ public class TestListener extends Thread {
 									&& Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
 								Param.simStatus = receivedState;
 							}
-							
+
 							if (receivedState == SimulatorState.TEST_IN_PROGRESS) {
 								if (PCCompanionParam.lastStartCommandTime == null) {
 									PCCompanionParam.lastStartCommandTime = new AtomicLong(System.currentTimeMillis());
@@ -71,7 +73,7 @@ public class TestListener extends Thread {
 							}
 						}
 						break;
-					// Emergency action command (applied only once)
+						// Emergency action command (applied only once)
 					case PCCompanionParam.EMERGENCY_COMMAND:
 						int emergency = input.readInt();
 						boolean commandFound = false;
@@ -83,7 +85,7 @@ public class TestListener extends Thread {
 								action = Text.RECOVER_CONTROL;
 								commandSuccess = true;
 							} else {
-								
+
 							}
 						}
 						if (emergency == PCCompanionParam.ACTION_RTL) {
@@ -101,14 +103,14 @@ public class TestListener extends Thread {
 								action = Text.LAND;
 								commandSuccess = true;
 							} else {
-								
+
 							}
 						}
 						if (commandFound) {
 							if (commandSuccess) {
 								GUI.log(Text.EMERGENCY_SUCCESS + " " + action);
-								FileDescriptor.out.sync();//TODO stop the Raspberry Pi 
-								break outerloop;
+								goOn = false;
+								FileDescriptor.out.sync();//TODO stop the Raspberry Pi
 							} else {
 								GUI.log(Text.EMERGENCY_FAILED + " " + emergency);
 								//TODO por contemplar qué hacer si hay error
@@ -126,6 +128,7 @@ public class TestListener extends Thread {
 			receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 			receivedPacket.setData(receivedBuffer, 0, receivedBuffer.length);
 		}
+		
 		input.close();
 		receiveSocket.close();
 	}

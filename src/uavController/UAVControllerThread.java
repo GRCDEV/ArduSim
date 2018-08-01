@@ -3,12 +3,10 @@ package uavController;
 import java.awt.geom.Point2D;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Arrays;
-import java.util.Properties;
 
 import org.javatuples.Triplet;
 import org.mavlink.IMAVLinkMessage;
@@ -45,6 +43,8 @@ import org.mavlink.messages.ardupilotmega.msg_set_position_target_global_int;
 import org.mavlink.messages.ardupilotmega.msg_statustext;
 import org.mavlink.messages.ardupilotmega.msg_sys_status;
 
+import com.fazecast.jSerialComm.SerialPort;
+
 import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
@@ -54,12 +54,6 @@ import api.pojo.Point3D;
 import api.pojo.RCValues;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
 import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
@@ -104,47 +98,20 @@ public class UAVControllerThread extends Thread {
 
 		// Connection through serial port on a real UAV
 		if(Param.isRealUAV) {
-			// It is necessary to identify the serial port (/dev/ttyAMA0)
-			Properties properties = System.getProperties();
-			String currentPorts = properties.getProperty(UAVParam.SERIAL_CONTROLLER_NAME, UAVParam.SERIAL_PORT);
-			if (currentPorts.equals(UAVParam.SERIAL_PORT)) {
-				properties.setProperty(UAVParam.SERIAL_CONTROLLER_NAME, UAVParam.SERIAL_PORT);
-			} else {
-				properties.setProperty(UAVParam.SERIAL_CONTROLLER_NAME,
-						currentPorts + File.pathSeparator + UAVParam.SERIAL_PORT);
-			}
-
-			CommPortIdentifier portIdentifier;
-			try {
-				portIdentifier = CommPortIdentifier.getPortIdentifier(UAVParam.SERIAL_PORT);
-
-				if (portIdentifier.isCurrentlyOwned()) {
-					GUI.log(Text.SERIAL_ERROR_1);
-				} else {
-					int timeout = 2000;
-					CommPort commPort = portIdentifier.open(this.getClass().getName(), timeout);
-					if (commPort instanceof SerialPort) {
-						serialPort = (SerialPort) commPort;
-						serialPort.setSerialPortParams(UAVParam.BAUD_RATE, SerialPort.DATABITS_8,
-								SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-						din = new DataInputStream(serialPort.getInputStream());
-						dout = new DataOutputStream(serialPort.getOutputStream());
-						reader = new MAVLinkReader(din, IMAVLinkMessage.MAVPROT_PACKET_START_V10);
-					} else {
-						GUI.log(Text.SERIAL_ERROR_2);
-					}
-				}
-			} catch (NoSuchPortException e) {
-				e.printStackTrace();
-			} catch (PortInUseException e) {
-				e.printStackTrace();
-			} catch (UnsupportedCommOperationException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+			serialPort = SerialPort.getCommPort(UAVParam.SERIAL_PORT);
+//			comPort.setBaudRate(57600);
+//			comPort.setNumDataBits(8);
+//			comPort.setNumStopBits(1);
+//			comPort.setParity(SerialPort.NO_PARITY);
+			serialPort.setComPortParameters(UAVParam.BAUD_RATE, 8, 1, SerialPort.NO_PARITY);
+			serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
+			if (serialPort.openPort()) {
+				din = new DataInputStream(serialPort.getInputStream());
+				dout = new DataOutputStream(serialPort.getOutputStream());
+				reader = new MAVLinkReader(din, IMAVLinkMessage.MAVPROT_PACKET_START_V10);
 			}
 			if (reader == null) {
-				GUI.log(Text.SERIAL_ERROR_3);
+				GUI.log(Text.SERIAL_ERROR);
 				System.exit(1);
 			}
 

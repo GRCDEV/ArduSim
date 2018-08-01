@@ -1,6 +1,7 @@
 package main;
 
 import java.io.File;
+import java.net.SocketException;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
@@ -76,7 +77,12 @@ public class Main {
 			
 			// 4. Start threads for waiting to commands to start the setup and start steps of the experiment
 			(new TestTalker()).start();
-			(new TestListener()).start();
+			try {
+				TestListener listener = new TestListener();
+				listener.start();
+			} catch (SocketException e) {
+				GUI.exit(Text.BIND_ERROR_1);
+			}
 		} else {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;
@@ -345,7 +351,7 @@ public class Main {
 			} else {
 				if (System.currentTimeMillis() - Param.startTime > Param.STARTING_TIMEOUT) {
 					checkEnd = true;
-				}
+				}//TODO descomentar
 			}
 			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 				Tools.waiting(SimParam.LONG_WAITING_TIME);

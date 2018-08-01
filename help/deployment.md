@@ -30,10 +30,6 @@ On a previous work ([On the impact of inter-UAV communications interference in t
 
 ### 2.1 Raspberry - Pixhawk serial link
 
-We have to follow two steps to successfully configure the Raspberry Pi 3 B+. First, we have to enable the serial port link, and then we have to install the library that ArduSim uses to connect to the flight controller through the serial port.
-
-#### Enabling serial port
-
 Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to keep the serial port enabled while disabling the output. Open the GUI tool in "Preferences-->Raspberry pi configuration", and enable "Serial Port" and disable "Serial Console" in the "Interfaces" tab. Alternatively, you can use the console utility with the following commands. Then go to *"Interfacing Options" - "Serial"* and enable it, but then you must check the file */boot/cmdline.txt* after reboot and remove the text *"console=serial0,115200"* if found.
 
     sudo apt-get update
@@ -48,46 +44,11 @@ Alternatively, you can completely disable bluetooth with this overlay:
 
     dtoverlay=pi3-disable-bt
 
-Next, restart the device and check that the *ttyAMA0* port is available again with the next command (a line must show: serial0 -> ttyAMA0):
+Next, restart the device and check that the *ttyAMA0* port is available again with the next command (a line must show: *serial0 -> ttyAMA0*):
 
     ls -l /dev
 
-#### Enabling serial communication for ArduSim
-
-Ardusim uses [RXTX library](http://rxtx.qbang.org/wiki/index.php/Main_Page) from Trent Jarvi et al. to communicate the Raspberry Pi with the flight controller, so you have to install it via Internet.
-
-1. Create folders */home/pi/libs* and */home/pi/javalibs* to store the binary and Java components, respectively.
-
-2. Download the file *rxtx-2.2pre2-bins.zip* from [this link](http://rxtx.qbang.org/wiki/index.php/Download), and copy the file *RXTXcomm.jar* that it contains to the folder */home/pi/javalibs*.
-
-3. Edit the file */etc/environment* and add these two lines:
-
-        JAVA_HOME="/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt"
-        CLASSPATH="/home/pi/javalibs/RXTXcomm.jar"
-
-    Please, check if the Java home path matches with your installed Java version (Java 8 is already included with Raspbian).
-
-4. Install the binary library version 2.2pre1. When you run ArduSim you will notice a warning message in the console advising of a version mismatch between the binary and the Java libraries versions. Don't take care, it is normal and causes no problems.
-
-        sudo apt-get install librxtx-java
-
-5. Edit the file */home/pi/.bashrc* adding the following lines at the end:
-
-        export JAVA_HOME="/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt"
-        export PATH=$PATH:$JAVA_HOME/bin
-        export CLASSPATH=/home/pi/javalibs/RXTXcomm.jar
-        export LD_LIBRARY_PATH=/home/pi/libs
-
-    As in step 3, check the installed Java path.
-
-6. Create two symbolic links to the binary library in the folders */home/pi/libs* and */usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre/lib/arm*:
-
-        sudo ln -s /usr/lib/jni/librxtxSerial-2.2pre1.so /home/pi/libs/librxtxSerial.so
-        sudo ln -s /usr/lib/jni/librxtxSerial-2.2pre1.so /usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre/lib/arm/librxtxSerial.so
-
-    Please, check if the paths match with your installed library and Java version.
-
-Finally, restart the Raspberry pi 3 for the changes to take effect.
+Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
 
 
 ### 2.2 Wireless ad-hoc network
@@ -125,7 +86,7 @@ Finally, restart the Raspberry pi 3 for the changes to take effect.
 
 ### 2.3 ArduSim autostart
 
-You can start ArduSim with a remote SSH connection from a computer once the multicopter and the Raspberry Pi 3 are turned on, but it is more practical to start ArduSim automatically on the Raspberry startup. To do so, we wrote a simple service (*start.service*) with the following content:
+You can start ArduSim with a remote SSH connection from a computer once the multicopter and the Raspberry Pi 3 B+ are turned on, but it is more practical to start ArduSim automatically on the Raspberry startup. To do so, we wrote a simple service (*ardusim.service*) with the following content:
 
     [Unit]
     Description=ArduSim
@@ -135,9 +96,8 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     [Service]
     Type=oneshot
     RemainAfterExit=true
-    ExecStart=/sbin/ifconfig wlan0
-    ExecStart=/sbin/iwconfig wlan0
-    ExecStart=/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/bin/java -jar /home/pi/Desktop/ArduSim.jar -c false -r true -p "PROTOCOL" -s 2.5
+    EnvironmentFile=/home/pi/Desktop/ardusim.ini
+    ExecStart=/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/bin/java -jar /home/pi/Desktop/ArduSim.jar -c $PCCOMPANION -r $REALUAV -p "${UAVPROTOCOL}" -s $UAVSPEED
     WorkingDirectory=/home/pi/Desktop/
     StandardOutput=syslog
     StandardError=syslog
@@ -148,7 +108,14 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     [Install]
     WantedBy=multi-user.target
 
-This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol *"PROTOCOL"*, and with a maximum speed of 2.5 m/s for the multicopter. The first two *ExecStart* commands are optional and could be used for debugging purposes, as it shows the configuration of the WiFi adapter and let's you check if the ad-hoc network is correctly configured at system startup.
+ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini* which contains the following:
+
+    PCCOMPANION=false
+    REALUAV=true
+    UAVPROTOCOL="some protocol"
+    UAVSPEED=2.5
+
+This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol *UAVPROTOCOL*, and with a maximum speed of 2.5 m/s for the multicopter.
 
 To store the output of ArduSim to a file, we also need to specify th target file to the system log service. Create the file */etc/rsyslog.d/ardusim.conf* with the following content:
 
@@ -166,7 +133,7 @@ Next, copy the service file and test it to be sure that it is working:
     sudo systemctl daemon-reload
     sudo systemctl start start.service
 
-Check the content of the file */home/pi/Desktop/Ardusim.log* to be sure that the service is working fine. If the service fails or behaves unexpectedly, stop the service an repeat the previous commands, but the first, until the service works fine. Then, use the following command to enable the service on startup:
+Check the content of the file */home/pi/Desktop/Ardusim.log* to be sure that the service is working fine. If the service fails or behaves unexpectedly, stop the service an repeat all the previous commands but the first, until the service works fine. Then, use the following command to enable the service on startup:
 
     sudo systemctl enable start.service
 

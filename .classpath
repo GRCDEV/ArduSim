@@ -16,7 +16,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/CollisionSimulator/libs/javatuples/javatuples-1.2-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/RXTXcomm.jar"/>
 	<classpathentry kind="lib" path="libs/commons-cli-1.4.jar" sourcepath="libs/commons-cli-1.4-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/commons-cli-1.4-javadoc.jar!/"/>
@@ -35,6 +34,11 @@
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/sigar_javadoc.zip!/"/>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="ArduSim/src"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/jSerialComm-2.0.2.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/jSerialComm-javadoc.zip!/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>

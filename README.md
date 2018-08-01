@@ -68,7 +68,7 @@ The VerticalFlowLayout implementation comes from Vassili Dzuba and under [Artist
 
 [javatuples](https://www.javatuples.org/) is used to return multiple values on functions and under [Apache license](https://www.javatuples.org/license.html).
 
-[RXTX](http://rxtx.qbang.org/wiki/index.php/Main_Page) is used to communicate with a real flight controller through serial port and under [LGPL v 2.1 license](http://www.gnu.org/licenses/lgpl.txt).
+[jSerialComm](https://github.com/Fazecast/jSerialComm/wiki) is used to communicate with a real flight controller through serial port and under [LGPL v 3.0 license](https://github.com/Fazecast/jSerialComm/blob/master/LICENSE-LGPL-3.0) and [Apache license](https://github.com/Fazecast/jSerialComm/blob/master/LICENSE-APACHE-2.0).
 
 Statistical Machine Intelligence and Learning Engine ([Smile](https://github.com/haifengl/smile)) is used for the protocol Chemotaxis (core, data, interpolation and math modules) and under [Apache license](https://github.com/haifengl/smile/blob/master/LICENSE).
 

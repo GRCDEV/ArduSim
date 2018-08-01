@@ -16,7 +16,7 @@ public class Text {
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
-	public static final String PROTOCOL_NOT_FOUND_ERROR = "The specified protocol was not found. Valid protocols:";
+	public static final String PROTOCOL_NOT_FOUND_ERROR = "protocol was not found. Valid protocols:";
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
 	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;
 	public static final String PROTOCOL_GETTING_PROT_CLASSES_ERROR = "Unable to retrieve classes implementing protocols in " + APP_NAME;
@@ -345,9 +345,7 @@ public class Text {
 	public static final String MISSION_SENT_ERROR_3 = "Error sending the mission.";
 	public static final String MISSION_GET = "Mission retrieved from the UAV.";
 	public static final String MISSION_GET_ERROR = "Error retrieving the current mission from the UAV.";
-	public static final String SERIAL_ERROR_1 = "Error: Serial port is currently in use.";
-	public static final String SERIAL_ERROR_2 = "Error: RXTX only works with serial ports.";
-	public static final String SERIAL_ERROR_3 = "Failed conecting to the serial port.";
+	public static final String SERIAL_ERROR = "Failed conecting to the serial port.";
 	public static final String TCP_ERROR = "Failed connecting to SITL through TCP.";
 	public static final String FLIGHT_MODE_ERROR_2 = "Reporting an unknown flying mode.";
 	public static final String IMPOSSIBLE_WAYPOINT_ERROR = "Received a waypoint out of range.";

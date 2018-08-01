@@ -172,8 +172,13 @@ public class ArduSimTools {
 					}
 				}
 				if (!found) {
-					GUI.log(Text.PROTOCOL_NOT_FOUND_ERROR + "\n\n");
-					myHelp.printHelp(usageCommand, options);
+					GUI.log(pr + " " + Text.PROTOCOL_NOT_FOUND_ERROR + "\n\n");
+					
+					for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {
+						GUI.log(ProtocolHelper.ProtocolNames[i]);
+					}
+					
+//					myHelp.printHelp(usageCommand, options);
 					System.exit(1);
 				}
 				ProtocolHelper.selectedProtocol = pr;
@@ -1034,8 +1039,9 @@ public class ArduSimTools {
 			try {
 				className = existingClasses.get(i);
 				// Ignore special case
-				if (!className.toUpperCase().endsWith("WINREGISTRY")) {
-					currentClass = Class.forName(existingClasses.get(i));
+				if (!className.toUpperCase().endsWith("WINREGISTRY")
+						&& !className.equals("module-info")) {
+					currentClass = Class.forName(className);
 					if (ProtocolHelper.class.isAssignableFrom(currentClass) && !ProtocolHelper.class.equals(currentClass)) {
 						classesMap.put(existingClasses.get(i), currentClass);
 					}
