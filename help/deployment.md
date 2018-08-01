@@ -1,8 +1,8 @@
 # Deployment on real devices - Raspberry Pi 3 B+
 
-The first deployment of a protocol requieres to configure hardware and software of one or more real multicopters. On later deployments, it will be enough to copy some files to the Raspberry Pi as detailed in [this link](setup.md).
+The first deployment of a protocol requieres to configure hardware and software of one or more real multicopters. On later deployments, it will be enough to copy some files to the Raspberry Pi 3 B+ as detailed in [this link](setup.md).
 
-You are supposed to previously own a Pixhawk controlled multicopter, and a Raspberry Pi 3 B+ with Raspbian OS to be attached to it.
+You are supposed to previously own a Pixhawk controlled multicopter, and a Raspberry Pi 3 B+ with Raspbian OS to be attached to it (tested on Raspbian Stretch with desktop, release date 2018-06-27).
 
 ## Table of contents
 
@@ -14,9 +14,9 @@ You are supposed to previously own a Pixhawk controlled multicopter, and a Raspb
 
 ### 1.1 Raspberry - Pixhawk serial link
 
-ArduSim communicates with the flight controller through serial port, so we need to stablish a connection between them.
+ArduSim communicates with the flight controller through a serial port, so we need to stablish a connection between them.
 
-A Pixhawk controller has two telemetry ports, one tipically used by one telemetry wireless transmitter and another available. On the other hand, a Raspberry Pi 3 B+ has a 40 pins GPIO where we can connect the telemetry port as a serial 3.3V link, with a cable similar to the one shown on the next image (it needs modifications), following the instructions in this [link](http://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html).
+A Pixhawk controller has two telemetry ports, one tipically used for a telemetry wireless transmitter and another available for other purposes. On the other hand, a Raspberry Pi 3 B+ has a 40 pins GPIO where we can connect the telemetry port as a serial 3.3V link, with a cable similar to the one shown on the next image, which would need modifications following the instructions in this [link](http://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html).
 
 ![cable](DF13cable.jpg)
 
@@ -30,12 +30,12 @@ On a previous work ([On the impact of inter-UAV communications interference in t
 
 ### 2.1 Raspberry - Pixhawk serial link
 
-Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to keep the serial port enabled while disabling the output. Open the GUI tool in "Preferences-->Raspberry pi configuration", and enable "Serial Port" and disable "Serial Console" in the "Interfaces" tab. Alternatively, you can use the console utility with the following commands. Then go to *"Interfacing Options" - "Serial"* and enable it, but then you must check the file */boot/cmdline.txt* after reboot and remove the text *"console=serial0,115200"* if found.
+Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to keep the serial port enabled while disabling the output. Open the GUI tool in "Preferences-->Raspberry pi configuration", and enable "Serial Port" and disable "Serial Console" in the "Interfaces" tab. Alternatively, you can use the console utility with the following commands, go to *"Interfacing Options" - "Serial"* and enable it, but then you must check the file */boot/cmdline.txt* after reboot and remove the text *"console=serial0,115200"* if found.
 
     sudo apt-get update
     sudo raspi-config
 
-Finally we have to enable the **ttyAMA0** serial port, which is disabled by default on the Raspberry Pi model 3 (not in the previous versions) to be able to use the bluetooth output through the GPIO connector, so we need to swap serial and bluetooth ports. Edit the file */boot/config.txt/* and add this two lines (the first one could already be there):
+Finally we have to enable the **ttyAMA0** serial port, which is disabled by default on the Raspberry Pi model 3 to be able to use the bluetooth output through the GPIO connector (not in previous versions), so we need to swap serial and bluetooth ports. Edit the file */boot/config.txt/* and add this two lines (the first one could already be there):
 
     enable_uart=1
     dtoverlay=pi3-miniuart-bt
@@ -49,7 +49,6 @@ Next, restart the device and check that the *ttyAMA0* port is available again wi
     ls -l /dev
 
 Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
-
 
 ### 2.2 Wireless ad-hoc network
 
@@ -108,7 +107,7 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     [Install]
     WantedBy=multi-user.target
 
-ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini* which contains the following:
+ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini*, which contains the following:
 
     PCCOMPANION=false
     REALUAV=true
@@ -117,7 +116,7 @@ ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini* 
 
 This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol *UAVPROTOCOL*, and with a maximum speed of 2.5 m/s for the multicopter.
 
-To store the output of ArduSim to a file, we also need to specify th target file to the system log service. Create the file */etc/rsyslog.d/ardusim.conf* with the following content:
+To store the output of ArduSim to a file, we also need to specify the target file to the system log service. Create the file */etc/rsyslog.d/ardusim.conf* with the following content:
 
     if $programname == 'ardusim' then /home/pi/Desktop/ArduSim.log
     if $programname == 'ardusim' then ~

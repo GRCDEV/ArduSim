@@ -24,35 +24,47 @@ This dialog allows to introduce several simulation parameters:
 
 * Simulation parameters:
 
-    *ArduCopter path*.
-    *Speeds file*.
-    *Number of UAVs*.
+    * *ArduCopter path*. The arducopter
+    * *Speeds file*.
+    * *Number of UAVs*.
 
 * Performance parameters:
 
-    *Screen refresh rate*.
-    *Minimum screen redraw distance*.
-    *Enable arducopter logging*.
-    *Restrict battery capacity*.
-    Measure CPU usage*.
-    Rendering quality*.
+    * *Screen refresh rate*.
+    * *Minimum screen redraw distance*.
+    * *Enable arducopter logging*.
+    * *Restrict battery capacity*.
+    * *Measure CPU usage*.
+    * *Rendering quality*.
 
 * General parameters:
 
-    *Enable verbose logging*.
-    *
+    * *Enable verbose logging*.
+    * *Enable verbose storage*.
 
-* UAV synchronization protocol:
+* UAV synchronization protocol.
 
 
 * UAV to UAV communications parameters:
 
+    * *Enable carrier sensing*.
+    * *Enable packet collision detection*.
+    * *Receiving buffer size*.
+    * *Wireless communications model*.
+    * *Fixed range distance*.
 
 * UAV Collision detection parameters:
 
+    * *Enable collision detection*.
+    * *Check period*.
+    * *Distance threshold*.
+    * *Altitude difference threshold*.
 
 * Wind parameters:
 
+    * *Enable wind*.
+    * *Direction*.
+    * *Speed*.
 
 al aceptar...
 
