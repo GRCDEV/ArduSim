@@ -24,7 +24,7 @@ This dialog allows to introduce several simulation parameters:
 
 * Simulation parameters:
 
-    * *ArduCopter path*. The arducopter
+    * *ArduCopter path*. The arducopter executable file
     * *Speeds file*.
     * *Number of UAVs*.
 
