@@ -75,11 +75,11 @@ This is the right place to set protocol parameters, and to load missions if need
 
 The following picture shows the main window of ArduSim.
 
-[Main window](mainwindow.png)
+![Main window](mainwindow.png)
 
 
 
-[Progress dialog](progress.png)
+![Progress dialog](progress.png)
 
 
 
