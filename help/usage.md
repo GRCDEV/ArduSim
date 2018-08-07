@@ -73,13 +73,24 @@ This is the right place to set protocol parameters, and to load missions if need
 
 ### 1.3 Main window
 
-The following picture shows the main window of ArduSim.
+The following picture shows the main window of ArduSim with ten UAVs performing a mission, represented as letters 'GRCTFMNPSU'.
 
 ![Main window](mainwindow.png)
 
+On the upper left corner of the window (1) we can find the application log. It shows messages representing the result of commands sent to the UAVs, the progress of the experiment, and any desired information using the function *GUI.log(String)*.
 
+On the right (2), there are a few buttons that allow the user to control the experiment. The *Setup* button starts the actions included in the function *setupActionPerformed()* of the protocol implementation, as explained in section [Protocol development](development.md). On the other hand, the button *Start test* begins the experiment with the function *startExperimentActionPerformed()* of the implementation. The last button lets you to stop the experiment and exit ArduSim at any time, and the first one shows the following dialog, where up-to-date data from the multicopters is shown in real time, as the location, the speed, the flight mode, and specific information related to the protocol under test.
 
 ![Progress dialog](progress.png)
+
+### 1.4 Results
+
+When all the virtual multicopters land the experiment ends. Then, the following dialog opens.
+
+![Results dialog](wirelessresults.png)
+
+
+
 
 
 
@@ -89,13 +100,23 @@ The following picture shows the main window of ArduSim.
 
 ## 2 ArduSim on real multicopters
 
-
+If a protocol is developed following the recommendations included with ArduSim, it can be easily deployed on real multicopters, just changing the execution parameters.
 
 ArduSim can be executed with the following command line:
 
     java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-h]
 
-... diferentiate three roles as explained in the previous section
+    -c. boolean. ArduSim will run as a PC Companion when this parameter is set to true. This is the only mandatory parameter.
+    -r. boolean. The default value is false, and it is only used if -c is set to false. The value false runs ArduSim for simulation, while the value true runs ArduSim in a real multicopter, which makes the parameters -p and -s mandatory.
+    -p. String. It represents the protocol name that must be deployed in the real multicopter.
+    -s. double. It means the desired flight speed for the real multicopter.
+    -h. It shows help explaining the previous parameters.
+
+
+
+
+
+
 
 
 
