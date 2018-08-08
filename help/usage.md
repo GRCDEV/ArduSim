@@ -89,14 +89,21 @@ When all the virtual multicopters land the experiment ends. Then, the following 
 
 ![Results dialog](wirelessresults.png)
 
+The results include detailed statistics of the virtualized communications among the virtual UAVs and the configuration of the experiments, which enables to repeat the same experiment again. The developer can also include information in the dialog with the corresponding functions of the protocol implementation, as explained in section [Protocol development](development.md).
 
+The user decides whether to store this information or not. In the former case, additional files are stored with many data about the experiment for further analysis. In the following list of files stored, *name* is the file name set by the user, and X is the UAV identifier.
 
-
-
-
-
-
-
+    * *name.txt*. It contains the same information shown in the results dialog.
+    * *name_mobility_OMNeT-INET-BoonMotionModel.txt*. The movement over the time (mobility) of all the UAVs is stored to be used in the communications simulator OMNeT++, using the mobility model *BoonMotionModel* of the INET framework.
+    * *name_mobility_OMNeT-INET-BoonMotionModel_3D.txt*. This file includes the same information plus the altitude of the multicopter over the time.
+    * *name_X_mobility_NS2.txt*. One file for each multicopter stores the mobility model to be used in the communications simulator NS2.
+    * *name_X_mobility_NS2_3D.txt*. In this case, the altitude of the multicopter is also included.
+    * *name_X_mission_AutoCAD.scr*. This file includes the simplified mission shown on screen, and is stored in AutoCAD format as a single poliline.
+    * *name_X_path.csv*. In this case, we include the 3D location, heading, speed, acceleration, and distance to origin over time. We think that this file may be the most useful to mathematically analyze the behavior of the multicopters.
+    * *name_X_path_AutoCAD.scr*. This is a simplified version of the previous file with an AutoCAD poliline with the path followed by the multicopter.
+    * *name_X_path_AutoCAD3d.scr* This file includes a 3D poliline with the path followed by the multicopter.
+    
+The user can generate additional files with the function *logData(String, String)* of the protocol implementation.
 
 ## 2 ArduSim on real multicopters
 
@@ -112,12 +119,35 @@ ArduSim can be executed with the following command line:
     -s. double. It means the desired flight speed for the real multicopter.
     -h. It shows help explaining the previous parameters.
 
+To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, preferably a laptop, connected among them in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
+
+### 2.1 Real multicopters
+
+The command line must be:
+
+    java -jar ArduSim.jar -c false -r true -p "some protocol" -s doubleValue
+
+The specified protocol would be launched. First, ArduSim will wait until the multicopter is ready to fly. Then, it will accept the setup and start commands from the PC Companion.
+
+Of course, a protocol could start automatically without a PC Companion, but we recommend this method, as some UAVs could start the flight later than others.
+
+### 2.2 PC Companion
+
+The command line must be:
+
+    java -jar ArduSim.jar -c true
+
+The following windows opens:
+
+![PC Companion](pccompanion.png)
 
 
 
+explicar comandos de emergencia también
 
 
 
+### 2.3 Results
 
 
 
