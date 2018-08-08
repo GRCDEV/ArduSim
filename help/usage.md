@@ -149,9 +149,9 @@ Once the setup process finishes, the user can also press the button "Start test"
 
 Three buttons allow the user to recover control over the UAVs in case the protocol behavior is undesired:
 
-* *Recover control*. The remote control of each multicopter must be turned on, and a pilot should be aware, as this command releases the control over the UAVs (RC channels override off) and they would crash.
-* *RTL*. All the multicopters would return to the location they were launched from.
-* *Land*. In this case, the UAVs would attempt to land wherever they are.
+* *Recover control*. The remote control of each multicopter must be turned on, and a pilot should be aware, as this command releases the control over the UAVs (RC channels override off) and they could crash.
+* *RTL*. All the multicopters return to the location they were launched from.
+* *Land*. In this case, the UAVs attempt to land wherever they are.
 
 This PC Companion has been designed for a minimal interaction with the UAVs in order to reduce the media occupancy, as running a high number of real UAVs can collapse the WiFi channel. ArduSim stops sending messages between PC Companion and UAVs, and vice versa, once the experiment starts. Then, it opens an additional dialog if implemented by the developer. With that dialog, the user could supervise the behavior of the protocol, checking the data sent among the real UAVs.
 
