@@ -141,17 +141,20 @@ The following windows opens:
 
 ![PC Companion](pccompanion.png)
 
+The real UAVs periodically send data packets with their identifier, based on the MAC address, and the current simulation state.
 
+In the example, just one multicopter has been detected and is ready to fly. From now, the setup button is enabled and the user can send that command.
 
-explicar comandos de emergencia también
+Once the setup process finishes, the user can also press the button "Start test" and the UAVs start the experiment.
 
+Three buttons allow the user to recover control over the UAVs in case the protocol behavior is undesired:
 
+    * *Recover control*. The remote control of each multicopter must be turned on, and a pilot should be aware, as this command releases the control over the UAVs (RC channels override off) and they would crash.
+    * *RTL*. All the multicopters would return to the location they were launched from.
+    * *Land*. In this case, the UAVs would attempt to land wherever they are.
+
+This PC Companion has been designed for a minimal interaction with the UAVs in order to reduce the media occupancy, as running a high number of real UAVs can collapse the WiFi channel. ArduSim stops sending messages between PC Companion and UAVs and vice versa once the experiment starts. Then, it opens an additional dialog if implemented by the developer. With that dialog, the user could supervise the behavior of the protocol checking the data sent among the real UAVs.
 
 ### 2.3 Results
 
-
-
-
-
-
-[//]: # (Al guardar lo del diálogo results, indicar los ficheros que se guardan con su contenido)
+When the multicopter ends the experiment it should land. On simulation, the user had the option to store flight information or not, but in this case the data is always stored in the same folder where ArduSim is running, for later analysis.
