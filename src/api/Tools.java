@@ -44,9 +44,19 @@ public class Tools {
 	// TCP parameter: maximum size of the byte array used on messages
 	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
 	
-	/** Returns true if the protocol is running on an real UAV or false if a simulation is being performed or ArduSim runs as a PC Companion. */
-	public static boolean isRealUAV() {
-		return Param.isRealUAV;
+	/** ArduSim runs in a real multicopter. */
+	public static final int MULTICOPTER = 0;
+	/** ArduSim runs a simulation. */
+	public static final int SIMULATOR = 1;
+	/** ArduSim runs as a PC Companion to control real multicopters. */
+	public static final int PCCOMPANION = 2;
+	
+	/** Returns the role ArduSim is performing. It can be compared to one of the following values to make decissions:
+	 * <p>Tools.MULTICOPTER
+	 * <p>Tools.SIMULATOR
+	 * <p>Tools.PCCOMPANION */
+	public static int getArduSimRole() {
+		return Param.role;
 	}
 	
 	/** Returns the number of UAVs that are running on the same machine.
@@ -162,7 +172,7 @@ public class Tools {
 							// Waypoint 0 is home and current
 							// Waypoint 1 is take off
 							if (j==0) {
-								if (Param.isRealUAV) {
+								if (Param.role == Tools.MULTICOPTER) {
 									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
 									missions[i].add(wp);
@@ -170,18 +180,18 @@ public class Tools {
 											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
-								} else {
+								} else if (Param.role == Tools.SIMULATOR) {
 									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, lat, lon, z, 1);
 									missions[i].add(wp);
 								}
 							} else {
-								if (Param.isRealUAV) {
+								if (Param.role == Tools.MULTICOPTER) {
 									wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
-								} else {
+								} else if (Param.role == Tools.SIMULATOR) {
 									wp = new Waypoint(j+1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
 											lat, lon, z, 1);
@@ -220,7 +230,7 @@ public class Tools {
 		}
 		// Check if there are at least take off and a waypoint to define a mission (first line is header, and wp0 is home)
 		// During simulation an additional waypoint is needed in order to stablish the starting location
-		if (list==null || (Param.isRealUAV && list.size()<4) || (!Param.isRealUAV && list.size()<5)) {
+		if (list==null || (Param.role == Tools.MULTICOPTER && list.size()<4) || (Param.role == Tools.SIMULATOR && list.size()<5)) {
 			GUI.log(Text.FILE_PARSING_ERROR_1);
 			return null;
 		}
@@ -268,17 +278,17 @@ public class Tools {
 				if (numSeq == 1) {
 					if ((frame != MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT
 							|| command != MAV_CMD.MAV_CMD_NAV_TAKEOFF
-							|| (Param.isRealUAV && param7 <= 0))) {
+							|| (Param.role == Tools.MULTICOPTER && param7 <= 0))) {
 						GUI.log(Text.FILE_PARSING_ERROR_5);
 						return null;
 					}
 					wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 					mission.add(wp);
 				} else {
-					if (Param.isRealUAV) {
+					if (Param.role == Tools.MULTICOPTER) {
 						wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 						mission.add(wp);
-					} else {
+					} else if (Param.role == Tools.SIMULATOR) {
 						if (numSeq == 2) {
 							// Set takeoff coordinates from the first wapoint that has coordinates
 							wp = mission.get(mission.size()-1);
@@ -386,6 +396,11 @@ public class Tools {
 	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/ 
 	public static List<WaypointSimplified> getUAVMissionSimplified(int numUAV) {
 		return UAVParam.missionUTMSimplified.get(numUAV);
+	}
+	
+	/** Provides the UDP port used by real UAVs for communication. This is useful in the PC Companion dialog, to listen data packets from the protocol.*/
+	public static int getUDPBroadcastPort() {
+		return UAVParam.broadcastPort;
 	}
 	
 	/** Advises if the collision check is enabled or not. */
@@ -503,10 +518,21 @@ public class Tools {
 	
 		try {
 			int x = Integer.parseInt(validating);
-			if (x < 1024 || x > 65535) {
+			if (x < 1024 || x > UAVParam.MAX_PORT) {
 				return false;
 			}
 		} catch (NumberFormatException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	/** Validates a boolean value. */
+	public static boolean isValidBoolean(String validating) {
+		if (validating == null) {
+			return false;
+		}
+		if (!validating.equalsIgnoreCase("true") && !validating.equalsIgnoreCase("false")) {
 			return false;
 		}
 		return true;
@@ -646,5 +672,5 @@ public class Tools {
 	public static List<LogPoint> getUTMPath(int numUAV) {
 		return SimParam.uavUTMPath[numUAV];
 	}
-	
+
 }

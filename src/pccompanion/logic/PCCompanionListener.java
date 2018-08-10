@@ -32,7 +32,7 @@ public class PCCompanionListener extends Thread {
 		DatagramPacket receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
 		Input input = new Input(receivedBuffer);
 		try {
-			receiveSocket = new DatagramSocket(PCCompanionParam.COMPUTER_PORT);
+			receiveSocket = new DatagramSocket(PCCompanionParam.computerPort);
 			receiveSocket.setBroadcast(true);
 		} catch (SocketException e) {
 			GUI.exit(Text.BIND_ERROR_3);

@@ -206,13 +206,16 @@ public class BoardHelper {
 			break;
 		}
 	
-		// At the beginning, only the UAVs can be drawn
+		// While connecting UAVs there is no need to re-scale the path or the mission
 		if (!BoardParam.drawAll) {
 			int numUAVsConnected = BoardHelper.getNumUAVsConnected();
 			if (numUAVsConnected > BoardParam.numUAVsDrawn.get()) {
 				BoardHelper.setScale();
 				ArduSimTools.rescaleDataStructures();
 				ProtocolHelper.selectedProtocolInstance.rescaleDataStructures();
+				BoardHelper.rescaleUAVPath();
+				BoardHelper.rescaleMissions();
+				ProtocolHelper.selectedProtocolInstance.rescaleShownResources();
 				BoardHelper.rescaleScaleBar();
 				BoardParam.numUAVsDrawn.set(numUAVsConnected);
 				if (numUAVsConnected == Param.numUAVs) {
@@ -220,15 +223,22 @@ public class BoardHelper {
 				}
 			}
 		} else {
-			// All UAVs connected. Draw everything
-			if (BoardParam.rescaleQueries.getAndSet(0) > 0
-					|| (Param.simStatus == SimulatorState.STARTING_UAVS && Param.numMissionUAVs.get() == 0)) {
+			// All UAVs connected
+			// If all UAVs are configured and all the missions are drawn the simulator state changes
+			if (Param.simStatus == SimulatorState.STARTING_UAVS
+					&& InitialConfigurationThread.UAVS_CONFIGURED.get() == Param.numUAVs	// All UAVs configured
+					&& BoardParam.numMissionsDrawn == Param.numMissionUAVs.get()) {			// All missions already drawn
+				Param.simStatus = SimulatorState.UAVS_CONFIGURED;
+			}
+			// Re-scale all if needed
+			if (BoardParam.rescaleQueries.getAndSet(0) > 0) {
 				BoardHelper.setScale();
+				ArduSimTools.rescaleDataStructures();
 				ProtocolHelper.selectedProtocolInstance.rescaleDataStructures();
 				BoardHelper.rescaleUAVPath();
 				BoardHelper.rescaleMissions();
 				ProtocolHelper.selectedProtocolInstance.rescaleShownResources();
-				BoardHelper.rescaleScaleBar();	// Gets the scale bar
+				BoardHelper.rescaleScaleBar();
 			}
 		}
 		
@@ -295,13 +305,6 @@ public class BoardHelper {
 				BoardParam.uavPrevPXLocation[i]
 						= new LogPoint(locationUTM.time, locationPX.x, locationPX.y, locationUTM.z, locationUTM.heading, locationUTM.speed, locationUTM.inTest);
 			}
-		}
-	
-		// 4. Detect if the needed missions are loaded (and scale is set)
-		if (Param.simStatus == SimulatorState.STARTING_UAVS
-				&& InitialConfigurationThread.UAVS_CONFIGURED.get() == Param.numUAVs	// All configured
-				&& BoardParam.numMissionsDrawn == Param.numMissionUAVs.get()) {			// All already drawn
-			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}
 	}
 	

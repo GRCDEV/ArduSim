@@ -26,7 +26,7 @@ import sim.pojo.IncomingMessageQueue;
 
 public class UAVParam {
 
-	// Application-SITL connection parameters
+	// ArduSim-flight controller connection parameters
 	// TCP (on virtual UAVs)
 	public static final int MAX_SITL_INSTANCES = 256;	// Maximum number of SITL instances allowed by ArduCopter implementation
 	public static final String MAV_NETWORK_IP = "127.0.0.1";
@@ -38,19 +38,19 @@ public class UAVParam {
 	public static final int PORT_CHECK_TIMEOUT = 200;	// (ms) Timeout while checking if a port is available
 	public static Integer[] mavPort;					// List of ports really used by SITL instances
 	// Serial port (on real UAVs)
-	public static final String SERIAL_PORT = "/dev/ttyAMA0";
-	public static final int BAUD_RATE = 57600;
+	public static volatile String serialPort = "/dev/ttyAMA0";
+	public static volatile int baudRate = 57600;
 	
 	// UAV-UAV connection parameters
-	// TCP (on virtual UAVs)
-	public static final String BROADCAST_IP = "192.168.1.255";	// Broadcast IP
-	public static final int BROADCAST_PORT = 14650;				// Broadcast port
-	public static DatagramSocket[] sendSocket;					// Sending socket
-	public static DatagramPacket[] sendPacket;					// Sending packet
-	public static DatagramSocket[] receiveSocket;				// Receiving socket
-	public static DatagramPacket[] receivePacket;				// Receiving packet
+	// TCP (on real UAVs)
+	public static volatile String broadcastIP = "192.168.1.255";// Broadcast IP
+	public static volatile int broadcastPort = 14650;			// Broadcast port
+	public static DatagramSocket sendSocket;					// Sending socket
+	public static DatagramPacket sendPacket;					// Sending packet
+	public static DatagramSocket receiveSocket;					// Receiving socket
+	public static DatagramPacket receivePacket;					// Receiving packet
 	// Range check and receiving virtual buffer (on virtual UAVs)
-	public static volatile int distanceCalculusPeriod;						// (ms) Between distance calculus between UAVs
+	public static volatile int distanceCalculusPeriod;						// (ms) Distance calculus between UAVs period
 																			// It is the minimum of the range check period and the collision check period when applied
 	public static volatile boolean distanceCalculusIsOnline = false;		// Whether the distance calculus service is online or not
 	public static AtomicReference<Double>[][] distances;					// (m) Stored distances between UAVs
@@ -63,10 +63,7 @@ public class UAVParam {
 	public static final int RECEIVING_BUFFER_PACKET_SIZE = 350;				// (packets) Initial size of the incoming queue q
 	public static int receivingBufferSize = 163840;							// (bytes) By default, the Raspberry Pi 3 receiving buffer size
 	public static long[] maxCompletedTEndTime;								// Array with the later completed transfer finish time for each sending UAV when using collision detection
-	public static final int MESSAGE_WAITING_TIME = 1;
-	
-	
-	// (ms) Waiting time to check if a message
+	public static final int MESSAGE_WAITING_TIME = 1;						// (ms) Waiting time to check if a message arrives
 	public static ConcurrentSkipListSet<IncomingMessage>[] vBuffer;			// Array with virtual buffer to calculate packet collisions when using packet collision detection
 	public static final int V_BUFFER_SIZE_FACTOR = 10;						// vBuffer is this times the size of mBuffer
 	public static int receivingvBufferSize = V_BUFFER_SIZE_FACTOR * receivingBufferSize;	// default value
@@ -82,11 +79,11 @@ public class UAVParam {
 	public static int appliedCollisionCheckPeriod;					// The same parameter but in milliseconds
 	public static volatile double collisionDistance = 10;			// (m) Distance to assert that a collision has happened (UTM coordinates)
 	public static volatile double collisionAltitudeDifference = 20;	// (m) Altitude difference to assert that a collision has happened
-	public static double collisionScreenDistance;					// (px) The previous distance, but in screen coordinates
+	public static volatile double collisionScreenDistance;					// (px) The previous distance, but in screen coordinates
 	public static volatile boolean collisionDetected = false; 		// Can be used to stop protocols when a collision happens
 	
 	// Parameters used to detect when a UAV reaches the last waypoint
-	public static final double LAST_WP_THRESHOLD = 1.0; // (m) Maximum distance considered
+	public static final double LAST_WP_THRESHOLD = 1.0; // (m) Maximum distance considered to assert that the UAV has reached the last waypoint
 	
 	// Received information
 	public static UAVCurrentData[] uavCurrentData;
@@ -105,7 +102,7 @@ public class UAVParam {
 	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
 	public static AtomicIntegerArray mavId;				// ID of the multicopter in the MAVLink protocol
 	public static final int MAV_ID = 1;					// ID of the multicopter in the MAVLink protocol by default
-	public static AtomicIntegerArray gcsId;			// ID of the GCS authorized to send commands to the flight controller
+	public static AtomicIntegerArray gcsId;				// ID of the GCS authorized to send commands to the flight controller
 														//   255 for Mission Planner and DroidPlanner
 														//   252 for APM Planner 2
 	public static AtomicIntegerArray RCmapRoll;			// Channel the roll is mapped to
@@ -120,25 +117,26 @@ public class UAVParam {
 														//   WARNING: not all modes are mapped in the remote control. Unmapped modes return -1
 
 	// Battery levels
-	private static final double CHARGED_VOLTAGE = 4.2;				// (V) Cell voltage at maximum charge
-	private static final double NOMINAL_VOLTAGE = 3.7;				// (V) Nominal cell voltage of a cell
-	private static final double ALARM_VOLTAGE = 3.5;				// (V) 20% charge. Minimum cell voltage under load (already flying)
-	private static final double FINAL_VOLTAGE = 3.75;				// (V) 20% charge. Minimum cell voltage without load (just when finished the flight)
-	private static final double FULLY_DISCHARGED_VOLTAGE = 3.2;	// (V) 0% charge. Minimum cell voltage without load
-	private static final double STORAGE_VOLTAGE = 3.8;				// (V) Cell voltage for storage purposes
+	public static final double CHARGED_VOLTAGE = 4.2;				// (V) Cell voltage at maximum charge
+	public static final double NOMINAL_VOLTAGE = 3.7;				// (V) Nominal cell voltage of a cell
+	public static final double ALARM_VOLTAGE = 3.5;				// (V) 20% charge. Minimum cell voltage under load (already flying)
+	public static final double FINAL_VOLTAGE = 3.75;				// (V) 20% charge. Minimum cell voltage without load (just when finished the flight)
+	public static final double FULLY_DISCHARGED_VOLTAGE = 3.2;		// (V) 0% charge. Minimum cell voltage without load
+	public static final double STORAGE_VOLTAGE = 3.8;				// (V) Cell voltage for storage purposes
 	public static final double BATTERY_DEPLETED_THRESHOLD = 0.2;	// (%) Battery energy level to rise the alarm
 	public static final int BATTERY_DEPLETED_ACTION = 1;	// 0 Disabled
 															// 1 Land (RTL if flying in auto mode)
 															// 2 RTL
 	public static final int BATTERY_PRINT_PERIOD = 5;	// (messages) Number of battery checks between output messages
 	// Real battery
-	public static final int LIPO_BATTERY_CELLS = 4;			// Number of cells of the LiPo battery
-	public static final double LIPO_BATTERY_CHARGED_VOLTAGE = LIPO_BATTERY_CELLS * CHARGED_VOLTAGE;	// (V) Maximum charge (16.8V)
-	public static final double LIPO_BATTERY_NOMINAL_VOLTAGE = LIPO_BATTERY_CELLS * NOMINAL_VOLTAGE;	// (V) Standard voltage (14.8V)
-	public static final double LIPO_BATTERY_ALARM_VOLTAGE = LIPO_BATTERY_CELLS * ALARM_VOLTAGE;		// (V) Voltage on flight to rise an alarm (14V)
-	public static final double LIPO_BATTERY_FINAL_VOLTAGE = LIPO_BATTERY_CELLS * FINAL_VOLTAGE;		// (V) Voltage at the end without load (15V)
-	public static final double LIPO_BATTERY_DISCHARGED_VOLTAGE = LIPO_BATTERY_CELLS * FULLY_DISCHARGED_VOLTAGE;	// (V) Minimum to avoid damage (12.8V)
-	public static final double LIPO_BATTERY_STORAGE_VOLTAGE = LIPO_BATTERY_CELLS * STORAGE_VOLTAGE;	// (V) Level for storage (15.2V)
+	public static volatile int lipoBatteryCells = 4;			// Number of cells of the LiPo battery
+	public static volatile double lipoBatteryChargedVoltage = lipoBatteryCells * CHARGED_VOLTAGE;	// (V) Maximum charge (16.8V)
+	public static volatile double lipoBatteryNominalVoltage = lipoBatteryCells * NOMINAL_VOLTAGE;	// (V) Standard voltage (14.8V)
+	public static volatile double lipoBatteryAlarmVoltage = lipoBatteryCells * ALARM_VOLTAGE;		// (V) Voltage on flight to rise an alarm (14V)
+	public static volatile double lipoBatteryFinalVoltage = lipoBatteryCells * FINAL_VOLTAGE;		// (V) Voltage at the end without load (15V)
+	public static volatile double lipoBatteryDischargedVoltage = lipoBatteryCells * FULLY_DISCHARGED_VOLTAGE;	// (V) Minimum to avoid damage (12.8V)
+	public static volatile double lipoBatteryStorageVoltage = lipoBatteryCells * STORAGE_VOLTAGE;	// (V) Level for storage (15.2V)
+	public static volatile int lipoBatteryCapacity = 3300;	// (mAh) Standard battery capacity
 	// Virtual battery
 	public static final int VIRTUAL_BATTERY_CELLS = 3;		// Number of cells of the virtual battery on ArduSim
 	public static final double VIRT_BATTERY_CHARGED_VOLTAGE = VIRTUAL_BATTERY_CELLS * CHARGED_VOLTAGE;	// (V) Maximum charge (12.6V)
@@ -147,10 +145,10 @@ public class UAVParam {
 	public static final double VIRT_BATTERY_FINAL_VOLTAGE = VIRTUAL_BATTERY_CELLS * FINAL_VOLTAGE;		// (V) Voltage at the end without load (11.25V)
 	public static final double VIRT_BATTERY_DISCHARGED_VOLTAGE = VIRTUAL_BATTERY_CELLS * FULLY_DISCHARGED_VOLTAGE;	// (V) Minimum to avoid damage (9.6V)
 	public static final double VIRT_BATTERY_STORAGE_VOLTAGE = VIRTUAL_BATTERY_CELLS * STORAGE_VOLTAGE;	// (V) Level for storage (11.4V)
-	public static final int MAX_BATTERY_CAPACITY = 500000000;	// (mAh) Maximum initial battery capacity
-	public static final int STANDARD_BATTERY_CAPACITY = 3300;	// (mAh) Standard battery capacity
-	public static int batteryCapacity;					// (mAh) Used battery capacity
-	public static int batteryLowLevel;								// (mAh) Calculated battery energy level to rise the alarm
+	public static final int VIRT_BATTERY_MAX_CAPACITY = 500000000;	// (mAh) Maximum initial battery capacity
+	// Real or virtual battery
+	public static int batteryCapacity;	// (mAh) Used battery capacity
+	public static int batteryLowLevel;	// (mAh) Calculated battery energy level to rise the alarm
 
 	// MAVLink waiting parameters
 	public static AtomicInteger numMAVLinksOnline = new AtomicInteger();	// Number of MAVLink links stablished
@@ -170,7 +168,7 @@ public class UAVParam {
 	public static final int STABILIZATION_WAIT_TIME = 200;				// (ms) Passively waiting the UAV to stop
 	public static final long STABILIZATION_TIMEOUT = 30 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 
-	// Filter to compensate the acceleration oscilation, applied when a new location is received from the UAV
+	// Filter to compensate the acceleration oscillation, applied when a new location is received from the UAV
 	public static final double ACCELERATION_THRESHOLD = 0.2;	// [0, 1] 1=new value, 0=previous value
 	public static final double MIN_ACCELERATION = 0.2;			// (m/s²) low pass filter
 	public static final double MAX_ACCELERATION = 5;			// (m/s²) high pass filter

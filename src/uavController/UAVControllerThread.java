@@ -97,13 +97,13 @@ public class UAVControllerThread extends Thread {
 		this.numTests = 0;
 
 		// Connection through serial port on a real UAV
-		if(Param.isRealUAV) {
-			serialPort = SerialPort.getCommPort(UAVParam.SERIAL_PORT);
+		if (Param.role == Tools.MULTICOPTER) {
+			serialPort = SerialPort.getCommPort(UAVParam.serialPort);
 //			comPort.setBaudRate(57600);
 //			comPort.setNumDataBits(8);
 //			comPort.setNumStopBits(1);
 //			comPort.setParity(SerialPort.NO_PARITY);
-			serialPort.setComPortParameters(UAVParam.BAUD_RATE, 8, 1, SerialPort.NO_PARITY);
+			serialPort.setComPortParameters(UAVParam.baudRate, 8, 1, SerialPort.NO_PARITY);
 			serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
 			if (serialPort.openPort()) {
 				din = new DataInputStream(serialPort.getInputStream());
@@ -114,8 +114,7 @@ public class UAVControllerThread extends Thread {
 				GUI.log(Text.SERIAL_ERROR);
 				System.exit(1);
 			}
-
-		} else {
+		} else if (Param.role == Tools.SIMULATOR) {
 			// Connection through TCP in the simulator
 			this.port = UAVParam.mavPort[numUAV];
 			try {
@@ -127,7 +126,6 @@ public class UAVControllerThread extends Thread {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
 			if (reader == null) {
 				GUI.exit(Text.TCP_ERROR);
 			}

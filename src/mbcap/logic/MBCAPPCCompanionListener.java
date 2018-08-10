@@ -10,7 +10,6 @@ import api.Tools;
 import main.Text;
 import mbcap.gui.MBCAPPCCompanionDialog;
 import mbcap.pojo.Beacon;
-import uavController.UAVParam;
 
 public class MBCAPPCCompanionListener extends Thread {
 	
@@ -29,7 +28,7 @@ public class MBCAPPCCompanionListener extends Thread {
 		Beacon b;
 		try {
 			@SuppressWarnings("resource")
-			DatagramSocket s = new DatagramSocket(UAVParam.BROADCAST_PORT);
+			DatagramSocket s = new DatagramSocket(Tools.getUDPBroadcastPort());
 			s.setBroadcast(true);
 			DatagramPacket p = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
 			while (true) {

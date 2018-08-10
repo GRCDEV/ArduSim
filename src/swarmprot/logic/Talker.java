@@ -21,6 +21,7 @@ import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 import api.pojo.WaypointSimplified;
+import main.Param;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
 
 public class Talker extends Thread {
@@ -61,7 +62,7 @@ public class Talker extends Thread {
 		this.cicleTime = 0;
 		socket = new DatagramSocket();
 		buffer = new byte[SwarmProtParam.DGRAM_MAX_LENGTH];
-		if (Tools.isRealUAV()) {
+		if (Param.role == Tools.MULTICOPTER) {
 			socket.setBroadcast(true);
 			packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(SwarmProtParam.BROADCAST_IP_REAL),
 					SwarmProtParam.portTalker);

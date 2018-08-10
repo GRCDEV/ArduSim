@@ -9,8 +9,8 @@ import api.pojo.StatusPacket;
 public class PCCompanionParam {
 
 	// Remote assistant computer parameters
-	public static final int COMPUTER_PORT = 5750;		// Destination port on the assistant computer
-	public static final int UAV_PORT = 5755;			// Destination port for commands on the UAV
+	public static volatile int computerPort = 5750;		// Destination port on the assistant computer
+	public static volatile int uavPort = 5755;			// Destination port for commands on the UAV
 	public static final int STATUS_SEND_TIMEOUT = 1000;	// (ms) Period between sent program status messages
 	public static final int COMMAND_SEND_TIMEOUT = 250;	// (ms) Period between sent commands
 	public static final int RECEIVE_TIMEOUT = 100;		// (ms) Period between receiving checks

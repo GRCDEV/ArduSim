@@ -317,7 +317,7 @@ public class PCCompanionGUI {
 		final String idString = "" + id;
 		final String mac;
 		final String ip = IP;
-		if (Param.isPCCompanion) {
+		if (Param.role == Tools.PCCOMPANION) {
 			BigInteger bi = new BigInteger(Long.toString(id & ~(1L << 63)));
 		    if (id < 0) bi = bi.setBit(64);
 		    String m = bi.toString(16);

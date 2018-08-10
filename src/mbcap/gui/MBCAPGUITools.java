@@ -14,6 +14,7 @@ import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.Point3D;
+import main.Param;
 import main.Text;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPParam.MBCAPState;
@@ -254,7 +255,7 @@ public class MBCAPGUITools {
 
 	/** Stores (or removes when p==null) the collision risk location that is drawn. */
 	public static void locateImpactRiskMark(Point3D riskUTMLocation, int numUAV, long beaconId) {
-		if (!Tools.isRealUAV()) {
+		if (Param.role == Tools.SIMULATOR) {
 			if (riskUTMLocation == null) {
 				MBCAPParam.impactLocationPX[numUAV].remove(beaconId);
 			} else {

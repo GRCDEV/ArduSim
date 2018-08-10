@@ -23,13 +23,13 @@ public class TestTalker extends Thread {
 		DatagramSocket sendSocket = null;
 		byte[] sendBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
-		if (Param.isRealUAV) {
-			broadcastAddress = UAVParam.BROADCAST_IP;
-		} else {
+		if (Param.role == Tools.SIMULATOR) {
 			broadcastAddress = UAVParam.MAV_NETWORK_IP;
+		} else {
+			broadcastAddress = UAVParam.broadcastIP;
 		}
 		DatagramPacket sentPacket = new DatagramPacket(sendBuffer, sendBuffer.length,
-		        new InetSocketAddress(broadcastAddress, PCCompanionParam.COMPUTER_PORT));
+		        new InetSocketAddress(broadcastAddress, PCCompanionParam.computerPort));
 		Output output = new Output(sendBuffer);
 		
 		try {

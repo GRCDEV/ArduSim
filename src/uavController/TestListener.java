@@ -31,7 +31,7 @@ public class TestListener extends Thread {
 		receivedBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
 		input = new Input(receivedBuffer);
-		receiveSocket = new DatagramSocket(PCCompanionParam.UAV_PORT);
+		receiveSocket = new DatagramSocket(PCCompanionParam.uavPort);
 		receiveSocket.setBroadcast(true);
 	}
 

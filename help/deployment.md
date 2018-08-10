@@ -95,8 +95,7 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     [Service]
     Type=oneshot
     RemainAfterExit=true
-    EnvironmentFile=/home/pi/Desktop/ardusim.ini
-    ExecStart=/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/bin/java -jar /home/pi/Desktop/ArduSim.jar -c $PCCOMPANION -r $REALUAV -p "${UAVPROTOCOL}" -s $UAVSPEED
+    ExecStart=/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/bin/java -jar /home/pi/Desktop/ArduSim.jar multicopter
     WorkingDirectory=/home/pi/Desktop/
     StandardOutput=syslog
     StandardError=syslog
@@ -107,10 +106,8 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     [Install]
     WantedBy=multi-user.target
 
-ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini*, which contains the following:
+ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini*, which contains the following two parameters among others:
 
-    PCCOMPANION=false
-    REALUAV=true
     UAVPROTOCOL="some protocol"
     UAVSPEED=2.5
 

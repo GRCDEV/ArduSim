@@ -18,6 +18,7 @@ import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
+import main.Param;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
 
 public class Listener extends Thread {
@@ -71,7 +72,7 @@ public class Listener extends Thread {
 			e.printStackTrace();
 		}
 		/** Real UAV */
-		if (Tools.isRealUAV()) {
+		if (Param.role == Tools.MULTICOPTER) {
 			this.socketListener = new DatagramSocket(SwarmProtParam.port);
 			this.socketListener.setBroadcast(true);
 

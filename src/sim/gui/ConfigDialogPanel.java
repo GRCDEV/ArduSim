@@ -440,6 +440,7 @@ public class ConfigDialogPanel extends JPanel {
 		add(lblGf, gbc_lblGf);
 		
 		cpuCheckBox = new JCheckBox();
+		cpuCheckBox.setSelected(Param.measureCPUEnabled);
 		GridBagConstraints gbc_cpuCheckBox = new GridBagConstraints();
 		gbc_cpuCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_cpuCheckBox.insets = new Insets(0, 0, 5, 5);
@@ -503,6 +504,7 @@ public class ConfigDialogPanel extends JPanel {
 		add(loggingLabel, gbc_loggingLabel);
 		
 		chckbxLogging = new JCheckBox();
+		chckbxLogging.setSelected(Param.verboseLogging);
 		GridBagConstraints gbc_chckbxLogging = new GridBagConstraints();
 		gbc_chckbxLogging.anchor = GridBagConstraints.WEST;
 		gbc_chckbxLogging.insets = new Insets(0, 0, 5, 5);
@@ -521,7 +523,7 @@ public class ConfigDialogPanel extends JPanel {
 		add(storageLabel, gbc_storageLabel);
 		
 		chckbxStorage = new JCheckBox();
-		chckbxStorage.setSelected(true);
+		chckbxStorage.setSelected(Param.verboseStore);
 		GridBagConstraints gbc_chckbxStorage = new GridBagConstraints();
 		gbc_chckbxStorage.anchor = GridBagConstraints.WEST;
 		gbc_chckbxStorage.insets = new Insets(0, 0, 5, 5);

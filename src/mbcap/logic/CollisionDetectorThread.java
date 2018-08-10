@@ -10,10 +10,10 @@ import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.Point3D;
+import main.Param;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
-import uavController.UAVParam;
 
 /** This class implements the collision risk check finite state machine. */
 
@@ -49,7 +49,7 @@ public class CollisionDetectorThread extends Thread {
 		}
 
 		int waitingTime;
-		boolean isRealUAV = Tools.isRealUAV();
+		boolean isRealUAV = Param.role == Tools.MULTICOPTER;
 		String prefix = Copter.getUAVPrefix(numUAV);
 		// If two UAVs collide, then the protocol stops. Also, it stops when the experiment finishes
 		while (!Tools.isCollisionDetected() && Tools.isExperimentInProgress()) {

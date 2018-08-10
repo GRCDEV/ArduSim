@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
+import api.Tools;
 import api.pojo.FlightMode;
 import sim.logic.SimParam;
 import uavController.UAVParam;
@@ -54,7 +55,7 @@ public class InitialConfigurationThread extends Thread {
 			return;
 		}
 		
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			// Disable logging to speed up simulation
 			if (!SimParam.arducopterLoggingEnabled && !Copter.setParameter(numUAV, ControllerParam.LOGGING, 0)) {
 				return;
@@ -63,7 +64,7 @@ public class InitialConfigurationThread extends Thread {
 			if (!Copter.setParameter(numUAV, ControllerParam.BATTERY_CAPACITY, UAVParam.batteryCapacity)) {
 				return;
 			}
-			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY
+			if (UAVParam.batteryCapacity != UAVParam.VIRT_BATTERY_MAX_CAPACITY
 					&& (!Copter.setParameter(numUAV, ControllerParam.BATTERY_CURRENT_DEPLETION_THRESHOLD, UAVParam.batteryLowLevel)
 							|| !Copter.setParameter(numUAV, ControllerParam.BATTERY_FAILSAFE_ACTION, UAVParam.BATTERY_DEPLETED_ACTION))) {
 				// The parameter ControllerParam.BATTERY_VOLTAGE_DEPLETION_THRESHOLD cannot be set on simulation (voltages does not changes)
@@ -74,7 +75,7 @@ public class InitialConfigurationThread extends Thread {
 					|| !Copter.setParameter(numUAV, ControllerParam.WIND_SPEED, Param.windSpeed)) {
 				return;
 			}
-		} else {
+		} else if (Param.role == Tools.MULTICOPTER) {
 			paramValue = Copter.getParameter(numUAV, ControllerParam.BATTERY_CAPACITY);
 			if (paramValue == null) {
 				return;

@@ -8,6 +8,7 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -56,13 +57,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileSystemView;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.javatuples.Pair;
 
 import api.Copter;
@@ -81,7 +75,7 @@ import main.Param.SimulatorState;
 import main.Param.WirelessModel;
 import main.cpuHelper.CPUData;
 import none.ProtocolNoneHelper;
-import pccompanion.gui.PCCompanionGUI;
+import pccompanion.logic.PCCompanionParam;
 import sim.board.BoardParam;
 import sim.gui.MainWindow;
 import sim.logic.GPSStartThread;
@@ -105,109 +99,287 @@ public class ArduSimTools {
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop. */
 	public static boolean parseArgs(String[] args) {
-		String usageCommand = "java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-h]";
-		Option control = Option.builder("c").longOpt("pccompanion").required(true).desc("whether running as a PC companion for real UAVs (true) or not (false)").hasArg(true).build();
-		Option realUAV = Option.builder("r").longOpt("realUAV").required(false).desc("whether running in real UAV (true) or not (false)").hasArg(true).build();
-		Option protocol = Option.builder("p").longOpt("protocol").required(false).desc("selected protocol when running in real UAV").hasArg(true).build();
-		Option sp = Option.builder("s").longOpt("speed").required(false).desc("UAV speed (m/s)").hasArg(true).build();
-		Options options = new Options();
-		options.addOption(control);
-		options.addOption(realUAV);
-		options.addOption(protocol);
-		options.addOption(sp);
-		Option help = Option.builder("h").longOpt("help").required(false).desc("ussage help").hasArg(false).build();
-		options.addOption(help);
-		CommandLineParser parser = new DefaultParser();
-		CommandLine cmdLine;
-		boolean pcCompanion = false;
-		try {
-			cmdLine = parser.parse(options, args);
-			HelpFormatter myHelp = new HelpFormatter();
-			String con = cmdLine.getOptionValue("c");
-			if (con == null || con.length() == 0 || (!con.toUpperCase().equals("TRUE") && !con.toUpperCase().equals("FALSE"))) {
-				myHelp.printHelp(usageCommand, options);
+		String commandLine = "Command line:\n    java -jar ArduSim.jar <option>\nChoose option:\n    multicopter\n    simulator\n    pccompanion";
+		if (args.length != 1) {
+			System.out.println(commandLine);
+			System.out.flush();
+			return false;
+		}
+		
+		if (!args[0].equalsIgnoreCase("multicopter") && !args[0].equalsIgnoreCase("simulator") && !args[0].equalsIgnoreCase("pccompanion")) {
+			System.out.println(commandLine);
+			System.out.flush();
+			return false;
+		}
+		
+		if (args[0].equalsIgnoreCase("multicopter")) {
+			Param.role = Tools.MULTICOPTER;
+		}
+		if (args[0].equalsIgnoreCase("simulator")) {
+			Param.role = Tools.SIMULATOR;
+		}
+		if (args[0].equalsIgnoreCase("pccompanion")) {
+			Param.role = Tools.PCCOMPANION;
+		}
+		return true;
+	}
+	
+	public static void parseIniFile() {
+		Map<String, String> parameters = null;
+		String param;
+		// Load INI file
+		parameters = ArduSimTools.loadIniFile();
+		if (parameters.size() == 0) {
+			return;
+		}
+		
+		// Parse parameters common to real UAV and PC Companion
+		if (Param.role == Tools.PCCOMPANION || Param.role == Tools.MULTICOPTER) {
+			param = parameters.get(Param.COMPUTER_PORT);
+			if (param == null) {
+				GUI.log(Param.COMPUTER_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + PCCompanionParam.computerPort);
+			} else {
+				if (!Tools.isValidPort(param)) {
+					GUI.log(Param.COMPUTER_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				PCCompanionParam.computerPort = Integer.parseInt(param);
+			}
+			param = parameters.get(Param.UAV_PORT);
+			if (param == null) {
+				GUI.log(Param.UAV_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + PCCompanionParam.uavPort);
+			} else {
+				if (!Tools.isValidPort(param)) {
+					GUI.log(Param.UAV_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				PCCompanionParam.uavPort = Integer.parseInt(param);
+			}
+			param = parameters.get(Param.BROADCAST_IP);
+			if (param == null) {
+				GUI.log(Param.BROADCAST_IP + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.broadcastIP);
+			} else {
+				UAVParam.broadcastIP = param;
+			}
+			GUI.log(Text.INI_FILE_PARAM_BROADCAST_IP_WARNING + " " + param);
+			param = parameters.get(Param.BROADCAST_PORT);
+			if (param == null) {
+				GUI.log(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.broadcastPort);
+			} else {
+				if (!Tools.isValidPort(param)) {
+					GUI.log(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				UAVParam.broadcastPort = Integer.parseInt(param);
+			}
+		}
+
+		// Parse parameters for a real UAV
+		if (Param.role == Tools.MULTICOPTER) {
+			if (!parameters.containsKey(Param.PROTOCOL)) {
+				GUI.log(Text.INI_FILE_PROTOCOL_NOT_FOUND_ERROR);
 				System.exit(1);
 			}
-			if (con.toUpperCase().equals("TRUE")) {
-				pcCompanion = true;
-			}
-			Param.isPCCompanion = pcCompanion;
-			if (pcCompanion && (cmdLine.hasOption("r") || cmdLine.hasOption("p") || cmdLine.hasOption("s"))) {
-				GUI.log(Text.COMPANION_ERROR + "\n");
-				myHelp.printHelp(usageCommand, options);
+			if (!parameters.containsKey(Param.SPEED)) {
+				GUI.log(Text.INI_FILE_SPEED_NOT_FOUND_ERROR);
 				System.exit(1);
 			}
-			if (pcCompanion) {
-				Param.isRealUAV = false;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						PCCompanionGUI.companion = new PCCompanionGUI();
-					}
-				});
-				return false;
+			// Set protocol
+			String pr = parameters.get(Param.PROTOCOL);
+			String pr2 = pr.toUpperCase();
+			boolean found = false;
+			for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
+				if (ProtocolHelper.ProtocolNames[i].toUpperCase().equals(pr2)) {
+					found = true;
+				}
+			}
+			if (!found) {
+				GUI.log(pr + " " + Text.PROTOCOL_NOT_FOUND_ERROR + "\n\n");
+
+				for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {
+					GUI.log(ProtocolHelper.ProtocolNames[i]);
+				}
+				System.exit(1);
+			}
+			ProtocolHelper.selectedProtocol = pr;
+			ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
+			if (ProtocolHelper.selectedProtocolInstance == null) {
+				System.exit(1);
+			}
+			// Set speed
+			String spe = parameters.get(Param.SPEED);
+			if (!Tools.isValidPositiveDouble(spe)) {
+				GUI.log(Text.SPEED_ERROR + "\n");
+				System.exit(1);
+			}
+			UAVParam.initialSpeeds = new double[1];
+			UAVParam.initialSpeeds[0] = Double.parseDouble(spe);
+
+			param = parameters.get(Param.SERIAL_PORT);
+			if (param == null) {
+				GUI.log(Param.SERIAL_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.serialPort);
+			} else {
+				if (!param.equalsIgnoreCase(UAVParam.serialPort)) {
+					GUI.log(Text.INI_FILE_PARAM_SERIAL_PORT_WARNING + " " + param);
+					UAVParam.serialPort = param;
+				}
+			}
+			param = parameters.get(Param.BAUD_RATE);
+			if (param == null) {
+				GUI.log(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.baudRate);
+			} else {
+				if (!Tools.isValidInteger(param)) {
+					GUI.log(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				UAVParam.baudRate = Integer.parseInt(param);
 			}
 			
-			if (cmdLine.hasOption("r")) {
-				String iRU = cmdLine.getOptionValue("r");
-				if (!iRU.toUpperCase().equals("TRUE") && !iRU.toUpperCase().equals("FALSE")) {
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-				Param.isRealUAV = Boolean.parseBoolean(iRU.toLowerCase());
+			param = parameters.get(Param.BATTERY_CELLS);
+			if (param == null) {
+				GUI.log(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCells);
 			} else {
-				Param.isRealUAV = false;
-			}
-			if (Param.isRealUAV) {
-				if (!cmdLine.hasOption("p") || !cmdLine.hasOption("s")) {
-					myHelp.printHelp(usageCommand, options);
+				if (!Tools.isValidInteger(param)) {
+					GUI.log(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
-				String pr = cmdLine.getOptionValue("p").trim();
-				String pr2 = pr.toUpperCase();
-				
-				boolean found = false;
-				for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
-					if (ProtocolHelper.ProtocolNames[i].toUpperCase().equals(pr2)) {
+				UAVParam.lipoBatteryCells = Integer.parseInt(param);
+				UAVParam.lipoBatteryChargedVoltage = UAVParam.lipoBatteryCells * UAVParam.CHARGED_VOLTAGE;
+				UAVParam.lipoBatteryNominalVoltage = UAVParam.lipoBatteryCells * UAVParam.NOMINAL_VOLTAGE;
+				UAVParam.lipoBatteryAlarmVoltage = UAVParam.lipoBatteryCells * UAVParam.ALARM_VOLTAGE;
+				UAVParam.lipoBatteryFinalVoltage = UAVParam.lipoBatteryCells * UAVParam.FINAL_VOLTAGE;
+				UAVParam.lipoBatteryDischargedVoltage = UAVParam.lipoBatteryCells * UAVParam.FULLY_DISCHARGED_VOLTAGE;
+				UAVParam.lipoBatteryStorageVoltage = UAVParam.lipoBatteryCells * UAVParam.STORAGE_VOLTAGE;
+			}
+			param = parameters.get(Param.BATTERY_CAPACITY);
+			if (param == null) {
+				GUI.log(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCapacity);
+			} else {
+				if (!Tools.isValidInteger(param)) {
+					GUI.log(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				UAVParam.lipoBatteryCapacity = Integer.parseInt(param);
+			}
+		}
+
+		// Parse remaining parameters, for real UAV or simulation
+		param = parameters.get(Param.MEASURE_CPU);
+		if (param == null) {
+			GUI.log(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.measureCPUEnabled);
+		} else {
+			if (!Tools.isValidBoolean(param)) {
+				GUI.log(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			Param.measureCPUEnabled = Boolean.valueOf(param);
+		}
+		param = parameters.get(Param.VERBOSE_LOGGING);
+		if (param == null) {
+			GUI.log(Param.VERBOSE_LOGGING + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.verboseLogging);
+		} else {
+			if (!Tools.isValidBoolean(param)) {
+				GUI.log(Param.VERBOSE_LOGGING + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			Param.verboseLogging = Boolean.valueOf(param);
+		}
+		param = parameters.get(Param.VERBOSE_STORE);
+		if (param == null) {
+			GUI.log(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.verboseStore);
+		} else {
+			if (!Tools.isValidBoolean(param)) {
+				GUI.log(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			Param.verboseStore = Boolean.valueOf(param);
+		}
+	}
+	
+	private static Map<String, String> loadIniFile() {
+		Map<String, String> parameters = new HashMap<>();
+		File folder = Tools.getCurrentFolder();
+		
+		File [] files = folder.listFiles(new FilenameFilter() {
+		    @Override
+		    public boolean accept(final File dir, String name) {
+		    	boolean extensionIsIni = false;
+		    	if(name.lastIndexOf(".") > 0) {
+		    		final String extension = name.substring(name.lastIndexOf(".")+1);
+		    		extensionIsIni = extension.equalsIgnoreCase("ini");
+				}
+		    	return extensionIsIni;
+		    }
+		});
+		if (files == null || files.length == 0) {
+			GUI.log(Text.INI_FILE_NOT_FOUND);
+			return parameters;
+		}
+		int pos = -1;
+		boolean found = false;
+		for (int i = 0; i < files.length && !found; i++) {
+			if (files[i].getName().equalsIgnoreCase("ardusim.ini")) {
+				pos = i;
+				found = true;
+			}
+		}
+		if (pos == -1) {
+			GUI.log(Text.INI_FILE_NOT_FOUND);
+			return parameters;
+		}
+		File iniFile = files[pos];
+		List<String> lines = new ArrayList<>();
+		try (BufferedReader br = new BufferedReader(new FileReader(iniFile))) {
+			String line = null;
+			while ((line = br.readLine()) != null) {
+		        lines.add(line);
+		    }
+		} catch (IOException e) {
+			return parameters;
+		}
+		// Check file length
+		if (lines==null || lines.size()<1) {
+			GUI.log(Text.INI_FILE_EMPTY);
+			return parameters;
+		}
+		List<String> checkedLines = new ArrayList<>();
+		for (int i = 0; i < lines.size(); i++) {
+			String line = lines.get(i).trim();
+			if (line.length() > 0 && !line.startsWith("#") && (line.length() - line.replace("=", "").length() == 1)) {
+				checkedLines.add(line);
+			}
+		}
+		if (checkedLines.size() > 0) {
+			String key, value;
+			String[] pair;
+			for (int i = 0; i < checkedLines.size(); i++) {
+				pair = checkedLines.get(i).split("=");
+				key = pair[0].trim().toUpperCase();
+				value = pair[1].trim();
+				parameters.put(key, value);
+			}
+		}
+		if (parameters.size() > 0) {
+			// Check waste parameters
+			for (final String key : parameters.keySet()) {
+				found = false;
+				for (int i = 0; i < Param.PARAMETERS.length && !found; i++) {
+					if (key.equals(Param.PARAMETERS[i])) {
 						found = true;
 					}
 				}
 				if (!found) {
-					GUI.log(pr + " " + Text.PROTOCOL_NOT_FOUND_ERROR + "\n\n");
-					
-					for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {
-						GUI.log(ProtocolHelper.ProtocolNames[i]);
-					}
-					
-//					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
+					GUI.log(Text.INI_FILE_WASTE_PARAMETER_WARNING + " " + key);
 				}
-				ProtocolHelper.selectedProtocol = pr;
-				ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
-				if (ProtocolHelper.selectedProtocolInstance == null) {
-					System.exit(-1);
-				}
-				
-				String spe = cmdLine.getOptionValue("s");
-				if (!Tools.isValidPositiveDouble(spe)) {
-					GUI.log(Text.SPEED_ERROR + "\n");
-					myHelp.printHelp(usageCommand, options);
-					System.exit(1);
-				}
-				UAVParam.initialSpeeds = new double[1];
-				UAVParam.initialSpeeds[0] = Double.parseDouble(spe);
-				
 			}
-			if (cmdLine.hasOption("h")) {
-				myHelp.printHelp(usageCommand, options);
-				System.exit(0);
+			// Check parameters with default value
+			for (int i = 0; i < Param.PARAMETERS.length; i++) {
+				if (!parameters.containsKey(Param.PARAMETERS[i])) {
+					GUI.log(Param.PARAMETERS[i] + " " + Text.INI_FILE_MISSING_PARAMETER_WARNING);
+				}
 			}
-		} catch (ParseException e1) {
-			GUI.log(e1.getMessage() + "\n");
-			HelpFormatter myHelp = new HelpFormatter();
-			myHelp.printHelp(usageCommand, options);
-			System.exit(1);
 		}
-		return true;
+		return parameters;
 	}
 	
 	/** Dynamically loads a Windows library. */
@@ -275,7 +447,7 @@ public class ArduSimTools {
 
 		Param.testEndTime = new long[Param.numUAVs];
 		
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			// Prepare matrix to brighten the background map image
 			for (int i=0; i<256; i++) {
 				BoardParam.brightness[i] = (short)(128+i/2);
@@ -321,7 +493,7 @@ public class ArduSimTools {
 			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
 			
-			if (!Param.isRealUAV) {
+			if (Param.role == Tools.SIMULATOR) {
 				UAVParam.MissionPx[i] = new ArrayList<Shape>();
 				BoardParam.uavPXPathLines[i] = new ArrayList<Shape>(SimParam.PATH_INITIAL_SIZE);
 				
@@ -335,27 +507,7 @@ public class ArduSimTools {
 		}
 		
 		// UAV to UAV communication structures
-		if (Param.isRealUAV) {
-			UAVParam.sendSocket = new DatagramSocket[Param.numUAVs];
-			UAVParam.sendPacket = new DatagramPacket[Param.numUAVs];
-			UAVParam.receiveSocket = new DatagramSocket[Param.numUAVs];
-			UAVParam.receivePacket = new DatagramPacket[Param.numUAVs];
-			for (int i = 0; i < Param.numUAVs; i++) {
-				try {
-					UAVParam.sendSocket[i] = new DatagramSocket();
-					UAVParam.sendSocket[i].setBroadcast(true);
-					UAVParam.sendPacket[i] = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH],
-							Tools.DATAGRAM_MAX_LENGTH,
-							InetAddress.getByName(UAVParam.BROADCAST_IP),
-							UAVParam.BROADCAST_PORT);
-					UAVParam.receiveSocket[i] = new DatagramSocket(UAVParam.BROADCAST_PORT);
-					UAVParam.receiveSocket[i].setBroadcast(true);
-					UAVParam.receivePacket[i] = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
-				} catch (SocketException | UnknownHostException e) {
-					GUI.exit(Text.THREAD_START_ERROR);
-				}
-			}
-		} else {
+		if (Param.role == Tools.SIMULATOR) {
 			UAVParam.distances = new AtomicReference[Param.numUAVs][Param.numUAVs];
 			UAVParam.isInRange = new AtomicBoolean[Param.numUAVs][Param.numUAVs];
 			for (int i = 0; i < Param.numUAVs; i++) {
@@ -388,6 +540,20 @@ public class ArduSimTools {
 			UAVParam.successfullyReceived = new AtomicIntegerArray(Param.numUAVs);
 			UAVParam.discardedForCollision = new int[Param.numUAVs];
 			UAVParam.successfullyEnqueued = new int[Param.numUAVs];
+		} else {
+			try {
+				UAVParam.sendSocket = new DatagramSocket();
+				UAVParam.sendSocket.setBroadcast(true);
+				UAVParam.sendPacket = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH],
+						Tools.DATAGRAM_MAX_LENGTH,
+						InetAddress.getByName(UAVParam.broadcastIP),
+						UAVParam.broadcastPort);
+				UAVParam.receiveSocket = new DatagramSocket(UAVParam.broadcastPort);
+				UAVParam.receiveSocket.setBroadcast(true);
+				UAVParam.receivePacket = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
+			} catch (SocketException | UnknownHostException e) {
+				GUI.exit(Text.THREAD_START_ERROR);
+			}
 		}
 		UAVParam.sentPacket = new int[Param.numUAVs];
 		UAVParam.receivedPacket = new int[Param.numUAVs];
@@ -411,7 +577,7 @@ public class ArduSimTools {
 		UAVParam.collisionScreenDistance = b.x - a.x;
 	}
 	
-	/** Auxiliary method to get the TCP ports available for SITL instances. */
+	/** Auxiliary method to check the available TCP and UDP ports needed by SITL instances and calculate the number of possible instances. */
 	public static Integer[] getSITLPorts() throws InterruptedException, ExecutionException {
 		// SITL starts using TCP5760 and UDP5501,5502,5503
 		ExecutorService es = Executors.newFixedThreadPool(20);
@@ -1448,7 +1614,7 @@ public class ArduSimTools {
 	/** Closes the SITL simulator instances, and the application. Also the Cygwin consoles if using Windows. */
 	public static void shutdown() {
 		// 1. Ask for confirmation if the experiment has not started or finished
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			boolean reallyClose = true;
 			if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 				Object[] options = {Text.YES_OPTION, Text.NO_OPTION};
@@ -1469,7 +1635,7 @@ public class ArduSimTools {
 
 		// 2. Change the status and close SITL
 		Param.simStatus = SimulatorState.SHUTTING_DOWN;
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.exitButton.setEnabled(false);
@@ -1486,7 +1652,7 @@ public class ArduSimTools {
 			FileDescriptor.out.sync();
 		} catch (SyncFailedException e1) {}
 		Tools.waiting(SimParam.LONG_WAITING_TIME);
-		if (Param.isRealUAV) {
+		if (Param.role == Tools.MULTICOPTER) {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				try {
 			    	Runtime.getRuntime().exec("shutdown.exe -s -t 0");
@@ -1498,7 +1664,7 @@ public class ArduSimTools {
 			} else {
 				GUI.log(Text.SHUTDOWN_ERROR);
 			}
-		} else {
+		} else if (Param.role == Tools.SIMULATOR) {
 			MainWindow.window.mainWindowFrame.dispose();
 		}
 	    
@@ -1590,7 +1756,7 @@ public class ArduSimTools {
 
 			// On simulation, stop if error happens and they are not online
 			if (System.nanoTime() - time > UAVParam.MAVLINK_ONLINE_TIMEOUT) {
-				if (Param.isRealUAV) {
+				if (Param.role == Tools.MULTICOPTER) {
 					if (!error) {
 						GUI.log(Text.MAVLINK_ERROR);
 						error = true;
@@ -1646,7 +1812,7 @@ public class ArduSimTools {
 				startProcess = true;
 			}
 			if (System.nanoTime() - time > UAVParam.GPS_FIX_TIMEOUT) {
-				if (Param.isRealUAV) {
+				if (Param.role == Tools.MULTICOPTER) {
 					if (!error) {
 						GUI.log(Text.GPS_FIX_ERROR_2);
 						error = true;
@@ -1663,7 +1829,7 @@ public class ArduSimTools {
 			GUI.exit(Text.GPS_FIX_ERROR_1);
 		}
 		GUI.log(Text.GPS_OK);
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.UAVS_ONLINE);
@@ -1714,10 +1880,10 @@ public class ArduSimTools {
 	/** Detects if a UAV is running out of battery. */
 	public static void checkBatteryLevel() {
 		int depleted = 0;
-		double alarmLevel;
-		if (Param.isRealUAV) {
-			alarmLevel = UAVParam.LIPO_BATTERY_ALARM_VOLTAGE;
-		} else {
+		double alarmLevel = Double.MAX_VALUE;
+		if (Param.role == Tools.MULTICOPTER) {
+			alarmLevel = UAVParam.lipoBatteryAlarmVoltage;
+		} else if (Param.role == Tools.SIMULATOR) {
 			alarmLevel = UAVParam.VIRT_BATTERY_ALARM_VOLTAGE;
 		}
 		int percentage;
@@ -1734,33 +1900,33 @@ public class ArduSimTools {
 				isDepleted = true;
 			}
 			if (percentage != -1 && voltage != -1) {
-				if (Param.isRealUAV) {
+				if (Param.role == Tools.MULTICOPTER) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
-				} else if (Param.verboseLogging) {
+				} else if (Param.role == Tools.SIMULATOR && Param.verboseLogging) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
 				}
 			} else if (percentage != -1) {
-				if (Param.isRealUAV) {
+				if (Param.role == Tools.MULTICOPTER) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " %");
-				} else if (Param.verboseLogging) {
+				} else if (Param.role == Tools.SIMULATOR && Param.verboseLogging) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
 				}
 			} else if (voltage != -1) {
-				if (Param.isRealUAV) {
+				if (Param.role == Tools.MULTICOPTER) {
 					GUI.log(Text.BATTERY_LEVEL + " " + voltage + " V");
-				} else if (Param.verboseLogging) {
+				} else if (Param.role == Tools.SIMULATOR && Param.verboseLogging) {
 					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
 				}
 			}
 			if (isDepleted) {
-				if (Param.isRealUAV) {
+				if (Param.role == Tools.MULTICOPTER) {
 					GUI.log(Text.BATTERY_FAILING2);
-				} else {
+				} else if (Param.role == Tools.SIMULATOR) {
 					depleted++;
 				}
 			}
 		}
-		if (!Param.isRealUAV && depleted > 0) {
+		if (Param.role == Tools.SIMULATOR && depleted > 0) {
 			GUI.log(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
 		}
 	}
@@ -1824,7 +1990,7 @@ public class ArduSimTools {
 	/** Builds a String with the experiment parameters. */
 	public static String getTestGlobalConfiguration() {
 		StringBuilder sb = new StringBuilder(2000);
-		if (Param.isRealUAV) {
+		if (Param.role == Tools.MULTICOPTER) {
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
 			sb.append("\n\t").append(Text.LOG_SPEED).append(UAVParam.initialSpeeds[0]).append(Text.METERS_PER_SECOND);
 			sb.append("\n\t").append(Text.VERBOSE_LOGGING_ENABLE).append(" ");
@@ -1839,7 +2005,7 @@ public class ArduSimTools {
 			} else {
 				sb.append(Text.OPTION_DISABLED);
 			}
-		} else {
+		} else if (Param.role == Tools.SIMULATOR) {
 			sb.append("\n").append(Text.SIMULATION_PARAMETERS);
 			sb.append("\n\t").append(Text.UAV_NUMBER).append(" ").append(Param.numUAVs);
 			sb.append("\n\t").append(Text.LOG_SPEED).append(" (").append(Text.METERS_PER_SECOND).append("):\n");
@@ -1861,7 +2027,7 @@ public class ArduSimTools {
 				sb.append(Text.OPTION_DISABLED);
 			}
 			sb.append("\n\t").append(Text.BATTERY).append(" ");
-			if (UAVParam.batteryCapacity != UAVParam.MAX_BATTERY_CAPACITY) {
+			if (UAVParam.batteryCapacity != UAVParam.VIRT_BATTERY_MAX_CAPACITY) {
 				sb.append(Text.YES_OPTION);
 				sb.append("\n\t\t").append(UAVParam.batteryCapacity).append(" ").append(Text.BATTERY_CAPACITY);
 			} else {
@@ -1890,12 +2056,12 @@ public class ArduSimTools {
 			sentPacketTot = sentPacketTot + UAVParam.sentPacket[i];
 			receivedPacketTot = receivedPacketTot + UAVParam.receivedPacket[i];
 		}
-		if (Param.isRealUAV) {
-			sb.append("\n\t").append(Text.BROADCAST_IP).append(" ").append(UAVParam.BROADCAST_IP);
-			sb.append("\n\t").append(Text.BROADCAST_PORT).append(" ").append(UAVParam.BROADCAST_PORT);
+		if (Param.role == Tools.MULTICOPTER) {
+			sb.append("\n\t").append(Text.BROADCAST_IP).append(" ").append(UAVParam.broadcastIP);
+			sb.append("\n\t").append(Text.BROADCAST_PORT).append(" ").append(UAVParam.broadcastPort);
 			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);
 			sb.append("\n\t").append(Text.TOT_PROCESSED).append(" ").append(receivedPacketTot);
-		} else {
+		} else if (Param.role == Tools.SIMULATOR) {
 			sb.append("\n\t").append(Text.CARRIER_SENSING_ENABLED).append(" ").append(UAVParam.carrierSensingEnabled);
 			sb.append("\n\t").append(Text.PACKET_COLLISION_DETECTION_ENABLED).append(" ").append(UAVParam.pCollisionEnabled);
 			sb.append("\n\t").append(Text.BUFFER_SIZE).append(" ").append(UAVParam.receivingBufferSize).append(" ").append(Text.BYTES);

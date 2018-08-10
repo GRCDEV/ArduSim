@@ -18,6 +18,8 @@ import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.Waypoint;
 import main.Param.SimulatorState;
+import main.cpuHelper.CPUUsageThread;
+import pccompanion.gui.PCCompanionGUI;
 import sim.board.BoardHelper;
 import sim.gui.ConfigDialog;
 import sim.gui.MainWindow;
@@ -46,15 +48,25 @@ public class Main {
 		}
 		ProtocolHelper.ProtocolNames = existingProtocols;
 		
-		// Parse the command line arguments
+		// Parse the command line arguments and load configuration file
 		if (!ArduSimTools.parseArgs(args)) {
 			return;
+		}
+		ArduSimTools.parseIniFile();
+		if (Param.role == Tools.PCCOMPANION) {
+			Param.numUAVs = 1;
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					PCCompanionGUI.companion = new PCCompanionGUI();
+				}
+			});
+			return;	// In the PC Companion, the control is released to the GUI
 		}
 		
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
 		ArduSimTools.detectOS();
-		if (Param.isRealUAV) {
+		if (Param.role == Tools.MULTICOPTER) {
 			// 1. We need to make constant the parameters shown in the GUI
 			Param.numUAVs = 1;	// Always one UAV per Raspberry Pi or whatever the device where the application is deployed
 			Param.numUAVsTemp.set(1);
@@ -83,7 +95,12 @@ public class Main {
 			} catch (SocketException e) {
 				GUI.exit(Text.BIND_ERROR_1);
 			}
-		} else {
+			
+			// 5. Start thread to measure the CPU usage
+			if (Param.measureCPUEnabled) {
+				new CPUUsageThread().start();
+			}
+		} else if (Param.role == Tools.SIMULATOR) {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;
 			Param.numUAVs = -1;
@@ -143,7 +160,7 @@ public class Main {
 		ArduSimTools.initializeDataStructures();
 		ProtocolHelper.selectedProtocolInstance.initializeDataStructures();
 		// Waiting the main window to be built
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			while (MainWindow.boardPanel == null || MainWindow.buttonsPanel == null) {
 				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
@@ -171,7 +188,7 @@ public class Main {
 		}
 		// Configuration feedback
 		GUI.log(Text.PROTOCOL_IN_USE + " " + ProtocolHelper.selectedProtocol);
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
 							|| Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)) {
@@ -204,7 +221,7 @@ public class Main {
 		SimTools.update();
 
 		// 8. Startup of the virtual UAVs
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			BoardHelper.buildWindImage(MainWindow.boardPanel);
 			Pair<GeoCoordinates, Double>[] start = ProtocolHelper.selectedProtocolInstance.setStartingLocation();
 			SimParam.tempFolderBasePath = ArduSimTools.defineTemporaryFolder();
@@ -217,13 +234,13 @@ public class Main {
 		// 9. Start UAV controllers, wait for MAVLink link, wait for GPS fix, and send basic configuration
 		ArduSimTools.startUAVControllers();
 		ArduSimTools.waitMAVLink();
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			ArduSimTools.forceGPS();
 		}
 		ArduSimTools.getGPSFix();//TODO descomentar
 		
 		// 10. Set communications online, and start collision detection if needed
-		if (!Param.isRealUAV && Param.numUAVs > 1) {
+		if (Param.role == Tools.SIMULATOR && Param.numUAVs > 1) {
 			// Calculus of the distance between UAVs
 			new DistanceCalculusThread().start();
 			// Communications range calculation enable
@@ -238,7 +255,7 @@ public class Main {
 		
 		// 11. Send basic UAV configuration and wait the communications to be online
 		ArduSimTools.sendBasicConfiguration();
-		if (!Param.isRealUAV && Param.numUAVs > 1) {
+		if (Param.role == Tools.SIMULATOR && Param.numUAVs > 1) {
 			while (!SimParam.communicationsOnline) {
 				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
@@ -246,7 +263,7 @@ public class Main {
 		
 		// 12. Launch the threads of the protocol under test and wait the GUI to be built
 		ProtocolHelper.selectedProtocolInstance.startThreads();
-		if (Param.isRealUAV) {
+		if (Param.role == Tools.MULTICOPTER) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
@@ -259,7 +276,7 @@ public class Main {
 		// 13. Build auxiliary elements to be drawn and prepare the user interaction
 		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			BoardHelper.downloadBackground();
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -287,7 +304,7 @@ public class Main {
 		}
 
 		// 15. Waiting for the user to start the experiment
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
@@ -306,7 +323,7 @@ public class Main {
 		// 16. Start the experiment, only if the program is not being closed
 		Param.startTime = System.currentTimeMillis();
 		GUI.log(Text.TEST_START);
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			timer = new Timer();
 			timer.scheduleAtFixedRate(new TimerTask() {
 				long time = Param.startTime;
@@ -363,7 +380,7 @@ public class Main {
 
 		// 18. Assert that the experiment has finished
 		GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			GUI.log(Text.WAITING_FOR_USER);
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -386,14 +403,14 @@ public class Main {
 			res += "\n\n" + ProtocolHelper.selectedProtocol + " " + Text.CONFIGURATION + ":\n";
 			res += s;
 		}
-		if (Param.isRealUAV) {
+		if (Param.role == Tools.MULTICOPTER) {
 			Calendar cal = Calendar.getInstance();
 			String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
 					+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
 					+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
 			ArduSimTools.storeResults(res, new File(Tools.getCurrentFolder(), fileName));
 			ArduSimTools.shutdown();	// Closes the simulator
-		} else {
+		} else if (Param.role == Tools.SIMULATOR) {
 			final String res2 = res;
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {

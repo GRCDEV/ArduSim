@@ -8,9 +8,13 @@ We already explained that ArduSim can be used in two ways. First, it can be used
 
 [2 ArduSim on real multicopters](#markdown-header-2-ardusim-on-real-multicopters)
 
+[3 INI configuration file](#markdown-header-3-ini-configuration-file)
+
 ## 1 ArduSim on simulation
 
-A simulation can be performed directly in Eclipse or from a *.jar* executable file. You need to run ArduSim with the parameter *-c false* to avoid it to run as a PC Companion. If you run ArduSim from Eclipse IDE you will need to set the parameter in the "run configuration".
+A simulation can be performed directly in Eclipse or from a *.jar* executable file. You need to run ArduSim with the parameter *simulator* to avoid it to run as a PC Companion or in a real multicopter. If you run ArduSim from Eclipse IDE you will need to set the parameter in the "run configuration".
+
+The file *ardusim.ini* is used to load some relevant parameters that can be modified later in the GUI.
 
 We suggest to run ArduSim as Administrator (Windows, requires Imdisk Virtual Disk Driver) or sudoer (Linux). In this mode, temporary files are stored in a virtual hard drive, which speeds up ArduSim when using a slow HHDD, as it could limit the number of virtual multicopters that can be run simultaneously.
 
@@ -111,23 +115,28 @@ If a protocol is developed following the recommendations included with ArduSim, 
 
 ArduSim can be executed with the following command line:
 
-    java -jar ArduSim.jar -c <arg> [-r <arg> [-p <arg> -s <arg>]] [-h]
+    java -jar ArduSim.jar <arg>
 
-    -c. boolean. ArduSim will run as a PC Companion when this parameter is set to true. This is the only mandatory parameter.
-    -r. boolean. The default value is false, and it is only used if -c is set to false. The value false runs ArduSim for simulation, while the value true runs ArduSim in a real multicopter, which makes the parameters -p and -s mandatory.
-    -p. String. It represents the protocol name that must be deployed in the real multicopter.
-    -s. double. It means the desired flight speed for the real multicopter.
-    -h. It shows help explaining the previous parameters.
+    *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
+    *simulator*. ArduSim runs as a multi-UAV simulator in a computer.
+    *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution in a group of real multicopters, preferably in a laptop for mobility.
 
-To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, preferably a laptop, connected among them in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer, which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
+To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, connected among them in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer, which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
 
 ### 2.1 Real multicopters
 
 The command line must be:
 
-    java -jar ArduSim.jar -c false -r true -p "some protocol" -s doubleValue
+    java -jar ArduSim.jar multicopter
 
-The specified protocol will be launched. First, ArduSim will wait until the multicopter is ready to fly. Then, it will accept the setup and start commands from the PC Companion. Messages are sent periodically to the PC Companion to inform the user if all the UAVs are ready to fly.
+A file named *ardusim.ini* must be in the same folder as *ArduSim.jar* in order to provide ArduSim the needed parameters, among others:
+
+* The protocol to be launched.
+* The desired flight speed for the multicopter.
+
+An example of the *ardusim.ini* file is included in the root of the Eclipse project, and is used when running ArduSim from Eclipse IDE.
+
+First, ArduSim will wait until the multicopter is ready to fly. Then, it will accept the setup and start commands from the PC Companion. Messages are sent periodically to the PC Companion to inform the user if all the UAVs are ready to fly.
 
 Of course, a protocol could start automatically without a PC Companion, but we recommend this method, as some UAVs could start the flight later than others.
 
@@ -135,9 +144,9 @@ Of course, a protocol could start automatically without a PC Companion, but we r
 
 The command line must be:
 
-    java -jar ArduSim.jar -c true
+    java -jar ArduSim.jar pccompanion
 
-The following windows opens:
+The parameters found in *ardusim.ini* are loaded, and the following windows opens:
 
 ![PC Companion](pccompanion.png)
 
@@ -158,3 +167,27 @@ This PC Companion has been designed for a minimal interaction with the UAVs in o
 ### 2.3 Results
 
 When the multicopter ends the experiment it should land. On simulation, the user had the option to store flight information or not, but in this case the data is always stored in the same folder where ArduSim is running once the multicopter lands.
+
+## 3 INI configuration file
+
+As explained before, a file *ardusim.ini* must be beside the ArduSim executable *.jar* file to provide parameters to the program. If not found, default parameters are used and the behavior of ArduSim could be different from desired.
+
+The current list of parameters is:
+
+* Global parameters:
+    * *MEASURECPU*. Measure CPU usage during the experiment.
+    * *VERBOSELOGGING*. Verbose logging to ArduSim window and console.
+    * *VERBOSESTORE*. Allows to store additional files at will.
+* PCCompanion-to-realUAV and realUAV-to-realUAV communication parameters:
+    * *BROADCASTIP*. The IP must be the broadcast address of the network configured on the Raspberry Pi.
+    * *BROADCASTPORT*. Port where the PC Companion can listen to supervise the protocol communications among real UAVs. The PC Companion can even interact with the multicopters with the functions "Copter.sendBroadcastMessage(byte[])" and "Copter.receiveMessage(int)".
+    * *COMPUTERPORT*. Port where the PC Companion receives coordination messages from the UAVs.
+    * *UAVPORT*. Port where the UAV receives coordination messages from the PC Companion.
+* **MANDATORY** parameters when running in real UAVs:
+    * *UAVPROTOCOL*. Protocol to be deployed.
+    * *UAVSPEED*. Maximum planned speed of the multicopter.
+* Optional parameters when running in real UAVs:
+    * *SERIALPORT*. Raspberry Pi serial port the flight controller is connected to.
+    * *BAUDRATE*. Baud rate of the serial link.
+    * *BATTERYCELLS*. Number of cells of the LiPo battery.
+    * *BATTERYCAPACITY*. Battery capacity (mAh).

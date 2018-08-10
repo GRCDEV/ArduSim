@@ -1,6 +1,6 @@
 # ArduSim
 
-ArduSim is a novel real-time flight simulator, oriented to the development of communications and flight coordination protocols among multicopters, performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements. Among many information, ArduSim generates the path followed by each UAV in OMNeT++ and NS2 format to provide mobility traces, performing a simulation or even when running ArduSim in a real multicopter.
+ArduSim is a novel real-time flight simulator, oriented to the development of communications and flight coordination protocols among multicopters, performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements, and the ports needed by SITL are free. Among many information, ArduSim generates the path followed by each UAV in OMNeT++ and NS2 format to provide mobility traces, performing a simulation or even when running ArduSim in a real multicopter.
 
 The Communication with multicopters uses the MAVLink protocol, a *de facto* standard for current open flight controllers, which makes the deployment of a new protocol on real UAVs a trivial task.
 
@@ -57,8 +57,6 @@ ArduSim is published under [Apache License 2.0](https://www.apache.org/licenses/
 [ArduPilot](https://github.com/ArduPilot/ardupilot) is the single UAV simulator ArduSim is based on, and is built under the [GNU General Public License v3.0](https://github.com/ArduPilot/ardupilot/blob/master/COPYING.txt).
 
 MAVLink libraries are used to communicate with real or virtual flight controller in native language and are built with [MAVLink Java generator and library](https://github.com/ghelle/MAVLinkJava) tool. [MAVLink message definition XML files](https://github.com/mavlink/mavlink/tree/master/message_definitions) are under the MIT-licence.
-
-Apache Commons CLI is used to parse command line arguments and under [license](http://www.apache.org/licenses/LICENSE-2.0) from the Apache Software Foundation (ASF) and under one or more contributor license agreements.
 
 The AtomicDoubleArray implementation comes from Doug Lea and under [CC0 1.0 Universal license](http://creativecommons.org/publicdomain/zero/1.0/), and is based on [Guava](https://github.com/google/guava) from Google, which is under [Apache license](https://github.com/google/guava/blob/master/COPYING).
 

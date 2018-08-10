@@ -614,7 +614,7 @@ public class Copter {
 				&& Copter.retrieveMission(numUAV)
 				&& Copter.setCurrentWaypoint(numUAV, 0)) {
 			Param.numMissionUAVs.incrementAndGet();
-			if (!Tools.isRealUAV()) {
+			if (Param.role == Tools.SIMULATOR) {
 				BoardParam.rescaleQueries.incrementAndGet();
 			}
 			success = true;
@@ -724,15 +724,7 @@ public class Copter {
 	/** API: Sends a message to the other UAVs.
 	 * <p>Blocking method.*/
 	public static void sendBroadcastMessage(int numUAV, byte[] message) {
-		if (Param.isRealUAV) {
-			UAVParam.sendPacket[numUAV].setData(message);
-			try {
-				UAVParam.sendSocket[numUAV].send(UAVParam.sendPacket[numUAV]);
-				UAVParam.sentPacket[numUAV]++;
-			} catch (IOException e) {
-				GUI.log(SimParam.prefix[numUAV] + MBCAPText.ERROR_BEACON);
-			}
-		} else {
+		if (Param.role == Tools.SIMULATOR) {
 			long now = System.nanoTime();
 			// 1. Can not send until the last transmission has finished
 			IncomingMessage prevMessage = UAVParam.prevSentMessage.get(numUAV);
@@ -813,6 +805,14 @@ public class Copter {
 					}
 				}
 			}
+		} else {
+			UAVParam.sendPacket.setData(message);
+			try {
+				UAVParam.sendSocket.send(UAVParam.sendPacket);
+				UAVParam.sentPacket[0]++;
+			} catch (IOException e) {
+				GUI.log(SimParam.prefix[numUAV] + MBCAPText.ERROR_BEACON);
+			}
 		}
 	}
 	
@@ -820,14 +820,7 @@ public class Copter {
 	 * <p>Blocking method.
 	 * <p>Returns null if a fatal error with the socket happens. */
 	public static byte[] receiveMessage(int numUAV) {
-		if (Param.isRealUAV) {
-			UAVParam.receivePacket[numUAV].setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
-			try {
-				UAVParam.receiveSocket[numUAV].receive(UAVParam.receivePacket[numUAV]);
-				UAVParam.receivedPacket[numUAV]++;
-				return UAVParam.receivePacket[numUAV].getData();
-			} catch (IOException e) { return null; }
-		} else {
+		if (Param.role == Tools.SIMULATOR) {
 			if (UAVParam.pCollisionEnabled) {
 				byte[] receivedBuffer = null;
 				while (receivedBuffer == null) {
@@ -919,6 +912,13 @@ public class Copter {
 				UAVParam.receivedPacket[numUAV]++;
 				return UAVParam.mBuffer[numUAV].pollFirst().message;
 			}
+		} else {
+			UAVParam.receivePacket.setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
+			try {
+				UAVParam.receiveSocket.receive(UAVParam.receivePacket);
+				UAVParam.receivedPacket[0]++;
+				return UAVParam.receivePacket.getData();
+			} catch (IOException e) { return null; }
 		}
 	}
 	

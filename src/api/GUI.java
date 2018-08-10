@@ -33,7 +33,7 @@ public class GUI {
 		System.out.println(res);
 		System.out.flush();
 		// Update GUI only when using simulator and the main window is already loaded
-		if (!Param.isRealUAV && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
+		if (Param.role == Tools.SIMULATOR && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.logArea.append(res + "\n");
@@ -53,7 +53,7 @@ public class GUI {
 	 * <p>The label is only updated when performing simulations. */
 	public static void updateGlobalInformation(final String text) {
 		// Update GUI only when using simulator
-		if (!Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(text);
@@ -79,29 +79,27 @@ public class GUI {
 	 * <p>On a real UAV shows the message in console and exits.
 	 * <p>On simulation, the message is shown in a dialog, virtual UAVs are stopped and exits. */
 	public static void exit(String message) {
-		if (Param.isRealUAV) {
-			System.out.println(Text.FATAL_ERROR + ": " + message);
-			System.out.flush();
-		} else {
+		if (Param.role == Tools.SIMULATOR) {
 			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
 			if (Param.simStatus != SimulatorState.CONFIGURING
-				&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL
-				&& !Param.isPCCompanion) {
+				&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
 				ArduSimTools.closeSITL();
 			}
+		} else {
+			System.out.println(Text.FATAL_ERROR + ": " + message);
+			System.out.flush();
 		}
 		System.exit(1);
 	}
 
 	/** Warns the user with a dialog when performing simulations. On a real UAV the console is used. */
 	public static void warn(String title, String message) {
-		if (Param.isRealUAV) {
+		if (Param.role == Tools.SIMULATOR) {
+			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
+		} else {
 			System.out.println(title + ": " + message);
 			System.out.flush();
-		} else {
-			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
 		}
-		
 	}
 	
 	/** Locates a UTM point on the screen, using the current screen scale. */

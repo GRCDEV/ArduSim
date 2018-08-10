@@ -10,12 +10,26 @@ import uavController.UAVControllerThread;
 
 public class Param {
 	
-	// The experiment is done in simulator or on a real UAV?
-	public static volatile boolean isRealUAV;
+	// Role of ArduSim
+	public static int role;
 	
-	// The application is being run as a PC companion
-	public static volatile boolean isPCCompanion;
-
+	// Name of the parameters loaded from INI file
+	public static final String COMPUTER_PORT = "COMPUTERPORT";
+	public static final String UAV_PORT = "UAVPORT";
+	public static final String PROTOCOL = "UAVPROTOCOL";
+	public static final String SPEED = "UAVSPEED";
+	public static final String SERIAL_PORT = "SERIALPORT";
+	public static final String BAUD_RATE = "BAUDRATE";
+	public static final String BROADCAST_IP = "BROADCASTIP";
+	public static final String BROADCAST_PORT = "BROADCASTPORT";
+	public static final String BATTERY_CELLS = "BATTERYCELLS";
+	public static final String BATTERY_CAPACITY = "BATTERYCAPACITY";
+	public static final String MEASURE_CPU = "MEASURECPU";
+	public static final String VERBOSE_LOGGING = "VERBOSELOGGING";
+	public static final String VERBOSE_STORE = "VERBOSESTORE";
+	public static final String[] PARAMETERS = {COMPUTER_PORT, UAV_PORT, PROTOCOL, SPEED, SERIAL_PORT, BAUD_RATE,
+			BROADCAST_IP, BROADCAST_PORT, BATTERY_CELLS, BATTERY_CAPACITY, MEASURE_CPU, VERBOSE_LOGGING, VERBOSE_STORE, };
+	
 	// Number of UAVs to be simulated
 	public static int numUAVs;
 	public static AtomicInteger numUAVsTemp = new AtomicInteger();	// Used as semaphore to modify numUAVs in configuration dialogs
@@ -27,10 +41,10 @@ public class Param {
 	public static AtomicInteger numMissionUAVs = new AtomicInteger();
 	
 	// Verbose logging?
-	public static volatile boolean verboseLogging;
+	public static volatile boolean verboseLogging = false;
 	
 	// Store additional information in files?
-	public static volatile boolean verboseStore;
+	public static volatile boolean verboseStore = true;
 	
 	// Array containing the UAV controllers. Useful to set a listener to detect when a waypoint is reached, if needed.
 	public static UAVControllerThread[] controllers;
@@ -59,7 +73,7 @@ public class Param {
 	public static final double FIXED_MAX_RANGE = 1500.0;	// (m) Fixed range maximum distance accepted
 	
 	// CPU usage parameters
-	public static boolean measureCPUEnabled;			// Whether the CPU utilization must be measured or not
+	public static boolean measureCPUEnabled = false;	// Whether the CPU utilization must be measured or not
 	public static int numCPUs;							// Number of cores available
 	public static ConcurrentLinkedQueue<CPUData> cpu = new ConcurrentLinkedQueue<>();	// CPU usage data
 	public static final int CPU_CHECK_PERIOD = 1;		// (s) Time between measurements

@@ -23,6 +23,7 @@ import api.pojo.GeoCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
 import followme.pojo.Nodo;
 import followme.pojo.RecursoCompartido;
+import main.Param;
 import sim.board.BoardPanel;
 
 public class FollowMeHelper extends ProtocolHelper {
@@ -193,7 +194,7 @@ public class FollowMeHelper extends ProtocolHelper {
 		// Analyze which UAV is master
 		int posMaster = -1;
 		boolean realUAVisMaster = false;
-		if (Tools.isRealUAV()) {
+		if (Param.role == Tools.MULTICOPTER) {
 			long id = Tools.getIdFromPos(0);
 			for (int i = 0; i < FollowMeParam.MASTER_ID_REAL.length && !realUAVisMaster; i++) {
 				if (id == FollowMeParam.MASTER_ID_REAL[i]) {
@@ -262,7 +263,7 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void startThreads() {
-		if (Tools.isRealUAV()) {
+		if (Param.role == Tools.MULTICOPTER) {
 			if (FollowMeParam.realUAVisMaster) {
 				// MasterMando sendTh = new MasterMando();
 				// sendTh.start();

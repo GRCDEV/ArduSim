@@ -82,7 +82,7 @@ Remember that ArduSim is a highly asynchronous application, and running in Eclip
 
 Finally, go to *Run --> Run configurations...* and create a new configuration with the following argument to be able to run a simulation, but not a PC Companion or a real multicopter:
 
-    -c false
+    simulator
 
 You can create a mission file in *Google Earth* and test the simulator with the protocol *None* or *MBCAP* to be sure that the setup is correct.
 

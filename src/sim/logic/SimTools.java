@@ -143,7 +143,7 @@ public class SimTools {
 				return false;
 			}
 			intValue = Integer.parseInt(validating);
-			if (intValue > UAVParam.MAX_BATTERY_CAPACITY) {
+			if (intValue > UAVParam.VIRT_BATTERY_MAX_CAPACITY) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.BATTERY_ERROR_2);
 				return false;
 			}
@@ -237,7 +237,7 @@ public class SimTools {
 		if (panel.batteryCheckBox.isSelected()) {
 			UAVParam.batteryCapacity = Integer.parseInt(panel.batteryTextField.getText());
 		} else {
-			UAVParam.batteryCapacity = UAVParam.MAX_BATTERY_CAPACITY;
+			UAVParam.batteryCapacity = UAVParam.VIRT_BATTERY_MAX_CAPACITY;
 		}
 		UAVParam.batteryLowLevel = (int)Math.rint(UAVParam.batteryCapacity * UAVParam.BATTERY_DEPLETED_THRESHOLD);
 		if (UAVParam.batteryLowLevel % 50 != 0) {
@@ -307,7 +307,7 @@ public class SimTools {
 				panel.renderQualityComboBox.setSelectedIndex(RenderQuality.Q3.getId());
 				
 				panel.batteryCheckBox.setSelected(false);
-				panel.batteryTextField.setText("" + UAVParam.STANDARD_BATTERY_CAPACITY);
+				panel.batteryTextField.setText("" + UAVParam.lipoBatteryCapacity);
 				panel.batteryTextField.setEnabled(false);
 				
 				//  Protocol parameters
@@ -352,15 +352,15 @@ public class SimTools {
 		}
 	}
 
-	/** Draws the panel content periodically, or stores information for loggin purposes when using a real UAV. */
+	/** Draws the panel content periodically, or stores information for logging purposes when using a real UAV. */
 	public static void update() {
 		// Clean the saturated queue if needed
 		SimTools.cleanQueue();
 		ActionListener taskPerformer = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				if (Param.isRealUAV) {
+				if (Param.role == Tools.MULTICOPTER) {
 					SimTools.storePath();
-				} else {
+				} else if (Param.role == Tools.SIMULATOR) {
 					MainWindow.boardPanel.repaint();
 					SimTools.updateUAVInfo();
 				}

@@ -16,8 +16,18 @@ public class Text {
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
+	public static final String INI_FILE_NOT_FOUND = "ardusim.ini file not found. Using default parameters values.";
+	public static final String INI_FILE_EMPTY = "ardusim.ini file is empty. Using default parameters values.";
+	public static final String INI_FILE_WASTE_PARAMETER_WARNING = "ardusim.ini file contains an invalid parameter:";
+	public static final String INI_FILE_MISSING_PARAMETER_WARNING = "parameter missing. Using default value.";
+	public static final String INI_FILE_PROTOCOL_NOT_FOUND_ERROR = "No protocol specified in INI file.";
+	public static final String INI_FILE_SPEED_NOT_FOUND_ERROR = "No flight speed specified in INI file.";
 	public static final String PROTOCOL_NOT_FOUND_ERROR = "protocol was not found. Valid protocols:";
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
+	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR = "param not found. Using default value:";
+	public static final String INI_FILE_PARAM_NOT_VALID_ERROR = "param not valid value:";
+	public static final String INI_FILE_PARAM_SERIAL_PORT_WARNING = "The serial link could not work properly if the serial port name is wrong:";
+	public static final String INI_FILE_PARAM_BROADCAST_IP_WARNING = "Broadcast IP:";
 	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;
 	public static final String PROTOCOL_GETTING_PROT_CLASSES_ERROR = "Unable to retrieve classes implementing protocols in " + APP_NAME;
 	public static final String PROTOCOL_LOADING_ERROR = "Unable to load existing protocols in " + APP_NAME + ". At least one protocol must be implemented.";
@@ -130,7 +140,7 @@ public class Text {
 	public static final String MIN_SCREEN_MOVEMENT_ERROR_2 = "The minimal screen movement of a UAV must be less than "
 			+ BoardParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD + " pixels.";
 	public static final String BATTERY_ERROR_1 = "The battery capacity must be a valid positive integer.";
-	public static final String BATTERY_ERROR_2 = "The battery capacity can be a maximum of " + UAVParam.MAX_BATTERY_CAPACITY + " " + Text.BATTERY_CAPACITY;
+	public static final String BATTERY_ERROR_2 = "The battery capacity can be a maximum of " + UAVParam.VIRT_BATTERY_MAX_CAPACITY + " " + Text.BATTERY_CAPACITY;
 	public static final String WIRELESS_MODEL_ERROR_1 = "The wireless range must be a valid positive number.";
 	public static final String WIRELESS_MODEL_ERROR_2 = "The wireless range must be less than "
 			+ Param.FIXED_MAX_RANGE + " meters.";

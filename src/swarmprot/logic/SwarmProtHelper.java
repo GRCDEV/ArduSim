@@ -23,6 +23,7 @@ import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
+import main.Param;
 import sim.board.BoardPanel;
 import swarmprot.gui.SwarmConfig;
 import swarmprot.logic.SwarmProtParam.SwarmProtState;
@@ -355,7 +356,7 @@ public class SwarmProtHelper extends ProtocolHelper {
 	/** Send a packet to all Slaves */
 	public static void sendDataToSlaves(DatagramPacket packet, DatagramSocket socket) throws IOException {
 		/** The real drone has different IP and sends without problems */
-		if (Tools.isRealUAV()) {
+		if (Param.role == Tools.MULTICOPTER) {
 			socket.send(packet);
 		}
 		/**
@@ -377,7 +378,7 @@ public class SwarmProtHelper extends ProtocolHelper {
 	public static void sendDataToMaster(DatagramPacket packet, DatagramSocket socket) throws IOException {
 	
 		/** The real drone has different IP and sends without problems */
-		if (Tools.isRealUAV()) {
+		if (Param.role == Tools.MULTICOPTER) {
 			socket.send(packet);
 		}
 		/**
