@@ -43,7 +43,7 @@ This dialog allows to introduce several simulation parameters:
 
 * General parameters:
 
-    * *Enable verbose logging*. The user may use this option to show additional information in the main window log and console, only under certain circumstances.
+    * *Enable verbose logging*. The user may use this option to show additional information in the main window log and console, only under certain circumstances. For example, using this option ArduSim provides additional information for debugging purposes.
     * *Enable verbose storage*. Similar to the previous option, the user may store additional information related to the protocol in files, only in some cases.
 
 * UAV synchronization protocol. This list is automatically populated with the protocols implemented in ArduSim. The user must select the protocol to be tested in simulation.

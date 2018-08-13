@@ -225,7 +225,6 @@ Now follows a list of information retrieval functions that don't need to communi
 * `void setWaypointReachedListener(WaypointReachedListener)`. Any Class can implement *WaypointReachedListener.java*, as *mbcap.logic.BeaconingThread* does. Then, using this method, that Class would be able to apply some logic each time the flight controller detects that a waypoint has been reached. It is useful for UAVs that follow a planned mission.
 * `int getCurrentWaypoint(int)`. It provides the identifier of the current waypoint of the mission. Useful for UAVs that follow a planned mission.
 * `boolean isLastWaypointReached(int)`. It asserts if the last waypoint of the mission has been reached. Useful for UAVs that follow a planned mission.
-* `String getUAVPrefix(int)`. This function builds a String with convenience text that should be prepended to any message that a specific multicopter could publish with the function `api.GUI.log(String)`.
 
 Experimental functions not directly included in *api.Copter.java* Class:
 
@@ -239,7 +238,8 @@ A few functions have been implemented to update data already shown in the GUI, a
 The next list of functions allow the developer to update the GUI, and even close ArduSim when an unexpected behavior is detected, showing a message before closing the application.
 
 * `void log(String)`. This method shows a message in console. Furthermore, is ArduSim runs as a simulator, the same message is shown in the log in the upper left corner of the main window.
-* `boolean isVerboseLoggingEnabled()`. It returns *true* if console and GUI logging is performed in verbose mode. This helper can be useful to show some messages of the protocol only in that mode.
+* `void logVerbose(String)`. In this case, the message is only shown if verbose logging mode is enabled.
+* `String getUAVPrefix(int)`. This function builds a String with convenience text that should be prepended to any message that a specific multicopter could publish with the previous functions.
 * `void updateProtocolState(int, String)`. The *progress dialog* shows general information for each running virtual UAV. This function is used to show there the current state of the protocol to compare the behavior when different UAVs are in a different state.
 * `void updateGlobalInformation(String)`. On the upper right corner of the main window, below the interaction buttons, there is a *String* where you can show any information with this function.
 * `void warn(String, String)`. On a real UAV, it writes a mesage to console, while in simulation it opens a dialog to warn the user.

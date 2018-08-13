@@ -44,9 +44,17 @@ public class GUI {
 		}
 	}
 	
-	/** Returns true if verbose logging feature is enabled. */
-	public static boolean isVerboseLoggingEnabled() {
-		return Param.verboseLogging;
+	/** Sends information to the main window log and console, only if verbose mode is enabled.
+	 * <p>The window log is only updated when performing simulations. */
+	public static void logVerbose(String text) {
+		if (Param.verboseLogging) {
+			GUI.log(text);
+		}
+	}
+	
+	/** Returns a prefix that identifies the UAV that is performing a command for logging purposes. */
+	public static String getUAVPrefix(int numUAV) {
+		return SimParam.prefix[numUAV];
 	}
 	
 	/** Sends information to the main window upper-right corner label when a protocol needs it.

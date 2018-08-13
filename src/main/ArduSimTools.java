@@ -1371,11 +1371,9 @@ public class ArduSimTools {
 					while (!success) {
 						if (input.ready()) {
 							s = input.readLine();
-							if (Param.verboseLogging) {
-								GUI.log(SimParam.prefix[i] + s);
-							}
+							GUI.logVerbose(SimParam.prefix[i] + s);
 							if (s.contains("Waiting for connection")) {
-								GUI.log(SimParam.prefix[i] + Text.SITL_UP);
+								GUI.logVerbose(SimParam.prefix[i] + Text.SITL_UP);
 								success = true;
 							}
 						} else {
@@ -1420,19 +1418,13 @@ public class ArduSimTools {
 		String OS = System.getProperty("os.name").toLowerCase();
 		if (OS.contains("win")) {
 			Param.runningOperatingSystem = Param.OS_WINDOWS;
-			if (Param.verboseLogging){
-				GUI.log(Text.OPERATING_SYSTEM_WINDOWS);
-			}
+			GUI.logVerbose(Text.OPERATING_SYSTEM_WINDOWS);
 		} else if (OS.contains("nux") || OS.contains("nix") || OS.contains("aix")) {
 			Param.runningOperatingSystem = Param.OS_LINUX;
-			if (Param.verboseLogging){
-				GUI.log(Text.OPERATING_SYSTEM_LINUX);
-			}
+			GUI.logVerbose(Text.OPERATING_SYSTEM_LINUX);
 		}else if (OS.contains("mac")) {
 			Param.runningOperatingSystem = Param.OS_MAC;
-			if (Param.verboseLogging){
-				GUI.log(Text.OPERATING_SYSTEM_MAC);
-			}
+			GUI.logVerbose(Text.OPERATING_SYSTEM_MAC);
 		} else {
 			GUI.exit(Text.UAVS_START_ERROR_4);
 		}
@@ -1902,20 +1894,20 @@ public class ArduSimTools {
 			if (percentage != -1 && voltage != -1) {
 				if (Param.role == Tools.MULTICOPTER) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
-				} else if (Param.role == Tools.SIMULATOR && Param.verboseLogging) {
-					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
+				} else if (Param.role == Tools.SIMULATOR) {
+					GUI.logVerbose(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
 				}
 			} else if (percentage != -1) {
 				if (Param.role == Tools.MULTICOPTER) {
 					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " %");
-				} else if (Param.role == Tools.SIMULATOR && Param.verboseLogging) {
-					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
+				} else if (Param.role == Tools.SIMULATOR) {
+					GUI.logVerbose(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
 				}
 			} else if (voltage != -1) {
 				if (Param.role == Tools.MULTICOPTER) {
 					GUI.log(Text.BATTERY_LEVEL + " " + voltage + " V");
-				} else if (Param.role == Tools.SIMULATOR && Param.verboseLogging) {
-					GUI.log(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
+				} else if (Param.role == Tools.SIMULATOR) {
+					GUI.logVerbose(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
 				}
 			}
 			if (isDepleted) {

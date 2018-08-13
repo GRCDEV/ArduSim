@@ -35,6 +35,7 @@ import main.Text;
 import main.Param.SimulatorState;
 import pccompanion.logic.PCCompanionParam;
 import pccompanion.logic.PCCompanionTalker;
+import sim.gui.MainWindow;
 import sim.gui.VerticalFlowLayout;
 import javax.swing.JComboBox;
 import java.awt.event.ActionListener;
@@ -68,6 +69,8 @@ public class PCCompanionGUI {
 	private JButton buttonRecoverControl;
 	private JButton buttonRTL;
 	private JButton buttonLand;
+	
+	private Timer timer;
 
 	public PCCompanionGUI() {
 		initialize();
@@ -170,16 +173,21 @@ public class PCCompanionGUI {
 						buttonLand.setEnabled(true);
 					}
 				});
-				Timer timer = new Timer();
+				timer = new Timer();
 				timer.scheduleAtFixedRate(new TimerTask() {
 		            long count = 0;
 		            public void run() {
-		            	SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								progressTimeLabel.setText(Tools.timeToString(0, count));
-								count = count + 1000;
-							}
-						});
+		            	if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+							final String timeString = Tools.timeToString(0, count);
+							count = count + 1000;
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									MainWindow.progressDialog.setTitle(timeString);
+								}
+							});
+						} else {
+							timer.cancel();
+						}
 		            }
 		        }, 0, 1000);	// for each second, without initial delay
 			}
@@ -234,6 +242,7 @@ public class PCCompanionGUI {
 		buttonRecoverControl.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_RECOVER_CONTROL);
+				timer.cancel();
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
@@ -255,6 +264,7 @@ public class PCCompanionGUI {
 		buttonRTL.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_RTL);
+				timer.cancel();
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
@@ -277,6 +287,7 @@ public class PCCompanionGUI {
 		buttonLand.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_LAND);
+				timer.cancel();
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {

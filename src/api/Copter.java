@@ -49,7 +49,7 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_1 + " " + parameter.getId() + ".");
 			return false;
 		} else {
-			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_1 + " " + parameter.getId() + " = " + value);
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.PARAMETER_1 + " " + parameter.getId() + " = " + value);
 			return true;
 		}
 	}
@@ -69,7 +69,7 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_2 + " " + parameter.getId() + ".");
 			return null;
 		} else {
-			GUI.log(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + parameter.getId() + " = " + UAVParam.newParamValue.get(numUAV));
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + parameter.getId() + " = " + UAVParam.newParamValue.get(numUAV));
 			return UAVParam.newParamValue.get(numUAV);
 		}
 	}
@@ -130,7 +130,7 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.ARM_ENGINES_ERROR);
 			return false;
 		} else {
-			GUI.log(SimParam.prefix[numUAV] + Text.ARM_ENGINES);
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.ARM_ENGINES);
 			return true;
 		}
 	}
@@ -261,11 +261,9 @@ public class Copter {
 		}
 		for (int i = 0; i < Param.numUAVs; i++) {
 			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * altitudes[i]) {
-				if (Param.verboseLogging) {
-					GUI.log(SimParam.prefix[i] + Text.ALTITUDE_TEXT
-							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())
-							+ " " + Text.METERS);
-				}
+				GUI.logVerbose(SimParam.prefix[i] + Text.ALTITUDE_TEXT
+						+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())
+						+ " " + Text.METERS);
 				Tools.waiting(UAVParam.ALTITUDE_WAIT);
 			}
 		}
@@ -292,11 +290,9 @@ public class Copter {
 		}
 
 		while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * altitude) {
-			if (Param.verboseLogging) {
-				GUI.log(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
-						+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
-						+ " " + Text.METERS);
-			}
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
+					+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
+					+ " " + Text.METERS);
 			Tools.waiting(UAVParam.ALTITUDE_WAIT);
 		}
 		return true;
@@ -333,7 +329,7 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT_ERROR);
 			return false;
 		} else {
-			GUI.log(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT + " = " + currentWP);
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT + " = " + currentWP);
 			return true;
 		}
 	}
@@ -351,7 +347,7 @@ public class Copter {
 				}
 			}
 
-			GUI.log(SimParam.prefix[numUAV] + Text.STOP);
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.STOP);
 			return true;
 		}
 		GUI.log(SimParam.prefix[numUAV] + Text.STOP_ERROR_2);
@@ -360,7 +356,7 @@ public class Copter {
 
 	/** API: Moves the throttle stick to half power using the corresponding RC channel.
 	 * <p>Returns true if the command was successful.
-	 * <p>Useful for starting auto flight when being on the ground, or to stabilize altitude when going out of auto mode. */
+	 * <p>Useful for starting auto flight while being on the ground, or to stabilize altitude when going out of auto mode. */
 	public static boolean setHalfThrottle(int numUAV) {
 		if (UAVParam.overrideOn.get(numUAV) == 1) {
 			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
@@ -372,7 +368,7 @@ public class Copter {
 				GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE_ERROR);
 				return false;
 			} else {
-				GUI.log(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE);
+				GUI.logVerbose(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE);
 				return true;
 			}
 		}
@@ -477,7 +473,7 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_DELETE_ERROR);
 			return false;
 		} else {
-			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_DELETE);
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.MISSION_DELETE);
 			return true;
 		}
 	}
@@ -527,7 +523,7 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_3);
 			return false;
 		} else {
-			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT);
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.MISSION_SENT);
 			return true;
 		}
 	}
@@ -547,7 +543,7 @@ public class Copter {
 			return false;
 		} else {
 			Copter.simplifyMission(numUAV);
-			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_GET);
+			GUI.logVerbose(SimParam.prefix[numUAV] + Text.MISSION_GET);
 			return true;
 		}
 	}
@@ -643,7 +639,7 @@ public class Copter {
 	 * <p>This method can be launched periodically, it only informs once when the last waypoint is reached, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
 	 * <p>Use only when the UAV is performing a planned mission. */
 	public static void landIfMissionEnded(int numUAV, double distanceThreshold) {
-		String prefix = Copter.getUAVPrefix(numUAV);
+		String prefix = GUI.getUAVPrefix(numUAV);
 		List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
 		FlightMode mode = Copter.getFlightMode(numUAV);
 		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
@@ -654,7 +650,7 @@ public class Copter {
 				&& currentWaypoint > 0
 				&& currentWaypoint == mission.get(mission.size()-1).numSeq) {
 			
-			// Only inform that the last waypoint has been reached once
+			// Inform only once that the last waypoint has been reached
 			if (!UAVParam.lastWaypointReached[numUAV]) {
 				UAVParam.lastWaypointReached[numUAV] = true;
 				GUI.log(prefix + Text.LAST_WAYPOINT_REACHED);
@@ -976,11 +972,6 @@ public class Copter {
 	/** API: Provides the latest heading (rad) received from the flight controller. */
 	public static double getHeading (int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getHeading();
-	}
-
-	/** Returns a prefix that identifies the UAV that is performing a command for logging purposes. */
-	public static String getUAVPrefix(int numUAV) {
-		return SimParam.prefix[numUAV];
 	}
 
 	

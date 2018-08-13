@@ -88,12 +88,12 @@ public class InitialConfigurationThread extends Thread {
 				}
 				UAVParam.batteryCapacity = (int)Math.round(paramValue);
 			}
-			GUI.log(Text.BATTERY_SIZE + " " + UAVParam.batteryCapacity);
+			GUI.logVerbose(Text.BATTERY_SIZE + " " + UAVParam.batteryCapacity);
 			UAVParam.batteryLowLevel = (int)Math.rint(UAVParam.batteryCapacity * UAVParam.BATTERY_DEPLETED_THRESHOLD);
 			if (UAVParam.batteryLowLevel % 50 != 0) {
 				UAVParam.batteryLowLevel = (UAVParam.batteryLowLevel / 50 + 1) * 50;	// Multiple of 50 roof value
 			}
-			GUI.log(Text.BATTERY_THRESHOLD + " " + UAVParam.batteryLowLevel + " (" + (UAVParam.BATTERY_DEPLETED_THRESHOLD * 100) + " %)");
+			GUI.logVerbose(Text.BATTERY_THRESHOLD + " " + UAVParam.batteryLowLevel + " (" + (UAVParam.BATTERY_DEPLETED_THRESHOLD * 100) + " %)");
 		}
 		
 		// Get flight controller configuration
