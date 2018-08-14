@@ -9,6 +9,7 @@ import org.javatuples.Pair;
 import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
+import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import lander.gui.LanderConfiDialog;
@@ -119,8 +120,8 @@ public class LanderHelper extends ProtocolHelper{
 	public void startExperimentActionPerformed() {
 		// TODO Auto-generated method stub
 		
-		GUI.log("NUMERO DE UAV: " + String.valueOf(Param.numUAVs));
-		if (!Copter.takeOff(0, LanderParam.altitude) || !Copter.moveUAV(Param.numUAVs-1, LanderParam.LocationEnd, LanderParam.altitude, 20, 2)) {
+		GUI.log("NUMERO DE UAV: " + Tools.getNumUAVs());
+		if (!Copter.takeOff(0, LanderParam.altitude) || !Copter.moveUAV(Tools.getNumUAVs()-1, LanderParam.LocationEnd, LanderParam.altitude, 20, 2)) {
 			//Tratar error
 		}
 		

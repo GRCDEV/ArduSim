@@ -26,10 +26,12 @@ public class MasterMando extends Thread {
 
 		recurso = FollowMeParam.recurso.get();
 		Copter.setFlightMode(FollowMeParam.posMaster, FlightMode.LOITER);
-		GUI.log("Inicio PrintTh");
+		//GUI.log("Inicio PrintTh" + );
 		long tfin = 0;
 		long tSysIni = System.nanoTime();
 		Nodo n = recurso.pop(type);
+		
+		GUI.log("Inicio PrintTh" + tSysIni);
 //		long tfinExperimento = tSysIni + (FollowMeParam.TiempoMaxExperimento  * 1000000);
 //
 //		do {

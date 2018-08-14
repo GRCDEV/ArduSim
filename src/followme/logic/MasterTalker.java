@@ -36,7 +36,11 @@ public class MasterTalker extends Thread {
 		byte[] buffer;
 		Output out = new Output();
 		int[] idsFormacion = new int[FollowMeParam.posFormacion.size()];
+		int waitingTime;
+		
+		
 		int i = 0;
+		
 		for (int p : FollowMeParam.posFormacion.values()) {
 			idsFormacion[i++] = p;
 		}
@@ -77,6 +81,7 @@ public class MasterTalker extends Thread {
 		GUI.updateProtocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		
 
+		long cicleTime = System.currentTimeMillis();
 		
 		while (Copter.getFlightMode(idMaster) != FlightMode.LAND_ARMED
 				&& Copter.getFlightMode(idMaster) != FlightMode.LAND) {
@@ -103,8 +108,17 @@ public class MasterTalker extends Thread {
 			byte[] message = Arrays.copyOf(buffer, out.position());
 			Copter.sendBroadcastMessage(idMaster, message);
 			out.clear();
-			Tools.waiting(1000);
+			
+			cicleTime = cicleTime + FollowMeParam.FollowMeBeaconingPeriod ;
+			waitingTime = (int)(cicleTime - System.currentTimeMillis());
+			if (waitingTime > 0) {
+				Tools.waiting(waitingTime);
+			}
+			
+			
 		}
+		
+		cicleTime = System.currentTimeMillis();
 		
 		while (true) {
 			buffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
@@ -116,7 +130,12 @@ public class MasterTalker extends Thread {
 			byte[] message = Arrays.copyOf(buffer, out.position());
 			Copter.sendBroadcastMessage(idMaster, message);
 			out.clear();
-			Tools.waiting(1000);
+			
+			cicleTime = cicleTime + FollowMeParam.FollowMeBeaconingPeriod ;
+			waitingTime = (int)(cicleTime - System.currentTimeMillis());
+			if (waitingTime > 0) {
+				Tools.waiting(waitingTime);
+			}
 		}
 	}
 }

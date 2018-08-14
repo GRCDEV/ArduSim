@@ -8,10 +8,7 @@ import followme.pojo.RecursoCompartido;
 public class FollowMeParam {
 	
 	public static volatile boolean setupFinished = false;
-	
-	
-	
-	
+		
 
 	public static final long MASTER_ID_SIM = 0;
 	public static final String[] MASTER_MAC = { "b8:27:eb:74:0c:d1", "00:c0:ca:90:32:05" };
@@ -28,15 +25,24 @@ public class FollowMeParam {
 	public static final double AlturaInitSend = 0.5;
 	public static final long TiempoMaxExperimento = 60000 * 5;
 	
-	public static final int DistanciaSeparacionHorizontal = 75;
+	
+	
+	public static int DistanceLinearOffset;
+	public static int DistanceRadio;
+	
+	
+	//public static final int DistanciaSeparacionHorizontal = 75;
 	public static final int DistanciaSeparacionVertical = 0;
-	public static final double DistanciaSeparacionRadio = 125;
+	//public static final double DistanciaSeparacionRadio = 125;
 
-
+	// Beaconing parameters
+	public static int FollowMeBeaconingPeriod = 1000;						// (ms) Time between beacons
+	public static int FollowMeNumBeacons = 5;								// Between a new future positions calculus
+		
 	public static final int FormacionLinea = 0;
 	public static final int FormacionMatriz = 1;
 	public static final int FormacionCircular = 3;
-	public static final int FormacionUsada = FormacionMatriz;
+	public static int FormacionUsada;
 
 	public static int posMaster = -1;
 

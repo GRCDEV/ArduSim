@@ -60,13 +60,14 @@ public class SlaveListener extends Thread {
 				idsFormacion = in.readInts(size);
 				// Precálculo de la formación
 				int posFormacion = -1;
+				//GUI.log("IdsFormacion = "+ idsFormacion + "Posformacion = " + posFormacion );
 				for (int i = 0; i < idsFormacion.length; i++) {
 					if (idsFormacion[i] == idSlave) {
 						posFormacion = i;
 					}
 				} // TODO acción si no lo encuentra
 				
-				
+				//GUI.log("Luego // IdsFormacion = "+ idsFormacion + "Posformacion = " + posFormacion );
 
 				switch (FollowMeParam.FormacionUsada) {
 				case FollowMeParam.FormacionLinea:

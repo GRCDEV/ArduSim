@@ -2,6 +2,7 @@ package lander.logic;
 
 
 import api.Copter;
+import api.Tools;
 import lander.tools.Point;
 import main.Param;
 
@@ -48,7 +49,7 @@ public class LanderMain extends Thread{
 
 	private void move(int x, int y) {
 			//Copter.moveUAV(0, Tools.UTMToGeo(origin.Easting + (x * PollutionParam.density), origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
-			Copter.moveUAV(Param.numUAVs-1, LanderParam.LocationEnd, LanderParam.altitude, 20, 2);
+			Copter.moveUAV(Tools.getNumUAVs()-1, LanderParam.LocationEnd, LanderParam.altitude, 20, 2);
 	}
 		
 

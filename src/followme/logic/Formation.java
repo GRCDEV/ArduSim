@@ -35,8 +35,8 @@ public class Formation {
 		int posSlaveX = columnsBeforeSlave;
 		int posSlaveY = rowsBeforeSlave;
 		
-		double distX = (posSlaveX - posMasterX) * FollowMeParam.DistanciaSeparacionHorizontal;
-		double distY = (posSlaveY - posMasterY) * FollowMeParam.DistanciaSeparacionHorizontal;
+		double distX = (posSlaveX - posMasterX) * FollowMeParam.DistanceLinearOffset;
+		double distY = (posSlaveY - posMasterY) * FollowMeParam.DistanceLinearOffset;
 		
 		//Point2D.Double offset = null;
 
@@ -51,7 +51,7 @@ public class Formation {
 	
 	public static Point2D.Double getOffsetLineal(int posFormation) {
 		double vert = -FollowMeParam.DistanciaSeparacionVertical;
-		double horiz = FollowMeParam.DistanciaSeparacionHorizontal * ((int) (posFormation + 2) / 2);
+		double horiz = FollowMeParam.DistanceLinearOffset * ((int) (posFormation + 2) / 2);
 		if (posFormation % 2 == 0) {
 			return new Point2D.Double(horiz, vert);
 		} else {
@@ -64,8 +64,8 @@ public class Formation {
 	 * */
 	public static Point2D.Double getOffsetCircular(int posFormation, int numSlaves){
 		double angulo = 2*Math.PI / numSlaves;
-		double vert = Math.sin(angulo * posFormation)* FollowMeParam.DistanciaSeparacionRadio;
-		double horiz = Math.cos(angulo * posFormation) *FollowMeParam.DistanciaSeparacionRadio;
+		double vert = Math.sin(angulo * posFormation)* FollowMeParam.DistanceRadio;
+		double horiz = Math.cos(angulo * posFormation) *FollowMeParam.DistanceRadio;
 		
 		return new Point2D.Double(horiz, vert);
 	}
