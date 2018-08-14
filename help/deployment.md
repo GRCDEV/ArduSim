@@ -120,7 +120,7 @@ To store the output of ArduSim to a file, we also need to specify the target fil
 
 Each time the service writes something to the stdout or sterr, it will be redirected to the specified file. To enable modifications restart the logging service:
 
-    sudo systemctl restart rsyslog
+    sudo systemctl restart rsyslog.service
 
 Next, copy the service file and test it to be sure that it is working:
 

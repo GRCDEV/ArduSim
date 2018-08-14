@@ -2,15 +2,22 @@ package pccompanion.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Font;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.math.BigInteger;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -31,19 +38,11 @@ import api.Tools;
 import api.pojo.FlightMode;
 import main.ArduSimTools;
 import main.Param;
-import main.Text;
 import main.Param.SimulatorState;
+import main.Text;
 import pccompanion.logic.PCCompanionParam;
 import pccompanion.logic.PCCompanionTalker;
-import sim.gui.MainWindow;
 import sim.gui.VerticalFlowLayout;
-import javax.swing.JComboBox;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.Font;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 
 public class PCCompanionGUI {
 	
@@ -182,7 +181,7 @@ public class PCCompanionGUI {
 							count = count + 1000;
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
-									MainWindow.progressDialog.setTitle(timeString);
+									progressTimeLabel.setText(timeString);
 								}
 							});
 						} else {
