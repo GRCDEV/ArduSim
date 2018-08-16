@@ -303,7 +303,7 @@ public class MBCAPGUITools {
 		MBCAPParam.progress[numUAV].add(new ProgressState(state, System.currentTimeMillis()));
 
 		// Update the log in the main window
-		GUI.log(GUI.getUAVPrefix(numUAV) + MBCAPText.CAP + " = " + state.getName());
+		GUI.log(numUAV, MBCAPText.CAP + " = " + state.getName());
 		// Update the progress dialog
 		GUI.updateProtocolState(numUAV, state.getName());
 	}

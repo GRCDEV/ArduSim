@@ -50,7 +50,6 @@ public class CollisionDetectorThread extends Thread {
 
 		int waitingTime;
 		boolean isRealUAV = Param.role == Tools.MULTICOPTER;
-		String prefix = GUI.getUAVPrefix(numUAV);
 		// If two UAVs collide, then the protocol stops. Also, it stops when the experiment finishes
 		while (!Tools.isCollisionDetected() && Tools.isExperimentInProgress()) {
 			// Analyze received information while flying
@@ -63,13 +62,13 @@ public class CollisionDetectorThread extends Thread {
 				if (state != MBCAPState.NORMAL
 						&& state != MBCAPState.EMERGENCY_LAND
 						&& System.nanoTime() - stateTime > MBCAPParam.uavDeadlockTimeout[numUAV]) {
-					GUI.log(prefix + MBCAPText.PROT_TIMED);
+					GUI.log(numUAV, MBCAPText.PROT_TIMED);
 					// Case a. The UAV can resume the mission
 					if (avoidingBeacon == null
 							&& state != MBCAPState.OVERTAKING) {
 						if (Copter.setFlightMode(numUAV, FlightMode.AUTO)) {
 							stateTime = System.nanoTime();
-							GUI.log(prefix + MBCAPText.MISSION_RESUME);
+							GUI.log(numUAV, MBCAPText.MISSION_RESUME);
 							
 							// Clean all risk marks as we don't know which UAV has failed
 							if (!isRealUAV) {
@@ -83,7 +82,7 @@ public class CollisionDetectorThread extends Thread {
 							MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
 							
 						} else {
-							GUI.log(prefix + MBCAPText.MISSION_RESUME_ERROR);
+							GUI.log(numUAV, MBCAPText.MISSION_RESUME_ERROR);
 						}
 					} else if (state == MBCAPState.OVERTAKING) {
 						// Case b. No need for commands for the UAV, just change the state
@@ -103,9 +102,9 @@ public class CollisionDetectorThread extends Thread {
 					} else {
 						// Case c. Deadlock. Landing the UAV
 						if (Copter.setFlightMode(numUAV, FlightMode.LAND)) {
-							GUI.warn(MBCAPText.PROT_ERROR, prefix + MBCAPText.DEADLOCK);
+							GUI.warn(numUAV, MBCAPText.PROT_ERROR, MBCAPText.DEADLOCK);
 						} else {
-							GUI.log(prefix + MBCAPText.DEADLOCK_ERROR);
+							GUI.log(numUAV, MBCAPText.DEADLOCK_ERROR);
 						}
 						avoidingBeacon = null;
 						stateTime = System.nanoTime();
@@ -250,7 +249,7 @@ public class CollisionDetectorThread extends Thread {
 					// 3.1 In normal flight state. Stop due to a new collision risk
 					if (avoidingBeacon != null
 							&& MBCAPParam.state[numUAV] == MBCAPState.NORMAL) {
-						GUI.log(prefix + MBCAPText.RISK_DETECTED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+						GUI.log(numUAV, MBCAPText.RISK_DETECTED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 						GUI.updateGlobalInformation(MBCAPText.COLLISION_RISK_DETECTED);
 						
 						if (Copter.stopUAV(numUAV)) {
@@ -259,7 +258,7 @@ public class CollisionDetectorThread extends Thread {
 							// Progress update
 							MBCAPGUITools.updateState(numUAV, MBCAPState.STAND_STILL);
 						} else {
-							GUI.log(prefix + MBCAPText.RISK_DETECTED_ERROR);
+							GUI.log(numUAV, MBCAPText.RISK_DETECTED_ERROR);
 						}
 					}
 
@@ -273,13 +272,13 @@ public class CollisionDetectorThread extends Thread {
 								&& avoidingBeacon.idAvoiding == selfBeacon.uavId
 								&& MBCAPParam.idAvoiding.get(numUAV) == avoidingBeacon.uavId
 								&& MBCAPState.getSatateById(avoidingBeacon.state) == MBCAPState.GO_ON_PLEASE) {
-							GUI.log(prefix + MBCAPText.RESUMING_MISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+							GUI.log(numUAV, MBCAPText.RESUMING_MISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 							if (Copter.setFlightMode(numUAV, FlightMode.AUTO)) {
 								stateTime = System.nanoTime();
 								// Progress update
 								MBCAPGUITools.updateState(numUAV, MBCAPState.OVERTAKING);
 							} else {
-								GUI.log(prefix + MBCAPText.RESUMING_MISSION_ERROR);
+								GUI.log(numUAV, MBCAPText.RESUMING_MISSION_ERROR);
 							}
 						} else if (selfBeacon.uavId < avoidingBeacon.uavId
 								&& avoidingBeacon.idAvoiding == selfBeacon.uavId
@@ -290,7 +289,7 @@ public class CollisionDetectorThread extends Thread {
 							if (MBCAPv3Helper.needsToMoveAside(numUAV, avoidingBeacon.points)) {
 								// Change to the state moving aside. Changing MAV mode as previous step
 								if (Copter.setFlightMode(0, FlightMode.GUIDED)) {
-									GUI.log(prefix + MBCAPText.MOVING + "...");
+									GUI.log(numUAV, MBCAPText.MOVING + "...");
 									stateTime = System.nanoTime();
 									// Progress update
 									MBCAPGUITools.updateState(numUAV, MBCAPState.MOVING_ASIDE);
@@ -307,20 +306,20 @@ public class CollisionDetectorThread extends Thread {
 											speed = Copter.getSpeed(numUAV);
 										}
 										if (speed > MBCAPParam.STABILIZATION_SPEED) {
-											GUI.log(prefix + MBCAPText.MOVING_ERROR_2);
+											GUI.log(numUAV, MBCAPText.MOVING_ERROR_2);
 										} else {
-											GUI.log(prefix + MBCAPText.MOVED);
+											GUI.log(numUAV, MBCAPText.MOVED);
 										}
 									} else {
-										GUI.log(prefix + MBCAPText.MOVING_ERROR);
+										GUI.log(numUAV, MBCAPText.MOVING_ERROR);
 									}
 								} else {
-									GUI.log(prefix + MBCAPText.MOVING_ERROR);
+									GUI.log(numUAV, MBCAPText.MOVING_ERROR);
 								}
 							} else {
 								// Change to the state go on, please
 								// There is no need to apply commands to the UAV
-								GUI.log(prefix + MBCAPText.GRANT_PERMISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+								GUI.log(numUAV, MBCAPText.GRANT_PERMISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 								stateTime = System.nanoTime();
 								// Progress update
 								MBCAPGUITools.updateState(numUAV, MBCAPState.GO_ON_PLEASE);
@@ -341,8 +340,7 @@ public class CollisionDetectorThread extends Thread {
 							&& MBCAPv3Helper.OvertakingFinished(numUAV, avoidingBeacon.uavId, avoidingBeacon.points.get(0))) {
 
 						// There is no need to apply commands to the UAV
-						GUI.log(prefix
-								+ MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+						GUI.log(numUAV, MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 						if (!isRealUAV) {
 							MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
 							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
@@ -361,8 +359,7 @@ public class CollisionDetectorThread extends Thread {
 							&& Copter.getUTMLocation(numUAV)
 							.distance(MBCAPParam.targetPointUTM[numUAV]) < MBCAPParam.SAFETY_DISTANCE_RANGE) {
 						// There is no need to apply commands to the UAV
-						GUI.log(prefix
-								+ MBCAPText.SAFE_PLACE + " " + MBCAPText.GRANT_PERMISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+						GUI.log(numUAV, MBCAPText.SAFE_PLACE + " " + MBCAPText.GRANT_PERMISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 						stateTime = System.nanoTime();
 						// Progress update
 						MBCAPGUITools.updateState(numUAV, MBCAPState.GO_ON_PLEASE);
@@ -375,8 +372,7 @@ public class CollisionDetectorThread extends Thread {
 							&& hasBeenOvertaken) {
 						hasBeenOvertaken = false;
 						if (Copter.setFlightMode(numUAV, FlightMode.AUTO)) {
-							GUI.log(prefix
-									+ MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+							GUI.log(numUAV, MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 							MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
 							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
 							
@@ -388,7 +384,7 @@ public class CollisionDetectorThread extends Thread {
 							MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
 							
 						} else {
-							GUI.log(prefix + MBCAPText.RESUMING_MISSION_ERROR);
+							GUI.log(numUAV, MBCAPText.RESUMING_MISSION_ERROR);
 						}
 					}
 				}

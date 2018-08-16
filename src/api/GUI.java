@@ -44,6 +44,17 @@ public class GUI {
 		}
 	}
 	
+	/** Sends information related to a specific UAV to the main window log and console.
+	 * <p>This function adds a prefix to the message with the UAV ID.
+	 * <p>The window log is only updated when performing simulations. */
+	public static void log(int numUAV, String text) {
+		String res = "";
+		if (SimParam.prefix != null && SimParam.prefix[numUAV] != null) {
+			res += SimParam.prefix[numUAV];
+		}
+		GUI.log(res + text);
+	}
+	
 	/** Sends information to the main window log and console, only if verbose mode is enabled.
 	 * <p>The window log is only updated when performing simulations. */
 	public static void logVerbose(String text) {
@@ -52,9 +63,15 @@ public class GUI {
 		}
 	}
 	
-	/** Returns a prefix that identifies the UAV that is performing a command for logging purposes. */
-	public static String getUAVPrefix(int numUAV) {
-		return SimParam.prefix[numUAV];
+	/** Sends information related to a specific UAV to the main window log and console, only if verbose mode is enabled.
+	 * <p>This function adds a prefix to the message with the UAV ID.
+	 * <p>The window log is only updated when performing simulations. */
+	public static void logVerbose(int numUAV, String text) {
+		String res = "";
+		if (SimParam.prefix != null && SimParam.prefix[numUAV] != null) {
+			res += SimParam.prefix[numUAV];
+		}
+		GUI.logVerbose(res + text);
 	}
 	
 	/** Sends information to the main window upper-right corner label when a protocol needs it.
@@ -85,29 +102,41 @@ public class GUI {
 
 	/** Program termination when a fatal error happens.
 	 * <p>On a real UAV shows the message in console and exits.
-	 * <p>On simulation, the message is shown in a dialog, virtual UAVs are stopped and exits. */
+	 * <p>On simulation or PC Companion, the message is shown in a dialog. Virtual UAVs are stopped before exiting if needed. */
 	public static void exit(String message) {
-		if (Param.role == Tools.SIMULATOR) {
-			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
-			if (Param.simStatus != SimulatorState.CONFIGURING
-				&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
-				ArduSimTools.closeSITL();
-			}
-		} else {
+		if (Param.role == Tools.MULTICOPTER) {
 			System.out.println(Text.FATAL_ERROR + ": " + message);
 			System.out.flush();
+		} else {
+			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
+			if (Param.role == Tools.SIMULATOR) {
+				if (Param.simStatus != SimulatorState.CONFIGURING
+					&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
+					ArduSimTools.closeSITL();
+				}
+			}
 		}
 		System.exit(1);
 	}
 
-	/** Warns the user with a dialog when performing simulations. On a real UAV the console is used. */
+	/** Warns the user. A dialog is used when performing simulations and in the PC Companion, and the console is used on a real UAV. */
 	public static void warn(String title, String message) {
-		if (Param.role == Tools.SIMULATOR) {
-			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
-		} else {
+		if (Param.role == Tools.MULTICOPTER) {
 			System.out.println(title + ": " + message);
 			System.out.flush();
+		} else {
+			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
 		}
+	}
+	
+	/** Warns the user about something related to a specific UAV.
+	 * <p>A dialog is used when performing simulations and in the PC Companion, and the console is used on a real UAV.*/
+	public static void warn(int numUAV, String title, String message) {
+		String res = "";
+		if (SimParam.prefix != null && SimParam.prefix[numUAV] != null) {
+			res += SimParam.prefix[numUAV];
+		}
+		GUI.warn(title, res + message);
 	}
 	
 	/** Locates a UTM point on the screen, using the current screen scale. */

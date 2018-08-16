@@ -750,7 +750,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				}
 			}
 			if (!found) {
-				GUI.log(GUI.getUAVPrefix(numUAV) + MBCAPText.WAYPOINT_LOST);
+				GUI.log(numUAV, MBCAPText.WAYPOINT_LOST);
 				return predictedPath;
 			}
 			
@@ -1230,7 +1230,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		double distPrevToTarget, distPostToTarget, distPostToRisk;
 		double distPrevToRisk = 0;
 		int i = 0;
-		while (lastLocations[i] == null) {
+		while (lastLocations[i] == null) {//TODO adaptar a la nueva implementación de lastelments
 			i++;
 		}
 		distPrevToTarget = lastLocations[i].distance(target);
@@ -1260,7 +1260,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	public static boolean needsToMoveAside(int numUAV, List<Point3D> avoidPredictedLocations) {
 		// Errors detection
 		if (avoidPredictedLocations == null || avoidPredictedLocations.size() <= 1) {
-			GUI.log(GUI.getUAVPrefix(numUAV) + MBCAPText.REPOSITION_ERROR_1);
+			GUI.log(numUAV, MBCAPText.REPOSITION_ERROR_1);
 			return false;
 		}
 

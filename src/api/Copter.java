@@ -639,7 +639,6 @@ public class Copter {
 	 * <p>This method can be launched periodically, it only informs once when the last waypoint is reached, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
 	 * <p>Use only when the UAV is performing a planned mission. */
 	public static void landIfMissionEnded(int numUAV, double distanceThreshold) {
-		String prefix = GUI.getUAVPrefix(numUAV);
 		List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
 		FlightMode mode = Copter.getFlightMode(numUAV);
 		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
@@ -653,7 +652,7 @@ public class Copter {
 			// Inform only once that the last waypoint has been reached
 			if (!UAVParam.lastWaypointReached[numUAV]) {
 				UAVParam.lastWaypointReached[numUAV] = true;
-				GUI.log(prefix + Text.LAST_WAYPOINT_REACHED);
+				GUI.log(numUAV, Text.LAST_WAYPOINT_REACHED);
 			}
 			// Only when the UAV is really close to the last waypoint force it to land
 			if (Copter.getUTMLocation(numUAV).distance(mission.get(mission.size()-1)) < distanceThreshold) {
@@ -664,7 +663,7 @@ public class Copter {
 						&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
 					// Land the UAV when reaches the last waypoint
 					if (!Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
-						GUI.log(prefix + Text.LAND_ERROR);
+						GUI.log(numUAV, Text.LAND_ERROR);
 					}
 				}
 			}

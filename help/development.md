@@ -238,11 +238,13 @@ A few functions have been implemented to update data already shown in the GUI, a
 The next list of functions allow the developer to update the GUI, and even close ArduSim when an unexpected behavior is detected, showing a message before closing the application.
 
 * `void log(String)`. This method shows a message in console. Furthermore, is ArduSim runs as a simulator, the same message is shown in the log in the upper left corner of the main window.
+* `void log(int, String)`. In this case, the shown text is prepended with the identifier of the multicopter the message is related to.
 * `void logVerbose(String)`. In this case, the message is only shown if verbose logging mode is enabled.
-* `String getUAVPrefix(int)`. This function builds a String with convenience text that should be prepended to any message that a specific multicopter could publish with the previous functions.
+* `void logVerbose(int, String)`. Like in a previous case, the shown text is prepended with the identifier of a multicopter.
 * `void updateProtocolState(int, String)`. The *progress dialog* shows general information for each running virtual UAV. This function is used to show there the current state of the protocol to compare the behavior when different UAVs are in a different state.
 * `void updateGlobalInformation(String)`. On the upper right corner of the main window, below the interaction buttons, there is a *String* where you can show any information with this function.
-* `void warn(String, String)`. On a real UAV, it writes a mesage to console, while in simulation it opens a dialog to warn the user.
+* `void warn(String, String)`. On a real UAV, it writes a message to console, while in simulation it opens a dialog to warn the user.
+* `void warn(int, String, String)`. Like the previous function, it warns the user, but prepending the ID of the multicopter the information is related to.
 * `void exit(String)`. The behavior is the same as the previous method, but additionally it closes ArduSim with a error code. If ArduSim runs as a simulator and before exiting, all SITL instances are closed and temporary files are removed.
 
 The following functions are useful to draw new elements in the main panel using the methods `loadResources()`,  `drawResources(Graphics2D, BoardPanel)`, `rescaleDataStructures()`, and `rescaleShownResources()` in the protocol implementation, as explained in section "[4 Protocol implementation](#markdown-header-4-protocol-implementation)".

@@ -27,6 +27,8 @@ import sim.gui.ProgressDialog;
 import sim.gui.ResultsDialog;
 import sim.logic.CollisionDetector;
 import sim.logic.DistanceCalculusThread;
+import sim.logic.FakeReceiverThread;
+import sim.logic.FakeSenderThread;
 import sim.logic.RangeCalculusThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
@@ -319,6 +321,17 @@ public class Main {
 		if (Param.simStatus != SimulatorState.TEST_IN_PROGRESS) {
 			return;
 		}
+		
+		
+		//TODO remove
+		if (FakeSenderThread.fakeCommunicationsEnabled) {
+			for (int i = 0; i < Param.numUAVs; i++) {
+				(new FakeSenderThread(i)).start();
+				(new FakeReceiverThread(i)).start();
+			}
+		}
+		
+		
 
 		// 16. Start the experiment, only if the program is not being closed
 		Param.startTime = System.currentTimeMillis();
