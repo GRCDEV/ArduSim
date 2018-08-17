@@ -66,7 +66,7 @@ public class UAVParam {
 	public static final int MESSAGE_WAITING_TIME = 1;						// (ms) Waiting time to check if a message arrives
 	public static ConcurrentSkipListSet<IncomingMessage>[] vBuffer;			// Array with virtual buffer to calculate packet collisions when using packet collision detection
 	public static final int V_BUFFER_SIZE_FACTOR = 10;						// vBuffer is this times the size of mBuffer
-	public static int receivingvBufferSize = V_BUFFER_SIZE_FACTOR * receivingBufferSize;	// default value
+	public static int receivingvBufferSize = V_BUFFER_SIZE_FACTOR * receivingBufferSize;	// (bytes) default value
 	public static AtomicIntegerArray vBufferUsedSpace;						// Array containing the number of bytes of the vBuffer in use
 	// Statistics
 	public static int[] sentPacket, packetWaitedPrevSending, packetWaitedMediaAvailable;

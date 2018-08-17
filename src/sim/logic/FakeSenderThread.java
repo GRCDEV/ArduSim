@@ -6,7 +6,7 @@ import main.Param;
 
 public class FakeSenderThread extends Thread {
 	
-	public static boolean fakeCommunicationsEnabled = false;
+	public static boolean fakeCommunicationsEnabled = true;
 	public static int period = 200;
 	public static int messageSize = 705;
 	private int numUAV; // UAV identifier, beginning from 0
