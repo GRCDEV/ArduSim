@@ -4,12 +4,15 @@ import java.awt.Shape;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.mavlink.messages.MAV_PARAM_TYPE;
 
@@ -58,20 +61,25 @@ public class UAVParam {
 	public static AtomicBoolean[][] isInRange;								// Matrix containing the range check result
 	public static AtomicReferenceArray<IncomingMessage> prevSentMessage;	// Stores the last sent message for each UAV
 	public static boolean pCollisionEnabled = true;							// Whether the packet collision detection is enabled or not
+	public static ReentrantLock[] lock;										// Locks for concurrence when detecting  packet collisions
 	public static boolean carrierSensingEnabled = true;						// Whether the carrier sensing is enabled or not
 	public static IncomingMessageQueue[] mBuffer;							// Array with the message queues used as buffers
 	public static final int RECEIVING_BUFFER_PACKET_SIZE = 350;				// (packets) Initial size of the incoming queue q
 	public static int receivingBufferSize = 163840;							// (bytes) By default, the Raspberry Pi 3 receiving buffer size
-	public static long[] maxCompletedTEndTime;								// Array with the later completed transfer finish time for each sending UAV when using collision detection
+	public static AtomicLongArray maxCompletedTEndTime;						// Array with the later completed transfer finish time for each sending UAV when using collision detection
 	public static final int MESSAGE_WAITING_TIME = 1;						// (ms) Waiting time to check if a message arrives
 	public static ConcurrentSkipListSet<IncomingMessage>[] vBuffer;			// Array with virtual buffer to calculate packet collisions when using packet collision detection
-	public static final int V_BUFFER_SIZE_FACTOR = 10;						// vBuffer is this times the size of mBuffer
-	public static int receivingvBufferSize = V_BUFFER_SIZE_FACTOR * receivingBufferSize;	// (bytes) default value
-	public static AtomicIntegerArray vBufferUsedSpace;						// Array containing the number of bytes of the vBuffer in use
+	public static final int V_BUFFER_SIZE_FACTOR = 3;						// vBuffer is this times the size of mBuffer
+	public static int receivingvBufferSize = V_BUFFER_SIZE_FACTOR * receivingBufferSize;	// (bytes) Virtual buffer size
+	public static final double BUFFER_FULL_THRESHOLD = 0.8;					// Size of the buffer when it is flushed to avoid it to be filled
+	public static int receivingvBufferTrigger = (int)Math.round(BUFFER_FULL_THRESHOLD * receivingvBufferSize);// (bytes) Virtual buffer level when it is flushed to avoid it to be filled
+	public static AtomicIntegerArray vBufferUsedSpace;						// (bytes) Array containing the current level of the vBuffer
+	public static ConcurrentHashMap<String, String> communicationsClosed;	// Contains the communication threads that have stop to send or receive messages (<=numUAVs)
+	public static final int CLOSSING_WAITING_TIME = 5000;					// (ms) Time to wait while the communications are being closed
 	// Statistics
 	public static int[] sentPacket, packetWaitedPrevSending, packetWaitedMediaAvailable;
 	public static AtomicIntegerArray receiverOutOfRange, receiverWasSending, receiverVirtualQueueFull, receiverQueueFull, successfullyReceived;
-	public static int[] receivedPacket, discardedForCollision, successfullyEnqueued;
+	public static AtomicIntegerArray receivedPacket, discardedForCollision, successfullyEnqueued, successfullyProcessed;
 	
 	// UAVs collision detection parameters
 	public static volatile boolean collisionCheckEnabled = false;	// Whether the collision check is enabled or not

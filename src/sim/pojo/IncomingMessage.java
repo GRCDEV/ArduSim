@@ -1,10 +1,14 @@
 package sim.pojo;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class IncomingMessage implements Comparable<IncomingMessage> {
 	public long start, end;				// (ns) Starting and ending time of the transmission period
 	public int senderPos;				// Position of the UAV on the Simulator internal arrays
 	public byte[] message;				// Message to be sent
-	public boolean overlapped, checked;	// Variables used to check if there are collisions on the receiving buffer
+	public AtomicBoolean checked = new AtomicBoolean();	// Variables used to check if there are collisions on the receiving buffer
+	public AtomicBoolean overlapped = new AtomicBoolean();
+	public AtomicBoolean alreadyOverlapped = new AtomicBoolean();
 	
 	@SuppressWarnings("unused")
 	private IncomingMessage() {}
@@ -13,8 +17,6 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 	public IncomingMessage(int senderPos, long startTime, byte[] message) {
 		this.senderPos = senderPos;
 		this.message = message;
-		this.overlapped = false;
-		this.checked = false;
 		this.start = startTime;
 		// integer roundUp: ru = (a + (b-1))/b ( in this case: (59+length + 2)/3 )
 		// roundedUp bytes = ru * 3
@@ -41,11 +43,15 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 		return false;
 	}
 
-	/** This incoming message is less than o if it starts before o.
-	 * <p>This comparison does not take into account from which UAV the message was sent. */
+	/** This incoming message is less than o if it starts before o. */
 	@Override
 	public int compareTo(IncomingMessage o) {
-		return (int)(this.start - o.start);
+		int res = (int)(this.start - o.start);
+		if (res == 0) {
+			return this.senderPos - o.senderPos;
+		} else {
+			return res;
+		}
 	}
 
 	@Override
@@ -55,8 +61,8 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 		res.end = this.end;
 		res.senderPos = this.senderPos;
 		res.message = this.message;
-		res.overlapped = this.overlapped;
-		res.checked = this.checked;
+		res.overlapped.set(this.overlapped.get());
+		res.checked.set(this.checked.get());
 		return res;
 	}
 	

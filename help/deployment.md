@@ -59,7 +59,7 @@ Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
 
     One or both commands will show the limitations on different frequency ranges. You are not allowed to do an Ad-hoc network on a specific frequency if a text like *"no-IBSS"* appears.
     
-    If your current region is applied and it is forbidden to stablish an Ad-hoc network in the 5 GHz frequency band you should use the 2.4 GHz band. Otherwise,if your region is not applied, you must change it with the *Raspberry Pi Configuration*  tool, on the tab *Localisation*, option *set wifi region*, and then restart the device.
+    If your current region is applied and it is forbidden to stablish an Ad-hoc network in the 5 GHz frequency band you should use the 2.4 GHz band. Otherwise, if your region is not applied, you must change it with the *Raspberry Pi Configuration*  tool, on the tab *Localisation*, option *set wifi region*, and then restart the device.
 
 2. Network configuration. Raspbian Jessie and Stretch have changed the way a network is configured. The file */etc/network/interfaces* must remain untouched. Please, generate the file */etc/network/interfaces.d/wlan0* with the following content:
 
@@ -75,7 +75,7 @@ Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
     
         denyinterfaces wlan0
 
-    Finally restart the Raspberry Pi. This way we leave the loopback interface untouched, and ethernet connection under DHCP control. We use a static network address named *NETWORK_NAME*. You also have to change the network address for each multicopter used in the group/swarm. We have found that the network manager makes a mess and thinks that the regulatory domain (WiFi country) is unset when using Raspbian in desktop mode. Don't care about it, as you can check, the Ad-hoc network is up and functioning once you restart the device (network manager becomes useless).
+    Finally restart the Raspberry Pi. This way we leave the loopback interface untouched, and ethernet connection under DHCP control. We use a static address for the network named *NETWORK_NAME*. You also have to change the network address for each multicopter used in the group/swarm. We have found that the network manager makes a mess and thinks that the regulatory domain (WiFi country) is unset when using Raspbian in desktop mode. Don't care about it, as you can check, the Ad-hoc network is up and functioning once you restart the device (network manager becomes useless).
 
     May be you are using other wireless adapters. If this is the case, we found that Raspbian changes randomly the wireless adapter identifier when using more than one at the same time. This issue could avoid ArduSim from working adequately sometimes. To solve it, you have to fix the adapters identifier editing the file */lib/udev/rules.d/75-persistent-net-generator.rules* and replace the corresponding line with:
 
@@ -111,7 +111,7 @@ ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini*,
     UAVPROTOCOL="some protocol"
     UAVSPEED=2.5
 
-This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol *UAVPROTOCOL*, and with a maximum speed of 2.5 m/s for the multicopter.
+This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol *UAVPROTOCOL*, and with a maximum speed of 2.5 m/s for the multicopter (modify it at will).
 
 To store the output of ArduSim to a file, we also need to specify the target file to the system log service. Create the file */etc/rsyslog.d/ardusim.conf* with the following content:
 

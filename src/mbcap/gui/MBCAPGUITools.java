@@ -36,12 +36,12 @@ public class MBCAPGUITools {
 		
 		// Beaconing parameters
 		validating = (String) panel.beaconingPeriodTextField.getText();
-		if (!Tools.isValidInteger(validating)) {
+		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_PERIOD_ERROR);
 			return false;
 		}
 		validating = (String) panel.numBeaconsTextField.getText();
-		if (!Tools.isValidInteger(validating)) {
+		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_REFRESH_ERROR);
 			return false;
 		}

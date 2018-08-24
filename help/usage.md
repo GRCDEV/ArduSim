@@ -16,7 +16,7 @@ A simulation can be performed directly in Eclipse or from a *.jar* executable fi
 
 The file *ardusim.ini* is used to load some relevant parameters that can be modified later in the GUI.
 
-We suggest to run ArduSim as Administrator (Windows, requires Imdisk Virtual Disk Driver) or sudoer (Linux). In this mode, temporary files are stored in a virtual hard drive, which speeds up ArduSim when using a slow HHDD, as it could limit the number of virtual multicopters that can be run simultaneously.
+We suggest to run ArduSim as Administrator (on Windows, and requires Imdisk Virtual Disk Driver) or sudoer (Linux). In this mode, temporary files are stored in a virtual hard drive, which speeds up ArduSim when using a slow HHDD, as it could limit the number of virtual multicopters that can be run simultaneously.
 
 ### 1.1 Simulation configuration
 
@@ -29,7 +29,7 @@ This dialog allows to introduce several simulation parameters:
 * Simulation parameters:
 
     * *ArduCopter path*. The arducopter executable file is auto-detected if found in the same folder as ArduSim when running from a *.jar* file, or the root folder of the project when running in Eclipse IDE. In any other case, you need to manually locate the file.
-    * *Speeds file*. The user must provide a *.csv* file with the maximum desired speed for the UAVs. One value per line must be provided for each multicopter.
+    * *Speeds file*. The user must provide a *.csv* file with the maximum desired speed for the UAVs. One value per line and multicopter must be provided.
     * *Number of UAVs*. The user can select the number of multicopters to be simulated depending on the number of speed values in the previous file, the performance of the computer, and the properties of the protocol being developed.
 
 * Performance parameters:
@@ -43,8 +43,8 @@ This dialog allows to introduce several simulation parameters:
 
 * General parameters:
 
-    * *Enable verbose logging*. The user may use this option to show additional information in the main window log and console, only under certain circumstances. For example, using this option ArduSim provides additional information for debugging purposes.
-    * *Enable verbose storage*. Similar to the previous option, the user may store additional information related to the protocol in files, only in some cases.
+    * *Enable verbose logging*. The user may use this option to show additional information in the main window log and console only under certain circumstances. For example, using this option ArduSim provides additional information for debugging purposes.
+    * *Enable verbose storage*. Similar to the previous option, the user may store additional information related to the protocol in files only in some cases.
 
 * UAV synchronization protocol. This list is automatically populated with the protocols implemented in ArduSim. The user must select the protocol to be tested in simulation.
 
@@ -81,15 +81,15 @@ The following picture shows the main window of ArduSim with ten UAVs performing 
 
 ![Main window](mainwindow.png)
 
-On the upper left corner of the window (1) we can find the application log. It shows messages representing the result of commands sent to the UAVs, the progress of the experiment, and any desired information using the function *GUI.log(String)*.
+On the upper left corner of the window (1) we can find the application log. It shows messages representing the result of commands sent to the UAVs, the progress of the experiment, and any desired information using the function `GUI.log(String)`.
 
-On the right (2), there are a few buttons that allow the user to control the experiment. The *Setup* button starts the actions included in the function *setupActionPerformed()* of the protocol implementation, as explained in section [Protocol development](development.md). On the other hand, the button *Start test* begins the experiment with the function *startExperimentActionPerformed()* of the implementation. The last button lets you to stop the experiment and exit ArduSim at any time, and the first one shows the following dialog, where up-to-date data from the multicopters is shown in real time: location, speed, flight mode, and specific information related to the protocol under test.
+On the right (2), there are a few buttons that allow the user to control the experiment. The *Setup* button starts the actions included in the function `setupActionPerformed()` of the protocol implementation, as explained in section [Protocol development](development.md). On the other hand, the button *Start test* begins the experiment with the function `startExperimentActionPerformed()` of the implementation. The last button lets you to stop the experiment and exit ArduSim at any time, and the first one shows the following dialog, where up-to-date data from the multicopters is shown in real time: location, speed, flight mode, and specific information related to the protocol under test.
 
 ![Progress dialog](progress.png)
 
 ### 1.4 Results
 
-When all the virtual multicopters land the experiment ends. Then, the following dialog opens.
+When all the virtual multicopters land, the experiment ends. Then, the following dialog opens.
 
 ![Results dialog](wirelessresults.png)
 
@@ -100,9 +100,9 @@ The user decides whether to store this information or not. In the former case, a
 * *name.txt*. It contains the same information shown in the results dialog.
 * *name_mobility_OMNeT-INET-BoonMotionModel.txt*. The movement over the time (mobility) of all the UAVs is stored to be used in the communications simulator OMNeT++, using the mobility model *BoonMotionModel* of the INET framework.
 * *name_mobility_OMNeT-INET-BoonMotionModel_3D.txt*. This file includes the same information plus the altitude of the multicopter over the time.
-* *name_X_mobility_NS2.txt*. One file for each multicopter stores the mobility model to be used in the communications simulator NS2.
+* *name_X_mobility_NS2.txt*. One file for each multicopter stores the mobility model to be used in the communications simulator NS2. This file format is compatible with NS3.
 * *name_X_mobility_NS2_3D.txt*. In this case, the altitude of the multicopter is also included.
-* *name_X_mission_AutoCAD.scr*. This file includes the simplified mission shown on screen, and is stored in AutoCAD format as a single poliline.
+* *name_X_mission_AutoCAD.scr*. This file includes the simplified mission shown on screen, and it is stored in AutoCAD format as a single poliline.
 * *name_X_path.csv*. In this case, we include the 3D location, heading, speed, acceleration, and distance to origin over time. We think that this file may be the most useful to mathematically analyze the behavior of the multicopters.
 * *name_X_path_AutoCAD.scr*. This is a simplified version of the previous file with an AutoCAD poliline with the path followed by the multicopter.
 * *name_X_path_AutoCAD3d.scr* This file includes a 3D poliline with the path followed by the multicopter.
@@ -111,7 +111,7 @@ The user can generate additional files with the function *logData(String, String
 
 ## 2 ArduSim on real multicopters
 
-If a protocol is developed following the recommendations included with ArduSim, it can be easily deployed on real multicopters, just changing the execution parameters.
+If a protocol is developed following the recommendations included with ArduSim, it can be easily deployed on real multicopters, just changing an execution parameter.
 
 ArduSim can be executed with the following command line:
 
@@ -119,9 +119,9 @@ ArduSim can be executed with the following command line:
 
     *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
     *simulator*. ArduSim runs as a multi-UAV simulator in a computer.
-    *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution in a group of real multicopters, preferably in a laptop for mobility.
+    *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution of a group of real multicopters, preferably in a laptop for mobility.
 
-To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, connected among them in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer, which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
+To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, all connected in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer, which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
 
 ### 2.1 Real multicopters
 
@@ -152,7 +152,7 @@ The parameters found in *ardusim.ini* are loaded, and the following windows open
 
 The real UAVs periodically send data packets with their identifier, based on the MAC address, and the current simulation state.
 
-In the example, just one multicopter has been detected and is ready to fly. From now, the setup button is enabled and the user can send that command.
+In the example, just one multicopter has been detected and is ready to fly. From now, the setup button will be enabled and then the user will be able to send that command.
 
 Once the setup process finishes, the user can also press the button "Start test" and the UAVs start the experiment.
 

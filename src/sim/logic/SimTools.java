@@ -117,7 +117,7 @@ public class SimTools {
 
 		//  Visualization parameters
 		validating = (String)panel.screenDelayTextField.getText();
-		if (!Tools.isValidInteger(validating)) {
+		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.SCREEN_DELAY_ERROR_1);
 			return false;
 		}
@@ -138,7 +138,7 @@ public class SimTools {
 		}
 		if (panel.batteryCheckBox.isSelected()) {
 			validating = (String)panel.batteryTextField.getText();
-			if (!Tools.isValidInteger(validating)) {
+			if (!Tools.isValidPositiveInteger(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.BATTERY_ERROR_1);
 				return false;
 			}
@@ -159,7 +159,7 @@ public class SimTools {
 
 		//  UAV to UAV communications parameters
 		validating = (String)panel.receivingBufferSizeTextField.getText();
-		if (!Tools.isValidInteger(validating)) {
+		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.BUFFER_SIZE_ERROR_1);
 			return false;
 		}
@@ -204,7 +204,7 @@ public class SimTools {
 		//  Wind parameters
 		if (panel.windCheckBox.isSelected()) {
 			validating = (String)panel.windDirTextField.getText();
-			if (!Tools.isValidInteger(validating)) {
+			if (!Tools.isValidPositiveInteger(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.WIND_DIRECTION_ERROR);
 				return false;
 			}
@@ -263,6 +263,7 @@ public class SimTools {
 		UAVParam.pCollisionEnabled = panel.pCollisionDetectionCheckBox.isSelected();
 		UAVParam.receivingBufferSize = Integer.parseInt((String)panel.receivingBufferSizeTextField.getText());
 		UAVParam.receivingvBufferSize = UAVParam.V_BUFFER_SIZE_FACTOR * UAVParam.receivingBufferSize;
+		UAVParam.receivingvBufferTrigger = (int)Math.round(UAVParam.BUFFER_FULL_THRESHOLD * UAVParam.receivingvBufferSize);
 		if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
 			Param.fixedRange = Double.parseDouble((String)panel.fixedRangeTextField.getText());
 		}

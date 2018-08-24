@@ -2,7 +2,7 @@
 
 This Eclipse Oxygen project includes the ArduSim simulator implementation. Once the project is cloned locally, and the protocol is tested you can generate the .jar executable file and perform simulations outside Eclipse.
 
-ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) as an internal module, a program oriented to simulate a single drone, so it is also needed to install SITL, and to compile an executable multicopter from it. Once finished the compilation (see instructions below) just copy the executable multicopter next to the java file and the simulator will automatically notice the multicopter file.
+ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) as an internal module, a program oriented to simulate a single drone, so it is also needed to install SITL, and to compile an executable multicopter from it. Once finished the compilation (see instructions below) just copy the executable multicopter next to the java file, and the simulator will automatically notice the multicopter file.
 
 ## Table of contents
 
@@ -22,7 +22,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * RAM 6 GB
 
-* Microsoft Windows 7
+* Microsoft Windows 7 or Linux
 
 * Eclipse IDE for Java Developers: Oxygen or later, with package EGit
 
@@ -40,7 +40,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * Java SE Runtime Environment 8 64 bits (or latest version)
 
-* ImDisk Virtual Disk Driver (under Windows)
+* ImDisk Virtual Disk Driver (Windows only)
 
 ## 2 Eclipse IDE integration
 
@@ -74,13 +74,13 @@ We recommend to show packages in hierarchical order in *Package explorer* tab. O
 
 ### 2.3 Copy necessary files
 
-ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.param*. These files must be put in a place easy to find in order to execute simulations when running the *.jar* file. If you put them in the root of the Eclipse project (by default: */home/user_name/git/ardusim*), ArduSim will automatically find them when running from Eclipse IDE, avoiding to manually select the *arducopter* file each time it is launched.
+ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.param*. These files must be put in a place easy to find in order to execute simulations when running ArduSim. If you put them in the root of the Eclipse project (by default: */home/user_name/git/ardusim*), ArduSim will automatically find them when running from Eclipse IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder.
 
 Several temporary files are generated when using ArduSim for simulations. Please, close ArduSim with the enabled button and not in the *Console* tab of Eclipse to force ArduSim to remove the temporary files before exiting.
 
 Remember that ArduSim is a highly asynchronous application, and running in Eclipse in degugging mode could lead to an unexpected behavior of the application.
 
-Finally, go to *Run --> Run configurations...* and create a new configuration with the following argument to be able to run a simulation, but not a PC Companion or a real multicopter:
+Finally, go to *Run --> Run configurations...* and create a new configuration with the following argument to be able to run a simulation, but not a PC Companion or a real multicopter, roles that are explained in other sections.
 
     simulator
 
@@ -98,7 +98,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 3. Cygwin. It is a Linux type command line emulator that enables us to compile the multicopter.
 
-    1. Download and run Cygwin [64-bit](https://cygwin.com/setup-x86_64.exe) or [32 bit](https://cygwin.com/setup-x86.exe) installer and accept all the prompts (including default file locations) until you reach the Select Packages dialog. There, with a left clic select the packages listed below (search for each one using the text in the "Name" field):
+    1. Download and run Cygwin [64-bit](https://cygwin.com/setup-x86_64.exe) or [32 bit](https://cygwin.com/setup-x86.exe) installer and accept all the prompts (including default file locations) until you reach the Select Packages dialog. There, with a left clic select the packages listed below (search for each one using the text in the "Name" field of the table):
 
         Name | Category/Name/Description
         --- | ---
@@ -117,13 +117,12 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         procps | System - procps-ng: System and process monitoring utilities
 
     2. When all the packages are selected, click through the rest of the prompts and accept all other default options (including the additional dependencies). From now, we will use *Cygwin* to refer indistinctly to the 32 (*Cygwin*) and 64 bits (*Cygwin64*) installed program and folders.
-   
-4. Set up folders/paths in Cygwin. This procedure makes it easy to execute simulated vehicles under SITL (sim_vehicle.py will be found from anywhere), but it is not strictly needed to just compile a multicopter, if the next steps are followed.
+    3. Open a *Cygwin terminal* from the desktop to initialize user files and close it.
 
-    1. Open a *Cygwin terminal* from the desktop to initialize user files and close it.
-    2. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, as the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later all the carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
 
-            export PATH=$PATH:$HOME/ardupilot/Tools/autotest
+4. Set up folders/paths in Cygwin. This procedure makes it easy to execute simulated vehicles under SITL (sim_vehicle.py will be found from anywhere), but it is not strictly needed to just compile a multicopter, if the next steps are followed. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, as the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later all the carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
+
+        export PATH=$PATH:$HOME/ardupilot/Tools/autotest
 
 5. Install required Python packages.
 
@@ -134,7 +133,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         python -m pip install --user lxml
         python -m pip install --user uavcan
 
-6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal input this lines:
+6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
 
         git clone git://github.com/ArduPilot/ardupilot.git
         cd ardupilot
@@ -177,7 +176,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
     
         sudo yum install git
 
-3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal go to your home folder (*/home/user_name*) and input this lines:
+3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal, go to your home folder (*/home/user_name*) and input this lines:
 
         git clone git://github.com/ArduPilot/ardupilot.git
         cd ardupilot

@@ -892,7 +892,12 @@ public class UAVControllerThread extends Thread {
 			message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
 			message.target_system = UAVParam.mavId.get(numUAV);
 			message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
-			this.sendMessage(message.encode());
+			try {
+				this.sendMessage(message.encode());
+			} catch (IOException e) {
+				System.out.println("Error moviendo el dron" + Param.id[numUAV] + " a una ubicación");
+			}
+			
 		} else {
 			GUI.log("You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete.");
 			return;

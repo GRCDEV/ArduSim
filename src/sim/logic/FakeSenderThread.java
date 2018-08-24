@@ -2,11 +2,10 @@ package sim.logic;
 
 import api.Copter;
 import api.Tools;
-import main.Param;
 
 public class FakeSenderThread extends Thread {
 	
-	public static boolean fakeCommunicationsEnabled = true;
+	public static boolean fakeCommunicationsEnabled = false;
 	public static int period = 200;
 	public static int messageSize = 705;
 	private int numUAV; // UAV identifier, beginning from 0
@@ -23,7 +22,7 @@ public class FakeSenderThread extends Thread {
 //		int waitingTime;
 		byte[] message = new byte[messageSize];
 //		long cicleTime = System.currentTimeMillis();
-		while (Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS) {
+		while (true) {//(Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS) {
 			Copter.sendBroadcastMessage(numUAV, message);
 			Tools.waiting(period);
 			

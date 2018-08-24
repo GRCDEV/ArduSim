@@ -90,16 +90,18 @@ public class Text {
 	public static final String TOT_SENT_PACKETS = "Total sent packets:";
 	public static final String TOT_WAITED_PREV_SENDING = "Waiting for the previous packet to be sent:";
 	public static final String TOT_WAITED_MEDIA_AVAILABLE = "Waiting the media to be available (carrier sensing):";
-	public static final String TOT_EQUIVALENT_RECEIVED = "Potentially received packets:";
+	public static final String TOT_POTENTIALLY_RECEIVED = "Potentially received packets:";
 	public static final String TOT_OUT_OF_RANGE = "Not received due to range:";
 	public static final String TOT_LOST_RECEIVER_WAS_SENDING = "Not received because the receiver was sending:";
-	public static final String TOT_VIRTUAL_QUEUE_WAS_FULL = "Not received because the virtual receiving queue was full:";
-	public static final String TOT_QUEUE_WAS_FULL = "Not received because the receiving queue was full:";
+	public static final String TOT_VIRTUAL_QUEUE_WAS_FULL = "Discarded because the virtual receiving buffer was full:";
+	public static final String TOT_QUEUE_WAS_FULL = "Discarded because the receiving buffer was full:";
 	public static final String TOT_RECEIVED = "Received packets:";
+	public static final String TOT_RECEIVED_IN_VBUFFER = "Received packets in virtual buffer:";
+	public static final String TOT_REMAINING_IN_VBUFFER = "Remaining in virtual buffers:";
 	public static final String TOT_REMAINING_IN_BUFFER = "Remaining in buffers:";
-	public static final String TOT_PROCESSED = "Processed:";
+	public static final String TOT_PROCESSED = "Processed in virtual buffers:";
 	public static final String TOT_DISCARDED_FOR_COLLISION = "Discarded due to collisions:";
-	public static final String TOT_ENQUEUED_OK = "Valid and used:";
+	public static final String TOT_USED_OK = "Used:";
 	public static final String COLLISION_PARAMETERS = "UAV Collision detection parameters:";
 	public static final String COLLISION_ENABLE = "Enable collision detection:";
 	public static final String COLLISION_PERIOD = "Check period:";
@@ -204,10 +206,11 @@ public class Text {
 	public static final String GPS_OK = "GPS fix acquired...";
 	public static final String COMMUNICATIONS_ONLINE = "Simulated communications online...";
 	public static final String COLLISION_DETECTION_ONLINE = "Collision detection online...";
-	public static final String SEND_MISSION = "Setting missions if needed...";
+	public static final String SEND_BASIC_CONFIGURATION = "Preparing UAVs internal configuration...";
 	public static final String WAITING_FOR_USER = "Waiting for user interaction.";
 	public static final String TAKING_OFF = "Take off in progress...";
 	public static final String TEST_START = "Test started...";
+	public static final String SHUTTING_DOWN_COMM = "Blocking virtual communications...";
 	public static final String EXITING = "UAV(s) closed. Time to go...";
 	public static final String ALTITUDE_TEXT = "altitude";
 	

@@ -539,7 +539,7 @@ public class Tools {
 	}
 
 	/** Validates a positive integer number. */
-	public static boolean isValidInteger(String validating) {
+	public static boolean isValidPositiveInteger(String validating) {
 		if (validating == null) {
 			return false;
 		}

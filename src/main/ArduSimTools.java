@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -46,8 +47,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
@@ -228,7 +231,7 @@ public class ArduSimTools {
 			if (param == null) {
 				GUI.log(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.baudRate);
 			} else {
-				if (!Tools.isValidInteger(param)) {
+				if (!Tools.isValidPositiveInteger(param)) {
 					GUI.log(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
@@ -239,7 +242,7 @@ public class ArduSimTools {
 			if (param == null) {
 				GUI.log(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCells);
 			} else {
-				if (!Tools.isValidInteger(param)) {
+				if (!Tools.isValidPositiveInteger(param)) {
 					GUI.log(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
@@ -255,7 +258,7 @@ public class ArduSimTools {
 			if (param == null) {
 				GUI.log(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCapacity);
 			} else {
-				if (!Tools.isValidInteger(param)) {
+				if (!Tools.isValidPositiveInteger(param)) {
 					GUI.log(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
@@ -528,7 +531,12 @@ public class ArduSimTools {
 				for (int i = 0; i < Param.numUAVs; i++) {
 					UAVParam.vBuffer[i] = new ConcurrentSkipListSet<>();
 				}
-				UAVParam.maxCompletedTEndTime = new long[Param.numUAVs];
+				UAVParam.successfullyProcessed = new AtomicIntegerArray(Param.numUAVs);
+				UAVParam.maxCompletedTEndTime = new AtomicLongArray(Param.numUAVs);
+				UAVParam.lock = new ReentrantLock[Param.numUAVs];
+				for (int i = 0; i < Param.numUAVs; i++) {
+					UAVParam.lock[i] = new ReentrantLock();
+				}
 			}
 			
 			UAVParam.packetWaitedPrevSending = new int[Param.numUAVs];
@@ -538,8 +546,9 @@ public class ArduSimTools {
 			UAVParam.receiverVirtualQueueFull = new AtomicIntegerArray(Param.numUAVs);
 			UAVParam.receiverQueueFull = new AtomicIntegerArray(Param.numUAVs);
 			UAVParam.successfullyReceived = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.discardedForCollision = new int[Param.numUAVs];
-			UAVParam.successfullyEnqueued = new int[Param.numUAVs];
+			UAVParam.discardedForCollision = new AtomicIntegerArray(Param.numUAVs);
+			UAVParam.successfullyEnqueued = new AtomicIntegerArray(Param.numUAVs);
+			UAVParam.communicationsClosed = new ConcurrentHashMap<>(Param.numUAVs);
 		} else {
 			try {
 				UAVParam.sendSocket = new DatagramSocket();
@@ -556,7 +565,7 @@ public class ArduSimTools {
 			}
 		}
 		UAVParam.sentPacket = new int[Param.numUAVs];
-		UAVParam.receivedPacket = new int[Param.numUAVs];
+		UAVParam.receivedPacket = new AtomicIntegerArray(Param.numUAVs);
 		
 	}
 	
@@ -1833,7 +1842,7 @@ public class ArduSimTools {
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, retrieves controller configuration, loads missions, etc. */
 	public static void sendBasicConfiguration() {
 		
-		GUI.log(Text.SEND_MISSION);
+		GUI.log(Text.SEND_BASIC_CONFIGURATION);
 		// All UAVs configured on a different thread, but the first
 		InitialConfigurationThread[] threads = null;
 		if (Param.numUAVs > 1) {
@@ -2046,7 +2055,7 @@ public class ArduSimTools {
 		long receivedPacketTot = 0;
 		for (int i = 0; i < Param.numUAVs; i++) {
 			sentPacketTot = sentPacketTot + UAVParam.sentPacket[i];
-			receivedPacketTot = receivedPacketTot + UAVParam.receivedPacket[i];
+			receivedPacketTot = receivedPacketTot + UAVParam.receivedPacket.get(i);
 		}
 		if (Param.role == Tools.MULTICOPTER) {
 			sb.append("\n\t").append(Text.BROADCAST_IP).append(" ").append(UAVParam.broadcastIP);
@@ -2064,28 +2073,8 @@ public class ArduSimTools {
 			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);
 			if (Param.numUAVs > 1 && sentPacketTot > 0) {
 				long packetWaitedPrevSendingTot = 0;
-				long equivalentReceived = sentPacketTot * (Param.numUAVs - 1);
-				long receiverOutOfRangeTot = 0;
-				long receiverWasSendingTot = 0;
-				long receiverVirtualQueueFullTot = 0;
-				long receiverQueueFullTot = 0;
-				long successfullyReceivedTot = 0;
-				long discardedForCollisionTot = 0;
-				long successfullyEnqueuedTot = 0;
 				for (int i = 0; i < Param.numUAVs; i++) {
 					packetWaitedPrevSendingTot = packetWaitedPrevSendingTot + UAVParam.packetWaitedPrevSending[i];
-					receiverOutOfRangeTot = receiverOutOfRangeTot + UAVParam.receiverOutOfRange.get(i);
-					receiverWasSendingTot = receiverWasSendingTot + UAVParam.receiverWasSending.get(i);
-					receiverQueueFullTot = receiverQueueFullTot + UAVParam.receiverQueueFull.get(i);
-					successfullyReceivedTot = successfullyReceivedTot + UAVParam.successfullyReceived.get(i);
-				}
-				long totRemainingInBuffer = successfullyReceivedTot - receivedPacketTot;
-				if (UAVParam.pCollisionEnabled) {
-					for (int i = 0; i < Param.numUAVs; i++) {
-						receiverVirtualQueueFullTot = receiverVirtualQueueFullTot + UAVParam.receiverVirtualQueueFull.get(i);
-						discardedForCollisionTot = discardedForCollisionTot + UAVParam.discardedForCollision[i];
-						successfullyEnqueuedTot = successfullyEnqueuedTot + UAVParam.successfullyEnqueued[i];
-					}
 				}
 				sb.append("\n\t\t").append(Text.TOT_WAITED_PREV_SENDING).append(" ").append(packetWaitedPrevSendingTot)
 					.append(" (").append(Tools.round((100.0 * packetWaitedPrevSendingTot)/sentPacketTot, 3)).append("%)");
@@ -2097,29 +2086,82 @@ public class ArduSimTools {
 					sb.append("\n\t\t").append(Text.TOT_WAITED_MEDIA_AVAILABLE).append(" ").append(packetWaitedMediaAvailableTot)
 						.append(" (").append(Tools.round((100.0 * packetWaitedMediaAvailableTot)/sentPacketTot, 3)).append("%)");
 				}
-				sb.append("\n\t").append(Text.TOT_EQUIVALENT_RECEIVED).append(" ").append(equivalentReceived);
+				long potentiallyReceived = sentPacketTot * (Param.numUAVs - 1);
+				long receiverOutOfRangeTot = 0;
+				long receiverWasSendingTot = 0;
+				long successfullyReceivedTot = 0;
+				for (int i = 0; i < Param.numUAVs; i++) {
+					receiverOutOfRangeTot = receiverOutOfRangeTot + UAVParam.receiverOutOfRange.get(i);
+					receiverWasSendingTot = receiverWasSendingTot + UAVParam.receiverWasSending.get(i);
+					successfullyReceivedTot = successfullyReceivedTot + UAVParam.successfullyReceived.get(i);
+				}
+				long receiverVirtualQueueFullTot = 0;
+				long successfullyEnqueuedTot = 0;
+				if (UAVParam.pCollisionEnabled) {
+					for (int i = 0; i < Param.numUAVs; i++) {
+						receiverVirtualQueueFullTot = receiverVirtualQueueFullTot + UAVParam.receiverVirtualQueueFull.get(i);
+						successfullyEnqueuedTot = successfullyEnqueuedTot + UAVParam.successfullyEnqueued.get(i);
+					}
+				}
+				long receiverQueueFullTot = 0;
+				for (int i = 0; i < Param.numUAVs; i++) {
+					receiverQueueFullTot = receiverQueueFullTot + UAVParam.receiverQueueFull.get(i);
+				}
+				sb.append("\n\t").append(Text.TOT_POTENTIALLY_RECEIVED).append(" ").append(potentiallyReceived);
 				sb.append("\n\t\t").append(Text.TOT_OUT_OF_RANGE).append(" ").append(receiverOutOfRangeTot)
-					.append(" (").append(Tools.round((100.0 * receiverOutOfRangeTot)/equivalentReceived, 3)).append("%)");
+					.append(" (").append(Tools.round((100.0 * receiverOutOfRangeTot)/potentiallyReceived, 3)).append("%)");
 				sb.append("\n\t\t").append(Text.TOT_LOST_RECEIVER_WAS_SENDING).append(" ").append(receiverWasSendingTot)
-					.append(" (").append(Tools.round((100.0 * receiverWasSendingTot)/equivalentReceived, 3)).append("%)");
+					.append(" (").append(Tools.round((100.0 * receiverWasSendingTot)/potentiallyReceived, 3)).append("%)");
 				if (UAVParam.pCollisionEnabled) {
 					sb.append("\n\t\t").append(Text.TOT_VIRTUAL_QUEUE_WAS_FULL).append(" ").append(receiverVirtualQueueFullTot)
-						.append(" (").append(Tools.round((100.0 * receiverVirtualQueueFullTot)/equivalentReceived, 3)).append("%)");
+						.append(" (").append(Tools.round((100.0 * receiverVirtualQueueFullTot)/potentiallyReceived, 3)).append("%)");
+					sb.append("\n\t\t").append(Text.TOT_RECEIVED_IN_VBUFFER).append(" ").append(successfullyEnqueuedTot)
+						.append(" (").append(Tools.round((100.0 * successfullyEnqueuedTot)/potentiallyReceived, 3)).append("%)");
+				} else {
+					// We must include the received messages but discarded because the buffer was full
+					successfullyReceivedTot = successfullyReceivedTot + receiverQueueFullTot;
+					sb.append("\n\t\t").append(Text.TOT_RECEIVED).append(" ").append(successfullyReceivedTot)
+						.append(" (").append(Tools.round((100.0 * successfullyReceivedTot)/potentiallyReceived, 3)).append("%)");
 				}
-				sb.append("\n\t\t").append(Text.TOT_QUEUE_WAS_FULL).append(" ").append(receiverQueueFullTot)
-					.append(" (").append(Tools.round((100.0 * receiverQueueFullTot)/equivalentReceived, 3)).append("%)");
-				sb.append("\n\t\t").append(Text.TOT_RECEIVED).append(" ").append(successfullyReceivedTot)
-					.append(" (").append(Tools.round((100.0 * successfullyReceivedTot)/equivalentReceived, 3)).append("%)");
-				if (successfullyReceivedTot > 0) {
-					sb.append("\n\t\t\t").append(Text.TOT_REMAINING_IN_BUFFER).append(" ").append(totRemainingInBuffer)
-						.append(" (").append(Tools.round((100.0 * totRemainingInBuffer)/successfullyReceivedTot, 3)).append("%)");
-					sb.append("\n\t\t\t").append(Text.TOT_PROCESSED).append(" ").append(receivedPacketTot)
+				long inBufferTot = successfullyReceivedTot - receiverQueueFullTot - receivedPacketTot;
+				if (UAVParam.pCollisionEnabled) {
+					if (successfullyEnqueuedTot != 0) {
+						long successfullyProcessedTot = 0;
+						for (int i = 0; i < Param.numUAVs; i++) {
+							successfullyProcessedTot = successfullyProcessedTot + UAVParam.successfullyProcessed.get(i);
+						}
+						long inVBufferTot = successfullyEnqueuedTot - successfullyProcessedTot;
+						sb.append("\n\t\t\t").append(Text.TOT_REMAINING_IN_VBUFFER).append(" ").append(inVBufferTot)
+							.append(" (").append(Tools.round((100.0 * inVBufferTot)/successfullyEnqueuedTot, 3)).append("%)");
+						sb.append("\n\t\t\t").append(Text.TOT_PROCESSED).append(" ").append(successfullyProcessedTot)
+							.append(" (").append(Tools.round((100.0 * successfullyProcessedTot)/successfullyEnqueuedTot, 3)).append("%)");
+						if (successfullyProcessedTot != 0) {
+							long discardedForCollisionTot = 0;
+							for (int i = 0; i < Param.numUAVs; i++) {
+								discardedForCollisionTot = discardedForCollisionTot + UAVParam.discardedForCollision.get(i);
+							}
+							sb.append("\n\t\t\t\t").append(Text.TOT_DISCARDED_FOR_COLLISION).append(" ").append(discardedForCollisionTot)
+								.append(" (").append(Tools.round((100.0 * discardedForCollisionTot)/successfullyProcessedTot, 3)).append("%)");
+							sb.append("\n\t\t\t\t").append(Text.TOT_RECEIVED).append(" ").append(successfullyReceivedTot)
+								.append(" (").append(Tools.round((100.0 * successfullyReceivedTot)/successfullyProcessedTot, 3)).append("%)");
+							if (successfullyReceivedTot != 0) {
+								sb.append("\n\t\t\t\t\t").append(Text.TOT_QUEUE_WAS_FULL).append(" ").append(receiverQueueFullTot)
+									.append(" (").append(Tools.round((100.0 * receiverQueueFullTot)/successfullyReceivedTot, 3)).append("%)");
+								sb.append("\n\t\t\t\t\t").append(Text.TOT_REMAINING_IN_BUFFER).append(" ").append(inBufferTot)
+									.append(" (").append(Tools.round((100.0 * inBufferTot)/successfullyReceivedTot, 3)).append("%)");
+								sb.append("\n\t\t\t\t\t").append(Text.TOT_USED_OK).append(" ").append(receivedPacketTot)
+									.append(" (").append(Tools.round((100.0 * receivedPacketTot)/successfullyReceivedTot, 3)).append("%)");
+							}
+						}
+					}
+				} else {
+					if (successfullyReceivedTot != 0) {
+						sb.append("\n\t\t\t").append(Text.TOT_QUEUE_WAS_FULL).append(" ").append(receiverQueueFullTot)
+						.append(" (").append(Tools.round((100.0 * receiverQueueFullTot)/successfullyReceivedTot, 3)).append("%)");
+					sb.append("\n\t\t\t").append(Text.TOT_REMAINING_IN_BUFFER).append(" ").append(inBufferTot)
+						.append(" (").append(Tools.round((100.0 * inBufferTot)/successfullyReceivedTot, 3)).append("%)");
+					sb.append("\n\t\t\t").append(Text.TOT_USED_OK).append(" ").append(receivedPacketTot)
 						.append(" (").append(Tools.round((100.0 * receivedPacketTot)/successfullyReceivedTot, 3)).append("%)");
-					if (receivedPacketTot > 0 && UAVParam.pCollisionEnabled) {
-						sb.append("\n\t\t\t\t").append(Text.TOT_DISCARDED_FOR_COLLISION).append(" ").append(discardedForCollisionTot)
-							.append(" (").append(Tools.round((100.0 * discardedForCollisionTot)/receivedPacketTot, 3)).append("%)");
-						sb.append("\n\t\t\t\t").append(Text.TOT_ENQUEUED_OK).append(" ").append(successfullyEnqueuedTot)
-							.append(" (").append(Tools.round((100.0 * successfullyEnqueuedTot)/receivedPacketTot, 3)).append("%)");
 					}
 				}
 			}
@@ -2146,7 +2188,6 @@ public class ArduSimTools {
 				sb.append("\n\t").append(Text.WIND_DIRECTION).append(" ").append(Param.windDirection).append(" ").append(Text.DEGREE_SYMBOL);
 			}
 		}
-		
 		return sb.toString();
 	}
 

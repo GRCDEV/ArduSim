@@ -720,6 +720,12 @@ public class Copter {
 	 * <p>Blocking method.*/
 	public static void sendBroadcastMessage(int numUAV, byte[] message) {
 		if (Param.role == Tools.SIMULATOR) {
+			if (Param.simStatus == Param.SimulatorState.TEST_FINISHED) {
+				UAVParam.communicationsClosed.put("s" + numUAV, "s" + numUAV);
+				while (true) {
+					Tools.waiting(SimParam.LONG_WAITING_TIME);
+				}
+			}
 			long now = System.nanoTime();
 			// 1. Can not send until the last transmission has finished
 			IncomingMessage prevMessage = UAVParam.prevSentMessage.get(numUAV);
@@ -777,15 +783,17 @@ public class Copter {
 								if (UAVParam.vBufferUsedSpace.get(i) + message.length <= UAVParam.receivingvBufferSize) {
 									UAVParam.vBuffer[i].add(sendingMessage.clone());
 									UAVParam.vBufferUsedSpace.addAndGet(i, message.length);
-									UAVParam.successfullyReceived.incrementAndGet(i);
+									UAVParam.successfullyEnqueued.incrementAndGet(i);
 								} else {
 									UAVParam.receiverVirtualQueueFull.incrementAndGet(i);
 								}
+								if (UAVParam.vBufferUsedSpace.get(i) >= UAVParam.receivingvBufferTrigger) {
+									Copter.checkPacketCollisions(i, false);
+								}
 							} else {
-								// Add to destination queue if it fits and, and update the media occupancy time
-								//	As collision detection is disabled and both variables are read by one thread and wrote by many:
-								//	a) The inserted elements in mBuffer are no longer sorted
-								//	b) and maxTEndTime must be accessed on a synchronized way
+								// Add to destination queue if it fits
+								//	As collision detection is disabled and mBuffer is read by one thread and wrote by many,
+								//	  the inserted elements are no longer sorted
 								if (UAVParam.mBuffer[i].offerLast(sendingMessage.clone())) {
 									UAVParam.successfullyReceived.incrementAndGet(i);
 								} else {
@@ -824,11 +832,17 @@ public class Copter {
 	 * <p>Returns null if a fatal error with the socket happens or the timeout is reached. */
 	public static byte[] receiveMessage(int numUAV, int socketTimeout) {
 		if (Param.role == Tools.SIMULATOR) {
+			if (Param.simStatus == Param.SimulatorState.TEST_FINISHED) {
+				UAVParam.communicationsClosed.put("r" + numUAV, "r" + numUAV);
+				while (true) {
+					Tools.waiting(SimParam.LONG_WAITING_TIME);
+				}
+			}
 			long start = System.currentTimeMillis();
 			long elapsedTime = 0;
+			byte[] receivedBuffer = null;
 			if (UAVParam.pCollisionEnabled) {
-				byte[] receivedBuffer = null;
-				while (receivedBuffer == null || (socketTimeout > 0 && elapsedTime < socketTimeout)) {
+				while ((receivedBuffer == null && socketTimeout <=0) || (receivedBuffer == null && elapsedTime < socketTimeout)) {
 					if (UAVParam.mBuffer[numUAV].isEmpty()) {
 						// Check for collisions
 						// 1. Wait until at least one message is available
@@ -836,7 +850,7 @@ public class Copter {
 							Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 							elapsedTime = System.currentTimeMillis() - start;
 						} else {
-							Copter.checkPacketCollisions(numUAV);
+							Copter.checkPacketCollisions(numUAV, true);
 						}
 					} else {
 						// Wait for transmission end
@@ -845,22 +859,23 @@ public class Copter {
 						while (message.end > now) {
 							Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 						}
+						UAVParam.receivedPacket.incrementAndGet(numUAV);
 						receivedBuffer = UAVParam.mBuffer[numUAV].pollFirst().message;
 					}
 				}
-				return receivedBuffer;
 			} else {
-				while (UAVParam.mBuffer[numUAV].isEmpty() || (socketTimeout > 0 && elapsedTime < socketTimeout)) {
+				boolean isEmpty = UAVParam.mBuffer[numUAV].isEmpty();
+				while ((isEmpty && socketTimeout <= 0) || (isEmpty && elapsedTime < socketTimeout)) {
 					Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
 					elapsedTime = System.currentTimeMillis() - start;
+					isEmpty = UAVParam.mBuffer[numUAV].isEmpty();
 				}
-				if (!UAVParam.mBuffer[numUAV].isEmpty() && (socketTimeout <= 0 || elapsedTime < socketTimeout)) {
-					UAVParam.receivedPacket[numUAV]++;
-					return UAVParam.mBuffer[numUAV].pollFirst().message;
-				} else {
-					return null;
+				if (!UAVParam.mBuffer[numUAV].isEmpty()) {
+					UAVParam.receivedPacket.incrementAndGet(numUAV);
+					receivedBuffer = UAVParam.mBuffer[numUAV].pollFirst().message;
 				}
 			}
+			return receivedBuffer;
 		} else {
 			UAVParam.receivePacket.setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
 			try {
@@ -868,75 +883,87 @@ public class Copter {
 					UAVParam.receiveSocket.setSoTimeout(socketTimeout);
 				}
 				UAVParam.receiveSocket.receive(UAVParam.receivePacket);
-				UAVParam.receivedPacket[0]++;
+				UAVParam.receivedPacket.incrementAndGet(0);
 				return UAVParam.receivePacket.getData();
 			} catch (IOException e) { return null; }
 		}
 	}
 	
-	private static void checkPacketCollisions(int numUAV) {
-		// 1. First iteration through the virtual buffer to check collisions between messages
-		Iterator<IncomingMessage> it = UAVParam.vBuffer[numUAV].iterator();
-		IncomingMessage prev, pos, next;
-		prev = it.next();
-		prev.checked = true;
-		// 1.1. Waiting until the first message is transmitted
-		//		Meanwhile, another message could be set as the first one, but it will be detected on the second iteration
-		//		and all the process will be repeated again
-		long now = System.nanoTime();
-		while (prev.end > now) {
-			Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
-			now = System.nanoTime();
-		}
-		// 1.2. Update the late completely received message finishing time
-		if (prev.end > UAVParam.maxCompletedTEndTime[numUAV]) {
-			UAVParam.maxCompletedTEndTime[numUAV] = prev.end;
-		}
-		// 1.3. Iteration over the rest of the elements to check collisions
-		while (it.hasNext()) {
-			pos = it.next();
-			pos.checked = true;
-			// Collides with the previous message?
-			if (pos.start <= UAVParam.maxCompletedTEndTime[numUAV]) {
-				prev.overlapped = true;
-				pos.overlapped = true;
-			}
-			// This message is being transmitted?
-			if (pos.end > now) {
-				// As the message has not been fully transmitted, we stop the iteration, ignoring this message on the second iteration
-				pos.checked = false;
-				if (pos.overlapped) {
-					prev.checked = false;
+	private static void checkPacketCollisions(int numUAV, boolean isReceiver) {
+		UAVParam.lock[numUAV].lock();
+		try {
+			// Maybe another thread would also try to check at the same time
+			if (isReceiver || UAVParam.vBufferUsedSpace.get(numUAV) >= UAVParam.receivingvBufferTrigger) {
+				// 1. First iteration through the virtual buffer to check collisions between messages
+				Iterator<IncomingMessage> it = UAVParam.vBuffer[numUAV].iterator();
+				IncomingMessage prev, pos, next;
+				prev = it.next();
+				prev.checked.set(true);
+				// 1.1. Waiting until the first message is transmitted
+				//		Meanwhile, another message could be set as the first one, but it will be detected on the second iteration
+				//		and all the process will be repeated again
+				long now = System.nanoTime();
+				while (prev.end > now) {
+					Tools.waiting(UAVParam.MESSAGE_WAITING_TIME);
+					now = System.nanoTime();
 				}
-				break;
-			} else {
-				// Update the late completely received message finishing time
-				if (pos.end > UAVParam.maxCompletedTEndTime[numUAV]) {
-					UAVParam.maxCompletedTEndTime[numUAV] = pos.end;
+				// 1.2. Update the late completely received message finishing time
+				if (prev.end > UAVParam.maxCompletedTEndTime.get(numUAV)) {
+					UAVParam.maxCompletedTEndTime.set(numUAV, prev.end);
 				}
-				prev = pos;
-			}
-		}
-		// 2. Second iteration discarding collided messages and storing received messages on the FIFO buffer
-		it = UAVParam.vBuffer[numUAV].iterator();
-		while (it.hasNext()) {
-			next = it.next();
-			if (next.checked) {
-				it.remove();
-				UAVParam.receivedPacket[numUAV]++;//TODO deben ser concurrentes
-				UAVParam.vBufferUsedSpace.addAndGet(numUAV, -next.message.length);
-				if (!next.overlapped) {
-					if (UAVParam.mBuffer[numUAV].offerLast(next)) {
-						UAVParam.successfullyEnqueued[numUAV]++;
-					} else {
-						UAVParam.receiverQueueFull.incrementAndGet(numUAV);
+				// 1.3. Iteration over the rest of the elements to check collisions
+				while (it.hasNext()) {
+					pos = it.next();
+					pos.checked.set(true);
+					// Collides with the previous message?
+					if (pos.start <= UAVParam.maxCompletedTEndTime.get(numUAV)) {
+						prev.overlapped.set(true);
+						pos.overlapped.set(true);
 					}
-				} else {
-					UAVParam.discardedForCollision[numUAV]++;
+					// This message is being transmitted?
+					if (pos.end > now) {
+						// As the message has not been fully transmitted, we stop the iteration, ignoring this message on the second iteration
+						pos.checked.set(false);
+						if (pos.overlapped.get()) {
+							prev.checked.set(false);
+						}
+						break;
+					} else {
+						// Update the late completely received message finishing time
+						if (pos.end > UAVParam.maxCompletedTEndTime.get(numUAV)) {
+							UAVParam.maxCompletedTEndTime.set(numUAV, pos.end);
+						}
+						prev = pos;
+					}
 				}
-			} else {
-				break;
+				// 2. Second iteration discarding collided messages and storing received messages on the FIFO buffer
+				it = UAVParam.vBuffer[numUAV].iterator();
+				while (it.hasNext()) {
+					next = it.next();
+					if (next.checked.get()) {
+						//it.remove();	// Problematic, as you don't know if the item has been really removed
+						if (UAVParam.vBuffer[numUAV].remove(next)) {
+							UAVParam.vBufferUsedSpace.addAndGet(numUAV, -next.message.length);
+							UAVParam.successfullyProcessed.incrementAndGet(numUAV);
+							if (next.overlapped.get()) {
+								if (!next.alreadyOverlapped.get()) {
+									UAVParam.discardedForCollision.incrementAndGet(numUAV);
+									next.alreadyOverlapped.set(true);
+								}
+							} else {
+								UAVParam.successfullyReceived.incrementAndGet(numUAV);
+								if (!UAVParam.mBuffer[numUAV].offerLast(next)) {
+									UAVParam.receiverQueueFull.incrementAndGet(numUAV);
+								}
+							}
+						}
+					} else {
+						break;
+					}
+				}
 			}
+		} finally {
+			UAVParam.lock[numUAV].unlock();
 		}
 	}
 	

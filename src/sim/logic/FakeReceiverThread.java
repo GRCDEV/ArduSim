@@ -1,6 +1,7 @@
 package sim.logic;
 
 import api.Copter;
+import api.Tools;
 import main.Param;
 
 public class FakeReceiverThread extends Thread {
@@ -17,8 +18,9 @@ public class FakeReceiverThread extends Thread {
 	@Override
 	public void run() {
 		
-		while (Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS) {
+		while (true) {//(Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS) {
 			Copter.receiveMessage(numUAV);
+//			Tools.waiting(100);
 		}
 	}
 
