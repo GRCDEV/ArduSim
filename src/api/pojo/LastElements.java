@@ -1,7 +1,6 @@
 package api.pojo;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 
 /** Concurrent, generic and bounded FIFO queue.
  * <p>When the queue is filled, the oldest element is removed.
@@ -54,10 +53,5 @@ public class LastElements<T> {
 			p = (p + 1) % this.size;
 		}
 		return res;
-	}
-	
-	public String toString() {
-		return "size=" + this.size + ", count=" + this.count + ", ini=" + this.ini + ", pos=" + this.p +
-				Arrays.toString(this.positions) + "  -  " + Arrays.toString(this.getLastValues());
 	}
 }

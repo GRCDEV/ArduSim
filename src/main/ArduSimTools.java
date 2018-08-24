@@ -70,8 +70,9 @@ import api.WaypointReachedListener;
 import api.pojo.AtomicDoubleArray;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
-import api.pojo.LastPositions;
+import api.pojo.LastElements;
 import api.pojo.LogPoint;
+import api.pojo.Point3D;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param.SimulatorState;
@@ -408,7 +409,7 @@ public class ArduSimTools {
 	public static void initializeDataStructures() {
 		UAVParam.uavCurrentData = new UAVCurrentData[Param.numUAVs];
 		UAVParam.uavCurrentStatus = new UAVCurrentStatus[Param.numUAVs];
-		UAVParam.lastLocations = new LastPositions[Param.numUAVs];
+		UAVParam.lastLocations = new LastElements[Param.numUAVs];
 		UAVParam.flightMode = new AtomicReferenceArray<FlightMode>(Param.numUAVs);
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
@@ -478,7 +479,7 @@ public class ArduSimTools {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			UAVParam.uavCurrentData[i] = new UAVCurrentData();
 			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
-			UAVParam.lastLocations[i] = new LastPositions(UAVParam.LOCATIONS_SIZE);
+			UAVParam.lastLocations[i] = new LastElements<Point3D>(Point3D.class, UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
 			UAVParam.RCminValue[i] = new AtomicIntegerArray(8);
 			UAVParam.RCtrimValue[i] = new AtomicIntegerArray(8);

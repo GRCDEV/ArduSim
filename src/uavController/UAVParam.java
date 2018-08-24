@@ -18,7 +18,8 @@ import org.mavlink.messages.MAV_PARAM_TYPE;
 
 import api.pojo.AtomicDoubleArray;
 import api.pojo.FlightMode;
-import api.pojo.LastPositions;
+import api.pojo.LastElements;
+import api.pojo.Point3D;
 import api.pojo.RCValues;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
@@ -99,7 +100,7 @@ public class UAVParam {
 	
 	// Last n UAV known positions of the UAV
 	public static final int LOCATIONS_SIZE = 3;		// n positions (never less than 2)
-	public static LastPositions[] lastLocations;	// Each UAV has an object with the last received locations sorted
+	public static LastElements<Point3D>[] lastLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Startup parameters
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed

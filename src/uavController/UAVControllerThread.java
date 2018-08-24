@@ -311,7 +311,7 @@ public class UAVControllerThread extends Thread {
 			long time = System.nanoTime();
 			
 			// The last few UAV positions are stored for later use in protocols
-			UAVParam.lastLocations[numUAV].updateLastPositions(new Point3D(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, message.relative_alt * 0.001));
+			UAVParam.lastLocations[numUAV].add(new Point3D(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, message.relative_alt * 0.001));
 			// Global horizontal speed estimation
 			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
 			Triplet<Double, Double, Double> speed = Triplet.with(message.vx * 0.01, message.vy * 0.01, message.vz * 0.01);
