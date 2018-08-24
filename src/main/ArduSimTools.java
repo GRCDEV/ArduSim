@@ -2495,7 +2495,7 @@ public class ArduSimTools {
 	private static void logCPUUtilization(String folder, String baseFileName) {
 		File file = new File(folder, baseFileName + "_" + Text.CPU_SUFIX);
 		StringBuilder sb = new StringBuilder(2000);
-		sb.append("time(s),GlobalCPU(%),GlobalCPU(%oneCore),JavaCPU(%),JavaCPU(%oneCore),ArduSimState\n");
+		sb.append("time(ns),GlobalCPU(%),GlobalCPU(%oneCore),JavaCPU(%),JavaCPU(%oneCore),ArduSimState\n");
 		CPUData data = Param.cpu.poll();
 		while (data != null) {
 			sb.append(data.time).append(",")
