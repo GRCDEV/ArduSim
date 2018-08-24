@@ -2035,6 +2035,36 @@ public class ArduSimTools {
 			} else {
 				sb.append(Text.NO_OPTION);
 			}
+			sb.append("\n\t").append(Text.CPU_MEASUREMENT_ENABLED).append(" ");
+			if (Param.measureCPUEnabled) {
+				sb.append(Text.OPTION_ENABLED);
+				Iterator<CPUData> data = Param.cpu.iterator();
+				CPUData d;
+				int count = 0;
+				double global = 0.0;
+				double processOneCore = 0.0;
+				while (data.hasNext()) {
+					d = data.next();
+					if (d.simState.equals(Param.SimulatorState.TEST_IN_PROGRESS.name())) {
+						count++;
+						global = global + d.globalCPU;
+						processOneCore = processOneCore + d.processCPU;
+					}
+				}
+				if (count > 0) {
+					if (count > 1) {
+						global = global / count;
+						processOneCore = processOneCore / count;
+					}
+					sb.append("\n\t\tDuring the experiment:")
+						.append("\n\t\t\tGlobalCPU: ").append(Tools.round(global, 3))
+						.append("%\n\t\t\tGlobalCPU(oneCore): ").append(Tools.round(global * Param.numCPUs, 3))
+						.append("%\n\t\t\tJavaCPU: ").append(Tools.round(processOneCore/Param.numCPUs, 3))
+						.append("%\n\t\t\tJavaCPU(oneCore): ").append(Tools.round(processOneCore, 3)).append("%");
+				}
+			} else {
+				sb.append(Text.OPTION_DISABLED);
+			}
 			sb.append("\n\t").append(Text.RENDER).append(" ").append(SimParam.renderQuality.getName());
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
 			sb.append("\n\t").append(Text.VERBOSE_LOGGING_ENABLE).append(" ");
@@ -2413,7 +2443,7 @@ public class ArduSimTools {
 		ProtocolHelper.selectedProtocolInstance.logData(folder, baseFileName);
 		
 		// 6. Store ArduCopter logs if needed
-		if (SimParam.arducopterLoggingEnabled) {
+		if (Param.role == Tools.SIMULATOR && SimParam.arducopterLoggingEnabled) {
 			File logSource, logDestination;
 			File parentFolder = new File(SimParam.tempFolderBasePath);
 			for (int i=0; i<Param.numUAVs; i++) {
@@ -2465,10 +2495,15 @@ public class ArduSimTools {
 	private static void logCPUUtilization(String folder, String baseFileName) {
 		File file = new File(folder, baseFileName + "_" + Text.CPU_SUFIX);
 		StringBuilder sb = new StringBuilder(2000);
-		sb.append("time(s),GlobalCPU(%),JavaCPU(%),JavaCPU(%oneCore),ArduSimState\n");
+		sb.append("time(s),GlobalCPU(%),GlobalCPU(%oneCore),JavaCPU(%),JavaCPU(%oneCore),ArduSimState\n");
 		CPUData data = Param.cpu.poll();
 		while (data != null) {
-			sb.append(data.time).append(",").append(Tools.round(data.globalCPU, 1)).append(",").append(data.processCPU/Param.numCPUs).append(",").append(data.processCPU).append(",").append(data.simState).append("\n");
+			sb.append(data.time).append(",")
+				.append(Tools.round(data.globalCPU, 1)).append(",")
+				.append(Tools.round(data.globalCPU * Param.numCPUs, 2)).append(",")
+				.append(data.processCPU/Param.numCPUs).append(",")
+				.append(data.processCPU).append(",")
+				.append(data.simState).append("\n");
 			data = Param.cpu.poll();
 		}
 		Tools.storeFile(file, sb.toString());

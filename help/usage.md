@@ -105,8 +105,10 @@ The user decides whether to store this information or not. In the former case, a
 * *name_X_mission_AutoCAD.scr*. This file includes the simplified mission shown on screen, and it is stored in AutoCAD format as a single poliline.
 * *name_X_path.csv*. In this case, we include the 3D location, heading, speed, acceleration, and distance to origin over time. We think that this file may be the most useful to mathematically analyze the behavior of the multicopters.
 * *name_X_path_AutoCAD.scr*. This is a simplified version of the previous file with an AutoCAD poliline with the path followed by the multicopter.
-* *name_X_path_AutoCAD3d.scr* This file includes a 3D poliline with the path followed by the multicopter.
-    
+* *name_X_path_AutoCAD3d.scr*. This file includes a 3D poliline with the path followed by the multicopter.
+* *name_CPU.txt*. This file is optionally stored for CPU usage analysis, and includes the global system CPU usage and the Java process CPU usage during each state of ArduSim execution. Two measures are provided; the global percentage, and the percentage relative to one core.
+* *name_X_ArduCopter_log.BIN*. This file is also optionally stored and includes the binary logging of the virtual flight controller, when performing simulations. It can be used in software like APM Planner 2 for further analysis.
+
 The user can generate additional files with the function *logData(String, String)* of the protocol implementation.
 
 ## 2 ArduSim on real multicopters
