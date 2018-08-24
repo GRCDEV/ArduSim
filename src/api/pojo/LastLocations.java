@@ -7,19 +7,19 @@ import java.lang.reflect.Array;
  * <p>Elements cannot be removed.
  * <p>The list of elements stored is provided in the same order they were inserted. */
 
-public class LastElements<T> {
+public class LastLocations<T> {
 	
 	Class<T> c;
 	private int size, count, p, ini;
 	private T[] positions;
 	
 	@SuppressWarnings("unused")
-	private LastElements() {}
+	private LastLocations() {}
 	
 	/** Creates a bounded FIFO queue of the provided size. Example with Integers:
 	 * <p>LastElements<Integer> elems = new LastElements<>(Integer.class, 5) */
 	@SuppressWarnings("unchecked")
-	public LastElements(Class<T> c, int size) {
+	public LastLocations(Class<T> c, int size) {
 		this.c = c;
 		this.size = size;
 		this.count = 0;

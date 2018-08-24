@@ -992,7 +992,7 @@ public class Copter {
 		return UAVParam.uavCurrentData[numUAV].getGeoLocation();
 	}
 	
-	/** API: Gets n last known locations (x,y,z) of the UAV in UTM coordinates (relative altitude).
+	/** API: Gets n available last known locations (x,y,z) of the UAV in UTM coordinates (relative altitude).
 	 * <p>The locations time increases with the position in the array. */
 	public static Point3D[] getLastKnownLocations(int numUAV) {
 		return UAVParam.lastLocations[numUAV].getLastValues();

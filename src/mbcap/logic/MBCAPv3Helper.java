@@ -1227,18 +1227,16 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		// Overtaken happened if the distance to the target UAV and to the risk location is increasing
 		Point3D riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(avoidingId);
 		Point3D[] lastLocations = Copter.getLastKnownLocations(numUAV);
+		if (lastLocations.length <= 1) {
+			return false;	// There is no information enough to decide
+		}
 		double distPrevToTarget, distPostToTarget, distPostToRisk;
 		double distPrevToRisk = 0;
-		int i = 0;
-		while (lastLocations[i] == null) {//TODO adaptar a la nueva implementación de lastelments
-			i++;
-		}
-		distPrevToTarget = lastLocations[i].distance(target);
+		distPrevToTarget = lastLocations[0].distance(target);
 		if (riskLocation != null) {
-			distPrevToRisk = lastLocations[i].distance(riskLocation);
+			distPrevToRisk = lastLocations[0].distance(riskLocation);
 		}
-		i++;
-		while (i < lastLocations.length) {
+		for (int i = 1; i < lastLocations.length; i++) {
 			distPostToTarget = lastLocations[i].distance(target);
 			if (distPrevToTarget >= distPostToTarget) {
 				return false;
@@ -1251,7 +1249,6 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				}
 				distPrevToRisk = distPostToRisk;
 			}
-			i++;
 		}
 		return true;
 	}

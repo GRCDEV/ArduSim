@@ -73,7 +73,7 @@ public class MBCAPParam {
 	public static final long STABILIZATION_TIMEOUT = 30 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 
 	public static long standStillTimeout = 5 * 1000000000l; // (ns) Timeout while the UAV stands still
-	public static long passingTimeout = 3 * 1000000000l; // (ns) Timeout when the UAV starts overtaking the other UAV before checking if it was successful
+	public static long passingTimeout = 5 * 1000000000l; // (ns) Timeout when the UAV starts overtaking the other UAV before checking if it was successful
 	public static long solvedTimeout = 4 * 1000000000l; // (ns) Timeout when going back to normal state before checking if another UAV considers that there is collision risk with you
 	public static long globalDeadlockTimeout = 1 * 50 * 1000000000l; // (ns) Base timeout to consider a deadlock (maximum time available applying a protocol state)
 	public static long[] uavDeadlockTimeout;	// (ns) Previous timeout, but adapted to each UAV
