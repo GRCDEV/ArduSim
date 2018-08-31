@@ -15,4 +15,11 @@ public class GeoCoordinates {
     this.latitude = latitude;
     this.longitude = longitude;
   }
+
+  @Override
+  public String toString() {
+	  return "(lat=" + this.latitude + ", lon=" + this.longitude + ")";
+  }
+  
+  
 }

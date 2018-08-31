@@ -411,6 +411,7 @@ public class ArduSimTools {
 		UAVParam.uavCurrentStatus = new UAVCurrentStatus[Param.numUAVs];
 		UAVParam.lastLocations = new LastLocations[Param.numUAVs];
 		UAVParam.flightMode = new AtomicReferenceArray<FlightMode>(Param.numUAVs);
+		UAVParam.flightStarted = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
@@ -1933,31 +1934,35 @@ public class ArduSimTools {
 		}
 	}
 	
+	/** Detects if all the UAVs have started the experiment (they are all flying). */
+	public static boolean isTestStarted() {
+		int length = UAVParam.flightStarted.length();
+		for (int i = 0; i < length; i++) {
+			if (UAVParam.flightStarted.get(i) == 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	/** Detects if all the UAVs have finished the experiment (they are all on the ground, with engines not armed). */
 	public static boolean isTestFinished() {
-		boolean allFinished = true;
-		if (UAVParam.flightStarted) {
-			long latest = 0;
-			for (int i = 0; i < Param.numUAVs; i++) {
-				FlightMode mode = UAVParam.flightMode.get(i);
-				if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
-					if (Param.testEndTime[i] == 0) {
-						Param.testEndTime[i] = System.currentTimeMillis();
-						if (Param.testEndTime[i] > latest) {
-							latest = Param.testEndTime[i];
-						}
+		long latest = 0;
+		for (int i = 0; i < Param.numUAVs; i++) {
+			FlightMode mode = UAVParam.flightMode.get(i);
+			if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
+				if (Param.testEndTime[i] == 0) {
+					Param.testEndTime[i] = System.currentTimeMillis();
+					if (Param.testEndTime[i] > latest) {
+						latest = Param.testEndTime[i];
 					}
-				} else {
-					allFinished = false;
 				}
+			} else {
+				return false;
 			}
-			if (allFinished) {
-				Param.latestEndTime = latest;
-			}
-		} else {
-			allFinished = false;
 		}
-		return allFinished;
+		Param.latestEndTime = latest;
+		return true;
 	}
 
 	/** Builds a String with the experiment results. */

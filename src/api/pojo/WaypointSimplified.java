@@ -1,5 +1,7 @@
 package api.pojo;
 
+import java.util.List;
+
 /** This class generates a simplified waypoint, including only coordinates and the sequence number in the waypoints that form the mission. */
 
 public class WaypointSimplified extends Point3D {
@@ -19,6 +21,15 @@ public class WaypointSimplified extends Point3D {
 	@Override
 	public String toString() {
 		return "WP" + this.numSeq + "(" + this.x + "," + this.y + "," + this.z + ")";
+	}
+	
+	public static String ListToString(List<WaypointSimplified> list) {
+		StringBuilder sb =new StringBuilder(500);
+		sb.append("Mission:");
+		for (int i = 0; i < list.size(); i++) {
+			sb.append("\n").append(list.get(i).toString());
+		}
+		return sb.toString();
 	}
 
 }

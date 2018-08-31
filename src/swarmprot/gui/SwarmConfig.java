@@ -127,7 +127,7 @@ public class SwarmConfig extends JDialog {
 							if (mission != null) {
 								/** The master is assigned the first mission in the list */
 								List<Waypoint>[] missions = new ArrayList[numUAVs];
-								missions[SwarmProtParam.posMaster] = mission;
+								missions[SwarmProtParam.MASTER_POSITION] = mission;
 								Tools.setLoadedMissionsFromFile(missions);
 
 							} else {
@@ -153,7 +153,7 @@ public class SwarmConfig extends JDialog {
 							if (current != null) {
 								/** The master is assigned the first mission in the list */
 								List<Waypoint>[] missions = new ArrayList[numUAVs];
-								missions[SwarmProtParam.posMaster] = current;
+								missions[SwarmProtParam.MASTER_POSITION] = current;
 								Tools.setLoadedMissionsFromFile(missions);
 							} else {
 								JOptionPane.showMessageDialog(null, SwarmProtText.MISSIONS_ERROR_3, SwarmProtText.MISSIONS_SELECTION_ERROR,

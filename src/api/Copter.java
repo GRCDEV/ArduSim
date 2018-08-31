@@ -21,7 +21,6 @@ import main.ArduSimTools;
 import main.Param;
 import main.StartExperimentThread;
 import main.Text;
-import mbcap.logic.MBCAPText;
 import sim.board.BoardParam;
 import sim.logic.SimParam;
 import sim.pojo.IncomingMessage;
@@ -416,8 +415,6 @@ public class Copter {
 	 * <p>The UAV must be in GUIDED flight mode.
 	 * <p>geo. Geographic coordinates the UAV has to move to.
 	 * <p>relAltitude. Relative altitude the UAV has to move to.
-	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
-	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
 	 * <p>The method may return control immediately or in more than 200 ms depending on the reaction of the flight controller
 	 * <p>Returns true if the command was successful. */
 	public static boolean moveUAVNonBlocking(int numUAV, GeoCoordinates geo, float relAltitude) {
@@ -559,7 +556,8 @@ public class Copter {
 		boolean foundFirst = false;
 		Waypoint wp;
 		UTMCoordinates utm;
-		for (int i=0; i<UAVParam.currentGeoMission[numUAV].size(); i++) {
+//		for (int i=0; i<UAVParam.currentGeoMission[numUAV].size(); i++) {
+		for (int i=1; i<UAVParam.currentGeoMission[numUAV].size(); i++) {//TODO check... ignoring home waypoint
 			wp = UAVParam.currentGeoMission[numUAV].get(i);
 			switch (wp.getCommand()) {
 			case MAV_CMD.MAV_CMD_NAV_WAYPOINT:
@@ -814,7 +812,7 @@ public class Copter {
 				UAVParam.sendSocket.send(UAVParam.sendPacket);
 				UAVParam.sentPacket[0]++;
 			} catch (IOException e) {
-				GUI.log(SimParam.prefix[numUAV] + MBCAPText.ERROR_BEACON);
+				GUI.log(SimParam.prefix[numUAV] + Text.MESSAGE_ERROR);
 			}
 		}
 	}

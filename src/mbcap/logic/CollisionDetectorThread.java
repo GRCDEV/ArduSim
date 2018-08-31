@@ -49,7 +49,7 @@ public class CollisionDetectorThread extends Thread {
 		}
 
 		int waitingTime;
-		boolean isRealUAV = Param.role == Tools.MULTICOPTER;
+		boolean isRealUAV = Tools.getArduSimRole() == Tools.MULTICOPTER;
 		// If two UAVs collide, then the protocol stops. Also, it stops when the experiment finishes
 		while (!Tools.isCollisionDetected() && Tools.isExperimentInProgress()) {
 			// Analyze received information while flying

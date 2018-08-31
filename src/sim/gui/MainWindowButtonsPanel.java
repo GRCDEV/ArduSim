@@ -139,6 +139,7 @@ public class MainWindowButtonsPanel extends JPanel {
 					public void run() {
 						MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_IN_PROGRESS);
 						MainWindow.buttonsPanel.startTestButton.setEnabled(false);
+						Param.startTime = System.currentTimeMillis();
 						Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
 					}
 				});

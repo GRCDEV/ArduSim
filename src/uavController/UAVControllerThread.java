@@ -338,7 +338,7 @@ public class UAVControllerThread extends Thread {
 					UAVParam.flightMode.set(numUAV, mode);
 					SimTools.updateUAVMAVMode(numUAV, mode.getMode());	// Update the progress dialog
 					if (mode.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
-						UAVParam.flightStarted = true;
+						UAVParam.flightStarted.set(numUAV, 1);
 					}
 				} else {
 					GUI.log(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + message.base_mode + "," + message.custom_mode + ")");

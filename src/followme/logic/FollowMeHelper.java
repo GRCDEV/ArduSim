@@ -197,7 +197,7 @@ public class FollowMeHelper extends ProtocolHelper {
 		// Analyze which UAV is master
 		int posMaster = -1;
 		boolean realUAVisMaster = false;
-		if (Param.role == Tools.MULTICOPTER) { //verificar
+		if (Tools.getArduSimRole() == Tools.MULTICOPTER) { //verificar
 			long id = Tools.getIdFromPos(0);
 			for (int i = 0; i < FollowMeParam.MASTER_ID_REAL.length && !realUAVisMaster; i++) {
 				if (id == FollowMeParam.MASTER_ID_REAL[i]) {
@@ -266,7 +266,7 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void startThreads() {
-		switch (Param.role)  
+		switch (Tools.getArduSimRole())  
 		{
 			case 0: // Tools.MULTICOPTER
 				if (FollowMeParam.realUAVisMaster) {

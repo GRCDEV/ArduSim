@@ -1,4 +1,4 @@
-package swarmprot.logic;
+package swarmprot.pojo;
 
 import java.util.Arrays;
 

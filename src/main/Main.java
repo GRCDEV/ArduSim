@@ -334,7 +334,9 @@ public class Main {
 		
 
 		// 16. Start the experiment, only if the program is not being closed
-		Param.startTime = System.currentTimeMillis();
+		if (Param.role == Tools.MULTICOPTER) {
+			Param.startTime = System.currentTimeMillis();
+		}
 		GUI.log(Text.TEST_START);
 		if (Param.role == Tools.SIMULATOR) {
 			timer = new Timer();
@@ -364,8 +366,14 @@ public class Main {
 
 		// 17. Waiting while the experiment is is progress and detecting the experiment end
 		int check = 0;
-		boolean checkEnd = false;
+		boolean allStarted = false;
 		while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+			// Detect if all the UAVs have started the experiment
+			if (!allStarted) {
+				if (ArduSimTools.isTestStarted()) {
+					allStarted = true;
+				}
+			}
 			// Check the battery level periodically
 			if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
 				ArduSimTools.checkBatteryLevel();
@@ -374,15 +382,11 @@ public class Main {
 			// Force the UAVs to land if needed
 			ProtocolHelper.selectedProtocolInstance.forceExperimentEnd();
 			// Detects if all UAVs are on the ground in order to finish the experiment
-			if (checkEnd) {
+			if (allStarted) {
 				if (ArduSimTools.isTestFinished()) {
 					Param.simStatus = SimulatorState.TEST_FINISHED;
 				}
-			} else {
-				if (System.currentTimeMillis() - Param.startTime > Param.STARTING_TIMEOUT) {
-					checkEnd = true;
-				}//TODO descomentar
-			}
+			}//TODO descomentar
 			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 				Tools.waiting(SimParam.LONG_WAITING_TIME);
 			}

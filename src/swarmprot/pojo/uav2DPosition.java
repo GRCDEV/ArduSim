@@ -1,19 +1,19 @@
-package swarmprot.logic;
+package swarmprot.pojo;
 
 import java.awt.geom.Point2D.Double;
 
-public class uavPosition extends Double {
+public class uav2DPosition extends Double {
 
 	private static final long serialVersionUID = 1L;
 	public long id;
 	public double heading;
 
-	public uavPosition() {
+	public uav2DPosition() {
 		super();
 	}
 
 	/** Values in meters. */
-	public uavPosition(double x, double y, long id, double heading) {
+	public uav2DPosition(double x, double y, long id, double heading) {
 		super(x, y);
 		this.id = id;
 		this.heading = heading;

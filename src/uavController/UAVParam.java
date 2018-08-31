@@ -205,7 +205,7 @@ public class UAVParam {
 	public static final int MAV_STATUS_ERROR_MODE = 3;
 	public static AtomicReferenceArray<FlightMode> flightMode; // Current flight mode
 	public static FlightMode[] newFlightMode;
-	public static volatile boolean flightStarted = false;	// Detects when at least one UAV has started to fly
+	public static AtomicIntegerArray flightStarted;	// Used to detect if the UAVs have started flight
 	public static final int MAV_STATUS_REQUEST_ARM = 4;
 	public static final int MAV_STATUS_ACK_ARM = 5;
 	public static final int MAV_STATUS_ERROR_ARM = 6;

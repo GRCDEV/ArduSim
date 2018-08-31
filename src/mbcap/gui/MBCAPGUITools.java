@@ -254,7 +254,7 @@ public class MBCAPGUITools {
 
 	/** Stores (or removes when p==null) the collision risk location that is drawn. */
 	public static void locateImpactRiskMark(Point3D riskUTMLocation, int numUAV, long beaconId) {
-		if (Param.role == Tools.SIMULATOR) {
+		if (Tools.getArduSimRole() == Tools.SIMULATOR) {
 			if (riskUTMLocation == null) {
 				MBCAPParam.impactLocationPX[numUAV].remove(beaconId);
 			} else {

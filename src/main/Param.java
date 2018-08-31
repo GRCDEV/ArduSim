@@ -65,7 +65,6 @@ public class Param {
 	public static volatile long startTime;	// (ms) experiment start in local time
 	public static long[] testEndTime;		// (ms) one UAV experiment finish in local time
 	public static long latestEndTime;		// (ms) experiment finish in local time
-	public static final long STARTING_TIMEOUT = 10000;	// (ms) Time to wait before checking if all UAVs are on the ground 
 
 	// Selected wireless model
 	public static WirelessModel selectedWirelessModel;

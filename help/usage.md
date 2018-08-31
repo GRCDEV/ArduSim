@@ -73,7 +73,7 @@ This dialog allows to introduce several simulation parameters:
 
 If the developer chooses to implement a dialog to input protocol parameters, it would open once the general configuration options are accepted. Otherwise, the main window of ArduSim is opened.
 
-This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol.
+This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions.
 
 ### 1.3 Main window
 
@@ -92,6 +92,8 @@ On the right (2), there are a few buttons that allow the user to control the exp
 When all the virtual multicopters land, the experiment ends. Then, the following dialog opens.
 
 ![Results dialog](wirelessresults.png)
+
+The provided data includes the time used by each multicopter during the experiment. This information is calculated considering that all the running multicopters start the flight sometime during the experiment.
 
 The results include detailed statistics of the virtualized communications among the virtual UAVs and the configuration of the experiments, which enables to repeat the same experiment again. The developer can also include information in the dialog with the corresponding functions of the protocol implementation, as explained in section [Protocol development](development.md).
 

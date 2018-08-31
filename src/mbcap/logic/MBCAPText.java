@@ -73,7 +73,6 @@ public class MBCAPText {
 	public static final String UAVS_START_ERROR_1 = "Failed locating the home position of the UAV";
 	public static final String UAVS_START_ERROR_2 = "No valid coordinates could be found to stablish the home of the UAV";
 	public static final String WARN_IMAGE_LOAD_ERROR = "The collision warning image could not be loaded.";
-	public static final String ERROR_BEACON = "Error sending a beacon.";
 	public static final String WAYPOINT_LOST = "Current waypoint not found.";
 	public static final String REPOSITION_ERROR_1 = "No information enough to decide where to step aside.";
 	

@@ -4,9 +4,6 @@ package swarmprot.logic;
 
 public class SwarmProtText {
 	
-	// Application name
-	public static final String APP_NAME = "ArduSim";
-	
 	// Configuration dialog
 	public static final String CONFIGURATION_DIALOG_TITLE_SWARM = "Swarm Protocol Configuration";
 	public static final String MISSIONS_DIALOG_TITLE = "Select the file(s) with UAVs paths";
@@ -21,72 +18,55 @@ public class SwarmProtText {
 	public static final String PROTOCOL_TEXT = "Swarm protocol";
 	public static final String LOAD_MISSION_KML = "Loading the .kml file into the master dron";
 	public static final String CONFIGURE_MASTER_MISSION = "Set up the mission in the master dron";
-	public static final String LANDING = "Landing all the drones";
-	public static final String ALL_LANDING = "All the Drones are landing";
+	public static final String LANDING = "Landing";
 	public static final String ENABLING = "Swarm protocol enabled...";
 	
-	//Log Messages
+	// Log Messages
 	public static final String DETECTED = "The Master UAV has detected ";
 	
-	//Simulator states
-	public static final String START = "Master dron detects his slaves";
-	public static final String SEND_DATA ="The master dron sends flight information of speed and altitude of the first phase" ;
-	public static final String WAIT_LIST = "Get their flight route";
-	public static final String SEND_LIST = "The master dron sends the flight route";
-	public static final String WAIT_TAKE_OFF = "Wait his turn to take off";
-	public static final String SEND_TAKE_OFF = "Master wait his turn to take off";
-	public static final String TAKING_OFF = "Began its takeoff";
-	public static final String MOVE_TO_WP = "Moves to waypoint";
-	public static final String WP_REACHED = "Waypoint reached";
+	// Protocol states
+	public static final String START = "Start";						// Master UAV detects slaves
+	public static final String SETUP = "Setup";						// Master sends mission to slaves
+	public static final String SETUP_FINISHED = "Setup finished";	// Waiting for the experiment to start
+	public static final String WAIT_TAKE_OFF = "Wait take off";		// Waiting his turn to take off;
+	public static final String TAKING_OFF = "Taking off";		// Performing the take off;
+	public static final String MOVE_TO_WP = "Moving to WP";		// Moving to a waypoint;
+	public static final String WP_REACHED = "WP reached";		// Waypoint reached;
 	public static final String LANDING_UAV = "Landing";
-	public static final String FINISH = "The flight is over";
+	public static final String FINISH = "Finished";				// The flight is over;
 	
-	//Internal Simulator States
-	public static final String INTSTART = "START";
-	public static final String INTSEND_DATA ="SEND DATA" ;
-	public static final String INTWAIT_LIST = "WAIT LIST";
-	public static final String INTSEND_LIST = "SEND LIST";
-	public static final String INTWAIT_TAKE_OFF = "WAIT TAKE OFF";
-	public static final String INTSEND_TAKE_OFF = "SEND TAKE OFF";
-	public static final String INTTAKING_OFF = "TAKING OFF";
-	public static final String INTMOVE_TO_WP = "MOVE TO WP";
-	public static final String INTWP_REACHED = "WP REACHED";
-	public static final String INTLANDING_UAV = "LANDING";
-	public static final String INTFINISH = "FINISH";
+	// Progress messages
+	//   from master
+	public static final String MASTER_START_LISTENER = "Master listener detecting slaves";
+	public static final String MASTER_SEND_DATA = "Master talker sending data with mission";
+	public static final String MASTER_DATA_ACK_LISTENER = "Master listener waiting for data ack";
+	public static final String MASTER_WP_REACHED_ACK_LISTENER = "Master listener waiting for waypoint reached ack";
+	public static final String MASTER_SEND_MOVE = "Master talker sending move order";
+	public static final String MASTER_SEND_LAND = "Master talker sending land order";
+	//   from slave
+	public static final String SLAVE_START_TALKER = "Slave talker sending hello";
+	public static final String SLAVE_WAIT_LIST_TALKER = "Slave talker sending data ack";
+	public static final String SLAVE_WAIT_DATA_LISTENER = "Slave listener waiting for data";
+	public static final String SLAVE_WAIT_ORDER_LISTENER = "Slave listener waiting move to waypoint or land order";
+	public static final String SLAVE_SEND_WP_REACHED_ACK = "Slave talker sending waypoint reached ack";
+	//   from master or slave
+	public static final String LISTENER_WAITING = "Listener waiting";
+	public static final String TALKER_WAITING = "Talker waiting";
+	public static final String WAITING_TAKE_OFF = "Listener waiting take off command";
+	public static final String TAKE_OFF_COMMAND = "Talker sending take off command";
+	public static final String LISTENER_FINISHED = "Listener finished";
+	public static final String TALKER_FINISHED = "Talker finished";
 	
-	//States Strings Master
-	public static final String MASTER_START_TALKER = "Wait";
-	public static final String MASTER_START_LISTENER = "Detect his slaves";
-	public static final String MASTER_SEND_DATA_TALKER = "Send MSJ2, with altitude and IDs for taking off";
-	public static final String MASTER_SEND_DATA_LISTENER = "Waiting for the ACK2";
-	public static final String MASTER_SEND_LIST_TALKER = "Sens MSJ3, with modified route";
-	public static final String MASTER_SEND_LIST_LISTENER = "Waiting for the ACK3";
+	// Error messages
+	public static final String TAKE_OFF_ERROR = "Unable to perform the take off of the UAV";
+	public static final String MOVE_ERROR = "Unable to move to a waypoint. UAV";
+	public static final String LAND_ERROR = "Unable to land the UAV";
 	
-	//State Strings Slave
-	public static final String SLAVE_START_TALKER = "Send his ID";
-	public static final String SLAVE_START_LISTENER = "Waiting for MSJ2";
-	public static final String SLAVE_WAIT_LIST_TALKER = "Send ACK2";
-	public static final String SLAVE_WAIT_LIST_LISTENER = "Waiting for MSJ3, route";
-	public static final String SLAVE_WAIT_TAKE_OFF_TALKER = "Send ACK3";
-	public static final String SLAVE_WAIT_TAKE_OFF_LISTENER = "Waiting for it's moment for take off";
-	
-	//State String commons TODO
-	public static final String TAKING_OFF_COMMON = "Starting its takeoff ";
-	public static final String MOVE_TO_WP_COMMON = "Moving to WP ";
-	
-	//Fault messages
 	public static final String FATAL_ERROR = "Fatal error";
 	public static final String UAVS_START_ERROR_1 = "Failed locating the home position of the UAV";
 	public static final String UAVS_START_ERROR_2 = "No valid coordinates could be found to stablish the home of the UAV";
-	public static final String SEND_MISSION_ERROR = "Error sending the mission to the UAV";
-	public static final String LANDING_ERROR = "Impossible to make the landing";
-	public static final String START_MISSION_ERROR = "Error starting the mission of the UAV";
-	public static final String MASTER_SOCKET_READ_ERROR = "Error processing information received";
-	public static final String MASTER_SOCKET_ERROR = "Master failure while listening to socket";
-
-	
-	//Errors
 	public static final String BAD_INPUT = "Please, check the selected information.";
+	public static final String MAX_WP_REACHED = "Maximum number of waypoints reached, please use less than 60";
 	
 
 	

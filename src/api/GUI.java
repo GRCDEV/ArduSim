@@ -2,6 +2,7 @@ package api;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -19,6 +20,8 @@ import sim.logic.SimParam;
 /** This class consists exclusively of static methods that help the developer to validate and show information on screen. */
 
 public class GUI {
+	
+	private static AtomicBoolean exiting = new AtomicBoolean();
 	
 	/** Sends information to the main window log and console.
 	 * <p>The window log is only updated when performing simulations. */
@@ -104,15 +107,18 @@ public class GUI {
 	 * <p>On a real UAV shows the message in console and exits.
 	 * <p>On simulation or PC Companion, the message is shown in a dialog. Virtual UAVs are stopped before exiting if needed. */
 	public static void exit(String message) {
-		if (Param.role == Tools.MULTICOPTER) {
-			System.out.println(Text.FATAL_ERROR + ": " + message);
-			System.out.flush();
-		} else {
-			JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
-			if (Param.role == Tools.SIMULATOR) {
-				if (Param.simStatus != SimulatorState.CONFIGURING
-					&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
-					ArduSimTools.closeSITL();
+		boolean exiting = GUI.exiting.getAndSet(true);
+		if (!exiting) {
+			if (Param.role == Tools.MULTICOPTER) {
+				System.out.println(Text.FATAL_ERROR + ": " + message);
+				System.out.flush();
+			} else {
+				JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
+				if (Param.role == Tools.SIMULATOR) {
+					if (Param.simStatus != SimulatorState.CONFIGURING
+						&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
+						ArduSimTools.closeSITL();
+					}
 				}
 			}
 		}
