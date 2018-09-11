@@ -354,8 +354,9 @@ public class Listener extends Thread {
 		long cicleTime = System.currentTimeMillis();
 		int waitingTime;
 		while (SwarmProtParam.state.get(numUAV) == TAKING_OFF) {
+			// Discard message
 			Copter.receiveMessage(numUAV, SwarmProtParam.RECEIVING_TIMEOUT);
-			
+			// Wait until target altitude is reached
 			if (System.currentTimeMillis() - cicleTime > SwarmProtParam.TAKE_OFF_CHECK_TIMEOUT) {
 				GUI.logVerbose(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
 						+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
@@ -397,7 +398,7 @@ public class Listener extends Thread {
 			while (SwarmProtParam.moveSemaphore.get(numUAV) == currentWP) {
 				// Discard message
 				Copter.receiveMessage(numUAV, SwarmProtParam.RECEIVING_TIMEOUT);
-				
+				// Wait until target location is reached
 				if (System.currentTimeMillis() - cicleTime > SwarmProtParam.MOVE_CHECK_TIMEOUT) {
 					if (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) <= SwarmProtParam.MIN_DISTANCE_TO_WP
 							&& Math.abs(relAltitude - UAVParam.uavCurrentData[numUAV].getZRelative()) <= 0.2) {
