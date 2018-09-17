@@ -94,7 +94,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 1. Install [Java](https://www.java.com/es/download/) if not present.
 
-2. MAVProxy. [Download](http://firmware.ardupilot.org/Tools/MAVProxy/MAVProxySetup-latest.exe) and install it with the default configuration options. This application is required for arducopter compilation and will no longer be used.
+2. MAVProxy. [Download](http://firmware.ardupilot.org/Tools/MAVProxy/MAVProxySetup-latest.exe), install it with the default configuration options, and don't start it. This application is required for arducopter compilation and will no longer be used.
 
 3. Cygwin. It is a Linux type command line emulator that enables us to compile the multicopter.
 
@@ -135,7 +135,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
 
-        git clone git://github.com/ArduPilot/ardupilot.git
+        git clone https://github.com/ArduPilot/ardupilot.git
         cd ardupilot
         git submodule update --init --recursive
 
@@ -152,62 +152,34 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 ## 4 SITL setup in Linux
 
-The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal.
+The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal. The process is explained for Debian based sistems (Ubuntu, Mint...). For RPM based systems (CentOS, Fedora...) use *yum* installer and install manually the dependencies included in the script mentioned later on.
 
 1. Install Java if not present.
-
-    On debian based systems (Ubuntu, Mint, ...) run:
 
         sudo add-apt-repository ppa:webupd8team/java
         sudo apt-get update
         sudo apt-get install oracle-java8-installer
-    
-    On RPM based systems (CentOS, Fedora, ...) you must go to the [Oracle official download page](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html), accept the license agreement, and download the appropriate file. Then, execute the following command, changing the version number accordingly to the downloaded one:
-    
-        sudo yum localinstall jre-8u162-linux-x64.rpm
 
 2. Install git if not present.
 
     On debian based systems (Ubuntu, Mint, ...) run:
     
-        sudo apt-get install git-core
-
-    On RPM based systems (CentOS, Fedora, ...) run:
-    
-        sudo yum install git
+        sudo apt install git
 
 3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal, go to your home folder (*/home/user_name*) and input this lines:
 
-        git clone git://github.com/ArduPilot/ardupilot.git
+        git clone https://github.com/ArduPilot/ardupilot.git
         cd ardupilot
         git submodule update --init --recursive
 
-4. Install required packages.
+4. Use the following command to install the required packages and reload the path with the *dot* command:
 
-    On debian based systems (Ubuntu, Mint, ...) run:
-    
-        sudo apt-get install python-matplotlib python-serial python-wxgtk3.0 python-wxtools python-lxml
-        sudo apt-get install python-scipy python-opencv ccache gawk git python-pip python-pexpect
-        sudo pip install future pymavlink MAVProxy
-    
-    On RPM based systems (CentOS, Fedora, ...) run:
-    
-        sudo yum install opencv-python wxPython python-pip pyserial scipy python-lxml python-matplotlib python-pexpect python-matplotlib-wx
+        Tools/scripts/install-prereqs-ubuntu.sh -y
+        . ~/.profile
 
-5. Set up path. This procedure makes it easy to execute simulated vehicles under SITL (sim_vehicle.py will be found from anywhere), but it is not strictly needed to just compile a multicopter, if the next steps are followed.
+5. Make the multicopter.
 
-    Edit the **.bashrc** file located on the user home folder */home/user_name/.bashrc*, to add the following lines:
-
-        export PATH=$PATH:$HOME/ardupilot/Tools/autotest
-        export PATH=/usr/lib/ccache:$PATH
-    
-    Next, reload the PATH using the *dot* command:
-
-        . ~/.bashrc
-
-6. Make the multicopter.
-
-        cd $HOME/ardupilot/ArduCopter
+        cd ArduCopter
         sim_vehicle.py -w
 
-    Once fully loaded, use "Ctrl+D" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *$HOME/ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *$HOME/ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
+    Once fully loaded, use "Ctrl+C" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
