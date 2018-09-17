@@ -160,10 +160,8 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         sudo apt-get update
         sudo apt-get install oracle-java8-installer
 
-2. Install git if not present.
+2. Install git if not present:
 
-    On debian based systems (Ubuntu, Mint, ...) run:
-    
         sudo apt install git
 
 3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal, go to your home folder (*/home/user_name*) and input this lines:
@@ -177,7 +175,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         Tools/scripts/install-prereqs-ubuntu.sh -y
         . ~/.profile
 
-5. Make the multicopter.
+5. Make the multicopter:
 
         cd ArduCopter
         sim_vehicle.py -w
