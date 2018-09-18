@@ -4,28 +4,33 @@ import java.util.Iterator;
 
 import api.*;
 import api.pojo.UTMCoordinates;
+import pollution.pojo.Point;
+import pollution.pojo.PointSet;
+import pollution.pojo.Value;
 import smile.data.SparseDataset;
 
 public class Pollution extends Thread {
 	
 	boolean [][] visited;
 	
-	public static UTMCoordinates origin;
 	int sizeX, sizeY;
 	
 	// Move to a point within the grid
 	void move(Point p) {
-		move(p.x, p.y);
+		move(p.getX(), p.getY());
 	}
 	void move(int x, int y) {
-		Copter.moveUAV(0, Tools.UTMToGeo(origin.Easting + (x * PollutionParam.density), origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
+		Copter.moveUAV(0, Tools.UTMToGeo(PollutionParam.origin.Easting + (x * PollutionParam.density), PollutionParam.origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
 	}
 	
 	double moveAndRead(Point p) {
 		double m;
 		move(p);
 		m = PollutionParam.sensor.read();
-		PollutionParam.measurements.set(p.getX(), p.getY(), m);
+		synchronized(PollutionParam.measurements_set) {
+			PollutionParam.measurements.set(p.getX(), p.getY(), m);
+			PollutionParam.measurements_temp.add(new Value(p.getX(), p.getY(), m));
+		}
 		visited[p.getX()][p.getY()] = true;
 		GUI.log("Read: [" + p.getX() + ", " + p.getY() + "] = " + m);
 		return m;
@@ -48,9 +53,6 @@ public class Pollution extends Thread {
 		// Calculate grid size and origin
 		sizeX = (int) ((double) PollutionParam.width / PollutionParam.density);
 		sizeY = (int) ((double) PollutionParam.length / PollutionParam.density);
-		origin = api.Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
-		origin.Easting -= PollutionParam.width/2.0;
-		origin.Northing -= PollutionParam.length/2.0;
 		
 		// new booleans are initialized to false by default, this is what we want
 		visited = new boolean[sizeX][sizeY];

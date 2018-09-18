@@ -1,4 +1,4 @@
-package pollution;
+package pollution.pojo;
 
 /**
  * Represents a 2d point on a grid.

@@ -1,6 +1,8 @@
 package pollution;
 
 import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.JFrame;
 
@@ -10,6 +12,7 @@ import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
 import api.pojo.GeoCoordinates;
+import pollution.pojo.*;
 import sim.board.BoardPanel;
 
 public class PollutionHelper extends ProtocolHelper {
@@ -33,6 +36,7 @@ public class PollutionHelper extends ProtocolHelper {
 
 	@Override
 	public void initializeDataStructures() {
+		// Sensor setup
 		GUI.log("Pollution sensor setup.");
 		try {
 			PollutionParam.sensor = PollutionParam.isSimulation ? new PollutionSensorSim() : null;
@@ -41,6 +45,16 @@ public class PollutionHelper extends ProtocolHelper {
 			e.printStackTrace();
 		}
 		GUI.log("Pollution sensor setup done.");
+		
+		// Coordinates setup
+		PollutionParam.origin = api.Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
+		PollutionParam.origin.Easting -= PollutionParam.width/2.0;
+		PollutionParam.origin.Northing -= PollutionParam.length/2.0;
+		
+		// Measurement structure
+		PollutionParam.measurements_temp = new ArrayList<Value>();
+		PollutionParam.measurements_set = new ValueSet();
+		
 		PollutionParam.ready = false;
 	}//TODO
 
@@ -68,6 +82,14 @@ public class PollutionHelper extends ProtocolHelper {
 	@Override
 	public void drawResources(Graphics2D g2, BoardPanel p) {
 		// TODO 
+		synchronized(PollutionParam.measurements_temp) {
+			Iterator<Value> itr = PollutionParam.measurements_temp.iterator();
+			while(itr.hasNext()) PollutionParam.measurements_set.add(itr.next());
+			PollutionParam.measurements_temp.clear();
+		}
+		pollution.gui.DrawTool.drawValueSet(g2, PollutionParam.measurements_set);
+		
+		
 	}
 
 	@Override

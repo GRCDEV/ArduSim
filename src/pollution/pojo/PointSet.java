@@ -1,4 +1,4 @@
-package pollution;
+package pollution.pojo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,26 +12,26 @@ public class PointSet {
 		pSet = new HashMap<Integer, HashSet<Integer>>();
 	}
 	
-	void add(Point p) {
+	public void add(Point p) {
 		add(p.getX(), p.getY());
 	}
-	void add(int a, int b) {
+	public void add(int a, int b) {
 		if (!pSet.containsKey(a)) pSet.put(a, new HashSet<Integer>());
 		pSet.get(a).add(b);
 	}
 	
-	boolean contains(Point p) {
+	public boolean contains(Point p) {
 		return contains(p.getX(), p.getY());
 	}
-	boolean contains(int a, int b) {
+	public boolean contains(int a, int b) {
 		if (pSet.containsKey(a)) return pSet.get(a).contains(b);
 		return false;
 	}
 	
-	void remove(Point p) {
+	public void remove(Point p) {
 		remove(p.getX(), p.getY());
 	}
-	void remove(int a, int b) {
+	public void remove(int a, int b) {
 		if (pSet.containsKey(a)) {
 			pSet.get(a).remove(b);
 			if (pSet.get(a).isEmpty()) pSet.remove(a);

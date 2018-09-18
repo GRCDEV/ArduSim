@@ -4,7 +4,12 @@ import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+
+import org.hyperic.sigar.Sigar;
 
 import api.Copter;
 import api.Tools;
@@ -64,7 +69,17 @@ public class PollutionSensorSim implements PollutionSensor {
 //		for (int i = 0; i < point.length; i++) {
 //			SimTools.println("[" + point[i][0] + ", " + point[i][1] + "] = " + data[i]);
 //		}
+		// Avoid showing error as the library is dynamically loaded and was not found in LD_LIBRARY_PATH
+		PrintStream original = System.err;
+		PrintStream dummy = new PrintStream(new OutputStream() {
+			@Override
+			public void write(int b) throws IOException {
+			}
+		});
+		System.setErr(dummy);
 		krigData = new KrigingInterpolation(point, data, new GaussianVariogram(981.8083, 658.7948, 500.0), error);
+		System.setErr(original);
+		
 		//SimTools.println("Krige(30, 50) : " + krigData.interpolate(30.0, 50.0));
 	}
 
