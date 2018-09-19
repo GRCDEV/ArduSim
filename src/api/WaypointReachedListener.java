@@ -4,7 +4,8 @@ package api;
 
 public interface WaypointReachedListener {
 	
-	/** Code executed each time the UAV associated to this Class reaches a waypoint. */
+	/** Code executed each time the UAV associated to this Class reaches a waypoint.
+	 * <p>This method is NOT thread-safe and the included code must take this into account. */
 	void onWaypointReached();
 	
 	/** Gets numUAV, or the position of this UAV in ArduSim arrays. */

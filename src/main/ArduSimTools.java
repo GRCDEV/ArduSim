@@ -219,6 +219,21 @@ public class ArduSimTools {
 			UAVParam.initialSpeeds = new double[1];
 			UAVParam.initialSpeeds[0] = Double.parseDouble(spe);
 
+			param = parameters.get(Param.MISSION_END);
+			if (param == null) {
+				GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.missionEnd);
+			} else {
+				if (param.equalsIgnoreCase(Waypoint.MISSION_END_UNMODIFIED)) {
+					Waypoint.missionEnd = Waypoint.MISSION_END_UNMODIFIED;
+				} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_LAND)) {
+					Waypoint.missionEnd = Waypoint.MISSION_END_LAND;
+				} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_RTL)) {
+					Waypoint.missionEnd = Waypoint.MISSION_END_RTL;
+				} else {
+					GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
+				}
+			}
 			param = parameters.get(Param.SERIAL_PORT);
 			if (param == null) {
 				GUI.log(Param.SERIAL_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.serialPort);
@@ -415,6 +430,7 @@ public class ArduSimTools {
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
+		UAVParam.lastWP = new Waypoint[Param.numUAVs];
 		UAVParam.RTLAltitude = new double[Param.numUAVs];
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
 		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
@@ -929,7 +945,7 @@ public class ArduSimTools {
 		List<String> commandLine = new ArrayList<String>();
 		BufferedReader input;
 		commandLine.add("df");
-		commandLine.add("-aTh");
+		commandLine.add("-ah");
 		ProcessBuilder pb = new ProcessBuilder(commandLine);
 		try {
 			Process p = pb.start();
@@ -952,7 +968,7 @@ public class ArduSimTools {
 	}
 	
 	/** Mount a virtual RAM drive under Linux. Return true if the command was successful. */
-	private static boolean mountDriveLinux(String diskPath) {
+	private static boolean mountDriveLinux(String diskPath) {//TODO crear mount, dismount y checkDriveMounted para MacOS
 		List<String> commandLine = new ArrayList<String>();
 		BufferedReader input;
 		commandLine.add("mount");
@@ -1870,10 +1886,12 @@ public class ArduSimTools {
 		}
 	}
 	
-	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event. */
+	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event.
+	 * <p>This method is NOT thread-safe. */
 	public static void triggerWaypointReached(int numUAV) {
+		WaypointReachedListener listener;
 		for (int i = 0; i < ArduSimTools.listeners.size(); i++) {
-			WaypointReachedListener listener = ArduSimTools.listeners.get(i);
+			listener = ArduSimTools.listeners.get(i);
 			if (listener.getNumUAV() == numUAV) {
 				listener.onWaypointReached();
 			}
@@ -1951,6 +1969,14 @@ public class ArduSimTools {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			FlightMode mode = UAVParam.flightMode.get(i);
 			if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
+				// Inform only once that the last waypoint has been reached
+				if (UAVParam.lastWP[i] != null
+						&& !UAVParam.lastWaypointReached[i]) {
+					UAVParam.lastWaypointReached[i] = true;
+					GUI.log(i, Text.LAST_WAYPOINT_REACHED);
+					ArduSimTools.triggerWaypointReached(i);
+				}
+				
 				if (Param.testEndTime[i] == 0) {
 					Param.testEndTime[i] = System.currentTimeMillis();
 					if (Param.testEndTime[i] > latest) {

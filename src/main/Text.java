@@ -26,6 +26,7 @@ public class Text {
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
 	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR = "param not found. Using default value:";
 	public static final String INI_FILE_PARAM_NOT_VALID_ERROR = "param not valid value:";
+	public static final String INI_FILE_PARAM_USING_DEFAULT = "param not valid. Using default value:";
 	public static final String INI_FILE_PARAM_SERIAL_PORT_WARNING = "The serial link could not work properly if the serial port name is wrong:";
 	public static final String INI_FILE_PARAM_BROADCAST_IP_WARNING = "Broadcast IP:";
 	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;
@@ -86,7 +87,6 @@ public class Text {
 	public static final String BUFFER_SIZE_ERROR_2 = "The receiving buffer must be big enough to store at least one frame (" + Tools.DATAGRAM_MAX_LENGTH + ")";
 	public static final String WIFI_MODEL = "Wireless communications model:";
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
-	
 	public static final String TOT_SENT_PACKETS = "Total sent packets:";
 	public static final String TOT_WAITED_PREV_SENDING = "Waiting for the previous packet to be sent:";
 	public static final String TOT_WAITED_MEDIA_AVAILABLE = "Waiting the media to be available (carrier sensing):";
@@ -226,6 +226,8 @@ public class Text {
 	public static final String XML_PARSING_ERROR_2 = "Not enough points to define a path in line:";
 	public static final String XML_PARSING_ERROR_3 = "Wrong file format.";
 	public static final String XML_PARSING_ERROR_4 = "Error parsing line/point:";
+	public static final String XML_LAND_ADDED = "Land waypoint added at the end of the mission of UAV: ";
+	public static final String XML_RTL_ADDED = "RTL waypoint added at the end of the mission of UAV: ";
 	public static final String FILE_HEADER = "QGC WPL 110";
 	public static final String FILE_PARSING_ERROR_1 = "Waypoint file error: Nothing useful found.";
 	public static final String FILE_PARSING_ERROR_2 = "Waypoint file error: Format not valid.";
@@ -233,6 +235,10 @@ public class Text {
 	public static final String FILE_PARSING_ERROR_4 = "Waypoint file error: Wrong format in line:";
 	public static final String FILE_PARSING_ERROR_5 = "Waypoint file error: Waypoint 0 is needed but ignored, and\n waypoint 1 must be a take off.";
 	public static final String FILE_PARSING_ERROR_6 = "Waypoint file error: Waypoints are not in the propper sequence order.";
+	// Loading mission(s) dialog
+	public static final String EXTEND_MISSION_TITLE = "Select option";
+	public static final String EXTEND_MISSION = "How do we finish the loaded missions?";
+	
 	// Parsing speed(s) file(s)
 	public static final String SPEEDS_PARSING_ERROR_1 = "Speeds file: No speed values found.";
 	public static final String SPEEDS_PARSING_ERROR_2 = "Speeds file: Wrong format in line:";

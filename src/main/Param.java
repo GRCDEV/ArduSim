@@ -18,6 +18,7 @@ public class Param {
 	public static final String UAV_PORT = "UAVPORT";
 	public static final String PROTOCOL = "UAVPROTOCOL";
 	public static final String SPEED = "UAVSPEED";
+	public static final String MISSION_END = "MISSIONEND";
 	public static final String SERIAL_PORT = "SERIALPORT";
 	public static final String BAUD_RATE = "BAUDRATE";
 	public static final String BROADCAST_IP = "BROADCASTIP";
@@ -27,7 +28,7 @@ public class Param {
 	public static final String MEASURE_CPU = "MEASURECPU";
 	public static final String VERBOSE_LOGGING = "VERBOSELOGGING";
 	public static final String VERBOSE_STORE = "VERBOSESTORE";
-	public static final String[] PARAMETERS = {COMPUTER_PORT, UAV_PORT, PROTOCOL, SPEED, SERIAL_PORT, BAUD_RATE,
+	public static final String[] PARAMETERS = {COMPUTER_PORT, UAV_PORT, PROTOCOL, SPEED, MISSION_END, SERIAL_PORT, BAUD_RATE,
 			BROADCAST_IP, BROADCAST_PORT, BATTERY_CELLS, BATTERY_CAPACITY, MEASURE_CPU, VERBOSE_LOGGING, VERBOSE_STORE, };
 	
 	// Number of UAVs to be simulated
