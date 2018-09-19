@@ -337,7 +337,7 @@ public class CollisionDetectorThread extends Thread {
 							&& MBCAPParam.state[numUAV] == MBCAPState.OVERTAKING
 							&& selfBeacon.uavId > avoidingBeacon.uavId
 							&& System.nanoTime() - stateTime > MBCAPParam.passingTimeout
-							&& MBCAPv3Helper.OvertakingFinished(numUAV, avoidingBeacon.uavId, avoidingBeacon.points.get(0))) {
+							&& MBCAPv3Helper.overtakingFinished(numUAV, avoidingBeacon.uavId, avoidingBeacon.points.get(0))) {
 
 						// There is no need to apply commands to the UAV
 						GUI.log(numUAV, MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
