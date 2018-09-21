@@ -25,7 +25,9 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -827,8 +829,7 @@ public class ArduSimTools {
 		// When it is not possible, use physical storage
 		if ((SimParam.userIsAdmin && Param.runningOperatingSystem == Param.OS_WINDOWS && !SimParam.imdiskIsInstalled)
 				|| !SimParam.userIsAdmin) {
-			File parentFolder = (new File(SimParam.sitlPath)).getParentFile();
-			return parentFolder.getAbsolutePath();
+			return Tools.getCurrentFolder().getAbsolutePath();
 		}
 		return null;
 	}
@@ -1303,13 +1304,12 @@ public class ArduSimTools {
 				}
 				for (int i=0; i<Param.numUAVs; i++) {
 					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
+					Path tempPath = tempFolder.toPath();
 					// Delete recursively in case it already exists
-					if (tempFolder.exists()) {
-						ArduSimTools.deleteFolder(tempFolder);
+					if (Files.exists(tempPath)) {
+						ArduSimTools.deleteFolder(tempPath);
 					}
-					if (!tempFolder.mkdir()) {
-						throw new IOException();
-					}
+					Files.createDirectory(tempPath);
 					
 					// Trying to speed up locating files on the RAM drive (under Linux)
 					if (SimParam.usingRAMDrive && (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)) {
@@ -1321,7 +1321,7 @@ public class ArduSimTools {
 						Files.copy(file1.toPath(), file2.toPath());
 					}
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				GUI.log(Text.UAVS_START_ERROR_2 + "\n" + parentFolder);
 				throw new IOException();
 			}
@@ -1425,19 +1425,23 @@ public class ArduSimTools {
 	}
 
 	/** Removes a folder recursively. */
-	public static void deleteFolder (File file) throws IOException {
-		for (File childFile : file.listFiles()) {
-			if (childFile.isDirectory()) {
-				ArduSimTools.deleteFolder(childFile);
-			} else {
-				if (!childFile.delete()) {
-					throw new IOException();
+	public static void deleteFolder (Path file) throws Exception {
+		DirectoryStream<Path> content = Files.newDirectoryStream(file);
+		try {
+			Iterator<Path> it = content.iterator();
+			Path child;
+			while (it.hasNext()) {
+				child = it.next();
+				if (Files.isDirectory(child)) {
+					ArduSimTools.deleteFolder(child);
+				} else {
+					Files.deleteIfExists(child);
 				}
 			}
+		} finally {
+			content.close();
 		}
-		if (!file.delete()) {
-			throw new IOException();
-		}
+		Files.deleteIfExists(file);
 	}
 	
 	/** Detects the Operating System. */
@@ -1737,11 +1741,11 @@ public class ArduSimTools {
 			if (SimParam.tempFolderBasePath != null) {
 				File parentFolder = new File(SimParam.tempFolderBasePath);
 				for (int i=0; i<UAVParam.MAX_SITL_INSTANCES; i++) {
-					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
-					if (tempFolder.exists()) {
+					Path tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i).toPath();
+					if (Files.exists(tempFolder)) {
 						try {
 							deleteFolder(tempFolder);
-						} catch (IOException e) {
+						} catch (Exception e) {
 						}
 					}
 				}

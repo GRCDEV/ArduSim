@@ -136,8 +136,11 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
 
         git clone https://github.com/ArduPilot/ardupilot.git
+        git checkout tags/Copter-3.5.7
         cd ardupilot
         git submodule update --init --recursive
+    
+    The first command clones the project in the local folder *ardupilot*. The last uploaded version of ArduPilot is usually unstable, and we highly recommend to downgrade to the latest stable version for ArduCopter. In the cloned webpage open de *Branch* drop-down list, select the tab *Tags*, look for the most up-to-date version of *Copter*, and put in the second line the tag found. ArduSim has been tested with ArduCopter version 3.5.7. The last command downloads modules needed by the target ArduPilot compilation.
 
 7. Make the multicopter. In the same *Cygwin terminal* and already within the *ardupilot* folder type:
 
