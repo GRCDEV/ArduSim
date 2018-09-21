@@ -773,7 +773,7 @@ public class ArduSimTools {
 				File ramDiskFile = new File(ramDiskPath);
 				if (ramDiskFile.exists()) {
 					// Check if temporal filesystem is already mounted and dismount
-					if (ArduSimTools.checkDriveMountedLinux(ramDiskPath)) {
+					if (ArduSimTools.checkDriveMountedLinuxMac(ramDiskPath)) {
 						if (!ArduSimTools.dismountDriveLinux(ramDiskPath)) {
 							return null;
 						}
@@ -791,20 +791,24 @@ public class ArduSimTools {
 				String ramDiskPath = "/tmp/" + SimParam.RAM_DRIVE_NAME;
 				File ramDiskFile = new File(ramDiskPath);
 				if (ramDiskFile.exists()) {
+					GUI.log("RAM Drive exists");
 					// Check if temporal filesystem is already mounted and dismount
-					if (ArduSimTools.checkDriveMountedLinux(ramDiskPath)) {
-						if (!ArduSimTools.dismountDriveLinux(ramDiskPath)) {
+					if (ArduSimTools.checkDriveMountedLinuxMac(ramDiskPath)) {
+						GUI.log("\tMounted");
+						if (!ArduSimTools.dismountDriveMac(ramDiskPath)) {
+							GUI.log("\t\tFailed mounting");
 							return null;
 						}
 					}
 				} else {
+					GUI.log("RAM Drive does not exist");
 					// Create the folder
 					ramDiskFile.mkdirs();
 				}
-				if (ArduSimTools.mountDriveLinux(ramDiskPath)) {
+				if (ArduSimTools.mountDriveMac(ramDiskPath)) {
 					SimParam.usingRAMDrive = true;
 					return ramDiskPath;
-				}
+				} else GUI.log("Failed mounting");
 			}
 		}
 		
@@ -924,28 +928,24 @@ public class ArduSimTools {
 		return false;
 	}
 	
-	/** If an appropriate virtual RAM drive is already mounted under Linux, it returns its location, or null in case of error. */
-	private static boolean checkDriveMountedLinux(String diskPath) {
+	/** If an appropriate virtual RAM drive is already mounted under Linux and Mac, it returns true if mounted, or false in case of error. */
+	private static boolean checkDriveMountedLinuxMac(String diskPath) {
 		List<String> commandLine = new ArrayList<String>();
 		BufferedReader input;
 		commandLine.add("df");
-		commandLine.add("-aTh");
+		commandLine.add("-ah");
 		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		boolean found = false;
 		try {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			StringBuilder sb = new StringBuilder();
 			String line = null;
-		    while ((line = input.readLine()) != null) {
-		        sb.append(line).append("\n");
+		    while ((line = input.readLine()) != null && !found) {
+		    	found = line.endsWith(diskPath);
+		    	GUI.log(line);
 		    }
-			String s = sb.toString();
-			if (s.length() > 0 && s.charAt(s.length()-1) == '\n') {
-				s = s.substring(0, s.length()-1);
-			}
-			if (s.contains(diskPath)) {
-				return true;
-			}
+		    if(!found) GUI.log("Mount not found");
+			return found;
 		} catch (IOException e) {
 		}
 		return false;
@@ -990,6 +990,65 @@ public class ArduSimTools {
 		return false;
 	}
 	
+	/** Mount a virtual RAM drive under Mac. Return true if the command was successful. */
+	private static boolean mountDriveMac(String diskPath) {
+//		NUMSECTORS=128000       # a sector is 512 bytes
+//		mydev=`hdiutil attach -nomount ram://$NUMSECTORS`
+//		newfs_hfs $mydev
+//		mkdir /tmp/mymount
+//		mount -t hfs $mydev /tmp/mymount
+		
+		List<String> commandLine = new ArrayList<String>();
+		BufferedReader input;
+		commandLine.add("hdiutil");
+		commandLine.add("attach");
+		commandLine.add("-nomount");
+		int ramSize;
+		if (SimParam.arducopterLoggingEnabled) {
+			ramSize = (SimParam.UAV_RAM_DRIVE_SIZE + SimParam.LOGGING_RAM_DRIVE_SIZE)*Param.numUAVs;
+		} else {
+			ramSize = SimParam.UAV_RAM_DRIVE_SIZE*Param.numUAVs;
+		}
+		commandLine.add("ram://" + ramSize * 2048);
+		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		try {
+			Process p = pb.start();
+			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			StringBuilder sb = new StringBuilder();
+			String line = null;
+		    while ((line = input.readLine()) != null) {
+		        sb.append(line);
+		    }
+			String s = sb.toString();
+			if (s.length() > 0) {
+				if (s.charAt(s.length()-1) == '\n') s = s.substring(0, s.length()-1);
+				s = s.trim();
+			}
+			if (s.length() != 0 && p.waitFor() == 0) {
+				commandLine.clear();
+				commandLine.add("newfs_hfs");
+				commandLine.add(s);
+				GUI.log(commandLine.toString());
+				pb = new ProcessBuilder(commandLine);
+				p = pb.start();
+				if (p.waitFor() == 0) {
+					commandLine.clear();
+					commandLine.add("mount");
+					commandLine.add("-t");
+					commandLine.add("hfs");
+					commandLine.add(s);
+					commandLine.add(diskPath);
+					pb = new ProcessBuilder(commandLine);
+					p = pb.start();
+					if (p.waitFor() == 0) return true;
+					else GUI.log("Failed mount");
+				} else GUI.log("Failed newfs_hfs");
+			} else GUI.log("Failed hdiutil");
+		} catch (IOException | InterruptedException e) {
+		}
+		return false;
+	}
+	
 	/** Dismounts a virtual RAM drive under Linux. Returns true if the command was successful. */
 	private static boolean dismountDriveLinux(String diskPath) {
 		List<String> commandLine = new ArrayList<String>();
@@ -1013,6 +1072,23 @@ public class ArduSimTools {
 				return true;
 			}
 		} catch (IOException e) {
+		}
+		return false;
+	}
+	
+	/** Dismounts a virtual RAM drive under Mac. Returns true if the command was successful. */
+	private static boolean dismountDriveMac(String diskPath) {
+		List<String> commandLine = new ArrayList<String>();
+		commandLine.add("hdiutil");
+		commandLine.add("detach");
+		commandLine.add(diskPath);
+		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		try {
+			Process p = pb.start();
+			if (p.waitFor() == 0) {
+				return true;
+			} else GUI.log("Error dismounting");
+		} catch (IOException | InterruptedException e) {
 		}
 		return false;
 	}
@@ -1707,16 +1783,26 @@ public class ArduSimTools {
 				}
 			}
 			
-			if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
+			if (Param.runningOperatingSystem == Param.OS_LINUX) {
 				// Unmount temporal filesystem and remove folder
-				if (ArduSimTools.checkDriveMountedLinux(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
+				if (ArduSimTools.checkDriveMountedLinuxMac(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
 					GUI.log(Text.DISMOUNT_DRIVE_ERROR);
 				}
 				File ramDiskFile = new File(SimParam.tempFolderBasePath);
 				if (ramDiskFile.exists()) {
 					ramDiskFile.delete();
 				}
-			}//TODO add support for MAC OS
+			}
+			if (Param.runningOperatingSystem == Param.OS_MAC) {
+				// Unmount temporal filesystem and remove folder
+				if (ArduSimTools.checkDriveMountedLinuxMac(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveMac(SimParam.tempFolderBasePath)) {
+					GUI.log(Text.DISMOUNT_DRIVE_ERROR);
+				}
+				File ramDiskFile = new File(SimParam.tempFolderBasePath);
+				if (ramDiskFile.exists()) {
+					ramDiskFile.delete();
+				}
+			}
 		} else {
 			if (SimParam.tempFolderBasePath != null) {
 				File parentFolder = new File(SimParam.tempFolderBasePath);
