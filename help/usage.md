@@ -16,7 +16,7 @@ A simulation can be performed directly in Eclipse or from a *.jar* executable fi
 
 The file *ardusim.ini* is used to load some relevant parameters that can be modified later in the GUI.
 
-We suggest to run ArduSim as Administrator (on Windows, and requires Imdisk Virtual Disk Driver) or sudoer (Linux). In this mode, temporary files are stored in a virtual hard drive, which speeds up ArduSim when using a slow HHDD, as it could limit the number of virtual multicopters that can be run simultaneously.
+We suggest to run ArduSim as Administrator (on Windows, and requires Imdisk Virtual Disk Driver) or sudoer (Linux or MacOS). In this mode, temporary files are stored in a virtual hard drive, which speeds up ArduSim when using a slow HHDD, as it could limit the number of virtual multicopters that can be run simultaneously.
 
 ### 1.1 Simulation configuration
 

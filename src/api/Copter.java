@@ -560,7 +560,7 @@ public class Copter {
 			wp = UAVParam.currentGeoMission[numUAV].get(i);
 			switch (wp.getCommand()) {
 			case MAV_CMD.MAV_CMD_NAV_WAYPOINT:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_UNLIM:
+			case MAV_CMD.MAV_CMD_NAV_LOITER_UNLIM:// Currently, only WAYPOINT, SPLINE_WAYPOINT, TAKEOFF, LAND, and RETURN_TO_LAUNCH waypoints are accepted when loading
 			case MAV_CMD.MAV_CMD_NAV_LOITER_TURNS:
 			case MAV_CMD.MAV_CMD_NAV_LOITER_TIME:
 			case MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT:

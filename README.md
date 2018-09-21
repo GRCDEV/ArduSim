@@ -28,7 +28,7 @@ As an example of the capabilities of ArduSim, the next picture shows 72 multicop
 
 ## ArduSim setup
 
-Follow [this link](help/setup.md) for detailed instructions.
+ArduSim supports running on Windows, Linux, and MacOS. Follow [this link](help/setup.md) for detailed instructions.
 
 ## Protocol development
 

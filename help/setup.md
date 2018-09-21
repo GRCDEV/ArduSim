@@ -14,6 +14,8 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 [4 SITL setup in Linux](#markdown-header-4-sitl-setup-in-linux)
 
+[5 SITL setup in MacOS](#markdown-header-5-sitl-setup-in-macos)
+
 ## 1 System requirements
 
 ###### Minimal:
@@ -22,7 +24,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * RAM 6 GB
 
-* Microsoft Windows 7 or Linux
+* Microsoft Windows 7, Linux or MacOS
 
 * Eclipse IDE for Java Developers: Oxygen or later, with package EGit
 
@@ -38,7 +40,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * Eclipse IDE for Java Developers: Oxygen or later, with packages EGit and WindowBuilder
 
-* Java SE Runtime Environment 8 64 bits (or latest version)
+* Java SE Runtime Environment 8 64 bits (compatibility not tested for newer versions)
 
 * ImDisk Virtual Disk Driver (Windows only)
 
@@ -185,3 +187,5 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         sim_vehicle.py -w
 
     Once fully loaded, use "Ctrl+C" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
+
+## 5 SITL setup in MacOS

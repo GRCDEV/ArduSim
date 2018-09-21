@@ -332,6 +332,27 @@ public class Tools {
 				return null;
 			}
 		}
+		
+		// Mission validation
+		// Currently only TAKEOFF (wp 1), WAYPOINT, SPLINE_WAYPOINT, LAND (wp last) and RETURN_TO_LAUNCH (wp last) are accepted.
+		int command;
+		for (int i = 2; i < mission.size() - 1; i++) {
+			command = mission.get(i).getCommand();
+			if (command != MAV_CMD.MAV_CMD_NAV_WAYPOINT
+					&& command != MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT) {
+				GUI.log(Text.FILE_PARSING_ERROR_7);
+				return null;
+			}
+		}
+		command = mission.get(mission.size() - 1).getCommand();
+		if (command != MAV_CMD.MAV_CMD_NAV_WAYPOINT
+					&& command != MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT
+					&& command != MAV_CMD.MAV_CMD_NAV_LAND
+					&& command != MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+			GUI.log(Text.FILE_PARSING_ERROR_7);
+			return null;
+		}
+		
 		return mission;
 	}
 

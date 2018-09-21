@@ -235,6 +235,8 @@ public class Text {
 	public static final String FILE_PARSING_ERROR_4 = "Waypoint file error: Wrong format in line:";
 	public static final String FILE_PARSING_ERROR_5 = "Waypoint file error: Waypoint 0 is needed but ignored, and\n waypoint 1 must be a take off.";
 	public static final String FILE_PARSING_ERROR_6 = "Waypoint file error: Waypoints are not in the propper sequence order.";
+	public static final String FILE_PARSING_ERROR_7 = "Waypoint file error: Waypoint command not compatible. Valid commands:\n"
+			+ "\twaypoint, spline waypoint, takeoff, land, RTL.";
 	// Loading mission(s) dialog
 	public static final String EXTEND_MISSION_TITLE = "Select option";
 	public static final String EXTEND_MISSION = "How do we finish the loaded missions?";
