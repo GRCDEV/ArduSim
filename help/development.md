@@ -236,7 +236,7 @@ Experimental functions not directly included in *api.Copter.java* Class:
 
 ### 5.3 GUI integration
 
-A few functions have been implemented to update data already shown in the GUI, and to allow the developer to introduce new elements in the drawing panel.
+A few functions have been implemented in Class *api.GUI.java* to update data already shown in the GUI, and to allow the developer to introduce new elements in the drawing panel.
 
 The next list of functions allow the developer to update the GUI, and even close ArduSim when an unexpected behavior is detected, showing a message before closing the application.
 
@@ -249,6 +249,10 @@ The next list of functions allow the developer to update the GUI, and even close
 * `void warn(String, String)`. On a real UAV, it writes a message to console, while in simulation it opens a dialog to warn the user.
 * `void warn(int, String, String)`. Like the previous function, it warns the user, but prepending the ID of the multicopter the information is related to.
 * `void exit(String)`. The behavior is the same as the previous method, but additionally it closes ArduSim with a error code. If ArduSim runs as a simulator and before exiting, all SITL instances are closed and temporary files are removed.
+
+The user can load missions from QGroundControl files or from a single Google Earth *.kml* file. In the second case, it ends when the multicopter reaches the last waypoint and it remains flying over the last waypoint. The user can add an extra waypoint to the end of the mission to make the UAV land or return to the launch location (RTL). In a real UAV, this can be achieved by means of a parameter in the *arducopter.ini* file, and in simulation, the next function can be used to ask the user which is the desired behavior:
+
+* `String askUserForMissionEnd()`. The result can be *MISSION_END_UNMODIFIED*, *MISSION_END_LAND*, or *MISSION_END_RTL* from the Class *api.pojo.Waypoint*, and it can be provided to the function `api.Tools.loadXMLMissionsFile(File, String)` to add the extra waypoint to the mission.
 
 The following functions are useful to draw new elements in the main panel using the methods `loadResources()`,  `drawResources(Graphics2D, BoardPanel)`, `rescaleDataStructures()`, and `rescaleShownResources()` in the protocol implementation, as explained in section "[4 Protocol implementation](#markdown-header-4-protocol-implementation)".
 
@@ -304,7 +308,7 @@ Now follow commands needed to coordinate each protocol with ArduSim:
 In the configuration dialog, the developer can load missions from files to be followed by the multicopters (on a real UAV the mission is loaded automatically). Moreover, they can be accessed later on:
 
 * `List<Waypoint> loadMission(File)`. This function is used by ArduSim when running in a real UAV that needs to follow a mission. It loads the first mission found in the same folder as the application. It is probably useless for developers, but it is available anyway.
-* `List<Waypoint>[] loadXMLMissionsFile(File)`. It loads one or more missions from a single Google Earth *.kml* file. This method may be used in the configuration dialog of the protocol.
+* `List<Waypoint>[] loadXMLMissionsFile(File, String)`. It loads one or more missions from a single Google Earth *.kml* file. This method may be used in the configuration dialog of the protocol. The second parameter allows to add an extra waypoint to the missions to land or RTL.
 * `List<Waypoint> loadMissionFile(String`. It loads a single mission from a file in standard QGroundControl format. This method may be used in the configuration dialog of the protocol.
 * `void setLoadedMissionsFromFile(List<Waypoint>[])`. Whenever the previous functions are used, this one must follows to make the missions available for ArduSim. Remember that the provided array must have the same length as the number of multicopters running on the same machine, leaving the appropriate holes (null) in the array if not all the UAVs need a mission.
 * `List<Waypoint>[] getLoadedMissions()`. This function provides the missions already loaded from file.

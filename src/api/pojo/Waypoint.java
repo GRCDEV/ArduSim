@@ -10,6 +10,14 @@ import org.mavlink.messages.ardupilotmega.msg_mission_item;
  * <p>arrayToString() and listToString() allow to print a mission in standard file format. */
 
 public class Waypoint implements Cloneable {
+	
+	/** Used to leave the mission as it is loaded from a Google Earth .kml file. */
+	public static String MISSION_END_UNMODIFIED = "unmodified";// If you change this text, also do it in ardusim.ini
+	/** Used to end the mission with a LAND command when it is loaded from a Google Earth .kml file. */
+	public static String MISSION_END_LAND = "land";
+	/** Used to end the mission with a RTL command when it is loaded from a Google Earth .kml file. */
+	public static String MISSION_END_RTL = "RTL";
+	public static String missionEnd = Waypoint.MISSION_END_UNMODIFIED;// Keep the same default in ardusim.ini
 
 	private int numSeq; // Waypoint sequence number
 	private int frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT; // Coordinate frame used

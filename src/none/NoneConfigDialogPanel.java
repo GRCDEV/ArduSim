@@ -22,7 +22,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import api.GUI;
 import api.Tools;
 import api.pojo.Waypoint;
-import main.Param;
 import main.Text;
 import mbcap.logic.MBCAPText;
 
@@ -132,7 +131,8 @@ public class NoneConfigDialogPanel extends JPanel {
 				// kml file selected
 				if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
 					// All missions are loaded from one single file
-					lists = Tools.loadXMLMissionsFile(selection[0]);
+					String missionEnd = GUI.askUserForMissionEnd();
+					lists = Tools.loadXMLMissionsFile(selection[0], missionEnd);
 					if (lists == null) {
 						GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 						Tools.setLoadedMissionsFromFile(null);

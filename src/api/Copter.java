@@ -112,7 +112,7 @@ public class Copter {
 	
 	/** API: Returns true if the UAV is flying. */
 	public static boolean isFlying(int numUAV) {
-		return !(Copter.getFlightMode(numUAV).getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING);
+		return Copter.getFlightMode(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING;
 	}
 	
 	/** API: Arms the engines.
@@ -556,8 +556,7 @@ public class Copter {
 		boolean foundFirst = false;
 		Waypoint wp;
 		UTMCoordinates utm;
-//		for (int i=0; i<UAVParam.currentGeoMission[numUAV].size(); i++) {
-		for (int i=1; i<UAVParam.currentGeoMission[numUAV].size(); i++) {//TODO check... ignoring home waypoint
+		for (int i=1; i<UAVParam.currentGeoMission[numUAV].size(); i++) {
 			wp = UAVParam.currentGeoMission[numUAV].get(i);
 			switch (wp.getCommand()) {
 			case MAV_CMD.MAV_CMD_NAV_WAYPOINT:
@@ -568,9 +567,11 @@ public class Copter {
 			case MAV_CMD.MAV_CMD_PAYLOAD_PREPARE_DEPLOY:
 			case MAV_CMD.MAV_CMD_NAV_LOITER_TO_ALT:
 			case MAV_CMD.MAV_CMD_NAV_LAND:
-				utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
-				WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
-				missionUTMSimplified.add(swp);
+				if (wp.getLatitude() != 0.0 || wp.getLongitude() != 0.0) {
+					utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
+					WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+					missionUTMSimplified.add(swp);
+				}
 				break;
 			case MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH:
 				if (!foundFirst) {
@@ -595,6 +596,7 @@ public class Copter {
 			}
 		}
 		UAVParam.missionUTMSimplified.set(numUAV, missionUTMSimplified);
+		UAVParam.lastWP[numUAV] = UAVParam.currentGeoMission[numUAV].get(UAVParam.currentGeoMission[numUAV].size() - 1);
 	}
 	
 	/** Deletes the current mission of the UAV, sends a new one, and gets it to be shown on the GUI.
@@ -634,35 +636,35 @@ public class Copter {
 	}
 	
 	/** Lands the UAV if it is close enough to the last waypoint.
-	 * <p>This method can be launched periodically, it only informs once when the last waypoint is reached, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
+	 * <p>This method can be launched periodically, it only informs that the last waypoint is reached once, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
 	 * <p>Use only when the UAV is performing a planned mission. */
 	public static void landIfMissionEnded(int numUAV, double distanceThreshold) {
-		List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
-		FlightMode mode = Copter.getFlightMode(numUAV);
 		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
-		// Last waypoint reached, if the flight controller informs that the current waypoint is the last one
-		if (mission != null
-				&& mode != FlightMode.LAND_ARMED
-				&& mode != FlightMode.LAND
-				&& currentWaypoint > 0
-				&& currentWaypoint == mission.get(mission.size()-1).numSeq) {
-			
+		Waypoint lastWP = UAVParam.lastWP[numUAV];
+		// Only check when the last waypoint is reached
+		if (lastWP != null && currentWaypoint > 0 && currentWaypoint == lastWP.getNumSeq()) {
 			// Inform only once that the last waypoint has been reached
 			if (!UAVParam.lastWaypointReached[numUAV]) {
 				UAVParam.lastWaypointReached[numUAV] = true;
-				GUI.log(numUAV, Text.LAST_WAYPOINT_REACHED);
+				GUI.log(numUAV, Text.LAST_WAYPOINT_REACHED);// never shown when RTL is used (workaround in ArduSimTools.isTestFinished())
 			}
-			// Only when the UAV is really close to the last waypoint force it to land
-			if (Copter.getUTMLocation(numUAV).distance(mission.get(mission.size()-1)) < distanceThreshold) {
-				List<Waypoint> missionGeo = Tools.getUAVMission(numUAV);
-				int command = missionGeo.get(missionGeo.size() - 1).getCommand();
-				// There is no need of landing when the last waypoint is the command LAND or when it is RTL under some circumstances
-				if (command != MAV_CMD.MAV_CMD_NAV_LAND
-						&& !(command == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
-					// Land the UAV when reaches the last waypoint
-					if (!Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
-						GUI.log(numUAV, Text.LAND_ERROR);
-					}
+			// Do nothing if the mission plans to land autonomously
+			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
+					|| (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
+				return;
+			}
+			// Do nothing if the UAV is already landing
+			FlightMode mode = Copter.getFlightMode(numUAV);
+			if (mode == FlightMode.LAND_ARMED
+					&& mode == FlightMode.LAND) {
+				return;
+			}
+			// Land only if the UAV is really close to the last waypoint force it to land
+			List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
+			if (mission != null
+					&& Copter.getUTMLocation(numUAV).distance(mission.get(mission.size()-1)) < distanceThreshold) {
+				if (!Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
+					GUI.log(numUAV, Text.LAND_ERROR);
 				}
 			}
 		}

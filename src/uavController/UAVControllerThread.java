@@ -544,7 +544,7 @@ public class UAVControllerThread extends Thread {
 			try {
 				msgReturnRCControl();
 				// Now the RC channels will not be overriden by ArduSim
-				UAVParam.overrideOn.set(0, 0);
+				UAVParam.overrideOn.set(numUAV, 0);
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} catch (IOException e1) {
 				e1.printStackTrace();

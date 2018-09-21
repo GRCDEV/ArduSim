@@ -812,99 +812,32 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				baseLocation = currentUTMLocation;
 			} else {
 				// It is necessary to project the current location over the planned path
-				WaypointSimplified sp1 = null;
-				Point2D.Double location1 = null;
-				if (posNextWaypoint>1) {
-					sp1 = mission.get(posNextWaypoint-2);	// Segment 1 previous point
-					location1 = new Point2D.Double(sp1.x, sp1.y);
-				}
-
-				// If we are over the first mission segment, the first predicted position is the current coordinates
-				if (location1 == null) {
+				if (posNextWaypoint <= 1) {
+					// If we are over the first mission segment, the first predicted position is the current coordinates
 					baseLocation = currentUTMLocation;
 					// The next waypoint position has been already set
 				} else {
 					// In any other case... (there is a previous segment in the planned path)
 					// The current location can be projected over the previous or the following segment
+					WaypointSimplified sp1 = mission.get(posNextWaypoint-2);	// Segment 1 previous point
+					Point2D.Double location1 = new Point2D.Double(sp1.x, sp1.y);
 					WaypointSimplified sp2 = mission.get(posNextWaypoint-1);	// Segments 1-2 joining point
 					Point2D.Double location2 = new Point2D.Double(sp2.x, sp2.y);
 					WaypointSimplified sp3 = mission.get(posNextWaypoint);		// Segment 2 final point
 					Point2D.Double location3 = new Point2D.Double(sp3.x, sp3.y);
+					
+					
 					// Intersection calculus with both segments
 					Point2D.Double prevIntersection = MBCAPv3Helper.getIntersection(currentUTMLocation, location1, location2);
 					Point2D.Double postIntersection = MBCAPv3Helper.getIntersection(currentUTMLocation, location2, location3);
-					// Check the segment over which this point is projected
-					int projectionCase = -1;	// -1 value over the vertex (when this point projects over the intersection of both segments)
-					// 0 value under the vertex (when this point projects under the intersection of both segments)
-					// 1 projects over the first segment
-					// 2 projects over the second segment
-					// 1. Checking the projection over the first segment
-					if (Math.abs(location2.getX() - location1.getX()) == 0.0) {
-						// Vertical line
-						if (prevIntersection.getY() >= Math.min(location1.getY(), location2.getY())
-								&& prevIntersection.getY() <= Math.max(location1.getY(), location2.getY())) {
-							// It projects over the first segment
-							projectionCase = 1;
-						}
-					} else {
-						// Any other case
-						if (prevIntersection.getX() >= Math.min(location1.getX(), location2.getX())
-								&& prevIntersection.getX() <= Math.max(location1.getX(), location2.getX())) {
-							// It projects over the first segment
-							projectionCase = 1;
-						}
-					}
-					// 2. Checking the projection over the second segment
-					if (Math.abs(location3.getX() - location2.getX()) == 0.0) {
-						// Vertical line
-						if (postIntersection.getY() >= Math.min(location2.getY(), location3.getY())
-								&& postIntersection.getY() <= Math.max(location2.getY(), location3.getY())) {
-							// It projects over the first segment
-							if (projectionCase == -1) {
-								// Only over the second segment
-								projectionCase = 2;
-							} else {
-								// Over both segments
-								projectionCase = 0;
-							}
-						}
-					} else {
-						// Any other case
-						if (postIntersection.getX() >= Math.min(location2.getX(), location3.getX())
-								&& postIntersection.getX() <= Math.max(location2.getX(), location3.getX())) {
-							// It projects over the first segment
-							if (projectionCase == -1) {
-								// Only over the second segment
-								projectionCase = 2;
-							} else {
-								// Over both segments
-								projectionCase = 0;
-							}
-						}
-					}
-					// 3. Considering the four cases
-					switch (projectionCase) {
-					case 1: // Projected over the first segment
-						nextWaypointPosition = posNextWaypoint - 1;
-						baseLocation = new Point2D.Double(prevIntersection.getX(), prevIntersection.getY());
-						break;
-					case 2: // Projected over the second segment
-						// posNextWaypoint is the same
+					
+					// Detect if moving towards the conflicting waypoint or from it
+					boolean waypointOvertaken = MBCAPv3Helper.isMovingAway(numUAV, location2);
+					if (waypointOvertaken) {
 						baseLocation = new Point2D.Double(postIntersection.getX(), postIntersection.getY());
-						break;
-					case -1: // projected out of both segments
-						// posNextWaypoint is the same
-						baseLocation = new Point2D.Double(location2.getX(), location2.getY());
-						break;
-					case 0: // projected over both segments, it requires to check distances
-						if (currentUTMLocation.distance(prevIntersection) <= currentUTMLocation.distance(postIntersection)) {
-							nextWaypointPosition = posNextWaypoint - 1;
-							baseLocation = new Point2D.Double(prevIntersection.getX(), prevIntersection.getY());
-						} else {
-							// posNextWaypoint is the same
-							baseLocation = new Point2D.Double(postIntersection.getX(), postIntersection.getY());
-						}
-						break;
+					} else {
+						baseLocation = new Point2D.Double(prevIntersection.getX(), prevIntersection.getY());
+						nextWaypointPosition--;
 					}
 				}
 			}
@@ -1223,32 +1156,31 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	}
 	
 	/** Calculates if the current UAV has overtaken another UAV. */
-	public static boolean OvertakingFinished(int numUAV, long avoidingId, Point2D.Double target) {
+	public static boolean overtakingFinished(int numUAV, long avoidingId, Point2D.Double target) {
 		// Overtaken happened if the distance to the target UAV and to the risk location is increasing
+		boolean success = MBCAPv3Helper.isMovingAway(numUAV, target);
+		if (!success) {
+			return false;
+		}
 		Point3D riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(avoidingId);
+		return MBCAPv3Helper.isMovingAway(numUAV, riskLocation);
+	}
+	
+	/** Calculates if the current UAV is moving away from a target point. */
+	public static boolean isMovingAway(int numUAV, Point2D.Double target) {
+		// true if the distance to the target is increasing
 		Point3D[] lastLocations = Copter.getLastKnownLocations(numUAV);
 		if (lastLocations.length <= 1) {
 			return false;	// There is no information enough to decide
 		}
-		double distPrevToTarget, distPostToTarget, distPostToRisk;
-		double distPrevToRisk = 0;
+		double distPrevToTarget, distPostToTarget;
 		distPrevToTarget = lastLocations[0].distance(target);
-		if (riskLocation != null) {
-			distPrevToRisk = lastLocations[0].distance(riskLocation);
-		}
 		for (int i = 1; i < lastLocations.length; i++) {
 			distPostToTarget = lastLocations[i].distance(target);
 			if (distPrevToTarget >= distPostToTarget) {
 				return false;
 			}
 			distPrevToTarget = distPostToTarget;
-			if (riskLocation != null) {
-				distPostToRisk = lastLocations[i].distance(riskLocation);
-				if (distPrevToRisk >= distPostToRisk) {
-					return false;
-				}
-				distPrevToRisk = distPostToRisk;
-			}
 		}
 		return true;
 	}

@@ -25,7 +25,9 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -219,6 +221,21 @@ public class ArduSimTools {
 			UAVParam.initialSpeeds = new double[1];
 			UAVParam.initialSpeeds[0] = Double.parseDouble(spe);
 
+			param = parameters.get(Param.MISSION_END);
+			if (param == null) {
+				GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.missionEnd);
+			} else {
+				if (param.equalsIgnoreCase(Waypoint.MISSION_END_UNMODIFIED)) {
+					Waypoint.missionEnd = Waypoint.MISSION_END_UNMODIFIED;
+				} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_LAND)) {
+					Waypoint.missionEnd = Waypoint.MISSION_END_LAND;
+				} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_RTL)) {
+					Waypoint.missionEnd = Waypoint.MISSION_END_RTL;
+				} else {
+					GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
+				}
+			}
 			param = parameters.get(Param.SERIAL_PORT);
 			if (param == null) {
 				GUI.log(Param.SERIAL_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.serialPort);
@@ -415,6 +432,7 @@ public class ArduSimTools {
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
+		UAVParam.lastWP = new Waypoint[Param.numUAVs];
 		UAVParam.RTLAltitude = new double[Param.numUAVs];
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
 		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
@@ -815,8 +833,7 @@ public class ArduSimTools {
 		// When it is not possible, use physical storage
 		if ((SimParam.userIsAdmin && Param.runningOperatingSystem == Param.OS_WINDOWS && !SimParam.imdiskIsInstalled)
 				|| !SimParam.userIsAdmin) {
-			File parentFolder = (new File(SimParam.sitlPath)).getParentFile();
-			return parentFolder.getAbsolutePath();
+			return Tools.getCurrentFolder().getAbsolutePath();
 		}
 		return null;
 	}
@@ -952,7 +969,7 @@ public class ArduSimTools {
 	}
 	
 	/** Mount a virtual RAM drive under Linux. Return true if the command was successful. */
-	private static boolean mountDriveLinux(String diskPath) {
+	private static boolean mountDriveLinux(String diskPath) {//TODO crear mount, dismount y checkDriveMounted para MacOS
 		List<String> commandLine = new ArrayList<String>();
 		BufferedReader input;
 		commandLine.add("mount");
@@ -1363,13 +1380,12 @@ public class ArduSimTools {
 				}
 				for (int i=0; i<Param.numUAVs; i++) {
 					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
+					Path tempPath = tempFolder.toPath();
 					// Delete recursively in case it already exists
-					if (tempFolder.exists()) {
-						ArduSimTools.deleteFolder(tempFolder);
+					if (Files.exists(tempPath)) {
+						ArduSimTools.deleteFolder(tempPath);
 					}
-					if (!tempFolder.mkdir()) {
-						throw new IOException();
-					}
+					Files.createDirectory(tempPath);
 					
 					// Trying to speed up locating files on the RAM drive (under Linux)
 					if (SimParam.usingRAMDrive && (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)) {
@@ -1381,7 +1397,7 @@ public class ArduSimTools {
 						Files.copy(file1.toPath(), file2.toPath());
 					}
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				GUI.log(Text.UAVS_START_ERROR_2 + "\n" + parentFolder);
 				throw new IOException();
 			}
@@ -1485,19 +1501,23 @@ public class ArduSimTools {
 	}
 
 	/** Removes a folder recursively. */
-	public static void deleteFolder (File file) throws IOException {
-		for (File childFile : file.listFiles()) {
-			if (childFile.isDirectory()) {
-				ArduSimTools.deleteFolder(childFile);
-			} else {
-				if (!childFile.delete()) {
-					throw new IOException();
+	public static void deleteFolder (Path file) throws Exception {
+		DirectoryStream<Path> content = Files.newDirectoryStream(file);
+		try {
+			Iterator<Path> it = content.iterator();
+			Path child;
+			while (it.hasNext()) {
+				child = it.next();
+				if (Files.isDirectory(child)) {
+					ArduSimTools.deleteFolder(child);
+				} else {
+					Files.deleteIfExists(child);
 				}
 			}
+		} finally {
+			content.close();
 		}
-		if (!file.delete()) {
-			throw new IOException();
-		}
+		Files.deleteIfExists(file);
 	}
 	
 	/** Detects the Operating System. */
@@ -1807,11 +1827,11 @@ public class ArduSimTools {
 			if (SimParam.tempFolderBasePath != null) {
 				File parentFolder = new File(SimParam.tempFolderBasePath);
 				for (int i=0; i<UAVParam.MAX_SITL_INSTANCES; i++) {
-					File tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i);
-					if (tempFolder.exists()) {
+					Path tempFolder = new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i).toPath();
+					if (Files.exists(tempFolder)) {
 						try {
 							deleteFolder(tempFolder);
-						} catch (IOException e) {
+						} catch (Exception e) {
 						}
 					}
 				}
@@ -1956,10 +1976,12 @@ public class ArduSimTools {
 		}
 	}
 	
-	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event. */
+	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event.
+	 * <p>This method is NOT thread-safe. */
 	public static void triggerWaypointReached(int numUAV) {
+		WaypointReachedListener listener;
 		for (int i = 0; i < ArduSimTools.listeners.size(); i++) {
-			WaypointReachedListener listener = ArduSimTools.listeners.get(i);
+			listener = ArduSimTools.listeners.get(i);
 			if (listener.getNumUAV() == numUAV) {
 				listener.onWaypointReached();
 			}
@@ -2037,6 +2059,14 @@ public class ArduSimTools {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			FlightMode mode = UAVParam.flightMode.get(i);
 			if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
+				// Inform only once that the last waypoint has been reached
+				if (UAVParam.lastWP[i] != null
+						&& !UAVParam.lastWaypointReached[i]) {
+					UAVParam.lastWaypointReached[i] = true;
+					GUI.log(i, Text.LAST_WAYPOINT_REACHED);
+					ArduSimTools.triggerWaypointReached(i);
+				}
+				
 				if (Param.testEndTime[i] == 0) {
 					Param.testEndTime[i] = System.currentTimeMillis();
 					if (Param.testEndTime[i] > latest) {

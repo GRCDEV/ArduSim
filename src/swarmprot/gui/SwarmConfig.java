@@ -116,7 +116,8 @@ public class SwarmConfig extends JDialog {
 						// kml file selected
 						if (extension.toUpperCase().equals(SwarmProtText.FILE_EXTENSION_KML.toUpperCase())) {
 							// All missions are loaded from one single file
-							lists = Tools.loadXMLMissionsFile(selection);
+							String missionEnd = GUI.askUserForMissionEnd();
+							lists = Tools.loadXMLMissionsFile(selection, missionEnd);
 							if (lists == null) {
 								GUI.warn(SwarmProtText.MISSIONS_SELECTION_ERROR, SwarmProtText.MISSIONS_ERROR_3);
 								return;

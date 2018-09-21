@@ -8,11 +8,12 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import api.pojo.StatusPacket;
+import api.pojo.Waypoint;
+import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
-import pccompanion.logic.PCCompanionParam;
 import main.Text;
-import main.ArduSimTools;
+import pccompanion.logic.PCCompanionParam;
 import sim.board.BoardHelper;
 import sim.gui.MainWindow;
 import sim.logic.SimParam;
@@ -143,6 +144,27 @@ public class GUI {
 			res += SimParam.prefix[numUAV];
 		}
 		GUI.warn(title, res + message);
+	}
+	
+	/** Asks the user if the mission must be finished with a Land or RTL command when it is loaded from Google Earth .kml file.
+	 * <p>This function must be used only from the GUI for simulations, not in a real multicopter or from the PC Companion.
+	 * <p>Returns value MISSION_END_UNMODIFIED, MISSION_END_LAND or MISSION_END_RTL found on api.pojo.Waypoint class
+	 * <p>If user closes the dialog, the default value is applied. */
+	public static String askUserForMissionEnd() {
+		String res = Waypoint.missionEnd;
+		String[] options = {Waypoint.MISSION_END_UNMODIFIED, Waypoint.MISSION_END_LAND, Waypoint.MISSION_END_RTL};
+		int pos = -1;
+		for (int i = 0; i < options.length; i++) {
+			if (options[i].equals(Waypoint.missionEnd)) {
+				pos = i;
+			}
+		}
+		int x = JOptionPane.showOptionDialog(null, Text.EXTEND_MISSION, Text.EXTEND_MISSION_TITLE,
+				JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, pos);
+		if (x != JOptionPane.CLOSED_OPTION) {
+			res = options[x];
+		}
+		return res;
 	}
 	
 	/** Locates a UTM point on the screen, using the current screen scale. */

@@ -241,6 +241,7 @@ public class UAVParam {
 	public static List<Waypoint>[] missionGeoLoaded;	// Missions loaded from file(s), in Geographic coordinates
 	public static Waypoint[][] newGeoMission;			// Missions that are about to be sent to the UAV, in Geographic coordinates
 	public static List<Waypoint>[] currentGeoMission;	// Missions retrieved from the UAV, in Geographic coordinates
+	public static Waypoint[] lastWP;					// Last waypoint of the retrieved mission
 	public static AtomicReferenceArray<List<WaypointSimplified>> missionUTMSimplified; // Missions simplified from the previous one for drawing, in UTM coordinates
 	public static List<Shape>[] MissionPx;				// Missions to be drawn on screen, in pixel coordinates
 	public static final int MAV_STATUS_REQUEST_WP_LIST = 28;

@@ -210,7 +210,8 @@ public class Main {
 					}
 				}
 			}
-			if (Param.runningOperatingSystem == Param.OS_LINUX && !SimParam.userIsAdmin) {
+			if ((Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)
+					&& !SimParam.userIsAdmin) {
 				GUI.log(Text.USE_ROOT);
 			}
 			GUI.log(Text.WIRELESS_MODEL_IN_USE + " " + Param.selectedWirelessModel.getName());

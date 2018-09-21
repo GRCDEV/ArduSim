@@ -118,9 +118,10 @@ public class Tools {
 	}
 	
 	/** Loads missions from a Google Earth kml file.
+	 * <p>missionEnd. Uses the values MISSION_END_UNMODIFIED, MISSION_END_LAND, and MISSION_END_RTL from api.pojo.Waypoint to decide whether the loaded mission must be finished with a land or RTL command or not.
 	 * <p>Returns null if the file is not valid or it is empty. */
 	@SuppressWarnings("unchecked")
-	public static List<Waypoint>[] loadXMLMissionsFile(File xmlFile) {
+	public static List<Waypoint>[] loadXMLMissionsFile(File xmlFile, String missionEnd) {
 		List<Waypoint>[] missions;
 		try {
 			Waypoint wp;
@@ -202,6 +203,30 @@ public class Tools {
 							GUI.log(Text.XML_PARSING_ERROR_4 + " " + (i+1) + "/" + (j+1));
 							return null;
 						}
+					}
+				}
+				// Add a last waypoint to land or RTL depending on the input option
+				int numSeq = missions[i].get(missions[i].size() - 1).getNumSeq() + 1;
+				if (missionEnd.equals(Waypoint.MISSION_END_LAND)) {
+					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+							MAV_CMD.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, 0, 0);
+					missions[i].add(wp);
+					if (Param.role == Tools.MULTICOPTER) {
+						GUI.logVerbose(Text.XML_LAND_ADDED + Tools.getIdFromPos(i));
+					}
+					if (Param.role == Tools.SIMULATOR) {
+						GUI.logVerbose(Text.XML_LAND_ADDED + i);
+					}
+				}
+				if (missionEnd.equals(Waypoint.MISSION_END_RTL)) {
+					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+							MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH, 0, 0, 0, 0, 0, 0, 0, 0);
+					missions[i].add(wp);
+					if (Param.role == Tools.MULTICOPTER) {
+						GUI.logVerbose(Text.XML_RTL_ADDED + Tools.getIdFromPos(i));
+					}
+					if (Param.role == Tools.SIMULATOR) {
+						GUI.logVerbose(Text.XML_RTL_ADDED + i);
 					}
 				}
 			}
@@ -327,7 +352,7 @@ public class Tools {
 			if (files.length>1) {
 				GUI.exit(Text.MISSIONS_ERROR_6);
 			}
-			List<Waypoint>[] missions = loadXMLMissionsFile(files[0]);
+			List<Waypoint>[] missions = Tools.loadXMLMissionsFile(files[0], Waypoint.missionEnd);
 			if (missions != null && missions.length>0) {
 				GUI.log(Text.MISSION_XML_SELECTED + " " + files[0].getName());
 				return missions[0];

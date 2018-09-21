@@ -73,7 +73,7 @@ This dialog allows to introduce several simulation parameters:
 
 If the developer chooses to implement a dialog to input protocol parameters, it would open once the general configuration options are accepted. Otherwise, the main window of ArduSim is opened.
 
-This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions.
+This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions. If Google Earth file format is used, the missions can be kept unmodified (the UAV remain flying in the last waypoint), or an extra waypoint can be added at the end of the mission (land or RTL).
 
 ### 1.3 Main window
 
