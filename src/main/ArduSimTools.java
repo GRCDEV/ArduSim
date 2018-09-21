@@ -809,24 +809,20 @@ public class ArduSimTools {
 				String ramDiskPath = "/tmp/" + SimParam.RAM_DRIVE_NAME;
 				File ramDiskFile = new File(ramDiskPath);
 				if (ramDiskFile.exists()) {
-					GUI.log("RAM Drive exists");
 					// Check if temporal filesystem is already mounted and dismount
 					if (ArduSimTools.checkDriveMountedLinuxMac(ramDiskPath)) {
-						GUI.log("\tMounted");
 						if (!ArduSimTools.dismountDriveMac(ramDiskPath)) {
-							GUI.log("\t\tFailed mounting");
 							return null;
 						}
 					}
 				} else {
-					GUI.log("RAM Drive does not exist");
 					// Create the folder
 					ramDiskFile.mkdirs();
 				}
 				if (ArduSimTools.mountDriveMac(ramDiskPath)) {
 					SimParam.usingRAMDrive = true;
 					return ramDiskPath;
-				} else GUI.log("Failed mounting");
+				}
 			}
 		}
 		
@@ -959,9 +955,7 @@ public class ArduSimTools {
 			String line = null;
 		    while ((line = input.readLine()) != null && !found) {
 		    	found = line.endsWith(diskPath);
-		    	GUI.log(line);
 		    }
-		    if(!found) GUI.log("Mount not found");
 			return found;
 		} catch (IOException e) {
 		}
@@ -1008,13 +1002,7 @@ public class ArduSimTools {
 	}
 	
 	/** Mount a virtual RAM drive under Mac. Return true if the command was successful. */
-	private static boolean mountDriveMac(String diskPath) {
-//		NUMSECTORS=128000       # a sector is 512 bytes
-//		mydev=`hdiutil attach -nomount ram://$NUMSECTORS`
-//		newfs_hfs $mydev
-//		mkdir /tmp/mymount
-//		mount -t hfs $mydev /tmp/mymount
-		
+	private static boolean mountDriveMac(String diskPath) {		
 		List<String> commandLine = new ArrayList<String>();
 		BufferedReader input;
 		commandLine.add("hdiutil");
@@ -1045,7 +1033,6 @@ public class ArduSimTools {
 				commandLine.clear();
 				commandLine.add("newfs_hfs");
 				commandLine.add(s);
-				GUI.log(commandLine.toString());
 				pb = new ProcessBuilder(commandLine);
 				p = pb.start();
 				if (p.waitFor() == 0) {
@@ -1058,9 +1045,8 @@ public class ArduSimTools {
 					pb = new ProcessBuilder(commandLine);
 					p = pb.start();
 					if (p.waitFor() == 0) return true;
-					else GUI.log("Failed mount");
-				} else GUI.log("Failed newfs_hfs");
-			} else GUI.log("Failed hdiutil");
+				}
+			}
 		} catch (IOException | InterruptedException e) {
 		}
 		return false;
@@ -1104,7 +1090,7 @@ public class ArduSimTools {
 			Process p = pb.start();
 			if (p.waitFor() == 0) {
 				return true;
-			} else GUI.log("Error dismounting");
+			}
 		} catch (IOException | InterruptedException e) {
 		}
 		return false;
