@@ -963,7 +963,7 @@ public class ArduSimTools {
 	}
 	
 	/** Mount a virtual RAM drive under Linux. Return true if the command was successful. */
-	private static boolean mountDriveLinux(String diskPath) {//TODO crear mount, dismount y checkDriveMounted para MacOS
+	private static boolean mountDriveLinux(String diskPath) {
 		List<String> commandLine = new ArrayList<String>();
 		BufferedReader input;
 		commandLine.add("mount");
@@ -1554,7 +1554,7 @@ public class ArduSimTools {
 				SimParam.sitlPath = sitlPath;
 				SimParam.paramPath = paramPath;
 			}
-		}//TODO add support for MAC OS
+		}
 	}
 	
 	/** Detects whether the program is executed with root/administrator privileges. */
@@ -1607,7 +1607,7 @@ public class ArduSimTools {
 			} catch (IOException e) {
 				// If fails starting the process, for sure the execution doesn't have root privileges
 			}
-		}//TODO add support for MAC OS
+		}
 		SimParam.userIsAdmin = false;
 	}
 
