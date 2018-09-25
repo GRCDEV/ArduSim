@@ -75,10 +75,10 @@ If the developer chooses to implement a dialog to input protocol parameters, it 
 
 This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions. If Google Earth file format is used, the missions can be kept unmodified (the UAV remain flying in the last waypoint), or an extra waypoint can be added at the end of the mission (land or RTL). If QGroundControl files are used, the following rules are applied:
 
-    * The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
-    * The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
-    * The following waypoint must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the mission.
-    * The las waypoint can be of type waypoint, spline waypoint, land, or RTL. It the command is not of type land or RTL, the multicopter will remain flying over the last waypoint until the user takes control of it. Alternatively, the protocol implemented can force the UAV to land as in the protocol MBCAP, or it can also perform any other action just detecting when the UAV is close enough to the last waypoint.
+* The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
+* The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
+* The following waypoint must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the mission.
+* The las waypoint can be of type waypoint, spline waypoint, land, or RTL. It the command is not of type land or RTL, the multicopter will remain flying over the last waypoint until the user takes control of it. Alternatively, the protocol implemented can force the UAV to land as in the protocol MBCAP, or it can also perform any other action just detecting when the UAV is close enough to the last waypoint.
 
 ### 1.3 Main window
 
@@ -126,9 +126,9 @@ ArduSim can be executed with the following command line:
 
     java -jar ArduSim.jar <arg>
 
-    *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
-    *simulator*. ArduSim runs as a multi-UAV simulator in a computer.
-    *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution of a group of real multicopters, preferably in a laptop for mobility.
+* *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
+* *simulator*. ArduSim runs as a multi-UAV simulator in a computer.
+* *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution of a group of real multicopters, preferably in a laptop for mobility.
 
 To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, all connected in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer, which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
 

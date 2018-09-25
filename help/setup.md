@@ -213,11 +213,11 @@ The next steps must be followed in order to compile a multicopter in MacOS. Prov
         1. Install Macports: Download [installer](https://www.macports.org/install.php) and follow the included instructions.
         2. Update port definitions & update macports if necessary:
 
-            `sudo port -v selfupdate`
+                sudo port -v selfupdate
 
     * Homebrew:
 
-        `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+            /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)""
 
 4. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs.
 
