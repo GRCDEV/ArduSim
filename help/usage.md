@@ -124,7 +124,7 @@ If a protocol is developed following the recommendations included with ArduSim, 
 
 ArduSim can be executed with the following command line:
 
-    `java -jar ArduSim.jar <arg>`
+    java -jar ArduSim.jar <arg>
 
     *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
     *simulator*. ArduSim runs as a multi-UAV simulator in a computer.
@@ -136,7 +136,7 @@ To deploy a protocol, ArduSim must be run in the real multicopters and in a comp
 
 The command line must be:
 
-    `java -jar ArduSim.jar multicopter`
+    java -jar ArduSim.jar multicopter
 
 A file named *ardusim.ini* must be in the same folder as *ArduSim.jar* in order to provide ArduSim the needed parameters, among others:
 
@@ -153,7 +153,7 @@ Of course, a protocol could start automatically without a PC Companion, but we r
 
 The command line must be:
 
-    `java -jar ArduSim.jar pccompanion`
+    java -jar ArduSim.jar pccompanion
 
 The parameters found in *ardusim.ini* are loaded, and the following windows opens:
 
