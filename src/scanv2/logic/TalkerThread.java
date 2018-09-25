@@ -1,6 +1,6 @@
-package swarmprot.logic;
+package scanv2.logic;
 
-import static swarmprot.pojo.State.*;
+import static scanv2.pojo.State.*;
 
 import java.awt.geom.Point2D;
 import java.util.Arrays;
@@ -10,9 +10,9 @@ import com.esotericsoftware.kryo.io.Output;
 import api.Copter;
 import api.GUI;
 import api.Tools;
-import swarmprot.pojo.Message;
+import scanv2.pojo.Message;
 
-public class Talker extends Thread {
+public class TalkerThread extends Thread {
 
 	private int numUAV;
 	private long selfId;
@@ -26,12 +26,12 @@ public class Talker extends Thread {
 	private int waitingTime;	// Time to wait between two sent messages
 	
 	@SuppressWarnings("unused")
-	private Talker() {}
+	private TalkerThread() {}
 
-	public Talker(int numUAV) {
+	public TalkerThread(int numUAV) {
 		this.numUAV = numUAV;
 		this.selfId = Tools.getIdFromPos(numUAV);
-		this.isMaster = SwarmProtHelper.isMaster(numUAV);
+		this.isMaster = ScanHelper.isMaster(numUAV);
 		
 		this.outBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
@@ -43,17 +43,17 @@ public class Talker extends Thread {
 	public void run() {
 		
 		while (!Tools.areUAVsAvailable()) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** START PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-			while (SwarmProtParam.state.get(numUAV) == START) {
-				Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+			while (ScanParam.state.get(numUAV) == START) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 			}
 		} else {
-			GUI.logVerbose(numUAV, SwarmProtText.SLAVE_START_TALKER);
+			GUI.logVerbose(numUAV, ScanText.SLAVE_START_TALKER);
 			output.clear();
 			output.writeShort(Message.HELLO);
 			output.writeLong(selfId);
@@ -65,61 +65,61 @@ public class Talker extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (SwarmProtParam.state.get(numUAV) == START) {
+			while (ScanParam.state.get(numUAV) == START) {
 				Copter.sendBroadcastMessage(numUAV, message);
 
 				// Timer
-				cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		}
-		while (SwarmProtParam.state.get(numUAV) < SETUP) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		while (ScanParam.state.get(numUAV) < SETUP) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** SETUP PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, SwarmProtText.MASTER_SEND_DATA);
-			int length = SwarmProtParam.data.length();
+			GUI.logVerbose(numUAV, ScanText.MASTER_SEND_DATA);
+			int length = ScanParam.data.length();
 			
 			cicleTime = System.currentTimeMillis();
-			while (SwarmProtParam.state.get(numUAV) == SETUP) {
+			while (ScanParam.state.get(numUAV) == SETUP) {
 				for (int i = 0; i < length; i++) {
-					message = SwarmProtParam.data.get(i);
-					if (message != null && i != SwarmProtParam.masterPosition) {
+					message = ScanParam.data.get(i);
+					if (message != null && i != ScanParam.masterPosition) {
 						Copter.sendBroadcastMessage(numUAV, message);
 					}
 				}
 
 				// Timer
-				cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-			while (SwarmProtParam.state.get(numUAV) == SETUP) {
-				Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+			while (ScanParam.state.get(numUAV) == SETUP) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 			}
 		}
-		while (SwarmProtParam.state.get(numUAV) < SETUP_FINISHED) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		while (ScanParam.state.get(numUAV) < SETUP_FINISHED) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** SETUP FINISHED PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-			while (SwarmProtParam.state.get(numUAV) == SETUP_FINISHED) {
-				Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+			while (ScanParam.state.get(numUAV) == SETUP_FINISHED) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 			}
 			
 		} else {
-			GUI.logVerbose(numUAV, SwarmProtText.SLAVE_WAIT_LIST_TALKER);
+			GUI.logVerbose(numUAV, ScanText.SLAVE_WAIT_LIST_TALKER);
 			output.clear();
 			output.writeShort(Message.DATA_ACK);
 			output.writeLong(selfId);
@@ -127,55 +127,55 @@ public class Talker extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (SwarmProtParam.state.get(numUAV) == SETUP_FINISHED) {
+			while (ScanParam.state.get(numUAV) == SETUP_FINISHED) {
 				Copter.sendBroadcastMessage(numUAV, message);
 
 				// Timer
-				cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		}
-		while (SwarmProtParam.state.get(numUAV) < WAIT_TAKE_OFF) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		while (ScanParam.state.get(numUAV) < WAIT_TAKE_OFF) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** WAIT TAKE OFF PHASE */
-		if (SwarmProtParam.state.get(numUAV) == WAIT_TAKE_OFF) {
-			GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-			while (SwarmProtParam.state.get(numUAV) == WAIT_TAKE_OFF) {
-				Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		if (ScanParam.state.get(numUAV) == WAIT_TAKE_OFF) {
+			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+			while (ScanParam.state.get(numUAV) == WAIT_TAKE_OFF) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 			}
 		}
-		while (SwarmProtParam.state.get(numUAV) < TAKING_OFF) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		while (ScanParam.state.get(numUAV) < TAKING_OFF) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** TAKING OFF PHASE */
-		GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-		while (SwarmProtParam.state.get(numUAV) == TAKING_OFF) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+		while (ScanParam.state.get(numUAV) == TAKING_OFF) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
-		while (SwarmProtParam.state.get(numUAV) < FOLLOWING_MISSION) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		while (ScanParam.state.get(numUAV) < FOLLOWING_MISSION) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		int currentWP = 0;
-		while (SwarmProtParam.state.get(numUAV) == FOLLOWING_MISSION) {
+		while (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
 			
 			/** MOVE_TO_WP PHASE */
 			if (currentWP == 0) {
-				if (SwarmProtParam.idNext.get(numUAV) == SwarmProtParam.BROADCAST_MAC_ID) {
-					GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-					while (SwarmProtParam.moveSemaphore.get(numUAV) == currentWP) {
-						Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+				if (ScanParam.idNext.get(numUAV) == ScanParam.BROADCAST_MAC_ID) {
+					GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+					while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
+						Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 					}
 				} else {
-					GUI.logVerbose(numUAV, SwarmProtText.TAKE_OFF_COMMAND);
-					long next = SwarmProtParam.idNext.get(numUAV);
+					GUI.logVerbose(numUAV, ScanText.TAKE_OFF_COMMAND);
+					long next = ScanParam.idNext.get(numUAV);
 					output.clear();
 					output.writeShort(Message.TAKE_OFF_NOW);
 					output.writeLong(next);
@@ -183,11 +183,11 @@ public class Talker extends Thread {
 					message = Arrays.copyOf(outBuffer, output.position());
 					
 					cicleTime = System.currentTimeMillis();
-					while (SwarmProtParam.moveSemaphore.get(numUAV) == currentWP) {
+					while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
 						Copter.sendBroadcastMessage(numUAV, message);
 						
 						// Timer
-						cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+						cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 						waitingTime = (int) (cicleTime - System.currentTimeMillis());
 						if (waitingTime > 0) {
 							Tools.waiting(waitingTime);
@@ -196,7 +196,7 @@ public class Talker extends Thread {
 				}
 			} else {
 				if (this.isMaster) {
-					GUI.logVerbose(numUAV, SwarmProtText.MASTER_SEND_MOVE);
+					GUI.logVerbose(numUAV, ScanText.MASTER_SEND_MOVE);
 					output.clear();
 					output.writeShort(Message.MOVE_NOW);
 					output.writeInt(currentWP);
@@ -204,18 +204,18 @@ public class Talker extends Thread {
 					message = Arrays.copyOf(outBuffer, output.position());
 					
 					cicleTime = System.currentTimeMillis();
-					while (SwarmProtParam.moveSemaphore.get(numUAV) == currentWP) {
+					while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
 						Copter.sendBroadcastMessage(numUAV, message);
 						
 						// Timer
-						cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+						cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 						waitingTime = (int) (cicleTime - System.currentTimeMillis());
 						if (waitingTime > 0) {
 							Tools.waiting(waitingTime);
 						}
 					}
 				} else {
-					GUI.logVerbose(numUAV, SwarmProtText.SLAVE_SEND_WP_REACHED_ACK);
+					GUI.logVerbose(numUAV, ScanText.SLAVE_SEND_WP_REACHED_ACK);
 					output.clear();
 					output.writeShort(Message.WP_REACHED_ACK);
 					output.writeLong(selfId);
@@ -224,11 +224,11 @@ public class Talker extends Thread {
 					message = Arrays.copyOf(outBuffer, output.position());
 					
 					cicleTime = System.currentTimeMillis();
-					while (SwarmProtParam.moveSemaphore.get(numUAV) == currentWP) {
+					while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
 						Copter.sendBroadcastMessage(numUAV, message);
 						
 						// Timer
-						cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+						cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 						waitingTime = (int) (cicleTime - System.currentTimeMillis());
 						if (waitingTime > 0) {
 							Tools.waiting(waitingTime);
@@ -239,12 +239,12 @@ public class Talker extends Thread {
 			
 			/** WP_REACHED PHASE */
 			if (this.isMaster) {
-				GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-				while (SwarmProtParam.wpReachedSemaphore.get(numUAV) == currentWP) {
-					Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+				GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
+					Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 				}
 			} else {
-				GUI.logVerbose(numUAV, SwarmProtText.SLAVE_SEND_WP_REACHED_ACK);
+				GUI.logVerbose(numUAV, ScanText.SLAVE_SEND_WP_REACHED_ACK);
 				output.clear();
 				output.writeShort(Message.WP_REACHED_ACK);
 				output.writeLong(selfId);
@@ -253,11 +253,11 @@ public class Talker extends Thread {
 				message = Arrays.copyOf(outBuffer, output.position());
 				
 				cicleTime = System.currentTimeMillis();
-				while (SwarmProtParam.wpReachedSemaphore.get(numUAV) == currentWP) {
+				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
 					Copter.sendBroadcastMessage(numUAV, message);
 					
 					// Timer
-					cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+					cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 					waitingTime = (int) (cicleTime - System.currentTimeMillis());
 					if (waitingTime > 0) {
 						Tools.waiting(waitingTime);
@@ -266,40 +266,40 @@ public class Talker extends Thread {
 			}
 			currentWP++;
 		}
-		while (SwarmProtParam.state.get(numUAV) < LANDING) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		while (ScanParam.state.get(numUAV) < LANDING) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** LANDING PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, SwarmProtText.MASTER_SEND_LAND);
+			GUI.logVerbose(numUAV, ScanText.MASTER_SEND_LAND);
 			output.clear();
 			output.writeShort(Message.LAND_NOW);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (SwarmProtParam.state.get(numUAV) == LANDING) {
+			while (ScanParam.state.get(numUAV) == LANDING) {
 				Copter.sendBroadcastMessage(numUAV, message);
 				
 				// Timer
-				cicleTime = cicleTime + SwarmProtParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, SwarmProtText.TALKER_WAITING);
-			while (SwarmProtParam.state.get(numUAV) == LANDING) {
-				Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+			while (ScanParam.state.get(numUAV) == LANDING) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 			}
 		}
-		while (SwarmProtParam.state.get(numUAV) < FINISH) {
-			Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+		while (ScanParam.state.get(numUAV) < FINISH) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** FINISH PHASE */
-		GUI.logVerbose(numUAV, SwarmProtText.TALKER_FINISHED);
+		GUI.logVerbose(numUAV, ScanText.TALKER_FINISHED);
 	}
 }

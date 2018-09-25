@@ -1,6 +1,6 @@
-package swarmprot.logic;
+package scanv2.logic;
 
-import static swarmprot.pojo.State.*;
+import static scanv2.pojo.State.*;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
@@ -24,54 +24,54 @@ import api.pojo.AtomicDoubleArray;
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
+import scanv2.gui.ScanConfigDialog;
+import scanv2.pojo.Permutation;
+import scanv2.pojo.uav2DPosition;
 import sim.board.BoardPanel;
-import swarmprot.gui.SwarmConfig;
-import swarmprot.pojo.Permutation;
-import swarmprot.pojo.uav2DPosition;
 
-public class SwarmProtHelper extends ProtocolHelper {
+public class ScanHelper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocolString = SwarmProtText.PROTOCOL_TEXT;
+		this.protocolString = ScanText.PROTOCOL_TEXT;
 	}
 
 	@Override
 	public boolean loadMission() {
 		// Only the master UAV has a mission (on real UAV, numUAV == 0)
-		boolean isMaster = SwarmProtHelper.isMaster(0);
+		boolean isMaster = ScanHelper.isMaster(0);
 		if (isMaster) {
-			SwarmProtParam.idMaster = Tools.getIdFromPos(SwarmProtParam.MASTER_POSITION);
+			ScanParam.idMaster = Tools.getIdFromPos(ScanParam.MASTER_POSITION);
 		}//	The slave in a real UAV has SwarmProtParam.idMaster == null
 		return isMaster;
 	}
 
 	@Override
 	public void openConfigurationDialog() {
-		SwarmProtParam.idMaster = SwarmProtParam.SIMULATION_MASTER_ID;
+		ScanParam.idMaster = ScanParam.SIMULATION_MASTER_ID;
 
-		new SwarmConfig();
+		new ScanConfigDialog();
 	}
 
 	@Override
 	public void initializeDataStructures() {
 		int numUAVs = Tools.getNumUAVs();
 		
-		SwarmProtParam.idPrev = new AtomicLongArray(numUAVs);
-		SwarmProtParam.idNext = new AtomicLongArray(numUAVs);
-		SwarmProtParam.takeoffAltitude = new AtomicDoubleArray(numUAVs);
-		SwarmProtParam.data = new AtomicReferenceArray<>(numUAVs);
-		SwarmProtParam.uavMissionReceivedUTM = new AtomicReferenceArray<>(numUAVs);
-		SwarmProtParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
+		ScanParam.idPrev = new AtomicLongArray(numUAVs);
+		ScanParam.idNext = new AtomicLongArray(numUAVs);
+		ScanParam.takeoffAltitude = new AtomicDoubleArray(numUAVs);
+		ScanParam.data = new AtomicReferenceArray<>(numUAVs);
+		ScanParam.uavMissionReceivedUTM = new AtomicReferenceArray<>(numUAVs);
+		ScanParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
 		
-		SwarmProtParam.state = new AtomicIntegerArray(numUAVs);
-		SwarmProtParam.moveSemaphore = new AtomicIntegerArray(numUAVs);
-		SwarmProtParam.wpReachedSemaphore = new AtomicIntegerArray(numUAVs);
+		ScanParam.state = new AtomicIntegerArray(numUAVs);
+		ScanParam.moveSemaphore = new AtomicIntegerArray(numUAVs);
+		ScanParam.wpReachedSemaphore = new AtomicIntegerArray(numUAVs);
 	}
 
 	@Override
 	public String setInitialState() {
-		return SwarmProtText.START;
+		return ScanText.START;
 	}
 
 	@Override
@@ -89,59 +89,59 @@ public class SwarmProtHelper extends ProtocolHelper {
 	@Override
 	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
 		/** Position the master on the map */
-		SwarmProtParam.masterHeading = 0.0;
+		ScanParam.masterHeading = 0.0;
 		Waypoint waypoint1, waypoint2;
 		waypoint1 = waypoint2 = null;
 		int waypoint1pos = 0;
 		boolean waypointFound;
 		List<Waypoint>[] missions = Tools.getLoadedMissions();
-		if (missions != null && missions[SwarmProtParam.MASTER_POSITION] != null) {
+		if (missions != null && missions[ScanParam.MASTER_POSITION] != null) {
 			waypointFound = false;
-			for (int j = 0; j < missions[SwarmProtParam.MASTER_POSITION].size() && !waypointFound; j++) {
-				waypoint1 = missions[SwarmProtParam.MASTER_POSITION].get(j);
+			for (int j = 0; j < missions[ScanParam.MASTER_POSITION].size() && !waypointFound; j++) {
+				waypoint1 = missions[ScanParam.MASTER_POSITION].get(j);
 				if (waypoint1.getLatitude() != 0 || waypoint1.getLongitude() != 0) {
 					waypoint1pos = j;
 					waypointFound = true;
 				}
 			}
 			if (!waypointFound) {
-				GUI.exit(SwarmProtText.UAVS_START_ERROR_2 + " " + Tools.getIdFromPos(SwarmProtParam.MASTER_POSITION));
+				GUI.exit(ScanText.UAVS_START_ERROR_2 + " " + Tools.getIdFromPos(ScanParam.MASTER_POSITION));
 			}
 			waypointFound = false;
-			for (int j = waypoint1pos + 1; j < missions[SwarmProtParam.MASTER_POSITION].size()
+			for (int j = waypoint1pos + 1; j < missions[ScanParam.MASTER_POSITION].size()
 					&& !waypointFound; j++) {
-				waypoint2 = missions[SwarmProtParam.MASTER_POSITION].get(j);
+				waypoint2 = missions[ScanParam.MASTER_POSITION].get(j);
 				if (waypoint2.getLatitude() != 0 || waypoint2.getLongitude() != 0) {
 					waypointFound = true;
 				}
 			}
 			if (waypointFound) {
-				SwarmProtParam.masterHeading = SwarmProtHelper.getMasterHeading(waypoint1, waypoint2);
+				ScanParam.masterHeading = ScanHelper.getMasterHeading(waypoint1, waypoint2);
 			}
 		} else {
-			JOptionPane.showMessageDialog(null, SwarmProtText.UAVS_START_ERROR_1 + " " + (SwarmProtParam.MASTER_POSITION + 1) + ".",
-					SwarmProtText.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, ScanText.UAVS_START_ERROR_1 + " " + (ScanParam.MASTER_POSITION + 1) + ".",
+					ScanText.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		}
 
 		int numUAVs = Tools.getNumUAVs();
-		GeoCoordinates[] startingLocations = posSlaveFromMasterGeo(SwarmProtParam.masterHeading, waypoint1, numUAVs - 1,
-				SwarmProtParam.initialDistanceBetweenUAV);
+		GeoCoordinates[] startingLocations = posSlaveFromMasterGeo(ScanParam.masterHeading, waypoint1, numUAVs - 1,
+				ScanParam.initialDistanceBetweenUAV);
 		@SuppressWarnings("unchecked")
 		Pair<GeoCoordinates, Double>[] startingLocationsFinal = new Pair[numUAVs];
 		int aux = 0;
 		int destAux = 0;
-		while (aux < SwarmProtParam.MASTER_POSITION) {
-			startingLocationsFinal[destAux] = Pair.with(startingLocations[aux], SwarmProtParam.masterHeading);
+		while (aux < ScanParam.MASTER_POSITION) {
+			startingLocationsFinal[destAux] = Pair.with(startingLocations[aux], ScanParam.masterHeading);
 			aux++;
 			destAux++;
 		}
 
 		startingLocationsFinal[destAux] = Pair
-				.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), SwarmProtParam.masterHeading);
+				.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), ScanParam.masterHeading);
 		destAux++;
 		while (aux < startingLocations.length) {
-			startingLocationsFinal[destAux] = Pair.with(startingLocations[aux], SwarmProtParam.masterHeading);
+			startingLocationsFinal[destAux] = Pair.with(startingLocations[aux], ScanParam.masterHeading);
 			aux++;
 			destAux++;
 		}
@@ -233,7 +233,7 @@ public class SwarmProtHelper extends ProtocolHelper {
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
 		// Only the master UAV has a mission
-		if (SwarmProtHelper.isMaster(numUAV)) {
+		if (ScanHelper.isMaster(numUAV)) {
 			return Copter.cleanAndSendMissionToUAV(numUAV, Tools.getLoadedMissions()[numUAV]);
 		} else {
 			return true;
@@ -244,10 +244,10 @@ public class SwarmProtHelper extends ProtocolHelper {
 	public void startThreads() {
 		int numUAVs = Tools.getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
-			(new Listener(i)).start();
-			(new Talker(i)).start();
+			(new ListenerThread(i)).start();
+			(new TalkerThread(i)).start();
 		}
-		GUI.log(SwarmProtText.ENABLING);
+		GUI.log(ScanText.ENABLING);
 	}
 
 	@Override
@@ -257,12 +257,12 @@ public class SwarmProtHelper extends ProtocolHelper {
 		while (!allFinished) {
 			allFinished = true;
 			for (int i = 0; i < numUAVs && allFinished; i++) {
-				if (SwarmProtParam.state.get(i) < SETUP_FINISHED) {
+				if (ScanParam.state.get(i) < SETUP_FINISHED) {
 					allFinished = false;
 				}
 			}
 			if (!allFinished) {
-				Tools.waiting(SwarmProtParam.STATE_CHANGE_TIMEOUT);
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 			}
 		}
 	}
@@ -305,8 +305,8 @@ public class SwarmProtHelper extends ProtocolHelper {
 		// We look for the drone that behave like center drone
 		for (int i = 0; i < currentLocations.length; i++) {
 			// We obtain coordinates for the drones that surround the central.
-			Point2D.Double[] formation = SwarmProtHelper.posSlaveFromMasterLinear(masterHeading,
-					currentLocations[i], currentLocations.length - 1, SwarmProtParam.initialDistanceBetweenUAVreal);
+			Point2D.Double[] formation = ScanHelper.posSlaveFromMasterLinear(masterHeading,
+					currentLocations[i], currentLocations.length - 1, ScanParam.initialDistanceBetweenUAVreal);
 			Point2D.Double[] flightFormationFinal = Arrays.copyOf(formation, formation.length + 1);
 
 			// Add to the end of the array the one that is being viewed if it is the center
@@ -322,7 +322,7 @@ public class SwarmProtHelper extends ProtocolHelper {
 			Permutation<Long> prueba = new Permutation<Long>(ids);
 			long[] bestForCurrentCenter = null;
 			double dOfCurrentCenter = Double.MAX_VALUE;
-			int j = SwarmProtHelper.factorial(ids.length);
+			int j = ScanHelper.factorial(ids.length);
 			while (j > 0) {
 				// Test of a permutation
 				Long[] mix = prueba.next();
@@ -371,7 +371,7 @@ public class SwarmProtHelper extends ProtocolHelper {
 					distanceOfBestFormation = dOfCurrentCenter;
 					boolean found = false;
 					for (int x = 0; x < bestForCurrentCenter.length; x++) {
-						if (bestForCurrentCenter[j] == SwarmProtParam.idMaster) {
+						if (bestForCurrentCenter[j] == ScanParam.idMaster) {
 							found = true;
 						}
 					}
@@ -417,14 +417,14 @@ public class SwarmProtHelper extends ProtocolHelper {
 		int role = Tools.getArduSimRole();
 		if (role == Tools.MULTICOPTER) {
 			/** You get the id = MAC for real drone */
-			long idMaster = Tools.getIdFromPos(SwarmProtParam.MASTER_POSITION);
-			for (int i = 0; i < SwarmProtParam.MAC_ID.length; i++) {
-				if (SwarmProtParam.MAC_ID[i] == idMaster) {
+			long idMaster = Tools.getIdFromPos(ScanParam.MASTER_POSITION);
+			for (int i = 0; i < ScanParam.MAC_ID.length; i++) {
+				if (ScanParam.MAC_ID[i] == idMaster) {
 					return true;
 				}
 			}
 		} else if (role == Tools.SIMULATOR) {
-			if (numUAV == SwarmProtParam.MASTER_POSITION) {
+			if (numUAV == ScanParam.MASTER_POSITION) {
 				return true;
 			}
 		}

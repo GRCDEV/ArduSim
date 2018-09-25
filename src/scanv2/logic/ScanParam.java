@@ -1,4 +1,4 @@
-package swarmprot.logic;
+package scanv2.logic;
 
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
@@ -8,7 +8,7 @@ import api.pojo.AtomicDoubleArray;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 
-public class SwarmProtParam {
+public class ScanParam {
 	
 	// Global parameters
 	// Initial distance between UAV when they are on the ground (only in simulation)

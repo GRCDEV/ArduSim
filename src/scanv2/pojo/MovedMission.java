@@ -1,4 +1,4 @@
-package swarmprot.pojo;
+package scanv2.pojo;
 
 import api.pojo.Point3D;
 

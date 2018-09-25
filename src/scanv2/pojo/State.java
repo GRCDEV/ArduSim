@@ -1,4 +1,4 @@
-package swarmprot.pojo;
+package scanv2.pojo;
 
 /** This class represents the states of the finite state machine used in the protocol. */
 

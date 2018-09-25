@@ -1,4 +1,4 @@
-package swarmprot.pojo;
+package scanv2.pojo;
 
 public final class Message {
 	

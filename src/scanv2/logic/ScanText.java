@@ -1,8 +1,8 @@
-package swarmprot.logic;
+package scanv2.logic;
 
 /** This class contains text descriptions for messages used by this protocol. */
 
-public class SwarmProtText {
+public class ScanText {
 	
 	// Configuration dialog
 	public static final String CONFIGURATION_DIALOG_TITLE_SWARM = "Swarm Protocol Configuration";
@@ -15,7 +15,7 @@ public class SwarmProtText {
 	public static final String MISSIONS_SELECTION_ERROR = "Missions selection warning";
 	public static final String MISSIONS_ERROR_3 = "The kml file is not valid.";
 	
-	public static final String PROTOCOL_TEXT = "Swarm protocol";
+	public static final String PROTOCOL_TEXT = "Scan protocol v2";
 	public static final String LOAD_MISSION_KML = "Loading the .kml file into the master dron";
 	public static final String CONFIGURE_MASTER_MISSION = "Set up the mission in the master dron";
 	public static final String LANDING = "Landing";
