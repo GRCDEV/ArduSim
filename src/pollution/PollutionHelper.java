@@ -82,14 +82,15 @@ public class PollutionHelper extends ProtocolHelper {
 	@Override
 	public void drawResources(Graphics2D g2, BoardPanel p) {
 		// TODO 
-		synchronized(PollutionParam.measurements_temp) {
-			Iterator<Value> itr = PollutionParam.measurements_temp.iterator();
-			while(itr.hasNext()) PollutionParam.measurements_set.add(itr.next());
-			PollutionParam.measurements_temp.clear();
+		if (PollutionParam.ready) {
+			synchronized(PollutionParam.measurements_temp) {
+				Iterator<Value> itr = PollutionParam.measurements_temp.iterator();
+				while(itr.hasNext()) PollutionParam.measurements_set.add(itr.next());
+				PollutionParam.measurements_temp.clear();
+			}
+			pollution.gui.DrawTool.drawValueSet(g2, PollutionParam.measurements_set);
+			pollution.gui.DrawTool.drawBounds(g2);
 		}
-		pollution.gui.DrawTool.drawValueSet(g2, PollutionParam.measurements_set);
-		
-		
 	}
 
 	@Override
