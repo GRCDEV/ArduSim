@@ -58,7 +58,7 @@ Use the button of the picture to start clonning the repository:
 
 Now copy the following URI in the configuration window and enter your user name and password:
 
-    https://frafabco@bitbucket.org/frafabco/ardusim.git
+    `https://frafabco@bitbucket.org/frafabco/ardusim.git`
 
 Finally, select the master branch and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
 
@@ -84,7 +84,7 @@ Remember that ArduSim is a highly asynchronous application, and running in Eclip
 
 Finally, go to *Run --> Run configurations...* and create a new configuration with the following argument to be able to run a simulation, but not a PC Companion or a real multicopter, roles that are explained in other sections.
 
-    simulator
+    `simulator`
 
 You can create a mission file in *Google Earth* and test the simulator with the protocol *None* or *MBCAP* to be sure that the setup is correct.
 
@@ -124,31 +124,31 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 4. Set up folders/paths in Cygwin. This procedure makes it easy to execute simulated vehicles under SITL (sim_vehicle.py will be found from anywhere), but it is not strictly needed to just compile a multicopter, if the next steps are followed. Edit the **.bashrc** file located on the user folder *C:\cygwin\home\user_name\.bashrc*, to add the following line. Preferably use the vi editor integrated with Cygwin, as the file is directly located on the folder where the *Cygwin terminal* opens. Otherwise, use any Windows text editor, but then you have to remove later all the carriage returns (*\r*) with *"sed -i 's/\r//g' .bashrc"* in a *Cygwin terminal*.
 
-        export PATH=$PATH:$HOME/ardupilot/Tools/autotest
+        `export PATH=$PATH:$HOME/ardupilot/Tools/autotest`
 
 5. Install required Python packages.
 
     Open a *Cygwin terminal* from the desktop and install the following packages:
 
-        python -m ensurepip --user
-        python -m pip install --user future
-        python -m pip install --user lxml
-        python -m pip install --user uavcan
+        `python -m ensurepip --user`
+        `python -m pip install --user future`
+        `python -m pip install --user lxml`
+        `python -m pip install --user uavcan`
 
 6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
 
-        git clone https://github.com/ArduPilot/ardupilot.git
-        cd ardupilot
-        git checkout tags/Copter-3.5.7
-        git submodule update --init --recursive
+        `git clone https://github.com/ArduPilot/ardupilot.git`
+        `cd ardupilot`
+        `git checkout tags/Copter-3.5.7`
+        `git submodule update --init --recursive`
     
     The first command clones the project in the local folder *ardupilot*. The last uploaded version of ArduPilot is usually unstable, and we highly recommend to downgrade to the latest stable version for ArduCopter. In the cloned webpage open de *Branch* drop-down list, select the tab *Tags*, look for the most up-to-date version of *Copter*, and put in the second line the tag found. ArduSim has been tested with ArduCopter version 3.5.7. The last command downloads modules needed by the target ArduPilot compilation.
 
 7. Make the multicopter. In the same *Cygwin terminal* and already within the *ardupilot* folder type:
 
-        cd ArduCopter
-        make sitl -j4
-        sim_vehicle.py -w
+        `cd ArduCopter`
+        `make sitl -j4`
+        `sim_vehicle.py -w`
 
     Once fully loaded, use "Ctrl+D" to close the running program. The second line builds the multicopter firmware *arducopter.elf*, and the third one uses MAVProxy to finally build the multicopter executable file *arducopter.exe* located in *C:\cygwin\home\user_name\ardupilot\build\sitl\bin*. Copy that file next to the ArduSim *.jar* file, and also the file *C:\cygwin\home\user_name\ardupilot\Tools\autotest\default_params\copter.param* to finish the basic setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
 
@@ -161,31 +161,107 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 1. Install Java if not present.
 
-        sudo add-apt-repository ppa:webupd8team/java
-        sudo apt-get update
-        sudo apt-get install oracle-java8-installer
+        `sudo add-apt-repository ppa:webupd8team/java`
+        `sudo apt-get update`
+        `sudo apt-get install oracle-java8-installer`
 
 2. Install git if not present:
 
-        sudo apt install git
+        `sudo apt install git`
 
 3. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In a terminal, go to your home folder (*/home/user_name*) and input this lines:
 
-        git clone https://github.com/ArduPilot/ardupilot.git
-        cd ardupilot
-        git checkout tags/Copter-3.5.7
-        git submodule update --init --recursive
+        `git clone https://github.com/ArduPilot/ardupilot.git`
+        `cd ardupilot`
+        `git checkout tags/Copter-3.5.7`
+        `git submodule update --init --recursive`
 
 4. Use the following command to install the required packages and reload the path with the *dot* command:
 
-        Tools/scripts/install-prereqs-ubuntu.sh -y
-        . ~/.profile
+        `Tools/scripts/install-prereqs-ubuntu.sh -y`
+        `. ~/.profile`
 
 5. Make the multicopter:
 
-        cd ArduCopter
-        sim_vehicle.py -w
+        `cd ArduCopter`
+        `sim_vehicle.py -w`
 
     Once fully loaded, use "Ctrl+C" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
 
 ## 5 SITL setup in MacOS
+
+The next steps must be followed in order to compile a multicopter in MacOS. Provided instructions use [Macports](https://www.macports.org/) or [Homebrew](https://brew.sh/) software repository systems to install dependencies. You have to chose which to use and install the corresponding package manager.
+
+1. Setup the developer environment
+
+    1. Execute Git to install Xcode:
+
+        `git`
+
+    2. Accept xcode license:
+
+        `sudo xcodebuild -license`
+
+2. Execute Java to install it:
+
+        `java`
+
+3. Install a package repository system (Macports or Homebrew):
+
+    * Macports:
+
+        1. Install Macports: Download [installer](https://www.macports.org/install.php) and follow the included instructions.
+        2. Update port definitions & update macports if necessary:
+
+            `sudo port -v selfupdate`
+
+    * Homebrew:
+
+        `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+
+4. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs.
+
+    `git clone git://github.com/ArduPilot/ardupilot.git`
+    `cd ardupilot`
+    `git checkout tags/Copter-3.5.7`
+    `git submodule update --init --recursive`
+
+5. Install gcc 7 to compile the multicopter:
+
+    * Macports:
+
+        `sudo port install gcc7`
+        `sudo port select gcc mp-gcc7`
+
+    * Homebrew:
+
+        `brew install gcc`
+
+6. Install required dependencies:
+
+    * Macports:
+
+        `sudo port install python27 py-pip`
+        `sudo port select python python27`
+        `sudo port select pip pip27`
+
+    * Homebrew:
+
+        `brew install python`
+
+7. Install python dependencies:
+
+        `pip install --user pyserial`
+
+8. Install mavproxy and mavlink:
+
+        `pip install --user mavproxy pymavlink`
+        `echo "export PATH=$PATH:$HOME/Library/Python/2.7/bin" >> ~/.bashrc`
+        `. ~/.bashrc`
+
+9. Make the multicopter:
+
+        `export CC=gcc; export CXX=g++;./waf configure --board sitl`
+        `./waf --targets bin/arducopter --jobs 1`
+
+    Copy the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin* next to the ArduSim .jar file, and also the file *ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
