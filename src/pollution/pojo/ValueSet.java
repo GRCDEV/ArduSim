@@ -9,8 +9,12 @@ import java.util.Map.Entry;
 
 public class ValueSet {
 	private HashMap<Integer, HashMap<Integer, Double>> pSet;
+	private double min, max;
+	
 	public ValueSet() {
 		pSet = new HashMap<Integer, HashMap<Integer, Double>>();
+		min = Double.MAX_VALUE;
+		max = Double.MIN_VALUE;
 	}
 	
 	public void add(Value v) {
@@ -23,6 +27,8 @@ public class ValueSet {
 	public void add(int a, int b, double c) {
 		if (!pSet.containsKey(a)) pSet.put(a, new HashMap<Integer, Double>());
 		pSet.get(a).put(b, c);
+		if (c < min) min = c;
+		if (c > max) max = c;
 	}
 	
 	public boolean contains(Point p) {
@@ -73,6 +79,14 @@ public class ValueSet {
 	
 	public boolean isEmpty() {
 		return pSet.isEmpty();
+	}
+	
+	public double getMin() {
+		return min;
+	}
+	
+	public double getMax() {
+		return max;
 	}
 	
 	private class Itr implements Iterator<Value> {

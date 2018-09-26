@@ -12,6 +12,7 @@ public class Value {
 	public Value(int x, int y, double v) {
 		this.x = x;
 		this.y = y;
+		this.v = v;
 	}
 	
 	/**
