@@ -27,8 +27,8 @@ public class FollowMeParam {
 	
 	
 	
-	public static int DistanceLinearOffset;
-	public static int DistanceRadio;
+	public static double DistanceLinearOffset;
+	public static double DistanceRadio;
 	
 	
 	//public static final int DistanciaSeparacionHorizontal = 75;
@@ -41,7 +41,7 @@ public class FollowMeParam {
 		
 	public static final int FormacionLinea = 0;
 	public static final int FormacionMatriz = 1;
-	public static final int FormacionCircular = 3;
+	public static final int FormacionCircular = 2;
 	public static int FormacionUsada;
 
 	public static int posMaster = -1;

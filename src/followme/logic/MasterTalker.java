@@ -110,6 +110,7 @@ public class MasterTalker extends Thread {
 			out.clear();
 			
 			cicleTime = cicleTime + FollowMeParam.FollowMeBeaconingPeriod ;
+			
 			waitingTime = (int)(cicleTime - System.currentTimeMillis());
 			if (waitingTime > 0) {
 				Tools.waiting(waitingTime);

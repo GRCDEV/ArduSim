@@ -53,8 +53,11 @@ public class Formation {
 		double vert = -FollowMeParam.DistanciaSeparacionVertical;
 		double horiz = FollowMeParam.DistanceLinearOffset * ((int) (posFormation + 2) / 2);
 		if (posFormation % 2 == 0) {
+		
+			GUI.log("Position Formation:"+ String.valueOf(posFormation) + "-NumSlaves:?" +" Resultados: distX=" + String.valueOf(horiz) + "distY=" +String.valueOf(vert) );
 			return new Point2D.Double(horiz, vert);
 		} else {
+			GUI.log("Position Formation:"+ String.valueOf(posFormation) + "-NumSlaves:?" + " Resultados: distX=" + String.valueOf(-horiz) + "distY=" +String.valueOf(vert) );
 			return new Point2D.Double(-horiz, vert);
 		}
 	}
@@ -62,11 +65,19 @@ public class Formation {
 	/* API: PArametros de entrada la posicin en el circulo alrededero del master, numero de esclavo al formar el circulo
 	 * 		Devuelve el offset, de la posicion que el esclavo adopta para realizar un cirrculo alrededor del master
 	 * */
+								
 	public static Point2D.Double getOffsetCircular(int posFormation, int numSlaves){
+											   /*FollowMeParam.DistanceRadio*/
 		double angulo = 2*Math.PI / numSlaves;
-		double vert = Math.sin(angulo * posFormation)* FollowMeParam.DistanceRadio;
-		double horiz = Math.cos(angulo * posFormation) *FollowMeParam.DistanceRadio;
+		//double vert = Math.sin(angulo * posFormation)* FollowMeParam.DistanceRadio;
+		//double horiz = Math.cos(angulo * posFormation) *FollowMeParam.DistanceRadio;
 		
+		double vert = Math.sin(angulo * posFormation)* 65.32814824;
+		double horiz = Math.cos(angulo * posFormation) * 65.32814824;
+		
+		
+		//System.out.println("Vertical_:" + vert + "-Horizontal valor" + horiz);
+		//GUI.log("Position Formation:"+ String.valueOf(posFormation) + "-NumSlaves: " + String.valueOf(numSlaves) + " Resultados: distX=" + String.valueOf(horiz) + "distY=" +String.valueOf(vert) );
 		return new Point2D.Double(horiz, vert);
 	}
 

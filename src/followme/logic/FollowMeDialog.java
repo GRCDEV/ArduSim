@@ -18,13 +18,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JComboBox;
 import javax.swing.border.TitledBorder;
 
-import api.GUI;
 import api.Tools;
-import api.pojo.GeoCoordinates;
 import followme.pojo.Nodo;
 import followme.pojo.RecursoCompartido;
-import lander.logic.LanderParam;
-
 import java.awt.Color;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -33,6 +29,11 @@ import javax.swing.SwingConstants;
 import javax.swing.DefaultComboBoxModel;
 
 public class FollowMeDialog extends JDialog {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private final JPanel contentPanel = new JPanel();
 
@@ -66,7 +67,7 @@ public class FollowMeDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public FollowMeDialog() {
-		setTitle(FollowMeText.PROTOCOL_TEXT + "Configurations");
+		setTitle(FollowMeText.PROTOCOL_TEXT + " Configurations");
 		
 		
 		setBounds(100, 100, 450, 352);
@@ -97,9 +98,9 @@ public class FollowMeDialog extends JDialog {
 		LblOptionSelect.setBounds(12, 49, 359, 15);
 		Cpanel1.add(LblOptionSelect);
 		
-		TxtRadioDistance = new JTextField("75", 3);
+		TxtRadioDistance = new JTextField("75", 12);
 		TxtRadioDistance.setHorizontalAlignment(SwingConstants.RIGHT);
-		TxtRadioDistance.setBounds(366, 53, 48, 19);
+		TxtRadioDistance.setBounds(282, 53, 132, 19);
 		Cpanel1.add(TxtRadioDistance);
 		
 		JPanel Cpanel2 = new JPanel();
@@ -119,6 +120,9 @@ public class FollowMeDialog extends JDialog {
 		
 		TxtOtherOption = new JTextField("10", 2);
 		TxtOtherOption.setBounds(331, 49, 83, 19);
+		TxtOtherOption.setVisible(false); 
+		
+		
 		Cpanel2.add(TxtOtherOption);
 		
 		JButton okButton = new JButton("OK");
@@ -128,6 +132,7 @@ public class FollowMeDialog extends JDialog {
 		JLabel lblOtherOption = new JLabel("Other option");
 		lblOtherOption.setVerticalAlignment(SwingConstants.TOP);
 		lblOtherOption.setBounds(12, 51, 246, 15);
+		lblOtherOption.setVisible(false);
 		Cpanel2.add(lblOtherOption);
 		
 		JPanel CpSource = new JPanel();
@@ -229,9 +234,11 @@ public class FollowMeDialog extends JDialog {
 			
 			FollowMeParam.FormacionUsada = mTypeFollowMe;
 			
-			FollowMeParam.DistanceLinearOffset = Integer.parseInt(TxtRadioDistance.getText());
+			FollowMeParam.DistanceLinearOffset = Double.parseDouble(TxtRadioDistance.getText());
 			
-			FollowMeParam.DistanceRadio = Integer.parseInt(TxtRadioDistance.getText());
+			FollowMeParam.DistanceRadio = Double.parseDouble(TxtRadioDistance.getText());
+			
+			//Integer.parseInt(TxtRadioDistance.getText());
 			
 			FollowMeParam.FollowMeBeaconingPeriod = Integer.parseInt(TxtUpdateTime.getText()); 
 			
@@ -242,6 +249,8 @@ public class FollowMeDialog extends JDialog {
 			Tools.setProtocolConfigured();
 			
 			//GUI.log("Coordenada final :"+ LanderParam.LocationEnd.toString());
+			
+			//GUI.log("Distance radio final :"+ FollowMeParam.DistanceRadio);
 			
 			
 			dispose();
