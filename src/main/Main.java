@@ -82,7 +82,7 @@ public class Main {
 			boolean loadMission = ProtocolHelper.selectedProtocolInstance.loadMission();
 			File parentFolder = Tools.getCurrentFolder();
 			if (loadMission) {
-				List<Waypoint> mission = Tools.loadMission(parentFolder);
+				List<Waypoint> mission = ArduSimTools.loadMission(parentFolder);
 				if (mission == null) {
 					GUI.exit(Text.MISSION_NOT_FOUND);
 				}

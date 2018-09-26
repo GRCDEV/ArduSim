@@ -2,10 +2,17 @@ package api;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.javatuples.Pair;
 
 import api.pojo.StatusPacket;
 import api.pojo.Waypoint;
@@ -146,11 +153,176 @@ public class GUI {
 		GUI.warn(title, res + message);
 	}
 	
+	/** Opens a dialog to load missions from a Google Earth .kml file.
+	 * <p>Returns the path found, and an array of missions, or null if no file was selected or any error happens. */
+	public static Pair<String, List<Waypoint>[]> loadKMLMissions() {
+		File[] selection;
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(Tools.getCurrentFolder());
+		chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE_2);
+		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, Text.FILE_EXTENSION_KML);
+		chooser.addChoosableFileFilter(filter1);
+		chooser.setAcceptAllFileFilterUsed(false);
+		chooser.setMultiSelectionEnabled(false);
+		if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
+			return null;
+		}
+		
+		selection = new File[] {chooser.getSelectedFile()};
+		Pair<String, List<Waypoint>[]> missions = GUI.loadAndParseMissions(selection);
+		if (missions != null) {
+			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
+				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
+			}
+			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
+				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	/** Opens a dialog to load missions from Waypoint .waypoints files.
+	 * <p>Returns the path found, and an array of missions, or null if no file was selected or any error happens. */
+	public static Pair<String, List<Waypoint>[]> loadWaypointMissions() {
+		File[] selection;
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(Tools.getCurrentFolder());
+		chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE_1);
+		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, Text.FILE_EXTENSION_WAYPOINTS);
+		chooser.addChoosableFileFilter(filter1);
+		chooser.setAcceptAllFileFilterUsed(false);
+		chooser.setMultiSelectionEnabled(true);
+		if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
+			return null;
+		}
+
+		selection = chooser.getSelectedFiles();
+		Pair<String, List<Waypoint>[]> missions = GUI.loadAndParseMissions(selection);
+		if (missions != null) {
+			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
+				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
+			}
+			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
+				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
+			}
+		}
+
+		return null;
+	}
+	
+	
+	/** Opens a dialog to load missions from a Google Earth .kml file, or from Waypoint .waypoints files.
+	 * <p>Returns the path found, and an array of missions, or null if no file was selected or any error happens. */
+	public static Pair<String, List<Waypoint>[]> loadMissions() {
+		File[] selection;
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(Tools.getCurrentFolder());
+		chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE_1);
+		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, Text.FILE_EXTENSION_KML);
+		chooser.addChoosableFileFilter(filter1);
+		FileNameExtensionFilter filter2 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, Text.FILE_EXTENSION_WAYPOINTS);
+		chooser.addChoosableFileFilter(filter2);
+		chooser.setAcceptAllFileFilterUsed(false);
+		chooser.setMultiSelectionEnabled(true);
+		if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
+			return null;
+		}
+		
+		selection = chooser.getSelectedFiles();
+		Pair<String, List<Waypoint>[]> missions = GUI.loadAndParseMissions(selection);
+		if (missions != null) {
+			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
+				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
+			}
+			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
+				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
+			}
+		}
+		
+		return null;
+	}
+	
+	/** Parses missions from files.
+	 * <p>Returns null if any error happens. */
+	@SuppressWarnings("unchecked")
+	private static Pair<String, List<Waypoint>[]> loadAndParseMissions(File[] files) {
+		if (files == null || files.length == 0) {
+			return null;
+		}
+		
+		String extension = Tools.getFileExtension(files[0]);
+		// Only one "kml" file is accepted
+		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase()) && files.length > 1) {
+			GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
+			return null;
+		}
+		// waypoints files can not be mixed with kml files
+		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+			for (int i = 1; i < files.length; i++) {
+				if (!Tools.getFileExtension(files[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+					GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
+					return null;
+				}
+			}
+		}
+		
+		// kml file selected
+		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
+			// All missions are loaded from one single file
+			String missionEnd = GUI.askUserForMissionEnd();
+			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0], missionEnd);
+			if (missions == null) {
+				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
+				return null;
+			}
+			return new Pair<String, List<Waypoint>[]>(Text.FILE_EXTENSION_KML, missions);
+		}
+		
+		// One or more .waypoints files selected
+		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+			List<Waypoint>[] missions = new ArrayList[files.length];
+			// Load each mission from one file
+			int j = 0;
+			for (int i = 0; i < files.length; i++) {
+				List<Waypoint> current = ArduSimTools.loadMissionFile(files[i].getAbsolutePath());
+				if (current != null) {
+					missions[j] = current;
+					j++;
+				}
+			}
+			// If no valid missions were found, just ignore the action
+			if (j == 0) {
+				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
+				return null;
+			}
+			
+			// The array must be resized if some file was incorrect
+			if (j != files.length) {
+				List<Waypoint>[] aux = missions;
+				missions = new ArrayList[j];
+				int m = 0;
+				for (int k = 0; k < files.length; k++) {
+					if (aux[k] != null) {
+						missions[m] = aux[k];
+						m++;
+					}
+				}
+			}
+			return new Pair<String, List<Waypoint>[]>(Text.FILE_EXTENSION_WAYPOINTS, missions);
+		}
+		return null;
+	}
+	
 	/** Asks the user if the mission must be finished with a Land or RTL command when it is loaded from Google Earth .kml file.
 	 * <p>This function must be used only from the GUI for simulations, not in a real multicopter or from the PC Companion.
 	 * <p>Returns value MISSION_END_UNMODIFIED, MISSION_END_LAND or MISSION_END_RTL found on api.pojo.Waypoint class
 	 * <p>If user closes the dialog, the default value is applied. */
-	public static String askUserForMissionEnd() {
+	private static String askUserForMissionEnd() {
 		String res = Waypoint.missionEnd;
 		String[] options = {Waypoint.MISSION_END_UNMODIFIED, Waypoint.MISSION_END_LAND, Waypoint.MISSION_END_RTL};
 		int pos = -1;

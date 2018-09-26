@@ -8,13 +8,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -25,8 +23,9 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.NumberFormatter;
+
+import org.javatuples.Pair;
 
 import api.GUI;
 import api.Tools;
@@ -91,84 +90,18 @@ public class ScanConfigDialog extends JDialog {
 			btnMap.addActionListener(new ActionListener() {
 				@SuppressWarnings("unchecked")
 				public void actionPerformed(ActionEvent e) {
-					// Select kml file or waypoints files
-					final File selection;
-					final JFileChooser chooser = new JFileChooser();
-					chooser.setCurrentDirectory(Tools.getCurrentFolder());
-					chooser.setDialogTitle(ScanText.MISSIONS_DIALOG_TITLE);
-					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-					FileNameExtensionFilter filter1 = new FileNameExtensionFilter(ScanText.MISSIONS_DIALOG_SELECTION_1, ScanText.FILE_EXTENSION_KML);
-					chooser.addChoosableFileFilter(filter1);
-					FileNameExtensionFilter filter2 = new FileNameExtensionFilter(ScanText.MISSIONS_DIALOG_SELECTION_2, ScanText.FILE_EXTENSION_WAYPOINTS);
-					chooser.addChoosableFileFilter(filter2);
-					chooser.setAcceptAllFileFilterUsed(false);
-					chooser.setMultiSelectionEnabled(false);
-					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						selection = chooser.getSelectedFile();
-					} else {
-						selection = null;
-					}
-					int numUAVs = Tools.getNumUAVs();
-					if (selection != null) {
-						List<Waypoint>[] lists;
-						List<Waypoint> mission;
-						String extension = Tools.getFileExtension(selection);
-						// kml file selected
-						if (extension.toUpperCase().equals(ScanText.FILE_EXTENSION_KML.toUpperCase())) {
-							// All missions are loaded from one single file
-							String missionEnd = GUI.askUserForMissionEnd();
-							lists = Tools.loadXMLMissionsFile(selection, missionEnd);
-							if (lists == null) {
-								GUI.warn(ScanText.MISSIONS_SELECTION_ERROR, ScanText.MISSIONS_ERROR_3);
-								return;
+					final Pair<String, List<Waypoint>[]> missions = GUI.loadMissions();
+					if (missions != null) {
+						int numUAVs = Tools.getNumUAVs();
+						/** The master is assigned the first mission in the list */
+						List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
+						missionsFinal[ScanParam.MASTER_POSITION] = missions.getValue1()[0];
+						Tools.setLoadedMissionsFromFile(missionsFinal);
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								missionsTextField.setText(missions.getValue0());
 							}
-							// Missions are stored
-							mission = lists[0];
-							
-							if (mission != null) {
-								/** The master is assigned the first mission in the list */
-								List<Waypoint>[] missions = new ArrayList[numUAVs];
-								missions[ScanParam.MASTER_POSITION] = mission;
-								Tools.setLoadedMissionsFromFile(missions);
-
-							} else {
-								JOptionPane.showMessageDialog(null, ScanText.MISSIONS_ERROR_3, ScanText.MISSIONS_SELECTION_ERROR,
-										JOptionPane.WARNING_MESSAGE);
-
-								return;
-							}
-							
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									missionsTextField.setText(selection.getName());
-								}
-							});
-						}
-
-						// One or more waypoints files selected
-						if (extension.toUpperCase().equals(ScanText.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-							// Load one mission from one file
-							List<Waypoint> current = Tools.loadMissionFile(selection.getAbsolutePath());
-							
-							// The mission is stored
-							if (current != null) {
-								/** The master is assigned the first mission in the list */
-								List<Waypoint>[] missions = new ArrayList[numUAVs];
-								missions[ScanParam.MASTER_POSITION] = current;
-								Tools.setLoadedMissionsFromFile(missions);
-							} else {
-								JOptionPane.showMessageDialog(null, ScanText.MISSIONS_ERROR_3, ScanText.MISSIONS_SELECTION_ERROR,
-										JOptionPane.WARNING_MESSAGE);
-
-								return;
-							}
-							
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									missionsTextField.setText(selection.getName());
-								}
-							});
-						}
+						});
 					}
 				}
 			});
@@ -177,11 +110,6 @@ public class ScanConfigDialog extends JDialog {
 			gbc_btnMap.gridx = 2;
 			gbc_btnMap.gridy = 0;
 			contentPanel.add(btnMap, gbc_btnMap);
-			
-			
-			
-			
-			
 		}
 		{
 			JLabel lblGroundFormationDistance = new JLabel("Ground formation distance (m)");
@@ -246,13 +174,15 @@ public class ScanConfigDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				
 				if(Tools.getLoadedMissions() != null ) {
-					//Acepta la configuración y cambia el estado
-					Tools.setProtocolConfigured();
+					// In this protocol, the number of UAVs running on this machine (n) is not affected by the number of missions loaded (1)
+					//   , so the function Tools.setNumUAVs() is not used
 					Double groud = (Double) spinnerGround.getValue();
 					Double air = (Double) spinnerFlight.getValue();
 					ScanParam.initialDistanceBetweenUAV = groud.intValue();
 					ScanParam.initialDistanceBetweenUAVreal = air.intValue();
-
+					// State change
+					Tools.setProtocolConfigured();
+					
 					dispose();
 				}else {
 					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);

@@ -13,7 +13,6 @@ import javax.swing.SwingUtilities;
 import api.GUI;
 import api.Tools;
 import api.pojo.Point3D;
-import main.Param;
 import main.Text;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPParam.MBCAPState;

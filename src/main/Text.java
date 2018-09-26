@@ -47,7 +47,8 @@ public class Text {
 	public static final String BASE_PATH_DIALOG_TITLE = "Select the SITL arducopter executable file";
 	public static final String BASE_PATH_DIALOG_SELECTION = "ArduCopter file";
 	public static final String BASE_PATH_DIALOG_EXTENSION = "exe";
-	public static final String MISSIONS_DIALOG_TITLE = "Select the file(s) with UAVs paths";
+	public static final String MISSIONS_DIALOG_TITLE_1 = "Select the file(s) with UAVs paths";
+	public static final String MISSIONS_DIALOG_TITLE_2 = "Select the file with UAVs paths";
 	public static final String MISSIONS_DIALOG_SELECTION_1 = "Google Earth kml File";
 	public static final String FILE_EXTENSION_KML = "kml";
 	public static final String MISSIONS_DIALOG_SELECTION_2 = "Waypoint Files";

@@ -6,23 +6,20 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.javatuples.Pair;
 
 import api.GUI;
 import api.Tools;
 import api.pojo.Waypoint;
-import main.Text;
 import mbcap.logic.MBCAPText;
 
 /** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog. */
@@ -74,33 +71,9 @@ public class NoneConfigDialogPanel extends JPanel {
 		
 		JButton missionsButton = new JButton(MBCAPText.BUTTON_SELECT);
 		missionsButton.addActionListener(new ActionListener() {
-			@SuppressWarnings("unchecked")
 			public void actionPerformed(ActionEvent e) {
-				// Select kml file or waypoints files
-				final File[] selection;
-				final JFileChooser chooser = new JFileChooser();
-				chooser.setCurrentDirectory(Tools.getCurrentFolder());
-				chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE);
-				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, Text.FILE_EXTENSION_KML);
-				chooser.addChoosableFileFilter(filter1);
-				FileNameExtensionFilter filter2 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, Text.FILE_EXTENSION_WAYPOINTS);
-				chooser.addChoosableFileFilter(filter2);
-				chooser.setAcceptAllFileFilterUsed(false);
-				chooser.setMultiSelectionEnabled(true);
-				if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
-					return;
-				}
-				
-				selection = chooser.getSelectedFiles();
-				if (selection.length == 0) {
-					return;
-				}
-				
-				String extension = Tools.getFileExtension(selection[0]);
-				// Only one "kml" file is accepted
-				if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase()) && selection.length > 1) {
-					GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
+				final Pair<String, List<Waypoint>[]> missions = GUI.loadMissions();
+				if (missions == null) {
 					Tools.setLoadedMissionsFromFile(null);
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -110,109 +83,21 @@ public class NoneConfigDialogPanel extends JPanel {
 					});
 					return;
 				}
-				// waypoints files can not be mixed with kml files
-				if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-					for (int i = 1; i < selection.length; i++) {
-						if (!Tools.getFileExtension(selection[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-							GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
-							Tools.setLoadedMissionsFromFile(null);
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									missionsTextField.setText("");
-									UAVsComboBox.removeAllItems();
-								}
-							});
-							return;
+				
+				// Missions are stored
+				Tools.setLoadedMissionsFromFile(missions.getValue1());
+				// The number of UAVs is updated
+				final int numUAVs = Math.min(missions.getValue1().length, Tools.getNumUAVs());
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						missionsTextField.setText(missions.getValue0());
+						UAVsComboBox.removeAllItems();
+						for (int i = 0; i < numUAVs; i++) {
+							UAVsComboBox.addItem("" + (i + 1));
 						}
+						UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
 					}
-				}
-
-				List<Waypoint>[] lists;
-				// kml file selected
-				if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
-					// All missions are loaded from one single file
-					String missionEnd = GUI.askUserForMissionEnd();
-					lists = Tools.loadXMLMissionsFile(selection[0], missionEnd);
-					if (lists == null) {
-						GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
-						Tools.setLoadedMissionsFromFile(null);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								missionsTextField.setText("");
-								UAVsComboBox.removeAllItems();
-							}
-						});
-						return;
-					}
-					
-					// Missions are stored
-					Tools.setLoadedMissionsFromFile(lists);
-					// The number of UAVs is updated
-					final int numUAVs = Math.min(Tools.getLoadedMissions().length, Tools.getNumUAVs());
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							missionsTextField.setText(selection[0].getAbsolutePath());
-							UAVsComboBox.removeAllItems();
-							for (int i = 0; i < numUAVs; i++) {
-								UAVsComboBox.addItem("" + (i + 1));
-							}
-							UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
-						}
-					});
-				}
-
-				// One or more waypoints files selected
-				if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-
-					lists = new ArrayList[selection.length];
-					// Load each mission from one file
-					int j = 0;
-					for (int i = 0; i < selection.length; i++) {
-						List<Waypoint> current = Tools.loadMissionFile(selection[i].getAbsolutePath());
-						if (current != null) {
-							lists[j] = current;
-							j++;
-						}
-					}
-					// If no valid missions were found, just ignore the action
-					if (j == 0) {
-						GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
-						Tools.setLoadedMissionsFromFile(null);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								missionsTextField.setText("");
-								UAVsComboBox.removeAllItems();
-							}
-						});
-						return;
-					}
-					// The array must be resized if some file was incorrect
-					if (j != selection.length) {
-						List<Waypoint>[] aux = lists;
-						lists = new ArrayList[j];
-						int m = 0;
-						for (int k = 0; k < selection.length; k++) {
-							if (aux[k] != null) {
-								lists[m] = aux[k];
-								m++;
-							}
-						}
-					}
-					// Missions are stored
-					Tools.setLoadedMissionsFromFile(lists);
-					// The number of UAVs is updated
-					final int numUAVs = Math.min(Tools.getLoadedMissions().length, Tools.getNumUAVs());
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							missionsTextField.setText(chooser.getCurrentDirectory().getAbsolutePath());
-							UAVsComboBox.removeAllItems();
-							for (int i = 0; i < numUAVs; i++) {
-								UAVsComboBox.addItem("" + (i + 1));
-							}
-							UAVsComboBox.setSelectedIndex(UAVsComboBox.getItemCount() - 1);
-						}
-					});
-				}
+				});
 			}
 		});
 		GridBagConstraints gbc_missionsButton = new GridBagConstraints();
