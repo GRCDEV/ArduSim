@@ -326,6 +326,16 @@ public class ArduSimTools {
 			}
 			Param.verboseStore = Boolean.valueOf(param);
 		}
+		param = parameters.get(Param.MIN_ALTITUDE);
+		if (param == null) {
+			GUI.log(Param.MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minFlyingAltitude);
+		} else {
+			if (!Tools.isValidPositiveDouble(param)) {
+				GUI.log(Param.MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			UAVParam.minFlyingAltitude = Double.parseDouble(param);
+		}
 	}
 	
 	private static Map<String, String> loadIniFile() {
@@ -1993,9 +2003,9 @@ public class ArduSimTools {
 							lat = Double.parseDouble(aux[1].trim());
 							//  Usually, Google Earth sets z=0
 							z = Double.parseDouble(aux[2].trim());
-							if (z==0) {
+							if (z < UAVParam.minFlyingAltitude) {
 								//  Default flying altitude
-								z = UAVParam.MIN_FLYING_ALTITUDE;
+								z = UAVParam.minFlyingAltitude;
 							}
 							// Waypoint 0 is home and current
 							// Waypoint 1 is take off

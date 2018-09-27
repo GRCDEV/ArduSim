@@ -485,9 +485,9 @@ public class Copter {
 			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_1);
 			return false;
 		}
-		// There is a minimum altitude to fly (waypoint 0 is home)
-		if (list.get(1).getAltitude() < UAVParam.MIN_FLYING_ALTITUDE) {
-			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_2 + "(" + UAVParam.MIN_FLYING_ALTITUDE + " " + Text.METERS+ ").");
+		// There is a minimum altitude to fly (waypoint 0 is home, and waypoint 1 is takeoff)
+		if (list.get(1).getAltitude() < UAVParam.minFlyingAltitude) {
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_2 + "(" + UAVParam.minFlyingAltitude + " " + Text.METERS+ ").");
 			return false;
 		}
 		int current = 0;

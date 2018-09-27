@@ -73,7 +73,7 @@ This dialog allows to introduce several simulation parameters:
 
 If the developer chooses to implement a dialog to input protocol parameters, it would open once the general configuration options are accepted. Otherwise, the main window of ArduSim is opened.
 
-This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions. If Google Earth file format is used, the missions can be kept unmodified (the UAV remain flying in the last waypoint), or an extra waypoint can be added at the end of the mission (land or RTL). If QGroundControl files are used, the following rules are applied:
+This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions. If Google Earth file format is used, the missions can be kept unmodified (the UAV remain flying in the last waypoint), or an extra waypoint can be added at the end of the mission (land or RTL). Moreover, if a waypoint has an altitude lower than the specified in the file *ardusim.ini*, it is set to that default for security (when you create a *.kml* in Google Earth, by default the altitude is 0. The default altitude is applied if you don't modify that file manually to set new altitude values). If QGroundControl files are used, the following rules are applied:
 
 * The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
 * The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
@@ -181,12 +181,13 @@ When the multicopter ends the experiment it should land. On simulation, the user
 
 As explained before, a file *ardusim.ini* must be beside the ArduSim executable *.jar* file to provide parameters to the program. If not found, default parameters are used and the behavior of ArduSim could be different from desired.
 
-The current list of parameters is:
+The list of parameters is:
 
 * Global parameters:
     * *MEASURECPU*. Measure CPU usage during the experiment.
     * *VERBOSELOGGING*. Verbose logging to ArduSim window and console.
     * *VERBOSESTORE*. Allows to store additional files at will.
+    * *MINALTITUDE*. Minimum relative altitude to home for takeoff, and minimum reletive altitude for any waypoint when loading a mission from a Google Earth .kml file.
 * PCCompanion-to-realUAV and realUAV-to-realUAV communication parameters:
     * *BROADCASTIP*. The IP must be the broadcast address of the network configured on the Raspberry Pi.
     * *BROADCASTPORT*. Port where the PC Companion can listen to supervise the protocol communications among real UAVs. The PC Companion can even interact with the multicopters with the functions "Copter.sendBroadcastMessage(byte[])" and "Copter.receiveMessage(int)".
