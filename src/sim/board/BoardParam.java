@@ -7,6 +7,7 @@ import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import api.pojo.LogPoint;
 
@@ -74,5 +75,8 @@ public class BoardParam {
 	public static BackgroundMap[][] map; // Set of tiles that conform the map
 	public static String[][] mapDownloadErrorText;	// Set of tiles of text to be shown when the download fails
 	public static short[] brightness = new short[256]; // Auxiliar array to brighten the map
+	
+	// Text shown in the lower-left corner
+	public static AtomicReference<String> panelText = new AtomicReference<>();
 
 }

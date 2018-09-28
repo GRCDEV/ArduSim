@@ -34,6 +34,7 @@ import org.mavlink.messages.ardupilotmega.msg_mission_item_reached;
 import org.mavlink.messages.ardupilotmega.msg_mission_request;
 import org.mavlink.messages.ardupilotmega.msg_mission_request_list;
 import org.mavlink.messages.ardupilotmega.msg_mission_set_current;
+import org.mavlink.messages.ardupilotmega.msg_param_request_list;
 import org.mavlink.messages.ardupilotmega.msg_param_request_read;
 import org.mavlink.messages.ardupilotmega.msg_param_set;
 import org.mavlink.messages.ardupilotmega.msg_param_value;
@@ -50,6 +51,7 @@ import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.LogPoint;
+import api.pojo.MAVParam;
 import api.pojo.Point3D;
 import api.pojo.RCValues;
 import api.pojo.UTMCoordinates;
@@ -210,7 +212,7 @@ public class UAVControllerThread extends Thread {
 //					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REQUEST:
 //						break;
 //					case IMAVLinkMessageID.MAVLINK_MSG_ID_HOME_POSITION:
-//						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
+////						System.out.println(inMsg.toString());
 //						break;
 //					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_REQUEST:
 //						break;
@@ -221,7 +223,7 @@ public class UAVControllerThread extends Thread {
 //					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
 //						break;
 //					default:
-//						System.out.println(GUIHelper.timeToString(ini, System.currentTimeMillis()) + inMsg.toString());
+//						System.out.println(inMsg.toString());
 //					}
 					
 					// Identify and process the received message
@@ -252,6 +254,9 @@ public class UAVControllerThread extends Thread {
 			processMode();
 			break;
 		case IMAVLinkMessageID.MAVLINK_MSG_ID_STATUSTEXT:
+			if (numUAV == 0) {
+				processVersion();
+			}
 			if (!this.locationReceived) {
 				processGPSFix();
 			}
@@ -353,6 +358,15 @@ public class UAVControllerThread extends Thread {
 			}
 		}
 	}
+	
+	/** Process the detection of the ArduCopter version. */
+	private void processVersion() {
+		msg_statustext message = (msg_statustext) inMsg;
+		String text = message.getText();
+		if (text.toUpperCase().startsWith("APM:COPTER")) {
+			UAVParam.arducopterVersion.set(text.split(" ")[1].substring(1));
+		}
+	}
 
 	/** Process the detection of the GPS fix. */
 	private void processGPSFix() {
@@ -374,15 +388,22 @@ public class UAVControllerThread extends Thread {
 	/** Process a received param value. */
 	private void processParam() {
 		msg_param_value message = (msg_param_value) inMsg;
+		String paramId = message.getParam_id();
+		// General storage of parameters
+		UAVParam.loadedParams[numUAV].put(paramId, new MAVParam(paramId, message.param_value, message.param_type));
+		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
+		
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_PARAM
-				&& message.getParam_id().equals(UAVParam.newParam[numUAV].getId())) {
+				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
+			// A parameter has been modified
 			if (message.param_value == UAVParam.newParamValue.get(numUAV)) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_1_PARAM);
 			}
 		} else if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_WAIT_FOR_PARAM
-				&& message.getParam_id().equals(UAVParam.newParam[numUAV].getId())) {
+				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
+			// A single param has been read
 			UAVParam.newParamValue.set(numUAV, message.param_value);
 			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 		}
@@ -668,6 +689,15 @@ public class UAVControllerThread extends Thread {
 			} catch (IOException e) {
 				e.printStackTrace();
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_REQUEST_WP_LIST);
+			}
+			break;
+		case UAVParam.MAV_STATUS_REQUEST_ALL_PARAM:
+			try {
+				msgRequestAllParam();
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_TIMEOUT_ALL_PARAM);
+			} catch (IOException e) {
+				e.printStackTrace();
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_ALL_PARAM);
 			}
 			break;
 		}
@@ -1110,6 +1140,17 @@ public class UAVControllerThread extends Thread {
 		message.x = UAVParam.newLocation[numUAV][0];
 		message.y = UAVParam.newLocation[numUAV][1];
 		message.z = UAVParam.newLocation[numUAV][2];
+		
+		message.sysId = UAVParam.gcsId.get(numUAV);
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		message.target_system = UAVParam.mavId.get(numUAV);
+		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		this.sendMessage(message.encode());
+	}
+	
+	/** Sending a message to request all the ArduCopter parameters, and the compilation version. */
+	private void msgRequestAllParam() throws IOException {
+		msg_param_request_list message = new msg_param_request_list();
 		
 		message.sysId = UAVParam.gcsId.get(numUAV);
 		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;

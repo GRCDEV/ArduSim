@@ -50,6 +50,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -85,6 +86,7 @@ import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.LastLocations;
 import api.pojo.LogPoint;
+import api.pojo.MAVParam;
 import api.pojo.Point3D;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
@@ -484,6 +486,9 @@ public class ArduSimTools {
 		UAVParam.rcs = new AtomicReference[Param.numUAVs];
 		UAVParam.overrideOn = new AtomicIntegerArray(Param.numUAVs);
 		
+		UAVParam.loadedParams = new Map[Param.numUAVs];
+		UAVParam.lastParamReceivedTime = new AtomicLong[Param.numUAVs];
+		
 		SimParam.uavUTMPathReceiving = new ArrayBlockingQueue[Param.numUAVs];
 		SimParam.uavUTMPath = new ArrayList[Param.numUAVs];	// Useful for logging purposes
 		
@@ -533,6 +538,9 @@ public class ArduSimTools {
 			
 			UAVParam.rcs[i] = new AtomicReference<>();
 			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
+			
+			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, MAVParam>(1250));
+			UAVParam.lastParamReceivedTime[i] = new AtomicLong();
 			
 			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
@@ -1917,6 +1925,39 @@ public class ArduSimTools {
 		}
 	}
 	
+	/** API: retrieves all the parameters and the current version of the Arducopter compilation.
+	 * <p>It is assumed that all the multicopters running in the same machine use the same compilation.
+	 * <p>Returns null if an error happens. */
+	public static void getArduCopterParameters(int numUAV) {
+		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
+		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ALL_PARAM);
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
+				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_ALL_PARAM) {
+			Tools.waiting(UAVParam.COMMAND_WAIT);
+			if (System.currentTimeMillis() - UAVParam.lastParamReceivedTime[numUAV].get() > UAVParam.ALL_PARAM_TIMEOUT) {
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+			}
+		}
+		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_ALL_PARAM) {
+			GUI.log(SimParam.prefix[numUAV] + Text.ARDUCOPTER_VERSION_ERROR_1);
+		} else {
+			if (numUAV == 0) {
+				long start = System.currentTimeMillis();
+				while (UAVParam.arducopterVersion.get() == null) {
+					Tools.waiting(UAVParam.COMMAND_WAIT);
+					if (System.currentTimeMillis() - start > UAVParam.VERSION_TIMEOUT) {
+						GUI.log(SimParam.prefix[numUAV] + Text.ARDUCOPTER_VERSION_ERROR_2);
+						return;
+					}
+				}
+				GUI.log(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
+				GUI.log(Text.ARDUCOPTER_VERSION + " " + UAVParam.arducopterVersion.get());
+			} else {
+				GUI.logVerbose(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
+			}
+		}
+	}
+	
 	/** Waits until GPS is available in all executing UAVs. */
 	public static void getGPSFix() {
 		GUI.log(Text.WAITING_GPS);
@@ -2266,8 +2307,19 @@ public class ArduSimTools {
 			for (int i=1; i<Param.numUAVs; i++) {
 				threads[i-1] = new InitialConfigurationThread(i);
 			}
-			for (int i=1; i<Param.numUAVs; i++) {
-				threads[i-1].start();
+			int size = threads.length;
+			int block = 5;
+			int uav = 1;
+			while (uav <= size) {
+				while (uav % block != 0 && uav <= size) {
+					threads[uav - 1].start();
+					uav++;
+				}
+				if (uav <= size) {
+					threads[uav - 1].start();
+					uav++;
+				}
+				Tools.waiting(200);
 			}
 		}
 		InitialConfigurationThread.sendBasicConfiguration(0);

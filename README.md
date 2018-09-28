@@ -58,6 +58,8 @@ ArduSim is published under [Apache License 2.0](https://www.apache.org/licenses/
 
 MAVLink libraries are used to communicate with real or virtual flight controller in native language and are built with [MAVLink Java generator and library](https://github.com/ghelle/MAVLinkJava) tool. [MAVLink message definition XML files](https://github.com/mavlink/mavlink/tree/master/message_definitions) are under the MIT-licence.
 
+The AtomicFloat implementation comes from Makoto YUI and under [Apache license](http://www.apache.org/licenses/LICENSE-2.0).
+
 The AtomicDoubleArray implementation comes from Doug Lea and under [CC0 1.0 Universal license](http://creativecommons.org/publicdomain/zero/1.0/), and is based on [Guava](https://github.com/google/guava) from Google, which is under [Apache license](https://github.com/google/guava/blob/master/COPYING).
 
 The VerticalFlowLayout implementation comes from Vassili Dzuba and under [Artistic License](https://opensource.org/licenses/artistic-license-2.0).

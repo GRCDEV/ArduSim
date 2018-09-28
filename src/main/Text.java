@@ -177,8 +177,8 @@ public class Text {
 	public static final String START_TEST = "Start test";
 	public static final String EXIT = "Exit";
 	public static final String WAITING_MAVLINK = "Waiting for MAVLink connection...";
-	public static final String WAITING_GPS = "Waiting for GPS fix...";
 	public static final String WAITING_CONFIGURATION_UPLOAD = "Waiting for initial configuration upload...";
+	public static final String WAITING_GPS = "Waiting for GPS fix...";
 	public static final String COPYRIGHT = "\u00A9 Google";
 	public static final String DRAWING_PANEL = "Drawing panel";
 	public static final String LOADING_UAV_IMAGE_ERROR = "The UAV image could not be loaded.";
@@ -373,6 +373,10 @@ public class Text {
 	public static final String FLIGHT_MODE_ERROR_2 = "Reporting an unknown flying mode.";
 	public static final String IMPOSSIBLE_WAYPOINT_ERROR = "Received a waypoint out of range.";
 	public static final String NOT_REQUESTED_ACK_ERROR = "Not requested ACK received:";
+	public static final String ARDUCOPTER_PARAMS = "Number of parameters received:";
+	public static final String ARDUCOPTER_VERSION = "Current Arducopter version:";
+	public static final String ARDUCOPTER_VERSION_ERROR_1 = "Error retrieving all the ArduCopter parameters, and compilation version.";
+	public static final String ARDUCOPTER_VERSION_ERROR_2 = "Error retrieving the ArduCopter compilation version.";
 	
 	// Wireless models
 	public static final String WIRELESS_MODEL_NONE = "unrestricted";

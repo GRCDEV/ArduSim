@@ -4,11 +4,13 @@ import java.awt.Shape;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -19,6 +21,7 @@ import org.mavlink.messages.MAV_PARAM_TYPE;
 import api.pojo.AtomicDoubleArray;
 import api.pojo.FlightMode;
 import api.pojo.LastLocations;
+import api.pojo.MAVParam;
 import api.pojo.Point3D;
 import api.pojo.RCValues;
 import api.pojo.Waypoint;
@@ -255,15 +258,23 @@ public class UAVParam {
 	public static final int MAV_STATUS_RECOVER_CONTROL = 34;
 	public static final int MAV_STATUS_RECOVER_ERROR = 35;
 	public static AtomicIntegerArray overrideOn;	// ([0,1]) 1 = RC Channels can be overridden
-	
 	public static final int MAV_STATUS_MOVE_UAV = 36;
 	public static final int MAV_STATUS_ACK_MOVE_UAV = 37;
 	public static final int MAV_STATUS_MOVE_UAV_ERROR = 38;
 	public static float[][] newLocation;	// [latitude, longitude, relative altitude] where to move the UAV
+	public static final int MAV_STATUS_REQUEST_ALL_PARAM = 39;
+	public static final int MAV_STATUS_TIMEOUT_ALL_PARAM = 40;
+	public static final int MAV_STATUS_ERROR_ALL_PARAM = 41;
+	public static AtomicLong[] lastParamReceivedTime;	// (ms) When the last param was received when loading all parameters
+	public static final long ALL_PARAM_TIMEOUT = 3000;	// (ms) Timeout waiting all parameters to be loaded
+	public static final long VERSION_TIMEOUT = 5000; 	// (ms) Timeout waiting ArduCopter version to be read
+	public static AtomicReference<String> arducopterVersion = new AtomicReference<>();
 	
 	// Potentiometer levels for the six flight modes configurable in the remote control (min, used, max)
 	public static final int[][] RC5_MODE_LEVEL = new int[][] {{0, 1000, 1230}, {1231, 1295, 1360},
 		{1361, 1425, 1490}, {1491, 1555, 1620}, {1621, 1685, 1749}, {1750, 1875, 2000}};
+	
+	public static Map<String, MAVParam>[] loadedParams;
 	
 	// Parameters of the UAV or the simulator
 	public enum ControllerParam {

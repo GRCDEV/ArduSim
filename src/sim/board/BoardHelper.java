@@ -468,19 +468,9 @@ public class BoardHelper {
 		}
 	
 		// 8. Draw the copyright of the map
-		if (BoardParam.map == null) {
-			if (UAVParam.numGPSFixed.get() != Param.numUAVs) {
-				if (UAVParam.numMAVLinksOnline.get() != Param.numUAVs) {
-					g.drawString(Text.WAITING_MAVLINK, 10, SimParam.boardPXHeight-10);
-				} else {
-					g.drawString(Text.WAITING_GPS, 10, SimParam.boardPXHeight-10);
-				}
-				
-			} else {
-				g.drawString(Text.WAITING_CONFIGURATION_UPLOAD, 10, SimParam.boardPXHeight-10);
-			}
-		} else {
-			g.drawString(Text.COPYRIGHT, 10, SimParam.boardPXHeight-10);
+		String panelText = BoardParam.panelText.get();
+		if (panelText != null) {
+			g.drawString(panelText, 10, SimParam.boardPXHeight - 10);
 		}
 	}
 

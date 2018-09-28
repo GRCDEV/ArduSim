@@ -33,6 +33,9 @@ public class InitialConfigurationThread extends Thread {
 	
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, loads missions..., to a specific UAV. */
 	public static void sendBasicConfiguration(int numUAV) {
+		// Load all parameters and get the ArduCopter compilation version
+		ArduSimTools.getArduCopterParameters(numUAV);
+		
 		Double paramValue;
 		// Determining the GCS identifier that must be used
 		paramValue = Copter.getParameter(numUAV, ControllerParam.SINGLE_GCS);

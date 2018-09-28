@@ -21,6 +21,7 @@ import main.Param.SimulatorState;
 import main.cpuHelper.CPUUsageThread;
 import pccompanion.gui.PCCompanionGUI;
 import sim.board.BoardHelper;
+import sim.board.BoardParam;
 import sim.gui.ConfigDialog;
 import sim.gui.MainWindow;
 import sim.gui.ProgressDialog;
@@ -231,14 +232,21 @@ public class Main {
 			if (SimParam.tempFolderBasePath == null) {
 				GUI.exit(Text.TEMP_PATH_ERROR);
 			}
+			BoardParam.panelText.set(Text.WAITING_MAVLINK);
 			ArduSimTools.startVirtualUAVs(start);
 		}
 
-		// 9. Start UAV controllers, wait for MAVLink link, wait for GPS fix, and send basic configuration
+		// 9. Start UAV controllers, wait for MAVLink link, send basic configuration, and wait for GPS fix
 		ArduSimTools.startUAVControllers();
 		ArduSimTools.waitMAVLink();
 		if (Param.role == Tools.SIMULATOR) {
+			BoardParam.panelText.set(Text.WAITING_CONFIGURATION_UPLOAD);
 			ArduSimTools.forceGPS();
+		}
+		ArduSimTools.sendBasicConfiguration();
+		
+		if (Param.role == Tools.SIMULATOR) {
+			BoardParam.panelText.set(Text.WAITING_GPS);
 		}
 		ArduSimTools.getGPSFix();//TODO descomentar
 		
@@ -254,17 +262,13 @@ public class Main {
 				(new CollisionDetector()).start();
 				GUI.log(Text.COLLISION_DETECTION_ONLINE);
 			}
-		}
-		
-		// 11. Send basic UAV configuration and wait the communications to be online
-		ArduSimTools.sendBasicConfiguration();
-		if (Param.role == Tools.SIMULATOR && Param.numUAVs > 1) {
+			// Wait the communications to be online
 			while (!SimParam.communicationsOnline) {
 				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
 		}
 		
-		// 12. Launch the threads of the protocol under test and wait the GUI to be built
+		// 11. Launch the threads of the protocol under test and wait the GUI to be built
 		ProtocolHelper.selectedProtocolInstance.startThreads();
 		if (Param.role == Tools.MULTICOPTER) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
@@ -276,10 +280,11 @@ public class Main {
 			return;
 		}
 		
-		// 13. Build auxiliary elements to be drawn and prepare the user interaction
-		//    The background map can not be downloaded until the GUI detects that all the missions are loaded
+		// 12. Build auxiliary elements to be drawn and prepare the user interaction
+		//    The background map cannot be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
 		if (Param.role == Tools.SIMULATOR) {
+			BoardParam.panelText.set(Text.COPYRIGHT);
 			BoardHelper.downloadBackground();
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -296,7 +301,7 @@ public class Main {
 			return;
 		}
 
-		// 14. Apply the configuration step
+		// 13. Apply the setup step
 		ProtocolHelper.selectedProtocolInstance.setupActionPerformed();
 		Param.simStatus = SimulatorState.READY_FOR_TEST;
 		while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
@@ -306,7 +311,7 @@ public class Main {
 			return;
 		}
 
-		// 15. Waiting for the user to start the experiment
+		// 14. Waiting for the user to start the experiment
 		if (Param.role == Tools.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -334,7 +339,7 @@ public class Main {
 		
 		
 
-		// 16. Start the experiment, only if the program is not being closed
+		// 15. Start the experiment, only if the program is not being closed
 		if (Param.role == Tools.MULTICOPTER) {
 			Param.startTime = System.currentTimeMillis();
 		}
@@ -365,7 +370,7 @@ public class Main {
 		}
 		ProtocolHelper.selectedProtocolInstance.startExperimentActionPerformed();
 
-		// 17. Waiting while the experiment is is progress and detecting the experiment end
+		// 16. Waiting while the experiment is is progress and detecting the experiment end
 		int check = 0;
 		boolean allStarted = false;
 		while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
@@ -396,7 +401,7 @@ public class Main {
 			return;
 		}
 
-		// 18. Assert that the experiment has finished
+		// 17. Assert that the experiment has finished
 		GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 		if (Param.role == Tools.SIMULATOR) {
 			GUI.log(Text.SHUTTING_DOWN_COMM);
@@ -413,7 +418,7 @@ public class Main {
 			});
 		}
 
-		// 19. Gather information to show the results dialog
+		// 18. Gather information to show the results dialog
 		String res = null;
 		res = ArduSimTools.getTestResults();
 		String s = ProtocolHelper.selectedProtocolInstance.getExperimentResults();

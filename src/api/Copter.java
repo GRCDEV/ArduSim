@@ -58,6 +58,10 @@ public class Copter {
 	 * <p>Returns the parameter value if the command was successful.
 	 * <p>Returns null if an error happens. */
 	public static Double getParameter(int numUAV, ControllerParam parameter) {
+		if (UAVParam.loadedParams[numUAV].containsKey(parameter.getId())) {
+			return (double) UAVParam.loadedParams[numUAV].get(parameter.getId()).getValue();
+		}
+		
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_GET_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
