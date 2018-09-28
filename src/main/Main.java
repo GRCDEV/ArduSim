@@ -401,14 +401,16 @@ public class Main {
 			return;
 		}
 
-		// 17. Assert that the experiment has finished
+		// 17. Inform that the experiment has finished, and wait virtual communications to be closed
 		GUI.log(Tools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 		if (Param.role == Tools.SIMULATOR) {
-			GUI.log(Text.SHUTTING_DOWN_COMM);
-			int numThreads = 2 * Param.numUAVs;
-			long now = System.currentTimeMillis();
-			while(UAVParam.communicationsClosed.size() < numThreads && System.currentTimeMillis() - now < UAVParam.CLOSSING_WAITING_TIME) {
-				Tools.waiting(SimParam.SHORT_WAITING_TIME);
+			if (Param.numUAVs > 1) {
+				GUI.log(Text.SHUTTING_DOWN_COMM);
+				int numThreads = 2 * Param.numUAVs;
+				long now = System.currentTimeMillis();
+				while(UAVParam.communicationsClosed.size() < numThreads && System.currentTimeMillis() - now < UAVParam.CLOSSING_WAITING_TIME) {
+					Tools.waiting(SimParam.SHORT_WAITING_TIME);
+				}
 			}
 			GUI.log(Text.WAITING_FOR_USER);
 			SwingUtilities.invokeLater(new Runnable() {
