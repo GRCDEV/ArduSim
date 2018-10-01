@@ -35,8 +35,8 @@ import api.Tools;
 import api.pojo.Waypoint;
 import scanv1.logic.Scanv1ProtParam;
 import scanv1.logic.Scanv1ProtText;
-import scanv2.logic.ScanParam;
-import scanv2.logic.ScanText;
+//import scanv2.logic.ScanParam;
+//import scanv2.logic.ScanText;
 
 public class Scanv1ConfigDialog extends JDialog {
 
@@ -91,7 +91,7 @@ public class Scanv1ConfigDialog extends JDialog {
 			missionsTextField.setColumns(10);
 		}
 		{
-			JButton btnMap = new JButton(ScanText.BUTTON_SELECT);
+			JButton btnMap = new JButton(Scanv1ProtText.BUTTON_SELECT);
 			btnMap.addActionListener(new ActionListener() {
 				@SuppressWarnings("unchecked")
 				public void actionPerformed(ActionEvent e) {
@@ -100,7 +100,7 @@ public class Scanv1ConfigDialog extends JDialog {
 						int numUAVs = Tools.getNumUAVs();
 						/** The master is assigned the first mission in the list */
 						List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
-						missionsFinal[ScanParam.MASTER_POSITION] = missions.getValue1()[0];
+						missionsFinal[Scanv1ProtParam.MASTER_POSITION] = missions.getValue1()[0];
 						Tools.setLoadedMissionsFromFile(missionsFinal);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
@@ -183,14 +183,14 @@ public class Scanv1ConfigDialog extends JDialog {
 					//   , so the function Tools.setNumUAVs() is not used
 					Double groud = (Double) spinnerGround.getValue();
 					Double air = (Double) spinnerFlight.getValue();
-					ScanParam.initialDistanceBetweenUAV = groud.intValue();
-					ScanParam.initialDistanceBetweenUAVreal = air.intValue();
+					Scanv1ProtParam.initialDistanceBetweenUAV = groud.intValue();
+					Scanv1ProtParam.initialDistanceBetweenUAVreal = air.intValue();
 					// State change
 					Tools.setProtocolConfigured();
 					
 					dispose();
 				}else {
-					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);
+					JOptionPane.showMessageDialog(null, Scanv1ProtText.BAD_INPUT);
 				}					
 				}
 		});
@@ -206,7 +206,7 @@ public class Scanv1ConfigDialog extends JDialog {
 			}
 		});
 		
-		this.setTitle(ScanText.CONFIGURATION_DIALOG_TITLE_SWARM);
+		this.setTitle(Scanv1ProtText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);

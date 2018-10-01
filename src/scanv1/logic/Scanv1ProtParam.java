@@ -8,6 +8,9 @@ import api.pojo.Point3D;
 
 public class Scanv1ProtParam {
 	public static final int posMaster = 0; // Position of master UAV into array of UAVs
+	
+	public static final int MASTER_POSITION = 0; // Position of master UAV into array of UAVs
+	
 	public static long idMaster; // Id real
 	public static final String[] MAC = new String[] { "b8:27:eb:74:0c:d1", "00:c0:ca:90:32:05" };// MACs of master with standard format
 	public static final long[] MACId = new long[] { 202481593486545L, 202481593486545L };// MACs of master with long format
