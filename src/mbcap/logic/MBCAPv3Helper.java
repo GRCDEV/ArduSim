@@ -73,8 +73,8 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		MBCAPParam.impactLocationUTM = new ConcurrentHashMap[numUAVs];
 		MBCAPParam.impactLocationPX = new ConcurrentHashMap[numUAVs];
 
-		MBCAPParam.targetPointUTM = new Point2D.Double[numUAVs];
-		MBCAPParam.targetPointGeo = new GeoCoordinates[numUAVs];
+		MBCAPParam.targetLocationUTM = new AtomicReferenceArray<Point2D.Double>(numUAVs);
+		MBCAPParam.targetLocationPX = new AtomicReferenceArray<Point2D.Double>(numUAVs);
 		MBCAPParam.beaconsStored = new ArrayList[numUAVs];
 
 		for (int i = 0; i < numUAVs; i++) {
@@ -146,13 +146,13 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	
 	@Override
 	public void rescaleShownResources() {
-		//Calculates the screen position of the points where the collision risk was detected
 		Iterator<Map.Entry<Long, Point3D>> entries;
 		Map.Entry<Long, Point3D> entry;
 		Point3D riskLocationUTM;
-		Point2D.Double riskLocationPX;
+		Point2D.Double riskLocationPX, targetLocationUTM, targetLocationPX;
 		int numUAVs = Tools.getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
+			// Collision risk locations
 			entries = MBCAPParam.impactLocationUTM[i].entrySet().iterator();
 			MBCAPParam.impactLocationPX[i].clear();
 			while (entries.hasNext()) {
@@ -160,6 +160,15 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				riskLocationUTM = entry.getValue();
 				riskLocationPX = GUI.locatePoint(riskLocationUTM.x, riskLocationUTM.y);
 				MBCAPParam.impactLocationPX[i].put(entry.getKey(), riskLocationPX);
+			}
+			
+			// Target locations
+			targetLocationUTM = MBCAPParam.targetLocationUTM.get(i);
+			if (targetLocationUTM == null) {
+				MBCAPParam.targetLocationPX.set(i, null);
+			} else {
+				targetLocationPX = GUI.locatePoint(targetLocationUTM.x, targetLocationUTM.y);
+				MBCAPParam.targetLocationPX.set(i, targetLocationPX);
 			}
 		}
 	}
@@ -170,6 +179,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			g2.setStroke(MBCAPParam.STROKE_POINT);
 			MBCAPGUITools.drawPredictedLocations(g2);
 			MBCAPGUITools.drawImpactRiskMarks(g2, p);
+			MBCAPGUITools.drawSafetyLocation(g2);
 		}
 	}
 
@@ -719,7 +729,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 		// 4. If the UAV is moving aside, send the current position and prediction towards the destination safe point
 		if (MBCAPParam.state[numUAV] == MBCAPState.MOVING_ASIDE) {
-			Point2D.Double destination = MBCAPParam.targetPointUTM[numUAV];
+			Point2D.Double destination = MBCAPParam.targetLocationUTM.get(numUAV);
 			double length = currentUTMLocation.distance(destination);
 			int numLocations1 = (int)Math.ceil(length/(speed * MBCAPParam.hopTime));
 			int numLocations2 = (int) Math.ceil(MBCAPParam.beaconFlyingTime / MBCAPParam.hopTime);
@@ -1220,8 +1230,8 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 		// If new coordinates have been found, it means that the UAV must move to a safer position
 		if (newLocation != null) {
-			MBCAPParam.targetPointUTM[numUAV] = newLocation;										// To show on screen
-			MBCAPParam.targetPointGeo[numUAV] = Tools.UTMToGeo(newLocation.x, newLocation.y);	// To order the movement
+			MBCAPParam.targetLocationUTM.set(numUAV, newLocation);
+			MBCAPParam.targetLocationPX.set(numUAV, GUI.locatePoint(newLocation.x, newLocation.y));
 			return true;
 		}
 		return false;

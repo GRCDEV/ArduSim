@@ -293,6 +293,23 @@ public class MBCAPGUITools {
 			}
 		}
 	}
+	
+	/** Draws the target location when moving aside. */
+	public static void drawSafetyLocation(Graphics2D g) {
+		int numUAVs = Tools.getNumUAVs();
+		Point2D.Double location;
+		for (int i = 0; i < numUAVs; i++) {
+			location = MBCAPParam.targetLocationPX.get(i);
+			if (location != null) {
+				int x = (int)location.x;
+				int y = (int)location.y;
+				g.setColor(GUI.getUAVColor(i));
+				g.drawLine(x - 10, y - 10, x + 10, y + 10);
+				g.drawLine(x + 10, y - 10, x - 10, y + 10);
+//				g.drawOval((int)location.x - 2, (int)location.y - 2, 4, 4);
+			}
+		}
+	}
 
 	/** Update the protocol state. */
 	public static void updateState(int numUAV, MBCAPState state) {

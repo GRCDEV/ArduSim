@@ -1,5 +1,6 @@
 package mbcap.logic;
 
+import java.awt.geom.Point2D;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -9,7 +10,9 @@ import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
+import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
+import api.pojo.UTMCoordinates;
 import main.Param;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam.MBCAPState;
@@ -294,7 +297,9 @@ public class CollisionDetectorThread extends Thread {
 									// Progress update
 									MBCAPGUITools.updateState(numUAV, MBCAPState.MOVING_ASIDE);
 									// Moving
-									if (Copter.moveUAV(numUAV, MBCAPParam.targetPointGeo[numUAV], (float) Copter.getZRelative(numUAV), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {
+									Point2D.Double utm = MBCAPParam.targetLocationUTM.get(numUAV);
+									GeoCoordinates geo = Tools.UTMToGeo(utm.x, utm.y);
+									if (Copter.moveUAV(numUAV, geo, (float) Copter.getZRelative(numUAV), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {
 										// Even when the UAV is close to destination, we also wait for it to be almost still
 										long time = System.nanoTime();
 										double speed = Copter.getSpeed(numUAV);
@@ -357,13 +362,15 @@ public class CollisionDetectorThread extends Thread {
 					if (avoidingBeacon != null
 							&& MBCAPParam.state[numUAV] == MBCAPState.MOVING_ASIDE
 							&& Copter.getUTMLocation(numUAV)
-							.distance(MBCAPParam.targetPointUTM[numUAV]) < MBCAPParam.SAFETY_DISTANCE_RANGE) {
+							.distance(MBCAPParam.targetLocationUTM.get(numUAV)) < MBCAPParam.SAFETY_DISTANCE_RANGE) {
 						// There is no need to apply commands to the UAV
 						GUI.log(numUAV, MBCAPText.SAFE_PLACE + " " + MBCAPText.GRANT_PERMISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 						stateTime = System.nanoTime();
 						// Progress update
 						MBCAPGUITools.updateState(numUAV, MBCAPState.GO_ON_PLEASE);
 						MBCAPParam.projectPath.set(numUAV, 0);	// Avoid projecting the predicted path over the theoretical one
+						MBCAPParam.targetLocationUTM.set(numUAV, null);
+						MBCAPParam.targetLocationPX.set(numUAV, null);
 					}
 
 					// In go on, please state. Change to normal state when the risk collision is solved
