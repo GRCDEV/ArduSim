@@ -1,14 +1,20 @@
 package api;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -151,6 +157,26 @@ public class GUI {
 			res += SimParam.prefix[numUAV];
 		}
 		GUI.warn(title, res + message);
+	}
+	
+	/** Closes the shown configuration dialog, and ArduSim.
+	 * <p>This method should be invoked when the configuration dialog of each protocol is built. */
+	public static void addEscapeListener(final JDialog dialog) {
+	    ActionListener escListener = new ActionListener() {
+
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+//	            dialog.setVisible(false);
+	        	dialog.dispose();
+				System.gc();
+				System.exit(0);
+	        }
+	    };
+
+	    dialog.getRootPane().registerKeyboardAction(escListener,
+	            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+	            JComponent.WHEN_IN_FOCUSED_WINDOW);
+
 	}
 	
 	/** Opens a dialog to load missions from a Google Earth .kml file.

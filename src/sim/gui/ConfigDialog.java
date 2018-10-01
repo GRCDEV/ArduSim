@@ -19,6 +19,7 @@ import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
+import api.GUI;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
@@ -82,6 +83,8 @@ public class ConfigDialog extends JDialog {
 				System.exit(0);
 			}
 		});
+		
+		GUI.addEscapeListener(this);
 
 		this.setTitle(Text.CONFIGURATION_DIALOG_TITLE);
 		SimTools.loadDefaultConfiguration(panel);

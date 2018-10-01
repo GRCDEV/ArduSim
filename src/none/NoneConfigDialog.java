@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
+import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
 import mbcap.logic.MBCAPText;
@@ -69,6 +70,8 @@ public class NoneConfigDialog extends JDialog {
         System.exit(0);
       }
     });
+    
+    GUI.addEscapeListener(this);
     
     this.setTitle(ProtocolHelper.selectedProtocol + " " + MBCAPText.CONFIGURATION);
     this.pack();
