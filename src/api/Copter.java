@@ -24,7 +24,6 @@ import main.Text;
 import sim.board.BoardParam;
 import sim.logic.SimParam;
 import sim.pojo.IncomingMessage;
-import uavController.UAVControllerThread;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
@@ -724,12 +723,12 @@ public class Copter {
 		return true;
 	}
 	
-	/** Method that provides the controller thread of an specific UAV.
-	 * <p>Temporary usage for debugging purposes.
-	 * <p>HANDLE WITH CARE.*/
-	public static UAVControllerThread getController(int numUAV) {
-		return Param.controllers[numUAV];
-	}
+//	/** Method that provides the controller thread of an specific UAV.
+//	 * <p>Temporary usage for debugging purposes.
+//	 * <p>HANDLE WITH CARE.*/
+//	public static UAVControllerThread getController(int numUAV) {
+//		return Param.controllers[numUAV];
+//	}
 	
 	/** API: Sends a message to the other UAVs.
 	 * <p>Blocking method.*/

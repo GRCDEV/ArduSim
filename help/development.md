@@ -230,11 +230,6 @@ Now follows a list of information retrieval functions that don't need to communi
 * `int getCurrentWaypoint(int)`. It provides the identifier of the current waypoint of the mission. Useful for UAVs that follow a planned mission.
 * `boolean isLastWaypointReached(int)`. It asserts if the last waypoint of the mission has been reached. Useful for UAVs that follow a planned mission.
 
-Experimental functions not directly included in *api.Copter.java* Class:
-
-* `void getController(int).msgTarget(Double, Double, Double, Double, Double, Double)`. This function allows to move a UAV in GUIDED flight mode towards a set of coordinates, or at a certain speed. Speed based motion has not been tested already and this function is experimental. It will probably fail in real UAVs.
-* `void msgYaw(float)`. This function allows to modify the yaw or heading of the multicopter. This function has not been tested already and is experimental. It will probably fail in real UAVs.
-
 ### 5.3 GUI integration
 
 A few functions have been implemented in Class *api.GUI.java* to update data already shown in the GUI, and to allow the developer to introduce new elements in the drawing panel.
