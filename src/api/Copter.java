@@ -414,13 +414,23 @@ public class Copter {
 		// ¿con qué frecuencia aceptaremos el channels override? Hay experimentos que indican que algunos valores se ignoran
 		// si se envian en intervalos menores a 0.393 segundos (quizá una cola fifo con timeout facilite resolver el problema)
 	}
+	
+	/** API: Moves the UAV to a new position.
+	 * <p>The UAV must be in GUIDED flight mode.
+	 * <p>geo. Geographic coordinates the UAV has to move to.
+	 * <p>relAltitude. Relative altitude the UAV has to move to.
+	 * <p>This method uses the message SET_POSITION_TARGET_GLOBAL_INT, and don't waits response from the flight controller. */
+	public static void moveUAV(int numUAV, GeoCoordinates geo, float relAltitude) {
+		UAVParam.target[numUAV].set(new Point3D(geo.longitude, geo.latitude, relAltitude));
+	}
 
 	/** API: Moves the UAV to a new position.
 	 * <p>The UAV must be in GUIDED flight mode.
 	 * <p>geo. Geographic coordinates the UAV has to move to.
 	 * <p>relAltitude. Relative altitude the UAV has to move to.
 	 * <p>The method may return control immediately or in more than 200 ms depending on the reaction of the flight controller
-	 * <p>Returns true if the command was successful. */
+	 * <p>Returns true if the command was successful.
+	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller. */
 	public static boolean moveUAVNonBlocking(int numUAV, GeoCoordinates geo, float relAltitude) {
 		UAVParam.newLocation[numUAV][0] = (float)geo.latitude;
 		UAVParam.newLocation[numUAV][1] = (float)geo.longitude;
@@ -445,7 +455,8 @@ public class Copter {
 	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
 	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
 	 * <p>Blocking method. It waits until the UAV is close enough of the target location.
-	 * <p>Returns true if the command was successful. */
+	 * <p>Returns true if the command was successful.
+	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller. */
 	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold, double altThreshold) {
 		if (!Copter.moveUAVNonBlocking(numUAV, geo, relAltitude)) {
 			return false;

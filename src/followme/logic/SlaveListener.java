@@ -1,7 +1,6 @@
 package followme.logic;
 
 import java.awt.geom.Point2D;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.esotericsoftware.kryo.io.Input;
@@ -110,15 +109,7 @@ public class SlaveListener extends Thread {
 		y += incY;
 		point.set(new Point2D.Double(x,y));
 		GeoCoordinates geo = Tools.UTMToGeo(x, y);
-
-		
-		
-		try {
-			Copter.getController(numUAV).msgTarget(geo.latitude, geo.longitude, FollowMeParam.AlturaInitFollowers, null, null, null);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Copter.moveUAV(numUAV, geo, (float)FollowMeParam.AlturaInitFollowers);
 
 		while (FollowMeParam.uavs[numUAV] == FollowMeState.GOTO_POSITION) {
 			message = Copter.receiveMessage(numUAV);
@@ -147,13 +138,7 @@ public class SlaveListener extends Thread {
 				y += incY;
 
 				geo = Tools.UTMToGeo(x, y);
-
-				try {
-					Copter.getController(numUAV).msgTarget(geo.latitude, geo.longitude, z, null, null, null);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				Copter.moveUAV(numUAV, geo, (float)z);
 
 				received = true;
 			}
@@ -193,13 +178,7 @@ public class SlaveListener extends Thread {
 				y += incY;
 
 				geo = Tools.UTMToGeo(x, y);
-
-				try {
-					Copter.getController(numUAV).msgTarget(geo.latitude, geo.longitude, z, null, null, null);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				Copter.moveUAV(numUAV, geo, (float)z);
 
 			} else if (idSender == idMaster && typeRecibido == FollowMeParam.MsgLanding) {
 
@@ -208,6 +187,7 @@ public class SlaveListener extends Thread {
 				received = true;
 			}
 		}
+		in.close();
 
 		FollowMeParam.uavs[numUAV] = FollowMeState.LANDING_FOLLOWERS;
 		GUI.updateProtocolState(numUAV, FollowMeParam.uavs[numUAV].getName());

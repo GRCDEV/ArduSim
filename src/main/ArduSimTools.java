@@ -88,6 +88,7 @@ import api.pojo.LastLocations;
 import api.pojo.LogPoint;
 import api.pojo.MAVParam;
 import api.pojo.Point3D;
+import api.pojo.RCValues;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import main.Param.SimulatorState;
@@ -486,6 +487,8 @@ public class ArduSimTools {
 		UAVParam.rcs = new AtomicReference[Param.numUAVs];
 		UAVParam.overrideOn = new AtomicIntegerArray(Param.numUAVs);
 		
+		UAVParam.target = new AtomicReference[Param.numUAVs];
+		
 		UAVParam.loadedParams = new Map[Param.numUAVs];
 		UAVParam.lastParamReceivedTime = new AtomicLong[Param.numUAVs];
 		
@@ -536,8 +539,10 @@ public class ArduSimTools {
 			
 			UAVParam.lastWaypointReached[i] = false;
 			
-			UAVParam.rcs[i] = new AtomicReference<>();
+			UAVParam.rcs[i] = new AtomicReference<RCValues>();
 			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
+			
+			UAVParam.target[i] = new AtomicReference<Point3D>();
 			
 			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, MAVParam>(1250));
 			UAVParam.lastParamReceivedTime[i] = new AtomicLong();

@@ -550,6 +550,25 @@ public class UAVControllerThread extends Thread {
 
 	/** Process a new command. */
 	private void processCommand() {
+		
+		RCValues values = UAVParam.rcs[numUAV].getAndSet(null);
+		if (values != null) {
+			try {
+				msgrcChannelsOverride(values.roll, values.pitch, values.throttle, values.yaw);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		Point3D target = UAVParam.target[numUAV].getAndSet(null);
+		if (target != null) {
+			try {
+				msgMoveToTarget(target.x, target.y, target.z);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		switch (UAVParam.MAVStatus.get(numUAV)) {
 		// Command to take control of the UAV using (half throttle)
 		case UAVParam.MAV_STATUS_THROTTLE_ON:
@@ -702,14 +721,6 @@ public class UAVControllerThread extends Thread {
 			break;
 		}
 		
-		RCValues values = UAVParam.rcs[numUAV].getAndSet(null);
-		if (values != null) {
-			try {
-				msgrcChannelsOverride(values.roll, values.pitch, values.throttle, values.yaw);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	/** Process a received command ACK. */
@@ -866,7 +877,7 @@ public class UAVControllerThread extends Thread {
 	}
 	
 	/** Use yaw in degrees (0-360). */
-	public void msgYaw(float yaw) throws IOException {
+	private void msgYaw(float yaw) throws IOException {
 		msg_command_long message = new msg_command_long();
 		message.command = MAV_CMD.MAV_CMD_CONDITION_YAW;// TODO probando, borrar el método
 		message.confirmation = 0;
@@ -880,58 +891,67 @@ public class UAVControllerThread extends Thread {
 		this.sendMessage(message.encode());
 	}
 	
-	/** Sends the UAV to a specific location.
-	 * <p>You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete.
-	 * <p>altitude. Over sea level (not relative).
+	/** Sends the UAV at a specific speed (m/s).
 	 * <p>speed. x=North, y=East, z=Down.*/
-	public void msgTarget(Double latitude, Double longitude, Double altitude,
-			Double speedX, Double speedY, Double speedZ) throws IOException {
-		// A possible alternative to this function is moveUAVNonBlocking
+	private void msgMoveSpeed(Double speedX, Double speedY, Double speedZ) throws IOException {
+		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
+		message.time_boot_ms = System.currentTimeMillis();
+		message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;// TODO method to be adapted in Copter Class
+//		int bX = 1;// bit 0// they would be concatenated with logic or: bX | bY | bZ
+//		int bY = 2;
+//		int bZ = 4;
+//		int bVx = 8;// bit 3
+//		int bVy = 16;
+//		int bVz = 32;
+//		int bAx = 64;// bit 6	// Not supported in ArduPilot
+//		int bAy = 128;
+//		int bAz = 256;
+//		int bForceA = 512;// bit 9
+//		int bYaw = 1024;
+//		int bYawRate = 2048;
+		message.type_mask = 56;
+		message.type_mask = ~message.type_mask & 0xFFFF; // 0=use, 1=ignore, so we need to flip bits
+		message.vx= speedX.floatValue();
+		message.vy= speedY.floatValue();
+		message.vz= speedZ.floatValue();
 		
-		if ((latitude != null && longitude != null && altitude != null && speedX == null && speedY == null && speedZ == null)
-				|| (latitude == null && longitude == null && altitude == null && speedX != null && speedY != null && speedZ != null)) {
-			msg_set_position_target_global_int message = new msg_set_position_target_global_int();
-			message.time_boot_ms = System.currentTimeMillis();
-			message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;// TODO method to be adapted in Copter Class
-//			int bX = 1;// bit 0// they would be concatenated with logic or: bX | bY | bZ
-//			int bY = 2;
-//			int bZ = 4;
-//			int bVx = 8;// bit 3
-//			int bVy = 16;
-//			int bVz = 32;
-//			int bAx = 64;// bit 6	// Not supported in ArduPilot
-//			int bAy = 128;
-//			int bAz = 256;
-//			int bForceA = 512;// bit 9
-//			int bYaw = 1024;
-//			int bYawRate = 2048;
-			if (latitude != null) {
-				message.type_mask = 7;
-				message.lat_int = Math.round(10000000l * latitude);	// Degrees
-				message.lon_int = Math.round(10000000l * longitude);
-				message.alt = altitude.floatValue();
-			} else {
-				message.type_mask = 56;
-				message.vx= speedX.floatValue();
-				message.vy= speedY.floatValue();
-				message.vz= speedZ.floatValue();
-			}
-			message.type_mask = ~message.type_mask & 0xFFFF; // 0=use, 1=ignore, so we need to flip bits
-			
-			message.sysId = UAVParam.gcsId.get(numUAV);
-			message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-			message.target_system = UAVParam.mavId.get(numUAV);
-			message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
-			try {
-				this.sendMessage(message.encode());
-			} catch (IOException e) {
-				System.out.println("Error moviendo el dron" + Param.id[numUAV] + " a una ubicación");
-			}
-			
-		} else {
-			GUI.log("You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete.");
-			return;
-		}
+		message.sysId = UAVParam.gcsId.get(numUAV);
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		message.target_system = UAVParam.mavId.get(numUAV);
+		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
+		this.sendMessage(message.encode());
+	}
+	
+	/** Sends the UAV to a specific location.
+	 * <p>You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete. */
+	private void msgMoveToTarget(double longitude, double latitude, Double altitude) throws IOException {
+		// A possible alternative to this function is moveUAVNonBlocking
+		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
+		message.time_boot_ms = System.currentTimeMillis();
+		message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;
+//		int bX = 1;// bit 0// they would be concatenated with logic or: bX | bY | bZ
+//		int bY = 2;
+//		int bZ = 4;
+//		int bVx = 8;// bit 3
+//		int bVy = 16;
+//		int bVz = 32;
+//		int bAx = 64;// bit 6	// Not supported in ArduPilot
+//		int bAy = 128;
+//		int bAz = 256;
+//		int bForceA = 512;// bit 9
+//		int bYaw = 1024;
+//		int bYawRate = 2048;
+		message.type_mask = 7;
+		message.type_mask = ~message.type_mask & 0xFFFF; // 0=use, 1=ignore, so we need to flip bits (~ flips bits)
+		message.lat_int = Math.round(10000000l * latitude);	// Degrees
+		message.lon_int = Math.round(10000000l * longitude);
+		message.alt = altitude.floatValue();
+		
+		message.sysId = UAVParam.gcsId.get(numUAV);
+		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
+		message.target_system = UAVParam.mavId.get(numUAV);
+		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
+		this.sendMessage(message.encode());
 	}
 
 	/** Sending new parameter value message. */

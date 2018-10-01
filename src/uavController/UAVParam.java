@@ -200,6 +200,9 @@ public class UAVParam {
 	
 	// RC Channels message sent values
 	public static AtomicReference<RCValues>[] rcs;
+	
+	// Target location for continuous movement
+	public static AtomicReference<Point3D>[] target;
 
 	// Communications finite state machine. States of the MAVLink protocol
 	public static AtomicIntegerArray MAVStatus;
