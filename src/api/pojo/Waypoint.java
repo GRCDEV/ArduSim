@@ -18,6 +18,9 @@ public class Waypoint implements Cloneable {
 	/** Used to end the mission with a RTL command when it is loaded from a Google Earth .kml file. */
 	public static String MISSION_END_RTL = "RTL";
 	public static String missionEnd = Waypoint.MISSION_END_UNMODIFIED;// Keep the same default in ardusim.ini
+	public static int waypointDelay = 0;	// (s) Hovering time over each waypoint
+											//     Modify WPNAV_RADIUS (10-1000 cm) parameter if needed to change where the
+											//       mission waypoint is reached
 
 	private int numSeq; // Waypoint sequence number
 	private int frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT; // Coordinate frame used

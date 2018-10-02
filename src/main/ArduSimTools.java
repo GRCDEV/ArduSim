@@ -250,6 +250,23 @@ public class ArduSimTools {
 					GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
 				}
 			}
+			param = parameters.get(Param.WAYPOINT_DELAY);
+			if (param == null) {
+				GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDelay);
+			} else {
+				try {
+					int delay = Integer.parseInt(param);
+					if (delay < 0 || delay > 65535) {
+						GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+						GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+					} else {
+						Waypoint.waypointDelay = delay;
+					}
+				} catch (NumberFormatException e) {
+					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+				}
+			}
 			param = parameters.get(Param.SERIAL_PORT);
 			if (param == null) {
 				GUI.log(Param.SERIAL_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.serialPort);
@@ -2037,6 +2054,7 @@ public class ArduSimTools {
 					// Add a fake waypoint for the home position (essential but ignored by the flight controller)
 					wp = new Waypoint(0, true, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 0, 1);
 					missions[i].add(wp);
+					int delay = Waypoint.waypointDelay;
 					// Check the coordinate triplet format
 					for (int j=0; j<lines[i].length; j++) {
 						aux = lines[i][j].split(",");
@@ -2061,7 +2079,7 @@ public class ArduSimTools {
 											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
 									missions[i].add(wp);
 									wp = new Waypoint(2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
 								} else if (Param.role == Tools.SIMULATOR) {
@@ -2072,12 +2090,12 @@ public class ArduSimTools {
 							} else {
 								if (Param.role == Tools.MULTICOPTER) {
 									wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
 								} else if (Param.role == Tools.SIMULATOR) {
 									wp = new Waypoint(j+1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 
+											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
 								}

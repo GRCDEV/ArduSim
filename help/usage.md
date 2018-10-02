@@ -73,12 +73,14 @@ This dialog allows to introduce several simulation parameters:
 
 If the developer chooses to implement a dialog to input protocol parameters, it would open once the general configuration options are accepted. Otherwise, the main window of ArduSim is opened.
 
-This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions. If Google Earth file format is used, the missions can be kept unmodified (the UAV remain flying in the last waypoint), or an extra waypoint can be added at the end of the mission (land or RTL). Moreover, if a waypoint has an altitude lower than the specified in the file *ardusim.ini*, it is set to that default for security (when you create a *.kml* in Google Earth, by default the altitude is 0. The default altitude is applied if you don't modify that file manually to set new altitude values). If QGroundControl files are used, the following rules are applied:
+This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions. Follows a list of general rules:
 
-* The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
-* The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
-* The following waypoint must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the mission.
-* The las waypoint can be of type waypoint, spline waypoint, land, or RTL. It the command is not of type land or RTL, the multicopter will remain flying over the last waypoint until the user takes control of it. Alternatively, the protocol implemented can force the UAV to land as in the protocol MBCAP, or it can also perform any other action just detecting when the UAV is close enough to the last waypoint.
+* QGroundControl files: The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
+* QGroundControl files: The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
+* QGroundControl files: The following waypoints must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the mission.
+* QGroundControl files: The las waypoint can be of type waypoint, spline waypoint, land, or RTL. It the command is not of type land or RTL, the multicopter will remain flying over the last waypoint until the user takes control of it. Alternatively, the protocol implemented can force the UAV to land as in the protocol MBCAP, or it can also perform any other action just detecting when the UAV is close enough to the last waypoint.
+* Google Earth file: The user can add a land or RTL command at the end of the mission. Also, a hovering time over each waypoint can be set. If the hovering time is set to 0, the multicopter follows the normal behavior (cutting corners while passing through waypoints). This options are controlled with *MISSIONEND* and *WAYPOINTDELAY* parameters from *ardusim.ini* file, and can be modified through the GUI when running simulations.
+* Google Earth file: If a waypoint has an altitude lower than the specified in the file *ardusim.ini*, it is set to that default for security reasons (when you create a *.kml* in Google Earth, by default the altitude is 0. The default altitude is applied if you don't modify that file manually to set new altitude values).
 
 ### 1.3 Main window
 
@@ -197,6 +199,8 @@ The list of parameters is:
     * *UAVPROTOCOL*. Protocol to be deployed.
     * *UAVSPEED*. Maximum planned speed of the multicopter.
 * Optional parameters when running in real UAVs:
+    * *MISSIONEND*. Whether to add a land or RTL command at the end of the mission if loaded from Google Earth .xml file. Valid values: unmodified, land, or RTL.
+    * *WAYPOINTDELAY*. Mission delay over each waypoint (seconds).
     * *SERIALPORT*. Raspberry Pi serial port the flight controller is connected to.
     * *BAUDRATE*. Baud rate of the serial link.
     * *BATTERYCELLS*. Number of cells of the LiPo battery.

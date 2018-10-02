@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.ProgressState;

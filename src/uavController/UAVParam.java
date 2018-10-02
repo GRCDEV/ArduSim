@@ -365,7 +365,9 @@ public class UAVParam {
 		RTL_ALTITUDE("RTL_ALT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),				// Altitude during return to launch
 		RTL_ALTITUDE_FINAL("RTL_ALT_FINAL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Loiter altitude when not desired to land after return to launch
 		// Others
-		CIRCLE_RADIUS("CIRCLE_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32);		// Circle mode radius
+		CIRCLE_RADIUS("CIRCLE_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),		// (cm) Circle mode radius
+		WPNAV_RADIUS("WPNAV_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32);			// (cm) Distance to the waypoint to assert that it has been reached
+		
 
 		private final String id;
 		private final int type;

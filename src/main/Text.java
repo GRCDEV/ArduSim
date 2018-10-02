@@ -229,6 +229,7 @@ public class Text {
 	public static final String XML_PARSING_ERROR_4 = "Error parsing line/point:";
 	public static final String XML_LAND_ADDED = "Land waypoint added at the end of the mission of UAV: ";
 	public static final String XML_RTL_ADDED = "RTL waypoint added at the end of the mission of UAV: ";
+	public static final String XML_DELAY = "Input mission delay over each waypoint (seconds)";
 	public static final String FILE_HEADER = "QGC WPL 110";
 	public static final String FILE_PARSING_ERROR_1 = "Waypoint file error: Nothing useful found.";
 	public static final String FILE_PARSING_ERROR_2 = "Waypoint file error: Format not valid.";

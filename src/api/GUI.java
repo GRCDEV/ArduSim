@@ -1,6 +1,7 @@
 package api;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -14,7 +15,9 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -301,6 +304,7 @@ public class GUI {
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
 			// All missions are loaded from one single file
 			String missionEnd = GUI.askUserForMissionEnd();
+			GUI.askUserForDelay();
 			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0], missionEnd);
 			if (missions == null) {
 				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
@@ -363,6 +367,21 @@ public class GUI {
 			res = options[x];
 		}
 		return res;
+	}
+	
+	/** Asks the user for the delay duration in the intermediate waypoints of the mission.
+	 * <p>If a delay is added to the waypoints, the multicopter avoids cutting corners when it arrives a waypoint. */
+	private static void askUserForDelay() {
+		SpinnerNumberModel sModel = new SpinnerNumberModel(0, 0, 65535, 1);
+		JSpinner spinner = new JSpinner(sModel);
+		spinner.setSize(350, spinner.getHeight());
+		spinner.setPreferredSize(new Dimension(350, spinner.getPreferredSize().height));
+		String[] options = {Text.OK};
+		int option = JOptionPane.showOptionDialog(null, spinner, Text.XML_DELAY,
+				JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+		if (option == JOptionPane.OK_OPTION) {
+			Waypoint.waypointDelay = (Integer)spinner.getValue();
+		}
 	}
 	
 	/** Locates a UTM point on the screen, using the current screen scale. */
