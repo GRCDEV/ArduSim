@@ -62,7 +62,7 @@ public class Scanv1Talker extends Thread {
 		this.cicleTime = 0;
 		socket = new DatagramSocket();
 		buffer = new byte[Scanv1ProtParam.DGRAM_MAX_LENGTH];
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
 			socket.setBroadcast(true);
 			packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(Scanv1ProtParam.BROADCAST_IP_REAL),
 					Scanv1ProtParam.portTalker);

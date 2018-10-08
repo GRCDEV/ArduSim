@@ -48,8 +48,8 @@ public class PollutionHelper extends ProtocolHelper {
 		
 		// Coordinates setup
 		PollutionParam.origin = api.Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
-		PollutionParam.origin.Easting -= PollutionParam.width/2.0;
-		PollutionParam.origin.Northing -= PollutionParam.length/2.0;
+		PollutionParam.origin.x -= PollutionParam.width/2.0;
+		PollutionParam.origin.y -= PollutionParam.length/2.0;
 		
 		// Measurement structure
 		PollutionParam.measurements_temp = new ArrayList<Value>();

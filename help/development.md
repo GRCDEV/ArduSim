@@ -210,7 +210,7 @@ Complex command functions. These functions have been built combining functions f
 * `void landIfMissionEnded(int, double)`. This method lands the multicopter if it is close enough to the last waypoint, and can be launched periodically in the method `forceExperimentEnd()` of the protocol implementation. Useful for UAVs that follow a planned mission.
 * `boolean landUAV(int)`. This method is used to land a UAV.
 * `boolean landAllUAVs()`. In this case, all the UAVs receive the land command.
-* `boolean cleanAndSendMissionToUAV(int, List<Waypoint>)`. It deletes the current mission of the UAV, sends a new one, and retrieves it from the flight controller to show it on the GUI, using the corresponding simple command functions.
+* `boolean cleanAndSendMissionToUAV(int, List<Waypoint>)`. It deletes the current mission of the UAV, sends a new one, and retrieves it from the flight controller to show it on the GUI, using the corresponding simple command functions. This function is automatically used by ArduSim before the `sendInitialConfiguration(int)` method of the protocol implementation.
 
 Now follows a list of information retrieval functions that don't need to communicate with the flight controller. The data could be slightly outdated, on the order of milliseconds, as this information is retrieved periodically.
 
@@ -323,7 +323,9 @@ ArduSim can detect possible collisions among UAVs when performing a simulation. 
 The flight controller uses geographic coordinates, but they are not useful to calculate distances. These functions are provided to transform between geographic and UTM coordinates:
 
 * `GeoCoordinates UTMToGeo(double, double)`. It translates Universal Transverse Mercator (UTM) coordinates to Geographic coordinates (latitude and longitude).
+* `GeoCoordinates UTMToGeo(UTMCoordinates)`. Equivalent to the previous function.
 * `UTMCoordinates geoToUTM(double, double)`. It translates Geograhic coordinates to UTM coordinates.
+* `UTMCoordinates geoToUTM(GeoCoordinates)`. Equivalent to the previous function.
 
 The following functions help to validate values introduced by the user in a dialog:
 
@@ -333,7 +335,7 @@ The following functions help to validate values introduced by the user in a dial
 * `boolean isValidDouble(String)`. It checks if a String represents a double.
 * `boolean isValidPositiveDouble(String)`. It checks if a String represents a positive double.
 
-Finally, we include several functions to retrieve information, and to store specific protocol data when the experiment finishes:
+Now, we include several functions to retrieve information, and to store specific protocol data when the experiment finishes:
 
 * `long getExperimentStartTime()`. It returns the Java VM time value when the experiment started.
 * `long getExperimentEndTime(int)`. It returns the Java VM time value when a UAV finished the experiment, it is, when it landed.
@@ -344,6 +346,36 @@ Finally, we include several functions to retrieve information, and to store spec
 * `String getFileExtension(File)`. It returns the file extension of a given *File*.
 * `void storeFile( File, String)`. It stores a *String* in a *File*.
 * `boolean isVerboseStorageEnabled()`. This function may be used to decide if some information must be stored in a *File*.
+
+Finally, ArduSim provides tools to form the swarm formation. The layout can be built from scratch, but several flying formations have been included to make easier to develop a new protol. The package *api.pojo.formations* includes a general class *FlightFormation*, and several formation implementations that can be used in any protocol, like shown in *Scan Protocol*. Follows a list of implemented formations:
+
+* *Linear*. The UAVs are ordered in a straight line perpendicular to a specific heading, and numbered from left to right.
+* *Matrix*. The UAVs are ordered in a square matrix, and numbered from left to right, and from bottom to up.
+* *Circle*. A center UAV is surrounded by the remaining forming a circle, and the are numbered; first the center UAV, and then the remaining counterclockwise starting on the right.
+
+In all cases, the center multicopter is the UAV closest to the rest of UAVs (center of line, matrix or circle). The following functions allow the developer to use this feature. You can set values in the `void openConfigurationDialog()` function of the protocol implementation, or retrieve then wherever you want.
+
+* `Formation getGroundFormation()`. This method provides the formation of UAVs used for the ground layout in simulations.
+* `void setGroundFormation(Formation)`. It sets the flight formation of UAVs used for the ground layout in simulations (after user input).
+* `int getGroundFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations.
+* `void setGroundFormationDistance(int)`. It sets the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations (after user input).
+* `Formation getFlyingFormation()`. This function provides the formation of UAVs used for the flying layout.
+* `void setFlyingFormation(Formation)`. It sets the flight formation of UAVs used for the flying layout (after user input).
+* `int getFlyingFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the flying layout.
+* `void setFlyingFormationDistance()`. It sets the minimum distance between contiguous UAVs in the formation used for the flying layout (after user input).
+
+You can use a swarm formation for the ground UAVs layout or not (it's not mandatory, you can set their starting location manually). As examples, the protocol MBCAP sets the initial location of the UAVs in the first point of the loaded mission, while the Scan Protocol uses the previous flight formations.
+
+The class *api.pojo.formations.FlightFormation* provides the following methods:
+
+* `static FlightFormation getFormation(Formation, int, double)`. Once you know which formation type to use (Formation), you can instantiate the formation with this method, providing the number of UAVs in the formation, and the minimum distance between contiguous UAVs. It returns an object with the rest of functions.
+* `int getCenterUAVPosition()`. It provides the position of the UAV in the center of the formation. 
+* `UTMCoordinates getOffset(int, double)`. With this method you can get the offset of the UAV from the center UAV in UTM coordinates, given its position in the formation, and the center UAV heading.
+* `UTMCoordinates getLocation(int, UTMCoordinates, double)`. It provides the location of a UAV in UTM coordinates, given its position in the formation, and the center UAV location (UTM) and heading (rad).
+* `Triplet<Integer, Long, UTMCoordinates>[] matchIDs(UAV2DLocation[], heading)`. This function must only be used in a flying formation (not ground formation in simulation) to match the best formation in flight for the given ground location for the UAVs, and heading towards the formation must be built. The best formation is the one where the UAVs have to move less distance to the flying formation during the takeoff phase.
+* `Pair<Integer, Long>[] getTakeoffSequence(Triplet<Integer, Long, UTMCoordinates>, double, Triplet<Integer, Long, UTMCoordinates>[])`. Again, this function must only be used in a flying formation, and provides a sorted array beginning with the UAVs that have to move further (takeoff order), with their position in the formation, and their ID.
+
+To build a new type of formation, you have to create a Class that extends *FlightFormation.java* Class, and implement the `void initializeFormation()` method to generate the layout (center UAV position, and an array with the points of the formation with their corresponding offset from the center UAV). The constructor only has to call the *super* equivalent. Finally, you need to add the new implemented formation to the `static FlightFormation getFormation(Formation, int, double)` method, and to the *FlightFormation.Formation* enumerator.
 
 ### 5.5 Implementation recomendations
 

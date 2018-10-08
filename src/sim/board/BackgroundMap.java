@@ -53,13 +53,13 @@ public class BackgroundMap {
 		GeoCoordinates bottomRight = projection.getGeoLocation(pxWidth, pxHeight);
 		UTMCoordinates bottomRightUTM = Tools.geoToUTM(bottomRight.latitude, bottomRight.longitude);
 
-		double incHorizontal = new Point2D.Double(upRightUTM.Easting, upRightUTM.Northing).distance(upLeftUTM.Easting,
-				upLeftUTM.Northing);
-		double incVertical = new Point2D.Double(upRightUTM.Easting, upRightUTM.Northing).distance(bottomRightUTM.Easting,
-				bottomRightUTM.Northing);
+		double incHorizontal = new Point2D.Double(upRightUTM.x, upRightUTM.y).distance(upLeftUTM.x,
+				upLeftUTM.y);
+		double incVertical = new Point2D.Double(upRightUTM.x, upRightUTM.y).distance(bottomRightUTM.x,
+				bottomRightUTM.y);
 		this.xScale = (incHorizontal * BoardParam.screenScale) / pxWidth;
 		this.yScale = (incVertical * BoardParam.screenScale) / pxHeight;
-		this.alfa = Math.acos((upRightUTM.Easting - upLeftUTM.Easting) / incHorizontal);
+		this.alfa = Math.acos((upRightUTM.x - upLeftUTM.x) / incHorizontal);
 		try {
 			URL imagen = new URL("http://maps.googleapis.com/maps/api/staticmap?center=" + latitude + "," + longitude
 					+ "&zoom=" + zoom + "&size=" + pxWidth + "x" + pxHeight + "&maptype=satellite");

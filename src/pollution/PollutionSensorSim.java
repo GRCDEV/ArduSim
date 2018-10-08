@@ -87,8 +87,8 @@ public class PollutionSensorSim implements PollutionSensor {
 	public double read() {
 		Point2D.Double location = Copter.getUTMLocation(0);
 		UTMCoordinates startLocation = Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
-		double pointX = (location.getX() - startLocation.Easting) / PollutionParam.length * dataYSize;
-		double pointY = (location.getY() - startLocation.Northing) / PollutionParam.length * dataYSize;
+		double pointX = (location.getX() - startLocation.x) / PollutionParam.length * dataYSize;
+		double pointY = (location.getY() - startLocation.y) / PollutionParam.length * dataYSize;
 		return krigData.interpolate(pointX, pointY);
 	}
 

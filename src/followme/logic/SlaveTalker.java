@@ -75,7 +75,7 @@ public class SlaveTalker extends Thread {
 			geoActual = Copter.getGeoLocation(numUAV);
 			UTMActual = Tools.geoToUTM(geoActual.latitude, geoActual.longitude);
 			dist = Math.sqrt(
-					Math.pow((pDestino.x - UTMActual.Easting), 2) + Math.pow((pDestino.y - UTMActual.Northing), 2));
+					Math.pow((pDestino.x - UTMActual.x), 2) + Math.pow((pDestino.y - UTMActual.y), 2));
 //			System.out.println("Slave " + numUAV + ": " + dist + " m");
 			Tools.waiting(1000);
 		} while (0.5 < dist);

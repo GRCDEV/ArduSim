@@ -91,6 +91,7 @@ import api.pojo.Point3D;
 import api.pojo.RCValues;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
+import api.pojo.formations.FlightFormation;
 import main.Param.SimulatorState;
 import main.Param.WirelessModel;
 import main.cpuHelper.CPUData;
@@ -144,6 +145,7 @@ public class ArduSimTools {
 		return true;
 	}
 	
+	/** Parses the ini file located beside the ArduSim executable file (Project folder in simulations). */
 	public static void parseIniFile() {
 		Map<String, String> parameters = null;
 		String param;
@@ -206,10 +208,9 @@ public class ArduSimTools {
 			}
 			// Set protocol
 			String pr = parameters.get(Param.PROTOCOL);
-			String pr2 = pr.toUpperCase();
 			boolean found = false;
 			for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
-				if (ProtocolHelper.ProtocolNames[i].toUpperCase().equals(pr2)) {
+				if (ProtocolHelper.ProtocolNames[i].equalsIgnoreCase(pr)) {
 					found = true;
 				}
 			}
@@ -314,8 +315,68 @@ public class ArduSimTools {
 				UAVParam.lipoBatteryCapacity = Integer.parseInt(param);
 			}
 		}
+		
+		// Parse parameters for simulations
+		if (Param.role == Tools.SIMULATOR) {
+			param = parameters.get(Param.GROUND_FORMATION);
+			// There will not always be a ground formation (i.e. MBCAP)
+			if (param != null) {
+				// Check if it is included in the list
+				FlightFormation.Formation[] formations = FlightFormation.Formation.values();
+				FlightFormation.Formation formation = null;
+				for (int i = 0; i < formations.length && formation == null; i++) {
+					if (formations[i].getName().equalsIgnoreCase(param)) {
+						formation = formations[i];
+					}
+				}
+				if (formation == null) {
+					GUI.log(Param.GROUND_FORMATION + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				UAVParam.groundFormation.set(formation);
+				// Check if the minimum distance is also included (meters)
+				param = parameters.get(Param.GROUND_DISTANCE);
+				if (param == null) {
+					GUI.log(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.groundDistanceBetweenUAV);
+				} else {
+					if (!Tools.isValidPositiveInteger(param)) {
+						GUI.log(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+						System.exit(1);
+					}
+					UAVParam.groundDistanceBetweenUAV = Integer.parseInt(param);
+				}
+			}
+		}
 
 		// Parse remaining parameters, for real UAV or simulation
+		param = parameters.get(Param.AIR_FORMATION);
+		// There will not always be an air formation (i.e. MBCAP)
+		if (param != null) {
+			// Check if it is included in the list
+			FlightFormation.Formation[] formations = FlightFormation.Formation.values();
+			FlightFormation.Formation formation = null;
+			for (int i = 0; i < formations.length && formation == null; i++) {
+				if (formations[i].getName().equalsIgnoreCase(param)) {
+					formation = formations[i];
+				}
+			}
+			if (formation == null) {
+				GUI.log(Param.AIR_FORMATION + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			UAVParam.airFormation.set(formation);
+			// Check if the minimum distance is also included (meters)
+			param = parameters.get(Param.AIR_DISTANCE);
+			if (param == null) {
+				GUI.log(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.airDistanceBetweenUAV);
+			} else {
+				if (!Tools.isValidPositiveInteger(param)) {
+					GUI.log(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				UAVParam.airDistanceBetweenUAV = Integer.parseInt(param);
+			}
+		}
 		param = parameters.get(Param.MEASURE_CPU);
 		if (param == null) {
 			GUI.log(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.measureCPUEnabled);
@@ -426,18 +487,12 @@ public class ArduSimTools {
 			for (final String key : parameters.keySet()) {
 				found = false;
 				for (int i = 0; i < Param.PARAMETERS.length && !found; i++) {
-					if (key.equals(Param.PARAMETERS[i])) {
+					if (key.equalsIgnoreCase(Param.PARAMETERS[i])) {
 						found = true;
 					}
 				}
 				if (!found) {
 					GUI.log(Text.INI_FILE_WASTE_PARAMETER_WARNING + " " + key);
-				}
-			}
-			// Check parameters with default value
-			for (int i = 0; i < Param.PARAMETERS.length; i++) {
-				if (!parameters.containsKey(Param.PARAMETERS[i])) {
-					GUI.log(Param.PARAMETERS[i] + " " + Text.INI_FILE_MISSING_PARAMETER_WARNING);
 				}
 			}
 		}
@@ -1375,12 +1430,11 @@ public class ArduSimTools {
 		ProtocolHelper o;
 		ProtocolHelper[] res = null;
 		List<ProtocolHelper> imp = new ArrayList<>();
-		String pr = selectedProtocol.toUpperCase();
 		for (int i = 0; i < implementations.length; i++) {
 			c = implementations[i];
 			o = (ProtocolHelper)c.newInstance();
 			o.setProtocol();
-			if (o.protocolString.toUpperCase().equals(pr)) {
+			if (o.protocolString.equalsIgnoreCase(selectedProtocol)) {
 				imp.add(o);
 			}
 		}

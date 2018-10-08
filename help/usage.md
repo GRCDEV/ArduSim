@@ -198,6 +198,11 @@ The list of parameters is:
 * **MANDATORY** parameters when running in real UAVs:
     * *UAVPROTOCOL*. Protocol to be deployed.
     * *UAVSPEED*. Maximum planned speed of the multicopter.
+* Optional parameters for protocols that use flight formations:
+    * *GROUNDFORMATION*.UAV ground formation (only for simulations). Used to set the layout of virtual UAVs, as specified in the *FlightFormation* Class.
+    * *GROUNDDISTANCE*. Minimum distance between contiguous UAVs in the ground formation (only for simulation). It must be an integer value in meters.
+    * *AIRFORMATION*. UAV flying formation. Used to set the flying layout.
+    * *AIRDISTANCE*. Minimum distance between contiguous UAVs in the flying formation. It must be an integer value in meters.
 * Optional parameters when running in real UAVs:
     * *MISSIONEND*. Whether to add a land or RTL command at the end of the mission if loaded from Google Earth .xml file. Valid values: unmodified, land, or RTL.
     * *WAYPOINTDELAY*. Mission delay over each waypoint (seconds).

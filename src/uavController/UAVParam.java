@@ -26,6 +26,7 @@ import api.pojo.Point3D;
 import api.pojo.RCValues;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
+import api.pojo.formations.FlightFormation;
 import sim.pojo.IncomingMessage;
 import sim.pojo.IncomingMessageQueue;
 
@@ -104,6 +105,14 @@ public class UAVParam {
 	// Last n UAV known positions of the UAV
 	public static final int LOCATIONS_SIZE = 3;		// n positions (never less than 2)
 	public static LastLocations<Point3D>[] lastLocations;	// Each UAV has an object with the last received locations sorted
+	
+	// Flight formation (when used)
+	public static AtomicReference<FlightFormation.Formation> groundFormation = new AtomicReference<FlightFormation.Formation>(FlightFormation.Formation.LINEAR);
+	public static AtomicReference<FlightFormation.Formation> airFormation = new AtomicReference<FlightFormation.Formation>(FlightFormation.Formation.LINEAR);
+	// Initial distance between UAV when they are on the ground (only in simulation)
+	public static volatile int groundDistanceBetweenUAV = 10;
+	// Distance between UAVs while following the mission
+	public static volatile int airDistanceBetweenUAV = 50;
 	
 	// Startup parameters
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
@@ -385,7 +394,5 @@ public class UAVParam {
 			return type;
 		}
 	}
-
-	
 
 }

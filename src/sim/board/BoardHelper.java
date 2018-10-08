@@ -87,8 +87,8 @@ public class BoardHelper {
 		UTMCoordinates upLeftUTMCorner = Tools.geoToUTM(maxLatitude, minLongitude);
 		UTMCoordinates upRightUTMCorner = Tools.geoToUTM(maxLatitude, maxLongitude);
 		UTMCoordinates downLeftUTMCorner = Tools.geoToUTM(minLatitude, minLongitude);
-		double imagesUTMTotalWidth = Point2D.distance(upLeftUTMCorner.Easting, upLeftUTMCorner.Northing, upRightUTMCorner.Easting, upRightUTMCorner.Northing);
-		double imagesUTMTotalHeight = Point2D.distance(upLeftUTMCorner.Easting, upLeftUTMCorner.Northing, downLeftUTMCorner.Easting, downLeftUTMCorner.Northing);
+		double imagesUTMTotalWidth = Point2D.distance(upLeftUTMCorner.x, upLeftUTMCorner.y, upRightUTMCorner.x, upRightUTMCorner.y);
+		double imagesUTMTotalHeight = Point2D.distance(upLeftUTMCorner.x, upLeftUTMCorner.y, downLeftUTMCorner.x, downLeftUTMCorner.y);
 		int imagesPXTotalWidth = (int)(imagesUTMTotalWidth*BoardParam.screenScale);
 		int imagesPXTotalHeight = (int)(imagesUTMTotalHeight*BoardParam.screenScale);
 	
@@ -97,12 +97,12 @@ public class BoardHelper {
 		int tile1PXHeight = Math.min(BoardParam.MAX_IMAGE_PX, imagesPXTotalHeight);
 		double tile1UTMWidth = imagesUTMTotalWidth*tile1PXWidth/imagesPXTotalWidth;
 		double tile1UTMHeight = imagesUTMTotalHeight*tile1PXHeight/imagesPXTotalHeight;
-		double incXX = (upRightUTMCorner.Easting-upLeftUTMCorner.Easting)*tile1UTMWidth/imagesUTMTotalWidth/2;
-		double incXY = (downLeftUTMCorner.Easting-upLeftUTMCorner.Easting)*tile1UTMHeight/imagesUTMTotalHeight/2;
-		double tile1UTMCenterX = upLeftUTMCorner.Easting + incXX + incXY;
-		double incYX = (upRightUTMCorner.Northing-upLeftUTMCorner.Northing)*tile1UTMWidth/imagesUTMTotalWidth/2;
-		double incYY = (downLeftUTMCorner.Northing-upLeftUTMCorner.Northing)*tile1UTMHeight/imagesUTMTotalHeight/2;
-		double tile1UTMCenterY = upLeftUTMCorner.Northing + incYX + incYY;
+		double incXX = (upRightUTMCorner.x-upLeftUTMCorner.x)*tile1UTMWidth/imagesUTMTotalWidth/2;
+		double incXY = (downLeftUTMCorner.x-upLeftUTMCorner.x)*tile1UTMHeight/imagesUTMTotalHeight/2;
+		double tile1UTMCenterX = upLeftUTMCorner.x + incXX + incXY;
+		double incYX = (upRightUTMCorner.y-upLeftUTMCorner.y)*tile1UTMWidth/imagesUTMTotalWidth/2;
+		double incYY = (downLeftUTMCorner.y-upLeftUTMCorner.y)*tile1UTMHeight/imagesUTMTotalHeight/2;
+		double tile1UTMCenterY = upLeftUTMCorner.y + incYX + incYY;
 	
 		GeoCoordinates tile1GeoCenter = Tools.UTMToGeo(tile1UTMCenterX, tile1UTMCenterY);
 		int zoom = BoardHelper.getMapZoom(tile1GeoCenter.latitude,
@@ -131,8 +131,8 @@ public class BoardHelper {
 		int PXWidth, PXHeight;
 		for (int i=0; i<BoardParam.map.length; i++) {
 			for (int j=0; j<BoardParam.map[i].length; j++) {
-				double originX = upLeftUTMCorner.Easting + i*incXX*2 + j*incXY*2;
-				double originY = upLeftUTMCorner.Northing + i*incYX*2 + j*incYY*2;
+				double originX = upLeftUTMCorner.x + i*incXX*2 + j*incXY*2;
+				double originY = upLeftUTMCorner.y + i*incYX*2 + j*incYY*2;
 				PXWidth = Math.min(imagesPXTotalWidth - tile1PXWidth*i, BoardParam.MAX_IMAGE_PX);
 				PXHeight = Math.min(imagesPXTotalHeight - tile1PXHeight*j, BoardParam.MAX_IMAGE_PX);
 				UTMWidth = PXWidth/BoardParam.screenScale;
@@ -168,8 +168,8 @@ public class BoardHelper {
 			GeoCoordinates bottomRightGeo = projection.getGeoLocation(pxWidth, pxHeight);
 			UTMCoordinates bottomRightUTM = Tools.geoToUTM(bottomRightGeo.latitude, bottomRightGeo.longitude);
 			double width, height;
-			width = bottomRightUTM.Easting - upLeftUTM.Easting;
-			height = upLeftUTM.Northing - bottomRightUTM.Northing;
+			width = bottomRightUTM.x - upLeftUTM.x;
+			height = upLeftUTM.y - bottomRightUTM.y;
 			if (width>=utmWidth && height>=utmHeight) {
 				scaleFound = true;
 			}
@@ -486,8 +486,8 @@ public class BoardHelper {
 						if (BoardParam.map[i][j] != null) {
 							if (BoardParam.map[i][j].img!=null) {
 								// Draw image
-								locationPX = BoardHelper.locateImage(BoardParam.map[i][j].originUTM.Easting,
-										BoardParam.map[i][j].originUTM.Northing);
+								locationPX = BoardHelper.locateImage(BoardParam.map[i][j].originUTM.x,
+										BoardParam.map[i][j].originUTM.y);
 								AffineTransform trans = new AffineTransform();
 								trans.translate(locationPX.x,
 										locationPX.y);

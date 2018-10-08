@@ -72,8 +72,8 @@ public class UavFishingHelper extends ProtocolHelper {
 		startCoordinatesArray[1] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationUAV,0.0);
 		
 		UavFishingParam.vOrigin = new double [2];
-		UavFishingParam.vOrigin[0] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).Easting - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).Easting;
-		UavFishingParam.vOrigin[1] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).Northing - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).Northing;
+		UavFishingParam.vOrigin[0] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).x - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).x;
+		UavFishingParam.vOrigin[1] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).y - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).y;
 		
 		UavFishingParam.vOrigin = VectorMath.getUnitaryVector(UavFishingParam.vOrigin);
 		UavFishingParam.vOrigin[0] *= UavFishingParam.radius;

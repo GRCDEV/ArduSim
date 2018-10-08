@@ -20,7 +20,7 @@ public class Pollution extends Thread {
 		move(p.getX(), p.getY());
 	}
 	void move(int x, int y) {
-		Copter.moveUAV(0, Tools.UTMToGeo(PollutionParam.origin.Easting + (x * PollutionParam.density), PollutionParam.origin.Northing + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
+		Copter.moveUAV(0, Tools.UTMToGeo(PollutionParam.origin.x + (x * PollutionParam.density), PollutionParam.origin.y + (y * PollutionParam.density)), (float) PollutionParam.altitude, 1.0, 1.0);
 	}
 	
 	double moveAndRead(Point p) {

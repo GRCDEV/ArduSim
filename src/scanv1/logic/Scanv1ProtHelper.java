@@ -15,7 +15,6 @@ import javax.swing.JOptionPane;
 
 import org.javatuples.Pair;
 
-import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
@@ -23,11 +22,10 @@ import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
-import main.Param;
-import sim.board.BoardPanel;
 import scanv1.gui.Scanv1ConfigDialog;
 //import scanprotocolv1.gui.Scanv1ConfigDialog;
 import scanv1.logic.Scanv1ProtParam.SwarmProtState;
+import sim.board.BoardPanel;
 
 public class Scanv1ProtHelper extends ProtocolHelper {
 
@@ -182,8 +180,8 @@ public class Scanv1ProtHelper extends ProtocolHelper {
 		double heading = 0.0;
 		p1UTM = Tools.geoToUTM(wp1.getLatitude(), wp1.getLongitude());
 		p2UTM = Tools.geoToUTM(wp2.getLatitude(), wp2.getLongitude());
-		incX = p2UTM.Easting - p1UTM.Easting;
-		incY = p2UTM.Northing - p1UTM.Northing;
+		incX = p2UTM.x - p1UTM.x;
+		incY = p2UTM.y - p1UTM.y;
 		if (incX != 0 || incY != 0) {
 			if (incX == 0) {
 				if (incY > 0)
@@ -221,7 +219,7 @@ public class Scanv1ProtHelper extends ProtocolHelper {
 	private static Point2D.Double[] posSlaveFromMasterUTM(double heading, Waypoint waypoint1, int numOfUAVs,
 			int initialDistanceBetweenUAV) {
 		UTMCoordinates initialPoint = Tools.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
-		return posSlaveFromMasterLinear(heading, new Point2D.Double(initialPoint.Easting, initialPoint.Northing),
+		return posSlaveFromMasterLinear(heading, new Point2D.Double(initialPoint.x, initialPoint.y),
 				numOfUAVs, initialDistanceBetweenUAV);
 
 	}
@@ -262,11 +260,8 @@ public class Scanv1ProtHelper extends ProtocolHelper {
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-		if (Tools.getIdFromPos(numUAV) == Scanv1ProtParam.idMaster) {
-			return Copter.cleanAndSendMissionToUAV(numUAV, Tools.getLoadedMissions()[numUAV]);
-		} else {
-			return true;
-		}
+		// No special action required (master mission is automatically loaded)
+		return true;
 	}
 
 	@Override
@@ -356,7 +351,7 @@ public class Scanv1ProtHelper extends ProtocolHelper {
 	/** Send a packet to all Slaves */
 	public static void sendDataToSlaves(DatagramPacket packet, DatagramSocket socket) throws IOException {
 		/** The real drone has different IP and sends without problems */
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
 			socket.send(packet);
 		}
 		/**
@@ -378,7 +373,7 @@ public class Scanv1ProtHelper extends ProtocolHelper {
 	public static void sendDataToMaster(DatagramPacket packet, DatagramSocket socket) throws IOException {
 	
 		/** The real drone has different IP and sends without problems */
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
 			socket.send(packet);
 		}
 		/**

@@ -57,7 +57,7 @@ public abstract class ProtocolHelper {
 	public abstract void drawResources(Graphics2D g2, BoardPanel p);
 	
 	/** Sets the initial position where the UAVs will appear in the simulator.
-	 * <p>Returns the calculated Geographic coordinates (latitude and longitude), and the heading. */
+	 * <p>Returns the calculated Geographic coordinates (latitude and longitude), and the heading (degrees). */
 	public abstract Pair<GeoCoordinates, Double>[] setStartingLocation();
 	
 	/** Sends to the specific UAV the basic configuration needed by the protocol, in an early stage before the setup step.

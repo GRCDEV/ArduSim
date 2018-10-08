@@ -462,7 +462,7 @@ public class Copter {
 		}
 		
 		UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
-		Point2D.Double destination = new Point2D.Double(utm.Easting, utm.Northing);
+		Point2D.Double destination = new Point2D.Double(utm.x, utm.y);
 		// Once the command is issued, we have to wait until the UAV approaches to destination.
 		// No timeout is defined to reach the destination, as it would depend on speed and distance
 		while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold
@@ -583,7 +583,7 @@ public class Copter {
 			case MAV_CMD.MAV_CMD_NAV_LAND:
 				if (wp.getLatitude() != 0.0 || wp.getLongitude() != 0.0) {
 					utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
-					WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+					WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.x, utm.y, wp.getAltitude());
 					missionUTMSimplified.add(swp);
 				}
 				break;
@@ -599,11 +599,11 @@ public class Copter {
 			case MAV_CMD.MAV_CMD_NAV_TAKEOFF:
 				// The geographic coordinates have been set by the flight controller
 				utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
-				WaypointSimplified twp = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+				WaypointSimplified twp = new WaypointSimplified(wp.getNumSeq(), utm.x, utm.y, wp.getAltitude());
 				missionUTMSimplified.add(twp);
 				if (!foundFirst) {
 					utm = Tools.geoToUTM(wp.getLatitude(), wp.getLongitude());
-					first = new WaypointSimplified(wp.getNumSeq(), utm.Easting, utm.Northing, wp.getAltitude());
+					first = new WaypointSimplified(wp.getNumSeq(), utm.x, utm.y, wp.getAltitude());
 					foundFirst = true;
 				}
 				break;
@@ -615,7 +615,8 @@ public class Copter {
 	
 	/** Deletes the current mission of the UAV, sends a new one, and gets it to be shown on the GUI.
 	 * <p>Blocking method.
-	 * <p>Must be used only once per UAV, and if the UAV must follow a mission.
+	 * <p>Method automatically used by ArduSim on start to send available missions to the UAVs.
+	 * <p>Must be used only if the UAV must follow a mission.
 	 * <p>Returns true if all the commands were successful.*/
 	public static boolean cleanAndSendMissionToUAV(int numUAV, List<Waypoint> mission) {
 		boolean success = false;

@@ -1,5 +1,6 @@
 package main;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import api.Copter;
@@ -7,6 +8,7 @@ import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.FlightMode;
+import api.pojo.Waypoint;
 import sim.logic.SimParam;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
@@ -309,6 +311,15 @@ public class InitialConfigurationThread extends Thread {
 			}
 		}
 		
+		// Load mission if needed
+		List<Waypoint> mission = UAVParam.missionGeoLoaded[numUAV];
+		if (mission != null) {
+			if (!Copter.cleanAndSendMissionToUAV(numUAV, mission)) {
+				return;
+			}
+		}
+		
+		// Actions needed by the specific protocol
 		if (!ProtocolHelper.selectedProtocolInstance.sendInitialConfiguration(numUAV)) {
 			return;
 		}

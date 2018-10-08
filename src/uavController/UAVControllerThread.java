@@ -312,11 +312,11 @@ public class UAVControllerThread extends Thread {
 				SimParam.zone = locationUTMauxiliary.Zone;
 				SimParam.letter = locationUTMauxiliary.Letter;
 			}
-			locationUTM.setLocation(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing);
+			locationUTM.setLocation(locationUTMauxiliary.x, locationUTMauxiliary.y);
 			long time = System.nanoTime();
 			
 			// The last few UAV positions are stored for later use in protocols
-			UAVParam.lastLocations[numUAV].add(new Point3D(locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, message.relative_alt * 0.001));
+			UAVParam.lastLocations[numUAV].add(new Point3D(locationUTMauxiliary.x, locationUTMauxiliary.y, message.relative_alt * 0.001));
 			// Global horizontal speed estimation
 			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
 			Triplet<Double, Double, Double> speed = Triplet.with(message.vx * 0.01, message.vy * 0.01, message.vz * 0.01);
@@ -325,7 +325,7 @@ public class UAVControllerThread extends Thread {
 			double heading = (message.hdg * 0.01) * Math.PI / 180;
 			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
-			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.Easting, locationUTMauxiliary.Northing, z, heading, hSpeed,
+			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.x, locationUTMauxiliary.y, z, heading, hSpeed,
 					Param.simStatus == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] == 0)); // UAV under test
 		}
 	}

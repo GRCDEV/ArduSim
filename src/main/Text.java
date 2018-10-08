@@ -14,6 +14,11 @@ public class Text {
 	// Default protocol
 	public static final String PROTOCOL_NONE = "none";
 	
+	// Flight formations
+	public static final String LINEAR_FORMATION = "Linear";
+	public static final String MATRIX_FORMATION = "Matrix";
+	public static final String CIRCLE_FORMATION = "Circle";
+	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
 	public static final String INI_FILE_NOT_FOUND = "ardusim.ini file not found. Using default parameters values.";

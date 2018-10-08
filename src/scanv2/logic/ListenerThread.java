@@ -1,14 +1,21 @@
 package scanv2.logic;
 
-import static scanv2.pojo.State.*;
+import static scanv2.pojo.State.FINISH;
+import static scanv2.pojo.State.FOLLOWING_MISSION;
+import static scanv2.pojo.State.LANDING;
+import static scanv2.pojo.State.SETUP;
+import static scanv2.pojo.State.SETUP_FINISHED;
+import static scanv2.pojo.State.START;
+import static scanv2.pojo.State.TAKING_OFF;
+import static scanv2.pojo.State.WAIT_TAKE_OFF;
 
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.javatuples.Pair;
 import org.javatuples.Triplet;
 
 import com.esotericsoftware.kryo.KryoException;
@@ -21,12 +28,13 @@ import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
+import api.pojo.UAV2DLocation;
 import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
+import api.pojo.formations.FlightFormation;
 import main.Text;
 import scanv2.pojo.Message;
 import scanv2.pojo.MovedMission;
-import scanv2.pojo.uav2DPosition;
 import sim.logic.SimParam;
 import uavController.UAVParam;
 
@@ -59,11 +67,11 @@ public class ListenerThread extends Thread {
 		}
 		
 		/** START PHASE */
-		Map<Long, uav2DPosition> UAVsDetected = null;
+		Map<Long, UAV2DLocation> UAVsDetected = null;
 		GUI.log(numUAV, ScanText.START);
 		if (this.isMaster) {
 			GUI.logVerbose(numUAV, ScanText.MASTER_START_LISTENER);
-			UAVsDetected = new HashMap<Long, uav2DPosition>();	// Detecting UAVs
+			UAVsDetected = new HashMap<Long, UAV2DLocation>();	// Detecting UAVs
 			while (ScanParam.state.get(numUAV) == START) {
 				inBuffer = Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
@@ -73,8 +81,7 @@ public class ListenerThread extends Thread {
 					if (type == Message.HELLO) {
 						// Read id (MAC on real UAV) of UAVs and write it into Map if is not duplicated
 						Long idSlave = input.readLong();
-						uav2DPosition location = new uav2DPosition(input.readDouble(), input.readDouble(), idSlave,
-								input.readDouble());
+						UAV2DLocation location = new UAV2DLocation(idSlave, input.readDouble(), input.readDouble());
 						// ADD to Map the new UAV detected
 						UAVsDetected.put(idSlave, location);
 					}
@@ -98,13 +105,58 @@ public class ListenerThread extends Thread {
 		}
 		
 		/** SETUP PHASE */
-		List<WaypointSimplified> screenMission = Tools.getUAVMissionSimplified(numUAV);
-		uav2DPosition[] currentLocations = null;
 		if (this.isMaster) {
 			GUI.log(numUAV, ScanText.SETUP);
 			GUI.log(numUAV, ScanText.DETECTED + UAVsDetected.size() + " UAVs");
 			
-			// 1. Calculate the take-off altitude
+			// 1. Make a permanent list of UAVs detected, including master
+			// 1.1. Add master to the Map
+			Point2D.Double masterLocation = Copter.getUTMLocation(numUAV);
+			UAVsDetected.put(this.selfId, new UAV2DLocation(this.selfId, masterLocation.x, masterLocation.y));
+			// 1.2. Get the list
+			UAV2DLocation[] currentLocations = UAVsDetected.values().toArray(new UAV2DLocation[UAVsDetected.size()]);
+			// 1.3. Set the number of UAVs running
+			int numUAVs = currentLocations.length;
+			
+			// 2. Set the heading used to orient the formation
+			if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
+				// We use the master heading
+				ScanParam.formationHeading = Copter.getHeading(numUAVs);
+			}// In simulation, centerHeading is assigned when SwarmProtHelper.setStartingLocation() is called,
+			 //   using the first mission segment to orient the formation
+			
+			// 3. Calculus of the UAVs distribution that better fit the current layout on the ground
+			FlightFormation airFormation = FlightFormation.getFormation(UAVParam.airFormation.get(), numUAVs, UAVParam.airDistanceBetweenUAV);
+			Triplet<Integer, Long, UTMCoordinates>[] match = airFormation.matchIDs(currentLocations, ScanParam.formationHeading);
+			
+			// 4. Get the target coordinates for the central UAV
+			int centerUAVAirPos = airFormation.getCenterUAVPosition();	// Position in the formation
+			Triplet<Integer, Long, UTMCoordinates> centerUAVAir = null;
+			for (int i = 0; i < numUAVs; i++) {
+				if (match[i].getValue0() == centerUAVAirPos) {
+					centerUAVAir = match[i];
+				}
+			}
+			if (centerUAVAir == null) {
+				GUI.exit(ScanText.CENTER_ID_NOT_FOUND);
+			}
+			long centerUAVId = centerUAVAir.getValue1();
+			
+			// 5. Load the mission
+			List<WaypointSimplified> screenMission = null;
+			if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
+				screenMission = Tools.getUAVMissionSimplified(numUAV);
+			} else {
+				// In simulation we need to locate which is the center UAV on the ground
+				for (int i = 0; i < numUAVs && screenMission == null; i++) {
+					screenMission = Tools.getUAVMissionSimplified(i);
+				}
+			}
+			if (screenMission == null || screenMission.size() > ScanParam.MAX_WAYPOINTS) {
+				GUI.exit(ScanText.MAX_WP_REACHED);
+			}
+			
+			// 6. Calculate the takeoff altitude
 			double takeoffAltitude = screenMission.get(0).z;
 			double takeOffAltitudeStepOne;
 			if (takeoffAltitude <= 5.0) {
@@ -115,135 +167,100 @@ public class ListenerThread extends Thread {
 				takeOffAltitudeStepOne = takeoffAltitude / 2;
 			}
 			
-			// 2. Make permanent the list of UAVs detected, including master
-			// 2.1. Populate the array with slaves
-			Iterator<Map.Entry<Long, uav2DPosition>> entries = UAVsDetected.entrySet().iterator();
-			Map.Entry<Long, uav2DPosition> entry;
-			int i = 0;
-			currentLocations = new uav2DPosition[UAVsDetected.size() + 1];	// +1 to include master ID
-			while (entries.hasNext()) {
-				entry = entries.next();
-				currentLocations[i] = entry.getValue();
-				i++;
-			}
-			// 2.2. Insert master in the last position of the array and store
-			Point2D.Double UTMMaster = Copter.getUTMLocation(numUAV);
-			Double headingMaster = Copter.getHeading(numUAV);
-			uav2DPosition masterLocation = new uav2DPosition();
-			masterLocation.id = Tools.getIdFromPos(numUAV);
-			masterLocation.x = UTMMaster.x;
-			masterLocation.y = UTMMaster.y;
-			masterLocation.heading = headingMaster;
-			currentLocations[currentLocations.length - 1] = masterLocation;
-			if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
-				ScanParam.masterHeading = Copter.getHeading(numUAV);
-			}// In simulation, masterHeading is assigned when SwarmProtHelper.setStartingLocation() is called
-			// 3. Calculus of the flying formation
-			Triplet<Long, Integer, uav2DPosition[]> result = ScanHelper.getBestFormation(currentLocations, ScanParam.masterHeading);
-
-			ScanParam.masterPosition = result.getValue1();	// Position of master in the reorganized vector
-			long centerId = result.getValue0();
-			uav2DPosition[] takeoffLocations = result.getValue2();
-
-			GUI.log(numUAV, "Center UAV id: " + centerId + ", master UAV position in the take off locations array: " + ScanParam.masterPosition);
-
-			if (screenMission.size() > ScanParam.MAX_WAYPOINTS) {
-				GUI.exit(ScanText.MAX_WP_REACHED);
-			}
-
-			// 3. Calculus of the missions to be sent to the slaves and storage of the mission to be followed by the master
-			// 3.1. Calculus of the mission to be followed by the UAV in the center of the formation
+			// 7. Calculus of the mission of all the UAVs
+			// 7.1. Center UAV mission
 			Point3D[] centerMission = new Point3D[screenMission.size()];
-			//	First, find the center UAV in the formation
-			boolean found = false;
-			int centerPosition = 0;
-			for (int r = 0; r < takeoffLocations.length && !found; r++) {
-				if (takeoffLocations[r].id == centerId) {
-					centerPosition = r;
-					found = true;
-				}
-			}
-			// Then, calculus of the mission of the central drone
-			centerMission[0] = new Point3D(takeoffLocations[centerPosition].x, takeoffLocations[centerPosition].y, takeoffAltitude);
-			for (i = 1; i < screenMission.size(); i++) {
+			centerMission[0] = new Point3D(centerUAVAir.getValue2().x, centerUAVAir.getValue2().y, takeoffAltitude);
+			for (int i = 1; i < screenMission.size(); i++) {
 				WaypointSimplified wp = screenMission.get(i);
 				centerMission[i] = new Point3D(wp.x, wp.y, wp.z);
 			}
-			// 3.2 Copy of the mission of the central drone to the neighbors
-			MovedMission[] movedMission = new MovedMission[takeoffLocations.length];
-			for (i = 0; i < takeoffLocations.length; i++) {
-				Point3D[] locations = new Point3D[centerMission.length];
-				if (i == centerPosition) {
+			// 7.2. Copying the mission of the central UAV to the others
+			Map<Integer, MovedMission> movedMission = new HashMap<Integer, MovedMission>(numUAVs);
+			int formationPosition;
+			long id;
+			Point3D[] locations;
+			Point3D location, reference;
+			for (int i = 0; i < numUAVs; i++) {
+				formationPosition = match[i].getValue0();
+				id = match[i].getValue1();
+				locations = new Point3D[centerMission.length];
+				if (id == centerUAVId) {
 					for (int j = 0; j < centerMission.length; j++) {
 						locations[j] = centerMission[j];
 					}
 				} else {
-					double incX = takeoffLocations[i].x - takeoffLocations[centerPosition].x;
-					double incY = takeoffLocations[i].y - takeoffLocations[centerPosition].y;
-					Point3D location, reference;
+					UTMCoordinates offset = airFormation.getOffset(formationPosition, ScanParam.formationHeading);
 					for (int j = 0; j < centerMission.length; j++) {
 						location = new Point3D();
 						reference = centerMission[j];
-						location.x = reference.x + incX;
-						location.y = reference.y + incY;
+						location.x = reference.x + offset.x;
+						location.y = reference.y + offset.y;
 						location.z = reference.z;
 						locations[j] = location;
 					}
 				}
-				movedMission[i] = new MovedMission(takeoffLocations[i].id, locations);
+				movedMission.put(formationPosition, new MovedMission(id, formationPosition, locations));
 			}
-			// 3.3. Calculus of the mission to be sent to slaves and storage of the mission of the master
+			
+			// 7.3 Define the takeoff sequence and store data
 			byte[] outBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 			Output output = new Output(outBuffer);
-			for (i = 0; i < movedMission.length; i++) {
-				long prev, next;
+			Pair<Integer, Long>[] sequence = airFormation.getTakeoffSequence(centerUAVAir, ScanParam.formationHeading, match);
+			long prevId, nextId;
+			MovedMission currentMission;
+			Point3D[] points;
+			// i represents the position in the takeoff sequence
+			for (int i = 0; i < numUAVs; i++) {
 				if (i == 0) {
-					prev = ScanParam.BROADCAST_MAC_ID;
+					prevId = FlightFormation.BROADCAST_MAC_ID;
 				} else {
-					prev = movedMission[i - 1].id;
+					prevId = sequence[i - 1].getValue1();
 				}
-				if (i == movedMission.length - 1) {
-					next = ScanParam.BROADCAST_MAC_ID;
+				if (i == numUAVs - 1) {
+					nextId = FlightFormation.BROADCAST_MAC_ID;
 				} else {
-					next = movedMission[i + 1].id;
+					nextId = sequence[i + 1].getValue1();
 				}
-
-				Point3D[] currentMission = movedMission[i].posiciones;
-				if (i == ScanParam.masterPosition) {
-					ScanParam.idPrev.set(numUAV, prev);
-					ScanParam.idNext.set(numUAV, next);
-					ScanParam.takeoffAltitude.set(numUAV, takeOffAltitudeStepOne);
-
-					Point3D[] missionMaster = new Point3D[currentMission.length];
-					for (int j = 0; j < currentMission.length; j++) {
-						missionMaster[j] = new Point3D(currentMission[j].x, currentMission[j].y,
-								currentMission[j].z);
+				currentMission = movedMission.get(sequence[i].getValue0());
+				points = currentMission.posiciones;
+				formationPosition = currentMission.formationPosition;
+				id = currentMission.id;
+				if (this.selfId == id) {
+					if (this.selfId == centerUAVId) {
+						ScanParam.amICenter[numUAV].set(true);
 					}
-					ScanParam.uavMissionReceivedUTM.set(numUAV, missionMaster);
-					GeoCoordinates[] missionMasterGeo = new GeoCoordinates[missionMaster.length];
-					for (int j = 0; j < missionMaster.length; j++) {
-						// Save each coordinates point in flightListGeo
-						missionMasterGeo[j] = Tools.UTMToGeo(missionMaster[j].x, missionMaster[j].y);
+					ScanParam.idPrev.set(numUAV, prevId);
+					ScanParam.idNext.set(numUAV, nextId);
+					ScanParam.numUAVs.set(numUAV, numUAVs);
+					ScanParam.takeoffAltitude.set(numUAV, takeOffAltitudeStepOne);
+					
+					ScanParam.uavMissionReceivedUTM.set(numUAV, points);
+					GeoCoordinates[] missionMasterGeo = new GeoCoordinates[points.length];
+					for (int j = 0; j < points.length; j++) {
+						missionMasterGeo[j] = Tools.UTMToGeo(points[j].x, points[j].y);
 					}
 					ScanParam.uavMissionReceivedGeo.set(numUAV, missionMasterGeo);
-					// missionSent[masterPosition] remains null
+					// ScanParam.data of masterPosition remains null
 				} else {
 					output.clear();
 					output.writeShort(Message.DATA);
-					output.writeLong(movedMission[i].id);
-					output.writeLong(prev);
-					output.writeLong(next);
+					output.writeLong(id);
+					output.writeLong(centerUAVId);
+					output.writeLong(prevId);
+					output.writeLong(nextId);
+					output.writeInt(numUAVs);
 					output.writeDouble(takeOffAltitudeStepOne);
 					// Number of points (Necessary for the Talker to know how many to read)
-					output.writeInt(centerMission.length);
+					output.writeInt(points.length);
 					// Points to send
-					for (int j = 0; j < currentMission.length; j++) {
-						output.writeDouble(currentMission[j].x);
-						output.writeDouble(currentMission[j].y);
-						output.writeDouble(currentMission[j].z);
+					for (int j = 0; j < points.length; j++) {
+						output.writeDouble(points[j].x);
+						output.writeDouble(points[j].y);
+						output.writeDouble(points[j].z);
 					}
 					output.flush();
-					ScanParam.data.set(i, Arrays.copyOf(outBuffer, output.position()));
+					ScanParam.data.set(formationPosition, Arrays.copyOf(outBuffer, output.position()));
 				}
 			}
 			try {
@@ -281,8 +298,12 @@ public class ListenerThread extends Thread {
 					if (type == Message.DATA) {
 						long id = input.readLong();
 						if (id == selfId) {
+							if (this.selfId == input.readLong()) {
+								ScanParam.amICenter[numUAV].set(true);
+							}
 							ScanParam.idPrev.set(numUAV, input.readLong());
 							ScanParam.idNext.set(numUAV, input.readLong());
+							ScanParam.numUAVs.set(numUAV, input.readInt());
 							ScanParam.takeoffAltitude.set(numUAV, input.readDouble());
 
 							// The number of WP is read to know the loop length
@@ -313,7 +334,7 @@ public class ListenerThread extends Thread {
 			// Discard message
 			Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
 			if (Tools.isExperimentInProgress()) {
-				if (ScanParam.idPrev.get(numUAV) == ScanParam.BROADCAST_MAC_ID) {
+				if (ScanParam.idPrev.get(numUAV) == FlightFormation.BROADCAST_MAC_ID) {
 					GUI.updateProtocolState(numUAV, ScanText.TAKING_OFF);
 					ScanParam.state.set(numUAV, TAKING_OFF);
 				} else {
@@ -376,20 +397,22 @@ public class ListenerThread extends Thread {
 		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		Point3D[] mission = ScanParam.uavMissionReceivedUTM.get(numUAV);
 		GeoCoordinates[] missionGeo = ScanParam.uavMissionReceivedGeo.get(numUAV);
+		int numUAVs = ScanParam.numUAVs.get(numUAV);
+		boolean amICenter = ScanParam.amICenter[numUAV].get();
 		Map<Long, Long> reached = null;
-		if (this.isMaster) {
-			reached = new HashMap<>(currentLocations.length);
+		if (amICenter) {
+			reached = new HashMap<>(numUAVs);
 		}
 		int currentWP = 0;
 		while (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
 			/** MOVE_TO_WP PHASE */
-			GUI.updateProtocolState(numUAV, ScanText.MOVE_TO_WP);
-			GUI.log(numUAV, ScanText.MOVE_TO_WP);
+			GUI.updateProtocolState(numUAV, ScanText.MOVE_TO_WP + " " + currentWP);
+			GUI.log(numUAV, ScanText.MOVE_TO_WP + " " + currentWP);
 			GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
 			
 			GeoCoordinates geo = missionGeo[currentWP];
 			UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
-			Point2D.Double destination = new Point2D.Double(utm.Easting, utm.Northing);
+			Point2D.Double destination = new Point2D.Double(utm.x, utm.y);
 			double relAltitude = mission[currentWP].z;
 			if (!Copter.moveUAVNonBlocking(numUAV, geo, (float)relAltitude)) {
 				GUI.exit(ScanText.MOVE_ERROR + " " + selfId);
@@ -416,13 +439,11 @@ public class ListenerThread extends Thread {
 			/** WP_REACHED PHASE */
 			GUI.updateProtocolState(numUAV, ScanText.WP_REACHED);
 			GUI.log(numUAV, ScanText.WP_REACHED);
-			if (this.isMaster) {
-				GUI.logVerbose(numUAV, ScanText.MASTER_WP_REACHED_ACK_LISTENER);
+			if (amICenter) {
+				GUI.logVerbose(numUAV, ScanText.CENTER_WP_REACHED_ACK_LISTENER);
+				reached.clear();
 			} else {
 				GUI.logVerbose(numUAV, ScanText.SLAVE_WAIT_ORDER_LISTENER);
-			}
-			if (this.isMaster) {
-				reached.clear();
 			}
 			while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
 				inBuffer = Copter.receiveMessage(numUAV);
@@ -430,20 +451,20 @@ public class ListenerThread extends Thread {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
 
-					if (this.isMaster && type == Message.WP_REACHED_ACK) {
+					if (amICenter && type == Message.WP_REACHED_ACK) {
 						long id = input.readLong();
 						int wp = input.readInt();
 						if (wp == currentWP) {
 							reached.put(id, id);
 						}
-						if (reached.size() == currentLocations.length - 1) {
+						if (reached.size() == numUAVs - 1) {
 							if (currentWP == mission.length - 1) {
 								ScanParam.state.set(numUAV, LANDING);
 							}
 							ScanParam.wpReachedSemaphore.incrementAndGet(numUAV);
 						}
 					}
-					if (!this.isMaster) {
+					if (!amICenter) {
 						if (type == Message.MOVE_NOW){
 							int wp = input.readInt();
 							if (wp > currentWP) {

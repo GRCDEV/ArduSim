@@ -6,7 +6,12 @@ public class ScanText {
 	
 	// Configuration dialog
 	public static final String CONFIGURATION_DIALOG_TITLE_SWARM = "Swarm Protocol Configuration";
+	public static final String MISSION_SELECT = "Flight mission:";
 	public static final String BUTTON_SELECT = "...";
+	public static final String GROUND_TEXT = "Ground formation:";
+	public static final String FORMATION_TEXT = "Formation";
+	public static final String DISTANCE_TEXT = "Min. distance between UAVs";
+	public static final String AIR_TEXT = "Flying formation:";
 	
 	public static final String PROTOCOL_TEXT = "Scan protocol v2";
 	public static final String LANDING = "Landing";
@@ -31,9 +36,9 @@ public class ScanText {
 	public static final String MASTER_START_LISTENER = "Master listener detecting slaves";
 	public static final String MASTER_SEND_DATA = "Master talker sending data with mission";
 	public static final String MASTER_DATA_ACK_LISTENER = "Master listener waiting for data ack";
-	public static final String MASTER_WP_REACHED_ACK_LISTENER = "Master listener waiting for waypoint reached ack";
-	public static final String MASTER_SEND_MOVE = "Master talker sending move order";
-	public static final String MASTER_SEND_LAND = "Master talker sending land order";
+	public static final String CENTER_WP_REACHED_ACK_LISTENER = "Center listener waiting for waypoint reached ack";
+	public static final String CENTER_SEND_MOVE = "Center talker sending move order";
+	public static final String CENTER_SEND_LAND = "Center talker sending land order";
 	//   from slave
 	public static final String SLAVE_START_TALKER = "Slave talker sending hello";
 	public static final String SLAVE_WAIT_LIST_TALKER = "Slave talker sending data ack";
@@ -57,6 +62,8 @@ public class ScanText {
 	public static final String UAVS_START_ERROR_1 = "Failed locating the home position of the UAV";
 	public static final String UAVS_START_ERROR_2 = "No valid coordinates could be found to stablish the home of the UAV";
 	public static final String BAD_INPUT = "Please, check the selected information.";
+	public static final String CENTER_ID_NOT_FOUND = "Center UAV not found in the target flight formation.";
+	public static final String CENTER_LOCATION_NOT_FOUND = "Center UAV location not found.";
 	public static final String MAX_WP_REACHED = "Maximum number of waypoints reached, please use less than 60";
 	
 

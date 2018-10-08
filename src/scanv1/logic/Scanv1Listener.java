@@ -72,7 +72,7 @@ public class Scanv1Listener extends Thread {
 			e.printStackTrace();
 		}
 		/** Real UAV */
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
 			this.socketListener = new DatagramSocket(Scanv1ProtParam.port);
 			this.socketListener.setBroadcast(true);
 

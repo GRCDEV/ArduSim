@@ -223,26 +223,19 @@ public class MBCAPv3Helper extends ProtocolHelper {
 					// We only can set a heading if at least two points with valid coordinates are found
 					p1UTM = Tools.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
 					p2UTM = Tools.geoToUTM(waypoint2.getLatitude(), waypoint2.getLongitude());
-					incX = p2UTM.Easting - p1UTM.Easting;
-					incY = p2UTM.Northing - p1UTM.Northing;
+					incX = p2UTM.x - p1UTM.x;
+					incY = p2UTM.y - p1UTM.y;
 					if (incX != 0 || incY != 0) {
 						if (incX == 0) {
 							if (incY > 0)	heading = 0.0;
 							else			heading = 180.0;
 						} else if (incY == 0) {
-							if (incX > 0)	heading = 89.9;	// SITL fails changing the flight mode if heading is close to 90 degrees
+							if (incX > 0)	heading = 90;
 							else			heading = 270.0;
 						} else {
 							double gamma = Math.atan(incY/incX);
 							if (incX >0)	heading = 90 - gamma * 180 / Math.PI;
 							else 			heading = 270.0 - gamma * 180 / Math.PI;
-						}
-						// Same correction due to the SITL error
-						if (heading < 90 && heading > 89.9) {
-							heading = 89.9;
-						}
-						if (heading > 90 && heading < 90.1) {
-							heading = 90.1;
 						}
 					}
 				}
@@ -257,7 +250,8 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-		return Copter.cleanAndSendMissionToUAV(numUAV, Tools.getLoadedMissions()[numUAV]);
+		// No special configuration is needed, as the missions are automatically loaded
+		return true;
 	}
 
 	@Override

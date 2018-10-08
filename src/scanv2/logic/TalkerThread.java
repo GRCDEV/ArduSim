@@ -10,6 +10,7 @@ import com.esotericsoftware.kryo.io.Output;
 import api.Copter;
 import api.GUI;
 import api.Tools;
+import api.pojo.formations.FlightFormation;
 import scanv2.pojo.Message;
 
 public class TalkerThread extends Thread {
@@ -60,7 +61,6 @@ public class TalkerThread extends Thread {
 			Point2D.Double initialPos = Copter.getUTMLocation(numUAV);
 			output.writeDouble(initialPos.x);
 			output.writeDouble(initialPos.y);
-			output.writeDouble(Copter.getHeading(numUAV));
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			
@@ -83,17 +83,17 @@ public class TalkerThread extends Thread {
 		/** SETUP PHASE */
 		if (this.isMaster) {
 			GUI.logVerbose(numUAV, ScanText.MASTER_SEND_DATA);
-			int length = ScanParam.data.length();
+			int length = ScanParam.data.length();//requiere identificador y un Map
 			
 			cicleTime = System.currentTimeMillis();
 			while (ScanParam.state.get(numUAV) == SETUP) {
 				for (int i = 0; i < length; i++) {
 					message = ScanParam.data.get(i);
-					if (message != null && i != ScanParam.masterPosition) {
+					if (message != null) {
 						Copter.sendBroadcastMessage(numUAV, message);
 					}
 				}
-
+				
 				// Timer
 				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
@@ -164,11 +164,12 @@ public class TalkerThread extends Thread {
 		
 		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		int currentWP = 0;
+		boolean amICenter = ScanParam.amICenter[numUAV].get();
 		while (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
 			
 			/** MOVE_TO_WP PHASE */
 			if (currentWP == 0) {
-				if (ScanParam.idNext.get(numUAV) == ScanParam.BROADCAST_MAC_ID) {
+				if (ScanParam.idNext.get(numUAV) == FlightFormation.BROADCAST_MAC_ID) {
 					GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
 					while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
 						Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
@@ -195,8 +196,8 @@ public class TalkerThread extends Thread {
 					}
 				}
 			} else {
-				if (this.isMaster) {
-					GUI.logVerbose(numUAV, ScanText.MASTER_SEND_MOVE);
+				if (amICenter) {
+					GUI.logVerbose(numUAV, ScanText.CENTER_SEND_MOVE);
 					output.clear();
 					output.writeShort(Message.MOVE_NOW);
 					output.writeInt(currentWP);
@@ -238,7 +239,7 @@ public class TalkerThread extends Thread {
 			}
 			
 			/** WP_REACHED PHASE */
-			if (this.isMaster) {
+			if (amICenter) {
 				GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
 				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
 					Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
@@ -271,8 +272,8 @@ public class TalkerThread extends Thread {
 		}
 		
 		/** LANDING PHASE */
-		if (this.isMaster) {
-			GUI.logVerbose(numUAV, ScanText.MASTER_SEND_LAND);
+		if (amICenter) {
+			GUI.logVerbose(numUAV, ScanText.CENTER_SEND_LAND);
 			output.clear();
 			output.writeShort(Message.LAND_NOW);
 			output.flush();
