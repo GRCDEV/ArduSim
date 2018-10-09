@@ -13,6 +13,7 @@ import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import sim.board.BoardPanel;
+import uavFishing.gui.UavFishingConfigDialog;
 
 public class UavFishingHelper extends ProtocolHelper {
 
@@ -29,7 +30,8 @@ public class UavFishingHelper extends ProtocolHelper {
 	@Override
 	public void openConfigurationDialog() {
 		GUI.log("Mostrando Ventana de Configuración");
-		
+		UavFishingConfigDialog dialog = new UavFishingConfigDialog();
+		GUI.log("Configuración Terminada");
 		Tools.setProtocolConfigured();
 	}
 
@@ -83,12 +85,9 @@ public class UavFishingHelper extends ProtocolHelper {
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-		//Enviar, si procede, misión para el dron
-		boolean success = false;
-		//TODO
-		success = true;
-
-		return success;
+	
+		if (numUAV == UavFishingParam.boatID) return Copter.cleanAndSendMissionToUAV(numUAV, Tools.getLoadedMissions()[numUAV]);
+		else return false;
 	}
 
 	@Override
@@ -115,7 +114,7 @@ public class UavFishingHelper extends ProtocolHelper {
 		Copter.setHalfThrottle(0);
 		//Dron
 		Copter.setFlightMode(1, FlightMode.STABILIZE);
-		Copter.armEngines(1);//TODO ahora tienes un método para hacer estas tres cosas en la API (Copter)
+		Copter.armEngines(1);
 		Copter.setFlightMode(1, FlightMode.GUIDED);
 		Copter.guidedTakeOff(1, 25);
 	}//TODO

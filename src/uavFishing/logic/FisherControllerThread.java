@@ -29,7 +29,7 @@ public class FisherControllerThread extends Thread{
 		Point2D.Double UTMActualPoint,UTMNextPoint;
 		double distance;
 		
-		while( Tools.isSetupInProgress()|| Tools.isSetupFinished()) {
+		while(!Tools.isExperimentInProgress()) {
 			Tools.waiting(100);
 		}
 		
@@ -47,8 +47,8 @@ public class FisherControllerThread extends Thread{
 			UTMNextPoint = new Point2D.Double(UTMActualPoint.getX()+vPosOrigin[0], UTMActualPoint.getY()+vPosOrigin[1]);
 			distance = UTMActualPoint.distance(UTMNextPoint);
 			GeoNextPoint=Tools.UTMToGeo((Copter.getUTMLocation(UavFishingParam.boatID).getX() + vPosOrigin[0]),Copter.getUTMLocation(UavFishingParam.boatID).getY() + vPosOrigin[1]);
-			
-			Copter.moveUAV(uavID, GeoNextPoint, 5, 0.95*distance, 0);
+			Copter.moveUAVNonBlocking(uavID, GeoNextPoint, 5);
+//			Copter.moveUAV(uavID, GeoNextPoint, 5, 0.95*distance, 0);
 			
 			
 			
