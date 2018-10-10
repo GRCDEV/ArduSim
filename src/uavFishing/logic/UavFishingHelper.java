@@ -32,7 +32,6 @@ public class UavFishingHelper extends ProtocolHelper {
 		GUI.log("Mostrando Ventana de Configuración");
 		UavFishingConfigDialog dialog = new UavFishingConfigDialog();
 		GUI.log("Configuración Terminada");
-		Tools.setProtocolConfigured();
 	}
 
 	@Override

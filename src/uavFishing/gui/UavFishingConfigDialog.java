@@ -13,6 +13,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -20,6 +21,10 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import api.GUI;
 import api.ProtocolHelper;
+import api.Tools;
+import api.pojo.GeoCoordinates;
+import lander.logic.LanderParam;
+import uavFishing.logic.UavFishingParam;
 
 
 
@@ -27,7 +32,7 @@ public class UavFishingConfigDialog extends JDialog{
 	
 	private static final long serialVersionUID = 1L;
 	private JLabel lblAngle,lblRadius,lblPathBoat;
-	private JTextField txtAngleDegrees,txtRadiusMeters,txtDataFilePath;
+	private JTextField txtAngleDegrees,txtRadiusMeters,txtMisionFilePath;
 	private JCheckBox chkClockwise;
 	
 	
@@ -92,11 +97,11 @@ public class UavFishingConfigDialog extends JDialog{
 		lblPathBoat.setBounds(0, 130, 210, 20);
 		cpBoat.add(lblPathBoat);
 		
-		txtDataFilePath = new JTextField("/home/fran/git/Ardusim");
-		txtDataFilePath.setEditable(true);
-		txtDataFilePath.setBounds(0, 0, 334, 20);
-		txtDataFilePath.setEnabled(true);
-		cpBoat.add(txtDataFilePath);
+		txtMisionFilePath = new JTextField("/home/fran/git/Ardusim");
+		txtMisionFilePath.setEditable(true);
+		txtMisionFilePath.setBounds(0, 0, 334, 20);
+		txtMisionFilePath.setEnabled(true);
+		cpBoat.add(txtMisionFilePath);
 		
 		JButton btnBoatMision = new JButton("...");
 		btnBoatMision.setSize(30,20);
@@ -116,7 +121,7 @@ public class UavFishingConfigDialog extends JDialog{
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("Keyhole Markup Language file", "kml");
 				chooser.addChoosableFileFilter(filter);
 				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-					txtDataFilePath.setText(chooser.getSelectedFile().getPath());
+					txtMisionFilePath.setText(chooser.getSelectedFile().getPath());
 				}
 				
 			}
@@ -128,15 +133,58 @@ public class UavFishingConfigDialog extends JDialog{
 		getContentPane().add(cpButton);
 		cpButton.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		
-		JButton BtnOk = new JButton("OK");
-		BtnOk.setActionCommand("OK");
-		cpButton.add(BtnOk);
+		JButton btnOk = new JButton("OK");
+		btnOk.setActionCommand("OK");
+		cpButton.add(btnOk);
 		
-		JButton BtnCancel = new JButton("Cancel");
-		BtnCancel.setActionCommand("Cancel");
-		cpButton.add(BtnCancel);
 		
+		btnOk.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				okAction();
+			}
+			
+		});
+		
+		
+		JButton btnCancel = new JButton("Cancel");
+		btnCancel.setActionCommand("Cancel");
+		cpButton.add(btnCancel);
+		
+		btnCancel.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				CancelAction();
+			}
+			
+		});
 		this.setVisible(true);
+	}
+	
+	private void okAction() {
+		try {
+			
+			UavFishingParam.angle = Double.parseDouble(txtAngleDegrees.getText());					
+			UavFishingParam.clockwise = chkClockwise.isSelected();
+			UavFishingParam.BoatDataFile = txtMisionFilePath.getText();
+			UavFishingParam.radius = Double.parseDouble(txtRadiusMeters.getText());
+			Tools.setProtocolConfigured();
+			dispose();
+			
+		} catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	
+	private void CancelAction() {
+		try {
+			
+			dispose();
+		} catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 }

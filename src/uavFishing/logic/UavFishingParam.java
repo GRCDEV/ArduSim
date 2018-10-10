@@ -10,7 +10,7 @@ public class UavFishingParam {
 	public static double heading,radius,angle,boatSpeed;
 	public static boolean clockwise;
 	public static int boatID,fisherID;
-	
+	public static String BoatDataFile;
 	public static double[] initial_speeds,vOrigin;
 	
 	
