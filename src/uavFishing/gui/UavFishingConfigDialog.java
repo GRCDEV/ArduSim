@@ -174,17 +174,14 @@ public class UavFishingConfigDialog extends JDialog{
 			dispose();
 			
 		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Angle and distance must be a number.", "Format error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
 	private void CancelAction() {
-		try {
-			
-			dispose();
-		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);
-		}
+				
+		dispose();
+	
 	}
 
 }
