@@ -2373,16 +2373,16 @@ public class ArduSimTools {
 		return null;
 	}
 	
-	/** Sends the initial configuration: increases battery capacity, sets wind configuration, retrieves controller configuration, loads missions, etc. */
-	public static void sendBasicConfiguration() {
+	/** Sends the initial configuration: increases battery capacity, sets wind configuration, retrieves controller configuration, etc. */
+	public static void sendBasicConfiguration1() {
 		
-		GUI.log(Text.SEND_BASIC_CONFIGURATION);
+		GUI.log(Text.SEND_BASIC_CONFIGURATION_1);
 		// All UAVs configured on a different thread, but the first
-		InitialConfigurationThread[] threads = null;
+		InitialConfiguration1Thread[] threads = null;
 		if (Param.numUAVs > 1) {
-			threads = new InitialConfigurationThread[Param.numUAVs - 1];
+			threads = new InitialConfiguration1Thread[Param.numUAVs - 1];
 			for (int i=1; i<Param.numUAVs; i++) {
-				threads[i-1] = new InitialConfigurationThread(i);
+				threads[i-1] = new InitialConfiguration1Thread(i);
 			}
 			int size = threads.length;
 			int block = 5;
@@ -2399,7 +2399,7 @@ public class ArduSimTools {
 				Tools.waiting(200);
 			}
 		}
-		InitialConfigurationThread.sendBasicConfiguration(0);
+		InitialConfiguration1Thread.sendBasicConfiguration(0);
 		if (Param.numUAVs > 1) {
 			for (int i=1; i<Param.numUAVs; i++) {
 				try {
@@ -2408,8 +2408,48 @@ public class ArduSimTools {
 				}
 			}
 		}
-		if (InitialConfigurationThread.UAVS_CONFIGURED.get() < Param.numUAVs) {
+		if (InitialConfiguration1Thread.UAVS_CONFIGURED.get() < Param.numUAVs) {
 			GUI.exit(Text.INITIAL_CONFIGURATION_ERROR_2);
+		}
+	}
+	
+	/** Sends the initial configuration: sends mission (if any), and lauches the protocol instance initial configuration. */
+	public static void sendBasicConfiguration2() {
+		
+		GUI.log(Text.SEND_BASIC_CONFIGURATION_2);
+		// All UAVs configured on a different thread, but the first
+		InitialConfiguration2Thread[] threads = null;
+		if (Param.numUAVs > 1) {
+			threads = new InitialConfiguration2Thread[Param.numUAVs - 1];
+			for (int i=1; i<Param.numUAVs; i++) {
+				threads[i-1] = new InitialConfiguration2Thread(i);
+			}
+			int size = threads.length;
+			int block = 5;
+			int uav = 1;
+			while (uav <= size) {
+				while (uav % block != 0 && uav <= size) {
+					threads[uav - 1].start();
+					uav++;
+				}
+				if (uav <= size) {
+					threads[uav - 1].start();
+					uav++;
+				}
+				Tools.waiting(200);
+			}
+		}
+		InitialConfiguration2Thread.sendBasicConfiguration(0);
+		if (Param.numUAVs > 1) {
+			for (int i=1; i<Param.numUAVs; i++) {
+				try {
+					threads[i-1].join();
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		if (InitialConfiguration2Thread.UAVS_CONFIGURED.get() < Param.numUAVs) {
+			GUI.exit(Text.INITIAL_CONFIGURATION_ERROR_3);
 		}
 	}
 	

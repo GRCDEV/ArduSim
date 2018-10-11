@@ -1,36 +1,33 @@
 package main;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import api.Copter;
 import api.GUI;
-import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.FlightMode;
-import api.pojo.Waypoint;
 import sim.logic.SimParam;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
 /** This class sends the initial configuration to all UAVs, asynchronously. */
 
-public class InitialConfigurationThread extends Thread {
+public class InitialConfiguration1Thread extends Thread {
 	
 	public static final AtomicInteger UAVS_CONFIGURED = new AtomicInteger();
 	
 	private int numUAV;
 	
 	@SuppressWarnings("unused")
-	private InitialConfigurationThread() {}
+	private InitialConfiguration1Thread() {}
 	
-	public InitialConfigurationThread(int numUAV) {
+	public InitialConfiguration1Thread(int numUAV) {
 		this.numUAV = numUAV;
 	}
 
 	@Override
 	public void run() {
-		InitialConfigurationThread.sendBasicConfiguration(numUAV);
+		InitialConfiguration1Thread.sendBasicConfiguration(numUAV);
 	}
 	
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, loads missions..., to a specific UAV. */
@@ -311,20 +308,7 @@ public class InitialConfigurationThread extends Thread {
 			}
 		}
 		
-		// Load mission if needed
-		List<Waypoint> mission = UAVParam.missionGeoLoaded[numUAV];
-		if (mission != null) {
-			if (!Copter.cleanAndSendMissionToUAV(numUAV, mission)) {
-				return;
-			}
-		}
-		
-		// Actions needed by the specific protocol
-		if (!ProtocolHelper.selectedProtocolInstance.sendInitialConfiguration(numUAV)) {
-			return;
-		}
-		
 		// Configuration successful
-		InitialConfigurationThread.UAVS_CONFIGURED.incrementAndGet();
+		InitialConfiguration1Thread.UAVS_CONFIGURED.incrementAndGet();
 	}
 }

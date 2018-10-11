@@ -26,7 +26,7 @@ import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
 import main.ArduSimTools;
-import main.InitialConfigurationThread;
+import main.InitialConfiguration2Thread;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
@@ -226,7 +226,7 @@ public class BoardHelper {
 			// All UAVs connected
 			// If all UAVs are configured and all the missions are drawn the simulator state changes
 			if (Param.simStatus == SimulatorState.STARTING_UAVS
-					&& InitialConfigurationThread.UAVS_CONFIGURED.get() == Param.numUAVs	// All UAVs configured
+					&& InitialConfiguration2Thread.UAVS_CONFIGURED.get() == Param.numUAVs	// All UAVs configured
 					&& BoardParam.numMissionsDrawn == Param.numMissionUAVs.get()) {			// All missions already drawn
 				Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 			}

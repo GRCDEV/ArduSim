@@ -243,12 +243,14 @@ public class Main {
 			BoardParam.panelText.set(Text.WAITING_CONFIGURATION_UPLOAD);
 			ArduSimTools.forceGPS();
 		}
-		ArduSimTools.sendBasicConfiguration();
+		ArduSimTools.sendBasicConfiguration1();
 		
 		if (Param.role == Tools.SIMULATOR) {
 			BoardParam.panelText.set(Text.WAITING_GPS);
 		}
 		ArduSimTools.getGPSFix();//TODO descomentar
+		
+		ArduSimTools.sendBasicConfiguration2();	// It requires GPS fix to set the current location for takeoff
 		
 		// 10. Set communications online, and start collision detection if needed
 		if (Param.role == Tools.SIMULATOR && Param.numUAVs > 1) {

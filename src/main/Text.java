@@ -212,7 +212,8 @@ public class Text {
 	public static final String GPS_OK = "GPS fix acquired...";
 	public static final String COMMUNICATIONS_ONLINE = "Simulated communications online...";
 	public static final String COLLISION_DETECTION_ONLINE = "Collision detection online...";
-	public static final String SEND_BASIC_CONFIGURATION = "Preparing UAVs internal configuration...";
+	public static final String SEND_BASIC_CONFIGURATION_1 = "Preparing UAVs internal configuration (phase 1)...";
+	public static final String SEND_BASIC_CONFIGURATION_2 = "Preparing UAVs internal configuration (phase 2)...";
 	public static final String WAITING_FOR_USER = "Waiting for user interaction.";
 	public static final String TAKING_OFF = "Take off in progress...";
 	public static final String TEST_START = "Test started...";
@@ -314,13 +315,14 @@ public class Text {
 	public static final String UAVS_START_ERROR_4 = "The running operating system is not compatible with " + Text.APP_NAME + ".";
 	public static final String UAVS_START_ERROR_5 = "Virtual UAV starting timeout running instance:";
 	public static final String THREAD_START_ERROR = "Failed to bind socket to IP.";
-	public static final String INITIAL_CONFIGURATION_ERROR_1 = "Failed forcing GPS data messages on the UAVs";
-	public static final String INITIAL_CONFIGURATION_ERROR_2 = "Failed sending the initial configuration to the UAVs";
+	public static final String INITIAL_CONFIGURATION_ERROR_1 = "Failed forcing GPS data messages on the UAVs.";
+	public static final String INITIAL_CONFIGURATION_ERROR_2 = "Failed sending the initial configuration to the UAVs (phase 1).";
+	public static final String INITIAL_CONFIGURATION_ERROR_3 = "Failed sending the initial configuration to the UAVs (phase 2).";
 	public static final String BATTERY_FAILING = "Battery depleting on ";
 	public static final String BATTERY_FAILING2 = "Battery failing.";
 	public static final String BATTERY_LEVEL = "Battery level:";
 	public static final String BATTERY_LEVEL2 = "Battery level of UAV";
-	public static final String TAKE_OFF_ERROR_1 = "Failed executing the take off of the UAV";
+	public static final String TAKE_OFF_ERROR_1 = "Failed executing the take off of the UAV.";
 	public static final String WIRELESS_ERROR = "Error. The function Tools.isInRange() must be modified.";
 	public static final String DOWNLOAD_ERROR = "Image not available";
 	public static final String DISMOUNT_DRIVE_ERROR = "Failed dismounting the virtual RAM drive.";
