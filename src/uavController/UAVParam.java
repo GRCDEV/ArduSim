@@ -116,8 +116,7 @@ public class UAVParam {
 	
 	// Startup parameters
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
-	public static final double DEFAULT_MIN_FLYING_ALTITUDE = 5;				// (m) Minimum relative initial flight altitude
-	public static double minFlyingAltitude = DEFAULT_MIN_FLYING_ALTITUDE;
+	public static volatile double minFlyingAltitude = 5.0;// (m) Minimum relative initial flight altitude
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
 	public static final double WIND_THRESHOLD = 0.5;	// (m/s) Minimum wind speed accepted by the simulator, when used
 	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
