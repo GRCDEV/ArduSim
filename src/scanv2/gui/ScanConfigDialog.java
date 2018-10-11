@@ -309,6 +309,8 @@ public class ScanConfigDialog extends JDialog {
 			}
 		});
 		
+		GUI.addEscapeListener(this);
+		
 		this.setTitle(ScanText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
 		this.setResizable(false);

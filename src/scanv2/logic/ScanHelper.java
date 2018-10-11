@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import javax.swing.JFrame;
@@ -56,17 +57,17 @@ public class ScanHelper extends ProtocolHelper {
 	public void initializeDataStructures() {
 		int numUAVs = Tools.getNumUAVs();
 		
-		ScanParam.amICenter = new AtomicBoolean[numUAVs];
+		ScanParam.iAmCenter = new AtomicBoolean[numUAVs];
 		for (int i = 0; i < numUAVs; i++) {
-			ScanParam.amICenter[i] = new AtomicBoolean();
+			ScanParam.iAmCenter[i] = new AtomicBoolean();
 		}
 		ScanParam.idPrev = new AtomicLongArray(numUAVs);
 		ScanParam.idNext = new AtomicLongArray(numUAVs);
 		ScanParam.numUAVs = new AtomicIntegerArray(numUAVs);
 		ScanParam.takeoffAltitude = new AtomicDoubleArray(numUAVs);
-		ScanParam.data = new AtomicReferenceArray<>(numUAVs);
 		ScanParam.uavMissionReceivedUTM = new AtomicReferenceArray<>(numUAVs);
 		ScanParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
+		ScanParam.data = new AtomicReference<>();
 		
 		ScanParam.state = new AtomicIntegerArray(numUAVs);
 		ScanParam.moveSemaphore = new AtomicIntegerArray(numUAVs);

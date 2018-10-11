@@ -82,42 +82,25 @@ public class TalkerThread extends Thread {
 		
 		/** SETUP PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, ScanText.MASTER_SEND_DATA);
-			int length = ScanParam.data.length();//requiere identificador y un Map
-			
-			cicleTime = System.currentTimeMillis();
-			while (ScanParam.state.get(numUAV) == SETUP) {
-				for (int i = 0; i < length; i++) {
-					message = ScanParam.data.get(i);
-					if (message != null) {
-						Copter.sendBroadcastMessage(numUAV, message);
+			GUI.logVerbose(numUAV, ScanText.MASTER_DATA_TALKER);
+			byte[][] messages = ScanParam.data.get();
+			if (messages != null) {
+				int length = messages.length;
+				
+				cicleTime = System.currentTimeMillis();
+				while (ScanParam.state.get(numUAV) == SETUP) {
+					for (int i = 0; i < length; i++) {
+						Copter.sendBroadcastMessage(numUAV, messages[i]);
+					}
+					
+					// Timer
+					cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+					waitingTime = (int) (cicleTime - System.currentTimeMillis());
+					if (waitingTime > 0) {
+						Tools.waiting(waitingTime);
 					}
 				}
-				
-				// Timer
-				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
-				waitingTime = (int) (cicleTime - System.currentTimeMillis());
-				if (waitingTime > 0) {
-					Tools.waiting(waitingTime);
-				}
 			}
-		} else {
-			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
-			while (ScanParam.state.get(numUAV) == SETUP) {
-				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
-			}
-		}
-		while (ScanParam.state.get(numUAV) < SETUP_FINISHED) {
-			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
-		}
-		
-		/** SETUP FINISHED PHASE */
-		if (this.isMaster) {
-			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
-			while (ScanParam.state.get(numUAV) == SETUP_FINISHED) {
-				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
-			}
-			
 		} else {
 			GUI.logVerbose(numUAV, ScanText.SLAVE_WAIT_LIST_TALKER);
 			output.clear();
@@ -127,9 +110,54 @@ public class TalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (ScanParam.state.get(numUAV) == SETUP_FINISHED) {
+			while (ScanParam.state.get(numUAV) == SETUP) {
+				if (ScanParam.uavMissionReceivedGeo.get(numUAV) != null) {
+					Copter.sendBroadcastMessage(numUAV, message);
+				}
+				
+				// Timer
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
+				}
+			}
+		}
+		while (ScanParam.state.get(numUAV) < READY_TO_FLY) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+		}
+		
+		/** READY TO FLY PHASE */
+		if (this.isMaster) {
+			GUI.logVerbose(numUAV, ScanText.MASTER_READY_TO_FLY_TALKER);
+			output.clear();
+			output.writeShort(Message.READY_TO_FLY);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == READY_TO_FLY) {
 				Copter.sendBroadcastMessage(numUAV, message);
-
+				
+				// Timer
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
+				}
+			}
+		} else {
+			GUI.logVerbose(numUAV, ScanText.SLAVE_READY_TO_FLY_CONFIRM_TALKER);
+			output.clear();
+			output.writeShort(Message.READY_TO_FLY_ACK);
+			output.writeLong(selfId);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == READY_TO_FLY) {
+				Copter.sendBroadcastMessage(numUAV, message);
+				
 				// Timer
 				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
@@ -158,48 +186,163 @@ public class TalkerThread extends Thread {
 		while (ScanParam.state.get(numUAV) == TAKING_OFF) {
 			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
+		while (ScanParam.state.get(numUAV) < MOVE_TO_TARGET) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+		}
+		
+		/** MOVE TO TARGET PHASE */
+		long idNext = ScanParam.idNext.get(numUAV);
+		if (idNext == FlightFormation.BROADCAST_MAC_ID) {
+			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+			while (ScanParam.state.get(numUAV) == MOVE_TO_TARGET) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+			}
+		} else {
+			GUI.logVerbose(numUAV, ScanText.TALKER_TAKE_OFF_COMMAND);
+			output.clear();
+			output.writeShort(Message.TAKE_OFF_NOW);
+			output.writeLong(idNext);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == MOVE_TO_TARGET) {
+				Copter.sendBroadcastMessage(numUAV, message);
+				
+				// Timer
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
+				}
+			}
+		}
+		while (ScanParam.state.get(numUAV) < TARGET_REACHED) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+		}
+		
+		/** TARGET REACHED PHASE */
+		boolean iAmCenter = ScanParam.iAmCenter[numUAV].get();
+		if (iAmCenter) {
+			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+			while (ScanParam.state.get(numUAV) == TARGET_REACHED) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+			}
+		} else {
+			GUI.logVerbose(numUAV, ScanText.NO_CENTER_TARGET_REACHED_TALKER);
+			output.clear();
+			output.writeShort(Message.TARGET_REACHED_ACK);
+			output.writeLong(selfId);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == TARGET_REACHED) {
+				Copter.sendBroadcastMessage(numUAV, message);
+				
+				// Timer
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
+				}
+			}
+		}
+		while (ScanParam.state.get(numUAV) < READY_TO_START) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+		}
+		
+		/** READY TO START */
+		if (iAmCenter) {
+			GUI.logVerbose(numUAV, ScanText.CENTER_TAKEOFF_END_TALKER);
+			output.clear();
+			output.writeShort(Message.TAKEOFF_END);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == READY_TO_START) {
+				Copter.sendBroadcastMessage(numUAV, message);
+				
+				// Timer
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
+				}
+			}
+		} else {
+			GUI.logVerbose(numUAV, ScanText.NO_CENTER_TAKEOFF_END_ACK_TALKER);
+			output.clear();
+			output.writeShort(Message.TAKEOFF_END_ACK);
+			output.writeLong(selfId);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == READY_TO_START) {
+				Copter.sendBroadcastMessage(numUAV, message);
+				
+				// Timer
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
+				}
+			}
+		}
+		while (ScanParam.state.get(numUAV) < SETUP_FINISHED) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+		}
+		
+		/** SETUP FINISHED PHASE */
+		GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+		while (ScanParam.state.get(numUAV) == SETUP_FINISHED) {
+			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+		}
 		while (ScanParam.state.get(numUAV) < FOLLOWING_MISSION) {
 			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		int currentWP = 0;
-		boolean amICenter = ScanParam.amICenter[numUAV].get();
 		while (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
 			
-			/** MOVE_TO_WP PHASE */
-			if (currentWP == 0) {
-				if (ScanParam.idNext.get(numUAV) == FlightFormation.BROADCAST_MAC_ID) {
-					GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
-					while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
-						Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
-					}
-				} else {
-					GUI.logVerbose(numUAV, ScanText.TAKE_OFF_COMMAND);
-					long next = ScanParam.idNext.get(numUAV);
-					output.clear();
-					output.writeShort(Message.TAKE_OFF_NOW);
-					output.writeLong(next);
-					output.flush();
-					message = Arrays.copyOf(outBuffer, output.position());
-					
-					cicleTime = System.currentTimeMillis();
-					while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
-						Copter.sendBroadcastMessage(numUAV, message);
-						
-						// Timer
-						cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
-						waitingTime = (int) (cicleTime - System.currentTimeMillis());
-						if (waitingTime > 0) {
-							Tools.waiting(waitingTime);
-						}
-					}
+			/** WP_REACHED PHASE */
+			if (iAmCenter) {
+				GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
+				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
+					Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 				}
 			} else {
-				if (amICenter) {
+				GUI.logVerbose(numUAV, ScanText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
+				output.clear();
+				output.writeShort(Message.WAYPOINT_REACHED_ACK);
+				output.writeLong(selfId);
+				output.writeInt(currentWP);
+				output.flush();
+				message = Arrays.copyOf(outBuffer, output.position());
+				
+				cicleTime = System.currentTimeMillis();
+				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
+					Copter.sendBroadcastMessage(numUAV, message);
+					
+					// Timer
+					cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+					waitingTime = (int) (cicleTime - System.currentTimeMillis());
+					if (waitingTime > 0) {
+						Tools.waiting(waitingTime);
+					}
+				}
+			}
+			
+			/** MOVE_TO_WP PHASE */
+			if (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
+				currentWP++;
+				if (iAmCenter) {
 					GUI.logVerbose(numUAV, ScanText.CENTER_SEND_MOVE);
 					output.clear();
-					output.writeShort(Message.MOVE_NOW);
+					output.writeShort(Message.MOVE_TO_WAYPOINT);
 					output.writeInt(currentWP);
 					output.flush();
 					message = Arrays.copyOf(outBuffer, output.position());
@@ -216,9 +359,9 @@ public class TalkerThread extends Thread {
 						}
 					}
 				} else {
-					GUI.logVerbose(numUAV, ScanText.SLAVE_SEND_WP_REACHED_ACK);
+					GUI.logVerbose(numUAV, ScanText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
 					output.clear();
-					output.writeShort(Message.WP_REACHED_ACK);
+					output.writeShort(Message.WAYPOINT_REACHED_ACK);
 					output.writeLong(selfId);
 					output.writeInt(currentWP - 1);
 					output.flush();
@@ -237,45 +380,16 @@ public class TalkerThread extends Thread {
 					}
 				}
 			}
-			
-			/** WP_REACHED PHASE */
-			if (amICenter) {
-				GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
-				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
-					Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
-				}
-			} else {
-				GUI.logVerbose(numUAV, ScanText.SLAVE_SEND_WP_REACHED_ACK);
-				output.clear();
-				output.writeShort(Message.WP_REACHED_ACK);
-				output.writeLong(selfId);
-				output.writeInt(currentWP);
-				output.flush();
-				message = Arrays.copyOf(outBuffer, output.position());
-				
-				cicleTime = System.currentTimeMillis();
-				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
-					Copter.sendBroadcastMessage(numUAV, message);
-					
-					// Timer
-					cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
-					waitingTime = (int) (cicleTime - System.currentTimeMillis());
-					if (waitingTime > 0) {
-						Tools.waiting(waitingTime);
-					}
-				}
-			}
-			currentWP++;
 		}
 		while (ScanParam.state.get(numUAV) < LANDING) {
 			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** LANDING PHASE */
-		if (amICenter) {
+		if (iAmCenter) {
 			GUI.logVerbose(numUAV, ScanText.CENTER_SEND_LAND);
 			output.clear();
-			output.writeShort(Message.LAND_NOW);
+			output.writeShort(Message.LAND);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			
