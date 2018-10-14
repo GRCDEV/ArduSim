@@ -1,4 +1,4 @@
-package uavFishing.logic;
+package uavFishing.pojo;
 
 /** 
  * Class whit methods for some vector operations.

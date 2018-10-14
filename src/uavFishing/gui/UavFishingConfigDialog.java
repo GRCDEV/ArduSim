@@ -19,7 +19,12 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.javatuples.Pair;
+import java.util.List;
+
 import api.GUI;
+import api.pojo.Waypoint;
 import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.GeoCoordinates;
@@ -34,6 +39,7 @@ public class UavFishingConfigDialog extends JDialog{
 	private JLabel lblAngle,lblRadius,lblPathBoat;
 	private JTextField txtAngleDegrees,txtRadiusMeters,txtMisionFilePath;
 	private JCheckBox chkClockwise;
+	private Pair<String, List<Waypoint>[]> fitxData;
 	
 	
 	public static void main(String[] args) {
@@ -89,8 +95,6 @@ public class UavFishingConfigDialog extends JDialog{
 		FlowLayout flowLayout_1 = (FlowLayout) cpBoat.getLayout();
 		flowLayout_1.setAlignment(FlowLayout.LEFT);
 		getContentPane().add(cpBoat);
-		Float x = cpBoat.getAlignmentX();
-		GUI.log(x.toString());
 		
 		
 		lblPathBoat = new JLabel("Fichero misión para el barco: ");
@@ -112,8 +116,14 @@ public class UavFishingConfigDialog extends JDialog{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				fitxData=api.GUI.loadKMLMissions();
+				txtMisionFilePath.setText(fitxData.getValue0());
+				
+				
+				
+				/*
 				JFileChooser chooser = new JFileChooser();
-				//chooser.setCurrentDirectory(Tools.getCurrentFolder());
 				chooser.setDialogTitle("Select UAV mision data file"); // TODO Add text helper file
 				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				chooser.setMultiSelectionEnabled(false);
@@ -123,8 +133,10 @@ public class UavFishingConfigDialog extends JDialog{
 				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 					txtMisionFilePath.setText(chooser.getSelectedFile().getPath());
 				}
-				
+				*/
 			}
+			
+			
 		});
 		
 		
@@ -170,6 +182,7 @@ public class UavFishingConfigDialog extends JDialog{
 			UavFishingParam.clockwise = chkClockwise.isSelected();
 			UavFishingParam.BoatDataFile = txtMisionFilePath.getText();
 			UavFishingParam.radius = Double.parseDouble(txtRadiusMeters.getText());
+			Tools.setLoadedMissionsFromFile(fitxData.getValue1());
 			Tools.setProtocolConfigured();
 			dispose();
 			

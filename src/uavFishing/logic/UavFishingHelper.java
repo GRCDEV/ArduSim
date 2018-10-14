@@ -14,6 +14,8 @@ import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import sim.board.BoardPanel;
 import uavFishing.gui.UavFishingConfigDialog;
+import uavFishing.pojo.ToolsFishing;
+import uavFishing.pojo.VectorMath;
 
 public class UavFishingHelper extends ProtocolHelper {
 

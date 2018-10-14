@@ -1,4 +1,4 @@
-package uavFishing.logic;
+package uavFishing.pojo;
 
 import api.Tools;
 import api.pojo.GeoCoordinates;

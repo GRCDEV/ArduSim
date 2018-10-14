@@ -6,6 +6,7 @@ import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.GeoCoordinates;
+import uavFishing.pojo.VectorMath;
 
 
 public class FisherControllerThread extends Thread{
