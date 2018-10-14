@@ -73,4 +73,3 @@ The VerticalFlowLayout implementation comes from Vassili Dzuba and under [Artist
 Statistical Machine Intelligence and Learning Engine ([Smile](https://github.com/haifengl/smile)) is used for the protocol Chemotaxis (core, data, interpolation and math modules) and under [Apache license](https://github.com/haifengl/smile/blob/master/LICENSE).
 
 [Sigar](https://github.com/hyperic/sigar) is used to measure CPU ussage under Windows and is under [Apache license](https://github.com/hyperic/sigar/blob/master/LICENSE).
-
