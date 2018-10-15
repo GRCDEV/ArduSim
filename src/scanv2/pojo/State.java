@@ -13,6 +13,7 @@ public final class State {
 	public static final short READY_TO_START = 7;
 	public static final short SETUP_FINISHED = 8;
 	public static final short FOLLOWING_MISSION = 9;
-	public static final short LANDING = 10;
-	public static final short FINISH = 11;
+	public static final short MOVE_TO_LAND = 10;
+	public static final short LANDING = 11;
+	public static final short FINISH = 12;
 }

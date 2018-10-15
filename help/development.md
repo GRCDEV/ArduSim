@@ -353,20 +353,22 @@ Finally, ArduSim provides tools to form the swarm formation. The layout can be b
 * *Matrix*. The UAVs are ordered in a square matrix, and numbered from left to right, and from bottom to up.
 * *Circle*. A center UAV is surrounded by the remaining forming a circle, and the are numbered; first the center UAV, and then the remaining counterclockwise starting on the right.
 
-In all cases, the center multicopter is the UAV closest to the rest of UAVs (center of line, matrix or circle). The following functions allow the developer to use this feature. You can set values in the `void openConfigurationDialog()` function of the protocol implementation, or retrieve then wherever you want.
+In all cases, the center multicopter is the UAV closest to the rest of UAVs (center of line, matrix or circle). The following general functions of the class *api.pojo.formations.FlightFormation* allow the developer to use this feature. You can set values in the `void openConfigurationDialog()` function of the protocol implementation, or retrieve then wherever you want.
 
 * `Formation getGroundFormation()`. This method provides the formation of UAVs used for the ground layout in simulations.
 * `void setGroundFormation(Formation)`. It sets the flight formation of UAVs used for the ground layout in simulations (after user input).
-* `int getGroundFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations.
-* `void setGroundFormationDistance(int)`. It sets the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations (after user input).
+* `double getGroundFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations.
+* `void setGroundFormationDistance(double)`. It sets the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations (after user input).
 * `Formation getFlyingFormation()`. This function provides the formation of UAVs used for the flying layout.
 * `void setFlyingFormation(Formation)`. It sets the flight formation of UAVs used for the flying layout (after user input).
-* `int getFlyingFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the flying layout.
-* `void setFlyingFormationDistance()`. It sets the minimum distance between contiguous UAVs in the formation used for the flying layout (after user input).
+* `double getFlyingFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the flying layout.
+* `void setFlyingFormationDistance(double)`. It sets the minimum distance between contiguous UAVs in the formation used for the flying layout (after user input).
+* `double getLandingFormationDistance()`. This function provides the minimum distance between cotiguous UAVs while landing.
+* `void setLandingFormationDistance(double)`. It sets the minimum distance between contiguous UAVs while landing.
 
 You can use a swarm formation for the ground UAVs layout or not (it's not mandatory, you can set their starting location manually). As examples, the protocol MBCAP sets the initial location of the UAVs in the first point of the loaded mission, while the Scan Protocol uses the previous flight formations.
 
-The class *api.pojo.formations.FlightFormation* provides the following methods:
+The class *api.pojo.formations.FlightFormation* also provides the following methods to define the layout of the swarm:
 
 * `static FlightFormation getFormation(Formation, int, double)`. Once you know which formation type to use (Formation), you can instantiate the formation with this method, providing the number of UAVs in the formation, and the minimum distance between contiguous UAVs. It returns an object with the rest of functions.
 * `int getCenterUAVPosition()`. It provides the position of the UAV in the center of the formation. 
@@ -375,7 +377,7 @@ The class *api.pojo.formations.FlightFormation* provides the following methods:
 * `Triplet<Integer, Long, UTMCoordinates>[] matchIDs(UAV2DLocation[], heading)`. This function must only be used in a flying formation (not ground formation in simulation) to match the best formation in flight for the given ground location for the UAVs, and heading towards the formation must be built. The best formation is the one where the UAVs have to move less distance to the flying formation during the takeoff phase.
 * `Pair<Integer, Long>[] getTakeoffSequence(Triplet<Integer, Long, UTMCoordinates>, double, Triplet<Integer, Long, UTMCoordinates>[])`. Again, this function must only be used in a flying formation, and provides a sorted array beginning with the UAVs that have to move further (takeoff order), with their position in the formation, and their ID.
 
-To build a new type of formation, you have to create a Class that extends *FlightFormation.java* Class, and implement the `void initializeFormation()` method to generate the layout (center UAV position, and an array with the points of the formation with their corresponding offset from the center UAV). The constructor only has to call the *super* equivalent. Finally, you need to add the new implemented formation to the `static FlightFormation getFormation(Formation, int, double)` method, and to the *FlightFormation.Formation* enumerator.
+Finally, you can build a new type of formation. You have to create a Class that extends *FlightFormation.java* Class, and then implement the `void initializeFormation()` method to generate the layout (center UAV position, and an array with the points of the formation with their corresponding offset from the center UAV). The constructor only has to call the *super* equivalent. Finally, you need to add the new implemented formation to the `static FlightFormation getFormation(Formation, int, double)` method, and to the *FlightFormation.Formation* enumerator.
 
 ### 5.5 Implementation recomendations
 

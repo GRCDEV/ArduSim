@@ -381,8 +381,15 @@ public class TalkerThread extends Thread {
 				}
 			}
 		}
-		while (ScanParam.state.get(numUAV) < LANDING) {
+		while (ScanParam.state.get(numUAV) < MOVE_TO_LAND) {
 			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+		}
+		
+		/** MOVE TO LAND PHASE */
+		if (ScanParam.state.get(numUAV) == MOVE_TO_LAND) {
+			while (ScanParam.state.get(numUAV) < LANDING) {
+				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+			}
 		}
 		
 		/** LANDING PHASE */
@@ -390,6 +397,9 @@ public class TalkerThread extends Thread {
 			GUI.logVerbose(numUAV, ScanText.CENTER_SEND_LAND);
 			output.clear();
 			output.writeShort(Message.LAND);
+			Point2D.Double currentLocation = Copter.getUTMLocation(numUAV);
+			output.writeDouble(currentLocation.x);
+			output.writeDouble(currentLocation.y);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			
@@ -403,11 +413,6 @@ public class TalkerThread extends Thread {
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
-			}
-		} else {
-			GUI.logVerbose(numUAV, ScanText.TALKER_WAITING);
-			while (ScanParam.state.get(numUAV) == LANDING) {
-				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
 			}
 		}
 		while (ScanParam.state.get(numUAV) < FINISH) {

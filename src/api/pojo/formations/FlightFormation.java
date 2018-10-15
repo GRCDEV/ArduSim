@@ -12,23 +12,40 @@ import api.pojo.Permutation;
 import api.pojo.UAV2DLocation;
 import api.pojo.UTMCoordinates;
 import main.Text;
+import uavController.UAVParam;
 
 public abstract class FlightFormation {
 	
 	public enum Formation {
-		LINEAR(Text.LINEAR_FORMATION),
-		MATRIX(Text.MATRIX_FORMATION),
-		CIRCLE(Text.CIRCLE_FORMATION);
+		LINEAR((short)0, Text.LINEAR_FORMATION),
+		MATRIX((short)1, Text.MATRIX_FORMATION),
+		CIRCLE((short)2, Text.CIRCLE_FORMATION);
 		// Add here new formations
 		
+		private final short formationId;
 		private final String name;
 		
-		private Formation(String name) {
+		private Formation(short formationId, String name) {
+			this.formationId = formationId;
 			this.name = name;
+		}
+		
+		public short getFormationId() {
+			return this.formationId;
 		}
 		
 		public String getName() {
 			return this.name;
+		}
+		
+		public static Formation getFormation(short formationId) {
+			Formation[] formations = Formation.values();
+			for (int i = 0; i < formations.length; i++) {
+				if (formations[i].getFormationId() == formationId) {
+					return formations[i];
+				}
+			}
+			return null;
 		}
 		
 		public static Formation getFormation(String name) {
@@ -60,6 +77,57 @@ public abstract class FlightFormation {
 		}
 		return null;
 	}
+	
+	/** Provides the formation of UAVs used for the ground layout in simulations. */
+	public static FlightFormation.Formation getGroundFormation() {
+		return UAVParam.groundFormation.get();
+	}
+	
+	/** Provides the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations. */
+	public static double getGroundFormationDistance() {
+		return UAVParam.groundDistanceBetweenUAV;
+	}
+	
+	/** Sets the flight formation of UAVs used for the ground layout in simulations. */
+	public static void setGroundFormation(FlightFormation.Formation formation) {
+		UAVParam.groundFormation.set(formation);
+	}
+	
+	/** Sets the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations. */
+	public static void setGroundFormationDistance(double distance) {
+		UAVParam.groundDistanceBetweenUAV = distance;
+	}
+	
+	/** Provides the formation of UAVs used for the flying layout. */
+	public static FlightFormation.Formation getFlyingFormation() {
+		return UAVParam.airFormation.get();
+	}
+	
+	/** Provides the minimum distance between contiguous UAVs in the formation used for the flying layout. */
+	public static double getFlyingFormationDistance() {
+		return UAVParam.airDistanceBetweenUAV;
+	}
+	
+	/** Sets the flight formation of UAVs used for the flying layout. */
+	public static void setFlyingFormation(FlightFormation.Formation formation) {
+		UAVParam.airFormation.set(formation);
+	}
+	
+	/** Sets the minimum distance between contiguous UAVs in the formation used for the flying layout. */
+	public static void setFlyingFormationDistance(double distance) {
+		UAVParam.airDistanceBetweenUAV = distance;
+	}
+	
+	/** Provides the minimum distance between contiguous UAVs while landing. */
+	public static double getLandingFormationDistance() {
+		return UAVParam.landDistanceBetweenUAV;
+	}
+	
+	/** Sets the minimum distance between contiguous UAVs while landing. */
+	public static void setLandingFormationDistance(double distance) {
+		UAVParam.landDistanceBetweenUAV = distance;
+	}
+	
 	
 	public static final long BROADCAST_MAC_ID = 281474976710655L; // Broadcast MAC (0xFFFFFFFFFFFF)
 	

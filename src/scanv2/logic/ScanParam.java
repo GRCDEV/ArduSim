@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import api.pojo.AtomicDoubleArray;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
+import api.pojo.formations.FlightFormation.Formation;
 
 public class ScanParam {
 	
@@ -37,12 +38,15 @@ public class ScanParam {
 	public static AtomicLongArray idPrev;					// id of the previous UAV to takeoff
 	public static AtomicLongArray idNext;					// id of the next UAV to takeoff
 	public static AtomicIntegerArray numUAVs;				// Number of UAVs detected by the master (master included)
+	public static AtomicReferenceArray<Formation> flyingFormation;	// Formation used while flying
+	public static AtomicIntegerArray flyingFormationPosition;		// Position of the UAV in the formation
+	public static AtomicDoubleArray flyingFormationHeading;			// (rad) Heading of the formation while flying
 	public static AtomicDoubleArray takeoffAltitude;		// (m) Altitude for the takeoff
 	public static AtomicReference<byte[][]> data;			// Master: array containing the data sent to the slaves
 	public static AtomicReferenceArray<Point3D[]> uavMissionReceivedUTM; // Mission for each UAV in UTM coordinates
 	public static AtomicReferenceArray<GeoCoordinates[]> uavMissionReceivedGeo; // Matrix with individual missions of each Drone GEO
 	// Maximum number of waypoints
-	public static final int MAX_WAYPOINTS = 59;	// MAX_MTU - 2 - 8x4 - 4 - 2xn = 18 Bytes remaining
+	public static final int MAX_WAYPOINTS = 59;	// MAX_MTU - 2 - 8x4 - 4 - 2 - 4 - 8 - 4 - 3x8xn
 	
 	// Thread and protocol coordination
 	public static AtomicIntegerArray state;

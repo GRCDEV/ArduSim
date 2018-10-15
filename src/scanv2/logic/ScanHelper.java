@@ -27,7 +27,6 @@ import api.pojo.Waypoint;
 import api.pojo.formations.FlightFormation;
 import scanv2.gui.ScanConfigDialog;
 import sim.board.BoardPanel;
-import uavController.UAVParam;
 
 public class ScanHelper extends ProtocolHelper {
 
@@ -64,6 +63,9 @@ public class ScanHelper extends ProtocolHelper {
 		ScanParam.idPrev = new AtomicLongArray(numUAVs);
 		ScanParam.idNext = new AtomicLongArray(numUAVs);
 		ScanParam.numUAVs = new AtomicIntegerArray(numUAVs);
+		ScanParam.flyingFormation = new AtomicReferenceArray<>(numUAVs);
+		ScanParam.flyingFormationPosition = new AtomicIntegerArray(numUAVs);
+		ScanParam.flyingFormationHeading = new AtomicDoubleArray(numUAVs);
 		ScanParam.takeoffAltitude = new AtomicDoubleArray(numUAVs);
 		ScanParam.uavMissionReceivedUTM = new AtomicReferenceArray<>(numUAVs);
 		ScanParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
@@ -140,7 +142,8 @@ public class ScanHelper extends ProtocolHelper {
 		// 2. With the ground formation centered on the mission beginning, get ground coordinates
 		//   As this is simulation, ID and position on the ground are the same for all the UAVs
 		int numUAVs = Tools.getNumUAVs();
-		FlightFormation groundFormation = FlightFormation.getFormation(UAVParam.groundFormation.get(), numUAVs, UAVParam.groundDistanceBetweenUAV);
+		FlightFormation groundFormation = FlightFormation.getFormation(FlightFormation.getGroundFormation(),
+				numUAVs, FlightFormation.getGroundFormationDistance());
 		int groundCenterUAVPosition = groundFormation.getCenterUAVPosition();
 		UAV2DLocation[] groundLocations = new UAV2DLocation[numUAVs];
 		UTMCoordinates locationUTM;
@@ -154,7 +157,8 @@ public class ScanHelper extends ProtocolHelper {
 		}
 		
 		// 3. Get the ID of the UAV that will be center in the flight formation
-		FlightFormation airFormation = FlightFormation.getFormation(UAVParam.airFormation.get(), numUAVs, UAVParam.airDistanceBetweenUAV);
+		FlightFormation airFormation = FlightFormation.getFormation(FlightFormation.getFlyingFormation(),
+				numUAVs, FlightFormation.getFlyingFormationDistance());
 		Triplet<Integer, Long, UTMCoordinates>[] match = airFormation.matchIDs(groundLocations, ScanParam.formationHeading);
 		int airCenterUAVPosition = airFormation.getCenterUAVPosition();
 		Integer airCenterUAVId = null;

@@ -339,11 +339,11 @@ public class ArduSimTools {
 				if (param == null) {
 					GUI.log(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.groundDistanceBetweenUAV);
 				} else {
-					if (!Tools.isValidPositiveInteger(param)) {
+					if (!Tools.isValidPositiveDouble(param)) {
 						GUI.log(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 						System.exit(1);
 					}
-					UAVParam.groundDistanceBetweenUAV = Integer.parseInt(param);
+					UAVParam.groundDistanceBetweenUAV = Double.parseDouble(param);
 				}
 			}
 		}
@@ -370,12 +370,23 @@ public class ArduSimTools {
 			if (param == null) {
 				GUI.log(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.airDistanceBetweenUAV);
 			} else {
-				if (!Tools.isValidPositiveInteger(param)) {
+				if (!Tools.isValidPositiveDouble(param)) {
 					GUI.log(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
-				UAVParam.airDistanceBetweenUAV = Integer.parseInt(param);
+				UAVParam.airDistanceBetweenUAV = Double.parseDouble(param);
 			}
+		}
+		// Check if the minimum distance for landing is also included (meters)
+		param = parameters.get(Param.LAND_DISTANCE);
+		if (param == null) {
+			GUI.log(Param.LAND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.landDistanceBetweenUAV);
+		} else {
+			if (!Tools.isValidPositiveDouble(param)) {
+				GUI.log(Param.LAND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			UAVParam.landDistanceBetweenUAV = Double.parseDouble(param);
 		}
 		param = parameters.get(Param.MEASURE_CPU);
 		if (param == null) {

@@ -12,25 +12,26 @@ public class ScanText {
 	public static final String FORMATION_TEXT = "Formation";
 	public static final String DISTANCE_TEXT = "Min. distance between UAVs";
 	public static final String AIR_TEXT = "Flying formation:";
-	
+	public static final String LANDING_TEXT = "Landing:";
 	public static final String PROTOCOL_TEXT = "Scan protocol v2";
 	public static final String LANDING = "Landing";
 	public static final String ENABLING = "Swarm protocol enabled...";
 	
 	// Protocol states
-	public static final String START = "Start";						// Master UAV detects slaves
-	public static final String SETUP = "Setup";						// Master sends mission to slaves
-	public static final String READY_TO_FLY = "Ready to fly";		// Blocking slaves until all have the mission
-	public static final String WAIT_TAKE_OFF = "Wait take off";		// Waiting its turn to take off;
-	public static final String TAKING_OFF = "Taking off";			// Performing the take off;
-	public static final String MOVE_TO_TARGET = "Move to target";	// Moving to the final takeoff location
-	public static final String TARGET_REACHED = "Target reached";	// Starting location reached
-	public static final String READY_TO_START = "Ready to start";	// Blocking UAVs until all reach the starting location
-	public static final String SETUP_FINISHED = "Setup finished";	// Waiting for the experiment to start
-	public static final String MOVE_TO_WP = "Moving to WP";			// Moving to a waypoint;
-	public static final String WP_REACHED = "WP reached";			// Waypoint reached;
-	public static final String LANDING_UAV = "Landing";				// UAV landing
-	public static final String FINISH = "Finished";					// The flight is over;
+	public static final String START = "Start";							// Master UAV detects slaves
+	public static final String SETUP = "Setup";							// Master sends mission to slaves
+	public static final String READY_TO_FLY = "Ready to fly";			// Blocking slaves until all have the mission
+	public static final String WAIT_TAKE_OFF = "Wait take off";			// Waiting its turn to take off
+	public static final String TAKING_OFF = "Taking off";				// Performing the take off
+	public static final String MOVE_TO_TARGET = "Move to target";		// Moving to the final takeoff location
+	public static final String TARGET_REACHED = "Target reached";		// Starting location reached
+	public static final String READY_TO_START = "Ready to start";		// Blocking UAVs until all reach the starting location
+	public static final String SETUP_FINISHED = "Setup finished";		// Waiting for the experiment to start
+	public static final String MOVE_TO_WP = "Moving to WP";				// Moving to a waypoint
+	public static final String WP_REACHED = "WP reached";				// Waypoint reached
+	public static final String LAND_LOCATION_REACHED = "Move to land";	// Moving to the final land location
+	public static final String LANDING_UAV = "Landing";					// UAV landing
+	public static final String FINISH = "Finished";						// The flight is over
 	
 	// Progress messages
 	//   from master
@@ -69,7 +70,8 @@ public class ScanText {
 	
 	// Error messages
 	public static final String TAKE_OFF_ERROR = "Unable to perform the take off of the UAV";
-	public static final String MOVE_ERROR = "Unable to move to a waypoint. UAV";
+	public static final String MOVE_ERROR_1 = "Unable to move to a waypoint. UAV";
+	public static final String MOVE_ERROR_2 = "Unable to move to target location. UAV";
 	public static final String LAND_ERROR = "Unable to land the UAV";
 	
 	public static final String FATAL_ERROR = "Fatal error";

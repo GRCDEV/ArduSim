@@ -25,6 +25,7 @@ import api.pojo.UAV2DLocation;
 import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
+import api.pojo.formations.FlightFormation.Formation;
 import main.Text;
 import scanv2.pojo.Message;
 import scanv2.pojo.MovedMission;
@@ -83,7 +84,7 @@ public class ListenerThread extends Thread {
 					}
 				}
 				// Coordination with ArduSim
-				if (Tools.isSetupInProgress()) {
+				if (Tools.isSetupInProgress() || Tools.isSetupFinished()) {// The setup could be too fast
 					ScanParam.state.set(numUAV, SETUP);
 				}
 			}
@@ -93,7 +94,7 @@ public class ListenerThread extends Thread {
 				// Discard message
 				Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
 				// Coordination with ArduSim
-				if (Tools.isSetupInProgress()) {
+				if (Tools.isSetupInProgress() || Tools.isSetupFinished()) {
 					ScanParam.state.set(numUAV, SETUP);
 				}
 			}
@@ -122,7 +123,8 @@ public class ListenerThread extends Thread {
 			 //   using the first mission segment to orient the formation
 			
 			// 3. Calculus of the UAVs distribution that better fit the current layout on the ground
-			FlightFormation airFormation = FlightFormation.getFormation(Tools.getFlyingFormation(), numUAVs, Tools.getFlyingFormationDistance());
+			Formation flyingFormation = FlightFormation.getFlyingFormation();
+			FlightFormation airFormation = FlightFormation.getFormation(flyingFormation, numUAVs, FlightFormation.getFlyingFormationDistance());
 			Triplet<Integer, Long, UTMCoordinates>[] match = airFormation.matchIDs(currentLocations, ScanParam.formationHeading);
 			
 			// 4. Get the target coordinates for the central UAV
@@ -230,8 +232,10 @@ public class ListenerThread extends Thread {
 					ScanParam.idPrev.set(numUAV, prevId);
 					ScanParam.idNext.set(numUAV, nextId);
 					ScanParam.numUAVs.set(numUAV, numUAVs);
+					ScanParam.flyingFormation.set(numUAV, flyingFormation);
+					ScanParam.flyingFormationPosition.set(numUAV, formationPosition);
+					ScanParam.flyingFormationHeading.set(numUAV, ScanParam.formationHeading);
 					ScanParam.takeoffAltitude.set(numUAV, takeOffAltitudeStepOne);
-					
 					ScanParam.uavMissionReceivedUTM.set(numUAV, points);
 					GeoCoordinates[] missionMasterGeo = new GeoCoordinates[points.length];
 					for (int j = 0; j < points.length; j++) {
@@ -247,6 +251,9 @@ public class ListenerThread extends Thread {
 					output.writeLong(prevId);
 					output.writeLong(nextId);
 					output.writeInt(numUAVs);
+					output.writeShort(flyingFormation.getFormationId());
+					output.writeInt(formationPosition);
+					output.writeDouble(ScanParam.formationHeading);
 					output.writeDouble(takeOffAltitudeStepOne);
 					// Number of points (Necessary for the Talker to know how many to read)
 					output.writeInt(points.length);
@@ -302,6 +309,9 @@ public class ListenerThread extends Thread {
 							ScanParam.idPrev.set(numUAV, input.readLong());
 							ScanParam.idNext.set(numUAV, input.readLong());
 							ScanParam.numUAVs.set(numUAV, input.readInt());
+							ScanParam.flyingFormation.set(numUAV, Formation.getFormation(input.readShort()));
+							ScanParam.flyingFormationPosition.set(numUAV, input.readInt());
+							ScanParam.flyingFormationHeading.set(numUAV, input.readDouble());
 							ScanParam.takeoffAltitude.set(numUAV, input.readDouble());
 
 							// The number of WP is read to know the loop length
@@ -439,7 +449,7 @@ public class ListenerThread extends Thread {
 		Point3D destinationUTM = missionUTM[0];
 		double relAltitude = missionUTM[0].z;
 		if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
-			GUI.exit(ScanText.MOVE_ERROR + " " + selfId);
+			GUI.exit(ScanText.MOVE_ERROR_2 + " " + selfId);
 		}
 		cicleTime = System.currentTimeMillis();
 		while (ScanParam.state.get(numUAV) == MOVE_TO_TARGET) {
@@ -555,6 +565,7 @@ public class ListenerThread extends Thread {
 		}
 		int currentWP = 0;
 		ScanParam.moveSemaphore.set(numUAV, 1);	// We reach waypoint 0 and start moving towards waypoint 1
+		UTMCoordinates centerUAVFinalLocation = null;
 		while (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
 			
 			/** WP_REACHED PHASE */
@@ -601,7 +612,8 @@ public class ListenerThread extends Thread {
 						}
 						
 						if (type == Message.LAND) {
-							ScanParam.state.set(numUAV, LANDING);
+							centerUAVFinalLocation = new UTMCoordinates(input.readDouble(), input.readDouble());
+							ScanParam.state.set(numUAV, MOVE_TO_LAND);
 							ScanParam.wpReachedSemaphore.incrementAndGet(numUAV);
 						}
 					}
@@ -619,7 +631,7 @@ public class ListenerThread extends Thread {
 				destinationUTM = missionUTM[currentWP];
 				relAltitude = missionUTM[currentWP].z;
 				if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
-					GUI.exit(ScanText.MOVE_ERROR + " " + selfId);
+					GUI.exit(ScanText.MOVE_ERROR_1 + " " + selfId);
 				}
 				cicleTime = System.currentTimeMillis();
 				while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
@@ -638,23 +650,56 @@ public class ListenerThread extends Thread {
 			}
 		}
 		
+		/** MOVE TO LAND PHASE */
+		int waitingTime;
+		// This only happens for UAVs not located in the center of the formation
+		if (ScanParam.state.get(numUAV) == MOVE_TO_LAND) {
+			GUI.log(numUAV, ScanText.LAND_LOCATION_REACHED);
+			GUI.updateProtocolState(numUAV, ScanText.LAND_LOCATION_REACHED);
+			GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
+			FlightFormation flyingFormation =
+					FlightFormation.getFormation(ScanParam.flyingFormation.get(numUAV), numUAVs, FlightFormation.getLandingFormationDistance());
+			int position = ScanParam.flyingFormationPosition.get(numUAV);
+			double formationHeading = ScanParam.flyingFormationHeading.get(numUAV);
+			UTMCoordinates landingLocation = flyingFormation.getLocation(position, centerUAVFinalLocation, formationHeading);
+			GeoCoordinates target = Tools.UTMToGeo(landingLocation);
+			float currentAltitude = (float)Copter.getZRelative(numUAV);
+			if (!Copter.moveUAVNonBlocking(numUAV, target, currentAltitude)) {
+				GUI.exit(ScanText.MOVE_ERROR_2 + " " + selfId);
+			}
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == MOVE_TO_LAND) {
+				// Wait until target location is reached
+				if (landingLocation.distance(Copter.getUTMLocation(numUAV)) <= ScanParam.MIN_DISTANCE_TO_WP
+						&& Math.abs(currentAltitude - Copter.getZRelative(numUAV)) <= 0.2) {
+					ScanParam.state.set(numUAV, LANDING);
+				}
+				if (ScanParam.state.get(numUAV) != LANDING) {
+					cicleTime = cicleTime + ScanParam.MOVE_CHECK_TIMEOUT;
+					waitingTime = (int) (cicleTime - System.currentTimeMillis());
+					if (waitingTime > 0) {
+						Tools.waiting(waitingTime);
+					}
+				}
+			}
+		}
+		
 		/** LANDING PHASE */
 		if (!Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
 			GUI.exit(ScanText.LAND_ERROR + " " + selfId);
 		}
-		GUI.log(numUAV, ScanText.LANDING);
+		GUI.log(numUAV, ScanText.LANDING_UAV);
 		GUI.updateProtocolState(numUAV, ScanText.LANDING_UAV);
 		GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
 		cicleTime = System.currentTimeMillis();
 		while (ScanParam.state.get(numUAV) == LANDING) {
-			// Discard message
-			Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
-			
-			if (System.currentTimeMillis() - cicleTime > ScanParam.LAND_CHECK_TIMEOUT) {
-				if(!Copter.isFlying(numUAV)) {
-					ScanParam.state.set(numUAV, FINISH);
-				} else {
-					cicleTime = cicleTime + ScanParam.LAND_CHECK_TIMEOUT;
+			if(!Copter.isFlying(numUAV)) {
+				ScanParam.state.set(numUAV, FINISH);
+			} else {
+				cicleTime = cicleTime + ScanParam.LAND_CHECK_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
 				}
 			}
 		}

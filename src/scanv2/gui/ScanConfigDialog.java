@@ -1,6 +1,7 @@
 package scanv2.gui;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -12,32 +13,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.JSpinner;
 import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.NumberFormatter;
 
 import org.javatuples.Pair;
 
 import api.GUI;
 import api.Tools;
 import api.pojo.Waypoint;
+import api.pojo.formations.FlightFormation;
 import api.pojo.formations.FlightFormation.Formation;
 import main.Text;
 import scanv2.logic.ScanParam;
 import scanv2.logic.ScanText;
-import uavController.UAVParam;
-
-import java.awt.Font;
-import javax.swing.JComboBox;
 
 public class ScanConfigDialog extends JDialog {
 
@@ -45,9 +41,10 @@ public class ScanConfigDialog extends JDialog {
 	private final JPanel contentPanel = new JPanel();
 	private JTextField missionsTextField;
 	private JComboBox<String> groundComboBox;
-	private JSpinner spinnerGround;
 	private JComboBox<String> airComboBox;
-	private JSpinner spinnerFlight;
+	private JTextField groundTextField;
+	private JTextField flyingTextField;
+	private JTextField landingTextField;
 
 	/**
 	 * Create the dialog.
@@ -69,9 +66,9 @@ public class ScanConfigDialog extends JDialog {
 		getContentPane().add(contentPanel, gbc_contentPanel);
 		GridBagLayout gbl_contentPanel = new GridBagLayout();
 		gbl_contentPanel.columnWidths = new int[]{114, 114, 0, 0};
-		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_contentPanel.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
-		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		contentPanel.setLayout(gbl_contentPanel);
 		{
 			JLabel lblMapaMisin = new JLabel(ScanText.MISSION_SELECT);
@@ -149,9 +146,10 @@ public class ScanConfigDialog extends JDialog {
 			gbc_groundComboBox.gridy = 3;
 			if (formations.length > 0) {
 				int pos = -1;
+				String formation = FlightFormation.getGroundFormation().getName();
 				for (int i = 0; i < formations.length; i++) {
 					groundComboBox.addItem(formations[i].getName());
-					if (UAVParam.groundFormation.get().getName().equalsIgnoreCase(formations[i].getName())) {
+					if (formation.equalsIgnoreCase(formations[i].getName())) {
 						pos = i;
 					}
 				}
@@ -170,16 +168,15 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(groundFormationDistanceLabel, gbc_groundFormationDistanceLabel);
 		}
 		{
-			SpinnerNumberModel model1 = new SpinnerNumberModel(UAVParam.groundDistanceBetweenUAV, 1, 100, 1);  
-			spinnerGround = new JSpinner(model1);
-			JFormattedTextField txt = ((JSpinner.NumberEditor) spinnerGround.getEditor()).getTextField();
-			((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
-			GridBagConstraints gbc_spinnerGround = new GridBagConstraints();
-			gbc_spinnerGround.anchor = GridBagConstraints.EAST;
-			gbc_spinnerGround.insets = new Insets(0, 0, 5, 5);
-			gbc_spinnerGround.gridx = 1;
-			gbc_spinnerGround.gridy = 4;
-			contentPanel.add(spinnerGround, gbc_spinnerGround);
+			groundTextField = new JTextField("" + Tools.round(FlightFormation.getGroundFormationDistance(), 6));
+			groundTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+			GridBagConstraints gbc_groundTextField = new GridBagConstraints();
+			gbc_groundTextField.insets = new Insets(0, 0, 5, 5);
+			gbc_groundTextField.fill = GridBagConstraints.HORIZONTAL;
+			gbc_groundTextField.gridx = 1;
+			gbc_groundTextField.gridy = 4;
+			contentPanel.add(groundTextField, gbc_groundTextField);
+			groundTextField.setColumns(10);
 		}
 		{
 			JLabel lblNewLabel = new JLabel(Text.METERS);
@@ -219,9 +216,10 @@ public class ScanConfigDialog extends JDialog {
 			gbc_airComboBox.gridy = 7;
 			if (formations.length > 0) {
 				int pos = -1;
+				String formation = FlightFormation.getFlyingFormation().getName();
 				for (int i = 0; i < formations.length; i++) {
 					airComboBox.addItem(formations[i].getName());
-					if (UAVParam.airFormation.get().getName().equalsIgnoreCase(formations[i].getName())) {
+					if (formation.equalsIgnoreCase(formations[i].getName())) {
 						pos = i;
 					}
 				}
@@ -240,16 +238,15 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(lblFlightDistance, gbc_lblFlightDistance);
 		}
 		{
-			SpinnerNumberModel model2 = new SpinnerNumberModel(UAVParam.airDistanceBetweenUAV, 5, 100, 1); 
-			spinnerFlight = new JSpinner(model2);
-			JFormattedTextField txt = ((JSpinner.NumberEditor) spinnerFlight.getEditor()).getTextField();
-			((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);
-			GridBagConstraints gbc_spinnerFlight = new GridBagConstraints();
-			gbc_spinnerFlight.anchor = GridBagConstraints.EAST;
-			gbc_spinnerFlight.insets = new Insets(0, 0, 5, 5);
-			gbc_spinnerFlight.gridx = 1;
-			gbc_spinnerFlight.gridy = 8;
-			contentPanel.add(spinnerFlight, gbc_spinnerFlight);
+			flyingTextField = new JTextField("" + Tools.round(FlightFormation.getFlyingFormationDistance(), 6));
+			flyingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+			GridBagConstraints gbc_flyingTextField = new GridBagConstraints();
+			gbc_flyingTextField.insets = new Insets(0, 0, 5, 5);
+			gbc_flyingTextField.fill = GridBagConstraints.HORIZONTAL;
+			gbc_flyingTextField.gridx = 1;
+			gbc_flyingTextField.gridy = 8;
+			contentPanel.add(flyingTextField, gbc_flyingTextField);
+			flyingTextField.setColumns(10);
 		}
 		{
 			JLabel lblNewLabel_1 = new JLabel(Text.METERS);
@@ -262,13 +259,53 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		}
 		{
+			JLabel lblNewLabel_2 = new JLabel(ScanText.LANDING_TEXT);
+			GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
+			gbc_lblNewLabel_2.anchor = GridBagConstraints.WEST;
+			gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
+			gbc_lblNewLabel_2.gridx = 0;
+			gbc_lblNewLabel_2.gridy = 10;
+			contentPanel.add(lblNewLabel_2, gbc_lblNewLabel_2);
+		}
+		{
+			JLabel lblLandDistance = new JLabel(ScanText.DISTANCE_TEXT);
+			lblLandDistance.setFont(new Font("Dialog", Font.PLAIN, 12));
+			GridBagConstraints gbc_lblLandDistance = new GridBagConstraints();
+			gbc_lblLandDistance.anchor = GridBagConstraints.EAST;
+			gbc_lblLandDistance.insets = new Insets(0, 0, 5, 5);
+			gbc_lblLandDistance.gridx = 0;
+			gbc_lblLandDistance.gridy = 11;
+			contentPanel.add(lblLandDistance, gbc_lblLandDistance);
+		}
+		{
+			landingTextField = new JTextField("" + Tools.round(FlightFormation.getLandingFormationDistance(), 6));
+			landingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+			GridBagConstraints gbc_landingTextField = new GridBagConstraints();
+			gbc_landingTextField.insets = new Insets(0, 0, 5, 5);
+			gbc_landingTextField.fill = GridBagConstraints.HORIZONTAL;
+			gbc_landingTextField.gridx = 1;
+			gbc_landingTextField.gridy = 11;
+			contentPanel.add(landingTextField, gbc_landingTextField);
+			landingTextField.setColumns(10);
+		}
+		{
+			JLabel lblNewLabel_3 = new JLabel(Text.METERS);
+			lblNewLabel_3.setFont(new Font("Dialog", Font.PLAIN, 12));
+			GridBagConstraints gbc_lblNewLabel_3 = new GridBagConstraints();
+			gbc_lblNewLabel_3.anchor = GridBagConstraints.WEST;
+			gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
+			gbc_lblNewLabel_3.gridx = 2;
+			gbc_lblNewLabel_3.gridy = 11;
+			contentPanel.add(lblNewLabel_3, gbc_lblNewLabel_3);
+		}
+		{
 			JSeparator separator = new JSeparator();
 			GridBagConstraints gbc_separator = new GridBagConstraints();
 			gbc_separator.fill = GridBagConstraints.HORIZONTAL;
 			gbc_separator.gridwidth = 4;
 			gbc_separator.insets = new Insets(0, 0, 5, 0);
 			gbc_separator.gridx = 0;
-			gbc_separator.gridy = 10;
+			gbc_separator.gridy = 12;
 			contentPanel.add(separator, gbc_separator);
 		}
 		JButton okButton = new JButton("OK");
@@ -276,25 +313,45 @@ public class ScanConfigDialog extends JDialog {
 		GridBagConstraints gbc_okButton = new GridBagConstraints();
 		gbc_okButton.insets = new Insets(0, 0, 0, 5);
 		gbc_okButton.gridx = 2;
-		gbc_okButton.gridy = 11;
+		gbc_okButton.gridy = 13;
 		contentPanel.add(okButton, gbc_okButton);
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				List<Waypoint>[] missions = Tools.getLoadedMissions();
+				if (missions == null) {
+					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);
+					return;
+				}
+				int count = 0;
+				for (int i = 0; i < missions.length; i++) {
+					if (missions[i] != null) {
+						count++;
+					}
+				}
+				if (count == 0) {
+					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);
+					return;
+				}
 				
-				if(Tools.getLoadedMissions() != null ) {
+				try {
 					// In this protocol, the number of UAVs running on this machine (n) is not affected by the number of missions loaded (1)
 					//   , so the function Tools.setNumUAVs() is not used
-					UAVParam.groundFormation.set(Formation.getFormation((String)groundComboBox.getSelectedItem()));
-					UAVParam.groundDistanceBetweenUAV = (Integer)spinnerGround.getValue();
-					UAVParam.airFormation.set(Formation.getFormation((String)airComboBox.getSelectedItem()));
-					UAVParam.airDistanceBetweenUAV = (Integer)spinnerFlight.getValue();
+					double ground = Double.parseDouble(groundTextField.getText());
+					double flying = Double.parseDouble(flyingTextField.getText());
+					double landing = Double.parseDouble(landingTextField.getText());
+					FlightFormation.setGroundFormation(Formation.getFormation((String)groundComboBox.getSelectedItem()));
+					FlightFormation.setGroundFormationDistance(ground);
+					FlightFormation.setFlyingFormation(Formation.getFormation((String)airComboBox.getSelectedItem()));
+					FlightFormation.setFlyingFormationDistance(flying);
+					FlightFormation.setLandingFormationDistance(landing);
 					// State change
 					Tools.setProtocolConfigured();
 					
 					dispose();
-				}else {
+				} catch (NumberFormatException e2) {
 					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);
-				}					
+					return;
+				}			
 			}
 		});
 		okButton.setActionCommand("OK");

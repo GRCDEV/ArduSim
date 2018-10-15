@@ -16,7 +16,6 @@ import api.pojo.LogPoint;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
-import api.pojo.formations.FlightFormation;
 import main.Main;
 import main.Param;
 import main.Param.SimulatorState;
@@ -130,46 +129,6 @@ public class Tools {
 	/** Provides the UDP port used by real UAVs for communication. This is useful in the PC Companion dialog, to listen data packets from the protocol.*/
 	public static int getUDPBroadcastPort() {
 		return UAVParam.broadcastPort;
-	}
-	
-	/** Provides the formation of UAVs used for the ground layout in simulations. */
-	public static FlightFormation.Formation getGroundFormation() {
-		return UAVParam.groundFormation.get();
-	}
-	
-	/** Provides the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations. */
-	public static int getGroundFormationDistance() {
-		return UAVParam.groundDistanceBetweenUAV;
-	}
-	
-	/** Sets the flight formation of UAVs used for the ground layout in simulations. */
-	public static void setGroundFormation(FlightFormation.Formation formation) {
-		UAVParam.groundFormation.set(formation);
-	}
-	
-	/** Sets the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations. */
-	public static void setGroundFormationDistance(int distance) {
-		UAVParam.groundDistanceBetweenUAV = distance;
-	}
-	
-	/** Provides the formation of UAVs used for the flying layout. */
-	public static FlightFormation.Formation getFlyingFormation() {
-		return UAVParam.airFormation.get();
-	}
-	
-	/** Provides the minimum distance between contiguous UAVs in the formation used for the flying layout. */
-	public static int getFlyingFormationDistance() {
-		return UAVParam.airDistanceBetweenUAV;
-	}
-	
-	/** Sets the flight formation of UAVs used for the flying layout. */
-	public static void setFlyingFormation(FlightFormation.Formation formation) {
-		UAVParam.airFormation.set(formation);
-	}
-	
-	/** Sets the minimum distance between contiguous UAVs in the formation used for the flying layout. */
-	public static void setFlyingFormationDistance(int distance) {
-		UAVParam.airDistanceBetweenUAV = distance;
 	}
 	
 	/** Advises if the collision check is enabled or not. */

@@ -110,9 +110,11 @@ public class UAVParam {
 	public static AtomicReference<FlightFormation.Formation> groundFormation = new AtomicReference<FlightFormation.Formation>(FlightFormation.Formation.LINEAR);
 	public static AtomicReference<FlightFormation.Formation> airFormation = new AtomicReference<FlightFormation.Formation>(FlightFormation.Formation.LINEAR);
 	// Initial distance between UAV when they are on the ground (only in simulation)
-	public static volatile int groundDistanceBetweenUAV = 10;
-	// Distance between UAVs while following the mission
-	public static volatile int airDistanceBetweenUAV = 50;
+	public static volatile double groundDistanceBetweenUAV = 10.0;
+	// Minimum distance between UAVs while following the mission
+	public static volatile double airDistanceBetweenUAV = 50.0;
+	// Minimum distance between UAVs when they land on the ground
+	public static volatile double landDistanceBetweenUAV = 2.5;
 	
 	// Startup parameters
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
