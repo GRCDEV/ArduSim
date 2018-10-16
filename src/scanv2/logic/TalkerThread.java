@@ -83,22 +83,22 @@ public class TalkerThread extends Thread {
 		/** SETUP PHASE */
 		if (this.isMaster) {
 			GUI.logVerbose(numUAV, ScanText.MASTER_DATA_TALKER);
-			byte[][] messages = ScanParam.data.get();
-			if (messages != null) {
-				int length = messages.length;
-				
-				cicleTime = System.currentTimeMillis();
-				while (ScanParam.state.get(numUAV) == SETUP) {
+			byte[][] messages;
+			cicleTime = System.currentTimeMillis();
+			while (ScanParam.state.get(numUAV) == SETUP) {
+				messages = ScanParam.data.get();
+				if (messages != null) {
+					int length = messages.length;
 					for (int i = 0; i < length; i++) {
 						Copter.sendBroadcastMessage(numUAV, messages[i]);
 					}
-					
-					// Timer
-					cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
-					waitingTime = (int) (cicleTime - System.currentTimeMillis());
-					if (waitingTime > 0) {
-						Tools.waiting(waitingTime);
-					}
+				}
+				
+				// Timer
+				cicleTime = cicleTime + ScanParam.SENDING_TIMEOUT;
+				waitingTime = (int) (cicleTime - System.currentTimeMillis());
+				if (waitingTime > 0) {
+					Tools.waiting(waitingTime);
 				}
 			}
 		} else {

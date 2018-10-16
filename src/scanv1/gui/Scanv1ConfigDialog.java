@@ -147,7 +147,7 @@ public class Scanv1ConfigDialog extends JDialog {
 			contentPanel.add(lblFlightDistance, gbc_lblFlightDistance);
 		}
 		{
-			SpinnerNumberModel model2 = new SpinnerNumberModel(5.0, 5.0, 100.0, 1.0); 
+			SpinnerNumberModel model2 = new SpinnerNumberModel(Scanv1ProtParam.initialDistanceBetweenUAVreal, 5.0, 100.0, 1.0); 
 			spinnerFlight = new JSpinner(model2);
 			JFormattedTextField txt = ((JSpinner.NumberEditor) spinnerFlight.getEditor()).getTextField();
 			((NumberFormatter) txt.getFormatter()).setAllowsInvalid(false);

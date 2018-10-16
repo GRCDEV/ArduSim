@@ -21,7 +21,7 @@ public class Scanv1ProtParam {
 	// Ground
 	public static int initialDistanceBetweenUAV = 1; // Initial distance between uav's on simulation
 	// Air
-	public static int initialDistanceBetweenUAVreal = 5; // Initial distance between uav's on real flight
+	public static int initialDistanceBetweenUAVreal = 25; // Initial distance between uav's on real flight
 
 	// TCP parameters
 	public static final int DGRAM_MAX_LENGTH = 1472; // (B) 1500-20-8 (MTU - IP - UDP)

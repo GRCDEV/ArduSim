@@ -83,7 +83,7 @@ public class LanderConfiDialog extends JDialog {
 		JLabel lblLatEnd = new JLabel("End latitude   ");
 		cpLocation.add(lblLatEnd);
 		
-		txtLatEnd = new JTextField("39.478469",10);
+		txtLatEnd = new JTextField("39.479019",10);
 		cpLocation.add(txtLatEnd);
 		
 		JLabel lblLongStart = new JLabel("Start longitude");
@@ -95,7 +95,7 @@ public class LanderConfiDialog extends JDialog {
 		JLabel lblLongEnd = new JLabel("End longitude");
 		cpLocation.add(lblLongEnd);
 		
-		txtLongEnd = new JTextField("-0.340252",10);
+		txtLongEnd = new JTextField("-0.342125",10);
 		cpLocation.add(txtLongEnd);
 		
 		JPanel cpRecognition = new JPanel();
