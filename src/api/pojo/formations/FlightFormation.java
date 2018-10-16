@@ -214,7 +214,6 @@ public abstract class FlightFormation {
 			// 3. We check all possible permutations of the UAVs IDs looking for the combination that better fits
 			//   with the current UAVs location
 			Permutation<Long> p = new Permutation<Long>(ids);
-			int permutations = p.size();
 			Triplet<Integer, Long, UTMCoordinates>[] bestFitCurrentCenter = null;
 			double errorBestFitCurrentCenter = Double.MAX_VALUE;
 			Long[] permutation;
@@ -224,8 +223,8 @@ public abstract class FlightFormation {
 			UTMCoordinates groundLocation, airLocation;
 			long id;
 			boolean centerUAVMoves;
-			for (int pm = 0; pm < permutations; pm++) {
-				permutation = p.next();
+			permutation = p.next();
+			while (permutation != null) {
 				errorTot = 0;
 				centerUAVMoves = false;
 				// 4. Sum of the distance^2 of all UAVs on the ground, relative to the location in the air
@@ -248,6 +247,7 @@ public abstract class FlightFormation {
 					bestFitCurrentCenter = Arrays.copyOf(match, match.length);
 					errorBestFitCurrentCenter = errorTot;
 				}
+				permutation = p.next();
 			}
 			
 			// 6. If the minimum error with this center is lower, update the best solution
