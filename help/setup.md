@@ -150,7 +150,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         make sitl -j4
         sim_vehicle.py -w
 
-    Once fully loaded, use "Ctrl+D" to close the running program. The second line builds the multicopter firmware *arducopter.elf*, and the third one uses MAVProxy to finally build the multicopter executable file *arducopter.exe* located in *C:\cygwin\home\user_name\ardupilot\build\sitl\bin*. Copy that file next to the ArduSim *.jar* file, and also the file *C:\cygwin\home\user_name\ardupilot\Tools\autotest\default_params\copter.param* to finish the basic setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
+    Once fully loaded, use "Ctrl+D" to close the running program. The second line builds the multicopter firmware *arducopter.elf*, and the third one uses MAVProxy to finally build the multicopter executable file *arducopter.exe* located in *C:\cygwin\home\user_name\ardupilot\build\sitl\bin*. Copy that file next to the ArduSim *.jar* file, and also the files *C:\cygwin\home\user_name\ardupilot\Tools\autotest\default_params\copter.param*, and *ardusim.ini* from the project root folder to finish the basic setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
 
 8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters. This setup speeds up the execution when running ArduSim on a computer with a slow hard drive.
 
@@ -186,7 +186,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         cd ArduCopter
         sim_vehicle.py -w
 
-    Once fully loaded, use "Ctrl+C" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the file *ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
+    Once fully loaded, use "Ctrl+C" to close the running program. The second line uses MAVProxy to finally build the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin*. Copy that file next to the ArduSim .jar file, and also the files *ardupilot/Tools/autotest/default_params/copter.param*, and *ardusim.ini* from the project root folder to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
 
 ## 5 SITL setup in MacOS
 
@@ -264,4 +264,4 @@ The next steps must be followed in order to compile a multicopter in MacOS. Prov
         export CC=gcc; export CXX=g++;./waf configure --board sitl
         ./waf --targets bin/arducopter --jobs 1
 
-    Copy the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin* next to the ArduSim .jar file, and also the file *ardupilot/Tools/autotest/default_params/copter.param* to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
+    Copy the multicopter executable file *arducopter* located in *ardupilot/build/sitl/bin* next to the ArduSim .jar file, and also the files *ardupilot/Tools/autotest/default_params/copter.param*, and *ardusim.ini* from the project root folder to finish the setup process. If you plan to execute ArduSim in Eclipse, copy both files to the root of the Eclipse project and you will no longer need to search for them each time ArduSim opens.
