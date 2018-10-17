@@ -1,6 +1,5 @@
 package scanv1.logic;
 
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -18,7 +17,7 @@ import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
-import main.Param;
+import api.pojo.UTMCoordinates;
 import scanv1.logic.Scanv1ProtParam.SwarmProtState;
 
 public class Scanv1Listener extends Thread {
@@ -180,7 +179,7 @@ public class Scanv1Listener extends Thread {
 					i++;
 				}
 				// Set Master ID and initial position to the last position
-				Point2D.Double UTMMaster = Copter.getUTMLocation(numUAV);
+				UTMCoordinates UTMMaster = Copter.getUTMLocation(numUAV);
 				Double headingMaster = Copter.getHeading(numUAV);
 				Scanv1uavPosition masterPosition = new Scanv1uavPosition();
 				masterPosition.id = Scanv1ProtParam.idMaster;

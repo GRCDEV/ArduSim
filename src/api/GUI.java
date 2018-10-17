@@ -372,7 +372,7 @@ public class GUI {
 	/** Asks the user for the delay duration in the intermediate waypoints of the mission.
 	 * <p>If a delay is added to the waypoints, the multicopter avoids cutting corners when it arrives a waypoint. */
 	private static void askUserForDelay() {
-		SpinnerNumberModel sModel = new SpinnerNumberModel(0, 0, 65535, 1);
+		SpinnerNumberModel sModel = new SpinnerNumberModel(Waypoint.waypointDelay, 0, 65535, 1);
 		JSpinner spinner = new JSpinner(sModel);
 		spinner.setSize(350, spinner.getHeight());
 		spinner.setPreferredSize(new Dimension(350, spinner.getPreferredSize().height));

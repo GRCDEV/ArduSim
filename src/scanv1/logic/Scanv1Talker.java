@@ -20,8 +20,8 @@ import api.GUI;
 import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
+import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
-import main.Param;
 import scanv1.logic.Scanv1ProtParam.SwarmProtState;
 
 public class Scanv1Talker extends Thread {
@@ -392,7 +392,7 @@ public class Scanv1Talker extends Thread {
 				output.clear();
 				output.writeShort(1);
 				output.writeLong(selfId);
-				Point2D.Double initialPos = Copter.getUTMLocation(numUAV);
+				UTMCoordinates initialPos = Copter.getUTMLocation(numUAV);
 				output.writeDouble(initialPos.x);
 				output.writeDouble(initialPos.y);
 				output.writeDouble(Copter.getHeading(numUAV));

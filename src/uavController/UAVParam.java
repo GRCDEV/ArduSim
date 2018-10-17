@@ -20,10 +20,11 @@ import org.mavlink.messages.MAV_PARAM_TYPE;
 
 import api.pojo.AtomicDoubleArray;
 import api.pojo.FlightMode;
-import api.pojo.LastLocations;
+import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.MAVParam;
 import api.pojo.Point3D;
 import api.pojo.RCValues;
+import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
@@ -104,7 +105,7 @@ public class UAVParam {
 	
 	// Last n UAV known positions of the UAV
 	public static final int LOCATIONS_SIZE = 3;		// n positions (never less than 2)
-	public static LastLocations<Point3D>[] lastLocations;	// Each UAV has an object with the last received locations sorted
+	public static ConcurrentBoundedQueue<UTMCoordinates>[] lastUTMLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Flight formation (when used)
 	public static AtomicReference<FlightFormation.Formation> groundFormation = new AtomicReference<FlightFormation.Formation>(FlightFormation.Formation.LINEAR);

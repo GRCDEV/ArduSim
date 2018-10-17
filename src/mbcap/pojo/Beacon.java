@@ -13,6 +13,7 @@ import com.esotericsoftware.kryo.io.Output;
 import api.Copter;
 import api.Tools;
 import api.pojo.Point3D;
+import api.pojo.UTMCoordinates;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPv3Helper;
@@ -50,9 +51,9 @@ public class Beacon implements Comparable<Beacon> {
 	public static Beacon buildToSend(int numUAV) {
 		// 1. Getting the needed information
 		long uavId = Tools.getIdFromPos(numUAV);
-		Quintet<Long, java.awt.geom.Point2D.Double, Double, Double, Double> uavcurrentData = Copter.getData(numUAV);
+		Quintet<Long, UTMCoordinates, Double, Double, Double> uavcurrentData = Copter.getData(numUAV);
 		Long time = uavcurrentData.getValue0();
-		Point2D.Double currentLocation = uavcurrentData.getValue1();
+		UTMCoordinates currentLocation = uavcurrentData.getValue1();
 		double currentZ = uavcurrentData.getValue2();
 		double speed = uavcurrentData.getValue3();
 		double acceleration = uavcurrentData.getValue4();

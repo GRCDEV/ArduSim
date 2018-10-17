@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import api.pojo.Point3D;
+import api.pojo.UTMCoordinates;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.ProgressState;
 
@@ -64,7 +65,7 @@ public class MBCAPParam {
 	public static double safePlaceDistance = 20; // (m) Minimum safety distance to the other UAV path
 	public static final double PRECISION_MARGIN = 0.5; // (m) In case a precision error occurs
 	public static final double SAFETY_DISTANCE_RANGE = 1; // (m) Maximum distance to consider that the UAV has reached the safety position
-	public static AtomicReferenceArray<Point2D.Double> targetLocationUTM;	// Safety position to move towards (UTM coordinates)
+	public static AtomicReferenceArray<UTMCoordinates> targetLocationUTM;	// Safety position to move towards (UTM coordinates)
 	public static AtomicReferenceArray<Point2D.Double> targetLocationPX;
 	// Stabilization parameters (when the UAV is moving aside)
 	public static final double STABILIZATION_SPEED = 0.2;				// (m/s) When it is stopped

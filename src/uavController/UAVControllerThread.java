@@ -1,6 +1,5 @@
 package uavController;
 
-import java.awt.geom.Point2D;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -304,28 +303,23 @@ public class UAVControllerThread extends Thread {
 				this.locationReceived = true;
 			}
 
-			Point2D.Double locationUTM = new Point2D.Double();
-			GeoCoordinates locationGeo = new GeoCoordinates(message.lat * 0.0000001, message.lon * 0.0000001);
-			UTMCoordinates locationUTMauxiliary = Tools.geoToUTM(locationGeo.latitude, locationGeo.longitude);	// Latitude = x
-			// The first time a coordinate set is received, we store the planet region where the UAVs are flying
-			if (SimParam.zone < 0) {
-				SimParam.zone = locationUTMauxiliary.Zone;
-				SimParam.letter = locationUTMauxiliary.Letter;
-			}
-			locationUTM.setLocation(locationUTMauxiliary.x, locationUTMauxiliary.y);
 			long time = System.nanoTime();
+			GeoCoordinates locationGeo = new GeoCoordinates(message.lat * 0.0000001, message.lon * 0.0000001);
+			UTMCoordinates locationUTM = Tools.geoToUTM(locationGeo.latitude, locationGeo.longitude);
 			
 			// The last few UAV positions are stored for later use in protocols
-			UAVParam.lastLocations[numUAV].add(new Point3D(locationUTMauxiliary.x, locationUTMauxiliary.y, message.relative_alt * 0.001));
+			UAVParam.lastUTMLocations[numUAV].add(locationUTM);
 			// Global horizontal speed estimation
 			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
 			Triplet<Double, Double, Double> speed = Triplet.with(message.vx * 0.01, message.vy * 0.01, message.vz * 0.01);
 			// Update the UAV data, including the acceleration calculus
 			double z = message.alt * 0.001;
 			double heading = (message.hdg * 0.01) * Math.PI / 180;
-			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM, z, message.relative_alt * 0.001, speed, hSpeed, heading);
+			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM,
+					z, message.relative_alt * 0.001,
+					speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
-			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTMauxiliary.x, locationUTMauxiliary.y, z, heading, hSpeed,
+			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTM.x, locationUTM.y, z, heading, hSpeed,
 					Param.simStatus == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] == 0)); // UAV under test
 		}
 	}

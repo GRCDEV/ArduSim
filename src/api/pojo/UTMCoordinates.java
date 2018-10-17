@@ -2,16 +2,12 @@ package api.pojo;
 
 import java.awt.geom.Point2D;
 
-import sim.logic.SimParam;
-
 /** This class generates a point in UTM coordinates in meters. */
 
 public class UTMCoordinates {
 
   public double x;
   public double y;
-  public int Zone;
-  public char Letter;
 
   @SuppressWarnings("unused")
   private UTMCoordinates() {}
@@ -19,8 +15,6 @@ public class UTMCoordinates {
   public UTMCoordinates(double x, double y) {
 	  this.x = x;
 	  this.y = y;
-	  this.Zone = SimParam.zone;
-	  this.Letter = SimParam.letter;
   }
   
   public double distance(UTMCoordinates location) {

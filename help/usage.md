@@ -190,6 +190,8 @@ The list of parameters is:
     * *VERBOSELOGGING*. Verbose logging to ArduSim window and console.
     * *VERBOSESTORE*. Allows to store additional files at will.
     * *MINALTITUDE*. Minimum relative altitude to home for takeoff, and minimum reletive altitude for any waypoint when loading a mission from a Google Earth .kml file.
+    * *MISSIONEND*. Whether to add a land or RTL command at the end of the mission if loaded from Google Earth .xml file. Valid values: unmodified, land, or RTL.
+    * *WAYPOINTDELAY*. Mission delay over each waypoint (seconds).
 * PCCompanion-to-realUAV and realUAV-to-realUAV communication parameters:
     * *BROADCASTIP*. The IP must be the broadcast address of the network configured on the Raspberry Pi.
     * *BROADCASTPORT*. Port where the PC Companion can listen to supervise the protocol communications among real UAVs. The PC Companion can even interact with the multicopters with the functions "Copter.sendBroadcastMessage(byte[])" and "Copter.receiveMessage(int)".
@@ -205,8 +207,6 @@ The list of parameters is:
     * *AIRDISTANCE*. Minimum distance between contiguous UAVs in the flying formation. It must be an integer value in meters.
     * *LANDDISTANCE*. Minimum distance between contiguous UAVs for the landing phase.
 * Optional parameters when running in real UAVs:
-    * *MISSIONEND*. Whether to add a land or RTL command at the end of the mission if loaded from Google Earth .xml file. Valid values: unmodified, land, or RTL.
-    * *WAYPOINTDELAY*. Mission delay over each waypoint (seconds).
     * *SERIALPORT*. Raspberry Pi serial port the flight controller is connected to.
     * *BAUDRATE*. Baud rate of the serial link.
     * *BATTERYCELLS*. Number of cells of the LiPo battery.

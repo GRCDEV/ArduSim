@@ -23,6 +23,7 @@ import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.LogPoint;
+import api.pojo.UTMCoordinates;
 import main.Param;
 import main.Text;
 import main.ArduSimTools;
@@ -395,7 +396,7 @@ public class SimTools {
 	/** Updates UAV position and speed on the progress dialog. */
 	public static void updateUAVInfo() {
 		if (MainWindow.progressDialog!=null) {
-			Point2D.Double locationUTM;
+			UTMCoordinates locationUTM;
 			for (int i=0; i<Param.numUAVs; i++) {
 				locationUTM = UAVParam.uavCurrentData[i].getUTMLocation();
 				if (locationUTM!=null) {

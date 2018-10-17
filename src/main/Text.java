@@ -277,6 +277,11 @@ public class Text {
 	public static final String MOBILITY_OMNET_SUFIX_2D = "mobility_OMNeT-INET-BoonMotionModel.txt";
 	public static final String MOBILITY_OMNET_SUFIX_3D = "mobility_OMNeT-INET-BoonMotionModel_3D.txt";
 	public static final String CPU_SUFIX = "CPU.txt";
+	public static final String ADDITIONAL_PARAMETERS = "Additional parameters (ardusim.ini):";
+	public static final String REAL_COMMUNICATIONS_PARAMETERS = "Real UAV-to-UAV communications parameters:";
+	public static final String SERIAL_COMMUNICATIONS_PARAMETERS = "ArduSim to Real UAV communications parameters:";
+	public static final String BATTERY_PARAMETERS = "Battery parameters:";
+	public static final String FORMATION_PARAMETERS = "Swarm formation parameters:";
 	
 	// General options and units
 	public static final String YES_OPTION = "yes";

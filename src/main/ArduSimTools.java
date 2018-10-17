@@ -84,11 +84,12 @@ import api.WaypointReachedListener;
 import api.pojo.AtomicDoubleArray;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
-import api.pojo.LastLocations;
+import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.LogPoint;
 import api.pojo.MAVParam;
 import api.pojo.Point3D;
 import api.pojo.RCValues;
+import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
@@ -236,38 +237,6 @@ public class ArduSimTools {
 			UAVParam.initialSpeeds = new double[1];
 			UAVParam.initialSpeeds[0] = Double.parseDouble(spe);
 
-			param = parameters.get(Param.MISSION_END);
-			if (param == null) {
-				GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.missionEnd);
-			} else {
-				if (param.equalsIgnoreCase(Waypoint.MISSION_END_UNMODIFIED)) {
-					Waypoint.missionEnd = Waypoint.MISSION_END_UNMODIFIED;
-				} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_LAND)) {
-					Waypoint.missionEnd = Waypoint.MISSION_END_LAND;
-				} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_RTL)) {
-					Waypoint.missionEnd = Waypoint.MISSION_END_RTL;
-				} else {
-					GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-					GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
-				}
-			}
-			param = parameters.get(Param.WAYPOINT_DELAY);
-			if (param == null) {
-				GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDelay);
-			} else {
-				try {
-					int delay = Integer.parseInt(param);
-					if (delay < 0 || delay > 65535) {
-						GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-						GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
-					} else {
-						Waypoint.waypointDelay = delay;
-					}
-				} catch (NumberFormatException e) {
-					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
-				}
-			}
 			param = parameters.get(Param.SERIAL_PORT);
 			if (param == null) {
 				GUI.log(Param.SERIAL_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.serialPort);
@@ -428,6 +397,38 @@ public class ArduSimTools {
 			}
 			UAVParam.minFlyingAltitude = Double.parseDouble(param);
 		}
+		param = parameters.get(Param.MISSION_END);
+		if (param == null) {
+			GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.missionEnd);
+		} else {
+			if (param.equalsIgnoreCase(Waypoint.MISSION_END_UNMODIFIED)) {
+				Waypoint.missionEnd = Waypoint.MISSION_END_UNMODIFIED;
+			} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_LAND)) {
+				Waypoint.missionEnd = Waypoint.MISSION_END_LAND;
+			} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_RTL)) {
+				Waypoint.missionEnd = Waypoint.MISSION_END_RTL;
+			} else {
+				GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
+			}
+		}
+		param = parameters.get(Param.WAYPOINT_DELAY);
+		if (param == null) {
+			GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDelay);
+		} else {
+			try {
+				int delay = Integer.parseInt(param);
+				if (delay < 0 || delay > 65535) {
+					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+				} else {
+					Waypoint.waypointDelay = delay;
+				}
+			} catch (NumberFormatException e) {
+				GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+			}
+		}
 	}
 	
 	private static Map<String, String> loadIniFile() {
@@ -533,7 +534,7 @@ public class ArduSimTools {
 	public static void initializeDataStructures() {
 		UAVParam.uavCurrentData = new UAVCurrentData[Param.numUAVs];
 		UAVParam.uavCurrentStatus = new UAVCurrentStatus[Param.numUAVs];
-		UAVParam.lastLocations = new LastLocations[Param.numUAVs];
+		UAVParam.lastUTMLocations = new ConcurrentBoundedQueue[Param.numUAVs];
 		UAVParam.flightMode = new AtomicReferenceArray<FlightMode>(Param.numUAVs);
 		UAVParam.flightStarted = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
@@ -610,7 +611,7 @@ public class ArduSimTools {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			UAVParam.uavCurrentData[i] = new UAVCurrentData();
 			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
-			UAVParam.lastLocations[i] = new LastLocations<Point3D>(Point3D.class, UAVParam.LOCATIONS_SIZE);
+			UAVParam.lastUTMLocations[i] = new ConcurrentBoundedQueue<UTMCoordinates>(UTMCoordinates.class, UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
 			UAVParam.RCminValue[i] = new AtomicIntegerArray(8);
 			UAVParam.RCtrimValue[i] = new AtomicIntegerArray(8);
@@ -709,7 +710,7 @@ public class ArduSimTools {
 	/** Rescales data structures when the screen scale is modified. */
 	public static void rescaleDataStructures() {
 		// Rescale the collision circles diameter
-		Point2D.Double locationUTM = null;
+		UTMCoordinates locationUTM = null;
 		boolean found = false;
 		int numUAVs = Tools.getNumUAVs();
 		for (int i=0; i<numUAVs && !found; i++) {
@@ -2828,6 +2829,35 @@ public class ArduSimTools {
 				sb.append("\n\t").append(Text.WIND_DIRECTION).append(" ").append(Param.windDirection).append(" ").append(Text.DEGREE_SYMBOL);
 			}
 		}
+		
+		sb.append("\n").append(Text.ADDITIONAL_PARAMETERS);
+		sb.append("\n\t").append(Param.MIN_ALTITUDE).append("=").append(UAVParam.minFlyingAltitude);
+		sb.append("\n\t").append(Param.MISSION_END).append("=").append(Waypoint.missionEnd);
+		sb.append("\n\t").append(Param.WAYPOINT_DELAY).append("=").append(Waypoint.waypointDelay);
+		if (Param.role == Tools.MULTICOPTER) {
+			sb.append("\n\t").append(Text.REAL_COMMUNICATIONS_PARAMETERS);
+			sb.append("\n\t\t").append(Param.BROADCAST_IP).append("=").append(UAVParam.broadcastIP);
+			sb.append("\n\t\t").append(Param.BROADCAST_PORT).append("=").append(UAVParam.broadcastPort);
+			sb.append("\n\t\t").append(Param.COMPUTER_PORT).append("=").append(PCCompanionParam.computerPort);
+			sb.append("\n\t\t").append(Param.UAV_PORT).append("=").append(PCCompanionParam.uavPort);
+			
+			sb.append("\n\t").append(Text.SERIAL_COMMUNICATIONS_PARAMETERS);
+			sb.append("\n\t\t").append(Param.SERIAL_PORT).append("=").append(UAVParam.serialPort);
+			sb.append("\n\t\t").append(Param.BAUD_RATE).append("=").append(UAVParam.baudRate);
+			
+			sb.append("\n\t").append(Text.BATTERY_PARAMETERS);
+			sb.append("\n\t\t").append(Param.BATTERY_CELLS).append("=").append(UAVParam.lipoBatteryCells);
+			sb.append("\n\t\t").append(Param.BATTERY_CAPACITY).append("=").append(UAVParam.lipoBatteryCapacity);
+		}
+		sb.append("\n\t").append(Text.FORMATION_PARAMETERS);
+		if (Param.role == Tools.SIMULATOR) {
+			sb.append("\n\t\t").append(Param.GROUND_FORMATION).append("=").append(UAVParam.groundFormation.get().getName());
+			sb.append("\n\t\t").append(Param.GROUND_DISTANCE).append("=").append(UAVParam.groundDistanceBetweenUAV);
+		}
+		sb.append("\n\t\t").append(Param.AIR_FORMATION).append("=").append(UAVParam.airFormation.get().getName());
+		sb.append("\n\t\t").append(Param.AIR_DISTANCE).append("=").append(UAVParam.airDistanceBetweenUAV);
+		sb.append("\n\t\t").append(Param.LAND_DISTANCE).append("=").append(UAVParam.landDistanceBetweenUAV);
+		
 		return sb.toString();
 	}
 

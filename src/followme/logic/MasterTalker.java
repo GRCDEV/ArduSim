@@ -1,6 +1,5 @@
 package followme.logic;
 
-import java.awt.geom.Point2D;
 import java.util.Arrays;
 
 import org.javatuples.Triplet;
@@ -11,6 +10,7 @@ import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
+import api.pojo.UTMCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
 
 public class MasterTalker extends Thread {
@@ -46,7 +46,7 @@ public class MasterTalker extends Thread {
 		}
 		
 		double lat, lon, heading, z, speedX, speedY, speedZ;
-		Point2D.Double utm = Copter.getUTMLocation(FollowMeParam.posMaster);
+		UTMCoordinates utm = Copter.getUTMLocation(FollowMeParam.posMaster);
 		heading = Copter.getHeading(FollowMeParam.posMaster);
 		
 		while (FollowMeParam.uavs[idMaster] == FollowMeState.WAIT_TAKE_OFF_MASTER) {

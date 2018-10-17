@@ -218,10 +218,8 @@ public class Tools {
 			y = y + 10000000;
 		y = Math.round(y * 100) * 0.01;
 	
-		if (SimParam.zone < 0) {
-			SimParam.zone = Zone;
-			SimParam.letter = Letter;
-		}
+		SimParam.zone = Zone;
+		SimParam.letter = Letter;
 		
 		return new UTMCoordinates(x, y);
 	}

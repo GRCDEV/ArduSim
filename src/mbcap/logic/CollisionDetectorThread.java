@@ -1,6 +1,5 @@
 package mbcap.logic;
 
-import java.awt.geom.Point2D;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -13,7 +12,6 @@ import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
-import main.Param;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
@@ -297,8 +295,8 @@ public class CollisionDetectorThread extends Thread {
 									// Progress update
 									MBCAPGUITools.updateState(numUAV, MBCAPState.MOVING_ASIDE);
 									// Moving
-									Point2D.Double utm = MBCAPParam.targetLocationUTM.get(numUAV);
-									GeoCoordinates geo = Tools.UTMToGeo(utm.x, utm.y);
+									UTMCoordinates utm = MBCAPParam.targetLocationUTM.get(numUAV);
+									GeoCoordinates geo = Tools.UTMToGeo(utm);
 									if (Copter.moveUAV(numUAV, geo, (float) Copter.getZRelative(numUAV), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {
 										// Even when the UAV is close to destination, we also wait for it to be almost still
 										long time = System.nanoTime();
@@ -341,21 +339,22 @@ public class CollisionDetectorThread extends Thread {
 					if (avoidingBeacon != null
 							&& MBCAPParam.state[numUAV] == MBCAPState.OVERTAKING
 							&& selfBeacon.uavId > avoidingBeacon.uavId
-							&& System.nanoTime() - stateTime > MBCAPParam.passingTimeout
-							&& MBCAPv3Helper.overtakingFinished(numUAV, avoidingBeacon.uavId, avoidingBeacon.points.get(0))) {
-
-						// There is no need to apply commands to the UAV
-						GUI.log(numUAV, MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
-						if (!isRealUAV) {
-							MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
-							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+							&& System.nanoTime() - stateTime > MBCAPParam.passingTimeout) {
+						Point3D avoidingLocation = avoidingBeacon.points.get(0);
+						if (MBCAPv3Helper.overtakingFinished(numUAV, avoidingBeacon.uavId, new UTMCoordinates(avoidingLocation.x, avoidingLocation.y))) {
+							// There is no need to apply commands to the UAV
+							GUI.log(numUAV, MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
+							if (!isRealUAV) {
+								MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
+								MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+							}
+							avoidingBeacon = null;
+							stateTime = System.nanoTime();
+							MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
+							MBCAPParam.event.incrementAndGet(numUAV);
+							// Progress update
+							MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
 						}
-						avoidingBeacon = null;
-						stateTime = System.nanoTime();
-						MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-						MBCAPParam.event.incrementAndGet(numUAV);
-						// Progress update
-						MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
 					}
 
 					// In moving aside state. Change to go on, please state

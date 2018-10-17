@@ -989,16 +989,16 @@ public class Copter {
 
 	/** API: Provides the latest received data from the flight controller.
 	 * <p>Long. time.
-	 * <p>Point2D.Double. UTM coordinates.
+	 * <p>UTMCoordinates. UTM coordinates.
 	 * <p>double. Absolute altitude.
 	 * <p>double. Speed.
 	 * <p>double. Acceleration. */
-	public static Quintet<Long, java.awt.geom.Point2D.Double, Double, Double, Double> getData(int numUAV) {
+	public static Quintet<Long, UTMCoordinates, Double, Double, Double> getData(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getData();
 	}
 
 	/** API: Provides the latest location in UTM meters (x,y) received from the flight controller. */
-	public static Point2D.Double getUTMLocation(int numUAV) {
+	public static UTMCoordinates getUTMLocation(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getUTMLocation();
 	}
 
@@ -1007,10 +1007,10 @@ public class Copter {
 		return UAVParam.uavCurrentData[numUAV].getGeoLocation();
 	}
 	
-	/** API: Gets n available last known locations (x,y,z) of the UAV in UTM coordinates (relative altitude).
+	/** API: Gets n available last known locations (x,y) of the UAV in UTM coordinates.
 	 * <p>The locations time increases with the position in the array. */
-	public static Point3D[] getLastKnownLocations(int numUAV) {
-		return UAVParam.lastLocations[numUAV].getLastValues();
+	public static UTMCoordinates[] getLastKnownUTMLocations(int numUAV) {
+		return UAVParam.lastUTMLocations[numUAV].getLastValues();
 	}
 
 	/** API: Provides the latest relative altitude from the ground (m) received from the flight controller. */

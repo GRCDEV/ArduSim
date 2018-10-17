@@ -6,6 +6,7 @@ import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.GeoCoordinates;
+import api.pojo.UTMCoordinates;
 import uavFishing.pojo.VectorMath;
 
 
@@ -27,7 +28,7 @@ public class FisherControllerThread extends Thread{
 	public void run() {
 		
 		GeoCoordinates GeoNextPoint;
-		Point2D.Double UTMActualPoint,UTMNextPoint;
+		UTMCoordinates UTMActualPoint,UTMNextPoint, UTMBoat;
 		double distance;
 		
 		while(!Tools.isExperimentInProgress()) {
@@ -43,11 +44,13 @@ public class FisherControllerThread extends Thread{
 			
 			// Calcular nueva posición
 			
-			UTMActualPoint=Copter.getUTMLocation(uavID);
+			UTMActualPoint = Copter.getUTMLocation(uavID);
 			vPosOrigin = VectorMath.rotateVector(vPosOrigin, UavFishingParam.angle, UavFishingParam.clockwise);
-			UTMNextPoint = new Point2D.Double(UTMActualPoint.getX()+vPosOrigin[0], UTMActualPoint.getY()+vPosOrigin[1]);
-			distance = UTMActualPoint.distance(UTMNextPoint);
-			GeoNextPoint=Tools.UTMToGeo((Copter.getUTMLocation(UavFishingParam.boatID).getX() + vPosOrigin[0]),Copter.getUTMLocation(UavFishingParam.boatID).getY() + vPosOrigin[1]);
+			UTMNextPoint = new UTMCoordinates(UTMActualPoint.x+vPosOrigin[0], UTMActualPoint.y+vPosOrigin[1]);
+			distance = UTMActualPoint.distance(UTMNextPoint);// no parece que la utilices para nada
+			
+			UTMBoat = Copter.getUTMLocation(UavFishingParam.boatID);
+			GeoNextPoint=Tools.UTMToGeo((UTMBoat.x + vPosOrigin[0]),UTMBoat.y + vPosOrigin[1]);
 			Copter.moveUAVNonBlocking(uavID, GeoNextPoint, 5);
 //			Copter.moveUAV(uavID, GeoNextPoint, 5, 0.95*distance, 0);
 			

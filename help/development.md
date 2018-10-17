@@ -219,7 +219,7 @@ Now follows a list of information retrieval functions that don't need to communi
 * `Quintet<Long, Point2D.Double, Double, Double, Double> getData(int)`. This method gives the most up-to-date data received from the flight controller, including coordinates, speed, acceleration and the moment when they were received from the flight controller.
 * `Point2D.Double getUTMLocation(int)`. It provides only the current UTM coordinates.
 * `GeoCoordinates getGeoLocation(int)`. In this case, it provides the current geographic coordinates (latitude and longitude).
-* `Point3D[] getLastKnownLocations(int)`. This function gives the last known locations of the UAV, starting with the older.
+* `Point3D[] getLastKnownUTMLocations(int)`. This function gives the last known locations of the UAV, starting with the older.
 * `double getZRelative(int)`. It provides the current relative altitude over the home location.
 * `double getZ(int)`. It provides the current absolute altitude over the sea level.
 * `double getSpeed(int)`. This method gives the current flight speed.

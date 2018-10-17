@@ -1,6 +1,5 @@
 package pollution;
 
-import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-
-import org.hyperic.sigar.Sigar;
 
 import api.Copter;
 import api.Tools;
@@ -85,10 +82,10 @@ public class PollutionSensorSim implements PollutionSensor {
 
 	@Override
 	public double read() {
-		Point2D.Double location = Copter.getUTMLocation(0);
+		UTMCoordinates location = Copter.getUTMLocation(0);
 		UTMCoordinates startLocation = Tools.geoToUTM(PollutionParam.startLocation.latitude, PollutionParam.startLocation.longitude);
-		double pointX = (location.getX() - startLocation.x) / PollutionParam.length * dataYSize;
-		double pointY = (location.getY() - startLocation.y) / PollutionParam.length * dataYSize;
+		double pointX = (location.x - startLocation.x) / PollutionParam.length * dataYSize;
+		double pointY = (location.y - startLocation.y) / PollutionParam.length * dataYSize;
 		return krigData.interpolate(pointX, pointY);
 	}
 

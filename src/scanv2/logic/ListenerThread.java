@@ -2,7 +2,6 @@ package scanv2.logic;
 
 import static scanv2.pojo.State.*;
 
-import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +107,7 @@ public class ListenerThread extends Thread {
 		if (this.isMaster) {
 			// 1. Make a permanent list of UAVs detected, including master
 			// 1.1. Add master to the Map
-			Point2D.Double masterLocation = Copter.getUTMLocation(numUAV);
+			UTMCoordinates masterLocation = Copter.getUTMLocation(numUAV);
 			UAVsDetected.put(this.selfId, new UAV2DLocation(this.selfId, masterLocation.x, masterLocation.y));
 			// 1.2. Get the list
 			UAV2DLocation[] currentLocations = UAVsDetected.values().toArray(new UAV2DLocation[UAVsDetected.size()]);

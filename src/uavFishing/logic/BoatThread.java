@@ -5,6 +5,7 @@ package uavFishing.logic;
 import com.esotericsoftware.kryo.io.Output;
 import api.Copter;
 import api.Tools;
+import api.pojo.UTMCoordinates;
 
 public class BoatThread extends Thread {
 	
@@ -28,8 +29,9 @@ public class BoatThread extends Thread {
 		// Calcular mensaje con posicion barco + velocidad + heading
 		while(Tools.isExperimentInProgress()) {
 		output.clear();
-		output.writeDouble(Copter.getUTMLocation(uavID).getX());
-		output.writeDouble(Copter.getUTMLocation(uavID).getY());
+		UTMCoordinates location = Copter.getUTMLocation(uavID);
+		output.writeDouble(location.x);
+		output.writeDouble(location.y);
 		output.writeDouble(UavFishingParam.heading);
 		output.writeDouble(UavFishingParam.radius);
 		output.writeDouble(UavFishingParam.angle);

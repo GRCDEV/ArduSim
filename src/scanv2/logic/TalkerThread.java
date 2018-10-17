@@ -2,7 +2,6 @@ package scanv2.logic;
 
 import static scanv2.pojo.State.*;
 
-import java.awt.geom.Point2D;
 import java.util.Arrays;
 
 import com.esotericsoftware.kryo.io.Output;
@@ -10,6 +9,7 @@ import com.esotericsoftware.kryo.io.Output;
 import api.Copter;
 import api.GUI;
 import api.Tools;
+import api.pojo.UTMCoordinates;
 import api.pojo.formations.FlightFormation;
 import scanv2.pojo.Message;
 
@@ -58,7 +58,7 @@ public class TalkerThread extends Thread {
 			output.clear();
 			output.writeShort(Message.HELLO);
 			output.writeLong(selfId);
-			Point2D.Double initialPos = Copter.getUTMLocation(numUAV);
+			UTMCoordinates initialPos = Copter.getUTMLocation(numUAV);
 			output.writeDouble(initialPos.x);
 			output.writeDouble(initialPos.y);
 			output.flush();
@@ -397,7 +397,7 @@ public class TalkerThread extends Thread {
 			GUI.logVerbose(numUAV, ScanText.CENTER_SEND_LAND);
 			output.clear();
 			output.writeShort(Message.LAND);
-			Point2D.Double currentLocation = Copter.getUTMLocation(numUAV);
+			UTMCoordinates currentLocation = Copter.getUTMLocation(numUAV);
 			output.writeDouble(currentLocation.x);
 			output.writeDouble(currentLocation.y);
 			output.flush();
