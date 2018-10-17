@@ -25,6 +25,12 @@ public class FisherReceiverThread  extends Thread{
 	@Override
 	public void run() {
 		
+		
+
+		while(!Tools.isExperimentInProgress()) {
+			Tools.waiting(100);
+		}
+		
 		while(Tools.isExperimentInProgress()) {
 			
 			message = Copter.receiveMessage(0);

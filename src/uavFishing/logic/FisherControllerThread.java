@@ -1,6 +1,5 @@
 package uavFishing.logic;
 
-import java.awt.geom.Point2D;
 
 import api.Copter;
 import api.GUI;
@@ -47,7 +46,7 @@ public class FisherControllerThread extends Thread{
 			UTMActualPoint = Copter.getUTMLocation(uavID);
 			vPosOrigin = VectorMath.rotateVector(vPosOrigin, UavFishingParam.angle, UavFishingParam.clockwise);
 			UTMNextPoint = new UTMCoordinates(UTMActualPoint.x+vPosOrigin[0], UTMActualPoint.y+vPosOrigin[1]);
-			distance = UTMActualPoint.distance(UTMNextPoint);// no parece que la utilices para nada
+//			distance = UTMActualPoint.distance(UTMNextPoint);// no parece que la utilices para nada
 			
 			UTMBoat = Copter.getUTMLocation(UavFishingParam.boatID);
 			GeoNextPoint=Tools.UTMToGeo((UTMBoat.x + vPosOrigin[0]),UTMBoat.y + vPosOrigin[1]);
@@ -56,8 +55,7 @@ public class FisherControllerThread extends Thread{
 			
 			
 			
-			
-			//
+		
 			
 		}
 		

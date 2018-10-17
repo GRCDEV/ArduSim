@@ -41,7 +41,7 @@ public class UavFishingConfigDialog extends JDialog{
 	private JCheckBox chkClockwise;
 	private Pair<String, List<Waypoint>[]> fitxData;
 	
-	
+	/*
 	public static void main(String[] args) {
 		try {
 			UavFishingConfigDialog dialog = new UavFishingConfigDialog();
@@ -49,7 +49,7 @@ public class UavFishingConfigDialog extends JDialog{
 			e.printStackTrace();
 		}
 	}
-	
+	*/
 	
 	public UavFishingConfigDialog () {
 		
@@ -101,7 +101,7 @@ public class UavFishingConfigDialog extends JDialog{
 		lblPathBoat.setBounds(0, 130, 210, 20);
 		cpBoat.add(lblPathBoat);
 		
-		txtMisionFilePath = new JTextField("/home/fran/git/Ardusim");
+		txtMisionFilePath = new JTextField("");
 		txtMisionFilePath.setEditable(true);
 		txtMisionFilePath.setBounds(0, 0, 334, 20);
 		txtMisionFilePath.setEnabled(true);
@@ -119,21 +119,7 @@ public class UavFishingConfigDialog extends JDialog{
 				
 				fitxData=api.GUI.loadKMLMissions();
 				txtMisionFilePath.setText(fitxData.getValue0());
-				
-				
-				
-				/*
-				JFileChooser chooser = new JFileChooser();
-				chooser.setDialogTitle("Select UAV mision data file"); // TODO Add text helper file
-				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				chooser.setMultiSelectionEnabled(false);
-				chooser.setAcceptAllFileFilterUsed(false);
-				FileNameExtensionFilter filter = new FileNameExtensionFilter("Keyhole Markup Language file", "kml");
-				chooser.addChoosableFileFilter(filter);
-				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-					txtMisionFilePath.setText(chooser.getSelectedFile().getPath());
-				}
-				*/
+				GUI.log("Longitud del vector de listas waypoint" + Integer.toString(fitxData.getValue1().length));
 			}
 			
 			
@@ -175,14 +161,17 @@ public class UavFishingConfigDialog extends JDialog{
 		this.setVisible(true);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void okAction() {
 		try {
 			
 			UavFishingParam.angle = Double.parseDouble(txtAngleDegrees.getText());					
 			UavFishingParam.clockwise = chkClockwise.isSelected();
-			UavFishingParam.BoatDataFile = txtMisionFilePath.getText();
 			UavFishingParam.radius = Double.parseDouble(txtRadiusMeters.getText());
-			Tools.setLoadedMissionsFromFile(fitxData.getValue1());
+			//Creamos un vector del tamaño igual al numero de UAVs para evitar problemas en la función sendInitialConfiguration principal.
+			UavFishingParam.boatMission = (List<Waypoint>[]) new List[Tools.getNumUAVs()];
+			UavFishingParam.boatMission[0]= fitxData.getValue1()[0];
+			Tools.setLoadedMissionsFromFile(UavFishingParam.boatMission);
 			Tools.setProtocolConfigured();
 			dispose();
 			

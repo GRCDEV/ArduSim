@@ -12,6 +12,7 @@ import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
+import api.pojo.Waypoint;
 import sim.board.BoardPanel;
 import uavFishing.gui.UavFishingConfigDialog;
 import uavFishing.pojo.ToolsFishing;
@@ -71,6 +72,9 @@ public class UavFishingHelper extends ProtocolHelper {
 	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
 		@SuppressWarnings("unchecked")
 		Pair<GeoCoordinates, Double>[] startCoordinatesArray = new Pair[2];
+		UavFishingParam.boatMission = Tools.getLoadedMissions();
+		UavFishingParam.startLocationBoat= new GeoCoordinates(UavFishingParam.boatMission[0].get(0).getLatitude(),UavFishingParam.boatMission[0].get(0).getLongitude());
+		UavFishingParam.startLocationUAV = new GeoCoordinates(UavFishingParam.startLocationBoat.latitude,UavFishingParam.startLocationBoat.longitude);
 		startCoordinatesArray[0] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationBoat,0.0);
 		startCoordinatesArray[1] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationUAV,0.0);
 		
@@ -86,38 +90,50 @@ public class UavFishingHelper extends ProtocolHelper {
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-	
-		if (numUAV == UavFishingParam.boatID) return Copter.cleanAndSendMissionToUAV(numUAV, Tools.getLoadedMissions()[numUAV]);
-		else return false;
+		/*GUI.log("Send initial Configuration for UAV:"+ numUAV);
+		if (numUAV == UavFishingParam.boatID) {
+			GUI.log("Sending Mission to UAV: " + numUAV );
+			return Copter.cleanAndSendMissionToUAV(numUAV, Tools.getLoadedMissions()[numUAV]);
+			
+		}
+		else*/
+			GUI.log("Initial Configuration to UAV: " + numUAV );
+			return true;
 	}
 
 	@Override
 	public void startThreads() {
-		
-		new FisherControllerThread(UavFishingParam.fisherID).start();
-		new FisherReceiverThread(UavFishingParam.fisherID).start();
+		GUI.log("Creating uavFishing threads");
 		new BoatThread(UavFishingParam.boatID).start();
-		
+		if(Tools.getNumUAVs() > 1)  {
+			new FisherControllerThread(UavFishingParam.fisherID).start();
+			new FisherReceiverThread(UavFishingParam.fisherID).start();
+		}
+		GUI.log("UavFishing threads created");
 	}//TODO
 
 	@Override
 	public void setupActionPerformed() {
-//		Param.simStatus = SimulatorState.READY_FOR_TEST;//TODO Francisco ha comentado esto. Estab en el siguiente método y no sirve
+
 	}
 
 	@Override
 	public void startExperimentActionPerformed() {
 		
-		//Barco
+		GUI.log("Starting Fishing Experiment");
+		//Boat
 		Copter.setFlightMode(0, FlightMode.STABILIZE);
 		Copter.armEngines(0);
 		Copter.setFlightMode(0, FlightMode.AUTO);
 		Copter.setHalfThrottle(0);
-		//Dron
-		Copter.setFlightMode(1, FlightMode.STABILIZE);
-		Copter.armEngines(1);
-		Copter.setFlightMode(1, FlightMode.GUIDED);
-		Copter.guidedTakeOff(1, 25);
+		if(Tools.getNumUAVs() > 1) {
+			//Dron
+			Copter.setFlightMode(1, FlightMode.STABILIZE);
+			Copter.armEngines(1);
+			Copter.setFlightMode(1, FlightMode.GUIDED);
+			Copter.guidedTakeOff(1, 25);
+		}
+		GUI.log("Fishing Experiment Ready");
 	}//TODO
 
 	@Override
