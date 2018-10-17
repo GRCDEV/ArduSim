@@ -157,7 +157,7 @@ The command line must be:
 
     java -jar ArduSim.jar pccompanion
 
-The parameters found in *ardusim.ini* are loaded, and the following windows opens:
+The file *ardusim.ini* must be located beside *ArduSim.jar* to load parameters, and then the following windows opens:
 
 ![PC Companion](pccompanion.png)
 
