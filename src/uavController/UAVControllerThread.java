@@ -7,7 +7,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Arrays;
 
-import org.javatuples.Triplet;
 import org.mavlink.IMAVLinkMessage;
 import org.mavlink.MAVLinkReader;
 import org.mavlink.messages.IMAVLinkMessageID;
@@ -48,7 +47,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
-import api.pojo.GeoCoordinates;
+import api.pojo.Location2D;
 import api.pojo.LogPoint;
 import api.pojo.MAVParam;
 import api.pojo.Point3D;
@@ -304,20 +303,18 @@ public class UAVControllerThread extends Thread {
 			}
 
 			long time = System.nanoTime();
-			GeoCoordinates locationGeo = new GeoCoordinates(message.lat * 0.0000001, message.lon * 0.0000001);
-			UTMCoordinates locationUTM = Tools.geoToUTM(locationGeo.latitude, locationGeo.longitude);
+			Location2D location = Location2D.NewLocation(message.lat * 0.0000001, message.lon * 0.0000001);
+			UTMCoordinates locationUTM = location.getUTMLocation();
 			
 			// The last few UAV positions are stored for later use in protocols
 			UAVParam.lastUTMLocations[numUAV].add(locationUTM);
 			// Global horizontal speed estimation
 			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
-			Triplet<Double, Double, Double> speed = Triplet.with(message.vx * 0.01, message.vy * 0.01, message.vz * 0.01);
+			double[] speed = new double[] {message.vx * 0.01, message.vy * 0.01, message.vz * 0.01};
 			// Update the UAV data, including the acceleration calculus
 			double z = message.alt * 0.001;
 			double heading = (message.hdg * 0.01) * Math.PI / 180;
-			UAVParam.uavCurrentData[numUAV].update(time, locationGeo, locationUTM,
-					z, message.relative_alt * 0.001,
-					speed, hSpeed, heading);
+			UAVParam.uavCurrentData[numUAV].update(time, location, z, message.relative_alt * 0.001, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
 			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTM.x, locationUTM.y, z, heading, hSpeed,
 					Param.simStatus == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] == 0)); // UAV under test

@@ -2,8 +2,6 @@ package followme.logic;
 
 import java.util.Arrays;
 
-import org.javatuples.Triplet;
-
 import com.esotericsoftware.kryo.io.Output;
 
 import api.Copter;
@@ -45,7 +43,7 @@ public class MasterTalker extends Thread {
 			idsFormacion[i++] = p;
 		}
 		
-		double lat, lon, heading, z, speedX, speedY, speedZ;
+		double heading, z;
 		UTMCoordinates utm = Copter.getUTMLocation(FollowMeParam.posMaster);
 		heading = Copter.getHeading(FollowMeParam.posMaster);
 		
@@ -92,18 +90,15 @@ public class MasterTalker extends Thread {
 			utm = Copter.getUTMLocation(FollowMeParam.posMaster);
 			heading = Copter.getHeading(FollowMeParam.posMaster);
 			z = Copter.getZRelative(FollowMeParam.posMaster);
-			Triplet<Double, Double, Double> speed = Copter.getSpeeds(FollowMeParam.posMaster);
-			speedX = speed.getValue0();
-			speedY = speed.getValue1();
-			speedZ = speed.getValue2();
+			double[] speed = Copter.getSpeeds(FollowMeParam.posMaster);
 
 			out.writeDouble(utm.x);
 			out.writeDouble(utm.y);
 			out.writeDouble(heading);
 			out.writeDouble(z);
-			out.writeDouble(speedX);
-			out.writeDouble(speedY);
-			out.writeDouble(speedZ);
+			out.writeDouble(speed[0]);
+			out.writeDouble(speed[1]);
+			out.writeDouble(speed[2]);
 			out.flush();
 			byte[] message = Arrays.copyOf(buffer, out.position());
 			Copter.sendBroadcastMessage(idMaster, message);

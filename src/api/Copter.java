@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.javatuples.Quintet;
-import org.javatuples.Triplet;
 import org.mavlink.messages.MAV_CMD;
 
 import api.pojo.FlightMode;
@@ -1029,7 +1028,7 @@ public class Copter {
 	}
 
 	/** API: Provides the latest three axes components of the speed (m/s) reveived from the flight controller. */
-	public static Triplet<Double, Double, Double> getSpeeds(int numUAV) {
+	public static double[] getSpeeds(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getSpeeds();
 	}
 

@@ -1,9 +1,9 @@
 package uavController;
 
 import org.javatuples.Quintet;
-import org.javatuples.Triplet;
 
 import api.pojo.GeoCoordinates;
+import api.pojo.Location2D;
 import api.pojo.UTMCoordinates;
 
 /** This class generates and object that contains the most recent information received from the UAV. */
@@ -11,19 +11,17 @@ import api.pojo.UTMCoordinates;
 public class UAVCurrentData {
 
 	private long time;					// (ns) Local time when the location was retrieved from the UAV
-	private GeoCoordinates locationGeo;	// (degrees) longitude,latitude coordinates
-	private UTMCoordinates locationUTM;	// (m) X,Y UTM coordinates
+	private Location2D location;		// Location in UTM and Geographic coordinates
 	private double z, zRelative;		// (m) Altitude
-	private Triplet<Double, Double, Double> speed;	// (m/s) Current speed in the three axes
+	private double[] speed;				// (m/s) Current speed in the three axes
 	private double groundSpeed;			// (m/s) Currrent ground speed
 	private double acceleration;		// (m/s^2) Current acceleration
 	private double heading;				// (rad) Current heading
 
 	/** Updates the UAV object data. */
-	public synchronized void update(long time, GeoCoordinates locationGeo, UTMCoordinates locationUTM, double z,
-			double zRelative, Triplet<Double, Double, Double> speed, double groundSpeed, double heading) {
-		this.locationGeo = locationGeo;
-		this.locationUTM = locationUTM;
+	public synchronized void update(long time, Location2D location, double z,
+			double zRelative, double[] speed, double groundSpeed, double heading) {
+		this.location = location;
 		this.z = z;
 		this.zRelative = zRelative;
 
@@ -63,18 +61,32 @@ public class UAVCurrentData {
 	 * <p>double. Speed.
 	 * <p>double. Acceleration. */
 	public synchronized Quintet<Long, UTMCoordinates, Double, Double, Double> getData() {
-		return Quintet.with(this.time, this.locationUTM, this.z, this.groundSpeed, this.acceleration);
+		UTMCoordinates location = null;
+		if (this.location != null) {
+			location = this.location.getUTMLocation();
+		}
+		return Quintet.with(this.time, location, this.z, this.groundSpeed, this.acceleration);
 	}
 
-	/** Returns the current location in UTM coordinates (x,y). */
+	/** Returns the current location in UTM coordinates. */
 	public synchronized UTMCoordinates getUTMLocation() {
-		return this.locationUTM;
+		if (this.location != null) {
+			return this.location.getUTMLocation();
+		}
+		return null;
 	}
 	
-	/** Returns the current location in Geographic coordinates.
-	 * <p>x=longitude, y=latitude. */
+	/** Returns the current location in Geographic coordinates. */
 	public synchronized GeoCoordinates getGeoLocation() {
-		return this.locationGeo;
+		if (this.location != null) {
+			return this.location.getGeoLocation();
+		}
+		return null;
+	}
+	
+	/** Return the current location in both UTM and Geographic coordinates. */
+	public synchronized Location2D getLocation() {
+		return Location2D.copyLocation(this.location);
 	}
 
 	/** Returns the current relative altitude (m). */
@@ -93,8 +105,11 @@ public class UAVCurrentData {
 	}
 	
 	/** Returns the current speed in the three axes (m/s). */
-	public synchronized Triplet<Double, Double, Double> getSpeeds() {
-		return this.speed;
+	public synchronized double[] getSpeeds() {
+		if (this.speed != null) {
+			return new double[] {this.speed[0], this.speed[1], this.speed[2]};
+		}
+		return null;
 	}
 	
 	/** Returns the current heading (rad). */

@@ -153,8 +153,12 @@ public class Tools {
 	
 	/** Transforms UTM coordinates to Geographic coordinates. 
 	 *  <p>Example: Tools.UTMToGeo(312915.84, 4451481.33).
-	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function geoToUTM is previously used, in order to get the zone and the letter of the UTM projection. */
+	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function geoToUTM is previously used, in order to get the zone and the letter of the UTM projection. Otherwise, it returns null. */
 	public static GeoCoordinates UTMToGeo(double x, double y) {
+		if (SimParam.zone == -1) {
+			return null;
+		}
+		
 		double latitude;
 		double longitude;
 	
@@ -180,7 +184,7 @@ public class Tools {
 	
 	/** Transforms UTM coordinates to Geographic coordinates. 
 	 *  <p>Example: Tools.UTMToGeo(312915.84, 4451481.33).
-	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function geoToUTM is previously used, in order to get the zone and the letter of the UTM projection. */
+	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function geoToUTM is previously used, in order to get the zone and the letter of the UTM projection. Otherwise, it returns null. */
 	public static GeoCoordinates UTMToGeo(UTMCoordinates location) {
 		return Tools.UTMToGeo(location.x, location.y);
 	}
