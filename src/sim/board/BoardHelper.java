@@ -87,8 +87,8 @@ public class BoardHelper {
 		UTMCoordinates upLeftUTMCorner = Tools.geoToUTM(maxLatitude, minLongitude);
 		UTMCoordinates upRightUTMCorner = Tools.geoToUTM(maxLatitude, maxLongitude);
 		UTMCoordinates downLeftUTMCorner = Tools.geoToUTM(minLatitude, minLongitude);
-		double imagesUTMTotalWidth = Point2D.distance(upLeftUTMCorner.x, upLeftUTMCorner.y, upRightUTMCorner.x, upRightUTMCorner.y);
-		double imagesUTMTotalHeight = Point2D.distance(upLeftUTMCorner.x, upLeftUTMCorner.y, downLeftUTMCorner.x, downLeftUTMCorner.y);
+		double imagesUTMTotalWidth = upLeftUTMCorner.distance(upRightUTMCorner);
+		double imagesUTMTotalHeight = upLeftUTMCorner.distance(downLeftUTMCorner);
 		int imagesPXTotalWidth = (int)(imagesUTMTotalWidth*BoardParam.screenScale);
 		int imagesPXTotalHeight = (int)(imagesUTMTotalHeight*BoardParam.screenScale);
 	
@@ -660,12 +660,7 @@ public class BoardHelper {
 		int yPX = SimParam.boardPXHeight - (int)Math.round(yUTM*BoardParam.screenScale);	// The "y" coordinate is drawn on inverse order
 		// In case a UAV goes out of the screen
 		if (xPX < 0 || xPX >SimParam.boardPXWidth
-				|| yPX < 0 || yPX > SimParam.boardPXHeight) {
-			
-//			System.out.println("Failing coordinates: UTM(" + inUTMX + "," + inUTMY + ") to screen(" + xPX + "," + yPX + ")");
-			
-			
-			//SimTools.println(Text.UAV_OUT_OF_SCREEN_ERROR);
+				|| yPX < 0 || yPX > SimParam.boardPXHeight) {//TODO trigger a re-scale event
 		}
 		return new Point2D.Double(xPX, yPX);
 	}

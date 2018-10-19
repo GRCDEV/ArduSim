@@ -1,6 +1,5 @@
 package api;
 
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -11,6 +10,7 @@ import org.mavlink.messages.MAV_CMD;
 
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
+import api.pojo.Location2D;
 import api.pojo.Point3D;
 import api.pojo.RCValues;
 import api.pojo.UTMCoordinates;
@@ -31,9 +31,14 @@ import uavController.UAVParam.ControllerParam;
 
 public class Copter {
 	
-	/** API: Sets a new value for a flight controller parameter.
-	 * <p>Parameters that start with "SIM_" are only available on simulation.
-	 * <p>Returns true if the command was successful. */
+	/**
+	 * API: Set a new value for a flight controller parameter.
+	 * <p>Parameters that start with "SIM_" are only available on simulation.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param parameter Parameter to modify.
+	 * @param value New value.
+	 * @return true if the command was successful.
+	 */
 	public static boolean setParameter(int numUAV, ControllerParam parameter, double value) {
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.newParamValue.set(numUAV, value);
@@ -51,10 +56,13 @@ public class Copter {
 		}
 	}
 	
-	/** API: Gets the value of a flight controller parameter.
-	 * <p>Parameters that start with "SIM_" are only available on simulation.
-	 * <p>Returns the parameter value if the command was successful.
-	 * <p>Returns null if an error happens. */
+	/**
+	 * API: Get the value of a flight controller parameter.
+	 * <p>Parameters that start with "SIM_" are only available on simulation.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param parameter Parameter to retrieve.
+	 * @return The parameter value if the command was successful, or null in an error happens.
+	 */
 	public static Double getParameter(int numUAV, ControllerParam parameter) {
 		if (UAVParam.loadedParams[numUAV].containsKey(parameter.getId())) {
 			return (double) UAVParam.loadedParams[numUAV].get(parameter.getId()).getValue();
@@ -75,8 +83,12 @@ public class Copter {
 		}
 	}
 
-	/** API: Changes a UAV flight mode.
-	 * <p>Returns true if the command was successful. */
+	/**
+	 * API: Change a UAV flight mode.
+	 * @param numUAV UAV position in arrays.
+	 * @param mode Flight mode to set.
+	 * @return true if the command was successful.
+	 */
 	public static boolean setFlightMode(int numUAV, FlightMode mode) {
 		UAVParam.newFlightMode[numUAV] = mode;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MODE);
@@ -107,20 +119,31 @@ public class Copter {
 		}
 	}
 
-	/** API: Gets the last flight mode value provided by a flight controller. */
+	/**
+	 * API: Get the last flight mode value provided by a flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return The flight mode of the multicopter.
+	 */
 	public static FlightMode getFlightMode(int numUAV) {
 		return UAVParam.flightMode.get(numUAV);
 	}
 	
-	/** API: Returns true if the UAV is flying. */
+	/**
+	 * API: Check if the UAV is flying.
+	 * @param numUAV UAV position in arrays.
+	 * @return Whether the UAV is flying or not.
+	 */
 	public static boolean isFlying(int numUAV) {
 		return Copter.getFlightMode(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING;
 	}
 	
-	/** API: Arms the engines.
+	/**
+	 * API: Arm the engines.
 	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
-	 * <p>The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
-	 * <p>Returns true if the command was successful. */
+	 * The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return true if the command was successful.
+	 */
 	public static boolean armEngines(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ARM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -136,11 +159,14 @@ public class Copter {
 		}
 	}
 
-	/** API: Takes off a UAV previously armed.
-	 * <p>altitude. Target altitude over the ground.
+	/**
+	 * API: Take off a UAV previously armed.
 	 * <p>The UAV must be in GUIDED mode and armed.
-	 * * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
-	 * <p>Returns true if the command was successful. */
+	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param altitude Target altitude over the home location.
+	 * @return true if the command was successful.
+	 */
 	public static boolean guidedTakeOff(int numUAV, double altitude) {
 		UAVParam.takeOffAltitude.set(numUAV, altitude);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_TAKE_OFF);
@@ -157,11 +183,13 @@ public class Copter {
 		}
 	}
 	
-	/** Takes off all the UAVs running on the same machine and starts the planned missions.
+	/**
+	 * Take off all the UAVs running on the same machine and start the planned missions.
 	 * <p>Concurrent method (all UAVs start the mission at the same time).
-	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
-	 * <p>The UAVs must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
-	 * <p>Returns true if all the commands were successful. */
+	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
+	 * The UAVs must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
+	 * @return true if all the commands were successful.
+	 */
 	public static boolean startMissionsFromGround() {
 		// Starts the movement of each UAV by arming engines, setting auto mode, and throttle to stabilize altitude.
 		// All UAVs start the experiment in different threads, but the first
@@ -193,12 +221,14 @@ public class Copter {
 		return true;
 	}
 	
-	
-	/** Takes off a UAV and starts the planned mission.
-	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
-	 * <p>The UAV must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).
+	/**
+	 * Take off a UAV and start the planned mission.
 	 * <p>Issues three commands: armEngines, setFlightMode --> AUTO, and setHalfThrottle.
-	 * <p>Returns true if all the commands were successful. */
+	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
+	 * The UAV must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return true if all the commands were successful.
+	 */
 	public static boolean startMissionFromGround(int numUAV) {
 		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
@@ -211,10 +241,12 @@ public class Copter {
 		return false;
 	}
 	
-	/** Takes off all the UAVs: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Non blocking method.
-	 * <p>altitudes. Array with the target relative altitude for all the UAVs (be sure that altitudes.length == Tools.getNumUAVs()).
-	 * <p>Returns true if all the commands were successful. */
+	/**
+	 * Take off all the UAVs: change mode to guided, arm engines, and then perform the guided take off.
+	 * <p>Non blocking method.</p>
+	 * @param altitudes (meters) Array with the target relative altitude for all the UAVs (be sure that <i>altitudes.length == Tools.getNumUAVs()</i>).
+	 * @return true if all the commands were successful.
+	 */
 	public static boolean takeOffAllUAVsNonBlocking(double[] altitudes) {
 		int numUAVs = Tools.getNumUAVs();
 		if (altitudes.length != numUAVs) {
@@ -249,10 +281,13 @@ public class Copter {
 		return true;
 	}
 	
-	/** Takes off all the UAVs one by one: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Blocking method. It waits until all the UAVs reach 95% of the target relative altitude.
-	 * <p>altitudes. Array with the target relative altitude for all the UAVs (be sure that altitudes.length == Tools.getNumUAVs()).
-	 * <p>Returns true if all the commands were successful. */
+	/**
+	 * Take off all the UAVs one by one: change mode to guided, arm engines, and then perform the guided take off.
+	 * <p>Blocking method.
+	 * It waits until all the UAVs reach 95% of the target relative altitude.</p>
+	 * @param altitudes (meters) Array with the target relative altitude for all the UAVs (be sure that <i>altitudes.length == Tools.getNumUAVs()</i>).
+	 * @return true if all the commands were successful.
+	 */
 	public static boolean takeOffAllUAVs(double[] altitudes) {
 		if (altitudes.length != Tools.getNumUAVs()) {
 			return false;
@@ -271,9 +306,13 @@ public class Copter {
 		return true;
 	}
 	
-	/** Takes off until the target relative altitude: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Non blocking method.
-	 * <p>Returns true if the command was successful. */
+	/**
+	 *  Take off until the target relative altitude: change mode to guided, arm engines, and then perform the guided take off.
+	 * <p>Non blocking method.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param altitude (meters) Target relative altitude for the UAV.
+	 * @return true if the command was successful.
+	 */
 	public static boolean takeOffNonBlocking(int numUAV, double altitude) {
 		if (!setFlightMode(numUAV, FlightMode.GUIDED) || !armEngines(numUAV) || !guidedTakeOff(numUAV, altitude)) {
 			GUI.log(Text.TAKE_OFF_ERROR_1 + " " + Param.id[numUAV]);
@@ -282,9 +321,14 @@ public class Copter {
 		return true;
 	}
 	
-	/** Takes off until the target relative altitude: changes mode to guided, arms engines, and then performs the guided take off.
-	 * <p>Blocking method. It waits until the UAV reaches 95% of the target relative altitude.
-	 * <p>Returns true if the command was successful. */
+	/**
+	 * Take off until the target relative altitude: change mode to guided, arm engines, and then perform the guided take off.
+	 * <p>Blocking method.
+	 * It waits until the UAV reaches 95% of the target relative altitude.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param altitude (meters) Target relative altitude for the UAV.
+	 * @return true if the command was successful.
+	 */
 	public static boolean takeOff(int numUAV, double altitude) {
 		if (!takeOffNonBlocking(numUAV, altitude)) {
 			return false;
@@ -299,8 +343,12 @@ public class Copter {
 		return true;
 	}
 	
-	/** API: Changes the planned flight speed (m/s).
-	 * <p>Returns true if the command was successful. */
+	/**
+	 * API: Change the planned flight speed.
+	 * @param numUAV UAV position in arrays.
+	 * @param speed (m/s) Target speed.
+	 * @return true if the command was successful.
+	 */
 	public static boolean setSpeed(int numUAV, double speed) {
 		UAVParam.newSpeed[numUAV] = speed;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_SPEED);
@@ -317,8 +365,12 @@ public class Copter {
 		}
 	}
 
-	/** API: Modifies the current waypoint of the mission stored on the UAV.
-	 * <p>Returns true if the command was successful. */
+	/**
+	 * API: Modify the current waypoint of the mission stored on the UAV.
+	 * @param numUAV UAV position in arrays.
+	 * @param currentWP New value, starting from 0.
+	 * @return true if the command was successful.
+	 */
 	public static boolean setCurrentWaypoint(int numUAV, int currentWP) {
 		UAVParam.newCurrentWaypoint[numUAV] = currentWP;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_CURRENT_WP);
@@ -335,8 +387,11 @@ public class Copter {
 		}
 	}
 
-	/** Suspends temporally a mission in AUTO mode, entering on loiter flight mode to force a fast stop.
-	 * <p>Returns true if all the commands were successful. */
+	/**
+	 * Suspend temporarily a mission in AUTO mode, entering on loiter flight mode to force a fast stop.
+	 * @param numUAV UAV position in arrays.
+	 * @return true if all the commands were successful.
+	 */
 	public static boolean stopUAV(int numUAV) {
 		if (Copter.setHalfThrottle(numUAV) && setFlightMode(numUAV, FlightMode.LOITER)) {
 			long time = System.nanoTime();
@@ -355,9 +410,12 @@ public class Copter {
 		return false;
 	}
 
-	/** API: Moves the throttle stick to half power using the corresponding RC channel.
-	 * <p>Returns true if the command was successful.
-	 * <p>Useful for starting auto flight while being on the ground, or to stabilize altitude when going out of auto mode. */
+	/**
+	 * API: Move the throttle stick to half power using the corresponding RC channel.
+	 * <p>Useful for starting auto flight while being on the ground, or to stabilize altitude when going out of auto mode.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return true if the command was successful.
+	 */
 	public static boolean setHalfThrottle(int numUAV) {
 		if (UAVParam.overrideOn.get(numUAV) == 1) {
 			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
@@ -377,10 +435,13 @@ public class Copter {
 		return false;
 	}
 	
-	/** API: Cancels the overriding of the remote control output.
-	 * <p>Returns true if the command was successful.
+	/**
+	 * API: Cancel the overriding of the remote control output.
 	 * <p>This function can be used only once, and since then the RC channels can not be overridden any more.
-	 * <p>Function already used in the PCCompanion to return the control of any overridden RCs. */
+	 * Function already used in the PCCompanion to return the control of any overridden RCs when an emergency button is pressed.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return true if the command was successful.
+	 */
 	public static boolean returnRCControl(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_RECOVER_CONTROL);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -396,13 +457,21 @@ public class Copter {
 		}
 	}
 	
-	/** API: Overrides the remote control output.
+	/**
+	 * API: Override the remote control output.
 	 * <p>Channel values in microseconds. Typically chan1=roll, chan2=pitch, chan3=throttle, chan4=yaw.
+	 * Standard modulation: 1000 (0%) - 2000 (100%).
+	 * Value 0 means that the control of that channel must be returned to the RC radio.
+	 * Value UINT16_MAX means to ignore this field.</p>
 	 * <p>By default, channels can be overridden, but the functionality can be disabled by the command "returnRCControl".
-	 * <p>Value 0 means that the control of that channel must be returned to the RC radio.
-	 * <p>Value UINT16_MAX means to ignore this field.
-	 * <p>Standard modulation: 1000 (0%) - 2000 (100%).
-	 * <p>Values are not applied immediately, but each time a message is received from the flight controller. */
+	 * This method doesn't wait response from the flight controller.
+	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param roll Turn on horizontal axes that goes from front to rear of the UAV (tilt the UAV to the left or to the right).
+	 * @param pitch Turn on horizontal axes that goes from left to right of the UAV (raise or turn down the front part of the UAV).
+	 * @param throttle Engine power (raise or descend the UAV).
+	 * @param yaw Turn on vertical axes (pointing north, east...).
+	 */
 	public static void channelsOverride(int numUAV, int roll, int pitch, int throttle, int yaw) {
 		if (UAVParam.overrideOn.get(numUAV) == 1) {
 			UAVParam.rcs[numUAV].set(new RCValues(roll, pitch, throttle, yaw));
@@ -413,22 +482,29 @@ public class Copter {
 		// si se envian en intervalos menores a 0.393 segundos (quizá una cola fifo con timeout facilite resolver el problema)
 	}
 	
-	/** API: Moves the UAV to a new position.
-	 * <p>The UAV must be in GUIDED flight mode.
-	 * <p>geo. Geographic coordinates the UAV has to move to.
-	 * <p>relAltitude. Relative altitude the UAV has to move to.
-	 * <p>This method uses the message SET_POSITION_TARGET_GLOBAL_INT, and don't waits response from the flight controller. */
+	/**
+	 * API: Move the UAV to a new location.
+	 * <p>The UAV must be in GUIDED flight mode.</p>
+	 * <p>This method uses the message SET_POSITION_TARGET_GLOBAL_INT, and doesn't wait response from the flight controller.
+	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param geo Geographic coordinates the UAV has to move to.
+	 * @param relAltitude (meters) Relative altitude the UAV has to move to.
+	 */
 	public static void moveUAV(int numUAV, GeoCoordinates geo, float relAltitude) {
 		UAVParam.target[numUAV].set(new Point3D(geo.longitude, geo.latitude, relAltitude));
 	}
 
-	/** API: Moves the UAV to a new position.
-	 * <p>The UAV must be in GUIDED flight mode.
-	 * <p>geo. Geographic coordinates the UAV has to move to.
-	 * <p>relAltitude. Relative altitude the UAV has to move to.
-	 * <p>The method may return control immediately or in more than 200 ms depending on the reaction of the flight controller
-	 * <p>Returns true if the command was successful.
-	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller. */
+	/**
+	 * API: Move the UAV to a new location.
+	 * <p>The UAV must be in GUIDED flight mode.</p>
+	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller.
+	 * The method may return control immediately or in more than 200 ms depending on the reaction of the flight controller.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param geo Geographic coordinates the UAV has to move to.
+	 * @param relAltitude (meters) Relative altitude the UAV has to move to.
+	 * @return true if the command was successful.
+	 */
 	public static boolean moveUAVNonBlocking(int numUAV, GeoCoordinates geo, float relAltitude) {
 		UAVParam.newLocation[numUAV][0] = (float)geo.latitude;
 		UAVParam.newLocation[numUAV][1] = (float)geo.longitude;
@@ -446,33 +522,39 @@ public class Copter {
 		}
 	}
 	
-	/** API: Moves the UAV to a new position.
+	/**
+	 * API: Move the UAV to a new location.
 	 * <p>The UAV must be in GUIDED flight mode.
-	 * <p>geo. Geographic coordinates the UAV has to move to.
-	 * <p>relAltitude. Relative altitude the UAV has to move to.
-	 * <p>destThreshold. Horizontal distance from the destination to assert that the UAV has reached there.
-	 * <p>altThreshold. Vertical distance from the destination to assert that the UAV has reached there.
-	 * <p>Blocking method. It waits until the UAV is close enough of the target location.
-	 * <p>Returns true if the command was successful.
-	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller. */
+	 * Blocking method. </p>
+	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller.
+	 * It also waits until the UAV is close enough of the target location.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param geo Geographic coordinates the UAV has to move to.
+	 * @param relAltitude (meters) Relative altitude the UAV has to move to.
+	 * @param destThreshold (meters) Horizontal distance from the destination to assert that the UAV has reached there.
+	 * @param altThreshold (meters) Vertical distance from the destination to assert that the UAV has reached there.
+	 * @return true if the command was successful.
+	 */
 	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold, double altThreshold) {
 		if (!Copter.moveUAVNonBlocking(numUAV, geo, relAltitude)) {
 			return false;
 		}
 		
 		UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
-		Point2D.Double destination = new Point2D.Double(utm.x, utm.y);
 		// Once the command is issued, we have to wait until the UAV approaches to destination.
 		// No timeout is defined to reach the destination, as it would depend on speed and distance
-		while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(destination) > destThreshold
+		while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(utm) > destThreshold
 				|| Math.abs(relAltitude - UAVParam.uavCurrentData[numUAV].getZRelative()) > altThreshold) {
 			Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
 		}
 		return true;
 	}
 
-	/** API: Removes the current mission from the UAV.
-	 * <p>Returns true if the command was successful. */
+	/**
+	 * API: Remove the current mission from the UAV.
+	 * @param numUAV UAV position in arrays.
+	 * @return true if the command was successful.
+	 */
 	public static boolean clearMission(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_CLEAR_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -488,11 +570,15 @@ public class Copter {
 		}
 	}
 
-	/** API: Sends a new mission to the UAV.
-	 * <p>Returns true if the command was successful.
-	 * <p>The waypoint 0 must be the current coordinates retrieved from the controller.
-	 * <p>The waypoint 1 must be take off.
-	 * <p>The last waypoint can be land or RTL. */
+	/**
+	 * API: Send a new mission to the UAV.
+	 * <p>The waypoint 0 of the mission should be the current coordinates retrieved from the controller, but it is ignored anyway.
+	 * The waypoint 1 must be take off.
+	 * The last waypoint can be land or RTL.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param list Mission to be sent to the flight controller.
+	 * @return true if the command was successful.
+	 */
 	public static boolean sendMission(int numUAV, List<Waypoint> list) {
 		if (list == null || list.size() < 2) {
 			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_1);
@@ -538,10 +624,13 @@ public class Copter {
 		}
 	}
 	
-	/** API: Retrieves the mission stored on the UAV.
-	 * <p>Returns true if the command was successful.
-	 * <p>New value available on api.Tools.getUAVMission(numUAV).
-	 * <p>Simplified version of the mission in UTM coordinates available on api.Tools.getUAVMissionSimplified(numUAV). */
+	/**
+	 * API: Retrieve the mission stored on the UAV.
+	 * <p>The new value available on <i>api.Tools.getUAVMission(numUAV)</i>.
+	 * The simplified version of the mission in UTM coordinates available on <i>api.Tools.getUAVMissionSimplified(numUAV)</i>.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return true if the command was successful.
+	 */
 	public static boolean retrieveMission(int numUAV) {
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -558,7 +647,10 @@ public class Copter {
 		}
 	}
 	
-	/** Creates the simplified mission shown on screen, and forces view to rescale.*/
+	/**
+	 * Create the simplified mission shown on screen, and forces view to re-scale.
+	 * @param numUAV UAV position in arrays.
+	 */
 	private static void simplifyMission(int numUAV) {
 		List<WaypointSimplified> missionUTMSimplified = new ArrayList<WaypointSimplified>();
 	
@@ -612,11 +704,15 @@ public class Copter {
 		UAVParam.lastWP[numUAV] = UAVParam.currentGeoMission[numUAV].get(UAVParam.currentGeoMission[numUAV].size() - 1);
 	}
 	
-	/** Deletes the current mission of the UAV, sends a new one, and gets it to be shown on the GUI.
-	 * <p>Blocking method.
+	/**
+	 * Delete the current mission of the UAV, sends a new one, and gets it to be shown on the GUI.
+	 * <p>Blocking method.</p>
 	 * <p>Method automatically used by ArduSim on start to send available missions to the UAVs.
-	 * <p>Must be used only if the UAV must follow a mission.
-	 * <p>Returns true if all the commands were successful.*/
+	 * Must be used only if the UAV must follow a mission.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param mission Mission to be sent to the flight controller.
+	 * @return true if all the commands were successful.
+	 */
 	public static boolean cleanAndSendMissionToUAV(int numUAV, List<Waypoint> mission) {
 		boolean success = false;
 		if (Copter.clearMission(numUAV)
@@ -632,26 +728,41 @@ public class Copter {
 		return success;
 	}
 	
-	/** Ads a Class as listener for the event: waypoint reached (more than one can be set). */
+	/**
+	 * Add a Class as listener for the event: waypoint reached (more than one can be set).
+	 * @param listener Class to be added as listener for the event.
+	 */
 	public static void setWaypointReachedListener(WaypointReachedListener listener) {
 		ArduSimTools.listeners.add(listener);
 	}
 	
-	/** API: Gets the current waypoint for a UAV.
-	 * <p><p>Use only when the UAV is performing a planned mission. */
+	/**
+	 * API: Get the current waypoint of the mission for a UAV.
+	 * <p>Use only when the UAV is performing a planned mission.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return The current waypoint of the mission, starting from 0.
+	 */
 	public static int getCurrentWaypoint(int numUAV) {
 		return UAVParam.currentWaypoint.get(numUAV);
 	}
 	
-	/** API: Identifies if the UAV has reached the last waypoint of the mission.
-	 * <p>Use only when the UAV is performing a planned mission. */
+	/**
+	 * API: Find out if the UAV has reached the last waypoint of the mission.
+	 * <p>Use only when the UAV is performing a planned mission.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return true if the last waypoint of the mission has been reached.
+	 */
 	public static boolean isLastWaypointReached(int numUAV) {
 		return UAVParam.lastWaypointReached[numUAV];
 	}
 	
-	/** Lands the UAV if it is close enough to the last waypoint.
+	/**
+	 * Land the UAV if it is close enough to the last waypoint.
 	 * <p>This method can be launched periodically, it only informs that the last waypoint is reached once, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
-	 * <p>Use only when the UAV is performing a planned mission. */
+	 * Use only when the UAV is performing a planned mission.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param distanceThreshold (meters) Horizontal distance from the last waypoint of the mission to assert that the UAV has to land.
+	 */
 	public static void landIfMissionEnded(int numUAV, double distanceThreshold) {
 		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
 		Waypoint lastWP = UAVParam.lastWP[numUAV];
@@ -684,42 +795,32 @@ public class Copter {
 		}
 	}
 	
-	/** Lands a UAVs if it is flying.
-	 * <p>Returns true if the command was successful, or even not needed because the UAV was not flying. */
+	/**
+	 * Land a UAV if it is flying.
+	 * @param numUAV UAV position in arrays.
+	 * @return true if the command was successful, or even when it is not needed because the UAV was not flying.
+	 */
 	public static boolean landUAV(int numUAV) {
 		if (Copter.isFlying(numUAV)) {
 			if (!setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
 				return false;
 			}
-//			// The following code is necessary for a possible race condition (not now, as setFlightMode solves the problem)
-//			while (Copter.getFlightMode(numUAV) != FlightMode.LAND_ARMED
-//					&& Copter.getFlightMode(numUAV) != FlightMode.LAND) {aqui
-//				Tools.waiting(UAVParam.COMMAND_WAIT);
-//			}
 		}
 		return true;
 	}
 	
-	/** Lands all the UAVs that are flying.
-	 * <p>Returns true if all the commands were successful, or even not needed because one or more UAVs were not flying. */
+	/**
+	 * Land all the UAVs that are flying.
+	 * @return true if all the commands were successful, or even when they are not needed because one or more UAVs were not flying.
+	 */
 	public static boolean landAllUAVs() {
-//		List<Integer> landing = new ArrayList<>();// Race condition solved in setFlightMode method
 		for (int i=0; i<Param.numUAVs; i++) {
 			if (Copter.isFlying(i)) {
-//				landing.add(i);
 				if (!setFlightMode(i, FlightMode.LAND_ARMED)) {
 					return false;
 				}
 			}
 		}
-//		int numUAV;
-//		for (int i = 0; i< landing.size(); i++) {
-//			numUAV = landing.get(i);
-//			while (Copter.getFlightMode(numUAV) != FlightMode.LAND_ARMED
-//					&& Copter.getFlightMode(numUAV) != FlightMode.LAND) {
-//				Tools.waiting(UAVParam.COMMAND_WAIT);
-//			}
-//		}
 		return true;
 	}
 	
@@ -730,8 +831,12 @@ public class Copter {
 //		return Param.controllers[numUAV];
 //	}
 	
-	/** API: Sends a message to the other UAVs.
-	 * <p>Blocking method.*/
+	/**
+	 * API: Send a message to the other UAVs.
+	 * <p>Blocking method.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param message Message to be sent, and encoded by the protocol.
+	 */
 	public static void sendBroadcastMessage(int numUAV, byte[] message) {
 		if (Param.role == Tools.SIMULATOR) {
 			if (Param.simStatus == Param.SimulatorState.TEST_FINISHED) {
@@ -833,17 +938,23 @@ public class Copter {
 		}
 	}
 	
-	/** API: Receives a message from another UAV.
-	 * <p>Blocking method.
-	 * <p>Returns null if a fatal error with the socket happens. */
+	/**
+	 * API: Receive a message from another UAV.
+	 * <p>Blocking method.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return The message received, or null if a fatal error with the socket happens.
+	 */
 	public static byte[] receiveMessage(int numUAV) {
 		return Copter.receiveMessage(numUAV, 0);
 	}
 	
-	/** API: Receives a message from another UAV.
-	 * <p>Blocking method until the socketTimeout is reached.
-	 * <p>The timeout value must be > 0. If 0, the method blocks until a message is received.
-	 * <p>Returns null if a fatal error with the socket happens or the timeout is reached. */
+	/**
+	 * API: Receive a message from another UAV.
+	 * <p>Blocking method until the socketTimeout is reached.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param socketTimeout (milliseconds) Duration of the timeout. a zero or negative value blocks until a message is received.
+	 * @return The message received, or null if a fatal error with the socket happens or the timeout is reached.
+	 */
 	public static byte[] receiveMessage(int numUAV, int socketTimeout) {
 		if (Param.role == Tools.SIMULATOR) {
 			if (Param.simStatus == Param.SimulatorState.TEST_FINISHED) {
@@ -981,59 +1092,103 @@ public class Copter {
 		}
 	}
 	
-	/** API: Gets the planned speed. */
+	/**
+	 * API: Get the planned speed.
+	 * @param numUAV UAV position in arrays.
+	 * @return (meters) The planned speed.
+	 */
 	public static double getPlannedSpeed(int numUAV) {
 		return UAVParam.initialSpeeds[numUAV];
 	}
 
-	/** API: Provides the latest received data from the flight controller.
-	 * <p>Long. time.
-	 * <p>UTMCoordinates. UTM coordinates.
-	 * <p>double. Absolute altitude.
-	 * <p>double. Speed.
-	 * <p>double. Acceleration. */
+	/**
+	 * API: Get the latest received data from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return A set of 5 values: time (ns) when the data was received from the flight controller, UTM coordinates,
+	 * absolute altitude (meters), speed (m/s), and acceleration (m/s^2).
+	 */
 	public static Quintet<Long, UTMCoordinates, Double, Double, Double> getData(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getData();
 	}
 
-	/** API: Provides the latest location in UTM meters (x,y) received from the flight controller. */
+	/**
+	 * API: Get the latest location in UTM coordinates (meters) received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return The latest known location.
+	 */
 	public static UTMCoordinates getUTMLocation(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getUTMLocation();
 	}
 
-	/** API: Provides the latest location in Geographic coordinates received from the flight controller. */
+	/**
+	 * API: Get the latest location in Geographic coordinates (degrees) received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return The latest known location.
+	 */
 	public static GeoCoordinates getGeoLocation(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getGeoLocation();
 	}
 	
-	/** API: Gets n available last known locations (x,y) of the UAV in UTM coordinates.
-	 * <p>The locations time increases with the position in the array. */
+	/**
+	 * API: Get the latest location in both UTM (meters) and Geographic coordinates (degrees) received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return The latest known location.
+	 */
+	public static Location2D getLocation(int numUAV) {
+		return UAVParam.uavCurrentData[numUAV].getLocation();
+	}
+	
+	/**
+	 * API: Get the last available known locations (x,y) of the UAV in UTM coordinates (meters).
+	 * @param numUAV UAV position in arrays.
+	 * @return An array with the last received coordinates where time increases with the position in the array.
+	 */
 	public static UTMCoordinates[] getLastKnownUTMLocations(int numUAV) {
 		return UAVParam.lastUTMLocations[numUAV].getLastValues();
 	}
 
-	/** API: Provides the latest relative altitude from the ground (m) received from the flight controller. */
-	public static double getZRelative (int numUAV) {
+	/**
+	 * API: Get the latest relative altitude received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return (meters) Relative altitude over the home location.
+	 */
+	public static double getZRelative(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getZRelative();
 	}
 
-	/** API: Provides the latest altitude (m) received from the flight controller. */
-	public static double getZ (int numUAV) {
+	/**
+	 * API: Get the latest altitude received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return (meters) Absolute altitude.
+	 */
+	public static double getZ(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getZ();
 	}
 
-	/** API: Provides the latest ground speed (m/s) received from the flight controller. */
-	public static double getSpeed (int numUAV) {
+	/**
+	 * API: Get the latest ground speed received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return (m/s) Ground speed.
+	 */
+	public static double getSpeed(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getSpeed();
 	}
 
-	/** API: Provides the latest three axes components of the speed (m/s) reveived from the flight controller. */
+	/**
+	 * API: Get the latest three axes components of the speed received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return (m/s) Ground speed on the three axes [x, y, z].
+	 */
 	public static double[] getSpeeds(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getSpeeds();
 	}
 
-	/** API: Provides the latest heading (rad) received from the flight controller. */
-	public static double getHeading (int numUAV) {
+	/**
+	 * API: Get the latest heading received from the flight controller.
+	 * @param numUAV UAV position in arrays.
+	 * @return (rad) Heading
+	 */
+	public static double getHeading(int numUAV) {
 		return UAVParam.uavCurrentData[numUAV].getHeading();
 	}
 

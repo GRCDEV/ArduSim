@@ -3,7 +3,6 @@ package sim.board;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.LookupOp;
 import java.awt.image.LookupTable;
@@ -53,10 +52,8 @@ public class BackgroundMap {
 		GeoCoordinates bottomRight = projection.getGeoLocation(pxWidth, pxHeight);
 		UTMCoordinates bottomRightUTM = Tools.geoToUTM(bottomRight.latitude, bottomRight.longitude);
 
-		double incHorizontal = new Point2D.Double(upRightUTM.x, upRightUTM.y).distance(upLeftUTM.x,
-				upLeftUTM.y);
-		double incVertical = new Point2D.Double(upRightUTM.x, upRightUTM.y).distance(bottomRightUTM.x,
-				bottomRightUTM.y);
+		double incHorizontal = upRightUTM.distance(upLeftUTM);
+		double incVertical = upRightUTM.distance(bottomRightUTM);
 		this.xScale = (incHorizontal * BoardParam.screenScale) / pxWidth;
 		this.yScale = (incVertical * BoardParam.screenScale) / pxHeight;
 		this.alfa = Math.acos((upRightUTM.x - upLeftUTM.x) / incHorizontal);

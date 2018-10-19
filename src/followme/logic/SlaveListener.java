@@ -1,8 +1,5 @@
 package followme.logic;
 
-import java.awt.geom.Point2D;
-import java.util.concurrent.atomic.AtomicReference;
-
 import com.esotericsoftware.kryo.io.Input;
 
 import api.Copter;
@@ -10,6 +7,7 @@ import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
+import api.pojo.UTMCoordinates;
 import followme.logic.FollowMeParam.FollowMeState;
 
 public class SlaveListener extends Thread {
@@ -17,14 +15,12 @@ public class SlaveListener extends Thread {
 	private int numUAV;
 	private long idSlave;
 	private int idMaster;
-	private AtomicReference<Point2D.Double> point;
 
 	private int[] idsFormacion;
 
-	public SlaveListener(int numUAV, AtomicReference<Point2D.Double> point) {
+	public SlaveListener(int numUAV) {
 		this.numUAV = numUAV;
 		this.idSlave = Tools.getIdFromPos(numUAV);
-		this.point = point;
 	}
 
 	@Override
@@ -43,7 +39,7 @@ public class SlaveListener extends Thread {
 		Input in = new Input();
 		int idSender, typeRecibido;
 		boolean received = false;
-		Point2D.Double offset = null;
+		UTMCoordinates offset = null;
 		double x = 0, y = 0, heading = 0;
 		while (!received) {
 			message = Copter.receiveMessage(numUAV); /// Espera bloqueante
@@ -107,7 +103,7 @@ public class SlaveListener extends Thread {
 
 		x += incX;
 		y += incY;
-		point.set(new Point2D.Double(x,y));
+		FollowMeParam.takeoffLocation.set(numUAV, new UTMCoordinates(x, y));
 		GeoCoordinates geo = Tools.UTMToGeo(x, y);
 		Copter.moveUAV(numUAV, geo, (float)FollowMeParam.AlturaInitFollowers);
 

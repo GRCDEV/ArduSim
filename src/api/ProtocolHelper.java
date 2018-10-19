@@ -11,12 +11,11 @@ import sim.board.BoardPanel;
 
 public abstract class ProtocolHelper {
 	
-	// Available protocols
+	// Available protocols (Internal use by ArduSim)
 	public static Class<?>[] ProtocolClasses;
 	public static volatile String[] ProtocolNames = null;
 	public static volatile String noneProtocolName = null;
-	
-	// Selected protocol
+	// Selected protocol (Internal use by ArduSim)
 	public static volatile String selectedProtocol;
 	public static volatile ProtocolHelper selectedProtocolInstance;
 	
@@ -24,79 +23,117 @@ public abstract class ProtocolHelper {
 	public String protocolString = null;
 	
 	/** Assign a protocol name to this implementation. Write something similar to:
-	 * <p>this.protocol = "Some protocol name"; */
+	 * <p>this.protocol = "Some protocol name";</p> */
 	public abstract void setProtocol();
 	
-	/** Used for deployment in real multicopter. Assert if it is needed to load a mission. */
+	/**
+	 * Assert if it is needed to load a mission.
+	 * This method is used when the protocol is deployed in a real multicopter (on simulations, the mission must be loaded in the dialog built in <i>openConfigurationDialog()</i> method).
+	 * @return true if this UAV must follow a mission.
+	 */
 	public abstract boolean loadMission();
 	
-	/** Open a configuration dialog for protocol specific parameters.
-	 * <p>The dialog will be constructed in the GUI thread (please, avoid heavy calculations).
-	 * <p>When the dialog is accepted, please use the following command:
-	 * <p>api.Tools.setProtocolConfigured(true); */
+	/**
+	 * Open a configuration dialog for protocol specific parameters.
+	 * The dialog will be constructed in the GUI thread (please, avoid heavy calculations).
+	 * When the dialog is accepted, please use the following command:
+	 * <p>api.Tools.setProtocolConfigured(true);</p> */
 	public abstract void openConfigurationDialog();
 	
-	/** Initialize data structures used by the protocol once the number of multicopters running in the same machine is known:
-	 * <p>int numUAVs = api.Tools.getNumUAVs().
-	 * <p>numUAVs > 1 in simulation, numUAVs == 1 running in a real UAV. */
+	/**
+	 * Initialize data structures used by the protocol, once the number of multicopters running in the same machine is known:
+	 * <p>int numUAVs = api.Tools.getNumUAVs().</p>
+	 * <p>numUAVs > 1 in simulation, numUAVs == 1 running in a real UAV.</p> */
 	public abstract void initializeDataStructures();
 	
-	/** Optional: Sets the initial state of the protocol shown in the progress dialog. */
+	/**
+	 * Set the state to be shown in the progress dialog when ArduSim starts.
+	 * @return The state to be shown in the progress dialog.
+	 */
 	public abstract String setInitialState();
 	
-	/** Optional: Rescales specific data structures of the protocol when the visualization scale changes. It is used when the protocol shows additional elements in the main pannel. */
+	/**
+	 * Optional: Re-scale specific data structures of the protocol when the visualization scale changes.
+	 * It is used when the protocol shows additional elements in the main panel. */
 	public abstract void rescaleDataStructures();
 	
-	/** Optional: Loads resources to be shown on screen. */
+	/**
+	 * Optional: Load resources to be shown on screen. */
 	public abstract void loadResources();
 	
-	/** Optional: Rescales for visualization the resources of the protocol (images) when the visualization scale changes. It is used when the protocol shows additional elements in the main pannel. */
+	/**
+	 * Optional: Re-scale loaded resources when the visualization scale changes.
+	 * It is used when the protocol shows additional elements in the main panel. */
 	public abstract void rescaleShownResources();
 	
-	/** Optional: Periodically draws the resources used in the protocol in the Graphics2D element of the specified BoardPanel. */
-	public abstract void drawResources(Graphics2D g2, BoardPanel p);
+	/**
+	 * Optional: Periodically draws the resources used in the protocol in the Graphics2D element of the specified BoardPanel.
+	 * @param graphics Element of the panel where any element of the protocol can be drawn.
+	 * @param panel Panel where the <i>graphics</i> element belongs to.
+	 */
+	public abstract void drawResources(Graphics2D graphics, BoardPanel panel);
 	
-	/** Sets the initial position where the UAVs will appear in the simulator.
-	 * <p>Returns the calculated Geographic coordinates (latitude and longitude), and the heading (degrees). */
+	/**
+	 * Set the initial location where all the UAVs running will appear (only for simulation).
+	 * @return The calculated Geographic coordinates (latitude and longitude), and the heading (degrees).
+	 */
 	public abstract Pair<GeoCoordinates, Double>[] setStartingLocation();
 	
-	/** Sends to the specific UAV the basic configuration needed by the protocol, in an early stage before the setup step.
-	 * <p>Must be a blocking method!
-	 * <p>Must return true only if all the commands issued to the drone were successful. */
+	/**
+	 * Send to the specific UAV the basic configuration needed by the protocol, in an early stage before the setup step.
+	 * <p>Must be a blocking method!</p>
+	 * @param numUAV UAV position in arrays.
+	 * @return true if all the commands included in the method end successfully.
+	 */
 	public abstract boolean sendInitialConfiguration(int numUAV);
 	
-	/** Launches threads needed by the protocol.
-	 * <p>In general, the threads must wait until a condition is met before doing any action. For example, a UAV thread must wait until the setup or start button is pressed to interact with other multicopters.*/
+	/**
+	 * Launch threads needed by the protocol.
+	 * In general, these threads must wait until a condition is met before doing any action.
+	 * For example, a UAV thread must wait until the setup or start button is pressed to interact with other multicopters.*/
 	public abstract void startThreads();
 	
-	/** Actions to perform when the user presses the Setup button.
-	 * <p>Must be a blocking method until the setup process if finished! */
+	/**
+	 * Action automatically performed when the user presses the Setup button.
+	 * <p>This must be a blocking method until the setup process if finished!</p> */
 	public abstract void setupActionPerformed();
 	
-	/** Starts the experiment.
-	 * <p>Must NOT be a blocking method, just should force a protocol thread to move the UAV. */
+	/**
+	 * Action automatically performed when the user presses the Start button.
+	 * <p>This must NOT be a blocking method, just should force a protocol thread to move the UAVs.</p> */
 	public abstract void startExperimentActionPerformed();
 	
-	/** Optional: Periodically issued to analyze if the experiment must be finished and to apply measures to make the UAVs land.
-	 * <p>For example, it can be finished when the user presses a button, the UAV is approaching to a location or ending a mission.
-	 * <p>Finally, ArduSim stops the experiment when all the UAVs landed.*/
+	/**
+	 * Optional: Periodically issued to analyze if the experiment must be finished, and to apply measures to make the UAVs land.
+	 * <p>For example, it can be finished when the user presses a button, the UAV is approaching to a location, or ending a mission.
+	 * ArduSim stops the experiment when all the UAVs have landed.</p>*/
 	public abstract void forceExperimentEnd();
 	
-	/** Optional: Provides general results of the experiment to be appended to text shown on the results dialog.*/
+	/**
+	 * Optional: Provide general results of the experiment to be appended to the text shown on the results dialog.
+	 * @return String with the results to be included on the results dialog.
+	 */
 	public abstract String getExperimentResults();
 	
-	/** Optional: Provides the protocol configuration to be appended to the text shown on the results dialog.*/
+	/**
+	 * Optional: Provide the protocol configuration to be appended to the text shown on the results dialog.
+	 * @return String with the configuration to be included on the results dialog.
+	 */
 	public abstract String getExperimentConfiguration();
 	
-	/** Optional: Stores files with information gathered while applying the protocol, at the end of the experiment.
-	 * <p>folder. Folder where the files will be stored, the same as the main log file.
-	 * <p>baseFileName. Base name that must be prepended to the final file name.*/
+	/**
+	 * Optional: Store at the end of the experiment files with information gathered while applying the protocol.
+	 * @param folder Folder where the files will be stored, the same as the main log file.
+	 * @param baseFileName Base name that must be prepended to the final file name.
+	 */
 	public abstract void logData(String folder, String baseFileName);
 	
-	/** Optional: Opens a configuration dialog for protocol specific parameters.
+	/**
+	 * Optional: Opens a configuration dialog for protocol specific parameters.
 	 * <p>The dialog will be constructed in the GUI thread (avoid heavy calculations).
-	 * <p>Launch dialog information updates in an independent thread to let the dialog construction finish.
-	 * <p>PCCompanionFrame can be set as the owner of the dialog if needed. */
+	 * Launch dialog information updates in an independent thread to let the dialog construction finish.</p>
+	 * @param PCCompanionFrame The Frame of the PC Companion instance. It can be set as the owner of the dialog to be built, if needed.
+	 */
 	public abstract void openPCCompanionDialog(JFrame PCCompanionFrame);
 	
 }

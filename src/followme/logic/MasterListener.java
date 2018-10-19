@@ -80,7 +80,7 @@ public class MasterListener extends Thread {
 		FollowMeParam.uavs[FollowMeParam.posMaster] = FollowMeState.READY_TO_START;
 		GUI.updateProtocolState(FollowMeParam.posMaster, FollowMeParam.uavs[FollowMeParam.posMaster].getName());
 		
-
+		in.close();
 		GUI.log("MasterListener Finaliza");
 
 	}

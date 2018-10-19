@@ -524,7 +524,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				int pos = 0;
 				for (j=0; j<predictedLocations.length; j++) {
 					if (predictedLocations[j] != null) {
-						Pair<Point2D.Double, Point2D.Double> pair =
+						Pair<UTMCoordinates, UTMCoordinates> pair =
 								beaconErrorCalculation(realUAVPath, predictedLocations, j,
 										maxBeaconDistance, pos, meanBeaconDistance);
 						pos++;
@@ -583,16 +583,16 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	}
 	
 	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon. */
-	private static Pair<Point2D.Double, Point2D.Double> beaconErrorCalculation(
+	private static Pair<UTMCoordinates, UTMCoordinates> beaconErrorCalculation(
 			PointTime[] realUAVPath, List<PointTime>[] predictedLocations, int predictedPos,
 			double[] maxBeaconDistance, int distancePos, double[] meanBeaconDistance) {
 		double dist;
 		int num = 0;
-		Point2D.Double ini, fin = ini = null;
+		UTMCoordinates ini, fin = ini = null;
 		List<PointTime> predictedLocs = predictedLocations[predictedPos];
 		PointTime predictedLocation, realPrev, realPost;
 		predictedLocation = null;
-		Point2D.Double realIntersection;
+		UTMCoordinates realIntersection;
 		int prev, post;
 
 		// Calculus for each one of the predicted locations
@@ -619,7 +619,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				double incT = Math.abs((predictedLocation.time-realPrev.time)/(realPost.time-realPrev.time));
 				double x = realPrev.x + (realPost.x-realPrev.x) * incT;
 				double y = realPrev.y + (realPost.y-realPrev.y) * incT;
-				realIntersection = new Point2D.Double(x, y);
+				realIntersection = new UTMCoordinates(x, y);
 				// Checking if the distance is greater than the previous
 				dist = predictedLocation.distance(realIntersection);
 				if (dist > maxBeaconDistance[distancePos]) {
@@ -650,7 +650,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		int[] num = new int[maxTimeDistance.length];
 		List<PointTime> predictedLocs;
 		PointTime predictedLocation, realPrev, realPost;
-		Point2D.Double realIntersection;
+		UTMCoordinates realIntersection;
 		int prev, post;
 
 		for (int i=0; i<predictedLocations.length; i++) {
@@ -677,7 +677,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 					double incT = Math.abs((predictedLocation.time-realPrev.time)/(realPost.time-realPrev.time));
 					double x = realPrev.x + (realPost.x-realPrev.x) * incT;
 					double y = realPrev.y + (realPost.y-realPrev.y) * incT;
-					realIntersection = new Point2D.Double(x, y);
+					realIntersection = new UTMCoordinates(x, y);
 					// Checking if the distance is greater than the previous
 					dist = predictedLocation.distance(realIntersection);
 					if (dist>maxTimeDistance[j]) {

@@ -24,6 +24,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.javatuples.Pair;
 
 import api.pojo.StatusPacket;
+import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import main.ArduSimTools;
 import main.Param;
@@ -38,10 +39,14 @@ import sim.logic.SimParam;
 
 public class GUI {
 	
+	// Used to avoid the exit dialog to be opened more than once at the same time.
 	private static AtomicBoolean exiting = new AtomicBoolean();
 	
-	/** Sends information to the main window log and console.
-	 * <p>The window log is only updated when performing simulations. */
+	/**
+	 * Send information to the main window log and console.
+	 * <p>The window log is only updated when performing simulations</p>.
+	 * @param text Text to be shown.
+	 */
 	public static void log(String text) {
 		final String res;
 		if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
@@ -64,9 +69,13 @@ public class GUI {
 		}
 	}
 	
-	/** Sends information related to a specific UAV to the main window log and console.
+	/**
+	 * Send information related to a specific UAV to the main window log and console.
 	 * <p>This function adds a prefix to the message with the UAV ID.
-	 * <p>The window log is only updated when performing simulations. */
+	 * The window log is only updated when performing simulations.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param text Text to be shown.
+	 */
 	public static void log(int numUAV, String text) {
 		String res = "";
 		if (SimParam.prefix != null && SimParam.prefix[numUAV] != null) {
@@ -75,17 +84,24 @@ public class GUI {
 		GUI.log(res + text);
 	}
 	
-	/** Sends information to the main window log and console, only if verbose mode is enabled.
-	 * <p>The window log is only updated when performing simulations. */
+	/**
+	 * Send information to the main window log and console, only if verbose mode is enabled.
+	 * <p>The window log is only updated when performing simulations.</p>
+	 * @param text Text to be shown.
+	 */
 	public static void logVerbose(String text) {
 		if (Param.verboseLogging) {
 			GUI.log(text);
 		}
 	}
 	
-	/** Sends information related to a specific UAV to the main window log and console, only if verbose mode is enabled.
+	/**
+	 * Send information related to a specific UAV to the main window log and console, only if verbose mode is enabled.
 	 * <p>This function adds a prefix to the message with the UAV ID.
-	 * <p>The window log is only updated when performing simulations. */
+	 * The window log is only updated when performing simulations.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param text Text to be shown.
+	 */
 	public static void logVerbose(int numUAV, String text) {
 		String res = "";
 		if (SimParam.prefix != null && SimParam.prefix[numUAV] != null) {
@@ -94,8 +110,11 @@ public class GUI {
 		GUI.logVerbose(res + text);
 	}
 	
-	/** Sends information to the main window upper-right corner label when a protocol needs it.
-	 * <p>The label is only updated when performing simulations. */
+	/**
+	 * Send information to the main window upper-right corner label when a protocol needs it.
+	 * <p>The label is only updated when performing simulations.</p>
+	 * @param text Text to be shown.
+	 */
 	public static void updateGlobalInformation(final String text) {
 		// Update GUI only when using simulator
 		if (Param.role == Tools.SIMULATOR) {
@@ -107,8 +126,12 @@ public class GUI {
 		}
 	}
 	
-	/** Updates the protocol state on the progress dialog.
-	 * <p>The progress dialog is only updated when performing simulations. */
+	/**
+	 * Update the protocol state shown on the progress dialog.
+	 * <p>The progress dialog is only updated when performing simulations.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param state String representation of the protocol state.
+	 */
 	public static void updateProtocolState(final int numUAV, final String state) {
 		// Update GUI only when using simulator
 		if (MainWindow.progressDialog != null) {
@@ -120,9 +143,13 @@ public class GUI {
 		}
 	}
 
-	/** Program termination when a fatal error happens.
-	 * <p>On a real UAV shows the message in console and exits.
-	 * <p>On simulation or PC Companion, the message is shown in a dialog. Virtual UAVs are stopped before exiting if needed. */
+	/**
+	 * Program termination when a fatal error happens.
+	 * <p>On a real UAV it shows the message in console and exits.
+	 * On simulation or PC Companion, the message is shown in a dialog.
+	 * Virtual UAVs are stopped before exiting if needed.</p>
+	 * @param message Error message to be shown.
+	 */
 	public static void exit(String message) {
 		boolean exiting = GUI.exiting.getAndSet(true);
 		if (!exiting) {
@@ -142,7 +169,12 @@ public class GUI {
 		System.exit(1);
 	}
 
-	/** Warns the user. A dialog is used when performing simulations and in the PC Companion, and the console is used on a real UAV. */
+	/**
+	 * Warn the user.
+	 * <p>A dialog is used when performing simulations and in the PC Companion, and the console is used on a real UAV.</p>
+	 * @param title Title for the dialog.
+	 * @param message Message to be shown.
+	 */
 	public static void warn(String title, String message) {
 		if (Param.role == Tools.MULTICOPTER) {
 			System.out.println(title + ": " + message);
@@ -152,8 +184,13 @@ public class GUI {
 		}
 	}
 	
-	/** Warns the user about something related to a specific UAV.
-	 * <p>A dialog is used when performing simulations and in the PC Companion, and the console is used on a real UAV.*/
+	/**
+	 * Warn the user about something related to a specific UAV.
+	 * <p>A dialog is used when performing simulations and in the PC Companion, and the console is used on a real UAV.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param title Title for the dialog.
+	 * @param message Message to be shown.
+	 */
 	public static void warn(int numUAV, String title, String message) {
 		String res = "";
 		if (SimParam.prefix != null && SimParam.prefix[numUAV] != null) {
@@ -162,8 +199,11 @@ public class GUI {
 		GUI.warn(title, res + message);
 	}
 	
-	/** Closes the shown configuration dialog, and ArduSim.
-	 * <p>This method should be invoked when the configuration dialog of each protocol is built. */
+	/**
+	 * Close the shown configuration dialog, and ArduSim when the escape key is pressed on the keyboard.
+	 * <p>This method should be invoked when the configuration dialog of each protocol is built.</p>
+	 * @param dialog Dialog where this method enables the escape key.
+	 */
 	public static void addEscapeListener(final JDialog dialog) {
 	    ActionListener escListener = new ActionListener() {
 
@@ -182,8 +222,10 @@ public class GUI {
 
 	}
 	
-	/** Opens a dialog to load missions from a Google Earth .kml file.
-	 * <p>Returns the path found, and an array of missions, or null if no file was selected or any error happens. */
+	/**
+	 * Open a dialog to load missions from a Google Earth <i>.kml</i> file.
+	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
+	 */
 	public static Pair<String, List<Waypoint>[]> loadKMLMissions() {
 		File[] selection;
 		JFileChooser chooser = new JFileChooser();
@@ -212,9 +254,10 @@ public class GUI {
 		return null;
 	}
 	
-	
-	/** Opens a dialog to load missions from Waypoint .waypoints files.
-	 * <p>Returns the path found, and an array of missions, or null if no file was selected or any error happens. */
+	/**
+	 * Open a dialog to load missions from <i>.waypoints</i> files.
+	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
+	 */
 	public static Pair<String, List<Waypoint>[]> loadWaypointMissions() {
 		File[] selection;
 		JFileChooser chooser = new JFileChooser();
@@ -243,9 +286,10 @@ public class GUI {
 		return null;
 	}
 	
-	
-	/** Opens a dialog to load missions from a Google Earth .kml file, or from Waypoint .waypoints files.
-	 * <p>Returns the path found, and an array of missions, or null if no file was selected or any error happens. */
+	/**
+	 * Open a dialog to load missions from a Google Earth <i>.kml</i> file, or from <i>.waypoints</i> files.
+	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
+	 */
 	public static Pair<String, List<Waypoint>[]> loadMissions() {
 		File[] selection;
 		JFileChooser chooser = new JFileChooser();
@@ -276,7 +320,7 @@ public class GUI {
 		return null;
 	}
 	
-	/** Parses missions from files.
+	/** Parse missions from files.
 	 * <p>Returns null if any error happens. */
 	@SuppressWarnings("unchecked")
 	private static Pair<String, List<Waypoint>[]> loadAndParseMissions(File[] files) {
@@ -305,7 +349,7 @@ public class GUI {
 			// All missions are loaded from one single file
 			String missionEnd = GUI.askUserForMissionEnd();
 			GUI.askUserForDelay();
-			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0], missionEnd);
+			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0], missionEnd);//TODO ocultar
 			if (missions == null) {
 				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 				return null;
@@ -348,10 +392,10 @@ public class GUI {
 		return null;
 	}
 	
-	/** Asks the user if the mission must be finished with a Land or RTL command when it is loaded from Google Earth .kml file.
-	 * <p>This function must be used only from the GUI for simulations, not in a real multicopter or from the PC Companion.
+	/** Ask the user if the mission must be finished with a Land or RTL command when it is loaded from Google Earth <i>.kml</i> file.
+	 * <p>This function must be used only from the GUI for simulations, not in a real multicopter or from the PC Companion.</p>
 	 * <p>Returns value MISSION_END_UNMODIFIED, MISSION_END_LAND or MISSION_END_RTL found on api.pojo.Waypoint class
-	 * <p>If user closes the dialog, the default value is applied. */
+	 * If user closes the dialog, the default value is applied.</p> */
 	private static String askUserForMissionEnd() {
 		String res = Waypoint.missionEnd;
 		String[] options = {Waypoint.MISSION_END_UNMODIFIED, Waypoint.MISSION_END_LAND, Waypoint.MISSION_END_RTL};
@@ -369,8 +413,8 @@ public class GUI {
 		return res;
 	}
 	
-	/** Asks the user for the delay duration in the intermediate waypoints of the mission.
-	 * <p>If a delay is added to the waypoints, the multicopter avoids cutting corners when it arrives a waypoint. */
+	/** Ask the user for the delay duration in the intermediate waypoints of the mission.
+	 * <p>If a delay is added to the waypoints, the multicopter avoids cutting corners when it arrives a waypoint.</p> */
 	private static void askUserForDelay() {
 		SpinnerNumberModel sModel = new SpinnerNumberModel(Waypoint.waypointDelay, 0, 65535, 1);
 		JSpinner spinner = new JSpinner(sModel);
@@ -384,17 +428,38 @@ public class GUI {
 		}
 	}
 	
-	/** Locates a UTM point on the screen, using the current screen scale. */
-	public static Point2D.Double locatePoint(double inUTMX, double inUTMY) {
-		return BoardHelper.locatePoint(inUTMX, inUTMY);
+	/**
+	 * Locate a UTM coordinates point on the screen, using the current screen scale.
+	 * @param utmX (meters)
+	 * @param utmY (meters)
+	 * @return Screen coordinates of the point.
+	 */
+	public static Point2D.Double locatePoint(double utmX, double utmY) {
+		return BoardHelper.locatePoint(utmX, utmY);
 	}
 	
-	/** Provides the Color associated to a UAV and that should be used to draw protocol elements. */
+	/**
+	 * Locates a UTM coordinates point on the screen, using the current screen scale.
+	 * @param location UTM coordinates
+	 * @return Screen coordinates of the point.
+	 */
+	public static Point2D.Double locatePoint(UTMCoordinates location) {
+		return BoardHelper.locatePoint(location.x, location.y);
+	}
+	
+	/**
+	 * Get the Color associated to a UAV, and that should be used to draw protocol elements.
+	 * @param numUAV UAV position in arrays.
+	 * @return Color used to draw elements of the UAV.
+	 */
 	public static Color getUAVColor(int numUAV) {
 		return SimParam.COLOR[numUAV % SimParam.COLOR.length];
 	}
 	
-	/** Provides a list with the UAVs detected by the PCCompanion to be used by the protocol dialog. */
+	/**
+	 * Provide a list with the UAVs detected by the PCCompanion to be used by the protocol dialog.
+	 * @return List of UAVs detected by the PCCompanion.
+	 */
 	public static StatusPacket[] getDetectedUAVs() {
 		return PCCompanionParam.connectedUAVs.get();
 	}

@@ -1,8 +1,6 @@
 package followme.logic;
 
-import java.awt.geom.Point2D;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
 
 import com.esotericsoftware.kryo.io.Output;
 
@@ -16,11 +14,9 @@ import followme.logic.FollowMeParam.FollowMeState;
 public class SlaveTalker extends Thread {
 
 	private int numUAV;
-	private AtomicReference<Point2D.Double> point;
 
-	public SlaveTalker(int numUAV, AtomicReference<Point2D.Double> point) {
+	public SlaveTalker(int numUAV) {
 		this.numUAV = numUAV;
-		this.point = point;
 	}
 
 	@Override
@@ -63,11 +59,10 @@ public class SlaveTalker extends Thread {
 		}
 
 		double dist;
-		Point2D.Double pDestino = null;
-		while (point.get() == null) {
+		while (FollowMeParam.takeoffLocation.get(numUAV) == null) {
 			Tools.waiting(100);
 		}
-		pDestino = point.get();
+		UTMCoordinates pDestino = FollowMeParam.takeoffLocation.get(numUAV);
 		GeoCoordinates geoActual;
 		UTMCoordinates UTMActual;
 
@@ -97,6 +92,8 @@ public class SlaveTalker extends Thread {
 			Tools.waiting(1000);
 
 		}
+		
+		out.close();
 
 		GUI.log("SlaveTalker " + numUAV + " Finaliza");
 	}

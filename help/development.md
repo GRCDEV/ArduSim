@@ -216,14 +216,15 @@ Now follows a list of information retrieval functions that don't need to communi
 
 * `FlightMode getFlightMode(int)`. This method provides the current flight mode of the multicopter.
 * `boolean isFlying(int)`. It reports whether the multicopter is flying or not (on the ground and engines off).
-* `Quintet<Long, Point2D.Double, Double, Double, Double> getData(int)`. This method gives the most up-to-date data received from the flight controller, including coordinates, speed, acceleration and the moment when they were received from the flight controller.
-* `Point2D.Double getUTMLocation(int)`. It provides only the current UTM coordinates.
+* `Quintet<Long, UTMCoordinates, Double, Double, Double> getData(int)`. This method gives the most up-to-date data received from the flight controller, including coordinates, speed, acceleration and the moment when they were received from the flight controller.
+* `UTMCoordinates getUTMLocation(int)`. It provides only the current UTM coordinates.
 * `GeoCoordinates getGeoLocation(int)`. In this case, it provides the current geographic coordinates (latitude and longitude).
-* `Point3D[] getLastKnownUTMLocations(int)`. This function gives the last known locations of the UAV, starting with the older.
+* `Location2D getLocation(int)`. It provides both the UTM, and the geographic coordinates.
+* `UTMCoordinates[] getLastKnownUTMLocations(int)`. This function gives the last known locations of the UAV, starting with the older.
 * `double getZRelative(int)`. It provides the current relative altitude over the home location.
 * `double getZ(int)`. It provides the current absolute altitude over the sea level.
 * `double getSpeed(int)`. This method gives the current flight speed.
-* `Triplet<Double, Double, Double> getSpeeds(int)`. In this case, the current flight speed for the three cartesian axes is provided.
+* `double[] getSpeeds(int)`. In this case, the current flight speed for the three cartesian axes is provided.
 * `double getPlannedSpeed(int)`. This method provides the maximum flying speed used by the flight controller. In a mission, it is the constant speed it will follow through a straight line, and in GUIDED flight mode it is the maximum speed adopted by the flight controller while executing commands.
 * `double getHeading(int)`. This method gives the current yaw or heading of the multicopter.
 * `void setWaypointReachedListener(WaypointReachedListener)`. Any Class can implement *WaypointReachedListener.java*, as *mbcap.logic.BeaconingThread* does. Then, using this method, that Class would be able to apply some logic each time the flight controller detects that a waypoint has been reached. It is useful for UAVs that follow a planned mission.
@@ -258,11 +259,13 @@ In a real multicopter, the mission is automatically loaded if the function `load
 The following functions are useful to draw new elements in the main panel using the methods `loadResources()`,  `drawResources(Graphics2D, BoardPanel)`, `rescaleDataStructures()`, and `rescaleShownResources()` in the protocol implementation, as explained in section "[4 Protocol implementation](#markdown-header-4-protocol-implementation)".
 
 * `Point2D.Double locatePoint(double, double)`. It provides the screen coordinates of a point given its UTM coordinates.
+* `Point2D.Double locatePoint(UTMCoordinates)`. This method is equivalent to the former.
 * `Color getUAVColor(int)`. It provides the Color assigned to a UAV to be used to draw linear elements on the screen, like the path followed by the UAV, which is  automatically drawn. Please, notice that each multicopter has a different color asigned.
 
-The last function may be used in the PC Companion dialog, if implemented, to get a list of UAVs detected. It is useful to build the GUI before launching a thread to update it depending on the present UAVs.
+Two methods can be used in the PC Companion instance:
 
-* `StatusPacket[] getDetectedUAVs()`. Returns an array of objects with the ID of the detected UAVs, and with their number as size. A usage example can be found in the protocol *MBCAP*.
+* `StatusPacket[] getDetectedUAVs()`. It returns an array of objects with the ID of the detected UAVs, and with their number as size. This can be used in the protocol dialog. It is useful to build the GUI before launching a thread to update it depending on the present UAVs. A usage example can be found in the protocol *MBCAP*.
+* `int api.pojo.Tools.getUDPBroadcastPort()`. With this function you can get the port number where the UAVs are listening for data packets. It is useful to listen to the transmissions in the swarm.
 
 ### 5.4 Available utilities
 

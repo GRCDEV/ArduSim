@@ -1,19 +1,13 @@
 package sim.logic;
 
-import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
@@ -24,24 +18,19 @@ import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.LogPoint;
 import api.pojo.UTMCoordinates;
-import main.Param;
-import main.Text;
 import main.ArduSimTools;
-import main.Param.SimulatorState;
+import main.Param;
 import main.Param.WirelessModel;
+import main.Text;
 import main.cpuHelper.CPUUsageThread;
-import mbcap.gui.MBCAPGUITools;
-import mbcap.logic.MBCAPParam;
 import sim.board.BoardParam;
 import sim.gui.ConfigDialogPanel;
 import sim.gui.MainWindow;
-import sim.gui.ProgressDialogPanel;
 import sim.logic.SimParam.RenderQuality;
 import uavController.UAVParam;
 
 /** This class contains method used internally by the application for its own profit. */
 
-@SuppressWarnings("unused")
 public class SimTools {
 	
 	/** Updates the MAVLink flight mode on the progress dialog. */

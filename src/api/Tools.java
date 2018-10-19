@@ -24,7 +24,9 @@ import uavController.UAVParam;
 
 public class Tools {
 	
-	// TCP parameter: maximum size of the byte array used on messages
+	/**
+	 * TCP parameter: maximum size of the byte array used on messages.
+	 * It is based on the Ethernet MTU, and assumes that IP and UDP protocols are used. */
 	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
 	
 	/** ArduSim runs in a real multicopter. */
@@ -34,126 +36,189 @@ public class Tools {
 	/** ArduSim runs as a PC Companion to control real multicopters. */
 	public static final int PCCOMPANION = 2;
 	
-	/** Returns the role ArduSim is performing. It can be compared to one of the following values to make decissions:
-	 * <p>Tools.MULTICOPTER
-	 * <p>Tools.SIMULATOR
-	 * <p>Tools.PCCOMPANION */
+	/**
+	 * Get the role performed by ArduSim.
+	 * @return The role ArduSim is performing. It can be compared to one of the following values to make decissions:
+	 * <p>Tools.MULTICOPTER, Tools.SIMULATOR, or Tools.PCCOMPANION</p>
+	 */
 	public static int getArduSimRole() {
 		return Param.role;
 	}
 	
-	/** Returns the number of UAVs that are running on the same machine.
-	 * <p> 1 When running on a real UAV (arrays are of size 1 and numUAV==0).
-	 * <p> n When running a simulation on a PC. */
+	/**
+	 * Get the number of multicopters running on the same machine.
+	 * @return The number of UAVs that are running on the same machine.
+	 * <p> 1 When running on a real UAV (arrays are of size 1 and numUAV==0), or nunUAVs when running a simulation on a PC.</p>
+	 */
 	public static int getNumUAVs() {
 		return Param.numUAVs;
 	}
 	
-	/** Sets the number of UAVs that will be simulated.
-	 * <p>Only use it in the protocol configuration dialog, and when a parameter limits the number of UAVs that must be simulated. */
+	/**
+	 * Set the number of UAVs running on the same machine.
+	 * Only use it in the protocol configuration dialog, and when a parameter limits the number of UAVs that must be simulated.
+	 * @param numUAVs The number of UAVs running on the same machine
+	 */
 	public static void setNumUAVs(int numUAVs) {
 		Param.numUAVsTemp.set(numUAVs);
 	}
 	
-	/** Returns the ID of a UAV.
-	 * <p>On real UAV returns a value based on the MAC address.
-	 * <p>On virtual UAV returns the position of the UAV in the arrays used by the simulator. */
+	/**
+	 * Get the ID of a multicopter.
+	 * @param numUAV UAV position in arrays.
+	 * @return The ID of a multicopter.
+	 * On real UAV returns a value based on the MAC address.
+	 * On virtual UAV it returns the position of the UAV in the arrays used by the simulator.
+	 */
 	public static long getIdFromPos(int numUAV) {
 		return Param.id[numUAV];
 	}
 	
-	/** Use this function to assert that the configuration of the protocol has finished when the corresponding dialog is closed.
-	 * <p>In order the parameters of the protocol to work properly, please establish default values for all of them to be used automatically when ArduSim is loaded. */
+	/**
+	 * Use this function to assert that the configuration of the protocol has finished when the corresponding dialog is closed.
+	 * <p>In order the parameters of the protocol to work properly, please establish default values for all of them to be used automatically when ArduSim is loaded.</p> */
 	public static void setProtocolConfigured() {
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 	}
 	
-	/** Returns true if the UAVs are located (GPS fix) and prepared to receive commands. */
+	/**
+	 * Find out if the multicopter(s) is(are) ready to receive commands.
+	 * @return true if all UAVs are located (GPS fix) and prepared to receive commands.
+	 */
 	public static boolean areUAVsAvailable() {
 		return Param.simStatus != Param.SimulatorState.STARTING_UAVS
 				&& Param.simStatus != Param.SimulatorState.CONFIGURING_PROTOCOL
 				&& Param.simStatus != Param.SimulatorState.CONFIGURING;
 	}
 	
-	/** Returns true if the UAVs are available and ready for the setup step, which has not been started jet. */
+	/**
+	 * Find out if the multicopter(s) is(are) ready to press the setup button.
+	 * @return true if the UAVs are available and ready for the setup step, which has not been started jet.
+	 */
 	public static boolean areUAVsReadyForSetup() {
 		return Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED;
 	}
 	
-	/** Returns true while the setup step is in progress. */
+	/**
+	 * Find out if the multicopter(s) is(are) performing the setup step.
+	 * @return true while the setup step is in progress.
+	 */
 	public static boolean isSetupInProgress() {
 		return Param.simStatus == Param.SimulatorState.SETUP_IN_PROGRESS;
 	}
 	
-	/** Returns true if the setup step has finished but the experiment has not started. */
+	/**
+	 * Find out if the multicopter(s) is(are) has(have) finished the setup step.
+	 * @return true if the setup step has finished but the experiment has not started.
+	 */
 	public static boolean isSetupFinished() {
 		return Param.simStatus == Param.SimulatorState.READY_FOR_TEST;
 	}
 	
-	/** Returns true while the experiment is in progress. */
+	/**
+	 * Find out if the multicopter(s) is(are) performing the experiment.
+	 * @return true while the experiment is in progress.
+	 */
 	public static boolean isExperimentInProgress() {
 		return Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS;
 	}
 	
-	/** Returns true if the experiment is finished (all UAVs running in the same machine have landed). */
+	/**
+	 * Find out if the multicopter(s) has(have) finished the experiment.
+	 * @return true if the experiment is finished (all UAVs running in the same machine have landed).
+	 */
 	public static boolean isExperimentFinished() {
 		return Param.simStatus == Param.SimulatorState.TEST_FINISHED;
 	}
 	
-	/** Sets the loaded missions from file/s for the UAVs, in geographic coordinates.
-	 * <p>Missions must be loaded and set in the protocol configuration dialog when needed.
-	 * <p>Please, check that the length of the array is the same as the number of running UAVs in the same machine.*/
+	/**
+	 * Set the loaded missions from file/s for the UAVs, in geographic coordinates.
+	 * Please, check that the length of the array is the same as the number of running UAVs in the same machine (method <i>getNumUAVs()</i>).
+	 * @param missions Missions that must be loaded and set with this method in the protocol configuration window, when needed.
+	 */
 	public static void setLoadedMissionsFromFile(List<Waypoint>[] missions) {
 		UAVParam.missionGeoLoaded = missions;
 	}
 	
-	/** Provides the missions loaded from files in geographic coordinates.
-	 * <p>Mission only available once they has been loaded.
-	 * <p>Returns null if not available.*/
+	/**
+	 * Get the missions loaded from files in geographic coordinates.
+	 * @return Array with the missions of the UAVs. They are only available when they are set with the method <i>setLoadedMissionsFromFile(List<Waypoint>[])</i>. If this method is used before, it returns null.
+	 */
 	public static List<Waypoint>[] getLoadedMissions() {
 		return UAVParam.missionGeoLoaded;
 	}
 
-	/** Provides the mission currently stored in the UAV in geographic coordinates.
-	 * <p>Mission only available if it is previously sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int). This steps can be performed automatically with the function api.Copter.cleanAndSendMissionToUAV().*/
+	/**
+	 * Get the mission stored on the multicopter.
+	 * Mission only available if it is previously sent to the drone with <i>Copter.sendMission(int,List&lt;Waypoint&gt;)</i> and retrieved with <i>Copter.retrieveMission(int)</i>.
+	 * This steps can be performed automatically with the function <i>Copter.cleanAndSendMissionToUAV(int,List&lt;Waypoint&gt;)</i>.
+	 * @param numUAV UAV position in arrays.
+	 * @return The mission currently stored in the UAV in geographic coordinates.
+	 */
 	public static List<Waypoint> getUAVMission(int numUAV) {
 		return UAVParam.currentGeoMission[numUAV];
 	}
 
-	/** Provides the simplified mission shown in the screen in UTM coordinates.
-	 * <p>Mission only available if previously is sent to the drone with sendMission(int,List<Waypoint>) and retrieved with retrieveMission(int).*/ 
+	/**
+	 * Get the mission shown on screen.
+	 * Mission only available if it is previously sent to the drone with <i>Copter.sendMission(int,List&lt;Waypoint&gt;)</i> and retrieved with <i>Copter.retrieveMission(int)</i>.
+	 * This steps can be performed automatically with the function <i>Copter.cleanAndSendMissionToUAV(int,List&lt;Waypoint&gt;)</i>.
+	 * @param numUAV UAV position in arrays.
+	 * @return The simplified mission shown in the screen in UTM coordinates.
+	 */
 	public static List<WaypointSimplified> getUAVMissionSimplified(int numUAV) {
 		return UAVParam.missionUTMSimplified.get(numUAV);
 	}
 	
-	/** Provides the UDP port used by real UAVs for communication. This is useful in the PC Companion dialog, to listen data packets from the protocol.*/
+	/**
+	 * Get the UDP port used for communications.
+	 * @return the UDP port used by real UAVs for communication.
+	 * This is useful in the PC Companion dialog, to listen data packets from the protocol.
+	 */
 	public static int getUDPBroadcastPort() {
 		return UAVParam.broadcastPort;
 	}
 	
-	/** Advises if the collision check is enabled or not. */
+	/**
+	 * Find out if possible UAV collisions are being detected.
+	 * @return true if the UAV collision check is enabled.
+	 */
 	public static boolean isCollisionCheckEnabled() {
 		return UAVParam.collisionCheckEnabled;
 	}
 	
-	/** Provides the maximum ground distance between two UAVs to assert that a collision has happened. */
+	/**
+	 * Get the security distance used to assert that a collision has happened.
+	 * @return The maximum ground distance between two UAVs to assert that a collision has happened.
+	 */
 	public static double getCollisionHorizontalDistance() {
 		return UAVParam.collisionDistance;
 	}
 	
-	/** Provides the maximum vertical distance between two UAVs to assert that a collision has happened. */
+	/**
+	 * Get the security vertical distance used to assert that a collision has happened.
+	 * @return The maximum vertical distance between two UAVs to assert that a collision has happened.
+	 */
 	public static double getCollisionVerticalDistance() {
 		return UAVParam.collisionAltitudeDifference;
 	}
 	
-	/** Advises when at least one collision between UAVs has happened. */
+	/**
+	 * Find out if at least a collision between multicopters has happened.
+	 * @return true if a collision has happened.
+	 */
 	public static boolean isCollisionDetected() {
 		return UAVParam.collisionDetected;
 	}
 	
-	/** Transforms UTM coordinates to Geographic coordinates. 
-	 *  <p>Example: Tools.UTMToGeo(312915.84, 4451481.33).
-	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function geoToUTM is previously used, in order to get the zone and the letter of the UTM projection. Otherwise, it returns null. */
+	/**
+	 * Transform UTM coordinates into Geographic coordinates.
+	 * @param x East (meters).
+	 * @param y North (meters).
+	 * @return Coordinates in Geographic coordinate system.
+	 * It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function <i>geoToUTM</i> is previously used (in order to get the zone and the letter of the UTM projection).
+	 * Otherwise, it returns null.
+	 */
 	public static GeoCoordinates UTMToGeo(double x, double y) {
 		if (SimParam.zone == -1) {
 			return null;
@@ -182,14 +247,23 @@ public class Tools {
 		return new GeoCoordinates(latitude, longitude);
 	}
 	
-	/** Transforms UTM coordinates to Geographic coordinates. 
-	 *  <p>Example: Tools.UTMToGeo(312915.84, 4451481.33).
-	 *  <p>It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function geoToUTM is previously used, in order to get the zone and the letter of the UTM projection. Otherwise, it returns null. */
+	/**
+	 * Transform UTM coordinates into Geographic coordinates.
+	 * @param location (meters).
+	 * @return Coordinates in Geographic coordinate system.
+	 * It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function <i>geoToUTM</i> is previously used (in order to get the zone and the letter of the UTM projection).
+	 * Otherwise, it returns null.
+	 */
 	public static GeoCoordinates UTMToGeo(UTMCoordinates location) {
 		return Tools.UTMToGeo(location.x, location.y);
 	}
 
-	/** Transforms Geographic coordinates to UTM coordinates. */
+	/**
+	 * Transform Geographic coordinates into UTM coordinates.
+	 * @param latitude (degrees).
+	 * @param longitude (degrees).
+	 * @return Coordinates in UTM coordinate system.
+	 */
 	public static UTMCoordinates geoToUTM(double latitude, double longitude) {
 		double x;
 		double y;
@@ -228,12 +302,21 @@ public class Tools {
 		return new UTMCoordinates(x, y);
 	}
 	
-	/** Transforms Geographic coordinates to UTM coordinates. */
+	/**
+	 * Transform Geographic coordinates into UTM coordinates.
+	 * @param location (geographic coordinates).
+	 * @return Coordinates in UTM coordinate system.
+	 */
 	public static UTMCoordinates geoToUTM(GeoCoordinates location) {
 		return Tools.geoToUTM(location.latitude, location.longitude);
 	}
 
-	/** Formats time retrieved by System.curentTimeMillis(), from initial to final time, to h:mm:ss. */
+	/**
+	 * Format a time range to h:mm.ss.
+	 * @param start Initial value retrieved with the method <i>System.curentTimeMillis()</i>.
+	 * @param end Final value retrieved with the method <i>System.curentTimeMillis()</i>.
+	 * @return String representation in h:mm:ss format.
+	 */
 	public static String timeToString(long start, long end) {
 		long time = Math.abs(end - start);
 		long h = time/3600000;
@@ -244,7 +327,12 @@ public class Tools {
 		return h + ":" + String.format("%02d", m) + ":" + String.format("%02d", s);
 	}
 
-	/** Rounds a double number to "places" decimal digits. */
+	/**
+	 * Round a double number to "places" decimal digits.
+	 * @param value Value to be rounded.
+	 * @param places Target decimal places.
+	 * @return Rounded value.
+	 */
 	public static double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
 	    BigDecimal bd = new BigDecimal(Double.toString(value));
@@ -252,7 +340,11 @@ public class Tools {
 	    return bd.doubleValue();
 	}
 
-	/** Validates a TCP port. */
+	/**
+	 * Validate a TCP port.
+	 * @param validating String representation of the TCP port.
+	 * @return true if the String represents a valid TCP port.
+	 */
 	public static boolean isValidPort(String validating) {
 		if (validating == null) {
 			return false;
@@ -269,7 +361,11 @@ public class Tools {
 		return true;
 	}
 	
-	/** Validates a boolean value. */
+	/**
+	 * Validate a boolean String.
+	 * @param validating String representation of the boolean value.
+	 * @return true if the String represents a valid boolean.
+	 */
 	public static boolean isValidBoolean(String validating) {
 		if (validating == null) {
 			return false;
@@ -280,7 +376,11 @@ public class Tools {
 		return true;
 	}
 
-	/** Validates a positive integer number. */
+	/**
+	 * Validate a positive integer number.
+	 * @param validating String representation of a positive integer.
+	 * @return true if the String represents a valid positive integer.
+	 */
 	public static boolean isValidPositiveInteger(String validating) {
 		if (validating == null) {
 			return false;
@@ -296,7 +396,11 @@ public class Tools {
 		return true;
 	}
 
-	/** Validates a positive double number. */
+	/**
+	 * Validate a positive double number.
+	 * @param validating String representation of a positive double.
+	 * @return true if the String represents a valid positive double.
+	 */
 	public static boolean isValidPositiveDouble(String validating) {
 		if (validating == null) {
 			return false;
@@ -312,7 +416,11 @@ public class Tools {
 		return true;
 	}
 
-	/** Validates a double number. */
+	/**
+	 * Validate a double number.
+	 * @param validating String representation of a double.
+	 * @return true if the String represents a valid double.
+	 */
 	public static boolean isValidDouble(String validating) {
 		if (validating == null) {
 			return false;
@@ -325,7 +433,10 @@ public class Tools {
 		return true;
 	}
 
-	/** Gets the folder where the simulator is running (.jar folder or project root under eclipse). */
+	/**
+	 * Get the folder where ArduSim is running.
+	 * @return The folder where ArduSim is running (.jar folder, or project root if running in eclipse).
+	 */
 	public static File getCurrentFolder() {
 		Class<Main> c = main.Main.class;
 		CodeSource codeSource = c.getProtectionDomain().getCodeSource();
@@ -352,8 +463,11 @@ public class Tools {
 		return jarFile.getParentFile();
 	}
 
-	/** Gets the file extension
-	 * <p>Returns empty String if there is not file extension */
+	/**
+	 * Get a file extension.
+	 * @param file The file to be checked.
+	 * @return The file extension, or empty string if the file has not extension.
+	 */
 	public static String getFileExtension(File file) {
 		String fileName = file.getName();
 		if(fileName.lastIndexOf(".") > 0) {
@@ -363,11 +477,15 @@ public class Tools {
 		}
 	}
 
-	/** Stores a String in a file. */
-	public static void storeFile(File destiny, String text) {
+	/**
+	 * Store text in a file.
+	 * @param destination File to store the text.
+	 * @param text Text to be stored in the file.
+	 */
+	public static void storeFile(File destination, String text) {
 		FileWriter fw = null;
 		try {
-			fw = new FileWriter(destiny);
+			fw = new FileWriter(destination);
 			fw.write(text);
 			fw.flush();
 		} catch (Exception ex) {
@@ -383,13 +501,19 @@ public class Tools {
 		}
 	}
 	
-	/** Returns true if verbose store feature is enabled.
-	 * <p>If set to true, the developer can store additional file(s) for non relevant information. */
+	/**
+	 * Find out if the verbose store feature is enabled.
+	 * If set to true, the developer can store additional file(s) for non relevant information.
+	 * @return true if verbose store feature is enabled.
+	 */
 	public static boolean isVerboseStorageEnabled() {
 		return Param.verboseStore;
 	}
 
-	/** Makes the thread wait for ms milliseconds. */
+	/**
+	 * Make this Thread wait.
+	 * @param ms Amount of time to wait in milliseconds.
+	 */
 	public static void waiting(int ms) {
 		try {
 			Thread.sleep(ms);
@@ -397,20 +521,32 @@ public class Tools {
 		}
 	}
 	
-	/** Returns the instant when the experiment started in local time.
-	 * <p>Returns 0 if the experiment has not started.*/
+	/**
+	 * Get the experiment starting time.
+	 * @return The instant when the experiment was started in Java VM time.
+	 * It also returns 0 if the experiment has not started.
+	 */
 	public static long getExperimentStartTime() {
 		return Param.startTime;
 	}
 
-	/** Returns the instant when a specific UAV has finished the experiment in local time (starting time is not 0).
-	 * <p>Returns 0 if the experiment has not finished jet, or it has not even started. */
+	/**
+	 * Get the experiment end time.
+	 * @param numUAV UAV position in arrays.
+	 * @return The instant when a specific UAV has finished the experiment in Java VM time in milliseconds.
+	 * <p>Returns 0 if the experiment has not finished jet for the multicopter <i>numUAV</i>, or it has not even started.
+	 */
 	public static long getExperimentEndTime(int numUAV) {
 		return Param.testEndTime[numUAV];
 	}
 	
-	/** Returns the path followed by the UAV in screen in UTM coordinates.
-	 * <p>Useful to log protocol data related to the path followed by the UAV, once the experiment has finished and the UAV is on the ground.*/
+	/**
+	 * Get the path followed by the multicopter during the experiment.
+	 * Useful to log protocol data related to the path followed by the UAV.
+	 * If needed, it is suggested to use this method once the experiment has finished and the UAV is on the ground.
+	 * @param numUAV UAV position in arrays.
+	 * @return The path followed by the UAV during the experiment in UTM coordinates.
+	 */
 	public static List<LogPoint> getUTMPath(int numUAV) {
 		return SimParam.uavUTMPath[numUAV];
 	}

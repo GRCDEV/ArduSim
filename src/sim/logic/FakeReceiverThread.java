@@ -1,8 +1,6 @@
 package sim.logic;
 
 import api.Copter;
-import api.Tools;
-import main.Param;
 
 public class FakeReceiverThread extends Thread {
 	

@@ -2,7 +2,9 @@ package followme.logic;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
+import api.pojo.UTMCoordinates;
 import followme.pojo.RecursoCompartido;
 
 public class FollowMeParam {
@@ -47,6 +49,8 @@ public class FollowMeParam {
 	public static int posMaster = -1;
 
 	public static boolean realUAVisMaster = false;
+	
+	public static AtomicReferenceArray<UTMCoordinates> takeoffLocation;
 
 	public static AtomicReference<RecursoCompartido> recurso = new AtomicReference<RecursoCompartido>(null);
 
