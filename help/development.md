@@ -353,8 +353,9 @@ Now, we include several functions to retrieve information, and to store specific
 Finally, ArduSim provides tools to form the swarm formation. The layout can be built from scratch, but several flying formations have been included to make easier to develop a new protol. The package *api.pojo.formations* includes a general class *FlightFormation*, and several formation implementations that can be used in any protocol, like shown in *Scan Protocol*. Follows a list of implemented formations:
 
 * *Linear*. The UAVs are ordered in a straight line perpendicular to a specific heading, and numbered from left to right.
-* *Matrix*. The UAVs are ordered in a square matrix, and numbered from left to right, and from bottom to up.
+* *Regular matrix*. The UAVs are ordered in a square matrix, and numbered from left to right, and from bottom to up.
 * *Circle*. A center UAV is surrounded by the remaining forming a circle, and the are numbered; first the center UAV, and then the remaining counterclockwise starting on the right.
+* *Compact mesh*. The center UAV is surrounded by the remaining at the closest location to the center of the formation. Always, the distance from a UAV to the surrounding UAVs is the same.
 
 In all cases, the center multicopter is the UAV closest to the rest of UAVs (center of line, matrix or circle). The following general functions of the class *api.pojo.formations.FlightFormation* allow the developer to use this feature. You can set values in the `void openConfigurationDialog()` function of the protocol implementation, or retrieve then wherever you want.
 
