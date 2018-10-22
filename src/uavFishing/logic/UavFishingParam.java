@@ -10,11 +10,11 @@ public class UavFishingParam {
 
 	public static GeoCoordinates startLocationBoat,startLocationUAV;
 	Pair<GeoCoordinates, Double>[] startCoordinatesArray;
-	public static double heading,radius,angle,boatSpeed;
+	public static double heading,radius,angle,boatSpeed,distanceTreshold;
 	public static boolean clockwise;
-	public static int fisherID;
+	public static int fisherID=1;
 	public static int boatID=0;
-	public static double[] initial_speeds,vOrigin;
+	public static double[] vOrigin = {0,1};
 	public static List<Waypoint>[] boatMission;
 	
 	

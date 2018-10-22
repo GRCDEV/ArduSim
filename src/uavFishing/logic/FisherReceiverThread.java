@@ -3,6 +3,7 @@ package uavFishing.logic;
 
 import com.esotericsoftware.kryo.io.Input;
 import api.Copter;
+import api.GUI;
 import api.Tools;
 
 public class FisherReceiverThread  extends Thread{
@@ -26,11 +27,12 @@ public class FisherReceiverThread  extends Thread{
 	public void run() {
 		
 		
-
+		GUI.log("Hilo de escucha esperando");
 		while(!Tools.isExperimentInProgress()) {
 			Tools.waiting(100);
 		}
 		
+		GUI.log("Hilo de escucha empezando a escuchar");
 		while(Tools.isExperimentInProgress()) {
 			
 			message = Copter.receiveMessage(0);

@@ -11,14 +11,12 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.javatuples.Pair;
 import java.util.List;
@@ -27,8 +25,6 @@ import api.GUI;
 import api.pojo.Waypoint;
 import api.ProtocolHelper;
 import api.Tools;
-import api.pojo.GeoCoordinates;
-import lander.logic.LanderParam;
 import uavFishing.logic.UavFishingParam;
 
 
@@ -64,7 +60,6 @@ public class UavFishingConfigDialog extends JDialog{
 		
 		JPanel cpFishers = new JPanel();
 		cpFishers.setBorder(new TitledBorder(null, "Fishers configuration", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(51, 51, 51)));
-		//cpFishers.setBounds(10, 10, 490, 100);
 		cpFishers.setLayout(null);
 		getContentPane().add(cpFishers);
 		
@@ -119,7 +114,7 @@ public class UavFishingConfigDialog extends JDialog{
 				
 				fitxData=api.GUI.loadKMLMissions();
 				txtMisionFilePath.setText(fitxData.getValue0());
-				GUI.log("Longitud del vector de listas waypoint" + Integer.toString(fitxData.getValue1().length));
+				GUI.log("Longitud del vector de listas waypoint: " + Integer.toString(fitxData.getValue1().length));
 			}
 			
 			
@@ -171,6 +166,7 @@ public class UavFishingConfigDialog extends JDialog{
 			//Creamos un vector del tamaño igual al numero de UAVs para evitar problemas en la función sendInitialConfiguration principal.
 			UavFishingParam.boatMission = (List<Waypoint>[]) new List[Tools.getNumUAVs()];
 			UavFishingParam.boatMission[0]= fitxData.getValue1()[0];
+			UavFishingParam.distanceTreshold = 2*UavFishingParam.radius;
 			Tools.setLoadedMissionsFromFile(UavFishingParam.boatMission);
 			Tools.setProtocolConfigured();
 			dispose();
