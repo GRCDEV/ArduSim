@@ -9,9 +9,9 @@ import api.Tools;
 
 /** The formation numbering starts in 0 in the center of the formation and increases with the distance to the center of the formation. */
 
-public class MeshCompactFlightFormation extends FlightFormation {
+public class MatrixCompactFlightFormation extends FlightFormation {
 	
-	protected MeshCompactFlightFormation(int numUAVs, double minDistance) {
+	protected MatrixCompactFlightFormation(int numUAVs, double minDistance) {
 		super(numUAVs, minDistance);
 	}
 
@@ -25,7 +25,7 @@ public class MeshCompactFlightFormation extends FlightFormation {
 		boolean minFound = false;
 		int layer = 1;
 		while (!minFound) {
-			n = n + layer * 6;
+			n = n + layer * 8;
 			if (n >= this.numUAVs) {
 				minFound = true;
 			} else {
@@ -34,21 +34,16 @@ public class MeshCompactFlightFormation extends FlightFormation {
 		}
 		
 		// 1.2. Finally, add layers until the minimum distance to positions is greater or equal to the previous maximum distance
-		double prevMaxDistance = layer;
-		double sin60 = Math.sqrt(3) / 2;
+		double prevMaxDistance = layer * Math.sqrt(2);
 		double minDistance;
 		boolean found = false;
 		while (!found) {
-			if (layer + 1 % 2 == 0) {
-				minDistance = (layer + 1) * sin60;
-			} else {
-				minDistance = Math.sqrt(0.25 + Math.pow((layer + 1) * sin60, 2));
-			}
+			minDistance = (layer + 1);
 			if (minDistance >= prevMaxDistance) {
 				found = true;
 			} else {
 				layer++;
-				n = n + layer * 6;
+				n = n + layer * 8;
 			}
 		}
 		
@@ -60,76 +55,48 @@ public class MeshCompactFlightFormation extends FlightFormation {
 		layer = 1;
 		int p = 1;
 		double distance, offsetX, offsetY;
-		Point2D.Double leftCorner, rightCorner, upLeftCorner, bottomLeftCorner;
-		double incX = 0.5 * this.minDistance;
-		double incY = sin60 * this.minDistance;
+		Point2D.Double upRightCorner, bottomLeftCorner;
 		for (layer = 1; layer <= layers; layer++) {
-			// The six corners of the layer
-			distance = layer * this.minDistance;
-			leftCorner = new Point2D.Double(- layer * this.minDistance, 0);
-			point[p] = new FormationPointHelper(distance, layer, 1, Tools.round(leftCorner.x, 6), Tools.round(leftCorner.y, 6));
+			// The four corners of the layer
+			distance = layer * this.minDistance * Math.sqrt(2);
+			point[p] = new FormationPointHelper(distance, layer, 1, Tools.round(-layer * this.minDistance, 6), Tools.round(layer * this.minDistance, 6));
 			p++;
-			rightCorner = new Point2D.Double(layer * this.minDistance, 0);
-			point[p] = new FormationPointHelper(distance, layer, 2, Tools.round(rightCorner.x, 6), Tools.round(rightCorner.y, 6));
+			upRightCorner = new Point2D.Double(layer * this.minDistance, layer * this.minDistance);
+			point[p] = new FormationPointHelper(distance, layer, 3, Tools.round(upRightCorner.x, 6), Tools.round(upRightCorner.y, 6));
 			p++;
-			upLeftCorner = new Point2D.Double(-incX * layer, incY * layer);
-			point[p] = new FormationPointHelper(distance, layer, 3, Tools.round(upLeftCorner.x, 6), Tools.round(upLeftCorner.y, 6));
-			p++;
-			point[p] = new FormationPointHelper(distance, layer, 4, Tools.round(incX * layer, 6), Tools.round(incY * layer, 6));
-			p++;
-			bottomLeftCorner = new Point2D.Double(-incX * layer, -incY * layer);
+			bottomLeftCorner = new Point2D.Double(-layer * this.minDistance, -layer * this.minDistance);
 			point[p] = new FormationPointHelper(distance, layer, 5, Tools.round(bottomLeftCorner.x, 6), Tools.round(bottomLeftCorner.y, 6));
 			p++;
-			point[p] = new FormationPointHelper(distance, layer, 6, Tools.round(incX * layer, 6), Tools.round(-incY * layer, 6));
+			point[p] = new FormationPointHelper(distance, layer, 6, Tools.round(layer * this.minDistance, 6), Tools.round(-layer * this.minDistance, 6));
 			p++;
-			int sidePoints = layer - 1;
+			int sidePoints = layer * 2 - 1;
 			// Get points of each side
-			//   up-left side
+			//   left side
 			for (int j = 1; j <= sidePoints; j++) {
-				offsetX = leftCorner.x + incX * j;
-				offsetY = leftCorner.y + incY * j;
-				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
-				point[p] = new FormationPointHelper(distance, layer, 1, Tools.round(offsetX, 6), Tools.round(offsetY, 6));
+				offsetY = bottomLeftCorner.y + this.minDistance * j;
+				distance = Math.sqrt(Math.pow(bottomLeftCorner.x, 2) + Math.pow(offsetY, 2));
+				point[p] = new FormationPointHelper(distance, layer, 1, Tools.round(bottomLeftCorner.x, 6), Tools.round(offsetY, 6));
 				p++;
 			}
-			//   up-right side
+			//   right side
 			for (int j = 1; j <= sidePoints; j++) {
-				offsetX = rightCorner.x - incX * j;
-				offsetY = rightCorner.y + incY * j;
-				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
-				point[p] = new FormationPointHelper(distance, layer, 2, Tools.round(offsetX, 6), Tools.round(offsetY, 6));
-				p++;
-			}
-			//   bottom-left side
-			for (int j = 1; j <= sidePoints; j++) {
-				offsetX = leftCorner.x + incX * j;
-				offsetY = leftCorner.y - incY * j;
-				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
-				point[p] = new FormationPointHelper(distance, layer, 3, Tools.round(offsetX, 6), Tools.round(offsetY, 6));
-				p++;
-			}
-			//   bottom-right side
-			for (int j = 1; j <= sidePoints; j++) {
-				offsetX = rightCorner.x - incX * j;
-				offsetY = rightCorner.y - incY * j;
-				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
-				point[p] = new FormationPointHelper(distance, layer, 4, Tools.round(offsetX, 6), Tools.round(offsetY, 6));
+				offsetY = upRightCorner.y - this.minDistance * j;
+				distance = Math.sqrt(Math.pow(upRightCorner.x, 2) + Math.pow(offsetY, 2));
+				point[p] = new FormationPointHelper(distance, layer, 2, Tools.round(upRightCorner.x, 6), Tools.round(offsetY, 6));
 				p++;
 			}
 			//   up side
 			for (int j = 1; j <= sidePoints; j++) {
-				offsetX = upLeftCorner.x + j * this.minDistance;
-				offsetY = upLeftCorner.y;
-				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
-				point[p] = new FormationPointHelper(distance, layer, 5, Tools.round(offsetX, 6), Tools.round(offsetY, 6));
+				offsetX = upRightCorner.x - this.minDistance * j;
+				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(upRightCorner.y, 2));
+				point[p] = new FormationPointHelper(distance, layer, 5, Tools.round(offsetX, 6), Tools.round(upRightCorner.y, 6));
 				p++;
 			}
 			//   bottom side
 			for (int j = 1; j <= sidePoints; j++) {
-				offsetX = bottomLeftCorner.x + j * this.minDistance;
-				offsetY = bottomLeftCorner.y;
-				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2));
-				point[p] = new FormationPointHelper(distance, layer, 6, Tools.round(offsetX, 6), Tools.round(offsetY, 6));
+				offsetX = bottomLeftCorner.x + this.minDistance * j;
+				distance = Math.sqrt(Math.pow(offsetX, 2) + Math.pow(bottomLeftCorner.y, 2));
+				point[p] = new FormationPointHelper(distance, layer, 6, Tools.round(offsetX, 6), Tools.round(bottomLeftCorner.y, 6));
 				p++;
 			}
 		}
@@ -189,7 +156,7 @@ public class MeshCompactFlightFormation extends FlightFormation {
 		}
 		return Arrays.copyOfRange(point, startIndex, endIndex);
 	}
-	
+
 	// Get subset of points with the same distance and in the same layer
 	private FormationPointHelper[] getSubSet(FormationPointHelper[] point, int startIndex) {
 		int layer = point[startIndex].layer;

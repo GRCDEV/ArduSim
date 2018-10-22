@@ -18,7 +18,8 @@ public abstract class FlightFormation {
 	
 	public enum Formation {
 		LINEAR((short)0, Text.LINEAR_FORMATION),
-		MATRIX((short)1, Text.MATRIX_FORMATION),
+		REGULAR_MATRIX((short)1, Text.MATRIX_REGULAR_FORMATION),
+		COMPACT_MATRIX((short)2, Text.MATRIX_COMPACT_FORMATION),
 		CIRCLE((short)2, Text.CIRCLE_FORMATION),
 		COMPACT_MESH((short)3, Text.MESH_COMPACT_FORMATION);
 		// Add here new formations
@@ -70,8 +71,11 @@ public abstract class FlightFormation {
 		if (formation == Formation.LINEAR) {
 			return new LinearFlightFormation(numUAVs, minDistance);
 		}
-		if (formation == Formation.MATRIX) {
+		if (formation == Formation.REGULAR_MATRIX) {
 			return new MatrixFlightFormation(numUAVs, minDistance);
+		}
+		if (formation == Formation.COMPACT_MATRIX) {
+			return new MatrixCompactFlightFormation(numUAVs, minDistance);
 		}
 		if (formation == Formation.CIRCLE) {
 			return new CircularFlightFormation(numUAVs, minDistance);

@@ -1,7 +1,7 @@
 package api.pojo.formations;
 
 /** The formation numbering starts in 0 an increases from left to right, and down to up.
- * The center UAV tries to minimize the distance to the further UAVs. */
+ * The selection of the center UAV tries to minimize the distance to the further UAVs. */
 
 public class MatrixFlightFormation extends FlightFormation {
 

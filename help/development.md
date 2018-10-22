@@ -354,6 +354,7 @@ Finally, ArduSim provides tools to form the swarm formation. The layout can be b
 
 * *Linear*. The UAVs are ordered in a straight line perpendicular to a specific heading, and numbered from left to right.
 * *Regular matrix*. The UAVs are ordered in a square matrix, and numbered from left to right, and from bottom to up.
+* *Compact matrix*. The center UAV is surrounded by the remaining at the closest location to the center of the formation.
 * *Circle*. A center UAV is surrounded by the remaining forming a circle, and the are numbered; first the center UAV, and then the remaining counterclockwise starting on the right.
 * *Compact mesh*. The center UAV is surrounded by the remaining at the closest location to the center of the formation. Always, the distance from a UAV to the surrounding UAVs is the same.
 

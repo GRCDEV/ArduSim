@@ -16,7 +16,8 @@ public class Text {
 	
 	// Flight formations
 	public static final String LINEAR_FORMATION = "Linear";
-	public static final String MATRIX_FORMATION = "Regular matrix";
+	public static final String MATRIX_REGULAR_FORMATION = "Regular matrix";
+	public static final String MATRIX_COMPACT_FORMATION = "Compact matrix";
 	public static final String CIRCLE_FORMATION = "Circle";
 	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
 	
