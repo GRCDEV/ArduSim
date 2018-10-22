@@ -16,10 +16,10 @@ public class CircularFlightFormation extends FlightFormation {
 	protected void initializeFormation() {
 		this.centerUAV = 0;
 		this.point[this.centerUAV] = new FormationPoint(this.centerUAV, 0, 0);
-		if (this.numUAVs == 2) {
-			this.point[1] = new FormationPoint(1, this.minDistance, 0);
-		}
-		if (this.numUAVs > 2) {
+//		if (this.numUAVs == 2) {
+//			this.point[1] = new FormationPoint(1, this.minDistance, 0);
+//		}
+		if (this.numUAVs > 1) {
 			double radius;
 			if (this.numUAVs <= 7) {
 				radius = this.minDistance;

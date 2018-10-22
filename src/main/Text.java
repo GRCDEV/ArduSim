@@ -16,8 +16,9 @@ public class Text {
 	
 	// Flight formations
 	public static final String LINEAR_FORMATION = "Linear";
-	public static final String MATRIX_FORMATION = "Matrix";
+	public static final String MATRIX_FORMATION = "Regular matrix";
 	public static final String CIRCLE_FORMATION = "Circle";
+	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
