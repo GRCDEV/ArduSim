@@ -138,12 +138,7 @@ public class UavFishingHelper extends ProtocolHelper {
 		if (numUAVs>1) {
 		startCoordinatesArray[1] = new Pair<GeoCoordinates, Double>(UavFishingParam.startLocationUAV,heading);
 		
-		
-//		UavFishingParam.vOrigin[0] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).x - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).x;
-//		UavFishingParam.vOrigin[1] = ToolsFishing.geoToUTM(UavFishingParam.startLocationUAV).y - ToolsFishing.geoToUTM(UavFishingParam.startLocationBoat).y;
-		
 		UavFishingParam.vOrigin = VectorMath.getUnitaryVector(UavFishingParam.vOrigin);
-		GUI.log("Vector Origen Unitario Inicial: " + UavFishingParam.vOrigin[0] + "," + UavFishingParam.vOrigin[1]);
 		UavFishingParam.vOrigin[0] *= UavFishingParam.radius;
 		UavFishingParam.vOrigin[1] *= UavFishingParam.radius;
 		GUI.log("Vector Origen Inicial: ( " + UavFishingParam.vOrigin[0] + "," + UavFishingParam.vOrigin[1] + " )");
@@ -161,7 +156,6 @@ public class UavFishingHelper extends ProtocolHelper {
 			
 		}
 		else*/
-			GUI.log("Initial Configuration to UAV: " + numUAV );
 			return true;
 	}
 
@@ -184,7 +178,6 @@ public class UavFishingHelper extends ProtocolHelper {
 	@Override
 	public void startExperimentActionPerformed() {
 		
-		GUI.log("Starting Fishing Experiment");
 		//Boat
 		Copter.setFlightMode(UavFishingParam.boatID, FlightMode.STABILIZE);
 		Copter.armEngines(UavFishingParam.boatID);
@@ -197,7 +190,6 @@ public class UavFishingHelper extends ProtocolHelper {
 			Copter.setFlightMode(1, FlightMode.GUIDED);
 			Copter.guidedTakeOff(1, 25);
 		}
-		GUI.log("Fishing Experiment Ready");
 	}//TODO
 
 	@Override

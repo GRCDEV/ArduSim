@@ -112,7 +112,7 @@ public class VectorMath {
 		}
 		else {
 		
-		a = ((componentY*componentX) + (componentX*componentX)) / (componentX*componentX);
+		a = ((componentY*componentY) + (componentX*componentX)) / (componentX*componentX);
 		b = (2 * z * componentY) / (componentX*componentX);
 		c = ((z*z)-(componentX * componentX) * (modulo*modulo)) / (componentX*componentX);
 		

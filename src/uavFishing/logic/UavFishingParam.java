@@ -14,7 +14,7 @@ public class UavFishingParam {
 	public static boolean clockwise;
 	public static int fisherID=1;
 	public static int boatID=0;
-	public static double[] vOrigin = {0,1};
+	public static double[] vOrigin = {1,0};
 	public static List<Waypoint>[] boatMission;
 	
 	
