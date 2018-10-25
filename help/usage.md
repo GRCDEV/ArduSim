@@ -192,6 +192,7 @@ The list of parameters is:
     * *MINALTITUDE*. Minimum relative altitude to home for takeoff, and minimum reletive altitude for any waypoint when loading a mission from a Google Earth .kml file.
     * *MISSIONEND*. Whether to add a land or RTL command at the end of the mission if loaded from Google Earth .xml file. Valid values: unmodified, land, or RTL.
     * *WAYPOINTDELAY*. Mission delay over each waypoint (seconds).
+    * *WAYPOINTDISTANCE*. Distance to waypoint to assert that it has been reached (centimeters), used only when WAYPOINTDELAY is greater than 0.
 * PCCompanion-to-realUAV and realUAV-to-realUAV communication parameters:
     * *BROADCASTIP*. The IP must be the broadcast address of the network configured on the Raspberry Pi.
     * *BROADCASTPORT*. Port where the PC Companion can listen to supervise the protocol communications among real UAVs. The PC Companion can even interact with the multicopters with the functions "Copter.sendBroadcastMessage(byte[])" and "Copter.receiveMessage(int)".

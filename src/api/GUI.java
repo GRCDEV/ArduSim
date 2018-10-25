@@ -1,7 +1,6 @@
 package api;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -15,9 +14,7 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.JSpinner;
 import javax.swing.KeyStroke;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -33,6 +30,7 @@ import main.Text;
 import pccompanion.logic.PCCompanionParam;
 import sim.board.BoardHelper;
 import sim.gui.MainWindow;
+import sim.gui.MissionDelayDialog;
 import sim.logic.SimParam;
 
 /** This class consists exclusively of static methods that help the developer to validate and show information on screen. */
@@ -347,9 +345,8 @@ public class GUI {
 		// kml file selected
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
 			// All missions are loaded from one single file
-			String missionEnd = GUI.askUserForMissionEnd();
-			GUI.askUserForDelay();
-			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0], missionEnd);//TODO ocultar
+			new MissionDelayDialog();
+			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0]);
 			if (missions == null) {
 				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 				return null;
@@ -390,42 +387,6 @@ public class GUI {
 			return new Pair<String, List<Waypoint>[]>(Text.FILE_EXTENSION_WAYPOINTS, missions);
 		}
 		return null;
-	}
-	
-	/** Ask the user if the mission must be finished with a Land or RTL command when it is loaded from Google Earth <i>.kml</i> file.
-	 * <p>This function must be used only from the GUI for simulations, not in a real multicopter or from the PC Companion.</p>
-	 * <p>Returns value MISSION_END_UNMODIFIED, MISSION_END_LAND or MISSION_END_RTL found on api.pojo.Waypoint class
-	 * If user closes the dialog, the default value is applied.</p> */
-	private static String askUserForMissionEnd() {
-		String res = Waypoint.missionEnd;
-		String[] options = {Waypoint.MISSION_END_UNMODIFIED, Waypoint.MISSION_END_LAND, Waypoint.MISSION_END_RTL};
-		int pos = -1;
-		for (int i = 0; i < options.length; i++) {
-			if (options[i].equals(Waypoint.missionEnd)) {
-				pos = i;
-			}
-		}
-		int x = JOptionPane.showOptionDialog(null, Text.EXTEND_MISSION, Text.EXTEND_MISSION_TITLE,
-				JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, pos);
-		if (x != JOptionPane.CLOSED_OPTION) {
-			res = options[x];
-		}
-		return res;
-	}
-	
-	/** Ask the user for the delay duration in the intermediate waypoints of the mission.
-	 * <p>If a delay is added to the waypoints, the multicopter avoids cutting corners when it arrives a waypoint.</p> */
-	private static void askUserForDelay() {
-		SpinnerNumberModel sModel = new SpinnerNumberModel(Waypoint.waypointDelay, 0, 65535, 1);
-		JSpinner spinner = new JSpinner(sModel);
-		spinner.setSize(350, spinner.getHeight());
-		spinner.setPreferredSize(new Dimension(350, spinner.getPreferredSize().height));
-		String[] options = {Text.OK};
-		int option = JOptionPane.showOptionDialog(null, spinner, Text.XML_DELAY,
-				JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-		if (option == JOptionPane.OK_OPTION) {
-			Waypoint.waypointDelay = (Integer)spinner.getValue();
-		}
 	}
 	
 	/**

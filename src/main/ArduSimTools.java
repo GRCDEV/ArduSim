@@ -423,6 +423,25 @@ public class ArduSimTools {
 					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
 				} else {
 					Waypoint.waypointDelay = delay;
+					if (delay > 0) {
+						param = parameters.get(Param.WAYPOINT_DISTANCE);
+						if (param == null) {
+							GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDistance);
+						} else {
+							try {
+								int distance = Integer.parseInt(param);
+								if (distance < 10 || distance > 1000) {
+									GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+									GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
+								} else {
+									Waypoint.waypointDistance = distance;
+								}
+							} catch (NumberFormatException e) {
+								GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+								GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
+							}
+						}
+					}
 				}
 			} catch (NumberFormatException e) {
 				GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
@@ -2084,10 +2103,9 @@ public class ArduSimTools {
 	}
 	
 	/** Loads missions from a Google Earth kml file.
-	 * <p>missionEnd. Uses the values MISSION_END_UNMODIFIED, MISSION_END_LAND, and MISSION_END_RTL from api.pojo.Waypoint to decide whether the loaded mission must be finished with a land or RTL command or not.
 	 * <p>Returns null if the file is not valid or it is empty. */
 	@SuppressWarnings("unchecked")
-	public static List<Waypoint>[] loadXMLMissionsFile(File xmlFile, String missionEnd) {
+	public static List<Waypoint>[] loadXMLMissionsFile(File xmlFile) {
 		List<Waypoint>[] missions;
 		try {
 			Waypoint wp;
@@ -2174,7 +2192,7 @@ public class ArduSimTools {
 				}
 				// Add a last waypoint to land or RTL depending on the input option
 				int numSeq = missions[i].get(missions[i].size() - 1).getNumSeq() + 1;
-				if (missionEnd.equals(Waypoint.MISSION_END_LAND)) {
+				if (Waypoint.missionEnd.equals(Waypoint.MISSION_END_LAND)) {
 					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 							MAV_CMD.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
@@ -2185,7 +2203,7 @@ public class ArduSimTools {
 						GUI.logVerbose(Text.XML_LAND_ADDED + i);
 					}
 				}
-				if (missionEnd.equals(Waypoint.MISSION_END_RTL)) {
+				if (Waypoint.missionEnd.equals(Waypoint.MISSION_END_RTL)) {
 					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 							MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
@@ -2340,7 +2358,7 @@ public class ArduSimTools {
 			if (files.length>1) {
 				GUI.exit(Text.MISSIONS_ERROR_6);
 			}
-			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0], Waypoint.missionEnd);
+			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0]);
 			if (missions != null && missions.length>0) {
 				GUI.log(Text.MISSION_XML_SELECTED + " " + files[0].getName());
 				return missions[0];

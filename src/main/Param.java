@@ -19,6 +19,7 @@ public class Param {
 	public static final String PROTOCOL = "UAVPROTOCOL";
 	public static final String SPEED = "UAVSPEED";
 	public static final String WAYPOINT_DELAY = "WAYPOINTDELAY";
+	public static final String WAYPOINT_DISTANCE = "WAYPOINTDISTANCE";
 	public static final String MISSION_END = "MISSIONEND";
 	public static final String SERIAL_PORT = "SERIALPORT";
 	public static final String BAUD_RATE = "BAUDRATE";
@@ -35,7 +36,7 @@ public class Param {
 	public static final String VERBOSE_LOGGING = "VERBOSELOGGING";
 	public static final String VERBOSE_STORE = "VERBOSESTORE";
 	public static final String MIN_ALTITUDE = "MINALTITUDE";
-	public static final String[] PARAMETERS = {COMPUTER_PORT, UAV_PORT, PROTOCOL, SPEED, WAYPOINT_DELAY, MISSION_END,
+	public static final String[] PARAMETERS = {COMPUTER_PORT, UAV_PORT, PROTOCOL, SPEED, WAYPOINT_DELAY, WAYPOINT_DISTANCE, MISSION_END,
 			SERIAL_PORT, BAUD_RATE, BROADCAST_IP, BROADCAST_PORT, BATTERY_CELLS, BATTERY_CAPACITY,
 			GROUND_FORMATION, GROUND_DISTANCE, AIR_FORMATION, AIR_DISTANCE,LAND_DISTANCE,
 			MEASURE_CPU, VERBOSE_LOGGING, VERBOSE_STORE, MIN_ALTITUDE};

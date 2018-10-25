@@ -10,7 +10,6 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 	public AtomicBoolean overlapped = new AtomicBoolean();
 	public AtomicBoolean alreadyOverlapped = new AtomicBoolean();
 	
-	@SuppressWarnings("unused")
 	private IncomingMessage() {}
 	
 	/** Creates a just sent message from the UAV on senderPos, generated on startTime and with message content. */

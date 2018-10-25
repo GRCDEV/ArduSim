@@ -237,7 +237,6 @@ public class Text {
 	public static final String XML_PARSING_ERROR_4 = "Error parsing line/point:";
 	public static final String XML_LAND_ADDED = "Land waypoint added at the end of the mission of UAV: ";
 	public static final String XML_RTL_ADDED = "RTL waypoint added at the end of the mission of UAV: ";
-	public static final String XML_DELAY = "Input mission delay over each waypoint (seconds)";
 	public static final String FILE_HEADER = "QGC WPL 110";
 	public static final String FILE_PARSING_ERROR_1 = "Waypoint file error: Nothing useful found.";
 	public static final String FILE_PARSING_ERROR_2 = "Waypoint file error: Format not valid.";
@@ -248,8 +247,10 @@ public class Text {
 	public static final String FILE_PARSING_ERROR_7 = "Waypoint file error: Waypoint command not compatible. Valid commands:\n"
 			+ "\twaypoint, spline waypoint, takeoff, land, RTL.";
 	// Loading mission(s) dialog
-	public static final String EXTEND_MISSION_TITLE = "Select option";
-	public static final String EXTEND_MISSION = "How do we finish the loaded missions?";
+	public static final String EXTEND_MISSION = "Mission end:";
+	public static final String XML_DELAY = "Input mission delay over each waypoint:";
+	public static final String TARGET_DISTANCE = "Distance to waypoint to assert reached:";
+	public static final String TARGET_DISTANCE_ERROR = "The distance must be between 10 and 1000 centimeters.";
 	
 	// Parsing speed(s) file(s)
 	public static final String SPEEDS_PARSING_ERROR_1 = "Speeds file: No speed values found.";
@@ -295,6 +296,7 @@ public class Text {
 	public static final String MILLISECONDS = "ms";
 	public static final String PIXELS = "pixels";
 	public static final String METERS = "m";
+	public static final String CENTIMETERS = "cm";
 	public static final String SECONDS = "s";
 	public static final String METERS_PER_SECOND = "m/s";
 	public static final String BATTERY_CAPACITY = "mAh";

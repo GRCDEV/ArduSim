@@ -36,6 +36,9 @@ public class InitialConfiguration2Thread extends Thread {
 			if (!Copter.cleanAndSendMissionToUAV(numUAV, mission)) {
 				return;
 			}
+			if (Waypoint.waypointDelay != 0 && !Copter.setParameter(numUAV, UAVParam.ControllerParam.WPNAV_RADIUS, Waypoint.waypointDistance)) {
+				return;
+			}
 		}
 		
 		// Actions needed by the specific protocol
