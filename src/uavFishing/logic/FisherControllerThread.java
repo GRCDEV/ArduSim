@@ -11,6 +11,7 @@ import uavFishing.pojo.VectorMath;
 
 public class FisherControllerThread extends Thread{
 	
+	public static volatile boolean startExperiment = false;
 	
 	private int uavID;
 	private double [] vPosOrigin;
@@ -30,7 +31,7 @@ public class FisherControllerThread extends Thread{
 		UTMCoordinates UTMActualPoint, UTMBoat,UTMNextPoint=new UTMCoordinates(0,0);
 		double distance;
 		GUI.log("Dron " + this.uavID + " esperando");
-		while(!Tools.isExperimentInProgress()) {
+		while(!FisherControllerThread.startExperiment) {
 			Tools.waiting(100);
 		}
 		
@@ -58,6 +59,7 @@ public class FisherControllerThread extends Thread{
 				UTMActualPoint = Copter.getUTMLocation(this.uavID);
 				distance = UTMActualPoint.distance(UTMNextPoint);
 				
+				Tools.waiting(100);
 			}
 
 			

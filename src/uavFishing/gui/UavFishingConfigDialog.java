@@ -168,6 +168,7 @@ public class UavFishingConfigDialog extends JDialog{
 			UavFishingParam.boatMission[0]= fitxData.getValue1()[0];
 			UavFishingParam.distanceTreshold = 2*UavFishingParam.radius;
 			Tools.setLoadedMissionsFromFile(UavFishingParam.boatMission);
+			Tools.setNumUAVs(2);
 			Tools.setProtocolConfigured();
 			dispose();
 			

@@ -163,10 +163,8 @@ public class UavFishingHelper extends ProtocolHelper {
 	public void startThreads() {
 		GUI.log("Creating uavFishing threads");
 		new BoatThread(UavFishingParam.boatID).start();
-		if(Tools.getNumUAVs() > 1)  {
-			new FisherControllerThread(UavFishingParam.fisherID).start();
-			new FisherReceiverThread(UavFishingParam.fisherID).start();
-		}
+		new FisherControllerThread(UavFishingParam.fisherID).start();
+		new FisherReceiverThread(UavFishingParam.fisherID).start();
 		GUI.log("UavFishing threads created");
 	}//TODO
 
@@ -179,17 +177,10 @@ public class UavFishingHelper extends ProtocolHelper {
 	public void startExperimentActionPerformed() {
 		
 		//Boat
-		Copter.setFlightMode(UavFishingParam.boatID, FlightMode.STABILIZE);
-		Copter.armEngines(UavFishingParam.boatID);
-		Copter.setFlightMode(UavFishingParam.boatID, FlightMode.AUTO);
-		Copter.setHalfThrottle(UavFishingParam.boatID);
-		if(Tools.getNumUAVs() > 1) {
-			//Dron
-			Copter.setFlightMode(1, FlightMode.STABILIZE);
-			Copter.armEngines(1);
-			Copter.setFlightMode(1, FlightMode.GUIDED);
-			Copter.guidedTakeOff(1, 25);
-		}
+		Copter.startMissionFromGround(UavFishingParam.boatID);
+		//Copter
+		FisherControllerThread.startExperiment = true;
+		
 	}//TODO
 
 	@Override

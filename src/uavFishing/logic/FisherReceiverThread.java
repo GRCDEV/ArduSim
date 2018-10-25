@@ -35,7 +35,7 @@ public class FisherReceiverThread  extends Thread{
 		GUI.log("Hilo de escucha empezando a escuchar");
 		while(Tools.isExperimentInProgress()) {
 			
-			message = Copter.receiveMessage(0);
+			message = Copter.receiveMessage(uavID);
 			if ( message != null) {
 				input.setPosition(0);
 				posReferencia[0]=input.readDouble();
