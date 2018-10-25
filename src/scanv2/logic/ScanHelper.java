@@ -3,7 +3,10 @@ package scanv2.logic;
 import static scanv2.pojo.State.SETUP_FINISHED;
 
 import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
@@ -21,7 +24,6 @@ import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.AtomicDoubleArray;
 import api.pojo.GeoCoordinates;
-import api.pojo.UAV2DLocation;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.formations.FlightFormation;
@@ -110,9 +112,10 @@ public class ScanHelper extends ProtocolHelper {
 		}
 		// 1.2. Get the heading
 		// Locate the first waypoint with coordinates
+		List<Waypoint> masterMission = missions[ScanParam.MASTER_POSITION];
 		waypointFound = false;
-		for (int j = 0; j < missions[ScanParam.MASTER_POSITION].size() && !waypointFound; j++) {
-			waypoint1 = missions[ScanParam.MASTER_POSITION].get(j);
+		for (int j = 0; j < masterMission.size() && !waypointFound; j++) {
+			waypoint1 = masterMission.get(j);
 			if (waypoint1.getLatitude() != 0 || waypoint1.getLongitude() != 0) {
 				waypoint1pos = j;
 				waypointFound = true;
@@ -123,9 +126,9 @@ public class ScanHelper extends ProtocolHelper {
 		}
 		// Locate the second waypoint with coordinates
 		waypointFound = false;
-		for (int j = waypoint1pos + 1; j < missions[ScanParam.MASTER_POSITION].size()
+		for (int j = waypoint1pos + 1; j < masterMission.size()
 				&& !waypointFound; j++) {
-			waypoint2 = missions[ScanParam.MASTER_POSITION].get(j);
+			waypoint2 = masterMission.get(j);
 			if (waypoint2.getLatitude() != 0 || waypoint2.getLongitude() != 0) {
 				waypointFound = true;
 			}
@@ -140,29 +143,31 @@ public class ScanHelper extends ProtocolHelper {
 		}
 		
 		// 2. With the ground formation centered on the mission beginning, get ground coordinates
+		//   The UAVs appear with the center UAV in the first waypoint of the initial mission
 		//   As this is simulation, ID and position on the ground are the same for all the UAVs
 		int numUAVs = Tools.getNumUAVs();
 		FlightFormation groundFormation = FlightFormation.getFormation(FlightFormation.getGroundFormation(),
 				numUAVs, FlightFormation.getGroundFormationDistance());
 		int groundCenterUAVPosition = groundFormation.getCenterUAVPosition();
-		UAV2DLocation[] groundLocations = new UAV2DLocation[numUAVs];
+		Map<Long, UTMCoordinates> groundLocations = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		UTMCoordinates locationUTM;
 		for (int i = 0; i < numUAVs; i++) {
 			if (i == groundCenterUAVPosition) {
-				groundLocations[i] = new UAV2DLocation(i, groundCenterUTMLocation);
+				groundLocations.put((long)i, groundCenterUTMLocation);
 			} else {
 				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, ScanParam.formationHeading);
-				groundLocations[i] = new UAV2DLocation(i, locationUTM);
+				groundLocations.put((long)i, locationUTM);
 			}
 		}
 		
 		// 3. Get the ID of the UAV that will be center in the flight formation
 		FlightFormation airFormation = FlightFormation.getFormation(FlightFormation.getFlyingFormation(),
 				numUAVs, FlightFormation.getFlyingFormationDistance());
-		Triplet<Integer, Long, UTMCoordinates>[] match = airFormation.matchIDs(groundLocations, ScanParam.formationHeading);
+		Triplet<Integer, Long, UTMCoordinates>[] match = FlightFormation.matchIDs(groundLocations, ScanParam.formationHeading,
+				true, null, airFormation);
 		int airCenterUAVPosition = airFormation.getCenterUAVPosition();
 		Integer airCenterUAVId = null;
-		Triplet<Integer, Long, UTMCoordinates> triplet;
+		Triplet<Integer, Long, UTMCoordinates> triplet = null;
 		for (int i = 0; i < numUAVs && airCenterUAVId == null; i++) {
 			triplet = match[i];
 			if (triplet.getValue0() == airCenterUAVPosition) {
@@ -170,12 +175,21 @@ public class ScanHelper extends ProtocolHelper {
 			}
 		}
 		
-		// 4. Move the mission to the UAV that will be the center in flight
-		//   It will only be used in simulations to show the center UAV mission on screen
-		List<Waypoint> aux = missions[ScanParam.MASTER_POSITION];
-		missions[ScanParam.MASTER_POSITION] = null;
-		missions[airCenterUAVId] = aux;
-		ScanParam.airCenterUAVPosition = airCenterUAVId;
+		// 4. Copy the mission to the location where the UAV in the center of the flight formation will be
+		List<Waypoint> centerMission = new ArrayList<>(masterMission.size());
+		int p = -1;
+		for (int i = 0; i < masterMission.size(); i++) {
+			centerMission.add(i, masterMission.get(i).clone());
+			if (masterMission.get(i).getNumSeq() == waypoint1.getNumSeq()) {
+				p = i;
+			}
+		}
+		Waypoint moved = centerMission.get(p);
+		GeoCoordinates movedGeo = Tools.UTMToGeo(triplet.getValue2());
+		moved.setLatitude(movedGeo.latitude);
+		moved.setLongitude(movedGeo.longitude);
+		missions[airCenterUAVId] = centerMission;
+		Tools.setLoadedMissionsFromFile(missions);
 		
 		// 5. Using the ground center UAV location as reference, get the starting location of all the UAVs
 		@SuppressWarnings("unchecked")
@@ -185,7 +199,7 @@ public class ScanHelper extends ProtocolHelper {
 			if (i == groundCenterUAVPosition) {
 				startingLocation[i] = Pair.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
 			} else {
-				startingLocation[i] = Pair.with(Tools.UTMToGeo(groundLocations[i].location), heading);
+				startingLocation[i] = Pair.with(Tools.UTMToGeo(groundLocations.get((long)i)), heading);
 			}
 		}
 

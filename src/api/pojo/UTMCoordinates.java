@@ -4,7 +4,7 @@ import java.awt.geom.Point2D;
 
 /** This class generates a point in UTM coordinates in meters. */
 
-public class UTMCoordinates {
+public class UTMCoordinates implements Cloneable {
 
 	public double x;
 	public double y;
@@ -40,6 +40,11 @@ public class UTMCoordinates {
 		}
 		UTMCoordinates location = (UTMCoordinates)obj;
 		return this.x == location.x && this.y == location.y;
+	}
+
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+		return new UTMCoordinates(this.x, this.y);
 	}
 
 	@Override

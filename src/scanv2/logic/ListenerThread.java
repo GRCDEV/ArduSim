@@ -20,7 +20,6 @@ import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
-import api.pojo.UAV2DLocation;
 import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
@@ -58,11 +57,11 @@ public class ListenerThread extends Thread {
 		}
 		
 		/** START PHASE */
-		Map<Long, UAV2DLocation> UAVsDetected = null;
+		Map<Long, UTMCoordinates> UAVsDetected = null;
 		GUI.log(numUAV, ScanText.START);
 		if (this.isMaster) {
 			GUI.logVerbose(numUAV, ScanText.MASTER_START_LISTENER);
-			UAVsDetected = new HashMap<Long, UAV2DLocation>();	// Detecting UAVs
+			UAVsDetected = new HashMap<Long, UTMCoordinates>();	// Detecting UAVs
 			int numUAVsDetected = 0;
 			while (ScanParam.state.get(numUAV) == START) {
 				inBuffer = Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
@@ -73,7 +72,7 @@ public class ListenerThread extends Thread {
 					if (type == Message.HELLO) {
 						// Read id (MAC on real UAV) of UAVs and write it into Map if is not duplicated
 						Long idSlave = input.readLong();
-						UAV2DLocation location = new UAV2DLocation(idSlave, input.readDouble(), input.readDouble());
+						UTMCoordinates location = new UTMCoordinates(input.readDouble(), input.readDouble());
 						// ADD to Map the new UAV detected
 						UAVsDetected.put(idSlave, location);
 						if (UAVsDetected.size() > numUAVsDetected) {
@@ -108,11 +107,9 @@ public class ListenerThread extends Thread {
 			// 1. Make a permanent list of UAVs detected, including master
 			// 1.1. Add master to the Map
 			UTMCoordinates masterLocation = Copter.getUTMLocation(numUAV);
-			UAVsDetected.put(this.selfId, new UAV2DLocation(this.selfId, masterLocation.x, masterLocation.y));
-			// 1.2. Get the list
-			UAV2DLocation[] currentLocations = UAVsDetected.values().toArray(new UAV2DLocation[UAVsDetected.size()]);
-			// 1.3. Set the number of UAVs running
-			int numUAVs = currentLocations.length;
+			UAVsDetected.put(this.selfId, new UTMCoordinates(masterLocation.x, masterLocation.y));
+			// 1.2. Set the number of UAVs running
+			int numUAVs = UAVsDetected.size();
 			
 			// 2. Set the heading used to orient the formation
 			if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
@@ -124,7 +121,8 @@ public class ListenerThread extends Thread {
 			// 3. Calculus of the UAVs distribution that better fit the current layout on the ground
 			Formation flyingFormation = FlightFormation.getFlyingFormation();
 			FlightFormation airFormation = FlightFormation.getFormation(flyingFormation, numUAVs, FlightFormation.getFlyingFormationDistance());
-			Triplet<Integer, Long, UTMCoordinates>[] match = airFormation.matchIDs(currentLocations, ScanParam.formationHeading);
+			Triplet<Integer, Long, UTMCoordinates>[] match =
+					FlightFormation.matchIDs(UAVsDetected, ScanParam.formationHeading, true, null, airFormation);
 			
 			// 4. Get the target coordinates for the central UAV
 			int centerUAVAirPos = airFormation.getCenterUAVPosition();	// Position in the formation
@@ -140,15 +138,7 @@ public class ListenerThread extends Thread {
 			long centerUAVId = centerUAVAir.getValue1();
 			
 			// 5. Load the mission
-			List<WaypointSimplified> screenMission = null;
-			if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
-				screenMission = Tools.getUAVMissionSimplified(numUAV);
-			} else {
-				// In simulation we need to locate which is the center UAV on the ground
-				for (int i = 0; i < numUAVs && screenMission == null; i++) {
-					screenMission = Tools.getUAVMissionSimplified(i);
-				}
-			}
+			List<WaypointSimplified> screenMission = Tools.getUAVMissionSimplified(numUAV);
 			if (screenMission == null || screenMission.size() > ScanParam.MAX_WAYPOINTS) {
 				GUI.exit(ScanText.MAX_WP_REACHED);
 			}
@@ -203,7 +193,7 @@ public class ListenerThread extends Thread {
 			// 7.3 Define the takeoff sequence and store data
 			byte[] outBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 			Output output = new Output(outBuffer);
-			Pair<Integer, Long>[] sequence = airFormation.getTakeoffSequence(centerUAVAir, ScanParam.formationHeading, match);
+			Pair<Integer, Long>[] sequence = FlightFormation.getTakeoffSequence(UAVsDetected, match);
 			Map<Long, byte[]> messages = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 			long prevId, nextId;
 			MovedMission currentMission;

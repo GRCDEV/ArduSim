@@ -17,7 +17,6 @@ public class ScanParam {
 	public static final int MASTER_POSITION = 0; // Position of master UAV into array of UAVs
 	public static final long SIMULATION_MASTER_ID = 0;
 	public static volatile Long idMaster = null; // Id of the master UAV (known by the master real UAV or in simulations)
-	public static volatile int airCenterUAVPosition;// Position of the center UAV in the ground formation (if a Formation is used)
 	public static final String[] MAC = new String[] { "b8:27:eb:74:0c:d1", "00:c0:ca:90:32:05" };// MACs of master with standard format
 	public static final long[] MAC_ID = new long[] { 202481593486545L, 202481593486545L };// MACs of master with long format
 	

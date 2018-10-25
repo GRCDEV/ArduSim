@@ -80,7 +80,7 @@ public class ScanText {
 	public static final String BAD_INPUT = "Please, check the selected information.";
 	public static final String CENTER_ID_NOT_FOUND = "Center UAV not found in the target flight formation.";
 	public static final String CENTER_LOCATION_NOT_FOUND = "Center UAV location not found.";
-	public static final String MAX_WP_REACHED = "Maximum number of waypoints reached, please use less than 60";
+	public static final String MAX_WP_REACHED = "Maximum number of waypoints reached, please use less than 59";
 	
 
 	
