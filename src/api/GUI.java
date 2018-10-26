@@ -47,7 +47,10 @@ public class GUI {
 	 */
 	public static void log(String text) {
 		final String res;
-		if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+		if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
+			res = Tools.timeToString(Param.setupTime, System.currentTimeMillis())
+					+ " " + text;
+		} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 			res = Tools.timeToString(Param.startTime, System.currentTimeMillis())
 					+ " " + text;
 		} else {

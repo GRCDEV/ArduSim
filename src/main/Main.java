@@ -304,6 +304,37 @@ public class Main {
 		}
 
 		// 13. Apply the setup step
+		if (Param.role == Tools.SIMULATOR) {
+			timer = new Timer();
+			timer.scheduleAtFixedRate(new TimerTask() {
+				public void run() {
+					if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
+						final String timeString = Tools.timeToString(Param.setupTime, System.currentTimeMillis());
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE_2 + " " + timeString);
+							}
+						});
+					} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+						final String timeString = Tools.timeToString(Param.startTime, System.currentTimeMillis());
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
+							}
+						});
+					} else {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
+							}
+						});
+						if (Param.simStatus != SimulatorState.READY_FOR_TEST) {
+							timer.cancel();
+						}
+					}
+				}
+			}, 0, 1000);	// Once each second, without initial waiting time
+		}
 		ProtocolHelper.selectedProtocolInstance.setupActionPerformed();
 		Param.simStatus = SimulatorState.READY_FOR_TEST;
 		while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
@@ -346,30 +377,6 @@ public class Main {
 			Param.startTime = System.currentTimeMillis();
 		}
 		GUI.log(Text.TEST_START);
-		if (Param.role == Tools.SIMULATOR) {
-			timer = new Timer();
-			timer.scheduleAtFixedRate(new TimerTask() {
-				long time = Param.startTime;
-				public void run() {
-					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-						final String timeString = Tools.timeToString(Param.startTime, time);
-						time = time + 1000;
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
-							}
-						});
-					} else {
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
-							}
-						});
-						timer.cancel();
-					}
-				}
-			}, 0, 1000);	// Once each second, without initial waiting time
-		}
 		ProtocolHelper.selectedProtocolInstance.startExperimentActionPerformed();
 
 		// 16. Waiting while the experiment is is progress and detecting the experiment end

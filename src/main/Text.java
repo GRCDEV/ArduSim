@@ -168,6 +168,7 @@ public class Text {
 	
 	// Progress dialog window:
 	public static final String PROGRESS_DIALOG_TITLE = "Test progress";
+	public static final String PROGRESS_DIALOG_TITLE_2 = "Setup progress";
 	public static final String UAV_ID = "UAV";
 	public static final String X_COORDINATE = "x =";
 	public static final String Y_COORDINATE = "y =";

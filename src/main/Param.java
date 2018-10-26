@@ -73,6 +73,7 @@ public class Param {
 	public static volatile double windSpeed = Param.DEFAULT_WIND_SPEED;
 
 	// Statistics parameters
+	public static volatile long setupTime;	// (ms) setup start in local time
 	public static volatile long startTime;	// (ms) experiment start in local time
 	public static long[] testEndTime;		// (ms) one UAV experiment finish in local time
 	public static long latestEndTime;		// (ms) experiment finish in local time

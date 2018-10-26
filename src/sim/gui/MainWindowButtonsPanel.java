@@ -120,6 +120,7 @@ public class MainWindowButtonsPanel extends JPanel {
 					public void run() {
 						MainWindow.buttonsPanel.setupButton.setEnabled(false);
 						MainWindow.buttonsPanel.statusLabel.setText(Text.CONFIGURATION_IN_PROGRESS);
+						Param.setupTime = System.currentTimeMillis();
 						Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
 					}
 				});
