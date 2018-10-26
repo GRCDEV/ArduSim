@@ -107,7 +107,7 @@ public class MBCAPPCCompanionDialog extends JDialog {
 		this.setVisible(true);
 		
 		// Listen for protocol data packets
-		new MBCAPPCCompanionListener(this);
+		new MBCAPPCCompanionListener(this).start();
 	}
 
 	/** Updates a UAV row with information received within the protocol. */
