@@ -8,7 +8,7 @@ The communication among multicopters emulates an Ad-hoc WiFi network link in the
 
 Ardusim was developed by [Francisco Fabra](mailto:frafabco@cam.upv.es), Phd student in the [Grupo de Redes de Computadores (GRC)](http://www.grc.upv.es/) research group of [Departamento de Informática de Sistemas y Computadores (DISCA)](http://www.upv.es/entidades/DISCA/index-es.html) department of [Universitat Politècnica de València](http://www.upv.es/) university. Supervisor: [Carlos T. Calafate](http://www.grc.upv.es/calafate/).
 
-As an example of the capabilities of ArduSim, the next picture shows 72 multicopters following elliptical missions like electrons of an atom.
+As an example of the capabilities of ArduSim, the next picture shows 72 multicopters following elliptical missions like electrons of an atom. The background image was built with images downloaded from Google Static Maps API, but Google stopped providing them as a free service. At this moment, ArduSim shows a blank background, but we plan to support Bing images, and to give the user the possibility to use a paid key for the current implementation based on Google Static Maps API.
 
 ![Ejemplo ArduSim](help/atomo.png)
 

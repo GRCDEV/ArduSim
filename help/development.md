@@ -124,7 +124,7 @@ In simulation, another difference compared to a "*UAV agent*" is the presence of
 
 The function `setStartingLocation()` provides the starting location of the virtual multicopters and then the simulation can start. If the multicopter has to follow a mission, we suggest to set the first point of the mission as the starting location. Once the current location is acquired, the virtual UAV-to-UAV communication link is stablished and the collision detection is enabled. The functions `sendInitialConfiguration()`, `startThreads()`, `setupActionPerformed()`, `startExperimentActionPerformed()`, `forceExperimentEnd()`, `getExperimentResults()`, `getExperimentConfiguration()`, and `logData()` are the same explained for the "*UAV agent*" role.
 
-There are another two differences compared to a "*UAV agent*". First, a set of pictures are downloaded from Google Static Maps to integrate the background image, which is geopositioned on the theoretical location of the virtual UAVs. Second, storing the experiment results is optional, while in a real UAV is always accomplished.
+There are another two differences compared to a "*UAV agent*". First, a set of pictures are downloaded from Google Static Maps to integrate the background image, which is geopositioned on the theoretical location of the virtual UAVs. Second, storing the experiment results is optional, while in a real UAV is always accomplished. Sadly, Google has stopped serving the background images for free, so the background map will not be available until a new version of ArduSim is released. We are planning to give support to Bing images, and also give the user the chance to use a paid key to utilize the current implementation for Google Static Maps.
 
 ## 4 Protocol implementation
 
@@ -394,4 +394,4 @@ Any function used to get information from a real or virtual multicopter must be 
 
 It is highly recommended to initialize the variables used by the protocol in the method `initializeDataStructures()` of the implementation with the same approach, with arrays of length `api.Tools.getNumUAVs()` and starting threads in function `startThreads()` of the implementation for all UAVs from 0 to `api.Tools.getNumUAVs() - 1`. This way the protocol code will be correct for real or virtual multicopters regardless the number of UAVs running on the same machine, as it is a dynamic value defined when ArduSim is run.
 
-"MBCAP" and "Swarn protocol" are google examples on how to make the code work for real and virtual UAVs. The ID of each UAV is used inside messages transmitted among UAVs, and the location of the UAV in the arrays is used in functions and variables.
+"MBCAP" and "Swarn protocol" are good examples on how to make the code work for real and virtual UAVs. The ID of each UAV is used inside messages transmitted among UAVs, and the location of the UAV in the arrays is used in functions and variables.
