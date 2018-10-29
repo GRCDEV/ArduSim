@@ -2562,6 +2562,7 @@ public class ArduSimTools {
 	
 	/** Detects if all the UAVs have finished the experiment (they are all on the ground, with engines not armed). */
 	public static boolean isTestFinished() {
+		boolean finished = true;
 		long latest = 0;
 		for (int i = 0; i < Param.numUAVs; i++) {
 			FlightMode mode = UAVParam.flightMode.get(i);
@@ -2581,11 +2582,11 @@ public class ArduSimTools {
 					}
 				}
 			} else {
-				return false;
+				finished = false;
 			}
 		}
 		Param.latestEndTime = latest;
-		return true;
+		return finished;
 	}
 
 	/** Builds a String with the experiment results. */
