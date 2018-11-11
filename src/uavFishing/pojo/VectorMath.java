@@ -23,7 +23,7 @@ public class VectorMath {
 		return Math.sqrt((componentX * componentX) + (componentY*componentY));
 	}
 
-	public static double getModulo(double vector2D[]) {
+	public static double getModule(double vector2D[]) {
 		
 		return getModule(vector2D[0],vector2D[1]);
 	}
@@ -53,10 +53,10 @@ public class VectorMath {
 		
 		int cuadrante = 0;
 		
-		if (componentX > 0 && componentY >= 0) cuadrante = 1;
-		if (componentX <= 0 && componentY >= 0) cuadrante = 2;
-		if (componentX < 0 && componentY <= 0) cuadrante = 3;
-		if (componentX >= 0 && componentY < 0) cuadrante = 4;
+		if (componentX > 0.000001 && (componentY > -0.000001 || componentY == 0)) cuadrante = 1;
+		if ((componentX < 0.000001 || componentX == 0 ) && (componentY > -0.000001 || componentY == 0)) cuadrante = 2;
+		if (componentX < -0.000001 && (componentY < 0.000001 || componentY == 0)) cuadrante = 3;
+		if ((componentX == 0 || componentX > -0.000001) && componentY < 0) cuadrante = 4;
 		
 		return cuadrante;
 	}
@@ -95,7 +95,7 @@ public class VectorMath {
 		
 		z = Math.cos(anguloRad)*(modulo*modulo);
 		
-		if(componentX == 0) {
+		if(componentX == 0 || (componentX < 0.000001 && componentX > 0) || (componentX > -0.000001 && componentX < 0)) {
 			
 			
 			y1= y2 = z / componentY;
