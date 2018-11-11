@@ -13,7 +13,7 @@ public class FisherReceiverThread  extends Thread{
 	private int uavID;
 	private Input input;
 	public static volatile double[] posBoat;
-	public static volatile double angle,heading,radius,altitude;
+	public static volatile double angle,heading,radius,boatAltitude;
 	public static volatile boolean landSignal;
 	
 	
@@ -46,7 +46,7 @@ public class FisherReceiverThread  extends Thread{
 				input.setPosition(0);
 				posBoat[0]=input.readDouble();
 				posBoat[1]=input.readDouble();
-				altitude = input.readDouble();
+				boatAltitude = input.readDouble();
 				heading = input.readDouble();
 				landSignal = input.readBoolean();
 

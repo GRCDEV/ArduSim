@@ -15,6 +15,7 @@ public class FisherControllerThread extends Thread{
 	
 	private int uavID;
 	private double [] vPosOrigin;
+	private boolean waypointReached;
 	
 	
 	
@@ -27,43 +28,64 @@ public class FisherControllerThread extends Thread{
 	@Override
 	public void run() {
 		
-		GeoCoordinates GeoNextPoint,GeoActualPoint;
+		GeoCoordinates GeoNextPoint,GeoBoatPoint;
 		UTMCoordinates UTMActualPoint, UTMBoat,UTMNextPoint=new UTMCoordinates(0,0);
+		long startTime,currentTime;
 		double distance;
+		int timeWaiting;
 		GUI.log("Dron " + this.uavID + " esperando");
 		while(!FisherControllerThread.startExperiment) {
 			Tools.waiting(100);
 		}
 		
-		if(!Copter.takeOff(this.uavID, 25))
+		if(!Copter.takeOff(this.uavID, UavFishingParam.UavAltitude))
 		{
 			GUI.log("Error en el despegue");
 			return;
 		}
+		startTime = System.currentTimeMillis();
 		GUI.log("Dron " + this.uavID + " empezando a moverse");
 		while(Tools.isExperimentInProgress()) {
 			
-			// Calcular nueva posición
 			
-			UTMActualPoint = Copter.getUTMLocation(this.uavID);
-			vPosOrigin = VectorMath.rotateVector(vPosOrigin, UavFishingParam.angle, UavFishingParam.clockwise);
-			UTMBoat = Copter.getUTMLocation(UavFishingParam.boatID);
-			UTMNextPoint.x = UTMBoat.x + vPosOrigin[0];
-			UTMNextPoint.y = UTMBoat.y + vPosOrigin[1];
-			GeoNextPoint=Tools.UTMToGeo((UTMBoat.x + vPosOrigin[0]),UTMBoat.y + vPosOrigin[1]);
-			distance = UTMActualPoint.distance(UTMNextPoint);
-			Copter.moveUAVNonBlocking(this.uavID, GeoNextPoint, 25);
-			while(distance > 1) {
+			currentTime = (System.currentTimeMillis() - startTime) / 1000;
+			if(currentTime > 300) {
 				
-				UTMBoat = Copter.getUTMLocation(UavFishingParam.boatID);
-				UTMActualPoint = Copter.getUTMLocation(this.uavID);
-				distance = UTMActualPoint.distance(UTMNextPoint);
+				while (!FisherReceiverThread.landSignal) {
+					
+					GeoBoatPoint = Tools.UTMToGeo(FisherReceiverThread.posBoat[0],FisherReceiverThread.posBoat[1]);
+					Copter.moveUAVNonBlocking(this.uavID, GeoBoatPoint, (float)FisherReceiverThread.boatAltitude);
+					Tools.waiting(500);
+				}
 				
-				Tools.waiting(100);
+				Copter.landUAV(uavID);
+				
 			}
-
+			else {
 			
+			// Calcular nueva posición
+				vPosOrigin = VectorMath.rotateVector(vPosOrigin, UavFishingParam.rotationAngle, UavFishingParam.clockwise);
+				
+				UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vPosOrigin[0];
+				UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vPosOrigin[1];
+				GeoNextPoint=Tools.UTMToGeo(UTMNextPoint.x,UTMNextPoint.y );
+				Copter.moveUAVNonBlocking(this.uavID, GeoNextPoint, (float)UavFishingParam.UavAltitude);
+				timeWaiting=0;
+				waypointReached = false;
+				while(!waypointReached) {
+					UTMActualPoint = Copter.getUTMLocation(this.uavID);
+
+					UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vPosOrigin[0];
+					UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vPosOrigin[1];
+					GeoNextPoint=Tools.UTMToGeo(UTMNextPoint.x,UTMNextPoint.y);
+					Copter.moveUAVNonBlocking(this.uavID, GeoNextPoint, (float)UavFishingParam.UavAltitude);
+					distance = UTMActualPoint.distance(UTMNextPoint);
+					if(distance <= 5 || timeWaiting>=8000) waypointReached = true;
+					Tools.waiting(100);
+					timeWaiting+=100;
+
+				}	
+			}
 		}
-		
 	}
 }

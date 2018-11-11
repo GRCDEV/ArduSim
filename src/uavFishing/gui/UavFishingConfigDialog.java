@@ -37,7 +37,7 @@ public class UavFishingConfigDialog extends JDialog{
 	private JCheckBox chkClockwise;
 	private Pair<String, List<Waypoint>[]> fitxData;
 	
-	
+	/*
 	public static void main(String[] args) {
 		try {
 			UavFishingConfigDialog dialog = new UavFishingConfigDialog();
@@ -45,7 +45,7 @@ public class UavFishingConfigDialog extends JDialog{
 			e.printStackTrace();
 		}
 	}
-	
+	*/
 	
 	public UavFishingConfigDialog () {
 		
@@ -66,7 +66,7 @@ public class UavFishingConfigDialog extends JDialog{
 		cpFishers.setLayout(null);
 		getContentPane().add(cpFishers);
 		
-		lblAngle = new JLabel("Trajectory angle (degrees): ");
+		lblAngle = new JLabel("Angulo trayectoria (degrees): ");
 		lblAngle.setBounds(15, 23, 210, 20);
 		cpFishers.add(lblAngle);
 		
@@ -172,7 +172,7 @@ public class UavFishingConfigDialog extends JDialog{
 		
 		try {
 			Tools.setNumUAVs(2);
-			UavFishingParam.RotateAngle = Double.parseDouble(txtAngleDegrees.getText());					
+			UavFishingParam.rotationAngle = Double.parseDouble(txtAngleDegrees.getText());					
 			UavFishingParam.clockwise = chkClockwise.isSelected();
 			UavFishingParam.radius = Double.parseDouble(txtRadiusMeters.getText());
 			UavFishingParam.UavAltitude = Double.parseDouble(txtAltitude.getText());
