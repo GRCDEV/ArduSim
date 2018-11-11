@@ -32,12 +32,12 @@ import uavFishing.logic.UavFishingParam;
 public class UavFishingConfigDialog extends JDialog{
 	
 	private static final long serialVersionUID = 1L;
-	private JLabel lblAngle,lblRadius,lblPathBoat;
-	private JTextField txtAngleDegrees,txtRadiusMeters,txtMisionFilePath;
+	private JLabel lblAngle,lblRadius,lbAltitude,lblPathBoat;
+	private JTextField txtAngleDegrees,txtRadiusMeters,txtAltitude,txtMisionFilePath;
 	private JCheckBox chkClockwise;
 	private Pair<String, List<Waypoint>[]> fitxData;
 	
-	/*
+	
 	public static void main(String[] args) {
 		try {
 			UavFishingConfigDialog dialog = new UavFishingConfigDialog();
@@ -45,14 +45,17 @@ public class UavFishingConfigDialog extends JDialog{
 			e.printStackTrace();
 		}
 	}
-	*/
+	
 	
 	public UavFishingConfigDialog () {
 		
 	
+		int Panelwith=516;
+		int Panelheitgth=420;
 		setTitle(ProtocolHelper.selectedProtocol +" configuration");
 		Point screenCenter = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
-		this.setBounds(screenCenter.x, screenCenter.y, 516, 300);
+		this.setBounds(screenCenter.x-(Panelwith/2), screenCenter.y-(Panelheitgth/2), Panelwith, Panelheitgth);
+		GUI.log("Posicion ventana :" + screenCenter.x + ", " + screenCenter.y);
 		this.setModal(true);
 		this.setResizable(false);
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);		
@@ -68,7 +71,7 @@ public class UavFishingConfigDialog extends JDialog{
 		cpFishers.add(lblAngle);
 		
 		txtAngleDegrees = new JTextField(null,3);
-		txtAngleDegrees.setHorizontalAlignment(SwingConstants.CENTER);
+		txtAngleDegrees.setHorizontalAlignment(SwingConstants.RIGHT);
 		txtAngleDegrees.setBounds(220, 24, 50, 20);
 		cpFishers.add(txtAngleDegrees);
 		
@@ -78,9 +81,18 @@ public class UavFishingConfigDialog extends JDialog{
 		
 		txtRadiusMeters = new JTextField(null,10);
 		txtRadiusMeters.setHorizontalAlignment(SwingConstants.RIGHT);
-		txtRadiusMeters.setBounds(220, 61, 75, 20);
+		txtRadiusMeters.setBounds(220, 61, 50, 20);
 		cpFishers.add(txtRadiusMeters);
-
+		
+		lbAltitude = new JLabel("Altitud del dron (metros): ");
+		lbAltitude.setBounds(15, 98, 210, 20);
+		cpFishers.add(lbAltitude);
+		
+		txtAltitude = new JTextField(null,4);
+		txtAltitude.setHorizontalAlignment(SwingConstants.RIGHT);
+		txtAltitude.setBounds(220, 99, 50, 20);
+		cpFishers.add(txtAltitude);
+		
 		chkClockwise = new JCheckBox("Sentido horario");
 		chkClockwise.setBounds(320,50,150, 20);
 		cpFishers.add(chkClockwise);
@@ -114,7 +126,6 @@ public class UavFishingConfigDialog extends JDialog{
 				
 				fitxData=api.GUI.loadKMLMissions();
 				txtMisionFilePath.setText(fitxData.getValue0());
-				GUI.log("Longitud del vector de listas waypoint: " + Integer.toString(fitxData.getValue1().length));
 			}
 			
 			
@@ -158,23 +169,27 @@ public class UavFishingConfigDialog extends JDialog{
 	
 	@SuppressWarnings("unchecked")
 	private void okAction() {
+		
 		try {
-			
-			UavFishingParam.angle = Double.parseDouble(txtAngleDegrees.getText());					
+			Tools.setNumUAVs(2);
+			UavFishingParam.RotateAngle = Double.parseDouble(txtAngleDegrees.getText());					
 			UavFishingParam.clockwise = chkClockwise.isSelected();
 			UavFishingParam.radius = Double.parseDouble(txtRadiusMeters.getText());
+			UavFishingParam.UavAltitude = Double.parseDouble(txtAltitude.getText());
 			//Creamos un vector del tamaño igual al numero de UAVs para evitar problemas en la función sendInitialConfiguration principal.
 			UavFishingParam.boatMission = (List<Waypoint>[]) new List[Tools.getNumUAVs()];
 			UavFishingParam.boatMission[0]= fitxData.getValue1()[0];
 			UavFishingParam.distanceTreshold = 2*UavFishingParam.radius;
 			Tools.setLoadedMissionsFromFile(UavFishingParam.boatMission);
-			Tools.setNumUAVs(2);
 			Tools.setProtocolConfigured();
 			dispose();
 			
 		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(this, "Angle and distance must be a number.", "Format error", JOptionPane.ERROR_MESSAGE);
-		}
+			JOptionPane.showMessageDialog(this, "Angle, altitude and distance must be a number.", "Format error", JOptionPane.ERROR_MESSAGE);
+		} catch (NullPointerException e) {
+			JOptionPane.showMessageDialog(this, "A file mission for Boat must be selected.", "Mission File", JOptionPane.ERROR_MESSAGE);
+		}	
+		
 	}
 	
 	private void CancelAction() {

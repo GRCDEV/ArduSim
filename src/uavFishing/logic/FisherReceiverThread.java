@@ -9,18 +9,21 @@ import api.Tools;
 public class FisherReceiverThread  extends Thread{
 	
 	private byte [] message;
+	String messagetxt;
 	private int uavID;
-	Input input;
-	public double[] posReferencia;
-	public double angle,heading,radius;
+	private Input input;
+	public static volatile double[] posBoat;
+	public static volatile double angle,heading,radius,altitude;
+	public static volatile boolean landSignal;
 	
 	
 	public FisherReceiverThread (int uavID) {
 		
 		this.uavID = uavID;
 		this.message = new byte[UavFishingParam.DATAGRAM_MAX_LENGTH];	
-		this.input = new Input(message);
-		this.posReferencia = new double [2];
+		this.input = new Input(this.message);
+		this.messagetxt = "";
+		this.posBoat = new double [2];
 	}
 	
 	@Override
@@ -32,18 +35,23 @@ public class FisherReceiverThread  extends Thread{
 			Tools.waiting(100);
 		}
 		
-		GUI.log("Hilo de escucha empezando a escuchar");
+		GUI.log("Hilo de escucha escuchando");
+		int i=0;
 		while(Tools.isExperimentInProgress()) {
 			
 			message = Copter.receiveMessage(uavID);
+			input.setBuffer(message);
 			if ( message != null) {
+				
 				input.setPosition(0);
-				posReferencia[0]=input.readDouble();
-				posReferencia[1]=input.readDouble();
+				posBoat[0]=input.readDouble();
+				posBoat[1]=input.readDouble();
+				altitude = input.readDouble();
 				heading = input.readDouble();
-				angle = input.readDouble();
-				radius = input.readDouble();
+				landSignal = input.readBoolean();
+
 			}
+			
 			
 			
 		
