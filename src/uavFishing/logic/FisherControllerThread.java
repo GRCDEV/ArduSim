@@ -6,6 +6,7 @@ import api.GUI;
 import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
+import uavController.UAVCurrentStatus;
 import uavFishing.pojo.VectorMath;
 
 
@@ -14,7 +15,7 @@ public class FisherControllerThread extends Thread{
 	public static volatile boolean startExperiment = false;
 	
 	private int uavID;
-	private double [] vPosOrigin;
+	private double [] vDirection;
 	private boolean waypointReached;
 	
 	
@@ -22,7 +23,8 @@ public class FisherControllerThread extends Thread{
 	public FisherControllerThread (int uavID) {
 		
 		this.uavID= uavID;
-		this.vPosOrigin = UavFishingParam.vOrigin;
+		this.vDirection = UavFishingParam.vOrigin;
+		this.waypointReached = false;
 	}
 	
 	@Override
@@ -31,8 +33,11 @@ public class FisherControllerThread extends Thread{
 		GeoCoordinates GeoNextPoint,GeoBoatPoint;
 		UTMCoordinates UTMActualPoint, UTMBoat,UTMNextPoint=new UTMCoordinates(0,0);
 		long startTime,currentTime;
-		double distance;
-		int timeWaiting;
+		double distanceToNextPoint, distanceToBoat,totalDistance;
+		double initialVoltage,minimumVoltage,currentVoltage;
+		boolean fligthTimeReached = false;
+		
+		
 		GUI.log("Dron " + this.uavID + " esperando");
 		while(!FisherControllerThread.startExperiment) {
 			Tools.waiting(100);
@@ -43,14 +48,16 @@ public class FisherControllerThread extends Thread{
 			GUI.log("Error en el despegue");
 			return;
 		}
+		
+		//Start flight
 		startTime = System.currentTimeMillis();
 		GUI.log("Dron " + this.uavID + " empezando a moverse");
 		while(Tools.isExperimentInProgress()) {
 			
-			
-			currentTime = (System.currentTimeMillis() - startTime) / 1000;
-			if(currentTime > 300) {
+			//Return to boat after a while
+			if(fligthTimeReached) {
 				
+				//Follow boat until end of boat's mission, then land
 				while (!FisherReceiverThread.landSignal) {
 					
 					GeoBoatPoint = Tools.UTMToGeo(FisherReceiverThread.posBoat[0],FisherReceiverThread.posBoat[1]);
@@ -62,29 +69,27 @@ public class FisherControllerThread extends Thread{
 				
 			}
 			else {
-			
-			// Calcular nueva posición
-				vPosOrigin = VectorMath.rotateVector(vPosOrigin, UavFishingParam.rotationAngle, UavFishingParam.clockwise);
 				
-				UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vPosOrigin[0];
-				UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vPosOrigin[1];
+				UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vDirection[0];
+				UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vDirection[1];
 				GeoNextPoint=Tools.UTMToGeo(UTMNextPoint.x,UTMNextPoint.y );
 				Copter.moveUAVNonBlocking(this.uavID, GeoNextPoint, (float)UavFishingParam.UavAltitude);
-				timeWaiting=0;
 				waypointReached = false;
-				while(!waypointReached) {
+				while(!waypointReached && !fligthTimeReached) {
+					Tools.waiting(100);
 					UTMActualPoint = Copter.getUTMLocation(this.uavID);
-
-					UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vPosOrigin[0];
-					UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vPosOrigin[1];
+					UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vDirection[0];
+					UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vDirection[1];
 					GeoNextPoint=Tools.UTMToGeo(UTMNextPoint.x,UTMNextPoint.y);
 					Copter.moveUAVNonBlocking(this.uavID, GeoNextPoint, (float)UavFishingParam.UavAltitude);
-					distance = UTMActualPoint.distance(UTMNextPoint);
-					if(distance <= 5 || timeWaiting>=8000) waypointReached = true;
-					Tools.waiting(100);
-					timeWaiting+=100;
-
-				}	
+					distanceToNextPoint = UTMActualPoint.distance(UTMNextPoint);
+					if(distanceToNextPoint <= 10) waypointReached = true;
+					currentTime = (System.currentTimeMillis() - startTime) / 1000;
+					if(currentTime >= UavFishingParam.FLIGTH_MAX_TIME) fligthTimeReached=true;
+			
+				}
+				//Rotates the direction vector $rotationAngle degrees
+				vDirection = VectorMath.rotateVector(vDirection, UavFishingParam.rotationAngle, UavFishingParam.clockwise);
 			}
 		}
 	}

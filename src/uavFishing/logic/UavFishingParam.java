@@ -10,7 +10,8 @@ public class UavFishingParam {
 
 	public static GeoCoordinates startLocationBoat,startLocationUAV;
 	Pair<GeoCoordinates, Double>[] startCoordinatesArray;
-	public static double radius,rotationAngle,boatSpeed,UavAltitude,distanceTreshold;
+	public static double radius,rotationAngle,boatSpeed,UavAltitude;
+	public static double distanceTreshold=10;
 	public static boolean clockwise;
 	public static int fisherID=1;
 	public static int boatID=0;
@@ -21,4 +22,5 @@ public class UavFishingParam {
 	
 	// TCP parameters
 	public static final int DATAGRAM_MAX_LENGTH = 1472; // (B) 1500-20-8 (MTU - IP - UDP)
+	public static final int FLIGTH_MAX_TIME = 480; // Maximum UAV flight time
 }
