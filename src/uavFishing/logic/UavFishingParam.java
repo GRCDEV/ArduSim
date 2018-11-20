@@ -11,7 +11,7 @@ public class UavFishingParam {
 	public static GeoCoordinates startLocationBoat,startLocationUAV;
 	Pair<GeoCoordinates, Double>[] startCoordinatesArray;
 	public static double radius,rotationAngle,boatSpeed,UavAltitude;
-	public static double distanceTreshold=10;
+	public static double distanceTreshold=10,estimateTreshold=1.2;
 	public static boolean clockwise;
 	public static int fisherID=1;
 	public static int boatID=0;
