@@ -31,6 +31,8 @@ import javax.swing.SwingConstants;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class MissionDelayDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
@@ -39,12 +41,14 @@ public class MissionDelayDialog extends JDialog {
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private final JSpinner delaySpinner;
 	private JTextField distanceTextField;
+	
+	@SuppressWarnings("unused")
+	private MissionDelayDialog() {
+		this.thisDialog = null;
+		this.delaySpinner = null;
+	}
 
-	/**
-	 * Create the dialog.
-	 */
-	public MissionDelayDialog() {
-		setBounds(100, 100, 450, 300);
+	public MissionDelayDialog(String title) {
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -227,7 +231,9 @@ public class MissionDelayDialog extends JDialog {
 		
 		this.thisDialog = this;
 		this.setModalityType(ModalityType.APPLICATION_MODAL);
+		this.setTitle(title);
 		this.pack();
+		this.setResizable(false);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 	}

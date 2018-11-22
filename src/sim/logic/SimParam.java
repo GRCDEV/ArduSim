@@ -11,13 +11,11 @@ import java.util.concurrent.BlockingQueue;
 import api.pojo.LogPoint;
 import main.Text;
 
-/** This class contains parameters related to the simulation platform. */
+/** This class contains parameters related to the simulation platform.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class SimParam {
 
-	// Whether the progress dialog is showing or not
-	public static volatile boolean progressShowing = false;
-	
 	// Detects when the communications are online
 	public static volatile boolean communicationsOnline = false;
 	

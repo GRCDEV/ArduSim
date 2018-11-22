@@ -7,7 +7,8 @@ import java.util.Queue;
 
 import api.Tools;
 
-/** The formation numbering starts in 0 in the center of the formation and increases with the distance to the center of the formation. */
+/** The formation numbering starts in 0 in the center of the formation and increases with the distance to the center of the formation.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MeshCompactFlightFormation extends FlightFormation {
 	

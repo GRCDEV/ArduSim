@@ -3,6 +3,8 @@ package sim.logic;
 import api.Copter;
 import api.Tools;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class FakeSenderThread extends Thread {
 	
 	public static boolean fakeCommunicationsEnabled = false;

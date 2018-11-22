@@ -8,7 +8,7 @@ import api.Tools;
 import mbcap.pojo.Beacon;
 
 /** This class receives data packets and stores them for later analysis of risk of collision.
- * <p>It also simulates broadcast and checks if there is a collision when using the simulator. */
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ReceiverThread extends Thread {
 	
@@ -26,12 +26,6 @@ public class ReceiverThread extends Thread {
 		while (!Tools.isExperimentInProgress() || !Copter.isFlying(numUAV)) {
 			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
 		}
-		
-		
-//		while (!Tools.areUAVsAvailable() || Tools.areUAVsReadyForSetup() || Tools.isSetupInProgress()	|| Tools.isSetupFinished()
-//				|| (Tools.isExperimentInProgress() && !Copter.isFlying(numUAV))) {
-//			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
-//		}
 		
 		long expirationCheckTime = System.currentTimeMillis();
 		long selfId = Tools.getIdFromPos(numUAV);

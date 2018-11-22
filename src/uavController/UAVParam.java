@@ -31,7 +31,8 @@ import api.pojo.formations.FlightFormation;
 import sim.pojo.IncomingMessage;
 import sim.pojo.IncomingMessageQueue;
 
-/** This class includes parameters specifically related to the communication with the flight controller. */
+/** This class includes parameters specifically related to the communication with the flight controller.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVParam {
 
@@ -91,7 +92,7 @@ public class UAVParam {
 	public static volatile boolean collisionCheckEnabled = false;	// Whether the collision check is enabled or not
 	public static volatile double collisionCheckPeriod = 0.5;		// (s) Between two checks
 	public static int appliedCollisionCheckPeriod;					// The same parameter but in milliseconds
-	public static volatile double collisionDistance = 10;			// (m) Distance to assert that a collision has happened (UTM coordinates)
+	public static volatile double collisionDistance = 5;			// (m) Distance to assert that a collision has happened (UTM coordinates)
 	public static volatile double collisionAltitudeDifference = 20;	// (m) Altitude difference to assert that a collision has happened
 	public static volatile double collisionScreenDistance;					// (px) The previous distance, but in screen coordinates
 	public static volatile boolean collisionDetected = false; 		// Can be used to stop protocols when a collision happens

@@ -5,14 +5,14 @@ import java.awt.geom.Point2D;
 import api.Tools;
 import sim.logic.SimParam;
 
-/** This class generates objects with valid UTM and Geographic coordinates, and it is thread-safe. */
+/** This class generates objects with valid UTM and Geographic coordinates, and it is thread-safe.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Location2D {
 	
 	private UTMCoordinates utm;	// (m) UTM coordinates location
 	private GeoCoordinates geo;	// (degrees) Geographic coordinates location
 	
-	@SuppressWarnings("unused")
 	private Location2D() {}
 	
 	public static Location2D NewLocation(double latitude, double longitude) {

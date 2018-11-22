@@ -1,6 +1,7 @@
 package scanv2.pojo;
 
-/** This class represents the states of the finite state machine used in the protocol. */
+/** This class represents the states of the finite state machine used in the protocol.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public final class State {
 	public static final short START = 0;

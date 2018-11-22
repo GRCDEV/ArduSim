@@ -21,7 +21,6 @@ import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import lander.gui.LanderConfiDialog;
 import main.Text;
-import noneTest.Nonev2Param;
 import scanv2.logic.ScanParam;
 import scanv2.logic.ScanText;
 import sim.board.BoardPanel;
@@ -315,7 +314,7 @@ public class LanderHelper extends ProtocolHelper{
 	}
 
 	@Override
-	public void logData(String folder, String baseFileName) {
+	public void logData(String folder, String baseFileName, long baseNanoTime) {
 		// TODO Auto-generated method stub
 		
 	}

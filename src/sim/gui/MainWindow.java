@@ -5,37 +5,39 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
 
-import main.Param;
-import main.Text;
 import main.ArduSimTools;
+import main.Param;
 import main.Param.SimulatorState;
+import main.Text;
 import sim.board.BoardPanel;
 import sim.logic.SimParam;
 
-/** This class generates the main windows of the application. It consists on three elements:
- * <p>A log panel.
- * <p>A panel with buttons to interact with.
- * <p>A panel to show the UAVs moving over a satellite map. */
+/** This class generates the main windows of the application. It consists on three elements: A log panel, a panel with buttons to interact with, and a panel to show the UAVs moving over a satellite map.</p>
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MainWindow {
 
 	public static MainWindow window;
 	public static BoardPanel boardPanel;
 	public static MainWindowButtonsPanel buttonsPanel;
-	public static ProgressDialog progressDialog;
 	
 	public JFrame mainWindowFrame;
+	
+	private final static Object CLOSE_SEMAPHORE = new Object();
 
-	/**
-	 * Create the application.
-	 */
 	public MainWindow() {
 		initialize();
 	}
@@ -84,17 +86,22 @@ public class MainWindow {
 		mainWindowFrame.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		mainWindowFrame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
-				(new Thread(new Runnable() {
-					public void run() {
-						if (Param.simStatus != SimulatorState.SHUTTING_DOWN
-								&& MainWindow.buttonsPanel.exitButton.isEnabled()) {
-							ArduSimTools.shutdown();
-						}
-					}
-				})).start();
+				MainWindow.window.closeArduSim();
 			}
 		});
 		mainWindowFrame.setTitle(Text.APP_NAME);
+		ActionListener escListener = new ActionListener() {
+
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	        	MainWindow.window.closeArduSim();
+	        }
+	    };
+	    mainWindowFrame.getRootPane().registerKeyboardAction(escListener,
+	            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+	            JComponent.WHEN_IN_FOCUSED_WINDOW);
+		
+		
 		mainWindowFrame.setVisible(true);
 		MainWindow.buttonsPanel = buttonsPanel;
 		MainWindow.boardPanel = boardPanel;
@@ -102,5 +109,19 @@ public class MainWindow {
 		SimParam.boardPXHeight = MainWindow.boardPanel.getHeight();
 		SimParam.boardPXWidth = MainWindow.boardPanel.getWidth();
 	}
-
+	
+	/** Request to close ArduSim simulator. */
+	public void closeArduSim() {
+		(new Thread(new Runnable() {
+			public void run() {
+				synchronized(MainWindow.CLOSE_SEMAPHORE) {
+					if (Param.simStatus != SimulatorState.SHUTTING_DOWN
+							&& MainWindow.buttonsPanel.exitButton.isEnabled()) {
+						ArduSimTools.shutdown();
+					}
+				}
+			}
+		})).start();
+	}
+	
 }

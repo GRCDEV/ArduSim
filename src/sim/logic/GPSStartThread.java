@@ -5,7 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import api.Copter;
 import uavController.UAVParam.ControllerParam;
 
-/** This class forces all UAVs to send their current location, asynchronously. */
+/** This class forces all UAVs to send their current location, asynchronously.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p>*/
 
 public class GPSStartThread extends Thread {
 	

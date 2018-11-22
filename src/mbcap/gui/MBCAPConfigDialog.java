@@ -18,7 +18,8 @@ import api.ProtocolHelper;
 import api.Tools;
 import mbcap.logic.MBCAPText;
 
-/** This class generates the dialog to input the configuration of the MBCAP protocol. */
+/** This class generates the dialog to input the configuration of the MBCAP protocol.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MBCAPConfigDialog extends JDialog {
 
@@ -80,7 +81,7 @@ public class MBCAPConfigDialog extends JDialog {
       }
     });
     
-    GUI.addEscapeListener(this);
+    GUI.addEscapeListener(this, true);
     
     MBCAPGUITools.loadDefaultProtocolConfiguration(panel);
     this.setTitle(ProtocolHelper.selectedProtocol + " " + MBCAPText.CONFIGURATION);

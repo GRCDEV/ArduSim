@@ -1,6 +1,7 @@
 package api.pojo;
 
-/** This class generates a point in Geographic coordinates. */
+/** This class generates a point in Geographic coordinates.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class GeoCoordinates {
 

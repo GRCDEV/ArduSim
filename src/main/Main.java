@@ -37,7 +37,8 @@ import uavController.TestListener;
 import uavController.TestTalker;
 import uavController.UAVParam;
 
-/** This class contains the main method and the chronological logic followed by the whole application. */
+/** This class contains the main method and the chronological logic followed by the whole application.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Main {
 
@@ -172,16 +173,15 @@ public class Main {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.logArea.setText(Text.STARTING_ENVIRONMENT + "\n");
-					MainWindow.buttonsPanel.progressDialogButton.setEnabled(false);
+					
 					MainWindow.buttonsPanel.setupButton.setEnabled(false);
 					MainWindow.buttonsPanel.startTestButton.setEnabled(false);
 					MainWindow.buttonsPanel.statusLabel.setText(Text.STARTING_ENVIRONMENT);
-					MainWindow.progressDialog = new ProgressDialog(MainWindow.window.mainWindowFrame);
-					MainWindow.progressDialog.setVisible(true);
+					new ProgressDialog(MainWindow.window.mainWindowFrame).toggleProgressShown();
 				}
 			});
 			// Waiting the progress dialog to be built
-			while (!SimParam.progressShowing || MainWindow.progressDialog == null) {
+			while (!ProgressDialog.progressShowing || ProgressDialog.progressDialog == null) {
 				Tools.waiting(SimParam.SHORT_WAITING_TIME);
 			}
 
@@ -248,7 +248,7 @@ public class Main {
 		if (Param.role == Tools.SIMULATOR) {
 			BoardParam.panelText.set(Text.WAITING_GPS);
 		}
-		ArduSimTools.getGPSFix();//TODO descomentar
+		ArduSimTools.getGPSFix();
 		
 		ArduSimTools.sendBasicConfiguration2();	// It requires GPS fix to set the current location for takeoff
 		
@@ -312,20 +312,20 @@ public class Main {
 						final String timeString = Tools.timeToString(Param.setupTime, System.currentTimeMillis());
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE_2 + " " + timeString);
+								ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE_2 + " " + timeString);
 							}
 						});
 					} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 						final String timeString = Tools.timeToString(Param.startTime, System.currentTimeMillis());
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
+								ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
 							}
 						});
 					} else {
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MainWindow.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
+								ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
 							}
 						});
 						if (Param.simStatus != SimulatorState.READY_FOR_TEST) {
@@ -401,7 +401,7 @@ public class Main {
 				if (ArduSimTools.isTestFinished()) {
 					Param.simStatus = SimulatorState.TEST_FINISHED;
 				}
-			}//TODO descomentar
+			}
 			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 				Tools.waiting(SimParam.LONG_WAITING_TIME);
 			}

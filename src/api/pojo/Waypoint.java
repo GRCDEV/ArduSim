@@ -6,11 +6,14 @@ import org.mavlink.messages.MAV_FRAME;
 import org.mavlink.messages.ardupilotmega.msg_mission_item;
 
 /** This class generates a waypoint used in missions.
- * <p>getMessage() allows to encode a MAVLink message of this waypoint.
- * <p>arrayToString() and listToString() allow to print a mission in standard file format. */
+ * <p>getMessage() allows to encode a MAVLink message of this waypoint.</p>
+ * <p>arrayToString() and listToString() allow to print a mission in standard file format.</p>
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Waypoint implements Cloneable {
 	
+	/** Maximum number of waypoints accepted by the flight controller (hard coded in the flight controller). */
+	public static final int MAX_WAYPOINTS = 718;
 	/** Used to leave the mission as it is loaded from a Google Earth .kml file. */
 	public static String MISSION_END_UNMODIFIED = "unmodified";// If you change this text, also do it in ardusim.ini
 	/** Used to end the mission with a LAND command when it is loaded from a Google Earth .kml file. */

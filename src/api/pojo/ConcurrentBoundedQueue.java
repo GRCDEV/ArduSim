@@ -3,9 +3,8 @@ package api.pojo;
 import java.lang.reflect.Array;
 
 /** Concurrent, generic and bounded FIFO queue.
- * <p>When the queue is filled, the oldest element is removed.
- * <p>Elements cannot be removed.
- * <p>The list of elements stored is provided in the same order they were inserted. */
+ * <p>When the queue is filled, the oldest element is removed. Elements cannot be removed. The list of elements stored is provided in the same order they were inserted.</p>
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ConcurrentBoundedQueue<T> {
 	
@@ -17,7 +16,7 @@ public class ConcurrentBoundedQueue<T> {
 	private ConcurrentBoundedQueue() {}
 	
 	/** Creates a bounded FIFO queue of the provided size. Example with Integers:
-	 * <p>LastElements<Integer> elems = new LastElements<>(Integer.class, 5) */
+	 * <p>LastElements<Integer> elements = new LastElements<>(Integer.class, 5);</p> */
 	@SuppressWarnings("unchecked")
 	public ConcurrentBoundedQueue(Class<T> c, int size) {
 		this.c = c;
@@ -28,7 +27,7 @@ public class ConcurrentBoundedQueue<T> {
 	}
 	
 	/** Adds a new element at the end of the queue.
-	 * <p>If the queue is full, the oldest element is removed.*/
+	 * <p>If the queue is full, the oldest element is removed.</p> */
 	public synchronized void add(T element) {
 		positions[p] = element;
 		if (this.count < this.size) {

@@ -17,6 +17,8 @@ import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import sim.board.pojo.MercatorProjection;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class BackgroundMap {
 
 	public Image img;					// Downloaded image
@@ -31,10 +33,16 @@ public class BackgroundMap {
 	}
 
 	/**
-	 * Retrieves a geopositioned image from Google Static Maps based on:
-	 *   Latitude and longitude of the center, zoom level, and UTM width-height to be filled.
-	 *   Also stores the image center in UTM coordinates
-	 *   Returns with attribute img==null if the image could not be downloaded.
+	 * Retrieves a geopositioned image from Google Static Maps.
+	 * <p>The object also contains the coordinates of the center of the image.
+	 * Returns with attribute img==null if the image could not be downloaded.</p>
+	 * @param latitude of the center of the image
+	 * @param longitude of the center of the image
+	 * @param zoom level
+	 * @param pxWidth to be filled with the image (pixels)
+	 * @param pxHeight to be filled with the image (pixels)
+	 * @param UTMx of the center of the image
+	 * @param UTMy of the center of the image
 	 */
 	public BackgroundMap(double latitude, double longitude, int zoom, int pxWidth, int pxHeight, double UTMx, double UTMy) {
 

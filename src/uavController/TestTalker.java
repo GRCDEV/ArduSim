@@ -16,6 +16,8 @@ import main.Text;
 import main.Param.SimulatorState;
 import pccompanion.logic.PCCompanionParam;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class TestTalker extends Thread {
 
 	@Override

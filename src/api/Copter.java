@@ -27,7 +27,8 @@ import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
 /** This class contains exclusively static methods to control the UAV "numUAV" in the arrays included in the application.
- * <p>Methods that start with "API" are single commands, while other methods are complex commands made of several of the previous commands. */
+ * <p>Methods that start with "API" are single commands, while other methods are complex commands made of several of the previous commands.</p>
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Copter {
 	
@@ -234,8 +235,7 @@ public class Copter {
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
 		if (armEngines(numUAV)
 				&& setFlightMode(numUAV, FlightMode.AUTO)
-				&& setHalfThrottle(numUAV)//TODO descomentar
-				) {
+				&& setHalfThrottle(numUAV)) {
 			return true;
 		}
 		return false;
@@ -389,6 +389,7 @@ public class Copter {
 
 	/**
 	 * Suspend temporarily a mission in AUTO mode, entering on loiter flight mode to force a fast stop.
+	 * <p>Blocking method until the UAV is almost stopped.</p>
 	 * @param numUAV UAV position in arrays.
 	 * @return true if all the commands were successful.
 	 */

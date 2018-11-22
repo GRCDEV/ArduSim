@@ -2,31 +2,20 @@ package api.pojo;
 
 import java.awt.geom.Point2D;
 
-/** This class generates a point in UTM coordinates in meters. */
+/** This class generates a point in UTM coordinates in meters.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
-public class UTMCoordinates implements Cloneable {
+public class UTMCoordinates extends Point2D.Double implements Cloneable {
 
-	public double x;
-	public double y;
+	private static final long serialVersionUID = 1L;
 
 	@SuppressWarnings("unused")
-	private UTMCoordinates() {}
+	private UTMCoordinates() {
+		super();
+	}
 
 	public UTMCoordinates(double x, double y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	public double distance(UTMCoordinates location) {
-		return Math.sqrt(Math.pow(this.x - location.x, 2) + Math.pow(this.y - location.y, 2));
-	}
-
-	public double distance(double x, double y) {
-		return Math.sqrt(Math.pow(this.x - x, 2) + Math.pow(this.y - y, 2));
-	}
-
-	public double distance(Point2D.Double location) {
-		return Math.sqrt(Math.pow(this.x - location.x, 2) + Math.pow(this.y - location.y, 2));
+		super(x, y);
 	}
 	
 	public double distance(Location2D location) {
@@ -43,7 +32,7 @@ public class UTMCoordinates implements Cloneable {
 	}
 
 	@Override
-	protected Object clone() throws CloneNotSupportedException {
+	public Object clone() {
 		return new UTMCoordinates(this.x, this.y);
 	}
 

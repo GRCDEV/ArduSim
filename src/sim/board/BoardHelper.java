@@ -35,7 +35,8 @@ import sim.gui.MainWindow;
 import sim.logic.SimParam;
 import uavController.UAVParam;
 
-/** This class contains methods used to show information on the board of the main window. */
+/** This class contains methods used to show information on the board of the main window.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class BoardHelper {
 	
@@ -263,7 +264,7 @@ public class BoardHelper {
 	}
 	
 	/** Calculates the screen-UTM scale when the UAVs are connected.
-	 * <p>If none is connected, returns false. */
+	 * <p>If none is connected, returns false.</p> */
 	private static void setScale() {
 		BoardHelper.getObjectsBoundaries();
 		
@@ -296,14 +297,16 @@ public class BoardHelper {
 		}
 	
 		// 3. Fist position of each UAV transformation from UTM to Screen
-		LogPoint locationUTM;
+		LogPoint locationUTM, aux;
 		Point2D.Double locationPX;
 		for (int i=0; i<Param.numUAVs; i++) {
 			if (BoardParam.uavPrevUTMLocation[i] != null) {
 				locationUTM = BoardParam.uavPrevUTMLocation[i];
 				locationPX = BoardHelper.locatePoint(locationUTM.x, locationUTM.y);
-				BoardParam.uavPrevPXLocation[i]
-						= new LogPoint(locationUTM.time, locationPX.x, locationPX.y, locationUTM.z, locationUTM.heading, locationUTM.speed, locationUTM.inTest);
+				aux = locationUTM.clone();
+				aux.x = locationPX.x;
+				aux.y = locationPX.y;
+				BoardParam.uavPrevPXLocation[i] = aux;
 			}
 		}
 	}
@@ -379,20 +382,26 @@ public class BoardHelper {
 	
 	/** Calculates the screen position of the UAV path. */
 	private static void rescaleUAVPath() {
-		LogPoint locationUTM;
+		LogPoint locationUTM, aux;
 		Point2D.Double locationPX;
 		for (int i=0; i<Param.numUAVs; i++) {
 			if (SimParam.uavUTMPath[i].size()>1) {
 				BoardParam.uavPXPathLines[i].clear();
 				locationUTM = SimParam.uavUTMPath[i].get(0);
 				locationPX = BoardHelper.locatePoint(locationUTM.x, locationUTM.y);
-				LogPoint prevLocation = new LogPoint(locationUTM.time, locationPX.x, locationPX.y, locationUTM.z, locationUTM.heading, locationUTM.speed, locationUTM.inTest);
+				aux = locationUTM.clone();
+				aux.x = locationPX.x;
+				aux.y = locationPX.y;
+				LogPoint prevLocation = aux;
 				LogPoint nextLocation;
 				Shape line;
 				for (int j=1; j<SimParam.uavUTMPath[i].size(); j++) {
 					locationUTM = SimParam.uavUTMPath[i].get(j);
 					locationPX = BoardHelper.locatePoint(locationUTM.x, locationUTM.y);
-					nextLocation = new LogPoint(locationUTM.time, locationPX.x, locationPX.y, locationUTM.z, locationUTM.heading, locationUTM.speed, locationUTM.inTest);
+					aux = locationUTM.clone();
+					aux.x = locationPX.x;
+					aux.y = locationPX.y;
+					nextLocation = aux;
 					if (nextLocation.distance(prevLocation.x, prevLocation.y)>=BoardParam.minScreenMovement) {
 						line = new Line2D.Double(prevLocation.x, prevLocation.y, nextLocation.x, nextLocation.y);
 						BoardParam.uavPXPathLines[i].add(line);
@@ -520,7 +529,7 @@ public class BoardHelper {
 	}
 
 	/** Locates an image on screen.
-	 * <p>originUTMX,originUTMY. Image UTM upper-left corner coordinates. */
+	 * <p>originUTMX,originUTMY. Image UTM upper-left corner coordinates.</p> */
 	private static Point2D.Double locateImage(double originUTMX, double originUTMY) {
 		Point2D.Double res = new Point2D.Double();
 		double xUTM = originUTMX - BoardParam.boardUpLeftUTMX;
@@ -550,7 +559,7 @@ public class BoardHelper {
 		LogPoint currentUTM;
 		Point2D.Double currentPXauxiliary;
 		LogPoint currentPX;
-		LogPoint previousPX;
+		LogPoint previousPX, aux;
 		if (SimParam.uavUTMPathReceiving != null) {
 			for (int i=0; i<Param.numUAVs; i++) {
 				//  1. Create new lines if new positions are stored
@@ -565,9 +574,10 @@ public class BoardHelper {
 							BoardParam.uavCurrentUTMLocation[i] = currentUTM;
 							// The UAV is connected. New lines can be drawn
 							currentPXauxiliary = BoardHelper.locatePoint(currentUTM.x, currentUTM.y);
-							currentPX
-								= new LogPoint(currentUTM.time, currentPXauxiliary.x, currentPXauxiliary.y, currentUTM.z, currentUTM.heading,
-									currentUTM.speed, currentUTM.inTest);
+							aux = currentUTM.clone();
+							aux.x = currentPXauxiliary.x;
+							aux.y = currentPXauxiliary.y;
+							currentPX = aux;
 							BoardParam.uavCurrentPXLocation[i] = currentPX;
 							
 							if (BoardParam.uavPrevUTMLocation[i] != null) {
@@ -632,7 +642,7 @@ public class BoardHelper {
 					AffineTransform trans = new AffineTransform();
 					trans.translate(currentPXLocation.x, currentPXLocation.y);
 					trans.scale(SimParam.uavImageScale, SimParam.uavImageScale);
-					trans.rotate( currentPXLocation.heading );
+					trans.rotate( currentPXLocation.getHeading() );
 					trans.translate(-SimParam.uavImage.getWidth()/2, -SimParam.uavImage.getHeight()/2);
 					g.drawImage(SimParam.uavImage, trans, p);
 		

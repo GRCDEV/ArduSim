@@ -6,14 +6,19 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -24,13 +29,22 @@ import main.Param;
 import main.Text;
 import sim.logic.SimParam;
 
-/** This class generates the dialog that shows UAV information on real time, over the main window. */
+/** This class generates the dialog that shows UAV information on real time, over the main window.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ProgressDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
+	
+	public static ProgressDialog progressDialog;
+	// Whether the progress dialog is showing or not
+	public static volatile boolean progressShowing = false;
+	
 	private final JPanel contentPanel = new JPanel();
 	public ProgressDialogPanel[] panels;
+	
+	private static volatile int x, y;
+	private static final Object SEMAPHORE = new Object();
 
 	public ProgressDialog(JFrame mainWindow) {
 		JScrollPane scrollPane;
@@ -86,7 +100,9 @@ public class ProgressDialog extends JDialog {
 		}
 		int dialogHeight = Math.min(this.getHeight(), maxHeight);
 		setSize(dialogWidth, dialogHeight);
-		setLocation(config.getBounds().x + config.getBounds().width - right - dialogWidth, config.getBounds().y + config.getBounds().height - this.getHeight() - top - bottom);
+		ProgressDialog.x = config.getBounds().x + config.getBounds().width - right - dialogWidth;
+		ProgressDialog.y = config.getBounds().y + config.getBounds().height - this.getHeight() - top - bottom;
+		setLocation(x, y);
 		
 		setResizable(false);
 		setAlwaysOnTop(true);
@@ -94,18 +110,48 @@ public class ProgressDialog extends JDialog {
 		this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
-				SimParam.progressShowing = false;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						setVisible(false);
-						MainWindow.buttonsPanel.progressDialogButton.setEnabled(true);
-					}
-				});
+				ProgressDialog.progressDialog.toggleProgressShown();
 			}
 		});
 
 		this.setTitle(Text.PROGRESS_DIALOG_TITLE);
-		SimParam.progressShowing = true;
+		
+		ActionListener escListener = new ActionListener() {
+
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	        	ProgressDialog.progressDialog.toggleProgressShown();
+	        }
+	    };
+	    this.getRootPane().registerKeyboardAction(escListener,
+	            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+	            JComponent.WHEN_IN_FOCUSED_WINDOW);
+	    
+	    ProgressDialog.progressDialog = this;
+	}
+	
+	/** Request to show or hide the progress dialog. */
+	public void toggleProgressShown() {
+		synchronized(SEMAPHORE) {
+			if (ProgressDialog.progressShowing) {
+				ProgressDialog.progressShowing = false;
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						ProgressDialog.progressDialog.setVisible(false);
+						MainWindow.buttonsPanel.progressDialogButton.setText(Text.SHOW_PROGRESS);
+					}
+				});
+			} else {
+				ProgressDialog.progressShowing = true;
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						ProgressDialog.progressDialog.setLocation(ProgressDialog.x, ProgressDialog.y);
+						ProgressDialog.progressDialog.setVisible(true);
+						MainWindow.buttonsPanel.progressDialogButton.setText(Text.HIDE_PROGRESS);
+					}
+				});
+			}
+		}
 	}
 
 }

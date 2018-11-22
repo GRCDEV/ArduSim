@@ -20,7 +20,8 @@ import mbcap.logic.MBCAPText;
 import mbcap.pojo.ProgressState;
 import sim.board.BoardPanel;
 
-/** This class contains exclusively static methods used by the GUI. */
+/** This class contains exclusively static methods used by the GUI.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MBCAPGUITools {
 
@@ -34,128 +35,102 @@ public class MBCAPGUITools {
 		}
 		
 		// Beaconing parameters
-		validating = (String) panel.beaconingPeriodTextField.getText();
+		validating = panel.beaconingPeriodTextField.getText();
 		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_PERIOD_ERROR);
 			return false;
 		}
-		validating = (String) panel.numBeaconsTextField.getText();
+		validating = panel.numBeaconsTextField.getText();
 		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_REFRESH_ERROR);
 			return false;
 		}
-		validating = (String) panel.beaconExpirationTimeTextField.getText();
+		validating = panel.hopTimeTextField.getText();
+		if (!Tools.isValidPositiveDouble(validating)) {
+			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.HOP_TIME_ERROR);
+			return false;
+		}
+		validating = panel.minSpeedTextField.getText();
+		if (!Tools.isValidPositiveDouble(validating)) {
+			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.MIN_SPEED_ERROR);
+			return false;
+		}
+		validating = panel.beaconExpirationTimeTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_EXPIRATION_ERROR);
 			return false;
 		}
 		double beaconExpirationTime = Double.parseDouble(validating);
-		validating = (String) panel.beaconFlyingTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.FLYING_TIME_ERROR_1);
-			return false;
-		}
-		validating = (String) panel.hopTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.HOP_TIME_ERROR);
-			return false;
-		}
-		double flyingTime = Double.parseDouble(panel.beaconFlyingTimeTextField.getText());
-		double maxFlyingTime = (MBCAPParam.MAX_POINTS-1)*MBCAPParam.hopTime;
-		if (flyingTime > maxFlyingTime) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.FLYING_TIME_ERROR_2 + " "
-					+ String.format( "%.2f", maxFlyingTime ) + " " + MBCAPText.SECONDS + ".");
-			return false;
-		}
-		double hopTime = Double.parseDouble(panel.hopTimeTextField.getText());
-		double points = flyingTime/hopTime;
-		if (Math.floor(points) - points != 0) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.FLYING_TIME_ERROR_3);
-			return false;
-		}
-		if (!Tools.isValidPositiveDouble((String) panel.minSpeedTextField.getText())) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.MIN_SPEED_ERROR);
-			return false;
-		}
 
 		// Collision avoidance protocol parameters
-		validating = (String) panel.collisionRiskDistanceTextField.getText();
+		validating = panel.collisionRiskDistanceTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_1);
 			return false;
 		}
-		double collisionRiskDistance = Double.parseDouble(validating);
 		boolean checkCollision = Tools.isCollisionCheckEnabled();
-		double collisionDistance = 0;
 		if (checkCollision) {
-			collisionDistance = Tools.getCollisionHorizontalDistance();
+			double collisionRiskDistance = Double.parseDouble(validating);
+			double collisionDistance = Tools.getCollisionHorizontalDistance();
 			if (collisionRiskDistance <= collisionDistance) {
 				GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_2);
 				return false;
 			}
 		}
-		validating = (String) panel.collisionRiskAltitudeDifferenceTextField.getText();
+		validating = panel.collisionRiskAltitudeDifferenceTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_1);
 			return false;
 		}
-		double collisionRiskAltitudeDifference = Double.parseDouble(validating);
-		double collisionAltitudeDifference;
 		if (checkCollision) {
-			collisionAltitudeDifference = Tools.getCollisionVerticalDistance();
+			double collisionRiskAltitudeDifference = Double.parseDouble(validating);
+			double collisionAltitudeDifference = Tools.getCollisionVerticalDistance();
 			if (collisionRiskAltitudeDifference <= collisionAltitudeDifference) {
 				GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_2);
 				return false;
 			}
 		}
-		validating = (String) panel.maxTimeTextField.getText();
+		validating = panel.maxTimeTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_TIME_ERROR);
 			return false;
 		}
-		validating = (String) panel.reactionDistanceTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.CHECK_THRESHOLD_ERROR_1);
-			return false;
-		}
-		double reactionDistance = Double.parseDouble(validating);
-		if (reactionDistance <= collisionRiskDistance) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.CHECK_THRESHOLD_ERROR_2);
-			return false;
-		}
-		validating = (String) panel.riskCheckPeriodTextField.getText();
+		validating = panel.riskCheckPeriodTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.CHECK_PERIOD_ERROR);
 			return false;
 		}
-		validating = (String) panel.safePlaceDistanceTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.SAFE_DISTANCE_ERROR_1);
+		validating = panel.packetLossTextField.getText();
+		if (!Tools.isValidPositiveInteger(validating)) {
+			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.PACKET_LOSS_ERROR);
 			return false;
 		}
-		if (checkCollision) {
-			double safePlaceDistance = Double.parseDouble(validating);
-			if (safePlaceDistance <= collisionDistance) {
-				GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.SAFE_DISTANCE_ERROR_2);
-				return false;
-			}
+		validating = panel.gpsErrorTextField.getText();
+		if (!Tools.isValidPositiveDouble(validating)) {
+			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.GPS_ERROR_ERROR);
+			return false;
 		}
-		validating = (String) panel.standStillTimeTextField.getText();
+		validating = panel.standStillTimeTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.HOVERING_TIMEOUT_ERROR);
 			return false;
 		}
-		validating = (String) panel.passingTimeTextField.getText();
+		validating = panel.passingTimeTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.OVERTAKE_TIMEOUT_ERROR);
 			return false;
 		}
-		validating = (String) panel.solvedTimeTextField.getText();
+		validating = panel.solvedTimeTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.RESUME_MODE_DELAY_ERROR);
 			return false;
 		}
-		validating = (String) panel.deadlockTimeoutTextField.getText();
+		validating = panel.recheckTextField.getText();
+		if (!Tools.isValidPositiveDouble(validating)) {
+			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.RECHECK_DELAY_ERROR);
+			return false;
+		}
+		validating = panel.deadlockTimeoutTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.DEADLOCK_TIMEOUT_ERROR_1);
 			return false;
@@ -174,31 +149,26 @@ public class MBCAPGUITools {
 		Tools.setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
 		
 		// Beaconing parameters
-		MBCAPParam.beaconingPeriod = Integer.parseInt((String) panel.beaconingPeriodTextField.getText());
-		MBCAPParam.numBeacons = Integer.parseInt((String) panel.numBeaconsTextField.getText());
-		MBCAPParam.beaconExpirationTime = (long) (Double
-				.parseDouble((String) panel.beaconExpirationTimeTextField.getText()) * 1000000000l);
-		MBCAPParam.beaconFlyingTime = Double.parseDouble((String) panel.beaconFlyingTimeTextField.getText());
-
-		MBCAPParam.hopTime = Double.parseDouble((String)panel.hopTimeTextField.getText());
+		MBCAPParam.beaconingPeriod = Integer.parseInt(panel.beaconingPeriodTextField.getText());
+		MBCAPParam.numBeacons = Integer.parseInt(panel.numBeaconsTextField.getText());
+		MBCAPParam.hopTime = Double.parseDouble(panel.hopTimeTextField.getText());
 		MBCAPParam.hopTimeNS = (long) (MBCAPParam.hopTime * 1000000000l);
-		MBCAPParam.minSpeed = Double.parseDouble((String) panel.minSpeedTextField.getText());
+		MBCAPParam.minSpeed = Double.parseDouble(panel.minSpeedTextField.getText());
+		MBCAPParam.beaconExpirationTime = (long) (Double.parseDouble(panel.beaconExpirationTimeTextField.getText()) * 1000000000l);
 
 		// Collision avoidance protocol
-		MBCAPParam.collisionRiskDistance = Double
-				.parseDouble((String) panel.collisionRiskDistanceTextField.getText());
-		MBCAPParam.collisionRiskAltitudeDifference = Double
-				.parseDouble((String) panel.collisionRiskAltitudeDifferenceTextField.getText());
-		MBCAPParam.collisionRiskTime = (long) (Double.parseDouble((String) panel.maxTimeTextField.getText()) * 1000000000l);
-		MBCAPParam.reactionDistance = Double.parseDouble((String) panel.reactionDistanceTextField.getText());
-		MBCAPParam.riskCheckPeriod = (long) (Double.parseDouble((String) panel.riskCheckPeriodTextField.getText())
-				* 1000000000l);
-		MBCAPParam.safePlaceDistance = Double.parseDouble((String) panel.safePlaceDistanceTextField.getText());
-		MBCAPParam.standStillTimeout = (long) (Double.parseDouble((String) panel.standStillTimeTextField.getText()) * 1000000000l);
-		MBCAPParam.passingTimeout = (long) (Double.parseDouble((String) panel.passingTimeTextField.getText()) * 1000000000l);
-		MBCAPParam.solvedTimeout = (long) (Double.parseDouble((String) panel.solvedTimeTextField.getText()) * 1000000000l);
-		MBCAPParam.globalDeadlockTimeout = Integer.parseInt((String) panel.deadlockTimeoutTextField.getText())
-				* 1000000000l;
+		MBCAPParam.collisionRiskDistance = Double.parseDouble(panel.collisionRiskDistanceTextField.getText());
+		MBCAPParam.collisionRiskAltitudeDifference = Double.parseDouble(panel.collisionRiskAltitudeDifferenceTextField.getText());
+		MBCAPParam.collisionRiskTime = (long) (Double.parseDouble(panel.maxTimeTextField.getText()) * 1000000000l);
+		MBCAPParam.riskCheckPeriod = (long) (Double.parseDouble(panel.riskCheckPeriodTextField.getText()) * 1000000000l);
+		MBCAPParam.packetLossThreshold = Integer.parseInt(panel.packetLossTextField.getText());
+		MBCAPParam.gpsError = Double.parseDouble(panel.gpsErrorTextField.getText());
+		MBCAPParam.safePlaceDistance = 2 * MBCAPParam.gpsError;
+		MBCAPParam.standStillTimeout = (long) (Double.parseDouble(panel.standStillTimeTextField.getText()) * 1000000000l);
+		MBCAPParam.passingTimeout = (long) (Double.parseDouble(panel.passingTimeTextField.getText()) * 1000000000l);
+		MBCAPParam.resumeTimeout = (long) (Double.parseDouble(panel.solvedTimeTextField.getText()) * 1000000000l);
+		MBCAPParam.recheckTimeout = (long) (Double.parseDouble(panel.recheckTextField.getText()) * 1000l);
+		MBCAPParam.globalDeadlockTimeout = Integer.parseInt(panel.deadlockTimeoutTextField.getText()) * 1000000000l;
 	}
 
 	/** Loads the default protocol configuration from variables. */
@@ -208,21 +178,21 @@ public class MBCAPGUITools {
 				// Beaconing parameters
 				panel.beaconingPeriodTextField.setText("" + MBCAPParam.beaconingPeriod);
 				panel.numBeaconsTextField.setText("" + MBCAPParam.numBeacons);
-				panel.beaconExpirationTimeTextField.setText("" + ((double) MBCAPParam.beaconExpirationTime) / 1000000000l);
-				panel.beaconFlyingTimeTextField.setText("" + MBCAPParam.beaconFlyingTime);
 				panel.hopTimeTextField.setText("" + MBCAPParam.hopTime);
 				panel.minSpeedTextField.setText("" + MBCAPParam.minSpeed);
+				panel.beaconExpirationTimeTextField.setText("" + ((double) MBCAPParam.beaconExpirationTime) / 1000000000l);
 
 				// Collision avoidance protocol parameters
 				panel.collisionRiskDistanceTextField.setText("" + MBCAPParam.collisionRiskDistance);
 				panel.collisionRiskAltitudeDifferenceTextField.setText("" + MBCAPParam.collisionRiskAltitudeDifference);
 				panel.maxTimeTextField.setText("" + ((double) MBCAPParam.collisionRiskTime) / 1000000000l);
-				panel.reactionDistanceTextField.setText("" + MBCAPParam.reactionDistance);
 				panel.riskCheckPeriodTextField.setText("" + ((double) MBCAPParam.riskCheckPeriod) / 1000000000l);
-				panel.safePlaceDistanceTextField.setText("" + MBCAPParam.safePlaceDistance);
+				panel.packetLossTextField.setText("" + MBCAPParam.packetLossThreshold);
+				panel.gpsErrorTextField.setText("" + MBCAPParam.gpsError);
 				panel.standStillTimeTextField.setText("" + ((double) MBCAPParam.standStillTimeout) / 1000000000l);
 				panel.passingTimeTextField.setText("" + ((double) MBCAPParam.passingTimeout) / 1000000000l);
-				panel.solvedTimeTextField.setText("" + ((double) MBCAPParam.solvedTimeout) / 1000000000l);
+				panel.solvedTimeTextField.setText("" + ((double) MBCAPParam.resumeTimeout) / 1000000000l);
+				panel.recheckTextField.setText("" + ((double) MBCAPParam.recheckTimeout) / 1000l);
 				panel.deadlockTimeoutTextField.setText("" + (int) (((double) MBCAPParam.globalDeadlockTimeout) / 1000000000l));
 			}
 		});
@@ -251,7 +221,7 @@ public class MBCAPGUITools {
 		}
 	}
 
-	/** Stores (or removes when p==null) the collision risk location that is drawn. */
+	/** Stores (or removes when riskUTMLocation==null) the collision risk location that is drawn. */
 	public static void locateImpactRiskMark(Point3D riskUTMLocation, int numUAV, long beaconId) {
 		if (Tools.getArduSimRole() == Tools.SIMULATOR) {
 			if (riskUTMLocation == null) {

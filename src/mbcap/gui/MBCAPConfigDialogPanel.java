@@ -23,26 +23,27 @@ import api.Tools;
 import api.pojo.Waypoint;
 import mbcap.logic.MBCAPText;
 
-/** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog. */
+/** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MBCAPConfigDialogPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 	public JTextField beaconingPeriodTextField;
 	public JTextField numBeaconsTextField;
-	public JTextField beaconExpirationTimeTextField;
-	public JTextField beaconFlyingTimeTextField;
 	public JTextField hopTimeTextField;
 	public JTextField minSpeedTextField;
+	public JTextField beaconExpirationTimeTextField;
 	public JTextField collisionRiskDistanceTextField;
 	public JTextField collisionRiskAltitudeDifferenceTextField;
 	public JTextField maxTimeTextField;
-	public JTextField reactionDistanceTextField;
 	public JTextField riskCheckPeriodTextField;
-	public JTextField safePlaceDistanceTextField;
+	public JTextField packetLossTextField;
+	public JTextField gpsErrorTextField;
 	public JTextField standStillTimeTextField;
 	public JTextField passingTimeTextField;
 	public JTextField solvedTimeTextField;
+	public JTextField recheckTextField;
 	public JTextField deadlockTimeoutTextField;
 	public JTextField missionsTextField;
 	public JComboBox<String> UAVsComboBox;
@@ -52,9 +53,8 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 0, 0, 0, 0, 0, 5 };
 		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31 };
-		gridBagLayout.columnWeights = new double[] { 1.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gridBagLayout.columnWeights = new double[] { 1.0, 0.0, 1.0, 1.0, 0.0, Double.MIN_VALUE };
+		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 		
 		JLabel lblSimpam = new JLabel(MBCAPText.SIMULATION_PARAMETERS);
@@ -201,64 +201,6 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		add(numBeaconsTextField, gbc_numBeaconsTextField);
 		numBeaconsTextField.setColumns(10);
 
-		JLabel lblBeaconExpirationTime = new JLabel(MBCAPText.BEACON_EXPIRATION);
-		lblBeaconExpirationTime.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblBeaconExpirationTime = new GridBagConstraints();
-		gbc_lblBeaconExpirationTime.gridwidth = 2;
-		gbc_lblBeaconExpirationTime.anchor = GridBagConstraints.EAST;
-		gbc_lblBeaconExpirationTime.insets = new Insets(0, 0, 5, 5);
-		gbc_lblBeaconExpirationTime.gridx = 0;
-		gbc_lblBeaconExpirationTime.gridy = 6;
-		add(lblBeaconExpirationTime, gbc_lblBeaconExpirationTime);
-
-		beaconExpirationTimeTextField = new JTextField();
-		beaconExpirationTimeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-		GridBagConstraints gbc_beaconExpirationTimeTextField = new GridBagConstraints();
-		gbc_beaconExpirationTimeTextField.insets = new Insets(0, 0, 5, 5);
-		gbc_beaconExpirationTimeTextField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_beaconExpirationTimeTextField.gridx = 2;
-		gbc_beaconExpirationTimeTextField.gridy = 6;
-		add(beaconExpirationTimeTextField, gbc_beaconExpirationTimeTextField);
-		beaconExpirationTimeTextField.setColumns(10);
-
-		JLabel lblS = new JLabel(MBCAPText.SECONDS);
-		lblS.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblS = new GridBagConstraints();
-		gbc_lblS.anchor = GridBagConstraints.WEST;
-		gbc_lblS.insets = new Insets(0, 0, 5, 5);
-		gbc_lblS.gridx = 3;
-		gbc_lblS.gridy = 6;
-		add(lblS, gbc_lblS);
-
-		JLabel lblInmediateFlyingTime = new JLabel(MBCAPText.TIME_WINDOW);
-		lblInmediateFlyingTime.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblInmediateFlyingTime = new GridBagConstraints();
-		gbc_lblInmediateFlyingTime.gridwidth = 2;
-		gbc_lblInmediateFlyingTime.anchor = GridBagConstraints.EAST;
-		gbc_lblInmediateFlyingTime.insets = new Insets(0, 0, 5, 5);
-		gbc_lblInmediateFlyingTime.gridx = 0;
-		gbc_lblInmediateFlyingTime.gridy = 7;
-		add(lblInmediateFlyingTime, gbc_lblInmediateFlyingTime);
-
-		beaconFlyingTimeTextField = new JTextField();
-		beaconFlyingTimeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-		GridBagConstraints gbc_beaconFlyingTimeTextField = new GridBagConstraints();
-		gbc_beaconFlyingTimeTextField.insets = new Insets(0, 0, 5, 5);
-		gbc_beaconFlyingTimeTextField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_beaconFlyingTimeTextField.gridx = 2;
-		gbc_beaconFlyingTimeTextField.gridy = 7;
-		add(beaconFlyingTimeTextField, gbc_beaconFlyingTimeTextField);
-		beaconFlyingTimeTextField.setColumns(10);
-
-		JLabel lblS_1 = new JLabel(MBCAPText.SECONDS);
-		lblS_1.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblS_1 = new GridBagConstraints();
-		gbc_lblS_1.anchor = GridBagConstraints.WEST;
-		gbc_lblS_1.insets = new Insets(0, 0, 5, 5);
-		gbc_lblS_1.gridx = 3;
-		gbc_lblS_1.gridy = 7;
-		add(lblS_1, gbc_lblS_1);
-
 		JLabel lblTimeBetweenPoints = new JLabel(MBCAPText.INTERSAMPLE);
 		lblTimeBetweenPoints.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblTimeBetweenPoints = new GridBagConstraints();
@@ -266,7 +208,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblTimeBetweenPoints.anchor = GridBagConstraints.EAST;
 		gbc_lblTimeBetweenPoints.insets = new Insets(0, 0, 5, 5);
 		gbc_lblTimeBetweenPoints.gridx = 0;
-		gbc_lblTimeBetweenPoints.gridy = 8;
+		gbc_lblTimeBetweenPoints.gridy = 6;
 		add(lblTimeBetweenPoints, gbc_lblTimeBetweenPoints);
 
 		hopTimeTextField = new JTextField();
@@ -275,7 +217,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_hopTimeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_hopTimeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_hopTimeTextField.gridx = 2;
-		gbc_hopTimeTextField.gridy = 8;
+		gbc_hopTimeTextField.gridy = 6;
 		add(hopTimeTextField, gbc_hopTimeTextField);
 		hopTimeTextField.setColumns(10);
 
@@ -285,7 +227,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblS_5.anchor = GridBagConstraints.WEST;
 		gbc_lblS_5.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS_5.gridx = 3;
-		gbc_lblS_5.gridy = 8;
+		gbc_lblS_5.gridy = 6;
 		add(lblS_5, gbc_lblS_5);
 
 		JLabel lblMinimumSpeedTo = new JLabel(MBCAPText.MIN_ADV_SPEED);
@@ -295,7 +237,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblMinimumSpeedTo.anchor = GridBagConstraints.EAST;
 		gbc_lblMinimumSpeedTo.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMinimumSpeedTo.gridx = 0;
-		gbc_lblMinimumSpeedTo.gridy = 9;
+		gbc_lblMinimumSpeedTo.gridy = 7;
 		add(lblMinimumSpeedTo, gbc_lblMinimumSpeedTo);
 
 		minSpeedTextField = new JTextField();
@@ -304,7 +246,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_minSpeedTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_minSpeedTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_minSpeedTextField.gridx = 2;
-		gbc_minSpeedTextField.gridy = 9;
+		gbc_minSpeedTextField.gridy = 7;
 		add(minSpeedTextField, gbc_minSpeedTextField);
 		minSpeedTextField.setColumns(10);
 
@@ -314,8 +256,37 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblMs_2.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMs_2.anchor = GridBagConstraints.WEST;
 		gbc_lblMs_2.gridx = 3;
-		gbc_lblMs_2.gridy = 9;
+		gbc_lblMs_2.gridy = 7;
 		add(lblMs_2, gbc_lblMs_2);
+				
+						JLabel lblBeaconExpirationTime = new JLabel(MBCAPText.BEACON_EXPIRATION);
+						lblBeaconExpirationTime.setFont(new Font("Dialog", Font.PLAIN, 12));
+						GridBagConstraints gbc_lblBeaconExpirationTime = new GridBagConstraints();
+						gbc_lblBeaconExpirationTime.gridwidth = 2;
+						gbc_lblBeaconExpirationTime.anchor = GridBagConstraints.EAST;
+						gbc_lblBeaconExpirationTime.insets = new Insets(0, 0, 5, 5);
+						gbc_lblBeaconExpirationTime.gridx = 0;
+						gbc_lblBeaconExpirationTime.gridy = 8;
+						add(lblBeaconExpirationTime, gbc_lblBeaconExpirationTime);
+		
+				beaconExpirationTimeTextField = new JTextField();
+				beaconExpirationTimeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+				GridBagConstraints gbc_beaconExpirationTimeTextField = new GridBagConstraints();
+				gbc_beaconExpirationTimeTextField.insets = new Insets(0, 0, 5, 5);
+				gbc_beaconExpirationTimeTextField.fill = GridBagConstraints.HORIZONTAL;
+				gbc_beaconExpirationTimeTextField.gridx = 2;
+				gbc_beaconExpirationTimeTextField.gridy = 8;
+				add(beaconExpirationTimeTextField, gbc_beaconExpirationTimeTextField);
+				beaconExpirationTimeTextField.setColumns(10);
+		
+				JLabel lblS = new JLabel(MBCAPText.SECONDS);
+				lblS.setFont(new Font("Dialog", Font.PLAIN, 12));
+				GridBagConstraints gbc_lblS = new GridBagConstraints();
+				gbc_lblS.anchor = GridBagConstraints.WEST;
+				gbc_lblS.insets = new Insets(0, 0, 5, 5);
+				gbc_lblS.gridx = 3;
+				gbc_lblS.gridy = 8;
+				add(lblS, gbc_lblS);
 
 		JLabel lblCollisionAvoidanceProtocol = new JLabel(MBCAPText.AVOID_PARAM);
 		GridBagConstraints gbc_lblCollisionAvoidanceProtocol = new GridBagConstraints();
@@ -323,7 +294,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblCollisionAvoidanceProtocol.gridwidth = 2;
 		gbc_lblCollisionAvoidanceProtocol.insets = new Insets(0, 0, 5, 5);
 		gbc_lblCollisionAvoidanceProtocol.gridx = 0;
-		gbc_lblCollisionAvoidanceProtocol.gridy = 11;
+		gbc_lblCollisionAvoidanceProtocol.gridy = 10;
 		add(lblCollisionAvoidanceProtocol, gbc_lblCollisionAvoidanceProtocol);
 
 		JLabel lblDistanceBetweenPaths = new JLabel(MBCAPText.WARN_DISTANCE);
@@ -333,7 +304,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblDistanceBetweenPaths.anchor = GridBagConstraints.EAST;
 		gbc_lblDistanceBetweenPaths.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDistanceBetweenPaths.gridx = 0;
-		gbc_lblDistanceBetweenPaths.gridy = 12;
+		gbc_lblDistanceBetweenPaths.gridy = 11;
 		add(lblDistanceBetweenPaths, gbc_lblDistanceBetweenPaths);
 
 		collisionRiskDistanceTextField = new JTextField();
@@ -342,7 +313,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_collisionRiskDistanceTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionRiskDistanceTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionRiskDistanceTextField.gridx = 2;
-		gbc_collisionRiskDistanceTextField.gridy = 12;
+		gbc_collisionRiskDistanceTextField.gridy = 11;
 		add(collisionRiskDistanceTextField, gbc_collisionRiskDistanceTextField);
 		collisionRiskDistanceTextField.setColumns(10);
 
@@ -352,7 +323,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblM_1.anchor = GridBagConstraints.WEST;
 		gbc_lblM_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM_1.gridx = 3;
-		gbc_lblM_1.gridy = 12;
+		gbc_lblM_1.gridy = 11;
 		add(lblM_1, gbc_lblM_1);
 
 		JLabel lblAltitudeDifferenceTo = new JLabel(MBCAPText.WARN_ALTITUDE);
@@ -362,7 +333,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblAltitudeDifferenceTo.anchor = GridBagConstraints.EAST;
 		gbc_lblAltitudeDifferenceTo.insets = new Insets(0, 0, 5, 5);
 		gbc_lblAltitudeDifferenceTo.gridx = 0;
-		gbc_lblAltitudeDifferenceTo.gridy = 13;
+		gbc_lblAltitudeDifferenceTo.gridy = 12;
 		add(lblAltitudeDifferenceTo, gbc_lblAltitudeDifferenceTo);
 
 		collisionRiskAltitudeDifferenceTextField = new JTextField();
@@ -371,7 +342,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_collisionRiskAltitudeDifferenceTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionRiskAltitudeDifferenceTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionRiskAltitudeDifferenceTextField.gridx = 2;
-		gbc_collisionRiskAltitudeDifferenceTextField.gridy = 13;
+		gbc_collisionRiskAltitudeDifferenceTextField.gridy = 12;
 		add(collisionRiskAltitudeDifferenceTextField, gbc_collisionRiskAltitudeDifferenceTextField);
 		collisionRiskAltitudeDifferenceTextField.setColumns(10);
 
@@ -381,7 +352,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblM_2.anchor = GridBagConstraints.WEST;
 		gbc_lblM_2.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM_2.gridx = 3;
-		gbc_lblM_2.gridy = 13;
+		gbc_lblM_2.gridy = 12;
 		add(lblM_2, gbc_lblM_2);
 
 		JLabel lblTimeDifferenceTo = new JLabel(MBCAPText.WARN_TIME);
@@ -391,7 +362,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblTimeDifferenceTo.anchor = GridBagConstraints.EAST;
 		gbc_lblTimeDifferenceTo.insets = new Insets(0, 0, 5, 5);
 		gbc_lblTimeDifferenceTo.gridx = 0;
-		gbc_lblTimeDifferenceTo.gridy = 14;
+		gbc_lblTimeDifferenceTo.gridy = 13;
 		add(lblTimeDifferenceTo, gbc_lblTimeDifferenceTo);
 
 		maxTimeTextField = new JTextField();
@@ -400,7 +371,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_maxTimeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_maxTimeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_maxTimeTextField.gridx = 2;
-		gbc_maxTimeTextField.gridy = 14;
+		gbc_maxTimeTextField.gridy = 13;
 		add(maxTimeTextField, gbc_maxTimeTextField);
 		maxTimeTextField.setColumns(10);
 
@@ -410,37 +381,8 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblS_9.anchor = GridBagConstraints.WEST;
 		gbc_lblS_9.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS_9.gridx = 3;
-		gbc_lblS_9.gridy = 14;
+		gbc_lblS_9.gridy = 13;
 		add(lblS_9, gbc_lblS_9);
-
-		JLabel lblDistanceToRisk = new JLabel(MBCAPText.CHECK_THRESHOLD);
-		lblDistanceToRisk.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblDistanceToRisk = new GridBagConstraints();
-		gbc_lblDistanceToRisk.gridwidth = 2;
-		gbc_lblDistanceToRisk.anchor = GridBagConstraints.EAST;
-		gbc_lblDistanceToRisk.insets = new Insets(0, 0, 5, 5);
-		gbc_lblDistanceToRisk.gridx = 0;
-		gbc_lblDistanceToRisk.gridy = 15;
-		add(lblDistanceToRisk, gbc_lblDistanceToRisk);
-
-		reactionDistanceTextField = new JTextField();
-		reactionDistanceTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-		GridBagConstraints gbc_reactionDistanceTextField = new GridBagConstraints();
-		gbc_reactionDistanceTextField.insets = new Insets(0, 0, 5, 5);
-		gbc_reactionDistanceTextField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_reactionDistanceTextField.gridx = 2;
-		gbc_reactionDistanceTextField.gridy = 15;
-		add(reactionDistanceTextField, gbc_reactionDistanceTextField);
-		reactionDistanceTextField.setColumns(10);
-
-		JLabel lblM_3 = new JLabel(MBCAPText.METERS);
-		lblM_3.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblM_3 = new GridBagConstraints();
-		gbc_lblM_3.anchor = GridBagConstraints.WEST;
-		gbc_lblM_3.insets = new Insets(0, 0, 5, 5);
-		gbc_lblM_3.gridx = 3;
-		gbc_lblM_3.gridy = 15;
-		add(lblM_3, gbc_lblM_3);
 
 		JLabel lblCollisionRiskCheck = new JLabel(MBCAPText.CHECK_PERIOD);
 		lblCollisionRiskCheck.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -449,7 +391,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblCollisionRiskCheck.anchor = GridBagConstraints.EAST;
 		gbc_lblCollisionRiskCheck.insets = new Insets(0, 0, 5, 5);
 		gbc_lblCollisionRiskCheck.gridx = 0;
-		gbc_lblCollisionRiskCheck.gridy = 16;
+		gbc_lblCollisionRiskCheck.gridy = 14;
 		add(lblCollisionRiskCheck, gbc_lblCollisionRiskCheck);
 
 		riskCheckPeriodTextField = new JTextField();
@@ -458,7 +400,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_riskCheckPeriodTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_riskCheckPeriodTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_riskCheckPeriodTextField.gridx = 2;
-		gbc_riskCheckPeriodTextField.gridy = 16;
+		gbc_riskCheckPeriodTextField.gridy = 14;
 		add(riskCheckPeriodTextField, gbc_riskCheckPeriodTextField);
 		riskCheckPeriodTextField.setColumns(10);
 
@@ -468,37 +410,57 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblS_3.anchor = GridBagConstraints.WEST;
 		gbc_lblS_3.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS_3.gridx = 3;
-		gbc_lblS_3.gridy = 16;
+		gbc_lblS_3.gridy = 14;
 		add(lblS_3, gbc_lblS_3);
-
-		JLabel lblDesiredDistanceBetween = new JLabel(MBCAPText.SAFE_DISTANCE);
-		lblDesiredDistanceBetween.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblDesiredDistanceBetween = new GridBagConstraints();
-		gbc_lblDesiredDistanceBetween.gridwidth = 2;
-		gbc_lblDesiredDistanceBetween.anchor = GridBagConstraints.EAST;
-		gbc_lblDesiredDistanceBetween.insets = new Insets(0, 0, 5, 5);
-		gbc_lblDesiredDistanceBetween.gridx = 0;
-		gbc_lblDesiredDistanceBetween.gridy = 17;
-		add(lblDesiredDistanceBetween, gbc_lblDesiredDistanceBetween);
-
-		safePlaceDistanceTextField = new JTextField();
-		safePlaceDistanceTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-		GridBagConstraints gbc_safePlaceDistanceTextField = new GridBagConstraints();
-		gbc_safePlaceDistanceTextField.insets = new Insets(0, 0, 5, 5);
-		gbc_safePlaceDistanceTextField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_safePlaceDistanceTextField.gridx = 2;
-		gbc_safePlaceDistanceTextField.gridy = 17;
-		add(safePlaceDistanceTextField, gbc_safePlaceDistanceTextField);
-		safePlaceDistanceTextField.setColumns(10);
-
-		JLabel lblM_4 = new JLabel(MBCAPText.METERS);
-		lblM_4.setFont(new Font("Dialog", Font.PLAIN, 12));
-		GridBagConstraints gbc_lblM_4 = new GridBagConstraints();
-		gbc_lblM_4.anchor = GridBagConstraints.WEST;
-		gbc_lblM_4.insets = new Insets(0, 0, 5, 5);
-		gbc_lblM_4.gridx = 3;
-		gbc_lblM_4.gridy = 17;
-		add(lblM_4, gbc_lblM_4);
+		
+		JLabel lblNewLabel = new JLabel(MBCAPText.PACKET_LOSS_THRESHOLD);
+		lblNewLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
+		gbc_lblNewLabel.anchor = GridBagConstraints.EAST;
+		gbc_lblNewLabel.gridwidth = 2;
+		gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNewLabel.gridx = 0;
+		gbc_lblNewLabel.gridy = 15;
+		add(lblNewLabel, gbc_lblNewLabel);
+		
+		packetLossTextField = new JTextField();
+		packetLossTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_packetLossTextField = new GridBagConstraints();
+		gbc_packetLossTextField.insets = new Insets(0, 0, 5, 5);
+		gbc_packetLossTextField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_packetLossTextField.gridx = 2;
+		gbc_packetLossTextField.gridy = 15;
+		add(packetLossTextField, gbc_packetLossTextField);
+		packetLossTextField.setColumns(10);
+		
+		JLabel lblNewLabel_1 = new JLabel(MBCAPText.GPS_ERROR);
+		lblNewLabel_1.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
+		gbc_lblNewLabel_1.anchor = GridBagConstraints.EAST;
+		gbc_lblNewLabel_1.gridwidth = 2;
+		gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNewLabel_1.gridx = 0;
+		gbc_lblNewLabel_1.gridy = 16;
+		add(lblNewLabel_1, gbc_lblNewLabel_1);
+		
+		gpsErrorTextField = new JTextField();
+		gpsErrorTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_gpsErrorTextField = new GridBagConstraints();
+		gbc_gpsErrorTextField.insets = new Insets(0, 0, 5, 5);
+		gbc_gpsErrorTextField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_gpsErrorTextField.gridx = 2;
+		gbc_gpsErrorTextField.gridy = 16;
+		add(gpsErrorTextField, gbc_gpsErrorTextField);
+		gpsErrorTextField.setColumns(10);
+		
+		JLabel lblNewLabel_2 = new JLabel(MBCAPText.METERS);
+		lblNewLabel_2.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
+		gbc_lblNewLabel_2.anchor = GridBagConstraints.WEST;
+		gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNewLabel_2.gridx = 3;
+		gbc_lblNewLabel_2.gridy = 16;
+		add(lblNewLabel_2, gbc_lblNewLabel_2);
 
 		JLabel lblMinimumWaitingTime = new JLabel(MBCAPText.HOVERING_TIMEOUT);
 		lblMinimumWaitingTime.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -507,7 +469,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblMinimumWaitingTime.anchor = GridBagConstraints.EAST;
 		gbc_lblMinimumWaitingTime.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMinimumWaitingTime.gridx = 0;
-		gbc_lblMinimumWaitingTime.gridy = 18;
+		gbc_lblMinimumWaitingTime.gridy = 17;
 		add(lblMinimumWaitingTime, gbc_lblMinimumWaitingTime);
 
 		standStillTimeTextField = new JTextField();
@@ -516,7 +478,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_standStillTimeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_standStillTimeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_standStillTimeTextField.gridx = 2;
-		gbc_standStillTimeTextField.gridy = 18;
+		gbc_standStillTimeTextField.gridy = 17;
 		add(standStillTimeTextField, gbc_standStillTimeTextField);
 		standStillTimeTextField.setColumns(10);
 
@@ -526,7 +488,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblS_6.anchor = GridBagConstraints.WEST;
 		gbc_lblS_6.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS_6.gridx = 3;
-		gbc_lblS_6.gridy = 18;
+		gbc_lblS_6.gridy = 17;
 		add(lblS_6, gbc_lblS_6);
 
 		JLabel lblWaitingTimeTo = new JLabel(MBCAPText.OVERTAKE_TIMEOUT);
@@ -536,7 +498,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblWaitingTimeTo.anchor = GridBagConstraints.EAST;
 		gbc_lblWaitingTimeTo.insets = new Insets(0, 0, 5, 5);
 		gbc_lblWaitingTimeTo.gridx = 0;
-		gbc_lblWaitingTimeTo.gridy = 19;
+		gbc_lblWaitingTimeTo.gridy = 18;
 		add(lblWaitingTimeTo, gbc_lblWaitingTimeTo);
 
 		passingTimeTextField = new JTextField();
@@ -545,7 +507,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_passingTimeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_passingTimeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_passingTimeTextField.gridx = 2;
-		gbc_passingTimeTextField.gridy = 19;
+		gbc_passingTimeTextField.gridy = 18;
 		add(passingTimeTextField, gbc_passingTimeTextField);
 		passingTimeTextField.setColumns(10);
 
@@ -555,7 +517,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblS_7.anchor = GridBagConstraints.WEST;
 		gbc_lblS_7.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS_7.gridx = 3;
-		gbc_lblS_7.gridy = 19;
+		gbc_lblS_7.gridy = 18;
 		add(lblS_7, gbc_lblS_7);
 
 		JLabel lblMinimumWaitingTime_1 = new JLabel(MBCAPText.RESUME_MODE_DELAY);
@@ -565,7 +527,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblMinimumWaitingTime_1.anchor = GridBagConstraints.EAST;
 		gbc_lblMinimumWaitingTime_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMinimumWaitingTime_1.gridx = 0;
-		gbc_lblMinimumWaitingTime_1.gridy = 20;
+		gbc_lblMinimumWaitingTime_1.gridy = 19;
 		add(lblMinimumWaitingTime_1, gbc_lblMinimumWaitingTime_1);
 
 		solvedTimeTextField = new JTextField();
@@ -574,7 +536,7 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_solvedTimeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_solvedTimeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_solvedTimeTextField.gridx = 2;
-		gbc_solvedTimeTextField.gridy = 20;
+		gbc_solvedTimeTextField.gridy = 19;
 		add(solvedTimeTextField, gbc_solvedTimeTextField);
 		solvedTimeTextField.setColumns(10);
 
@@ -584,8 +546,37 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		gbc_lblS_8.anchor = GridBagConstraints.WEST;
 		gbc_lblS_8.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS_8.gridx = 3;
-		gbc_lblS_8.gridy = 20;
+		gbc_lblS_8.gridy = 19;
 		add(lblS_8, gbc_lblS_8);
+		
+		JLabel lblNewLabel_3 = new JLabel(MBCAPText.RECHECK_DELAY);
+		lblNewLabel_3.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblNewLabel_3 = new GridBagConstraints();
+		gbc_lblNewLabel_3.anchor = GridBagConstraints.EAST;
+		gbc_lblNewLabel_3.gridwidth = 2;
+		gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNewLabel_3.gridx = 0;
+		gbc_lblNewLabel_3.gridy = 20;
+		add(lblNewLabel_3, gbc_lblNewLabel_3);
+		
+		recheckTextField = new JTextField();
+		recheckTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_recheckTextField = new GridBagConstraints();
+		gbc_recheckTextField.insets = new Insets(0, 0, 5, 5);
+		gbc_recheckTextField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_recheckTextField.gridx = 2;
+		gbc_recheckTextField.gridy = 20;
+		add(recheckTextField, gbc_recheckTextField);
+		recheckTextField.setColumns(10);
+		
+		JLabel lblNewLabel_4 = new JLabel(MBCAPText.SECONDS);
+		lblNewLabel_4.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_lblNewLabel_4 = new GridBagConstraints();
+		gbc_lblNewLabel_4.anchor = GridBagConstraints.WEST;
+		gbc_lblNewLabel_4.insets = new Insets(0, 0, 5, 5);
+		gbc_lblNewLabel_4.gridx = 3;
+		gbc_lblNewLabel_4.gridy = 20;
+		add(lblNewLabel_4, gbc_lblNewLabel_4);
 
 		JLabel lblDeadlockTimeout = new JLabel(MBCAPText.DEADLOCK_TIMEOUT);
 		lblDeadlockTimeout.setFont(new Font("Dialog", Font.PLAIN, 12));

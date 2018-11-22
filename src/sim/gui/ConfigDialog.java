@@ -25,7 +25,8 @@ import main.Param.SimulatorState;
 import main.Text;
 import sim.logic.SimTools;
 
-/** This class generates de dialog to input the application general configuration. */
+/** This class generates the dialog to input the application general configuration.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ConfigDialog extends JDialog {
 
@@ -84,7 +85,7 @@ public class ConfigDialog extends JDialog {
 			}
 		});
 		
-		GUI.addEscapeListener(this);
+		GUI.addEscapeListener(this, true);
 
 		this.setTitle(Text.CONFIGURATION_DIALOG_TITLE);
 		SimTools.loadDefaultConfiguration(panel);

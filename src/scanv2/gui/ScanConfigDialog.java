@@ -35,6 +35,8 @@ import main.Text;
 import scanv2.logic.ScanParam;
 import scanv2.logic.ScanText;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class ScanConfigDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
@@ -46,9 +48,6 @@ public class ScanConfigDialog extends JDialog {
 	private JTextField flyingTextField;
 	private JTextField landingTextField;
 
-	/**
-	 * Create the dialog.
-	 */
 	public ScanConfigDialog() {
 		setBounds(100, 100, 450, 300);
 		GridBagLayout gridBagLayout = new GridBagLayout();
@@ -366,7 +365,7 @@ public class ScanConfigDialog extends JDialog {
 			}
 		});
 		
-		GUI.addEscapeListener(this);
+		GUI.addEscapeListener(this, true);
 		
 		this.setTitle(ScanText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
@@ -374,8 +373,6 @@ public class ScanConfigDialog extends JDialog {
 		this.setLocationRelativeTo(null);
 		this.setModal(true);
 		this.setVisible(true);
-
-
 	}
 
 }

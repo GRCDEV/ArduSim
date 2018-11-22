@@ -14,7 +14,8 @@ import main.Text;
 import mbcap.logic.MBCAPv3Helper;
 import sim.board.BoardPanel;
 
-/** Implementation of the protocol NONE to allow the user to simply follow missions. */
+/** Implementation of the protocol NONE to allow the user to simply follow missions.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ProtocolNoneHelper extends ProtocolHelper {
 	
@@ -96,7 +97,7 @@ public class ProtocolNoneHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void logData(String folder, String baseFileName) {}
+	public void logData(String folder, String baseFileName, long baseNanoTime) {}
 
 	/** Checks the validity of the configuration of the protocol. */
 	public static boolean isValidProtocolConfiguration(NoneConfigDialogPanel panel) {

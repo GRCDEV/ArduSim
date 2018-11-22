@@ -63,7 +63,8 @@ import sim.logic.SimTools;
 
 /** This class implements the communication with the UAV, whether it is real or simulated.
  * <p>The thread applies the communications finite state machine needed to support the MAVLink protocol.
- * <p>If you need to send a new type of message to the flight controller, please contact with the original developer (it would be easier). */
+ * If you need to send a new type of message to the flight controller, please contact with the original developer (it would be easier).</p>
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVControllerThread extends Thread {
 	
@@ -316,8 +317,14 @@ public class UAVControllerThread extends Thread {
 			double heading = (message.hdg * 0.01) * Math.PI / 180;
 			UAVParam.uavCurrentData[numUAV].update(time, location, z, message.relative_alt * 0.001, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
+			SimulatorState currentState = Param.simStatus;
+			int state = currentState.getStateId();
+			// Differentiate if this specific UAV has finished the experiment
+			if (currentState == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] != 0) {
+				state = SimulatorState.TEST_FINISHED.getStateId();
+			}
 			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTM.x, locationUTM.y, z, heading, hSpeed,
-					Param.simStatus == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] == 0)); // UAV under test
+					state)); // UAV under test
 		}
 	}
 
@@ -719,25 +726,9 @@ public class UAVControllerThread extends Thread {
 		msg_command_ack message = (msg_command_ack) inMsg;
 		switch (UAVParam.MAVStatus.get(numUAV)) {
 		// ACK received when changing the flight mode
-//		case UAVParam.MAV_STATUS_ACK_MODE:
-//			if (message.command == MAV_CMD.MAV_CMD_DO_SET_MODE) {
-//				System.out.println(message.toString());
-//				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
-//					// The new value has been accepted, so we can set it
-//					//UAVParam.flightMode.set(numUAV, UAVParam.newFlightMode[numUAV]);
-//					//SimTools.updateUAVMAVMode(numUAV, UAVParam.newFlightMode[numUAV].getMode());
-//					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
-//				} else {
-//					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_MODE);
-//				}
-//			}
-//			break;
 		case UAVParam.MAV_STATUS_ACK_MODE:
 			if (message.command == msg_set_mode.MAVLINK_MSG_ID_SET_MODE) {
 				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
-					// The new value has been accepted, so we can set it
-					//UAVParam.flightMode.set(numUAV, UAVParam.newFlightMode[numUAV]);
-					//SimTools.updateUAVMAVMode(numUAV, UAVParam.newFlightMode[numUAV].getMode());
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 				} else {
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_MODE);
@@ -883,7 +874,7 @@ public class UAVControllerThread extends Thread {
 	}
 	
 	/** Sends the UAV at a specific speed (m/s).
-	 * <p>speed. x=North, y=East, z=Down.*/
+	 * <p>speed. x=North, y=East, z=Down.</p> */
 	private void msgMoveSpeed(Double speedX, Double speedY, Double speedZ) throws IOException {
 		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
 		message.time_boot_ms = System.currentTimeMillis();
@@ -914,7 +905,7 @@ public class UAVControllerThread extends Thread {
 	}
 	
 	/** Sends the UAV to a specific location.
-	 * <p>You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete. */
+	 * <p>You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete.</p> */
 	private void msgMoveToTarget(double longitude, double latitude, Double altitude) throws IOException {
 		// A possible alternative to this function is moveUAVNonBlocking
 		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
@@ -973,7 +964,7 @@ public class UAVControllerThread extends Thread {
 	}
 
 	/** Sending new current waypoint message.
-	 * <p>Starts with 0. */
+	 * <p>Starts with 0.</p> */
 	private void msgSetCurrentWaypoint() throws IOException {
 		msg_mission_set_current message = new msg_mission_set_current();
 		message.seq = UAVParam.newCurrentWaypoint[numUAV];
@@ -1103,8 +1094,7 @@ public class UAVControllerThread extends Thread {
 	}
 	
 	/** Restricted method for API usage. Please, don't use it.
-	 * <p>Value 0 returns control to the RC.
-	 * <p>UINT16_MAX avoids changing that channel.*/
+	 * <p>Value 0 returns control to the RC. UINT16_MAX avoids changing that channel.</p> */
 	private void msgrcChannelsOverride(int roll, int pitch, int throttle, int yaw) throws IOException {
 		msg_rc_channels_override message = new msg_rc_channels_override();
 		// Initially, only trim values

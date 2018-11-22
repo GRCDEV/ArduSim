@@ -11,6 +11,8 @@ import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 import api.pojo.formations.FlightFormation.Formation;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class ScanParam {
 	
 	// General parameters

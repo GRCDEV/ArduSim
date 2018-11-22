@@ -2,6 +2,8 @@ package scanv2.pojo;
 
 import api.pojo.Point3D;
 
+/** <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+
 public class MovedMission implements Comparable<MovedMission> {
 
 	public long id;

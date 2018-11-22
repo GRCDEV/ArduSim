@@ -15,6 +15,8 @@ import api.pojo.UTMCoordinates;
 import main.Text;
 import uavController.UAVParam;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public abstract class FlightFormation {
 	
 	public enum Formation {
@@ -137,11 +139,9 @@ public abstract class FlightFormation {
 		UAVParam.landDistanceBetweenUAV = distance;
 	}
 	
-	/** 
-	 * <p>Returns null if any error happens. */
 	/**
 	 * Get the match between the current UAVs location and the target formation in the air.
-	 * <p>The center UAV must only be specified if it should be excluded from the takeoff process, and even then, it must be included in the <i>groundLocations> Map, and in the size of the airFormation (<i>airFormation.numUAVs</i>)</p>
+	 * <p>The center UAV must only be specified if it should be excluded from the takeoff process, and even then, it must be included in the <i>groundLocations> Map, and in the size of the airFormation (<i>airFormation.numUAVs</i>). Returns null if any error happens.</p>
 	 * @param groundLocations ID and location of all the UAVs, including the center UAV on the ground, whether it will be excluded or not from the takeoff process.
 	 * @param heading Heading for the flying formation.
 	 * @param centerIncluded Whether the center UAV on the ground should be included or not in the takeoff process.
@@ -347,10 +347,8 @@ public abstract class FlightFormation {
 	}
 	
 	/** Calculate the centerUAV (located in [0,0] coordinates), and the offset of the remaining UAVs to the centerUAV.
-	 * <p>Don't call this method. It is automatically used when the formation object is created. */
+	 * <p>Don't call this method. It is automatically used when the formation object is created.</p> */
 	protected abstract void initializeFormation();
-	
-	
 	
 	/** Get the position of the center UAV in the formation. */
 	public int getCenterUAVPosition() {

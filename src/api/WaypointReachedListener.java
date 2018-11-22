@@ -1,6 +1,7 @@
 package api;
 
-/** Implementing this interface enables a Class to execute code each time the UAV "numUAV" reaches a waypoint. */
+/** Implementing this interface enables a Class to execute code each time the UAV "numUAV" reaches a waypoint.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public interface WaypointReachedListener {
 	

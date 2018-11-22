@@ -201,7 +201,7 @@ public class UavFishingHelper extends ProtocolHelper {
 	}
 	
 	@Override
-	public void logData(String folder, String baseFileName) {
+	public void logData(String folder, String baseFileName, long baseNanoTime) {
 		// TODO 
 	}
 

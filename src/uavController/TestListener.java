@@ -20,6 +20,8 @@ import main.Param.SimulatorState;
 import pccompanion.logic.PCCompanionParam;
 import main.Text;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class TestListener extends Thread {
 	
 	private static byte[] receivedBuffer;
@@ -110,12 +112,9 @@ public class TestListener extends Thread {
 							if (commandSuccess) {
 								GUI.log(Text.EMERGENCY_SUCCESS + " " + action);
 								goOn = false;
-								FileDescriptor.out.sync();//TODO stop the Raspberry Pi
+								FileDescriptor.out.sync();
 							} else {
 								GUI.log(Text.EMERGENCY_FAILED + " " + emergency);
-								//TODO por contemplar qué hacer si hay error
-								// Probablemente será necesario obligar a los desarrolladores a implementar una función sobre la acción a
-								//  tomar cuando se aplica el comando de emergencia
 							}
 						} else {
 							GUI.log(Text.EMERGENCY_NOT_FOUND + " " + emergency);

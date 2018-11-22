@@ -26,19 +26,21 @@ import main.cpuHelper.CPUUsageThread;
 import sim.board.BoardParam;
 import sim.gui.ConfigDialogPanel;
 import sim.gui.MainWindow;
+import sim.gui.ProgressDialog;
 import sim.logic.SimParam.RenderQuality;
 import uavController.UAVParam;
 
-/** This class contains method used internally by the application for its own profit. */
+/** This class contains method used internally by the application for its own profit.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class SimTools {
 	
 	/** Updates the MAVLink flight mode on the progress dialog. */
 	public static void updateUAVMAVMode(final int numUAV, final String mode) {
-		if (MainWindow.progressDialog!=null) {
+		if (ProgressDialog.progressDialog != null) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
-					MainWindow.progressDialog.panels[numUAV].MAVModeLabel.setText(mode);
+					ProgressDialog.progressDialog.panels[numUAV].MAVModeLabel.setText(mode);
 				}
 			});
 		}
@@ -46,8 +48,7 @@ public class SimTools {
 	}
 	
 	/** Loads initial speed of UAVs from CSV file without header.
-	 * <p>One value (m/s) per line.
-	 * <p>Returns null if the file is not valid or it is empty. */
+	 * <p>One value (m/s) per line. Returns null if the file is not valid or it is empty.</p> */
 	public static double[] loadSpeedsFile(String txtFile) {
 		List<String> lines = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader(txtFile))) {
@@ -106,7 +107,7 @@ public class SimTools {
 		}
 
 		//  Visualization parameters
-		validating = (String)panel.screenDelayTextField.getText();
+		validating = panel.screenDelayTextField.getText();
 		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.SCREEN_DELAY_ERROR_1);
 			return false;
@@ -116,7 +117,7 @@ public class SimTools {
 			GUI.warn(Text.VALIDATION_WARNING, Text.SCREEN_DELAY_ERROR_2);
 			return false;
 		}
-		validating = (String)panel.minScreenMovementTextField.getText();
+		validating = panel.minScreenMovementTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.MIN_SCREEN_MOVEMENT_ERROR_1);
 			return false;
@@ -127,7 +128,7 @@ public class SimTools {
 			return false;
 		}
 		if (panel.batteryCheckBox.isSelected()) {
-			validating = (String)panel.batteryTextField.getText();
+			validating = panel.batteryTextField.getText();
 			if (!Tools.isValidPositiveInteger(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.BATTERY_ERROR_1);
 				return false;
@@ -148,7 +149,7 @@ public class SimTools {
 		}
 
 		//  UAV to UAV communications parameters
-		validating = (String)panel.receivingBufferSizeTextField.getText();
+		validating = panel.receivingBufferSizeTextField.getText();
 		if (!Tools.isValidPositiveInteger(validating)) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.BUFFER_SIZE_ERROR_1);
 			return false;
@@ -159,7 +160,7 @@ public class SimTools {
 			return false;
 		}
 		if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
-			validating = (String)panel.fixedRangeTextField.getText();
+			validating = panel.fixedRangeTextField.getText();
 			if (!Tools.isValidPositiveDouble(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.WIRELESS_MODEL_ERROR_1);
 				return false;
@@ -174,17 +175,17 @@ public class SimTools {
 		// Collision detection parameters
 		boolean checkCollision = panel.collisionDetectionCheckBox.isSelected();
 		if (checkCollision) {
-			validating = (String) panel.collisionCheckPeriodTextField.getText();
+			validating = panel.collisionCheckPeriodTextField.getText();
 			if (!Tools.isValidPositiveDouble(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.COLLISION_PERIOD_ERROR);
 				return false;
 			}
-			validating = (String) panel.collisionDistanceTextField.getText();
+			validating = panel.collisionDistanceTextField.getText();
 			if (!Tools.isValidPositiveDouble(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.COLLISION_DISTANCE_THRESHOLD_ERROR);
 				return false;
 			}
-			validating = (String) panel.collisionAltitudeTextField.getText();
+			validating = panel.collisionAltitudeTextField.getText();
 			if (!Tools.isValidPositiveDouble(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING,  Text.COLLISION_ALTITUDE_THRESHOLD_ERROR);
 				return false;
@@ -193,12 +194,12 @@ public class SimTools {
 		
 		//  Wind parameters
 		if (panel.windCheckBox.isSelected()) {
-			validating = (String)panel.windDirTextField.getText();
-			if (!Tools.isValidPositiveInteger(validating)) {
+			validating = panel.windDirTextField.getText();
+			if (!Tools.isValidNonNegativeInteger(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.WIND_DIRECTION_ERROR);
 				return false;
 			}
-			validating = (String)panel.windSpeedTextField.getText();
+			validating = panel.windSpeedTextField.getText();
 			if (!Tools.isValidPositiveDouble(validating)) {
 				GUI.warn(Text.VALIDATION_WARNING, Text.WIND_SPEED_ERROR_1);
 				return false;
@@ -217,8 +218,8 @@ public class SimTools {
 		Param.numUAVsTemp.set(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
 
 		//  Performance parameters
-		BoardParam.screenDelay = Integer.parseInt((String)panel.screenDelayTextField.getText());
-		BoardParam.minScreenMovement = Double.parseDouble((String)panel.minScreenMovementTextField.getText());
+		BoardParam.screenDelay = Integer.parseInt(panel.screenDelayTextField.getText());
+		BoardParam.minScreenMovement = Double.parseDouble(panel.minScreenMovementTextField.getText());
 		if (panel.loggingEnabledCheckBox.isSelected()) {
 			SimParam.arducopterLoggingEnabled = true;
 		} else {
@@ -251,21 +252,21 @@ public class SimTools {
 		//  UAV to UAV communications parameters
 		UAVParam.carrierSensingEnabled = panel.carrierSensingCheckBox.isSelected();
 		UAVParam.pCollisionEnabled = panel.pCollisionDetectionCheckBox.isSelected();
-		UAVParam.receivingBufferSize = Integer.parseInt((String)panel.receivingBufferSizeTextField.getText());
+		UAVParam.receivingBufferSize = Integer.parseInt(panel.receivingBufferSizeTextField.getText());
 		UAVParam.receivingvBufferSize = UAVParam.V_BUFFER_SIZE_FACTOR * UAVParam.receivingBufferSize;
 		UAVParam.receivingvBufferTrigger = (int)Math.round(UAVParam.BUFFER_FULL_THRESHOLD * UAVParam.receivingvBufferSize);
 		if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
-			Param.fixedRange = Double.parseDouble((String)panel.fixedRangeTextField.getText());
+			Param.fixedRange = Double.parseDouble(panel.fixedRangeTextField.getText());
 		}
 		
 		// Collision detection parameters
 		boolean checkCollision = panel.collisionDetectionCheckBox.isSelected();
 		UAVParam.collisionCheckEnabled = checkCollision;
 		if (checkCollision) {
-			UAVParam.collisionCheckPeriod = Double.parseDouble((String) panel.collisionCheckPeriodTextField.getText());
+			UAVParam.collisionCheckPeriod = Double.parseDouble(panel.collisionCheckPeriodTextField.getText());
 			UAVParam.appliedCollisionCheckPeriod = (int) Math.round(UAVParam.collisionCheckPeriod*1000);
-			UAVParam.collisionDistance = Double.parseDouble((String) panel.collisionDistanceTextField.getText());
-			UAVParam.collisionAltitudeDifference = Double.parseDouble((String) panel.collisionAltitudeTextField.getText());
+			UAVParam.collisionDistance = Double.parseDouble(panel.collisionDistanceTextField.getText());
+			UAVParam.collisionAltitudeDifference = Double.parseDouble(panel.collisionAltitudeTextField.getText());
 			// Distance calculus slightly faster than the collision check frequency
 			UAVParam.distanceCalculusPeriod = Math.min(UAVParam.RANGE_CHECK_PERIOD / 2, (int) Math.round(UAVParam.collisionCheckPeriod*950));
 		} else {
@@ -274,8 +275,8 @@ public class SimTools {
 
 		//  Wind parameters
 		if (panel.windCheckBox.isSelected()) {
-			Param.windDirection = Integer.parseInt((String)panel.windDirTextField.getText());
-			Param.windSpeed = Double.parseDouble((String)panel.windSpeedTextField.getText());
+			Param.windDirection = Integer.parseInt(panel.windDirTextField.getText());
+			Param.windSpeed = Double.parseDouble(panel.windSpeedTextField.getText());
 		} else {
 			Param.windDirection = Param.DEFAULT_WIND_DIRECTION;
 			Param.windSpeed = Param.DEFAULT_WIND_SPEED;
@@ -384,7 +385,7 @@ public class SimTools {
 	
 	/** Updates UAV position and speed on the progress dialog. */
 	public static void updateUAVInfo() {
-		if (MainWindow.progressDialog!=null) {
+		if (ProgressDialog.progressDialog != null) {
 			UTMCoordinates locationUTM;
 			for (int i=0; i<Param.numUAVs; i++) {
 				locationUTM = UAVParam.uavCurrentData[i].getUTMLocation();
@@ -398,10 +399,10 @@ public class SimTools {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					for (int i=0; i<Param.numUAVs; i++) {
-						MainWindow.progressDialog.panels[i].xLabel.setText(String.format("%.2f", SimParam.xUTM[i]));
-						MainWindow.progressDialog.panels[i].yLabel.setText(String.format("%.2f", SimParam.yUTM[i]));
-						MainWindow.progressDialog.panels[i].zLabel.setText(String.format("%.2f", SimParam.z[i]));
-						MainWindow.progressDialog.panels[i].speedLabel.setText(String.format("%.2f", SimParam.speed[i]));
+						ProgressDialog.progressDialog.panels[i].xLabel.setText(String.format("%.2f", SimParam.xUTM[i]));
+						ProgressDialog.progressDialog.panels[i].yLabel.setText(String.format("%.2f", SimParam.yUTM[i]));
+						ProgressDialog.progressDialog.panels[i].zLabel.setText(String.format("%.2f", SimParam.z[i]));
+						ProgressDialog.progressDialog.panels[i].speedLabel.setText(String.format("%.2f", SimParam.speed[i]));
 					}
 				}
 			});

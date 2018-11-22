@@ -9,6 +9,8 @@ import org.javatuples.Pair;
 import api.pojo.GeoCoordinates;
 import sim.board.BoardPanel;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public abstract class ProtocolHelper {
 	
 	// Available protocols (Internal use by ArduSim)
@@ -28,15 +30,15 @@ public abstract class ProtocolHelper {
 	
 	/**
 	 * Assert if it is needed to load a mission.
-	 * This method is used when the protocol is deployed in a real multicopter (on simulations, the mission must be loaded in the dialog built in <i>openConfigurationDialog()</i> method).
+	 * <p>This method is used when the protocol is deployed in a real multicopter (on simulations, the mission must be loaded in the dialog built in <i>openConfigurationDialog()</i> method).</p>
 	 * @return true if this UAV must follow a mission.
 	 */
 	public abstract boolean loadMission();
 	
 	/**
 	 * Open a configuration dialog for protocol specific parameters.
-	 * The dialog will be constructed in the GUI thread (please, avoid heavy calculations).
-	 * When the dialog is accepted, please use the following command:
+	 * <p>The dialog will be constructed in the GUI thread (please, avoid heavy calculations).
+	 * When the dialog is accepted, please use the following command:</p>
 	 * <p>api.Tools.setProtocolConfigured(true);</p> */
 	public abstract void openConfigurationDialog();
 	
@@ -54,7 +56,7 @@ public abstract class ProtocolHelper {
 	
 	/**
 	 * Optional: Re-scale specific data structures of the protocol when the visualization scale changes.
-	 * It is used when the protocol shows additional elements in the main panel. */
+	 * <p>It is used when the protocol shows additional elements in the main panel.</p> */
 	public abstract void rescaleDataStructures();
 	
 	/**
@@ -63,7 +65,7 @@ public abstract class ProtocolHelper {
 	
 	/**
 	 * Optional: Re-scale loaded resources when the visualization scale changes.
-	 * It is used when the protocol shows additional elements in the main panel. */
+	 * <p>It is used when the protocol shows additional elements in the main panel.</p> */
 	public abstract void rescaleShownResources();
 	
 	/**
@@ -89,8 +91,8 @@ public abstract class ProtocolHelper {
 	
 	/**
 	 * Launch threads needed by the protocol.
-	 * In general, these threads must wait until a condition is met before doing any action.
-	 * For example, a UAV thread must wait until the setup or start button is pressed to interact with other multicopters.*/
+	 * <p>In general, these threads must wait until a condition is met before doing any action.
+	 * For example, a UAV thread must wait until the setup or start button is pressed to interact with other multicopters.</p> */
 	public abstract void startThreads();
 	
 	/**
@@ -125,8 +127,9 @@ public abstract class ProtocolHelper {
 	 * Optional: Store at the end of the experiment files with information gathered while applying the protocol.
 	 * @param folder Folder where the files will be stored, the same as the main log file.
 	 * @param baseFileName Base name that must be prepended to the final file name.
+	 * @param baseNanoTime Base time (ns) when the experiment started. It the arbitrary value provided by <i>System.nanoTime()</i> when the experiment started.
 	 */
-	public abstract void logData(String folder, String baseFileName);
+	public abstract void logData(String folder, String baseFileName, long baseNanoTime);
 	
 	/**
 	 * Optional: Opens a configuration dialog for protocol specific parameters.

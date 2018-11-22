@@ -2,7 +2,9 @@ package main.cpuHelper;
 
 import main.Param;
 
-/** Stores the current CPU usage level at a certain instant. */
+/** Stores the current CPU usage level at a certain instant.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+
 public class CPUData {
 	
 	public long time;			// (ns) JVM instant when the data was read

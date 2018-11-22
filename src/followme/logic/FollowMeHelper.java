@@ -183,7 +183,7 @@ public class FollowMeHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void logData(String folder, String baseFileName) {
+	public void logData(String folder, String baseFileName, long baseNanoTime) {
 		// TODO
 		GUI.log("Willian Final"+ Tools.getExperimentStartTime());
 	}

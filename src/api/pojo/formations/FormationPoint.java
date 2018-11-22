@@ -1,5 +1,7 @@
 package api.pojo.formations;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class FormationPoint {
 	
 	public int position;

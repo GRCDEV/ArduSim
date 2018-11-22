@@ -1,6 +1,7 @@
 package scanv2.logic;
 
-/** This class contains text descriptions for messages used by this protocol. */
+/** This class contains text descriptions for messages used by this protocol.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ScanText {
 	

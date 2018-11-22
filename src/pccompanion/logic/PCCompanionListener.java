@@ -23,6 +23,8 @@ import main.Param.SimulatorState;
 import pccompanion.gui.PCCompanionGUI;
 import main.Text;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class PCCompanionListener extends Thread {
 
 	@Override
@@ -94,12 +96,6 @@ public class PCCompanionListener extends Thread {
 					}
 					// 3. Have all UAVs finished the setup step?
 					if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
-						
-//						Entry<Long, StatusPacket>[] entries = (Entry<Long, StatusPacket>[])receiving.entrySet().toArray();
-//						StatusPacket[] connected = new StatusPacket[entries.length];
-//						for (int i = 0; i < entries.length; i++) {
-//							connected[i] = entries[i].getValue();
-//						}
 						Collection<StatusPacket> col = receiving.values();
 						PCCompanionParam.connectedUAVs.compareAndSet(null, col.toArray(new StatusPacket[col.size()]));
 						it = receiving.entrySet().iterator();

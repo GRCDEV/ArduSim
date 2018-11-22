@@ -8,7 +8,8 @@ import api.ProtocolHelper;
 import api.pojo.Waypoint;
 import uavController.UAVParam;
 
-/** This class sends the initial configuration to all UAVs, asynchronously. */
+/** This class sends the initial configuration to all UAVs, asynchronously.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class InitialConfiguration2Thread extends Thread {
 	
@@ -31,13 +32,15 @@ public class InitialConfiguration2Thread extends Thread {
 	/** Sends the initial configuration: loads missions to a specific UAV, and launches the protocol initial configuration. */
 	public static void sendBasicConfiguration(int numUAV) {
 		// Load mission if needed
-		List<Waypoint> mission = UAVParam.missionGeoLoaded[numUAV];
-		if (mission != null) {
-			if (!Copter.cleanAndSendMissionToUAV(numUAV, mission)) {
-				return;
-			}
-			if (Waypoint.waypointDelay != 0 && !Copter.setParameter(numUAV, UAVParam.ControllerParam.WPNAV_RADIUS, Waypoint.waypointDistance)) {
-				return;
+		if (UAVParam.missionGeoLoaded != null) {
+			List<Waypoint> mission = UAVParam.missionGeoLoaded[numUAV];
+			if (mission != null) {
+				if (!Copter.cleanAndSendMissionToUAV(numUAV, mission)) {
+					return;
+				}
+				if (Waypoint.waypointDelay != 0 && !Copter.setParameter(numUAV, UAVParam.ControllerParam.WPNAV_RADIUS, Waypoint.waypointDistance)) {
+					return;
+				}
 			}
 		}
 		

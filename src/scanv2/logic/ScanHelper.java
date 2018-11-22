@@ -30,6 +30,8 @@ import api.pojo.formations.FlightFormation;
 import scanv2.gui.ScanConfigDialog;
 import sim.board.BoardPanel;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class ScanHelper extends ProtocolHelper {
 
 	@Override
@@ -283,7 +285,7 @@ public class ScanHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void logData(String folder, String baseFileName) {}
+	public void logData(String folder, String baseFileName, long baseNanoTime) {}
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {

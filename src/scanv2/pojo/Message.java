@@ -1,5 +1,7 @@
 package scanv2.pojo;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public final class Message {
 	
 	public static final short HELLO = 0;				// "I am here"

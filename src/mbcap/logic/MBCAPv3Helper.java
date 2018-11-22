@@ -29,16 +29,19 @@ import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
-import mbcap.gui.MBCAPPCCompanionDialog;
+import main.Param.SimulatorState;
 import mbcap.gui.MBCAPConfigDialog;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.gui.MBCAPGUITools;
+import mbcap.gui.MBCAPPCCompanionDialog;
 import mbcap.logic.MBCAPParam.MBCAPState;
 import mbcap.pojo.Beacon;
-import mbcap.pojo.PointTime;
+import mbcap.pojo.ErrorPoint;
 import mbcap.pojo.ProgressState;
 import sim.board.BoardPanel;
 import uavController.UAVParam;
+
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class MBCAPv3Helper extends ProtocolHelper {
 
@@ -93,19 +96,6 @@ public class MBCAPv3Helper extends ProtocolHelper {
 
 		for (int i=0; i < numUAVs; i++) {
 			MBCAPParam.progress[i] = new ArrayList<ProgressState>();
-		}
-		
-		MBCAPParam.uavDeadlockTimeout = new long[numUAVs];
-		
-		double maxBeaconDistance, speed;
-		for (int i=0; i < numUAVs; i++) {
-			speed = Copter.getPlannedSpeed(i);
-			maxBeaconDistance = speed * MBCAPParam.beaconFlyingTime;
-			if (MBCAPParam.reactionDistance < maxBeaconDistance) {
-				maxBeaconDistance = MBCAPParam.reactionDistance;
-			}
-			long aux = MBCAPParam.DEADLOCK_TIMEOUT_BASE + Math.round((maxBeaconDistance * 2 / speed) * 1000000000l);
-			MBCAPParam.uavDeadlockTimeout[i] = Math.max(MBCAPParam.globalDeadlockTimeout, aux);
 		}
 	}
 
@@ -390,66 +380,62 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		sb.append(MBCAPText.BEACONING_PARAM);
 		sb.append("\n\t").append(MBCAPText.BEACON_INTERVAL).append(" ").append(MBCAPParam.beaconingPeriod).append(" ").append(MBCAPText.MILLISECONDS);
 		sb.append("\n\t").append(MBCAPText.BEACON_REFRESH).append(" ").append(MBCAPParam.numBeacons);
-		sb.append("\n\t").append(MBCAPText.BEACON_EXPIRATION).append(" ").append(String.format( "%.2f", MBCAPParam.beaconExpirationTime*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.TIME_WINDOW).append(" ").append(MBCAPParam.beaconFlyingTime).append(" ").append(MBCAPText.MILLISECONDS);
 		sb.append("\n\t").append(MBCAPText.INTERSAMPLE).append(" ").append(MBCAPParam.hopTime).append(" ").append(MBCAPText.MILLISECONDS);
 		sb.append("\n\t").append(MBCAPText.MIN_ADV_SPEED).append(" ").append(MBCAPParam.minSpeed).append(" ").append(MBCAPText.METERS_PER_SECOND);
+		sb.append("\n\t").append(MBCAPText.BEACON_EXPIRATION).append(" ").append(String.format( "%.2f", MBCAPParam.beaconExpirationTime*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
 		sb.append("\n").append(MBCAPText.AVOID_PARAM);
 		sb.append("\n\t").append(MBCAPText.WARN_DISTANCE).append(" ").append(MBCAPParam.collisionRiskDistance).append(" ").append(MBCAPText.METERS);
 		sb.append("\n\t").append(MBCAPText.WARN_ALTITUDE).append(" ").append(MBCAPParam.collisionRiskAltitudeDifference).append(" ").append(MBCAPText.METERS);
 		sb.append("\n\t").append(MBCAPText.WARN_TIME).append(" ").append(String.format( "%.2f", MBCAPParam.collisionRiskTime*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.CHECK_THRESHOLD).append(" ").append(MBCAPParam.reactionDistance).append(" ").append(MBCAPText.METERS);
 		sb.append("\n\t").append(MBCAPText.CHECK_PERIOD).append(" ").append(String.format( "%.2f", MBCAPParam.riskCheckPeriod*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.SAFE_DISTANCE).append(" ").append(MBCAPParam.safePlaceDistance).append(" ").append(MBCAPText.METERS);
+		sb.append("\n\t").append(MBCAPText.PACKET_LOSS_THRESHOLD).append(" ").append(MBCAPParam.packetLossThreshold);
+		sb.append("\n\t").append(MBCAPText.GPS_ERROR).append(" ").append(MBCAPParam.gpsError).append(" ").append(MBCAPText.METERS);
 		sb.append("\n\t").append(MBCAPText.HOVERING_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.standStillTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
 		sb.append("\n\t").append(MBCAPText.OVERTAKE_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.passingTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.RESUME_MODE_DELAY).append(" ").append(String.format( "%.2f", MBCAPParam.solvedTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
+		sb.append("\n\t").append(MBCAPText.RESUME_MODE_DELAY).append(" ").append(String.format( "%.2f", MBCAPParam.resumeTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
+		sb.append("\n\t").append(MBCAPText.RECHECK_DELAY).append(" ").append(String.format( "%.2f", MBCAPParam.recheckTimeout*0.001 )).append(" ").append(MBCAPText.SECONDS);
 		sb.append("\n\t").append(MBCAPText.DEADLOCK_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.globalDeadlockTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
 		return sb.toString();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public void logData(String folder, String baseFileName) {
+	public void logData(String folder, String baseFileName, long baseNanoTime) {
 		// Logging to file the error predicting the location during the experiment (and the beacons itself if needed).
 		int numUAVs = Tools.getNumUAVs();
-		List<PointTime>[] realUAVPaths = new ArrayList[numUAVs];
+		@SuppressWarnings("unchecked")
+		List<ErrorPoint>[] realUAVPaths = new ArrayList[numUAVs];
 
 		// 1. UAV path calculus (only experiment path, and ignoring repeated positions)
 		LogPoint realPostLocation, realPrevLocation;
+		double time;
+		int inTestState = SimulatorState.TEST_IN_PROGRESS.getStateId();
 		Double x, y;
 		for (int i=0; i<numUAVs; i++) {
-			int j = 0;
 			realPrevLocation = null;
-			y = x = null;
-			realUAVPaths[i] = new ArrayList<PointTime>();
+			realUAVPaths[i] = new ArrayList<ErrorPoint>();
 
 			List<LogPoint> fullPath = Tools.getUTMPath(i);
-			while (j<fullPath.size()) {
+			for (int j = 0; j < fullPath.size(); j++) {
 				realPostLocation = fullPath.get(j);
 
 				// Considers only not repeated locations and only generated during the experiment
-				if (fullPath.get(j).inTest) {
+				if (realPostLocation.getSimulatorState() == inTestState) {
+					time = realPostLocation.getTime();
 					x = realPostLocation.x;
 					y = realPostLocation.y;
 					if (realPrevLocation == null) {
 						// First test location
+						realUAVPaths[i].add(new ErrorPoint(0, x, y));
+						if (realPostLocation.getTime() != 0) {
+							realUAVPaths[i].add(new ErrorPoint(time, x, y));
+						}
 						realPrevLocation = realPostLocation;
 					} else if (realPostLocation.x!=realPrevLocation.x || realPostLocation.y!=realPrevLocation.y || realPostLocation.z!=realPrevLocation.z) {
 						// Moved
+						realUAVPaths[i].add(new ErrorPoint(realPostLocation.getTime(), x, y));
 						realPrevLocation = realPostLocation;
-					} else {
-						// Don't moved
-						x = null;
-						y = null;
-					}
-
-					// Real locations
-					if (x != null) {
-						realUAVPaths[i].add(new PointTime(fullPath.get(j).time, x, y));
 					}
 				}
-				j++;
 			}
 		}
 		
@@ -461,38 +447,46 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		StringBuilder sb2 = null;
 		StringBuilder sb3, sb4;
 		int j;
-		PointTime predictedLocation;
-		List<PointTime>[][] totalPredictedLocations = new ArrayList[numUAVs][];
+		ErrorPoint predictedLocation;
+		@SuppressWarnings("unchecked")
+		List<List<ErrorPoint>>[] totalPredictedLocations = new ArrayList[numUAVs];
 		boolean verboseStore = Tools.isVerboseStorageEnabled();
+		// For each UAV
 		for (int i=0; i<numUAVs; i++) {
-			totalPredictedLocations[i] = new ArrayList[MBCAPParam.beaconsStored[i].size()];
+			List<Beacon> beacons = MBCAPParam.beaconsStored[i];
+			totalPredictedLocations[i] = new ArrayList<List<ErrorPoint>>(beacons.size());
 			
 			if (verboseStore) {
 				// Store each beacon also
 				beaconsFile = new File(folder + File.separator + baseFileName + "_" + Tools.getIdFromPos(i) + "_" + MBCAPText.BEACONS_SUFIX);
 				sb1 = new StringBuilder(2000);
-				sb1.append("time,x1,y2,x2,y2,...,xn,yn\n");
+				sb1.append("time(s),x1,y2,x2,y2,...,xn,yn\n");
 			}
-			List<Beacon> beacons = MBCAPParam.beaconsStored[i];
-			// j beacons
+			
+			// For each beacon
 			Beacon beacon;
 			for (j=0; j<beacons.size(); j++) {
 				beacon = beacons.get(j);
-				if (beacon.points!=null && beacon.points.size()>0) {
+				time = Tools.round(((double) (beacon.time - baseNanoTime)) / 1000000000l, 9);
+				if (time >= 0 && time <= realUAVPaths[i].get(realUAVPaths[i].size() - 1).time
+						&& beacon.points!=null && beacon.points.size()>0) {
 					if (verboseStore) {
-						sb1.append(beacon.time);
+						sb1.append(time);
 					}
+					
 					List<Point3D> locations = beacon.points;
-					totalPredictedLocations[i][j] = new ArrayList<PointTime>();
+					List<ErrorPoint> predictions = new ArrayList<ErrorPoint>(beacon.points.size());
+					// For each point in each beacon
 					for (int k=0; k<locations.size(); k++) {
 						if (verboseStore) {
 							sb1.append(",").append(Tools.round(locations.get(k).x, 3))
 								.append(",").append(Tools.round(locations.get(k).y, 3));
 						}
-						predictedLocation = new PointTime(beacon.time + MBCAPParam.hopTimeNS*k, locations.get(k).x, locations.get(k).y);
+						predictedLocation = new ErrorPoint(time + MBCAPParam.hopTime*k, locations.get(k).x, locations.get(k).y);
 						// Predicted positions for later calculus of the error in prediction
-						totalPredictedLocations[i][j].add(predictedLocation);
+						predictions.add(predictedLocation);
 					}
+					totalPredictedLocations[i].add(predictions);
 					if (verboseStore) {
 						sb1.append("\n");
 					}
@@ -502,18 +496,12 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				Tools.storeFile(beaconsFile, sb1.toString());
 			}
 
-			// 3. Calculus of the mean and maximum error on each beacon
-			PointTime[] realUAVPath = new PointTime[realUAVPaths[i].size()];
-			realUAVPath = realUAVPaths[i].toArray(realUAVPath);
-			List<PointTime>[] predictedLocations = totalPredictedLocations[i];
-			int numBeacons = 0; // Number of beacons with useful information
-			for (int k=0; k<predictedLocations.length; k++) {
-				if (predictedLocations[k] != null) {
-					numBeacons++;
-				}
-			}
-			// Only store information if useful beacons were found
+			// 3. Calculus of the mean and maximum distance error on each beacon
+			//    Only store information if useful beacons were found
+			int numBeacons = totalPredictedLocations[i].size();
 			if (numBeacons > 0) {
+				ErrorPoint[] realUAVPath = realUAVPaths[i].toArray(new ErrorPoint[realUAVPaths[i].size()]);
+				List<List<ErrorPoint>> predictedLocations = totalPredictedLocations[i];
 				double[] maxBeaconDistance = new double[numBeacons]; // One per beacon
 				double[] meanBeaconDistance = new double[numBeacons];
 				if (Tools.isVerboseStorageEnabled()) {
@@ -521,27 +509,24 @@ public class MBCAPv3Helper extends ProtocolHelper {
 					maxErrorFile = new File(folder + File.separator + baseFileName + "_" + Tools.getIdFromPos(i) + "_" + MBCAPText.MAX_ERROR_LINES_SUFIX);
 					sb2 = new StringBuilder(2000);
 				}
-				int pos = 0;
-				for (j=0; j<predictedLocations.length; j++) {
-					if (predictedLocations[j] != null) {
-						Pair<UTMCoordinates, UTMCoordinates> pair =
-								beaconErrorCalculation(realUAVPath, predictedLocations, j,
-										maxBeaconDistance, pos, meanBeaconDistance);
-						pos++;
-						if (pair!=null && Tools.isVerboseStorageEnabled()) {
-							sb2.append("._LINE\n");
-							sb2.append(Tools.round(pair.getValue0().x, 3)).append(",")
-								.append(Tools.round(pair.getValue0().y, 3)).append("\n");
-							sb2.append(Tools.round(pair.getValue1().x, 3)).append(",")
-								.append(Tools.round(pair.getValue1().y, 3)).append("\n\n");
-						}
+				// For each beacon get the max and mean distance errors
+				for (j=0; j<predictedLocations.size(); j++) {
+					Pair<UTMCoordinates, UTMCoordinates> pair =
+							beaconErrorCalculation(realUAVPath, predictedLocations, j,
+									maxBeaconDistance, j, meanBeaconDistance);
+					if (pair!=null && Tools.isVerboseStorageEnabled()) {
+						sb2.append("._LINE\n");
+						sb2.append(Tools.round(pair.getValue0().x, 3)).append(",")
+							.append(Tools.round(pair.getValue0().y, 3)).append("\n");
+						sb2.append(Tools.round(pair.getValue1().x, 3)).append(",")
+							.append(Tools.round(pair.getValue1().y, 3)).append("\n\n");
 					}
 				}
 				if (Tools.isVerboseStorageEnabled()) {
 					Tools.storeFile(maxErrorFile, sb2.toString());
 				}
 				
-				// 4. Storage of the mean and maximum error on each beacon
+				// 4. Storage of the mean and maximum distance error on each beacon
 				beaconsErrorFile = new File(folder + File.separator + baseFileName + "_" + Tools.getIdFromPos(i) + "_" + MBCAPText.BEACON_TOTAL_ERROR_SUFIX);
 				sb3 = new StringBuilder(2000);
 				sb3.append("max(m),mean(m)\n");
@@ -553,13 +538,15 @@ public class MBCAPv3Helper extends ProtocolHelper {
 					.append(Tools.round(meanBeaconDistance[meanBeaconDistance.length-1], 3));
 				Tools.storeFile(beaconsErrorFile, sb3.toString());
 				
-				// 5. Calculus and storage of the mean and maximum error on each position of each beacon
+				// 5. Calculus and storage of the mean and maximum distance error on each position of each beacon
+				// First, get the maximum size of the beacons
 				int size = 0;
-				for (int m = 0; m<predictedLocations.length; m++) {
-					if (predictedLocations[m].size()>size) {
-						size = predictedLocations[m].size();
+				for (int m = 0; m<predictedLocations.size(); m++) {
+					if (predictedLocations.get(m).size()>size) {
+						size = predictedLocations.get(m).size();
 					}
 				}
+				
 				double[] maxTimeDistance = new double[size];
 				double[] meanTimeDistance = new double[size];
 				timeErrorCalculation(realUAVPath, predictedLocations, maxTimeDistance, meanTimeDistance);
@@ -582,15 +569,16 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		MBCAPPCCompanionDialog.mbcap = new MBCAPPCCompanionDialog(PCCompanionFrame);
 	}
 	
-	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon. */
+	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon.
+	 * Also returns the starting and ending point of the line that represents the maximum distance error in the beacon. */
 	private static Pair<UTMCoordinates, UTMCoordinates> beaconErrorCalculation(
-			PointTime[] realUAVPath, List<PointTime>[] predictedLocations, int predictedPos,
+			ErrorPoint[] realUAVPath, List<List<ErrorPoint>> predictedLocations, int predictedPos,
 			double[] maxBeaconDistance, int distancePos, double[] meanBeaconDistance) {
 		double dist;
 		int num = 0;
 		UTMCoordinates ini, fin = ini = null;
-		List<PointTime> predictedLocs = predictedLocations[predictedPos];
-		PointTime predictedLocation, realPrev, realPost;
+		List<ErrorPoint> predictedLocs = predictedLocations.get(predictedPos);
+		ErrorPoint predictedLocation, realPrev, realPost;
 		predictedLocation = null;
 		UTMCoordinates realIntersection;
 		int prev, post;
@@ -599,8 +587,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		for (int i=0; i<predictedLocs.size(); i++) {
 			predictedLocation = predictedLocs.get(i);
 			// Ignores points too far on time or outside the real path
-			if (predictedLocs.get(0).distance(predictedLocation) <= MBCAPParam.reactionDistance
-					&& predictedLocation.time >= realUAVPath[0].time
+			if (predictedLocation.time >= realUAVPath[0].time
 					&& predictedLocation.time <= realUAVPath[realUAVPath.length-1].time) {
 				// Locating the real previous and next points
 				prev = -1;
@@ -620,14 +607,16 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				double x = realPrev.x + (realPost.x-realPrev.x) * incT;
 				double y = realPrev.y + (realPost.y-realPrev.y) * incT;
 				realIntersection = new UTMCoordinates(x, y);
-				// Checking if the distance is greater than the previous
+				
 				dist = predictedLocation.distance(realIntersection);
+				meanBeaconDistance[distancePos] = meanBeaconDistance[distancePos] + dist;
+				// Checking if the distance is greater than the previous
 				if (dist > maxBeaconDistance[distancePos]) {
 					maxBeaconDistance[distancePos] = dist;
 					ini = predictedLocation;
 					fin = realIntersection;
 				}
-				meanBeaconDistance[distancePos] = meanBeaconDistance[distancePos] + dist;
+				
 				num++;
 			}
 		}
@@ -644,17 +633,19 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	}
 
 	/** Auxiliary method to calculate the maximum and mean error on each position of each beacon. */
-	private static void timeErrorCalculation(PointTime[] realUAVPath, List<PointTime>[] predictedLocations,
+	private static void timeErrorCalculation(ErrorPoint[] realUAVPath, List<List<ErrorPoint>> predictedLocations,
 			double[] maxTimeDistance, double[] meanTimeDistance) {
 		double dist;
 		int[] num = new int[maxTimeDistance.length];
-		List<PointTime> predictedLocs;
-		PointTime predictedLocation, realPrev, realPost;
+		List<ErrorPoint> predictedLocs;
+		ErrorPoint predictedLocation, realPrev, realPost;
 		UTMCoordinates realIntersection;
 		int prev, post;
 
-		for (int i=0; i<predictedLocations.length; i++) {
-			predictedLocs = predictedLocations[i];
+		// For each beacon
+		for (int i=0; i<predictedLocations.size(); i++) {
+			predictedLocs = predictedLocations.get(i);
+			// For each position in the beacon
 			for (int j=0; j<predictedLocs.size(); j++) {
 				predictedLocation = predictedLocs.get(j);
 				// Ignores points out of the real path
@@ -678,19 +669,22 @@ public class MBCAPv3Helper extends ProtocolHelper {
 					double x = realPrev.x + (realPost.x-realPrev.x) * incT;
 					double y = realPrev.y + (realPost.y-realPrev.y) * incT;
 					realIntersection = new UTMCoordinates(x, y);
-					// Checking if the distance is greater than the previous
+					
 					dist = predictedLocation.distance(realIntersection);
+					meanTimeDistance[j] = meanTimeDistance[j] + dist;
+					// Checking if the distance is greater than the previous
 					if (dist>maxTimeDistance[j]) {
 						maxTimeDistance[j] = dist;
 					}
-					meanTimeDistance[j] = meanTimeDistance[j] + dist;
 					num[j]++;
 				}
 			}
 		}
 
 		for (int i=0; i<meanTimeDistance.length; i++) {
-			meanTimeDistance[i] = meanTimeDistance[i]/num[i];
+			if (num[i] != 0) {
+				meanTimeDistance[i] = meanTimeDistance[i]/num[i];
+			}
 		}
 	}
 	
@@ -727,7 +721,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			UTMCoordinates destination = MBCAPParam.targetLocationUTM.get(numUAV);
 			double length = destination.distance(currentUTMLocation);
 			int numLocations1 = (int)Math.ceil(length/(speed * MBCAPParam.hopTime));
-			int numLocations2 = (int) Math.ceil(MBCAPParam.beaconFlyingTime / MBCAPParam.hopTime);
+			int numLocations2 = (int)Math.ceil(MBCAPv3Helper.getReactionDistance(speed) / (speed * MBCAPParam.hopTime));
 			int numLocations = Math.min(numLocations1, numLocations2);
 			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 			double xUTM, yUTM;
@@ -759,7 +753,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				return predictedPath;
 			}
 			
-			// 5. In the stand still state, send the waypoint list so the other UAV could decide whether to move aside or not
+			// 5. In the stand still state, send the remaining waypoint list so the other UAV could decide whether to move aside or not
 			if (MBCAPParam.state[numUAV] == MBCAPState.STAND_STILL) {
 				// The first point is the current position
 				predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
@@ -798,7 +792,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	}
 
 	/** Calculates the first point of the predicted positions list depending on the protocol version.
-	 * <p>It also decides which is the next waypoint the UAV is moving towards, also depending on the protocol version. */
+	 * <p>It also decides which is the next waypoint the UAV is moving towards, also depending on the protocol version.</p> */
 	private static Pair<UTMCoordinates, Integer> getCurrentLocation(int numUAV, List<WaypointSimplified> mission, UTMCoordinates currentUTMLocation, int posNextWaypoint) {
 		UTMCoordinates baseLocation = null;
 		int nextWaypointPosition = posNextWaypoint;
@@ -853,13 +847,15 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		List<Double> distances = new ArrayList<Double>(MBCAPParam.DISTANCES_SIZE);
 		double totalDistance = 0.0;
 		// MBCAP v1 or MBCAP v2 (no acceleration present)
+		int remainingLocations = (int)Math.ceil(MBCAPv3Helper.getReactionDistance(speed) / (speed * MBCAPParam.hopTime));
+		double flyingTime = remainingLocations * MBCAPParam.hopTime;
+		
 		if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V1) || ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V2)
 				|| (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3) && acceleration == 0.0)) {
-			totalDistance = MBCAPParam.beaconFlyingTime * speed;
+			totalDistance = flyingTime * speed;
 		} else if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3)) {
 			// MBCAP v3 (constant acceleration present)
-			totalDistance = acceleration*MBCAPParam.beaconFlyingTime*MBCAPParam.beaconFlyingTime/2.0
-					+ speed*MBCAPParam.beaconFlyingTime;
+			totalDistance = acceleration * flyingTime * flyingTime / 2.0 + speed * flyingTime;
 		}
 		// 2. Calculus of the last waypoint included in the points calculus, and the total distance
 		double distanceAcum = 0.0;
@@ -879,7 +875,6 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		}
 
 		// 3. Predicted points calculus
-		int remainingLocations = (int) Math.ceil(MBCAPParam.beaconFlyingTime / MBCAPParam.hopTime);
 		double incDistance = 0.0;
 		double prevSegmentsLength = 0.0;
 
@@ -903,7 +898,6 @@ public class MBCAPv3Helper extends ProtocolHelper {
 		while (i < distances.size() && locations < remainingLocations && distanceAcum < totalDistance && posNextWaypoint <= posLastWaypoint) {
 			nextWaypoint = mission.get(posNextWaypoint);
 			currentSegmentLength = distances.get(i);
-
 			if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V1) || ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V2)
 					|| (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3) && acceleration == 0)) {
 				remainingSegment = Math.min(currentSegmentLength, totalDistance - distanceAcum + prevRemainingSegment);
@@ -927,7 +921,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				prevWaypoint = nextWaypoint;
 				locations = 0;
 			} else if (ProtocolHelper.selectedProtocol.equals(MBCAPText.MBCAP_V3)) {
-				// the distance increment has to be calculated each time
+				// the distance increment has to be calculated for each mission segment
 				double maxAcumDistance = Math.min(currentSegmentLength + prevSegmentsLength, totalDistance);
 				double maxTotalTime = (-speed + Math.sqrt(speed*speed + 2*acceleration*maxAcumDistance))/acceleration;
 				int totalHops = (int)Math.floor(maxTotalTime/MBCAPParam.hopTime);
@@ -962,11 +956,13 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			List<Point3D> predictedPath) {
 		// Only works with MBCAP version 4
 
+		int remainingLocations = (int)Math.ceil(MBCAPv3Helper.getReactionDistance(speed) / (speed * MBCAPParam.hopTime));
+		double flyingTime = remainingLocations * MBCAPParam.hopTime;
 		double distanceAcum;
 		List<Double> distances = new ArrayList<Double>(MBCAPParam.DISTANCES_SIZE);
 		if (acceleration == 0.0) {
 			// The same solution from the previous protocol versions
-			double totalDistance = MBCAPParam.beaconFlyingTime * speed;
+			double totalDistance = flyingTime * speed;
 			distanceAcum = currentUTMLocation.distance(mission.get(posNextWaypoint));
 			distances.add(distanceAcum);
 			int posLastWaypoint = posNextWaypoint;
@@ -979,7 +975,6 @@ public class MBCAPv3Helper extends ProtocolHelper {
 					posLastWaypoint = i;
 				}
 			}
-			int remainingLocations = (int) Math.ceil(MBCAPParam.beaconFlyingTime / MBCAPParam.hopTime);
 			double incDistance = totalDistance / remainingLocations;
 			double xp, yp, zp;
 			WaypointSimplified prevWaypoint = new WaypointSimplified(currentWaypoint - 1, currentUTMLocation.x, currentUTMLocation.y, currentZ);
@@ -1028,7 +1023,6 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			}
 
 			// 2. Predicted points calculus
-			int totalLocations = (int) Math.ceil(MBCAPParam.beaconFlyingTime / MBCAPParam.hopTime);
 			int locations = 0;
 			double incDistance;
 			WaypointSimplified prevWaypoint = new WaypointSimplified(currentWaypoint - 1, currentUTMLocation.x, currentUTMLocation.y, currentZ);
@@ -1043,14 +1037,14 @@ public class MBCAPv3Helper extends ProtocolHelper {
 			boolean goOn = true;
 			while (goOn
 					&& i < distances.size()
-					&& locations < totalLocations
+					&& locations < remainingLocations
 					&& distanceAcum < maxDistance
 					&& posNextWaypoint <= posLastWaypoint) {
 				nextWaypoint = mission.get(posNextWaypoint);
 				currentSegmentLength = distances.get(i);
 				
 				while (goOn
-						&& locations < totalLocations
+						&& locations < remainingLocations
 						&& distanceAcum < prevSegmentsLength + currentSegmentLength
 						&& distanceAcum < maxDistance) {
 					double time = (locations+1)*MBCAPParam.hopTime;
@@ -1121,24 +1115,28 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	}
 	
 	/** Calculates if two UAVs have collision risk.
-	 * <p>Requires to be in the normal protocol state. */
-	public static boolean hasCollisionRisk(int numUAV, Beacon selfBeacon, Beacon receivedBeacon) {
+	 * <p>Requires to be in the normal protocol state.
+	 * Returns null if no risk has been detected, or the location of the risky point otherwise.</p> */
+	public static Point3D hasCollisionRisk(int numUAV, Beacon selfBeacon, Beacon receivedBeacon) {
 		double distance;
 		long selfTime, beaconTime;
-		int maxPoints = (int)Math.ceil(MBCAPParam.reactionDistance / (selfBeacon.speed * MBCAPParam.hopTime)) + 1;
 		Point3D selfPoint, receivedPoint;
-		for (int i = 0; i < selfBeacon.points.size() && i < maxPoints; i++) {
+		boolean checkTime = receivedBeacon.state == MBCAPState.NORMAL.getId()
+				&& receivedBeacon.speed >= MBCAPParam.minSpeed
+				&& selfBeacon.speed >= MBCAPParam.minSpeed;
+		for (int i = 0; i < selfBeacon.points.size(); i++) {
 			selfTime = selfBeacon.time + i * MBCAPParam.hopTimeNS;
 			selfPoint = selfBeacon.points.get(i);
 			for (int j = 0; j < receivedBeacon.points.size(); j++) {
 				// Do not check if the other UAV is in Go on, please and the location is the detected risk location
-				if (receivedBeacon.state == MBCAPState.GO_ON_PLEASE.getId() && j == 1) {
-					continue;
+				if (j == 1
+						&& (receivedBeacon.state == MBCAPState.GO_ON_PLEASE.getId() || receivedBeacon.state == MBCAPState.STAND_STILL.getId())) {
+					break;
 				}
 				
 				boolean risky = true;
-				// Temporal collision risk (only if the other UAV is also in the normal protocol state)
-				if (receivedBeacon.state == MBCAPState.NORMAL.getId()) {
+				// Temporal collision risk (only if the other UAV is also in the normal protocol state, and with enough speed)
+				if (checkTime) {
 					beaconTime = receivedBeacon.time + j * MBCAPParam.hopTimeNS;
 					if (Math.abs(selfTime - beaconTime) >= MBCAPParam.collisionRiskTime) {
 						risky = false;
@@ -1151,29 +1149,51 @@ public class MBCAPv3Helper extends ProtocolHelper {
 					distance = selfPoint.distance(receivedPoint);
 					if (distance < MBCAPParam.collisionRiskDistance
 							&& Math.abs(selfPoint.z - receivedPoint.z) < MBCAPParam.collisionRiskAltitudeDifference) {
-						MBCAPParam.impactLocationUTM[numUAV].put(receivedBeacon.uavId, selfPoint);
-						MBCAPGUITools.locateImpactRiskMark(selfPoint, numUAV, receivedBeacon.uavId);
-						return true;
+						return selfPoint;
 					}
 				}
 			}
 		}
-		return false;
+		return null;
+	}
+	
+	/** Get the reaction distance given the current speed. It ignores the possible current acceleration. */
+	private static double getReactionDistance(double speed) {
+		double d = 0;
+		if (speed >= MBCAPParam.minSpeed) {
+			if (speed < 5) {
+				d = d + 2.76 * speed -0.42;
+			} else if (speed < 7.5) {
+				d = d + 0.58 * speed + 10.48;
+			} else {
+				d = d + 1.8 * speed + 1.33;
+			}
+			d = d + MBCAPParam.gpsError
+					+ MBCAPParam.riskCheckPeriod / 1000000000l * speed
+					+ (MBCAPParam.packetLossThreshold * MBCAPParam.beaconingPeriod) / 1000.0 * speed;
+		}
+		return d;
 	}
 	
 	/** Calculates if the current UAV has overtaken another UAV. */
-	public static boolean overtakingFinished(int numUAV, long avoidingId, UTMCoordinates target) {
+	public static boolean overtakingFinished(int numUAV, long avoidingId, Point3D target) {
 		// Overtaken happened if the distance to the target UAV and to the risk location is increasing
 		boolean success = MBCAPv3Helper.isMovingAway(numUAV, target);
 		if (!success) {
 			return false;
 		}
 		Point3D riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(avoidingId);
-		return MBCAPv3Helper.isMovingAway(numUAV, new UTMCoordinates(riskLocation.x, riskLocation.y));
+		success = MBCAPv3Helper.isMovingAway(numUAV, riskLocation);
+		if (!success) {
+			return false;
+		}
+		
+		// AND the UAV has moved far enough
+		return target.distance(MBCAPParam.selfBeacon.get(numUAV).points.get(0)) > MBCAPParam.collisionRiskDistance;
 	}
 	
 	/** Calculates if the current UAV is moving away from a target point. */
-	public static boolean isMovingAway(int numUAV, UTMCoordinates target) {
+	public static boolean isMovingAway(int numUAV, Point2D.Double target) {
 		// true if the distance to the target is increasing
 		UTMCoordinates[] lastLocations = Copter.getLastKnownUTMLocations(numUAV);
 		if (lastLocations.length <= 1) {
@@ -1234,11 +1254,11 @@ public class MBCAPv3Helper extends ProtocolHelper {
 	}
 	
 	/** Calculates the safe place to move aside from a path segment.
-	 * <p>Returns null if there is no need of moving aside. */
+	 * <p>Returns null if there is no need of moving aside.</p> */
 	private static UTMCoordinates getSafeLocation(UTMCoordinates currentLocation,
 			UTMCoordinates prev, UTMCoordinates post) {
 		double currentX = currentLocation.x;
-		double currentY = currentLocation.y;//TODO estaba como X
+		double currentY = currentLocation.y;
 		double prevX = prev.x;
 		double prevY = prev.y;
 		double postX = post.x;
@@ -1253,7 +1273,7 @@ public class MBCAPv3Helper extends ProtocolHelper {
 				return null;
 			}
 			// Farthest enough case
-			if (Math.abs(currentX - prevX)>MBCAPParam.safePlaceDistance) {
+			if (Math.abs(currentX - prevX) > MBCAPParam.safePlaceDistance) {
 				return null;
 			}
 			// Has to move apart case

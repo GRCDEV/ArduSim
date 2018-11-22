@@ -13,6 +13,8 @@ import api.pojo.UTMCoordinates;
 import api.pojo.formations.FlightFormation;
 import scanv2.pojo.Message;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class TalkerThread extends Thread {
 
 	private int numUAV;

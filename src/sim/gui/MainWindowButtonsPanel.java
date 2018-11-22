@@ -19,13 +19,13 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
-import main.ArduSimTools;
-import sim.logic.SimParam;
 
-/** This class generates the panel used to interact with the application, which is inside the main window. */
+/** This class generates the panel used to interact with the application, which is inside the main window.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MainWindowButtonsPanel extends JPanel {
 
@@ -95,16 +95,7 @@ public class MainWindowButtonsPanel extends JPanel {
 		progressDialogButton = new JButton(Text.SHOW_PROGRESS);
 		progressDialogButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
-				if (!SimParam.progressShowing) {
-					SimParam.progressShowing = true;
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							MainWindow.progressDialog.setVisible(true);
-							progressDialogButton.setEnabled(false);
-						}
-					});
-				}
+				ProgressDialog.progressDialog.toggleProgressShown();
 			}
 		});
 		GridBagConstraints gbc_progressDialogButton = new GridBagConstraints();

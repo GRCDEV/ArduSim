@@ -2,6 +2,8 @@ package sim.pojo;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class IncomingMessage implements Comparable<IncomingMessage> {
 	public long start, end;				// (ns) Starting and ending time of the transmission period
 	public int senderPos;				// Position of the UAV on the Simulator internal arrays
@@ -17,15 +19,7 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 		this.senderPos = senderPos;
 		this.message = message;
 		this.start = startTime;
-		// integer roundUp: ru = (a + (b-1))/b ( in this case: (59+length + 2)/3 )
-		// roundedUp bytes = ru * 3
-//		long tTrans = 20000 + 4000 * ((message.length + 61) / 3);
-//		this.end = this.start + tTrans;
-//		System.out.println(this.start + " + " + tTrans + " = " + this.end);
-		
 		this.end = this.start + 20000 + 4000 * ((message.length + 61) / 3);
-		
-		//System.out.println((long)(this.start * 0.001) + " - " + (long)(this.end * 0.001));
 	}
 	
 	/** Two incoming messages are equal if the came from the same UAV and started on the same instant. */

@@ -22,6 +22,8 @@ import main.ArduSimTools;
 import main.Param;
 import main.Text;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class CPUUsageThread extends Thread {
 	
 	private static final int FINISHED = 1;

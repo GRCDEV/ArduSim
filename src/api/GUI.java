@@ -31,9 +31,11 @@ import pccompanion.logic.PCCompanionParam;
 import sim.board.BoardHelper;
 import sim.gui.MainWindow;
 import sim.gui.MissionDelayDialog;
+import sim.gui.ProgressDialog;
 import sim.logic.SimParam;
 
-/** This class consists exclusively of static methods that help the developer to validate and show information on screen. */
+/** This class consists exclusively of static methods that help the developer to validate and show information on screen.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class GUI {
 	
@@ -135,10 +137,10 @@ public class GUI {
 	 */
 	public static void updateProtocolState(final int numUAV, final String state) {
 		// Update GUI only when using simulator
-		if (MainWindow.progressDialog != null) {
+		if (ProgressDialog.progressDialog != null) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
-					MainWindow.progressDialog.panels[numUAV].protStateLabel.setText(state);
+					ProgressDialog.progressDialog.panels[numUAV].protStateLabel.setText(state);
 				}
 			});
 		}
@@ -201,11 +203,12 @@ public class GUI {
 	}
 	
 	/**
-	 * Close the shown configuration dialog, and ArduSim when the escape key is pressed on the keyboard.
+	 * Close the shown configuration dialog, and optionally ArduSim when the escape key is pressed on the keyboard.
 	 * <p>This method should be invoked when the configuration dialog of each protocol is built.</p>
 	 * @param dialog Dialog where this method enables the escape key.
+	 * @param closeArduSim Whether to close ArduSim or not when the key is pressed.
 	 */
-	public static void addEscapeListener(final JDialog dialog) {
+	public static void addEscapeListener(final JDialog dialog, final boolean closeArduSim) {
 	    ActionListener escListener = new ActionListener() {
 
 	        @Override
@@ -213,7 +216,9 @@ public class GUI {
 //	            dialog.setVisible(false);
 	        	dialog.dispose();
 				System.gc();
-				System.exit(0);
+				if (closeArduSim) {
+					System.exit(0);
+				}
 	        }
 	    };
 
@@ -311,9 +316,11 @@ public class GUI {
 		Pair<String, List<Waypoint>[]> missions = GUI.loadAndParseMissions(selection);
 		if (missions != null) {
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
-				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
+				GUI.log(Text.MISSIONS_LOADED + " " + selection[0].getName());
+				return new Pair<String, List<Waypoint>[]>(selection[0].getName(), missions.getValue1());
 			}
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
+				GUI.log(Text.MISSIONS_LOADED + " " + selection[0].getName());
 				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
 			}
 		}
@@ -322,7 +329,7 @@ public class GUI {
 	}
 	
 	/** Parse missions from files.
-	 * <p>Returns null if any error happens. */
+	 * <p>Returns null if any error happens.</p> */
 	@SuppressWarnings("unchecked")
 	private static Pair<String, List<Waypoint>[]> loadAndParseMissions(File[] files) {
 		if (files == null || files.length == 0) {
@@ -345,10 +352,11 @@ public class GUI {
 			}
 		}
 		
-		// kml file selected
+		// kml file selected. All missions are loaded from one single file
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
-			// All missions are loaded from one single file
-			new MissionDelayDialog();
+			// First, configure the missions
+			new MissionDelayDialog(files[0].getName());
+			// Next, load the missions
 			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0]);
 			if (missions == null) {
 				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);

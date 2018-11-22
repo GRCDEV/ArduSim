@@ -28,6 +28,8 @@ import main.Text;
 import scanv2.pojo.Message;
 import scanv2.pojo.MovedMission;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class ListenerThread extends Thread {
 
 	private int numUAV;

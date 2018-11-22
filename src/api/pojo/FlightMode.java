@@ -4,7 +4,8 @@ import org.mavlink.messages.MAV_MODE_FLAG;
 
 import main.Text;
 
-/** UAV flight modes available. */
+/** UAV flight modes available.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public enum FlightMode {
 	STABILIZE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
@@ -158,7 +159,7 @@ public enum FlightMode {
 
 	/**
 	 * Return the ardupilot flight mode corresponding to the base and custom values.
-	 * <p>If no valid flight mode is found, it returns null. */
+	 * <p>If no valid flight mode is found, it returns null.</p> */
 	public static FlightMode getMode(int base, long custom) {
 		for (FlightMode p : FlightMode.values()) {
 			if (p.baseMode == base && p.customMode == custom) {

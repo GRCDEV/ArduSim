@@ -6,9 +6,14 @@ import api.WaypointReachedListener;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 
-/** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision. */
+/** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class BeaconingThread extends Thread implements WaypointReachedListener {
+	
+	boolean finished = false;
+	double distance = Double.MAX_VALUE;
+	
 
 	private int numUAV; // UAV identifier, beginning from 0
 
@@ -36,7 +41,6 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
 		}
 		
-		
 //		while (!Tools.areUAVsAvailable() || Tools.areUAVsReadyForSetup() || Tools.isSetupInProgress()	|| Tools.isSetupFinished()
 //				|| (Tools.isExperimentInProgress() && !Copter.isFlying(numUAV))) {
 //			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
@@ -44,6 +48,7 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 		Beacon selfBeacon = null;
 		byte[] sendBuffer = null;
 		int waitingTime;
+		short prevState = 0;
 
 		// Send beacons while the UAV is flying during the experiment
 		// The protocol is stopped when two UAVs collide
@@ -51,12 +56,13 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 		while (Tools.isExperimentInProgress() && Copter.isFlying(numUAV)
 				&& !Tools.isCollisionDetected()) {
 			// Each beacon is sent a number of times before renewing the predicted positions
-			for (int i = 0; i < MBCAPParam.numBeacons; i++) {
+			for (long i = 0; i < MBCAPParam.numBeacons; i++) {
 				// The first time it is needed to calculate the predicted positions
 				if (i == 0) {
 					selfBeacon = Beacon.buildToSend(numUAV);
 					MBCAPParam.selfBeacon.set(numUAV, selfBeacon);
 					sendBuffer = selfBeacon.getBuffer();
+					prevState = selfBeacon.state;
 
 					// Beacon store for logging purposes
 					if (Tools.isVerboseStorageEnabled()
@@ -66,6 +72,20 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 				} else {
 					// In any other case, only time, state and idAvoiding are updated
 					sendBuffer = selfBeacon.getBufferUpdated();
+					// Create a new beacon if the state is changed
+					if (selfBeacon.state != prevState) {
+						selfBeacon = Beacon.buildToSend(numUAV);
+						MBCAPParam.selfBeacon.set(numUAV, selfBeacon);
+						sendBuffer = selfBeacon.getBuffer();
+						prevState = selfBeacon.state;
+
+						// Beacon store for logging purposes
+						if (Tools.isVerboseStorageEnabled()
+								&& Tools.getExperimentEndTime(numUAV) == 0) {
+							MBCAPParam.beaconsStored[numUAV].add(selfBeacon.clone());
+						}
+						i = 0;	// Reset value to start again
+					}
 				}
 				if (!selfBeacon.points.isEmpty()) {
 					Copter.sendBroadcastMessage(numUAV, sendBuffer);

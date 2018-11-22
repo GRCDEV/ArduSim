@@ -6,7 +6,8 @@ import api.pojo.GeoCoordinates;
 import api.pojo.Location2D;
 import api.pojo.UTMCoordinates;
 
-/** This class generates and object that contains the most recent information received from the UAV. */
+/** This class generates and object that contains the most recent information received from the UAV.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVCurrentData {
 
@@ -55,11 +56,11 @@ public class UAVCurrentData {
 	}
 
 	/** Returns the current value of the most relevant data:
-	 * <p>Long. time.
-	 * <p>UTMCoordinates. UTM coordinates.
-	 * <p>double. Absolute altitude.
-	 * <p>double. Speed.
-	 * <p>double. Acceleration. */
+	 * <p><b>Long</b>. time.</p>
+	 * <p><b>UTMCoordinates</b> UTM coordinates.</p>
+	 * <p><b>double</b>. Absolute altitude.</p>
+	 * <p><b>double</b>. Speed.</p>
+	 * <p><b>double</b>. Acceleration.</p> */
 	public synchronized Quintet<Long, UTMCoordinates, Double, Double, Double> getData() {
 		UTMCoordinates location = null;
 		if (this.location != null) {

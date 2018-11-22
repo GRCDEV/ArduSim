@@ -18,11 +18,13 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import api.GUI;
 import api.Tools;
 import main.Text;
 import main.ArduSimTools;
 
-/** This class generates a dialog when the experiment finalizes, with the experiment configuration and the results. */
+/** This class generates a dialog when the experiment finalizes, with the experiment configuration and the results.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ResultsDialog extends JDialog {
 
@@ -100,6 +102,9 @@ public class ResultsDialog extends JDialog {
 				buttonPane.add(closeButton);
 			}
 		}
+		
+		GUI.addEscapeListener(this, false);
+		
 		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		this.setTitle(Text.RESULTS_TITLE);
 		this.pack();

@@ -18,7 +18,8 @@ import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPv3Helper;
 
 /** This class generates and updates the beacons sent by MBCAP protocol to detect risks of collision.
- * <p>It also allows to convert the object to MAVLink message and viceversa. */
+ * <p>It also allows to convert the object to MAVLink message and viceversa.</p>
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Beacon implements Comparable<Beacon> {
 
@@ -46,7 +47,7 @@ public class Beacon implements Comparable<Beacon> {
 	}
 
 	/** Creates a beacon to send data. Don't use to receive data.
-	 * <p>This method should be immediately followed by the getBuffer() method. */
+	 * <p>This method always should be followed by the getBuffer() method.</p> */
 	public static Beacon buildToSend(int numUAV) {
 		// 1. Getting the needed information
 		long uavId = Tools.getIdFromPos(numUAV);
@@ -88,9 +89,9 @@ public class Beacon implements Comparable<Beacon> {
 		} else {
 			res.out.writeShort(res.points.size());
 			for (int i = 0; i < res.points.size(); i++) {
-				res.out.writeFloat((float)res.points.get(i).x);
-				res.out.writeFloat((float)res.points.get(i).y);
-				res.out.writeFloat((float)res.points.get(i).z);
+				res.out.writeDouble(res.points.get(i).x);
+				res.out.writeDouble(res.points.get(i).y);
+				res.out.writeDouble(res.points.get(i).z);
 			}
 		}
 		res.out.flush();
@@ -100,7 +101,7 @@ public class Beacon implements Comparable<Beacon> {
 	}
 
 	/** Retrieves the buffer build by the method buildToSend(int).
-	 * <p>This method must be called after the mentioned method. */
+	 * <p>This method must always be called after the mentioned method.</p> */
 	public byte[] getBuffer() {
 		return Arrays.copyOf(sendBuffer, dataSize);
 
@@ -123,7 +124,7 @@ public class Beacon implements Comparable<Beacon> {
 
 	/** Creates a beacon from a received buffer.
 	 * <p>It requires later analysis of which UAV has sent the beacon, based on the uavId parameter.
-	 * <p>Returns null if the buffer is null. */
+	 * Returns null if the buffer is null.</p> */
 	public static Beacon getBeacon(byte[] buffer) {
 		if (buffer == null) {
 			return null;
@@ -141,7 +142,7 @@ public class Beacon implements Comparable<Beacon> {
 		int size = res.in.readShort();
 		res.points = new ArrayList<Point3D>(size);
 		for (int i = 0; i < size; i++) {
-			res.points.add(new Point3D(res.in.readFloat(), res.in.readFloat(), res.in.readFloat()));
+			res.points.add(new Point3D(res.in.readDouble(), res.in.readDouble(), res.in.readDouble()));
 		}
 		return res;
 	}

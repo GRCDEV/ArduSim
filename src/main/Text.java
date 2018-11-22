@@ -4,7 +4,8 @@ import api.Tools;
 import sim.board.BoardParam;
 import uavController.UAVParam;
 
-/** This class contains text descriptions used on the application and on the simulator GUI. */
+/** This class contains text descriptions used on the application and on the simulator GUI.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Text {
 	
@@ -154,7 +155,7 @@ public class Text {
 	public static final String WIRELESS_MODEL_ERROR_1 = "The wireless range must be a valid positive number.";
 	public static final String WIRELESS_MODEL_ERROR_2 = "The wireless range must be less than "
 			+ Param.FIXED_MAX_RANGE + " meters.";
-	public static final String WIND_DIRECTION_ERROR = "The wind direction must be a valid positive integer.";
+	public static final String WIND_DIRECTION_ERROR = "The wind direction must be a valid non negative integer.";
 	public static final String WIND_SPEED_ERROR_1 = "The wind speed must be a valid positive number.";
 	public static final String WIND_SPEED_ERROR_2 = "The wind speed must be greater or equal to " + UAVParam.WIND_THRESHOLD;
 	public static final String BIND_ERROR_1 = "Unable to bind port to receive commands from the computer assistant.";
@@ -182,6 +183,7 @@ public class Text {
 	public static final String CONFIGURATION_PANEL = "Configuration panel";
 	public static final String SETUP_TEST = "Setup";
 	public static final String SHOW_PROGRESS = "Show progress";
+	public static final String HIDE_PROGRESS = "Hide progress";
 	public static final String START_TEST = "Start test";
 	public static final String EXIT = "Exit";
 	public static final String WAITING_MAVLINK = "Waiting for MAVLink connection...";
@@ -211,10 +213,11 @@ public class Text {
 	public static final String SIMULATED_WIND_SPEED = "Wind speed:";
 	public static final String STARTING_UAVS = "Starting up virtual UAVs...";
 	public static final String SITL_UP = "SITL instance is up.";
-	public static final String CONTROLLERS_STARTED = "UAVs controllers started...";
+	public static final String CONTROLLERS_STARTED = "UAV controllers started...";
 	public static final String GPS_OK = "GPS fix acquired...";
 	public static final String COMMUNICATIONS_ONLINE = "Simulated communications online...";
 	public static final String COLLISION_DETECTION_ONLINE = "Collision detection online...";
+	public static final String MISSIONS_LOADED = "Missions loaded from";
 	public static final String SEND_BASIC_CONFIGURATION_1 = "Preparing UAVs internal configuration (phase 1)...";
 	public static final String SEND_BASIC_CONFIGURATION_2 = "Preparing UAVs internal configuration (phase 2)...";
 	public static final String WAITING_FOR_USER = "Waiting for user interaction.";
@@ -273,7 +276,8 @@ public class Text {
 	public static final String LOG_SPEED = "Initial speed";
 	public static final String LOG_BATTERY = "Battery capacity";
 	public static final String MISSION_SUFIX = "mission_AutoCAD.scr";
-	public static final String PATH_SUFIX = "path.csv";
+	public static final String PATH_SETUP_SUFIX = "path_setup.csv";
+	public static final String PATH_TEST_SUFIX = "path_test.csv";
 	public static final String PATH_2D_SUFIX = "path_AutoCAD.scr";
 	public static final String PATH_3D_SUFIX = "path_AutoCAD3d.scr";
 	public static final String MOBILITY_NS2_SUFIX_2D = "mobility_NS2.txt";
@@ -338,6 +342,7 @@ public class Text {
 	public static final String DISMOUNT_DRIVE_ERROR = "Failed dismounting the virtual RAM drive.";
 	public static final String STORE_WARNING = "Store warning";
 	public static final String STORE_QUESTION = "Do you want to overwrite the file?";
+	public static final String STORE_PATH_ERROR = "UAV path not found. Unable to store in file.";
 	public static final String LAST_WAYPOINT_REACHED = "Last waypoint reached.";
 	public static final String LAND_ERROR = "Was unable to land.";
 	

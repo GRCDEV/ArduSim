@@ -10,7 +10,8 @@ import javax.swing.SwingConstants;
 
 import main.Text;
 
-/** This class generates a panel with real time information gathered from the UAV on real time. */
+/** This class generates a panel with real time information gathered from the UAV on real time.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ProgressDialogPanel extends JPanel {
 

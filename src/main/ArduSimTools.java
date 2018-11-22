@@ -112,14 +112,15 @@ import uavController.UAVCurrentStatus;
 import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
-/** This class contains general tools used by the simulator. */
+/** This class contains general tools used by the simulator.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ArduSimTools {
 	
 	public static List<WaypointReachedListener> listeners = new ArrayList<WaypointReachedListener>();
 	
 	/** Parses the command line of the simulator.
-	 * <p>Returns false if running a PC companion and the main thread execution must stop. */
+	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
 	public static boolean parseArgs(String[] args) {
 		String commandLine = "Command line:\n    java -jar ArduSim.jar <option>\nChoose option:\n    multicopter\n    simulator\n    pccompanion";
 		if (args.length != 1) {
@@ -450,6 +451,7 @@ public class ArduSimTools {
 		}
 	}
 	
+	/** Auxiliary method to load parameters from the ArduSim ini configuration file. */
 	private static Map<String, String> loadIniFile() {
 		Map<String, String> parameters = new HashMap<>();
 		File folder = Tools.getCurrentFolder();
@@ -1244,8 +1246,7 @@ public class ArduSimTools {
 	}
 	
 	/** Gets an object of the available implementation for the selected protocol.
-	 * <p>Returns null if no valid or more than one implementation were found.
-	 * <p>An error message is already displayed.*/
+	 * <p>Returns null if no valid or more than one implementation were found. An error message is already displayed.</p> */
 	public static ProtocolHelper getSelectedProtocolInstance() {
 		// Target protocol class and object
 		ProtocolHelper protocolLaunched = null;
@@ -1268,7 +1269,7 @@ public class ArduSimTools {
 	}
 	
 	/** Gets all classes that extend ProtocolHelper or implement a protocol.
-	 * <p>Returns null or an array of size 0 if no valid implementations were found. */
+	 * <p>Returns null or an array of size 0 if no valid implementations were found.</p> */
 	private static Class<?>[] getAnyProtocolImplementations() {
 		Class<?>[] res = null;
 		// Get all Java classes included in ArduSim
@@ -1286,8 +1287,7 @@ public class ArduSimTools {
 	}
 	
 	/** Loads the implemented protocols and retrieves the name of each one.
-	 * <p>Protocol names are case-sensitive.
-	 * <p>Returns null if no valid implementations were found. */
+	 * <p>Protocol names are case-sensitive. Returns null if no valid implementations were found.</p> */
 	public static String[] loadProtocols() {
 		// First store the identifier of None protocol
 		ProtocolNoneHelper noneInstance = new ProtocolNoneHelper();
@@ -1320,7 +1320,7 @@ public class ArduSimTools {
 	}
 	
 	/** Returns the existing Java classes in the jar file or Eclipse project.
-	 * <p>Returns null or empty list if some error happens.*/
+	 * <p>Returns null or empty list if some error happens.</p> */
 	private static List<String> getClasses() {
 		List<String> existingClasses = null;
 		if (isRunningFromJar()) {
@@ -1346,7 +1346,7 @@ public class ArduSimTools {
 	}
 	
 	/** Returns the String representation of the jar File the ArduSim instance is running from (path+name).
-	 * <p>Returns null if some error happens.*/
+	 * <p>Returns null if some error happens.</p> */
 	private static String getJarFile() {
 		Class<Main> c = main.Main.class;
 		CodeSource codeSource = c.getProtectionDomain().getCodeSource();
@@ -1371,7 +1371,7 @@ public class ArduSimTools {
 	}
 	
 	/** Returns the list of classes included in the Jar file.
-	 * <p>Returns null or empty list if some error happens.*/
+	 * <p>Returns null or empty list if some error happens.</p> */
 	private static List<String> getClassNamesFromJar(String jarFile) throws Exception {
 		List<String> res = new ArrayList<>();
 		JarInputStream jarFileStream = new JarInputStream(new FileInputStream(jarFile));
@@ -1423,7 +1423,7 @@ public class ArduSimTools {
 	}
 	
 	/** Returns all the classes that contain a valid implementation of any protocol.
-	 * <p>Returns an array of size 0 if no valid implementations were found.*/
+	 * <p>Returns an array of size 0 if no valid implementations were found.</p> */
 	private static Class<?>[] getAllImplementations(List<String> existingClasses) {
 		String className;
 		Class<?> currentClass;
@@ -1454,8 +1454,7 @@ public class ArduSimTools {
 	}
 	
 	/** Returns an instance for all the implementations of the selected protocol among all available implementations.
-	 * <p>Returns a valid ProtocolHelper object for each implementation.
-	 * <p>Returns null if no valid implementation was found. */
+	 * <p>Returns a valid ProtocolHelper object for each implementation. Returns null if no valid implementation was found.</p> */
 	private static ProtocolHelper[] getProtocolImplementationInstances(Class<?>[] implementations, String selectedProtocol) throws InstantiationException, IllegalAccessException {
 		Class<?> c;
 		ProtocolHelper o;
@@ -1642,7 +1641,7 @@ public class ArduSimTools {
 		Files.deleteIfExists(file);
 	}
 	
-	/** Detects the Operating System. */
+	/** Detects the running Operating System. */
 	public static void detectOS() {
 		String OS = System.getProperty("os.name").toLowerCase();
 		if (OS.contains("win")) {
@@ -1969,7 +1968,7 @@ public class ArduSimTools {
 				Param.controllers[i] = new UAVControllerThread(i);
 				Param.controllers[i].start();
 			}
-			GUI.log(Text.CONTROLLERS_STARTED);
+			GUI.log(Param.numUAVs + " " + Text.CONTROLLERS_STARTED);
 		} catch (SocketException e) {
 			GUI.exit(Text.THREAD_START_ERROR);
 		}
@@ -2033,8 +2032,7 @@ public class ArduSimTools {
 	}
 	
 	/** API: retrieves all the parameters and the current version of the Arducopter compilation.
-	 * <p>It is assumed that all the multicopters running in the same machine use the same compilation.
-	 * <p>Returns null if an error happens. */
+	 * <p>It is assumed that all the multicopters running in the same machine use the same compilation. Returns null if an error happens.</p> */
 	public static void getArduCopterParameters(int numUAV) {
 		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ALL_PARAM);
@@ -2103,7 +2101,7 @@ public class ArduSimTools {
 	}
 	
 	/** Loads missions from a Google Earth kml file.
-	 * <p>Returns null if the file is not valid or it is empty. */
+	 * <p>Returns null if the file is not valid or it is empty.</p> */
 	@SuppressWarnings("unchecked")
 	public static List<Waypoint>[] loadXMLMissionsFile(File xmlFile) {
 		List<Waypoint>[] missions;
@@ -2224,7 +2222,7 @@ public class ArduSimTools {
 	}
 
 	/** Loads a mission from a standard QGroundControl file.
-	 * <p>Returns null if the file is not valid or it is empty. */
+	 * <p>Returns null if the file is not valid or it is empty.</p> */
 	public static List<Waypoint> loadMissionFile(String path) {
 	
 		List<String> list = new ArrayList<>();
@@ -2342,9 +2340,8 @@ public class ArduSimTools {
 	}
 
 	/** Loads the first mission found in a folder.
-	 * <p>Priority loading: 1st xml file, 2nd QGRoundControl file, 3rd txt file.
-	 * <p>Only the first valid file/mission found is used.
-	 * <p>Returns null if no valid mission was found. */
+	 * <p>Priority loading: 1st xml file, 2nd QGRoundControl file, 3rd txt file. Only the first valid file/mission found is used.
+	 * Returns null if no valid mission was found.</p> */
 	public static List<Waypoint> loadMission(File parentFolder) {
 		// 1. kml file case
 		File[] files = parentFolder.listFiles(new FileFilter() {
@@ -2484,7 +2481,7 @@ public class ArduSimTools {
 	}
 	
 	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event.
-	 * <p>This method is NOT thread-safe. */
+	 * <p>This method is NOT thread-safe.</p> */
 	public static void triggerWaypointReached(int numUAV) {
 		WaypointReachedListener listener;
 		for (int i = 0; i < ArduSimTools.listeners.size(); i++) {
@@ -2881,89 +2878,162 @@ public class ArduSimTools {
 	}
 
 	/** Logs to files the UAV path and general information. */
-	public static void storeLogAndPath(String folder, String baseFileName) {
-		File file1, file2;
-		File file3 = null;
-		StringBuilder sb1, sb2;
-		StringBuilder sb3 = null;
+	public static long storeLogAndPath(String folder, String baseFileName) {
+		// 1. Find the first data stored from each UAV during setup and experiment
+		long firstSetupNanoTime = Long.MAX_VALUE;
+		long firstExperimentNanoTime = Long.MAX_VALUE;
+		long nanoTime;
+		boolean found;
+		LogPoint searching;
+		int inSetup = SimulatorState.SETUP_IN_PROGRESS.getStateId();
+		int inExperiment = SimulatorState.TEST_IN_PROGRESS.getStateId();
+		int state;
+		for (int i = 0; i < Param.numUAVs; i++) {
+			found = false;
+			for (int j = 0; j < SimParam.uavUTMPath[i].size() && !found; j++) {
+				searching = SimParam.uavUTMPath[i].get(j);
+				state = searching.getSimulatorState();
+				nanoTime = searching.getNanoTime();
+				if (state == inSetup && nanoTime < firstSetupNanoTime) {
+					firstSetupNanoTime = nanoTime;
+				}
+				if (state == inExperiment) {
+					if (nanoTime < firstExperimentNanoTime) {
+						firstExperimentNanoTime = nanoTime;
+					}
+					found = true;
+				}
+				
+			}
+		}
+		// Nothing to store if setup and experiment where not recorded
+		if (firstSetupNanoTime == Long.MAX_VALUE && firstExperimentNanoTime == Long.MAX_VALUE) {
+			GUI.warn(Text.STORE_WARNING, Text.STORE_PATH_ERROR);
+			return firstExperimentNanoTime;
+		}
+		
+		// 2. Storing UAV path during setup and experiment, and AutoCAD path files
+		File file1, file2, file3;
+		File file4 = null;
+		StringBuilder sb1, sb3, sb2;
+		StringBuilder sb4 = null;
 		LogPoint sp;
 		LogPoint spPrev;
 		Double x, y, z, a;
-		long firstTime = Long.MAX_VALUE;
-		long lastTime = 0;
+		double time;
+		boolean firstExperimentData, firstSetupData;
+		double lastTime = 0;
 		for (int i=0; i<Param.numUAVs; i++) {
-			file1 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_SUFIX);
+			file1 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_TEST_SUFIX);
 			sb1 = new StringBuilder(2000);
-			sb1.append("x(m),y(m),z(m),heading(rad),t(arbitrary ns),s(m/s),a(m/s\u00B2),\u0394d(m),d(m)\n");
-			file2 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_2D_SUFIX);
+			sb1.append("x(m),y(m),z(m),heading(rad),t(s),s(m/s),a(m/s\u00B2),\u0394d(m),d(m)\n");
+			file2 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_SETUP_SUFIX);
 			sb2 = new StringBuilder(2000);
-			sb2.append("._PLINE\n");
+			sb2.append("x(m),y(m),z(m),heading(rad),t(s)\n");
+			file3 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_2D_SUFIX);
+			sb3 = new StringBuilder(2000);
+			sb3.append("._PLINE\n");
 
-			int j = 0;
-			double dist = 0; // Accumulated distance to origin
+			int j = 0;			// Position in the path list
+			double dist = 0;	// Accumulated distance to origin
 			double d;
 			spPrev = null;
 			z = y = x = null;
 			
 			if (Param.verboseStore) {
-				file3 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
-				sb3 = new StringBuilder(2000);
-				sb3.append("._3DPOLY\n");
+				file4 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
+				sb4 = new StringBuilder(2000);
+				sb4.append("._3DPOLY\n");
 
 			}
 
+			firstSetupData = true;
+			firstExperimentData  = true;
 			while (j<SimParam.uavUTMPath[i].size()) {
 				sp = SimParam.uavUTMPath[i].get(j);
 				// Calculus of the unfiltered acceleration
 				if (j == 0) {
 					a = 0.0;
 				} else {
-					a = (sp.speed - SimParam.uavUTMPath[i].get(j-1).speed)/
-							(sp.time - SimParam.uavUTMPath[i].get(j-1).time)*1000000000l;
+					a = (sp.getSpeed() - SimParam.uavUTMPath[i].get(j-1).getSpeed())/
+							(sp.getNanoTime() - SimParam.uavUTMPath[i].get(j-1).getNanoTime())*1000000000l;
+				}
+				state = sp.getSimulatorState();
+				
+				// Consider only not repeated locations and during setup
+				if (state == inSetup) {
+					sp.setTime(firstSetupNanoTime);
+					time = sp.getTime();
+					x = Tools.round(sp.x, 3);
+					y = Tools.round(sp.y, 3);
+					z = Tools.round(sp.z, 3);
+					if (firstSetupData) {
+						// Adding 0 point
+						sb2.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
+						.append(",").append(0).append("\n");
+						// At the beginning we may need to add a 0 time point
+						if (time != 0) {
+							sb2.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
+							.append(",").append(time).append("\n");
+						}
+						spPrev = sp;
+						firstSetupData = false;
+					} else {
+						if (spPrev == null || sp.x!=spPrev.x || sp.y!=spPrev.y || sp.z!=spPrev.z) {
+							sb2.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
+								.append(",").append(time).append("\n");
+							spPrev = sp;
+						}
+					}
 				}
 
-				// Considers only not repeated locations and under test
-				if (sp.inTest) {
-					if (sp.time > lastTime) {
-						lastTime = sp.time;
+				// Consider only not repeated locations and under test
+				if (state == inExperiment) {
+					sp.setTime(firstExperimentNanoTime);
+					time = sp.getTime();
+					if (time > lastTime) {
+						lastTime = time;
 					}
 					x = Tools.round(sp.x, 3);
 					y = Tools.round(sp.y, 3);
 					z = Tools.round(sp.z, 3);
-					if (spPrev == null) {
-						// First test location
-						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.heading)
-							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
+					if (firstExperimentData) {
+						// Adding 0 point
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
+							.append(",").append(0).append(",").append(Tools.round(sp.getSpeed(), 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.000,0.000\n");
-						sb2.append(x).append(",").append(y).append("\n");
+						sb3.append(x).append(",").append(y).append("\n");
 						if (Param.verboseStore) {
-							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
+							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
+						}
+						// At the beginning we may need to add a 0 time point
+						if (time != 0) {
+							sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
+								.append(",").append(time).append(",").append(Tools.round(sp.getSpeed(), 3))
+								.append(",").append(Tools.round(a, 3)).append(",0.000,0.000\n");
 						}
 						spPrev = sp;
-						// Getting global test stating time
-						if (sp.time < firstTime) {
-							firstTime = sp.time;
-						}
+						firstExperimentData = false;
 					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
 						// Moved horizontally
 						d = sp.distance(spPrev);
 						dist = dist + d;
-						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.heading)
-							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
+							.append(",").append(time).append(",").append(Tools.round(sp.getSpeed(), 3))
 							.append(",").append(Tools.round(a, 3)).append(",").append(Tools.round(d, 3))
 							.append(",").append(Tools.round(dist, 3)).append("\n");
-						sb2.append(x).append(",").append(y).append("\n");
+						sb3.append(x).append(",").append(y).append("\n");
 						if (Param.verboseStore) {
-							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
+							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
 					} else if (sp.z!=spPrev.z) {
 						// Only moved vertically
-						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.heading)
-							.append(",").append(sp.time).append(",").append(Tools.round(sp.speed, 3))
+						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
+							.append(",").append(time).append(",").append(Tools.round(sp.getSpeed(), 3))
 							.append(",").append(Tools.round(a, 3)).append(",0.0,").append(Tools.round(dist, 3)).append("\n");
 						if (Param.verboseStore) {
-							sb3.append(x).append(",").append(y).append(",").append(z).append("\n");
+							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
 					}
@@ -2971,101 +3041,103 @@ public class ArduSimTools {
 				j++;
 			}
 			Tools.storeFile(file1, sb1.toString());
-			sb2.append("\n");
 			Tools.storeFile(file2, sb2.toString());
+			sb3.append("\n");
+			Tools.storeFile(file3, sb3.toString());
 			if (Param.verboseStore) {
-				sb3.append("\n");
-				Tools.storeFile(file3, sb3.toString());
+				sb4.append("\n");
+				Tools.storeFile(file4, sb4.toString());
 			}
 		}
 		
-		// Storing mobility files
-		File file4, file5, file6, file7;
-		StringBuilder sb4, sb5, sb6, sb7;
-		double time;
-		boolean firstData;
-		file6 = new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_2D);
-		file7 =new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_3D);
-		sb6 = new StringBuilder(2000);
+		// Storing mobility files, only during the experiment
+		File file5, file6, file7, file8;
+		StringBuilder sb5, sb6, sb7, sb8;
+		file7 = new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_2D);
+		file8 =new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_3D);
 		sb7 = new StringBuilder(2000);
+		sb8 = new StringBuilder(2000);
 		for (int i = 0; i < Param.numUAVs; i++) {
-			file4 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_2D);
-			file5 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_3D);
-			sb4 = new StringBuilder(2000);
+			file5 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_2D);
+			file6 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_3D);
 			sb5 = new StringBuilder(2000);
-			firstData = true;
-			double t;
+			sb6 = new StringBuilder(2000);
+			firstExperimentData = true;
 			spPrev = null;
 			for (int j = 0; j < SimParam.uavUTMPath[i].size(); j++) {
 				sp = SimParam.uavUTMPath[i].get(j);
-				if (sp.inTest && sp.time - firstTime >= 0 && sp.time <= lastTime) {
-					time = (sp.time - firstTime) * 0.000000001;
-					t = Tools.round(time, 9);
-					x = Tools.round(sp.x, 2);
-					y = Tools.round(sp.y, 2);
-					z = Tools.round(sp.z, 2);
-					if (firstData) {
-						// Adding 0 point
-						sb4.append("$node_(0) set X_ ").append(x).append("\n");
-						sb4.append("$node_(0) set Y_ ").append(y).append("\n");
-						sb5.append("$node_(0) set X_ ").append(x).append("\n");
-						sb5.append("$node_(0) set Y_ ").append(y).append("\n");
-						sb5.append("$node_(0) set Z_ ").append(z).append("\n");
-						sb6.append("0 ").append(x).append(" ").append(y);
-						sb7.append("0 ").append(x).append(" ").append(y).append(" ").append(z);
-						// At the beginning we may need to add a 0 time point
-						if (sp.time != firstTime) {
-							sb4.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
-							sb4.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
-							sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
-							sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
-							sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
-							sb6.append(" ").append(t).append(" ").append(x).append(" ").append(y);
-							sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+				state = sp.getSimulatorState();
+				if (state == inExperiment) {
+					time = sp.getTime();
+					if (time <= lastTime) {
+						x = Tools.round(sp.x, 2);
+						y = Tools.round(sp.y, 2);
+						z = Tools.round(sp.z, 2);
+						if (firstExperimentData) {
+							// Adding 0 point
+							sb5.append("$node_(0) set X_ ").append(x).append("\n");
+							sb5.append("$node_(0) set Y_ ").append(y).append("\n");
+							sb6.append("$node_(0) set X_ ").append(x).append("\n");
+							sb6.append("$node_(0) set Y_ ").append(y).append("\n");
+							sb6.append("$node_(0) set Z_ ").append(z).append("\n");
+							sb7.append("0 ").append(x).append(" ").append(y);
+							sb8.append("0 ").append(x).append(" ").append(y).append(" ").append(z);
+							// At the beginning we may need to add a 0 time point
+							if (time != 0) {
+								sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+								sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+								sb6.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+								sb6.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+								sb6.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
+								sb7.append(" ").append(time).append(" ").append(x).append(" ").append(y);
+								sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+							}
+							spPrev = sp;
+							firstExperimentData = false;
+						} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
+							sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+							sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+							sb6.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
+							sb7.append(" ").append(time).append(" ").append(x).append(" ").append(y);
+							sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+							spPrev = sp;
+						} else if (sp.z!=spPrev.z) {
+							sb6.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
+							sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+							spPrev = sp;
 						}
-						spPrev = sp;
-						firstData = false;
-					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
-						sb4.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
-						sb4.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
-						sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
-						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
-						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
-						sb6.append(" ").append(t).append(" ").append(x).append(" ").append(y);
-						sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
-						spPrev = sp;
-					} else if (sp.z!=spPrev.z) {
-						sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
-						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
-						sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
-						sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
-						spPrev = sp;
 					}
 				}
 			}
-			if (spPrev.time < lastTime) {
-				t = Tools.round((lastTime - firstTime) * 0.000000001, 9);
+			if (spPrev.getTime() < lastTime) {
+				time = spPrev.getTime();
 				x = Tools.round(spPrev.x, 2);
 				y = Tools.round(spPrev.y, 2);
 				z = Tools.round(spPrev.z, 2);
-				sb4.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
-				sb4.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
-				sb5.append("$ns_ at ").append(t).append(" $node_(0) set X_ ").append(x).append("\n");
-				sb5.append("$ns_ at ").append(t).append(" $node_(0) set Y_ ").append(y).append("\n");
-				sb5.append("$ns_ at ").append(t).append(" $node_(0) set Z_ ").append(z).append("\n");
-				sb6.append(" ").append(t).append(" ").append(x).append(" ").append(y);
-				sb7.append(" ").append(t).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+				sb5.append("$ns_ at ").append(lastTime).append(" $node_(0) set X_ ").append(x).append("\n");
+				sb5.append("$ns_ at ").append(lastTime).append(" $node_(0) set Y_ ").append(y).append("\n");
+				sb6.append("$ns_ at ").append(lastTime).append(" $node_(0) set X_ ").append(x).append("\n");
+				sb6.append("$ns_ at ").append(lastTime).append(" $node_(0) set Y_ ").append(y).append("\n");
+				sb6.append("$ns_ at ").append(lastTime).append(" $node_(0) set Z_ ").append(z).append("\n");
+				sb7.append(" ").append(lastTime).append(" ").append(x).append(" ").append(y);
+				sb8.append(" ").append(lastTime).append(" ").append(x).append(" ").append(y).append(" ").append(z);
 			}
 			
-			Tools.storeFile(file4, sb4.toString());
 			Tools.storeFile(file5, sb5.toString());
+			Tools.storeFile(file6, sb6.toString());
 			
-			sb6.append("\n");
 			sb7.append("\n");
+			sb8.append("\n");
 		}
 		
-		Tools.storeFile(file6, sb6.toString());
 		Tools.storeFile(file7, sb7.toString());
+		Tools.storeFile(file8, sb8.toString());
+		
+		return firstExperimentNanoTime;
 	}
 	
 	/** Stores the experiment results. */
@@ -3087,7 +3159,7 @@ public class ArduSimTools {
 		Tools.storeFile(file, results);
 		
 		// 2. Store the UAV path and general information
-		ArduSimTools.storeLogAndPath(folder, baseFileName);
+		long startTestNanoTime = ArduSimTools.storeLogAndPath(folder, baseFileName);
 		
 		// 3. Store missions when used
 		ArduSimTools.logMission(folder, baseFileName);
@@ -3098,7 +3170,9 @@ public class ArduSimTools {
 		}
 		
 		// 5. Store protocol specific information
-		ProtocolHelper.selectedProtocolInstance.logData(folder, baseFileName);
+		if (startTestNanoTime != Long.MAX_VALUE) {
+			ProtocolHelper.selectedProtocolInstance.logData(folder, baseFileName, startTestNanoTime);
+		}
 		
 		// 6. Store ArduCopter logs if needed
 		if (Param.role == Tools.SIMULATOR && SimParam.arducopterLoggingEnabled) {

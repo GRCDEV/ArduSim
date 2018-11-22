@@ -22,6 +22,8 @@ import main.Param.SimulatorState;
 import sim.logic.SimParam;
 import uavController.UAVParam;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class Tools {
 	
 	/**
@@ -38,7 +40,7 @@ public class Tools {
 	
 	/**
 	 * Get the role performed by ArduSim.
-	 * @return The role ArduSim is performing. It can be compared to one of the following values to make decissions:
+	 * @return The role ArduSim is performing. It can be compared to one of the following values to make decisions:
 	 * <p>Tools.MULTICOPTER, Tools.SIMULATOR, or Tools.PCCOMPANION</p>
 	 */
 	public static int getArduSimRole() {
@@ -56,7 +58,7 @@ public class Tools {
 	
 	/**
 	 * Set the number of UAVs running on the same machine.
-	 * Only use it in the protocol configuration dialog, and when a parameter limits the number of UAVs that must be simulated.
+	 * <p>Only use this method in the protocol configuration dialog, and when a parameter limits the number of UAVs that must be simulated.</p>
 	 * @param numUAVs The number of UAVs running on the same machine
 	 */
 	public static void setNumUAVs(int numUAVs) {
@@ -133,7 +135,7 @@ public class Tools {
 	
 	/**
 	 * Set the loaded missions from file/s for the UAVs, in geographic coordinates.
-	 * Please, check that the length of the array is the same as the number of running UAVs in the same machine (method <i>getNumUAVs()</i>).
+	 * <p>Please, check that the length of the array is the same as the number of running UAVs in the same machine (method <i>getNumUAVs()</i>).</p>
 	 * @param missions Missions that must be loaded and set with this method in the protocol configuration window, when needed.
 	 */
 	public static void setLoadedMissionsFromFile(List<Waypoint>[] missions) {
@@ -150,8 +152,8 @@ public class Tools {
 
 	/**
 	 * Get the mission stored on the multicopter.
-	 * Mission only available if it is previously sent to the drone with <i>Copter.sendMission(int,List&lt;Waypoint&gt;)</i> and retrieved with <i>Copter.retrieveMission(int)</i>.
-	 * This steps can be performed automatically with the function <i>Copter.cleanAndSendMissionToUAV(int,List&lt;Waypoint&gt;)</i>.
+	 * <p>Mission only available if it is previously sent to the drone with <i>Copter.sendMission(int,List&lt;Waypoint&gt;)</i> and retrieved with <i>Copter.retrieveMission(int)</i>.
+	 * This steps can be performed automatically with the function <i>Copter.cleanAndSendMissionToUAV(int,List&lt;Waypoint&gt;)</i>.</p>
 	 * @param numUAV UAV position in arrays.
 	 * @return The mission currently stored in the UAV in geographic coordinates.
 	 */
@@ -161,8 +163,8 @@ public class Tools {
 
 	/**
 	 * Get the mission shown on screen.
-	 * Mission only available if it is previously sent to the drone with <i>Copter.sendMission(int,List&lt;Waypoint&gt;)</i> and retrieved with <i>Copter.retrieveMission(int)</i>.
-	 * This steps can be performed automatically with the function <i>Copter.cleanAndSendMissionToUAV(int,List&lt;Waypoint&gt;)</i>.
+	 * <p>Mission only available if it is previously sent to the drone with <i>Copter.sendMission(int,List&lt;Waypoint&gt;)</i> and retrieved with <i>Copter.retrieveMission(int)</i>.
+	 * This steps can be performed automatically with the function <i>Copter.cleanAndSendMissionToUAV(int,List&lt;Waypoint&gt;)</i>.</p>
 	 * @param numUAV UAV position in arrays.
 	 * @return The simplified mission shown in the screen in UTM coordinates.
 	 */
@@ -172,8 +174,8 @@ public class Tools {
 	
 	/**
 	 * Get the UDP port used for communications.
+	 * <p>This is useful in the PC Companion dialog, to listen data packets from the protocol.</p>
 	 * @return the UDP port used by real UAVs for communication.
-	 * This is useful in the PC Companion dialog, to listen data packets from the protocol.
 	 */
 	public static int getUDPBroadcastPort() {
 		return UAVParam.broadcastPort;
@@ -395,6 +397,26 @@ public class Tools {
 		}
 		return true;
 	}
+	
+	/**
+	 * Validate a non negative integer number.
+	 * @param validating String representation of a non negative integer.
+	 * @return true if the String represents a valid non negative integer.
+	 */
+	public static boolean isValidNonNegativeInteger(String validating) {
+		if (validating == null) {
+			return false;
+		}
+		try {
+			int x = Integer.parseInt(validating);
+			if (x < 0) {
+				return false;
+			}
+		} catch (NumberFormatException e) {
+			return false;
+		}
+		return true;
+	}
 
 	/**
 	 * Validate a positive double number.
@@ -503,7 +525,7 @@ public class Tools {
 	
 	/**
 	 * Find out if the verbose store feature is enabled.
-	 * If set to true, the developer can store additional file(s) for non relevant information.
+	 * <p>If set to true, the developer can store additional file(s) for non relevant information.</p>
 	 * @return true if verbose store feature is enabled.
 	 */
 	public static boolean isVerboseStorageEnabled() {
@@ -534,7 +556,7 @@ public class Tools {
 	 * Get the experiment end time.
 	 * @param numUAV UAV position in arrays.
 	 * @return The instant when a specific UAV has finished the experiment in Java VM time in milliseconds.
-	 * <p>Returns 0 if the experiment has not finished jet for the multicopter <i>numUAV</i>, or it has not even started.
+	 * Returns 0 if the experiment has not finished jet for the multicopter <i>numUAV</i>, or it has not even started.
 	 */
 	public static long getExperimentEndTime(int numUAV) {
 		return Param.testEndTime[numUAV];
@@ -542,8 +564,8 @@ public class Tools {
 	
 	/**
 	 * Get the path followed by the multicopter during the experiment.
-	 * Useful to log protocol data related to the path followed by the UAV.
-	 * If needed, it is suggested to use this method once the experiment has finished and the UAV is on the ground.
+	 * <p>Useful to log protocol data related to the path followed by the UAV.
+	 * If needed, it is suggested to use this method once the experiment has finished and the UAV is on the ground.</p>
 	 * @param numUAV UAV position in arrays.
 	 * @return The path followed by the UAV during the experiment in UTM coordinates.
 	 */

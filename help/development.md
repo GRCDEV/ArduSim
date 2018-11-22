@@ -335,6 +335,7 @@ The following functions help to validate values introduced by the user in a dial
 * `boolean isValidPort(String)`. It checks if a String represents a TCP port in the range [1024, 65535].
 * `boolean isValidBoolean(String)`. It checks if a String represents a valid boolean value.
 * `boolean isValidPositiveInteger(String)`. It checks if a String represents a positive integer.
+* `boolean isValidNonNegativeInteger(String)`. It checks if a String represents 0, or a positive integer.
 * `boolean isValidDouble(String)`. It checks if a String represents a double.
 * `boolean isValidPositiveDouble(String)`. It checks if a String represents a positive double.
 

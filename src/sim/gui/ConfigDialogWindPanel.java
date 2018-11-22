@@ -17,7 +17,8 @@ import main.Param;
 import main.Text;
 import sim.logic.SimParam;
 
-/** This class generates a panel to show the wind direction as an arrow, on the general configuration dialog. */
+/** This class generates a panel to show the wind direction as an arrow, on the general configuration dialog.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ConfigDialogWindPanel extends JPanel {
 

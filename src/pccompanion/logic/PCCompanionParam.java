@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import api.pojo.StatusPacket;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class PCCompanionParam {
 
 	// Remote assistant computer parameters

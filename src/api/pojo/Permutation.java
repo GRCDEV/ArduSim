@@ -3,7 +3,8 @@ package api.pojo;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-/** This class allows to get the possible permutations of the elements of an array, one by one. */
+/** This class allows to get the possible permutations of the elements of an array, one by one.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Permutation <T> {
 	private T[] arr;

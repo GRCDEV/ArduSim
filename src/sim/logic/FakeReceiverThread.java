@@ -2,6 +2,8 @@ package sim.logic;
 
 import api.Copter;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class FakeReceiverThread extends Thread {
 	
 	private int numUAV; // UAV identifier, beginning from 0

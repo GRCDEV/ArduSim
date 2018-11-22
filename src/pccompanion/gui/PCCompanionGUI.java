@@ -44,6 +44,8 @@ import pccompanion.logic.PCCompanionParam;
 import pccompanion.logic.PCCompanionTalker;
 import sim.gui.VerticalFlowLayout;
 
+/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class PCCompanionGUI {
 	
 	public static PCCompanionGUI companion;

@@ -1,6 +1,7 @@
 package main;
 
-/** This class allows the asynchronous start of a mission when the UAV is in stabilize mode on the ground. */
+/** This class allows the asynchronous start of a mission when the UAV is in stabilize mode on the ground.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 import java.util.concurrent.atomic.AtomicInteger;
 

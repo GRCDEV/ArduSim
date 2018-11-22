@@ -4,7 +4,8 @@ import api.Tools;
 
 /** The formation numbering starts in 0, with the UAV in the center of the circle.
  * The remaining UAVs are numbered beginning in the east with 1, and moving counterclockwise.
- * The UAVs keep at least the minDistance with the former and the later in the formation, and with the center UAV. */
+ * The UAVs keep at least the minDistance with the former and the later in the formation, and with the center UAV.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class CircularFlightFormation extends FlightFormation {
 
@@ -16,9 +17,6 @@ public class CircularFlightFormation extends FlightFormation {
 	protected void initializeFormation() {
 		this.centerUAV = 0;
 		this.point[this.centerUAV] = new FormationPoint(this.centerUAV, 0, 0);
-//		if (this.numUAVs == 2) {
-//			this.point[1] = new FormationPoint(1, this.minDistance, 0);
-//		}
 		if (this.numUAVs > 1) {
 			double radius;
 			if (this.numUAVs <= 7) {

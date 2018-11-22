@@ -4,7 +4,8 @@ import org.javatuples.Quartet;
 
 import api.Tools;
 
-/** This class generates and object that contains the current status information received from the UAV. */
+/** This class generates and object that contains the current status information received from the UAV.
+ * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVCurrentStatus {
 	
@@ -32,7 +33,7 @@ public class UAVCurrentStatus {
 		return this.current;
 	}
 	/** Returns the battery remaining level (%) or -1 if unknown.
-	 * <p>100% is the level when started, even if the battery was not fully charged!. */
+	 * <p>100% is the level when started, even if the battery was not fully charged!.</p> */
 	public synchronized int getRemainingBattery() {
 		return this.remainingBattery;
 	}
