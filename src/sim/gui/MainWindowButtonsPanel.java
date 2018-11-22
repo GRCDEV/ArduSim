@@ -105,6 +105,7 @@ public class MainWindowButtonsPanel extends JPanel {
 		buttonsPanel.add(progressDialogButton, gbc_progressDialogButton);
 		
 		setupButton = new JButton(Text.SETUP_TEST);
+		setupButton.setEnabled(false);
 		setupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {
@@ -125,6 +126,7 @@ public class MainWindowButtonsPanel extends JPanel {
 		buttonsPanel.add(setupButton, gbc_setupButton);
 
 		startTestButton = new JButton(Text.START_TEST);
+		startTestButton.setEnabled(false);
 		startTestButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {

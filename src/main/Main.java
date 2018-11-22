@@ -173,9 +173,6 @@ public class Main {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.logArea.setText(Text.STARTING_ENVIRONMENT + "\n");
-					
-					MainWindow.buttonsPanel.setupButton.setEnabled(false);
-					MainWindow.buttonsPanel.startTestButton.setEnabled(false);
 					MainWindow.buttonsPanel.statusLabel.setText(Text.STARTING_ENVIRONMENT);
 					new ProgressDialog(MainWindow.window.mainWindowFrame).toggleProgressShown();
 				}
