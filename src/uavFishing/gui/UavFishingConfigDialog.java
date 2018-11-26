@@ -179,7 +179,7 @@ public class UavFishingConfigDialog extends JDialog{
 			//Creamos un vector del tamaño igual al numero de UAVs para evitar problemas en la función sendInitialConfiguration principal.
 			UavFishingParam.boatMission = (List<Waypoint>[]) new List[Tools.getNumUAVs()];
 			UavFishingParam.boatMission[0]= fitxData.getValue1()[0];
-			UavFishingParam.distanceTreshold = 2*UavFishingParam.radius;
+			UavFishingParam.distanceTreshold = 0.1*UavFishingParam.radius;
 			Tools.setLoadedMissionsFromFile(UavFishingParam.boatMission);
 			Tools.setProtocolConfigured();
 			dispose();
