@@ -1,6 +1,6 @@
-package scanv2.logic;
+package muscop.logic;
 
-import static scanv2.pojo.State.*;
+import static muscop.pojo.State.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,10 +25,10 @@ import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
 import api.pojo.formations.FlightFormation.Formation;
 import main.Text;
-import scanv2.pojo.Message;
-import scanv2.pojo.MovedMission;
+import muscop.pojo.Message;
+import muscop.pojo.MovedMission;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class ListenerThread extends Thread {
 

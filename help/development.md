@@ -79,7 +79,7 @@ Several protocols have been already included in ArduSim:
 
 * **None**. Completed. Mission based. This protocol simply makes the multicopters to follow a planned mission.
 * **MBCAP**. Completed. Mission based. It avoids collisions among multicopters that are following a planned mission, as explained in the paper [MBCAP: Mission Based Collision Avoidance Protocol for UAVs](http://dx.doi.org/10.1109/AINA.2018.00090), presented in the "Advanced Information Networking and Applications (AINA 2018)" conference.
-* **Swarm protocol**. Almost completed. Swarm based. It makes a swarm to follow a mission stored in one of them while keeping the formation stable. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
+* **MUSCOP**. Almost completed. Swarm based. It makes a swarm to follow a mission stored in one of them while keeping the formation stable. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
 * **Chemotaxis**. Almost completed. Single multicopter. It enables a multicopter to dynamically move around an area looking for a hotspot using a sensor (e.g. heat on wildfires, pollution peaks,...).
 * **Follow Me**. In progress. Swarm based. A swarm follows a multicopter that is manually controlled by a pilot.
 * **Fishing**. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.

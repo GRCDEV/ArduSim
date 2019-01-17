@@ -25,7 +25,7 @@ import main.Param.SimulatorState;
 import main.Text;
 
 /** This class generates the panel used to interact with the application, which is inside the main window.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MainWindowButtonsPanel extends JPanel {
 
@@ -151,7 +151,11 @@ public class MainWindowButtonsPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				(new Thread(new Runnable() {
 					public void run() {
-						ArduSimTools.shutdown();
+						synchronized(MainWindow.CLOSE_SEMAPHORE) {
+							if (Param.simStatus != SimulatorState.SHUTTING_DOWN) {
+								ArduSimTools.shutdown();
+							}
+						}
 					}
 				})).start();
 			}

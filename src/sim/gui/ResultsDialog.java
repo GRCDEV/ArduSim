@@ -20,11 +20,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import api.GUI;
 import api.Tools;
-import main.Text;
 import main.ArduSimTools;
+import main.Text;
 
 /** This class generates a dialog when the experiment finalizes, with the experiment configuration and the results.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ResultsDialog extends JDialog {
 
@@ -67,7 +67,7 @@ public class ResultsDialog extends JDialog {
 						chooser.setAcceptAllFileFilterUsed(false);
 						int retrieval = chooser.showSaveDialog(null);
 						if (retrieval == JFileChooser.APPROVE_OPTION) {
-							File file = chooser.getSelectedFile();
+							final File file = chooser.getSelectedFile();
 							if (file.exists()) {
 								Object[] options = {Text.YES_OPTION, Text.NO_OPTION};
 								int result = JOptionPane.showOptionDialog(frame,
@@ -79,11 +79,21 @@ public class ResultsDialog extends JDialog {
 										options,
 										options[1]);
 								if (result == JOptionPane.YES_OPTION) {
-									ArduSimTools.storeResults(s, file);
+									(new Thread(new Runnable() {
+										@Override
+										public void run() {
+											ArduSimTools.storeResults(s, file);
+										}
+									})).start();
 									dispose();
 								}
 							} else {
-								ArduSimTools.storeResults(s, file);
+								(new Thread(new Runnable() {
+									@Override
+									public void run() {
+										ArduSimTools.storeResults(s, file);
+									}
+								})).start();
 								dispose();
 							}
 						}

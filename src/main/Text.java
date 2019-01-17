@@ -5,7 +5,7 @@ import sim.board.BoardParam;
 import uavController.UAVParam;
 
 /** This class contains text descriptions used on the application and on the simulator GUI.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Text {
 	
@@ -224,6 +224,9 @@ public class Text {
 	public static final String TAKING_OFF = "Take off in progress...";
 	public static final String TEST_START = "Test started...";
 	public static final String SHUTTING_DOWN_COMM = "Blocking virtual communications...";
+	public static final String STORING = "Storing results...";
+	public static final String STORING_NOT_FINISHED = "ArduSim cannot be closed while storing results.";
+	public static final String CLOSING = "Closing ArduSim...";
 	public static final String EXITING = "UAV(s) closed. Time to go...";
 	public static final String ALTITUDE_TEXT = "altitude";
 	

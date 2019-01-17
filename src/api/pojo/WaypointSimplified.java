@@ -3,7 +3,7 @@ package api.pojo;
 import java.util.List;
 
 /** This class generates a simplified waypoint, including only coordinates and the sequence number in the waypoints that form the mission.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class WaypointSimplified extends Point3D {
 	private static final long serialVersionUID = 1L;

@@ -5,7 +5,7 @@ import java.awt.geom.Point2D;
 import api.pojo.GeoCoordinates;
 
 /** This class generates a Mercator projection object that allows to transform between screen and Geographic coordinates.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MercatorProjection {
 

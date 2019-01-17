@@ -7,7 +7,7 @@ import main.cpuHelper.CPUData;
 import uavController.UAVControllerThread;
 
 /** This class contains general parameters of the application.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Param {
 	

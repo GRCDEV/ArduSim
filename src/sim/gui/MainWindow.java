@@ -26,7 +26,7 @@ import sim.board.BoardPanel;
 import sim.logic.SimParam;
 
 /** This class generates the main windows of the application. It consists on three elements: A log panel, a panel with buttons to interact with, and a panel to show the UAVs moving over a satellite map.</p>
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MainWindow {
 
@@ -36,7 +36,7 @@ public class MainWindow {
 	
 	public JFrame mainWindowFrame;
 	
-	private final static Object CLOSE_SEMAPHORE = new Object();
+	public final static Object CLOSE_SEMAPHORE = new Object();
 
 	public MainWindow() {
 		initialize();
@@ -113,6 +113,7 @@ public class MainWindow {
 	/** Request to close ArduSim simulator. */
 	public void closeArduSim() {
 		(new Thread(new Runnable() {
+			@Override
 			public void run() {
 				synchronized(MainWindow.CLOSE_SEMAPHORE) {
 					if (Param.simStatus != SimulatorState.SHUTTING_DOWN

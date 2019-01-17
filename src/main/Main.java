@@ -38,7 +38,7 @@ import uavController.TestTalker;
 import uavController.UAVParam;
 
 /** This class contains the main method and the chronological logic followed by the whole application.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Main {
 

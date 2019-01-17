@@ -7,7 +7,7 @@ import api.pojo.Location2D;
 import api.pojo.UTMCoordinates;
 
 /** This class generates and object that contains the most recent information received from the UAV.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVCurrentData {
 

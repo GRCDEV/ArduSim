@@ -1,6 +1,6 @@
-package scanv2.pojo;
+package muscop.pojo;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public final class Message {
 	

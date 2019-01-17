@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import api.pojo.LogPoint;
 
 /** This class contains the parameters that change the behaviour of the panel used to show the UAVs movement.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class BoardParam {
 

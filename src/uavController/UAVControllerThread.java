@@ -64,7 +64,7 @@ import sim.logic.SimTools;
 /** This class implements the communication with the UAV, whether it is real or simulated.
  * <p>The thread applies the communications finite state machine needed to support the MAVLink protocol.
  * If you need to send a new type of message to the flight controller, please contact with the original developer (it would be easier).</p>
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVControllerThread extends Thread {
 	
@@ -431,9 +431,9 @@ public class UAVControllerThread extends Thread {
 		msg_mission_item_reached message = (msg_mission_item_reached) inMsg;
 		// The received value begins in 0
 		UAVParam.currentWaypoint.set(numUAV, message.seq);
-		GUI.log(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
+//		GUI.log(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);// TODO descomentar
 		
-		ArduSimTools.triggerWaypointReached(numUAV);
+		ArduSimTools.triggerWaypointReached(numUAV, message.seq);
 	}
 
 	/** Process the received message that gets the number of waypoints included in the UAV mission. */

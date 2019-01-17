@@ -1,8 +1,8 @@
 package lander.logic;
 
 import static lander.pojo.State.*;
-import static scanv2.pojo.State.FINISH;
-import static scanv2.pojo.State.LANDING;
+import static muscop.pojo.State.FINISH;
+import static muscop.pojo.State.LANDING;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
@@ -21,8 +21,8 @@ import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import lander.gui.LanderConfiDialog;
 import main.Text;
-import scanv2.logic.ScanParam;
-import scanv2.logic.ScanText;
+import muscop.logic.ScanParam;
+import muscop.logic.ScanText;
 import sim.board.BoardPanel;
 import sim.logic.SimParam;
 import uavController.UAVParam;

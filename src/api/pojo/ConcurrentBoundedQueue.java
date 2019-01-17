@@ -4,7 +4,7 @@ import java.lang.reflect.Array;
 
 /** Concurrent, generic and bounded FIFO queue.
  * <p>When the queue is filled, the oldest element is removed. Elements cannot be removed. The list of elements stored is provided in the same order they were inserted.</p>
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ConcurrentBoundedQueue<T> {
 	

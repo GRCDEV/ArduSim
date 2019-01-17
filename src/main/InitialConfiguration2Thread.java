@@ -9,7 +9,7 @@ import api.pojo.Waypoint;
 import uavController.UAVParam;
 
 /** This class sends the initial configuration to all UAVs, asynchronously.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class InitialConfiguration2Thread extends Thread {
 	

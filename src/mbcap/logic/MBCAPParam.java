@@ -15,17 +15,19 @@ import mbcap.pojo.Beacon;
 import mbcap.pojo.ProgressState;
 
 /** This class contains parameters related to MBCAP protocol.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MBCAPParam {
 	
 	// Beaconing parameters
+	public static final int MAX_BEACON_LOCATIONS = 59;//TODO meter en interfaz				// Maximum number of locations that can be sent in the beacon
+	public static final double MAX_WAYPOINT_DISTANCE = 400;			// (m) Maximum distance to a waypoint to be included in the beacon while in stand still state
 	public static int beaconingPeriod = 200;						// (ms) Time between beacons
 	public static int numBeacons = 5;								// Between a new future positions calculus
 	public static double hopTime = 0.5;								// (s) Between two predicted positions
 	public static long hopTimeNS = (long) (hopTime * 1000000000l);	// (ns) The same in nanoseconds
 	public static double minSpeed = 1.0;							// (m/s) To calculate the predicted future positions
-	public static long beaconExpirationTime = 10 * 1000000000l;		// (ns) Beacon validity before being ignored
+	public static long beaconExpirationTime = 10 * 1000000000l;		// (ns) Beacon validity before being ignored TODO sobra 1 segundo
 	
 	// Collision risk detection parameters
 	public static double collisionRiskDistance = 20; 				// (m) Distance between points to assert collision risk (UTM coordinates)
@@ -47,8 +49,9 @@ public class MBCAPParam {
 	public static final int SHORT_WAITING_TIME = 200; 					// (ms) Waiting timeout between threads
 	public static final Stroke STROKE_POINT = new BasicStroke(1f);		// Shown circles format
 	// Moving aside parameters
-	public static double safePlaceDistance = 2 * MBCAPParam.gpsError;	// (m) Minimum safety distance to the other UAV path
-	public static final double PRECISION_MARGIN = 0.5;					// (m) In case a precision error occurs
+	public static final double EXTRA_ERROR = 1.5;						// (m) Additional distance error for the safety distance (curve compensation)
+	public static final double PRECISION_MARGIN = 1;					// (m) In case a precision error happens during breaking
+	public static double safePlaceDistance = 2 * MBCAPParam.gpsError + EXTRA_ERROR + PRECISION_MARGIN;// (m) Minimum safety distance to the other UAV path
 	public static final double SAFETY_DISTANCE_RANGE = 1;				// (m) Maximum distance to consider that the UAV has reached the safety position
 	public static final double STABILIZATION_SPEED = 0.2;				// (m/s) When it is stopped
 	public static final int STABILIZATION_WAIT_TIME = 200;				// (ms) Time passively waiting the UAV to stop
@@ -57,8 +60,27 @@ public class MBCAPParam {
 	// Parameter to decide whether the predicted path must be projected over the theoretical mission or not.
 	public static AtomicIntegerArray projectPath;		// 1 means project, 0 means do not project
 	
+	// Equation parameters for the minimum distance between a UAV and a mission segment when near of a waypoint to avoid the other UAV when moving towards the next segment
+	//  d=f(speed, angle between mission segments)
+	public static final double[][] FUNCTION_DISTANCE_VS_SPEED = new double[][] {{0, 0, 0, 0},
+		{0.37783, 0.06666666666666, -0.0085714285714262, 0.059047619047619},
+		{0.74388, 0.16428571428571, -0.06, 0.112},
+		{1.13956, 0.17857142857144, -0.09571428571429, 0.148},
+		{1.27618, 0.2190476190476, -0.10428571428571, 0.15180952380952}};	// d = [1] + [2] * speed + [3] * speed^2 for each angle [0] in radians
+	public static final double[][] FUNCTION_DISTANCE_VS_ALPHA = new double[][] {{0, 0, 0, 0},
+		{2.5, -0.0041484183177452, 1.6173509925798, -0.60732719765111},
+		{5, -0.028184494059779, 4.7381059350027, 1.3302321210998},
+		{7.5, -0.030910306099195, 10.557940446505, -3.3652974603568},
+		{10, -0.093797386913902, 18.318356442452, -5.5283946551365},
+		{12.5, -0.16173390395179, 28.802004999439, -8.4664805885628},
+		{15, -0.23662178632741, 42.085324900865, -12.306741240534}};	// d = [1] + [2] * angle + [3] * angle^2 for each speed [0] in m/s
+	// Equation parameters for the minimum distance to a waypoint where the UAV starts to change the trajectory depending on the speed
+	public static final double[] FUNCTION_WAYPOINT_THRESHOLD = new double[] {0.61904761904762, -0.44142857142857, 0.49466666666666667};	// d = [1] + [2] * speed + [3] * speed^2
+	
 	// Data structures for storing data
 	public static AtomicIntegerArray event;						// Event number included in the beacon
+	public static AtomicIntegerArray eventDeadlockSolved;		// Number of deadlock events solved
+	public static AtomicIntegerArray eventDeadlockFailed;		// Number of deadlock events failed
 	public static AtomicLongArray idAvoiding;					// UAV with risk of collision included in the beacon
 	public static final long ID_AVOIDING_DEFAULT = -1;			// Default value (not avoiding collision)
 	public static final int POINTS_SIZE = 59;					// Initial predicted positions list size

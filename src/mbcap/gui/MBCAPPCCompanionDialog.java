@@ -30,7 +30,7 @@ import mbcap.logic.MBCAPText;
 import mbcap.pojo.Beacon;
 import sim.gui.VerticalFlowLayout;
 
-/* Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class MBCAPPCCompanionDialog extends JDialog {
 

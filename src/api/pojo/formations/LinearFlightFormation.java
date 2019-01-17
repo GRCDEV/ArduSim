@@ -3,7 +3,7 @@ package api.pojo.formations;
 import api.Tools;
 
 /** The formation numbering starts in 0, and increases from left to the right.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class LinearFlightFormation extends FlightFormation {
 

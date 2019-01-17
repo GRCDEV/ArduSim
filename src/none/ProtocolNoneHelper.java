@@ -15,7 +15,7 @@ import mbcap.logic.MBCAPv3Helper;
 import sim.board.BoardPanel;
 
 /** Implementation of the protocol NONE to allow the user to simply follow missions.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ProtocolNoneHelper extends ProtocolHelper {
 	

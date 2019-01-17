@@ -7,14 +7,13 @@ import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 
 /** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class BeaconingThread extends Thread implements WaypointReachedListener {
 	
 	boolean finished = false;
 	double distance = Double.MAX_VALUE;
 	
-
 	private int numUAV; // UAV identifier, beginning from 0
 
 	@SuppressWarnings("unused")
@@ -25,7 +24,7 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 	}
 	
 	@Override
-	public void onWaypointReached() {
+	public void onWaypointReached(int numSeq) {
 		// Project the predicted path over the planned mission
 		MBCAPParam.projectPath.set(numUAV, 1);
 	}
@@ -57,6 +56,7 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 				&& !Tools.isCollisionDetected()) {
 			// Each beacon is sent a number of times before renewing the predicted positions
 			for (long i = 0; i < MBCAPParam.numBeacons; i++) {
+				
 				// The first time it is needed to calculate the predicted positions
 				if (i == 0) {
 					selfBeacon = Beacon.buildToSend(numUAV);

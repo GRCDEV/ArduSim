@@ -28,7 +28,7 @@ import uavController.UAVParam.ControllerParam;
 
 /** This class contains exclusively static methods to control the UAV "numUAV" in the arrays included in the application.
  * <p>Methods that start with "API" are single commands, while other methods are complex commands made of several of the previous commands.</p>
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Copter {
 	
@@ -135,7 +135,7 @@ public class Copter {
 	 * @return Whether the UAV is flying or not.
 	 */
 	public static boolean isFlying(int numUAV) {
-		return Copter.getFlightMode(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING;
+		return UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING;
 	}
 	
 	/**
@@ -702,7 +702,22 @@ public class Copter {
 			}
 		}
 		UAVParam.missionUTMSimplified.set(numUAV, missionUTMSimplified);
-		UAVParam.lastWP[numUAV] = UAVParam.currentGeoMission[numUAV].get(UAVParam.currentGeoMission[numUAV].size() - 1);
+		Waypoint lastWP = UAVParam.currentGeoMission[numUAV].get(UAVParam.currentGeoMission[numUAV].size() - 1);
+		UAVParam.lastWP[numUAV] = lastWP;
+		if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+			Waypoint home = UAVParam.currentGeoMission[numUAV].get(0);
+			UAVParam.lastWPUTM[numUAV] = Tools.geoToUTM(home.getLatitude(), home.getLongitude());
+		} else if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND) {
+			if (lastWP.getLatitude() == 0 && lastWP.getLongitude() == 0) {
+				Waypoint prevLastWP = UAVParam.currentGeoMission[numUAV].get(UAVParam.currentGeoMission[numUAV].size() - 2);
+				UAVParam.lastWPUTM[numUAV] = Tools.geoToUTM(prevLastWP.getLatitude(), prevLastWP.getLongitude());
+				// Be careful, usually, the UAV lands many meters before reaching that waypoint if the planned speed is high
+			} else {
+				UAVParam.lastWPUTM[numUAV] = Tools.geoToUTM(lastWP.getLatitude(), lastWP.getLongitude());
+			}
+		} else {
+			UAVParam.lastWPUTM[numUAV] = Tools.geoToUTM(lastWP.getLatitude(), lastWP.getLongitude());
+		}
 	}
 	
 	/**

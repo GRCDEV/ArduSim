@@ -8,7 +8,7 @@ import org.mavlink.messages.ardupilotmega.msg_mission_item;
 /** This class generates a waypoint used in missions.
  * <p>getMessage() allows to encode a MAVLink message of this waypoint.</p>
  * <p>arrayToString() and listToString() allow to print a mission in standard file format.</p>
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Waypoint implements Cloneable {
 	

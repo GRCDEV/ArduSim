@@ -1,4 +1,4 @@
-package scanv2.gui;
+package muscop.gui;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -32,10 +32,10 @@ import api.pojo.Waypoint;
 import api.pojo.formations.FlightFormation;
 import api.pojo.formations.FlightFormation.Formation;
 import main.Text;
-import scanv2.logic.ScanParam;
-import scanv2.logic.ScanText;
+import muscop.logic.ScanParam;
+import muscop.logic.ScanText;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class ScanConfigDialog extends JDialog {
 

@@ -19,7 +19,7 @@ import api.Tools;
 import mbcap.logic.MBCAPText;
 
 /** This class generates the dialog to input the configuration of the MBCAP protocol.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class NoneConfigDialog extends JDialog {
 

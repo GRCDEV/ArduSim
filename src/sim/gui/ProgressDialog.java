@@ -30,7 +30,7 @@ import main.Text;
 import sim.logic.SimParam;
 
 /** This class generates the dialog that shows UAV information on real time, over the main window.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ProgressDialog extends JDialog {
 

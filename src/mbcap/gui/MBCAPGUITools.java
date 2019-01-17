@@ -21,7 +21,7 @@ import mbcap.pojo.ProgressState;
 import sim.board.BoardPanel;
 
 /** This class contains exclusively static methods used by the GUI.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MBCAPGUITools {
 
@@ -72,7 +72,7 @@ public class MBCAPGUITools {
 		if (checkCollision) {
 			double collisionRiskDistance = Double.parseDouble(validating);
 			double collisionDistance = Tools.getCollisionHorizontalDistance();
-			if (collisionRiskDistance <= collisionDistance) {
+			if (collisionRiskDistance < collisionDistance + 1) {
 				GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_2);
 				return false;
 			}
@@ -163,7 +163,7 @@ public class MBCAPGUITools {
 		MBCAPParam.riskCheckPeriod = (long) (Double.parseDouble(panel.riskCheckPeriodTextField.getText()) * 1000000000l);
 		MBCAPParam.packetLossThreshold = Integer.parseInt(panel.packetLossTextField.getText());
 		MBCAPParam.gpsError = Double.parseDouble(panel.gpsErrorTextField.getText());
-		MBCAPParam.safePlaceDistance = 2 * MBCAPParam.gpsError;
+		MBCAPParam.safePlaceDistance = 2 * MBCAPParam.gpsError + MBCAPParam.EXTRA_ERROR + MBCAPParam.PRECISION_MARGIN;
 		MBCAPParam.standStillTimeout = (long) (Double.parseDouble(panel.standStillTimeTextField.getText()) * 1000000000l);
 		MBCAPParam.passingTimeout = (long) (Double.parseDouble(panel.passingTimeTextField.getText()) * 1000000000l);
 		MBCAPParam.resumeTimeout = (long) (Double.parseDouble(panel.solvedTimeTextField.getText()) * 1000000000l);

@@ -3,7 +3,7 @@ package api.pojo;
 import java.awt.geom.Point2D;
 
 /** This class generates a point in UTM coordinates in meters.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UTMCoordinates extends Point2D.Double implements Cloneable {
 

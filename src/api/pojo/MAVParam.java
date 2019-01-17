@@ -2,7 +2,7 @@ package api.pojo;
 
 import java.util.Objects;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class MAVParam {
 	

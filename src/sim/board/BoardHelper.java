@@ -36,7 +36,7 @@ import sim.logic.SimParam;
 import uavController.UAVParam;
 
 /** This class contains methods used to show information on the board of the main window.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class BoardHelper {
 	

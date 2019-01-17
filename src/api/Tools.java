@@ -22,7 +22,7 @@ import main.Param.SimulatorState;
 import sim.logic.SimParam;
 import uavController.UAVParam;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class Tools {
 	
@@ -170,6 +170,24 @@ public class Tools {
 	 */
 	public static List<WaypointSimplified> getUAVMissionSimplified(int numUAV) {
 		return UAVParam.missionUTMSimplified.get(numUAV);
+	}
+	
+	/**
+	 * Get the UTM coordinates of the last waypoint of the current mission.
+	 * @param numUAV UAV position in arrays.
+	 * @return The UTM coordinates of the last waypoint of the current mission, or <i>null</i> if the UAV is not following a mission.
+	 */
+	public static UTMCoordinates getUAVLastWaypointUTM(int numUAV) {
+		return UAVParam.lastWPUTM[numUAV];
+	}
+	
+	/**
+	 * Get the last waypoint of the current mission.
+	 * @param numUAV UAV position in arrays.
+	 * @return The last waypoint of the current mission, or <i>null</i> if the UAV is not following a mission.
+	 */
+	public static Waypoint getUAVLastWaypoint(int numUAV) {
+		return UAVParam.lastWP[numUAV];
 	}
 	
 	/**

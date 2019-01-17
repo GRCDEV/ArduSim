@@ -23,7 +23,7 @@ import api.pojo.Waypoint;
 import mbcap.logic.MBCAPText;
 
 /** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class NoneConfigDialogPanel extends JPanel {
 

@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import api.pojo.Point3D;
 
 /** This class contains parameters related to elements of the MBCAP protocol that are shown on the board panel.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MBCAPGUIParam {
 

@@ -3,7 +3,7 @@ package api.pojo;
 import api.Tools;
 
 /** This class generates a point for each of the UAV locations during its movement, including time, heading, etc.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class LogPoint extends Point3D implements Cloneable {
 	

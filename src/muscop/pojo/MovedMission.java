@@ -1,8 +1,8 @@
-package scanv2.pojo;
+package muscop.pojo;
 
 import api.pojo.Point3D;
 
-/** <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+/** <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MovedMission implements Comparable<MovedMission> {
 

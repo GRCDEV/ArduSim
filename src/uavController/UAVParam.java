@@ -32,7 +32,7 @@ import sim.pojo.IncomingMessage;
 import sim.pojo.IncomingMessageQueue;
 
 /** This class includes parameters specifically related to the communication with the flight controller.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVParam {
 
@@ -98,7 +98,7 @@ public class UAVParam {
 	public static volatile boolean collisionDetected = false; 		// Can be used to stop protocols when a collision happens
 	
 	// Parameters used to detect when a UAV reaches the last waypoint
-	public static final double LAST_WP_THRESHOLD = 1.0; // (m) Maximum distance considered to assert that the UAV has reached the last waypoint
+	public static final double LAST_WP_THRESHOLD = 2.0; // (m) Maximum distance considered to assert that the UAV has reached the last waypoint
 	
 	// Received information
 	public static UAVCurrentData[] uavCurrentData;
@@ -189,7 +189,7 @@ public class UAVParam {
 	public static final int COMMAND_WAIT = 200;
 
 	// Stabilization parameters (when the UAV is stopping)
-	public static final double STABILIZATION_SPEED = 0.2;				// (m/s) When it is stopped
+	public static final double STABILIZATION_SPEED = 0.3;				// (m/s) When it is stopped
 	public static final int STABILIZATION_WAIT_TIME = 200;				// (ms) Passively waiting the UAV to stop
 	public static final long STABILIZATION_TIMEOUT = 30 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 
@@ -261,6 +261,7 @@ public class UAVParam {
 	public static Waypoint[][] newGeoMission;			// Missions that are about to be sent to the UAV, in Geographic coordinates
 	public static List<Waypoint>[] currentGeoMission;	// Missions retrieved from the UAV, in Geographic coordinates
 	public static Waypoint[] lastWP;					// Last waypoint of the retrieved mission
+	public static UTMCoordinates[] lastWPUTM;			// Coordinates of the last waypoint of the retrieved mission
 	public static AtomicReferenceArray<List<WaypointSimplified>> missionUTMSimplified; // Missions simplified from the previous one for drawing, in UTM coordinates
 	public static List<Shape>[] MissionPx;				// Missions to be drawn on screen, in pixel coordinates
 	public static final int MAV_STATUS_REQUEST_WP_LIST = 28;

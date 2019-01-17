@@ -31,7 +31,7 @@ import sim.logic.SimParam.RenderQuality;
 import uavController.UAVParam;
 
 /** This class contains method used internally by the application for its own profit.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class SimTools {
 	

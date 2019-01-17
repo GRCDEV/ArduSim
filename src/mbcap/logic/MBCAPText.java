@@ -1,7 +1,7 @@
 package mbcap.logic;
 
 /** This class contains messages used by MBCAP protocol.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class MBCAPText {
 	
@@ -19,6 +19,9 @@ public class MBCAPText {
 	public static final String BUTTON_SELECT = "...";
 	public static final String UAV_NUMBER = "Number of UAVs:";
 	
+	public static final String SITUATIONS_SOLVED = "Number of collisions avoided:";
+	public static final String DEADLOCKS = "Number of deadlocks solved:";
+	public static final String DEADLOCKS_FAILED = "Number of deadlocks failed:";
 	public static final String BEACONING_PARAM = "Beaconing parameters:";
 	public static final String BEACON_INTERVAL = "Beacon interval:";
 	public static final String BEACON_REFRESH = "Beacon renewal rate:";
@@ -45,7 +48,7 @@ public class MBCAPText {
 	public static final String MIN_SPEED_ERROR = "The minimal speed must be a valid positive number.";
 	public static final String BEACON_EXPIRATION_ERROR = "The beacon expiration time must be a valid positive number.";
 	public static final String WARN_DISTANCE_ERROR_1 = "The distance between UAVs must be a valid positive number.";
-	public static final String WARN_DISTANCE_ERROR_2 = "The distance between UAVs must be greater than the distance defined to detect collision.";
+	public static final String WARN_DISTANCE_ERROR_2 = "The distance between UAVs must be greater by one than the distance defined to detect collision.";
 	public static final String WARN_ALTITUDE_ERROR_1 = "The altitude difference must be a valid positive number.";
 	public static final String WARN_ALTITUDE_ERROR_2 = "The altitude difference must be greater than the distance defined to detect collision.";
 	public static final String WARN_TIME_ERROR = "The time difference must be a valid positive number.";

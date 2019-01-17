@@ -9,7 +9,7 @@ import org.javatuples.Pair;
 import api.pojo.GeoCoordinates;
 import sim.board.BoardPanel;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public abstract class ProtocolHelper {
 	

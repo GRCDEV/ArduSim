@@ -1,6 +1,6 @@
-package scanv2.logic;
+package muscop.logic;
 
-import static scanv2.pojo.State.SETUP_FINISHED;
+import static muscop.pojo.State.SETUP_FINISHED;
 
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -27,10 +27,10 @@ import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.formations.FlightFormation;
-import scanv2.gui.ScanConfigDialog;
+import muscop.gui.ScanConfigDialog;
 import sim.board.BoardPanel;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class ScanHelper extends ProtocolHelper {
 

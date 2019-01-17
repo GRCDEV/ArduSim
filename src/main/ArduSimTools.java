@@ -113,11 +113,13 @@ import uavController.UAVParam;
 import uavController.UAVParam.ControllerParam;
 
 /** This class contains general tools used by the simulator.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ArduSimTools {
 	
 	public static List<WaypointReachedListener> listeners = new ArrayList<WaypointReachedListener>();
+	
+	private static volatile boolean storingResults = false;
 	
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
@@ -562,6 +564,7 @@ public class ArduSimTools {
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
 		UAVParam.lastWP = new Waypoint[Param.numUAVs];
+		UAVParam.lastWPUTM = new UTMCoordinates[Param.numUAVs];
 		UAVParam.RTLAltitude = new double[Param.numUAVs];
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
 		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
@@ -1833,6 +1836,11 @@ public class ArduSimTools {
 	
 	/** Closes the SITL simulator instances, and the application. Also the Cygwin consoles if using Windows. */
 	public static void shutdown() {
+		if (ArduSimTools.storingResults) {
+			GUI.warn(Text.STORE_WARNING, Text.STORING_NOT_FINISHED);
+			return;
+		}
+		
 		// 1. Ask for confirmation if the experiment has not started or finished
 		if (Param.role == Tools.SIMULATOR) {
 			boolean reallyClose = true;
@@ -1854,6 +1862,7 @@ public class ArduSimTools {
 		}
 
 		// 2. Change the status and close SITL
+		GUI.log(Text.CLOSING);
 		Param.simStatus = SimulatorState.SHUTTING_DOWN;
 		if (Param.role == Tools.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
@@ -2482,12 +2491,12 @@ public class ArduSimTools {
 	
 	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event.
 	 * <p>This method is NOT thread-safe.</p> */
-	public static void triggerWaypointReached(int numUAV) {
+	public static void triggerWaypointReached(int numUAV, int numSeq) {
 		WaypointReachedListener listener;
 		for (int i = 0; i < ArduSimTools.listeners.size(); i++) {
 			listener = ArduSimTools.listeners.get(i);
 			if (listener.getNumUAV() == numUAV) {
-				listener.onWaypointReached();
+				listener.onWaypointReached(numSeq);
 			}
 		}
 	}
@@ -2569,7 +2578,7 @@ public class ArduSimTools {
 						&& !UAVParam.lastWaypointReached[i]) {
 					UAVParam.lastWaypointReached[i] = true;
 					GUI.log(i, Text.LAST_WAYPOINT_REACHED);
-					ArduSimTools.triggerWaypointReached(i);
+					ArduSimTools.triggerWaypointReached(i, Tools.getUAVMission(i).get(Tools.getUAVMission(i).size() - 1).getNumSeq());
 				}
 				
 				if (Param.testEndTime[i] == 0) {
@@ -2636,7 +2645,7 @@ public class ArduSimTools {
 		} else if (Param.role == Tools.SIMULATOR) {
 			sb.append("\n").append(Text.SIMULATION_PARAMETERS);
 			sb.append("\n\t").append(Text.UAV_NUMBER).append(" ").append(Param.numUAVs);
-			sb.append("\n\t").append(Text.LOG_SPEED).append(" (").append(Text.METERS_PER_SECOND).append("):\n");
+			sb.append("\n\t").append(Text.LOG_SPEED).append(" (").append(Text.METERS_PER_SECOND).append("):\n\t");
 			for (int i=0; i<Param.numUAVs; i++) {
 				sb.append(UAVParam.initialSpeeds[i]);
 				if (i%10 == 9) {
@@ -3142,11 +3151,14 @@ public class ArduSimTools {
 	
 	/** Stores the experiment results. */
 	public static void storeResults(String results, File file) {
+		ArduSimTools.storingResults = true;
+		GUI.log(Text.STORING);
+		
 		// Extracting the name of the file without path or extension for later logging
 		String folder = file.getParent();
 		String baseFileName = file.getName();
 		String extension = Tools.getFileExtension(file);
-		if (extension.length() > 0) {
+		if (extension.length() > 0 && extension.equalsIgnoreCase(Text.FILE_EXTENSION_TXT)) {
 			baseFileName = baseFileName.substring(0, baseFileName.lastIndexOf(extension) - 1); // Remove also the dot
 		}
 		
@@ -3190,6 +3202,9 @@ public class ArduSimTools {
 				}
 			}
 		}
+		
+		GUI.log(Text.WAITING_FOR_USER);
+		ArduSimTools.storingResults = false;
 	}
 	
 	/** Logging to file the UAVs mission, in AutoCAD format. */

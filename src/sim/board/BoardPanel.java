@@ -4,7 +4,7 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 /** This class generates the panel used to draw the map and the UAVs movement.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class BoardPanel extends JPanel {
 

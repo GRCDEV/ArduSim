@@ -35,7 +35,7 @@ import sim.gui.ProgressDialog;
 import sim.logic.SimParam;
 
 /** This class consists exclusively of static methods that help the developer to validate and show information on screen.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class GUI {
 	
@@ -232,7 +232,7 @@ public class GUI {
 	 * Open a dialog to load missions from a Google Earth <i>.kml</i> file.
 	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
 	 */
-	public static Pair<String, List<Waypoint>[]> loadKMLMissions() {
+	public static Pair<String, List<Waypoint>[]> loadKMLMissions() {//TODO hacerlo con thread y callback para que no se ejecute en el hilo GUI
 		File[] selection;
 		JFileChooser chooser = new JFileChooser();
 		chooser.setCurrentDirectory(Tools.getCurrentFolder());
@@ -264,7 +264,7 @@ public class GUI {
 	 * Open a dialog to load missions from <i>.waypoints</i> files.
 	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
 	 */
-	public static Pair<String, List<Waypoint>[]> loadWaypointMissions() {
+	public static Pair<String, List<Waypoint>[]> loadWaypointMissions() {//TODO hacerlo con thread y callback para que no se ejecute en el hilo GUI
 		File[] selection;
 		JFileChooser chooser = new JFileChooser();
 		chooser.setCurrentDirectory(Tools.getCurrentFolder());
@@ -296,7 +296,7 @@ public class GUI {
 	 * Open a dialog to load missions from a Google Earth <i>.kml</i> file, or from <i>.waypoints</i> files.
 	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
 	 */
-	public static Pair<String, List<Waypoint>[]> loadMissions() {
+	public static Pair<String, List<Waypoint>[]> loadMissions() {//TODO hacerlo con thread y callback para que no se ejecute en el hilo GUI
 		File[] selection;
 		JFileChooser chooser = new JFileChooser();
 		chooser.setCurrentDirectory(Tools.getCurrentFolder());

@@ -8,7 +8,7 @@ import api.Tools;
 import mbcap.pojo.Beacon;
 
 /** This class receives data packets and stores them for later analysis of risk of collision.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ReceiverThread extends Thread {
 	

@@ -1,6 +1,6 @@
-package scanv2.logic;
+package muscop.logic;
 
-import static scanv2.pojo.State.*;
+import static muscop.pojo.State.*;
 
 import java.util.Arrays;
 
@@ -11,9 +11,9 @@ import api.GUI;
 import api.Tools;
 import api.pojo.UTMCoordinates;
 import api.pojo.formations.FlightFormation;
-import scanv2.pojo.Message;
+import muscop.pojo.Message;
 
-/** Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class TalkerThread extends Thread {
 

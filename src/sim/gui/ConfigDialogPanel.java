@@ -37,7 +37,7 @@ import sim.logic.SimTools;
 import uavController.UAVParam;
 
 /** This class generates the panel with the general configuration parameters shown in the configuration dialog.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class ConfigDialogPanel extends JPanel {
 

@@ -6,7 +6,7 @@ import api.Tools;
 import sim.logic.SimParam;
 
 /** This class generates objects with valid UTM and Geographic coordinates, and it is thread-safe.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class Location2D {
 	

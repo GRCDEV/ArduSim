@@ -5,7 +5,7 @@ import java.util.ArrayDeque;
 import uavController.UAVParam;
 
 /** This implementation is thread-safe.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class IncomingMessageQueue {
 	

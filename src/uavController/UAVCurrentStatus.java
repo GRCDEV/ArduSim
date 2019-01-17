@@ -5,7 +5,7 @@ import org.javatuples.Quartet;
 import api.Tools;
 
 /** This class generates and object that contains the current status information received from the UAV.
- * <p>Developed by: Francisco José Fabra Collado, fron GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
 public class UAVCurrentStatus {
 	

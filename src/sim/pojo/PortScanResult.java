@@ -1,5 +1,7 @@
 package sim.pojo;
 
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+
 public class PortScanResult {
 	private int port;
 
