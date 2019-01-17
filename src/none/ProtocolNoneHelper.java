@@ -11,7 +11,7 @@ import api.ProtocolHelper;
 import api.Tools;
 import api.pojo.GeoCoordinates;
 import main.Text;
-import mbcap.logic.MBCAPv3Helper;
+import mbcap.logic.MBCAPHelper;
 import sim.board.BoardPanel;
 
 /** Implementation of the protocol NONE to allow the user to simply follow missions.
@@ -19,10 +19,10 @@ import sim.board.BoardPanel;
 
 public class ProtocolNoneHelper extends ProtocolHelper {
 	
-	private MBCAPv3Helper copy;
+	private MBCAPHelper copy;
 	
 	public ProtocolNoneHelper() {
-		this.copy = new MBCAPv3Helper();
+		this.copy = new MBCAPHelper();
 	}
 
 	@Override

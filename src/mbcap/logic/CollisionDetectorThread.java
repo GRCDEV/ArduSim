@@ -13,7 +13,7 @@ import api.pojo.GeoCoordinates;
 import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import mbcap.gui.MBCAPGUITools;
-import mbcap.logic.MBCAPParam.MBCAPState;
+import mbcap.pojo.MBCAPState;
 import mbcap.pojo.Beacon;
 
 /** This class implements the collision risk check finite state machine.
@@ -203,7 +203,7 @@ public class CollisionDetectorThread extends Thread {
 									}
 									
 									if (check) {
-										riskyLocation = MBCAPv3Helper.hasCollisionRisk(numUAV, selfBeacon, auxBeacon);
+										riskyLocation = MBCAPHelper.hasCollisionRisk(numUAV, selfBeacon, auxBeacon);
 										if (riskyLocation != null && !auxBeacon.isLanding) {
 											MBCAPParam.impactLocationUTM[numUAV].put(auxBeacon.uavId, riskyLocation);
 											MBCAPGUITools.locateImpactRiskMark(riskyLocation, numUAV, auxBeacon.uavId);
@@ -379,7 +379,7 @@ public class CollisionDetectorThread extends Thread {
 									// UAV with less priority
 
 									// Change to the states moving aside or go on, please
-									if (MBCAPv3Helper.needsToMoveAside(numUAV, avoidingBeacon.points, avoidingBeacon.plannedSpeed)) {
+									if (MBCAPHelper.needsToMoveAside(numUAV, avoidingBeacon.points, avoidingBeacon.plannedSpeed)) {
 										// Change to the state moving aside. Changing MAV mode as previous step
 										if (Copter.setFlightMode(numUAV, FlightMode.GUIDED)) {
 											GUI.log(numUAV, MBCAPText.MOVING + "...");
@@ -433,7 +433,7 @@ public class CollisionDetectorThread extends Thread {
 								&& selfBeacon.uavId > avoidingBeacon.uavId
 								&& System.nanoTime() - stateTime > MBCAPParam.passingTimeout) {
 							Point3D avoidingLocation = avoidingBeacon.points.get(0);
-							if (MBCAPv3Helper.overtakingFinished(numUAV, avoidingBeacon.uavId, avoidingLocation)) {
+							if (MBCAPHelper.overtakingFinished(numUAV, avoidingBeacon.uavId, avoidingLocation)) {
 								// There is no need to apply commands to the UAV
 								GUI.log(numUAV, MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 								if (!isRealUAV) {

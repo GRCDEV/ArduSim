@@ -18,7 +18,7 @@ import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.logic.MBCAPParam;
-import mbcap.logic.MBCAPv3Helper;
+import mbcap.logic.MBCAPHelper;
 import uavController.UAVParam;
 
 /** This class generates and updates the beacons sent by MBCAP protocol to detect risks of collision.
@@ -68,7 +68,7 @@ public class Beacon implements Comparable<Beacon> {
 		float plannedSpeed = (float)Copter.getPlannedSpeed(numUAV);
 		double speed = uavcurrentData.getValue3();
 		double acceleration = uavcurrentData.getValue4();
-		List<Point3D> points = MBCAPv3Helper.getPredictedPath(numUAV, speed, acceleration, currentLocation, currentZ);
+		List<Point3D> points = MBCAPHelper.getPredictedPath(numUAV, speed, acceleration, currentLocation, currentZ);
 		MBCAPGUIParam.predictedLocation.set(numUAV, points);
 
 		// 2. Beacon building

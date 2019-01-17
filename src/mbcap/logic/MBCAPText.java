@@ -101,11 +101,8 @@ public class MBCAPText {
 	public static final String SAFE_PLACE = "Safe place reached.";
 	public static final String LANDING_ERROR = "It was not possible to land all the UAVs.";
 
-	// Protocol versions
-	public static final String MBCAP_V1 = "MBCAP v1";
-	public static final String MBCAP_V2 = "MBCAP v2";
-	public static final String MBCAP_V3 = "MBCAP v3";
-	public static final String MBCAP_V4 = "MBCAP v4";
+	// Protocol name
+	public static final String MBCAP_TEXT = "MBCAP";
 
 	// Flying modes
 	public static final String STATE_NORMAL = "Normal";

@@ -14,7 +14,7 @@ public class ScanText {
 	public static final String DISTANCE_TEXT = "Min. distance between UAVs";
 	public static final String AIR_TEXT = "Flying formation:";
 	public static final String LANDING_TEXT = "Landing:";
-	public static final String PROTOCOL_TEXT = "Scan protocol v2";
+	public static final String PROTOCOL_TEXT = "MUSCOP";
 	public static final String LANDING = "Landing";
 	public static final String ENABLING = "Swarm protocol enabled...";
 	

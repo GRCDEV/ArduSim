@@ -16,8 +16,6 @@ import uavController.UAVParam;
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class CollisionDetector extends Thread {
-	
-	public static volatile int collisions = 0;
 
 	@Override
 	public void run() {
@@ -96,16 +94,13 @@ public class CollisionDetector extends Thread {
 											GUI.log(Text.COLLISION_DETECTED_ERROR_1 + " " + i + " - " + j + "(d=" + Tools.round(distance, 2) + ").");
 											GUI.updateGlobalInformation(Text.COLLISION_DETECTED);
 											
-											collisions++;//TODO quitar
-											
-											
-//											// The protocols must be stopped TODO descomentar
-//											UAVParam.collisionDetected = true;
-//											if (!Copter.landAllUAVs()) {
-//												GUI.log(MBCAPText.LANDING_ERROR);
-//											}
-//											// Advising the user
-//											GUI.warn(Text.COLLISION_TITLE, Text.COLLISION_DETECTED_ERROR_2 + " " + i + " - " + j);
+											// The protocols must be stopped
+											UAVParam.collisionDetected = true;
+											if (!Copter.landAllUAVs()) {
+												GUI.log(MBCAPText.LANDING_ERROR);
+											}
+											// Advising the user
+											GUI.warn(Text.COLLISION_TITLE, Text.COLLISION_DETECTED_ERROR_2 + " " + i + " - " + j);
 										}
 									}
 								}

@@ -15,7 +15,7 @@ import api.Tools;
 import api.pojo.Point3D;
 import main.Text;
 import mbcap.logic.MBCAPParam;
-import mbcap.logic.MBCAPParam.MBCAPState;
+import mbcap.pojo.MBCAPState;
 import mbcap.logic.MBCAPText;
 import mbcap.pojo.ProgressState;
 import sim.board.BoardPanel;

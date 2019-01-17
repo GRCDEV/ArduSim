@@ -40,10 +40,6 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
 		}
 		
-//		while (!Tools.areUAVsAvailable() || Tools.areUAVsReadyForSetup() || Tools.isSetupInProgress()	|| Tools.isSetupFinished()
-//				|| (Tools.isExperimentInProgress() && !Copter.isFlying(numUAV))) {
-//			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
-//		}
 		Beacon selfBeacon = null;
 		byte[] sendBuffer = null;
 		int waitingTime;

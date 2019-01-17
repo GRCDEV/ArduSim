@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import mbcap.pojo.Beacon;
+import mbcap.pojo.MBCAPState;
 import mbcap.pojo.ProgressState;
 
 /** This class contains parameters related to MBCAP protocol.
@@ -20,14 +21,14 @@ import mbcap.pojo.ProgressState;
 public class MBCAPParam {
 	
 	// Beaconing parameters
-	public static final int MAX_BEACON_LOCATIONS = 59;//TODO meter en interfaz				// Maximum number of locations that can be sent in the beacon
+	public static final int MAX_BEACON_LOCATIONS = 59;				// Maximum number of locations that can be sent in the beacon
 	public static final double MAX_WAYPOINT_DISTANCE = 400;			// (m) Maximum distance to a waypoint to be included in the beacon while in stand still state
 	public static int beaconingPeriod = 200;						// (ms) Time between beacons
 	public static int numBeacons = 5;								// Between a new future positions calculus
 	public static double hopTime = 0.5;								// (s) Between two predicted positions
 	public static long hopTimeNS = (long) (hopTime * 1000000000l);	// (ns) The same in nanoseconds
 	public static double minSpeed = 1.0;							// (m/s) To calculate the predicted future positions
-	public static long beaconExpirationTime = 10 * 1000000000l;		// (ns) Beacon validity before being ignored TODO sobra 1 segundo
+	public static long beaconExpirationTime = 10 * 1000000000l;		// (ns) Beacon validity before being ignored
 	
 	// Collision risk detection parameters
 	public static double collisionRiskDistance = 20; 				// (m) Distance between points to assert collision risk (UTM coordinates)
@@ -95,36 +96,5 @@ public class MBCAPParam {
 	public static AtomicReferenceArray<Point2D.Double> targetLocationPX;	// Safety location to move towards (screen coordinates)
 	
 	public static MBCAPState[] state; // Protocol state included in the beacon
-	
-	// MBCAP finite state machine states enumerator
-	public enum MBCAPState {
-		NORMAL((short)1, MBCAPText.STATE_NORMAL),
-		STAND_STILL((short)2, MBCAPText.STATE_STAND_STILL),
-		MOVING_ASIDE((short)3, MBCAPText.STATE_MOVING_ASIDE),
-		GO_ON_PLEASE((short)4, MBCAPText.STATE_GO_ON_PLEASE),
-		OVERTAKING((short)5, MBCAPText.STATE_OVERTAKING),
-		EMERGENCY_LAND((short)6, MBCAPText.STATE_EMERGENCY_LAND);
-		
-		private final short id;
-		private final String name;
-		private MBCAPState(short id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-		public short getId() {
-			return this.id;
-		}
-		public String getName() {
-			return this.name;
-		}
-		public static MBCAPState getSatateById(short id) {
-			for (MBCAPState p : MBCAPState.values()) {
-				if (p.getId() == id) {
-					return p;
-				}
-			}
-			return null;
-		}
-	}
-	
+
 }

@@ -25,9 +25,9 @@ import api.pojo.Point3D;
 import api.pojo.StatusPacket;
 import main.Param.SimulatorState;
 import mbcap.logic.MBCAPPCCompanionListener;
-import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPText;
 import mbcap.pojo.Beacon;
+import mbcap.pojo.MBCAPState;
 import sim.gui.VerticalFlowLayout;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
@@ -56,7 +56,6 @@ public class MBCAPPCCompanionDialog extends JDialog {
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
 		{
-
 			tableModel = new DefaultTableModel(0, 0);
 			String header[] = new String[] { MBCAPText.ID, MBCAPText.EVENT, MBCAPText.FLIGHT_MODE,
 					MBCAPText.ID_AVOIDING, MBCAPText.SPEED,
@@ -72,19 +71,15 @@ public class MBCAPPCCompanionDialog extends JDialog {
 			table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 			table.setEnabled(false);
 
-
 			panel_1 = new JPanel();
 			panel_1.add(table.getTableHeader());
 			panel_1.setLayout(new VerticalFlowLayout(VerticalFlowLayout.CENTER, VerticalFlowLayout.TOP, 5, 0));
 			panel_1.add(table);
 
-
 			panel_2 = new JPanel();
 			panel_2.setLayout(new BorderLayout(0, 0));
 			panel_2.add(panel_1);
 
-			
-			
 			connected = GUI.getDetectedUAVs();
 			int count = 0;
 			for (int i = 0; i < connected.length; i++) {
@@ -101,8 +96,6 @@ public class MBCAPPCCompanionDialog extends JDialog {
 			JScrollPane scrollPane = new JScrollPane(panel_2);
 			getContentPane().add(scrollPane, BorderLayout.CENTER);
 			resizeColumnWidth();
-			
-			
 		}
 		
 		this.setModalityType(ModalityType.MODELESS);
@@ -128,7 +121,7 @@ public class MBCAPPCCompanionDialog extends JDialog {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					tableModel.setValueAt(b.event, row, 1);
-					tableModel.setValueAt(MBCAPParam.MBCAPState.getSatateById(b.state), row, 2);
+					tableModel.setValueAt(MBCAPState.getSatateById(b.state), row, 2);
 					tableModel.setValueAt(b.idAvoiding, row, 3);
 					tableModel.setValueAt(Tools.round(b.speed, 3), row, 4);
 					if (b.points.size() > 0) {

@@ -1,6 +1,6 @@
 package mbcap.pojo;
 
-import mbcap.logic.MBCAPParam.MBCAPState;
+import mbcap.pojo.MBCAPState;
 
 /** This class generates objects with the MBCAP protocol state and the instant when the data was retrieved.
  * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
