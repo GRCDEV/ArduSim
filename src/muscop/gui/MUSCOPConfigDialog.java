@@ -32,12 +32,12 @@ import api.pojo.Waypoint;
 import api.pojo.formations.FlightFormation;
 import api.pojo.formations.FlightFormation.Formation;
 import main.Text;
-import muscop.logic.ScanParam;
-import muscop.logic.ScanText;
+import muscop.logic.MUSCOPParam;
+import muscop.logic.MUSCOPText;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
-public class ScanConfigDialog extends JDialog {
+public class MUSCOPConfigDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
@@ -48,7 +48,7 @@ public class ScanConfigDialog extends JDialog {
 	private JTextField flyingTextField;
 	private JTextField landingTextField;
 
-	public ScanConfigDialog() {
+	public MUSCOPConfigDialog() {
 		setBounds(100, 100, 450, 300);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{355, 0};
@@ -70,7 +70,7 @@ public class ScanConfigDialog extends JDialog {
 		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		contentPanel.setLayout(gbl_contentPanel);
 		{
-			JLabel lblMapaMisin = new JLabel(ScanText.MISSION_SELECT);
+			JLabel lblMapaMisin = new JLabel(MUSCOPText.MISSION_SELECT);
 			GridBagConstraints gbc_lblMapaMisin = new GridBagConstraints();
 			gbc_lblMapaMisin.anchor = GridBagConstraints.WEST;
 			gbc_lblMapaMisin.fill = GridBagConstraints.VERTICAL;
@@ -91,7 +91,7 @@ public class ScanConfigDialog extends JDialog {
 			missionsTextField.setColumns(10);
 		}
 		{
-			JButton btnMap = new JButton(ScanText.BUTTON_SELECT);
+			JButton btnMap = new JButton(MUSCOPText.BUTTON_SELECT);
 			btnMap.addActionListener(new ActionListener() {
 				@SuppressWarnings("unchecked")
 				public void actionPerformed(ActionEvent e) {
@@ -100,7 +100,7 @@ public class ScanConfigDialog extends JDialog {
 						int numUAVs = Tools.getNumUAVs();
 						/** The master is assigned the first mission in the list */
 						List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
-						missionsFinal[ScanParam.MASTER_POSITION] = missions.getValue1()[0];
+						missionsFinal[MUSCOPParam.MASTER_POSITION] = missions.getValue1()[0];
 						Tools.setLoadedMissionsFromFile(missionsFinal);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
@@ -117,7 +117,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(btnMap, gbc_btnMap);
 		}
 		{
-			JLabel groundFormationLabel = new JLabel(ScanText.GROUND_TEXT);
+			JLabel groundFormationLabel = new JLabel(MUSCOPText.GROUND_TEXT);
 			GridBagConstraints gbc_groundFormationLabel = new GridBagConstraints();
 			gbc_groundFormationLabel.anchor = GridBagConstraints.WEST;
 			gbc_groundFormationLabel.insets = new Insets(0, 0, 5, 5);
@@ -126,7 +126,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(groundFormationLabel, gbc_groundFormationLabel);
 		}
 		{
-			JLabel groundFormationFormationLabel = new JLabel(ScanText.FORMATION_TEXT);
+			JLabel groundFormationFormationLabel = new JLabel(MUSCOPText.FORMATION_TEXT);
 			groundFormationFormationLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_groundFormationFormationLabel = new GridBagConstraints();
 			gbc_groundFormationFormationLabel.anchor = GridBagConstraints.EAST;
@@ -157,7 +157,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(groundComboBox, gbc_groundComboBox);
 		}
 		{
-			JLabel groundFormationDistanceLabel = new JLabel(ScanText.DISTANCE_TEXT);
+			JLabel groundFormationDistanceLabel = new JLabel(MUSCOPText.DISTANCE_TEXT);
 			groundFormationDistanceLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_groundFormationDistanceLabel = new GridBagConstraints();
 			gbc_groundFormationDistanceLabel.anchor = GridBagConstraints.EAST;
@@ -188,7 +188,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel, gbc_lblNewLabel);
 		}
 		{
-			JLabel airFormationLabel = new JLabel(ScanText.AIR_TEXT);
+			JLabel airFormationLabel = new JLabel(MUSCOPText.AIR_TEXT);
 			GridBagConstraints gbc_airFormationLabel = new GridBagConstraints();
 			gbc_airFormationLabel.anchor = GridBagConstraints.WEST;
 			gbc_airFormationLabel.insets = new Insets(0, 0, 5, 5);
@@ -197,7 +197,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(airFormationLabel, gbc_airFormationLabel);
 		}
 		{
-			JLabel airFormationFormationLabel = new JLabel(ScanText.FORMATION_TEXT);
+			JLabel airFormationFormationLabel = new JLabel(MUSCOPText.FORMATION_TEXT);
 			airFormationFormationLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_airFormationFormationLabel = new GridBagConstraints();
 			gbc_airFormationFormationLabel.anchor = GridBagConstraints.EAST;
@@ -227,7 +227,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(airComboBox, gbc_airComboBox);
 		}
 		{
-			JLabel lblFlightDistance = new JLabel(ScanText.DISTANCE_TEXT);
+			JLabel lblFlightDistance = new JLabel(MUSCOPText.DISTANCE_TEXT);
 			lblFlightDistance.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblFlightDistance = new GridBagConstraints();
 			gbc_lblFlightDistance.anchor = GridBagConstraints.EAST;
@@ -258,7 +258,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		}
 		{
-			JLabel lblNewLabel_2 = new JLabel(ScanText.LANDING_TEXT);
+			JLabel lblNewLabel_2 = new JLabel(MUSCOPText.LANDING_TEXT);
 			GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
 			gbc_lblNewLabel_2.anchor = GridBagConstraints.WEST;
 			gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
@@ -267,7 +267,7 @@ public class ScanConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_2, gbc_lblNewLabel_2);
 		}
 		{
-			JLabel lblLandDistance = new JLabel(ScanText.DISTANCE_TEXT);
+			JLabel lblLandDistance = new JLabel(MUSCOPText.DISTANCE_TEXT);
 			lblLandDistance.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblLandDistance = new GridBagConstraints();
 			gbc_lblLandDistance.anchor = GridBagConstraints.EAST;
@@ -318,7 +318,7 @@ public class ScanConfigDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				List<Waypoint>[] missions = Tools.getLoadedMissions();
 				if (missions == null) {
-					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);
+					JOptionPane.showMessageDialog(null, MUSCOPText.BAD_INPUT);
 					return;
 				}
 				int count = 0;
@@ -328,7 +328,7 @@ public class ScanConfigDialog extends JDialog {
 					}
 				}
 				if (count == 0) {
-					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);
+					JOptionPane.showMessageDialog(null, MUSCOPText.BAD_INPUT);
 					return;
 				}
 				
@@ -348,7 +348,7 @@ public class ScanConfigDialog extends JDialog {
 					
 					dispose();
 				} catch (NumberFormatException e2) {
-					JOptionPane.showMessageDialog(null, ScanText.BAD_INPUT);
+					JOptionPane.showMessageDialog(null, MUSCOPText.BAD_INPUT);
 					return;
 				}			
 			}
@@ -367,7 +367,7 @@ public class ScanConfigDialog extends JDialog {
 		
 		GUI.addEscapeListener(this, true);
 		
-		this.setTitle(ScanText.CONFIGURATION_DIALOG_TITLE_SWARM);
+		this.setTitle(MUSCOPText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);

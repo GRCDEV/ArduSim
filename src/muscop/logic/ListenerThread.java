@@ -45,7 +45,7 @@ public class ListenerThread extends Thread {
 	public ListenerThread(int numUAV) {
 		this.numUAV = numUAV;
 		this.selfId = Tools.getIdFromPos(numUAV);
-		this.isMaster = ScanHelper.isMaster(numUAV);
+		this.isMaster = MUSCOPHelper.isMaster(numUAV);
 		
 		this.inBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
@@ -55,18 +55,18 @@ public class ListenerThread extends Thread {
 	public void run() {
 		
 		while (!Tools.areUAVsAvailable()) {
-			Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+			Tools.waiting(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** START PHASE */
 		Map<Long, UTMCoordinates> UAVsDetected = null;
-		GUI.log(numUAV, ScanText.START);
+		GUI.log(numUAV, MUSCOPText.START);
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, ScanText.MASTER_START_LISTENER);
+			GUI.logVerbose(numUAV, MUSCOPText.MASTER_START_LISTENER);
 			UAVsDetected = new HashMap<Long, UTMCoordinates>();	// Detecting UAVs
 			int numUAVsDetected = 0;
-			while (ScanParam.state.get(numUAV) == START) {
-				inBuffer = Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+			while (MUSCOPParam.state.get(numUAV) == START) {
+				inBuffer = Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -79,30 +79,30 @@ public class ListenerThread extends Thread {
 						UAVsDetected.put(idSlave, location);
 						if (UAVsDetected.size() > numUAVsDetected) {
 							numUAVsDetected = UAVsDetected.size();
-							GUI.log(ScanText.MASTER_DETECTED_UAVS + numUAVsDetected);
+							GUI.log(MUSCOPText.MASTER_DETECTED_UAVS + numUAVsDetected);
 						}
 					}
 				}
 				// Coordination with ArduSim
 				if (Tools.isSetupInProgress() || Tools.isSetupFinished()) {// The setup could be too fast
-					ScanParam.state.set(numUAV, SETUP);
+					MUSCOPParam.state.set(numUAV, SETUP);
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
-			while (ScanParam.state.get(numUAV) == START) {
+			GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
+			while (MUSCOPParam.state.get(numUAV) == START) {
 				// Discard message
-				Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+				Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 				// Coordination with ArduSim
 				if (Tools.isSetupInProgress() || Tools.isSetupFinished()) {
-					ScanParam.state.set(numUAV, SETUP);
+					MUSCOPParam.state.set(numUAV, SETUP);
 				}
 			}
 		}
 		
 		/** SETUP PHASE */
-		GUI.log(numUAV, ScanText.SETUP);
-		GUI.updateProtocolState(numUAV, ScanText.SETUP);
+		GUI.log(numUAV, MUSCOPText.SETUP);
+		GUI.updateProtocolState(numUAV, MUSCOPText.SETUP);
 		long lastReceivedReadyToFly = 0;	// Used in slaves to detect the end of this phase
 		Map<Long, Long> acks = null;
 		if (this.isMaster) {
@@ -116,15 +116,15 @@ public class ListenerThread extends Thread {
 			// 2. Set the heading used to orient the formation
 			if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
 				// We use the master heading
-				ScanParam.formationHeading = Copter.getHeading(numUAVs);
-			}// In simulation, centerHeading is assigned when SwarmProtHelper.setStartingLocation() is called,
+				MUSCOPParam.formationHeading = Copter.getHeading(numUAVs);
+			}// In simulation, centerHeading is assigned when MUSCOPHelper.setStartingLocation() is called,
 			 //   using the first mission segment to orient the formation
 			
 			// 3. Calculus of the UAVs distribution that better fit the current layout on the ground
 			Formation flyingFormation = FlightFormation.getFlyingFormation();
 			FlightFormation airFormation = FlightFormation.getFormation(flyingFormation, numUAVs, FlightFormation.getFlyingFormationDistance());
 			Triplet<Integer, Long, UTMCoordinates>[] match =
-					FlightFormation.matchIDs(UAVsDetected, ScanParam.formationHeading, true, null, airFormation);
+					FlightFormation.matchIDs(UAVsDetected, MUSCOPParam.formationHeading, true, null, airFormation);
 			
 			// 4. Get the target coordinates for the central UAV
 			int centerUAVAirPos = airFormation.getCenterUAVPosition();	// Position in the formation
@@ -135,14 +135,14 @@ public class ListenerThread extends Thread {
 				}
 			}
 			if (centerUAVAir == null) {
-				GUI.exit(ScanText.CENTER_ID_NOT_FOUND);
+				GUI.exit(MUSCOPText.CENTER_ID_NOT_FOUND);
 			}
 			long centerUAVId = centerUAVAir.getValue1();
 			
 			// 5. Load the mission
 			List<WaypointSimplified> screenMission = Tools.getUAVMissionSimplified(numUAV);
-			if (screenMission == null || screenMission.size() > ScanParam.MAX_WAYPOINTS) {
-				GUI.exit(ScanText.MAX_WP_REACHED);
+			if (screenMission == null || screenMission.size() > MUSCOPParam.MAX_WAYPOINTS) {
+				GUI.exit(MUSCOPText.MAX_WP_REACHED);
 			}
 			
 			// 6. Calculate the takeoff altitude
@@ -179,7 +179,7 @@ public class ListenerThread extends Thread {
 						locations[j] = centerMission[j];
 					}
 				} else {
-					UTMCoordinates offset = airFormation.getOffset(formationPosition, ScanParam.formationHeading);
+					UTMCoordinates offset = airFormation.getOffset(formationPosition, MUSCOPParam.formationHeading);
 					for (int j = 0; j < centerMission.length; j++) {
 						location = new Point3D();
 						reference = centerMission[j];
@@ -213,27 +213,27 @@ public class ListenerThread extends Thread {
 					nextId = sequence[i + 1].getValue1();
 				}
 				currentMission = movedMission.get(sequence[i].getValue0());
-				points = currentMission.posiciones;
+				points = currentMission.locations;
 				formationPosition = currentMission.formationPosition;
 				id = currentMission.id;
 				if (this.selfId == id) {
 					if (this.selfId == centerUAVId) {
-						ScanParam.iAmCenter[numUAV].set(true);
+						MUSCOPParam.iAmCenter[numUAV].set(true);
 					}
-					ScanParam.idPrev.set(numUAV, prevId);
-					ScanParam.idNext.set(numUAV, nextId);
-					ScanParam.numUAVs.set(numUAV, numUAVs);
-					ScanParam.flyingFormation.set(numUAV, flyingFormation);
-					ScanParam.flyingFormationPosition.set(numUAV, formationPosition);
-					ScanParam.flyingFormationHeading.set(numUAV, ScanParam.formationHeading);
-					ScanParam.takeoffAltitude.set(numUAV, takeOffAltitudeStepOne);
-					ScanParam.uavMissionReceivedUTM.set(numUAV, points);
+					MUSCOPParam.idPrev.set(numUAV, prevId);
+					MUSCOPParam.idNext.set(numUAV, nextId);
+					MUSCOPParam.numUAVs.set(numUAV, numUAVs);
+					MUSCOPParam.flyingFormation.set(numUAV, flyingFormation);
+					MUSCOPParam.flyingFormationPosition.set(numUAV, formationPosition);
+					MUSCOPParam.flyingFormationHeading.set(numUAV, MUSCOPParam.formationHeading);
+					MUSCOPParam.takeoffAltitude.set(numUAV, takeOffAltitudeStepOne);
+					MUSCOPParam.uavMissionReceivedUTM.set(numUAV, points);
 					GeoCoordinates[] missionMasterGeo = new GeoCoordinates[points.length];
 					for (int j = 0; j < points.length; j++) {
 						missionMasterGeo[j] = Tools.UTMToGeo(points[j].x, points[j].y);
 					}
-					ScanParam.uavMissionReceivedGeo.set(numUAV, missionMasterGeo);
-					// ScanParam.data of masterPosition remains null
+					MUSCOPParam.uavMissionReceivedGeo.set(numUAV, missionMasterGeo);
+					// Data for the masterPosition remain null
 				} else {
 					output.clear();
 					output.writeShort(Message.DATA);
@@ -244,7 +244,7 @@ public class ListenerThread extends Thread {
 					output.writeInt(numUAVs);
 					output.writeShort(flyingFormation.getFormationId());
 					output.writeInt(formationPosition);
-					output.writeDouble(ScanParam.formationHeading);
+					output.writeDouble(MUSCOPParam.formationHeading);
 					output.writeDouble(takeOffAltitudeStepOne);
 					// Number of points (Necessary for the Talker to know how many to read)
 					output.writeInt(points.length);
@@ -258,7 +258,7 @@ public class ListenerThread extends Thread {
 					messages.put(id, Arrays.copyOf(outBuffer, output.position()));
 				}
 			}
-			ScanParam.data.set(messages.values().toArray(new byte[messages.size()][]));
+			MUSCOPParam.data.set(messages.values().toArray(new byte[messages.size()][]));
 			
 			try {
 				output.close();
@@ -266,9 +266,9 @@ public class ListenerThread extends Thread {
 			
 			
 			// 4. Wait for data ack from all the slaves
-			GUI.logVerbose(numUAV, ScanText.MASTER_DATA_ACK_LISTENER);
+			GUI.logVerbose(numUAV, MUSCOPText.MASTER_DATA_ACK_LISTENER);
 			acks = new HashMap<Long, Long>((int)Math.ceil(numUAVs / 0.75) + 1);
-			while (ScanParam.state.get(numUAV) == SETUP) {
+			while (MUSCOPParam.state.get(numUAV) == SETUP) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
@@ -278,32 +278,32 @@ public class ListenerThread extends Thread {
 						long idSlave = input.readLong();
 						acks.put(idSlave, idSlave);
 						if (acks.size() == numUAVs - 1) {
-							ScanParam.state.set(numUAV, READY_TO_FLY);
+							MUSCOPParam.state.set(numUAV, READY_TO_FLY);
 						}
 					}
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, ScanText.SLAVE_WAIT_DATA_LISTENER);
-			while (ScanParam.state.get(numUAV) == SETUP) {
+			GUI.logVerbose(numUAV, MUSCOPText.SLAVE_WAIT_DATA_LISTENER);
+			while (MUSCOPParam.state.get(numUAV) == SETUP) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
 					
-					if (type == Message.DATA && ScanParam.uavMissionReceivedGeo.get(numUAV) == null) {
+					if (type == Message.DATA && MUSCOPParam.uavMissionReceivedGeo.get(numUAV) == null) {
 						long id = input.readLong();
 						if (id == selfId) {
 							if (this.selfId == input.readLong()) {
-								ScanParam.iAmCenter[numUAV].set(true);
+								MUSCOPParam.iAmCenter[numUAV].set(true);
 							}
-							ScanParam.idPrev.set(numUAV, input.readLong());
-							ScanParam.idNext.set(numUAV, input.readLong());
-							ScanParam.numUAVs.set(numUAV, input.readInt());
-							ScanParam.flyingFormation.set(numUAV, Formation.getFormation(input.readShort()));
-							ScanParam.flyingFormationPosition.set(numUAV, input.readInt());
-							ScanParam.flyingFormationHeading.set(numUAV, input.readDouble());
-							ScanParam.takeoffAltitude.set(numUAV, input.readDouble());
+							MUSCOPParam.idPrev.set(numUAV, input.readLong());
+							MUSCOPParam.idNext.set(numUAV, input.readLong());
+							MUSCOPParam.numUAVs.set(numUAV, input.readInt());
+							MUSCOPParam.flyingFormation.set(numUAV, Formation.getFormation(input.readShort()));
+							MUSCOPParam.flyingFormationPosition.set(numUAV, input.readInt());
+							MUSCOPParam.flyingFormationHeading.set(numUAV, input.readDouble());
+							MUSCOPParam.takeoffAltitude.set(numUAV, input.readDouble());
 
 							// The number of WP is read to know the loop length
 							int size = input.readInt();
@@ -315,28 +315,28 @@ public class ListenerThread extends Thread {
 										input.readDouble(), input.readDouble());
 								missionGeo[i] = Tools.UTMToGeo(mission[i].x, mission[i].y);
 							}
-							ScanParam.uavMissionReceivedUTM.set(numUAV, mission);
-							ScanParam.uavMissionReceivedGeo.set(numUAV, missionGeo);
+							MUSCOPParam.uavMissionReceivedUTM.set(numUAV, mission);
+							MUSCOPParam.uavMissionReceivedGeo.set(numUAV, missionGeo);
 						}
 					}
 					
 					if (type == Message.READY_TO_FLY) {
 						lastReceivedReadyToFly = System.currentTimeMillis();
-						ScanParam.state.set(numUAV, READY_TO_FLY);
+						MUSCOPParam.state.set(numUAV, READY_TO_FLY);
 					}
 				}
 			}
 		}
 		
 		/** READY TO FLY PHASE */
-		GUI.log(numUAV, ScanText.READY_TO_FLY);
-		GUI.updateProtocolState(numUAV, ScanText.READY_TO_FLY);
-		int numUAVs = ScanParam.numUAVs.get(numUAV);
+		GUI.log(numUAV, MUSCOPText.READY_TO_FLY);
+		GUI.updateProtocolState(numUAV, MUSCOPText.READY_TO_FLY);
+		int numUAVs = MUSCOPParam.numUAVs.get(numUAV);
 		
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, ScanText.MASTER_READY_TO_FLY_ACK_LISTENER);
+			GUI.logVerbose(numUAV, MUSCOPText.MASTER_READY_TO_FLY_ACK_LISTENER);
 			acks.clear();
-			while (ScanParam.state.get(numUAV) == READY_TO_FLY) {
+			while (MUSCOPParam.state.get(numUAV) == READY_TO_FLY) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
@@ -346,19 +346,19 @@ public class ListenerThread extends Thread {
 						long idSlave = input.readLong();
 						acks.put(idSlave, idSlave);
 						if (acks.size() == numUAVs - 1) {
-							if (ScanParam.idPrev.get(numUAV) == FlightFormation.BROADCAST_MAC_ID) {
-								ScanParam.state.set(numUAV, TAKING_OFF);
+							if (MUSCOPParam.idPrev.get(numUAV) == FlightFormation.BROADCAST_MAC_ID) {
+								MUSCOPParam.state.set(numUAV, TAKING_OFF);
 							} else {
-								ScanParam.state.set(numUAV, WAIT_TAKE_OFF);
+								MUSCOPParam.state.set(numUAV, WAIT_TAKE_OFF);
 							}
 						}
 					}
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, ScanText.SLAVE_WAIT_READY_TO_FLY_LISTENER);
-			while (ScanParam.state.get(numUAV) == READY_TO_FLY) {
-				inBuffer = Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+			GUI.logVerbose(numUAV, MUSCOPText.SLAVE_WAIT_READY_TO_FLY_LISTENER);
+			while (MUSCOPParam.state.get(numUAV) == READY_TO_FLY) {
+				inBuffer = Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -368,22 +368,22 @@ public class ListenerThread extends Thread {
 					}
 				}
 				
-				if (System.currentTimeMillis() - lastReceivedReadyToFly > ScanParam.SETUP_TIMEOUT) {
-					if (ScanParam.idPrev.get(numUAV) == FlightFormation.BROADCAST_MAC_ID) {
-						ScanParam.state.set(numUAV, TAKING_OFF);
+				if (System.currentTimeMillis() - lastReceivedReadyToFly > MUSCOPParam.SETUP_TIMEOUT) {
+					if (MUSCOPParam.idPrev.get(numUAV) == FlightFormation.BROADCAST_MAC_ID) {
+						MUSCOPParam.state.set(numUAV, TAKING_OFF);
 					} else {
-						ScanParam.state.set(numUAV, WAIT_TAKE_OFF);
+						MUSCOPParam.state.set(numUAV, WAIT_TAKE_OFF);
 					}
 				}
 			}
 		}
 		
 		/** WAIT TAKE OFF PHASE */
-		if (ScanParam.state.get(numUAV) == WAIT_TAKE_OFF) {
-			GUI.log(numUAV, ScanText.WAIT_TAKE_OFF);
-			GUI.updateProtocolState(numUAV, ScanText.WAIT_TAKE_OFF);
-			GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING_TAKE_OFF);
-			while (ScanParam.state.get(numUAV) == WAIT_TAKE_OFF) {
+		if (MUSCOPParam.state.get(numUAV) == WAIT_TAKE_OFF) {
+			GUI.log(numUAV, MUSCOPText.WAIT_TAKE_OFF);
+			GUI.updateProtocolState(numUAV, MUSCOPText.WAIT_TAKE_OFF);
+			GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING_TAKE_OFF);
+			while (MUSCOPParam.state.get(numUAV) == WAIT_TAKE_OFF) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
@@ -392,7 +392,7 @@ public class ListenerThread extends Thread {
 					if (type == Message.TAKE_OFF_NOW) {
 						long id = input.readLong();
 						if (id == selfId) {
-							ScanParam.state.set(numUAV, TAKING_OFF);
+							MUSCOPParam.state.set(numUAV, TAKING_OFF);
 						}
 					}
 				}
@@ -400,72 +400,72 @@ public class ListenerThread extends Thread {
 		}
 		
 		/** TAKING OFF PHASE */
-		GUI.log(numUAV, ScanText.TAKING_OFF);
-		GUI.updateProtocolState(numUAV, ScanText.TAKING_OFF);
-		double altitude = ScanParam.takeoffAltitude.get(numUAV);
+		GUI.log(numUAV, MUSCOPText.TAKING_OFF);
+		GUI.updateProtocolState(numUAV, MUSCOPText.TAKING_OFF);
+		double altitude = MUSCOPParam.takeoffAltitude.get(numUAV);
 		double thresholdAltitude = altitude * 0.95;
 		if (!Copter.takeOffNonBlocking(numUAV, altitude)) {
-			GUI.exit(ScanText.TAKE_OFF_ERROR + " " + selfId);
+			GUI.exit(MUSCOPText.TAKE_OFF_ERROR + " " + selfId);
 		}
-		GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
+		GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 		long cicleTime = System.currentTimeMillis();
 		long logTime = cicleTime;
-		while (ScanParam.state.get(numUAV) == TAKING_OFF) {
+		while (MUSCOPParam.state.get(numUAV) == TAKING_OFF) {
 			// Discard message
-			Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 			// Wait until target altitude is reached
-			if (System.currentTimeMillis() - cicleTime > ScanParam.TAKE_OFF_CHECK_TIMEOUT) {
+			if (System.currentTimeMillis() - cicleTime > MUSCOPParam.TAKE_OFF_CHECK_TIMEOUT) {
 				if (Copter.getZRelative(numUAV) >= thresholdAltitude) {
-					ScanParam.state.set(numUAV, MOVE_TO_TARGET);
+					MUSCOPParam.state.set(numUAV, MOVE_TO_TARGET);
 				} else {
-					if (System.currentTimeMillis() - logTime > ScanParam.TAKE_OFF_LOG_TIMEOUT) {
+					if (System.currentTimeMillis() - logTime > MUSCOPParam.TAKE_OFF_LOG_TIMEOUT) {
 						GUI.logVerbose(numUAV, Text.ALTITUDE_TEXT
 								+ " = " + String.format("%.2f", Copter.getZ(numUAV))
 								+ " " + Text.METERS);
-						logTime = logTime + ScanParam.TAKE_OFF_LOG_TIMEOUT;
+						logTime = logTime + MUSCOPParam.TAKE_OFF_LOG_TIMEOUT;
 					}
 					
-					cicleTime = cicleTime + ScanParam.TAKE_OFF_CHECK_TIMEOUT;
+					cicleTime = cicleTime + MUSCOPParam.TAKE_OFF_CHECK_TIMEOUT;
 				}
 			}
 		}
 		
 		/** MOVE TO TARGET PHASE */
-		GUI.log(numUAV, ScanText.MOVE_TO_WP + " 0");
-		GUI.updateProtocolState(numUAV, ScanText.MOVE_TO_WP + " 0");
-		GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
-		Point3D[] missionUTM = ScanParam.uavMissionReceivedUTM.get(numUAV);
-		GeoCoordinates[] missionGeo = ScanParam.uavMissionReceivedGeo.get(numUAV);
+		GUI.log(numUAV, MUSCOPText.MOVE_TO_WP + " 0");
+		GUI.updateProtocolState(numUAV, MUSCOPText.MOVE_TO_WP + " 0");
+		GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
+		Point3D[] missionUTM = MUSCOPParam.uavMissionReceivedUTM.get(numUAV);
+		GeoCoordinates[] missionGeo = MUSCOPParam.uavMissionReceivedGeo.get(numUAV);
 		GeoCoordinates destinationGeo = missionGeo[0];
 		Point3D destinationUTM = missionUTM[0];
 		double relAltitude = missionUTM[0].z;
 		if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
-			GUI.exit(ScanText.MOVE_ERROR_2 + " " + selfId);
+			GUI.exit(MUSCOPText.MOVE_ERROR_2 + " " + selfId);
 		}
 		cicleTime = System.currentTimeMillis();
-		while (ScanParam.state.get(numUAV) == MOVE_TO_TARGET) {
+		while (MUSCOPParam.state.get(numUAV) == MOVE_TO_TARGET) {
 			// Discard message
-			Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 			// Wait until target location is reached
-			if (System.currentTimeMillis() - cicleTime > ScanParam.MOVE_CHECK_TIMEOUT) {
-				if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= ScanParam.MIN_DISTANCE_TO_WP
+			if (System.currentTimeMillis() - cicleTime > MUSCOPParam.MOVE_CHECK_TIMEOUT) {
+				if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP
 						&& Math.abs(relAltitude - Copter.getZRelative(numUAV)) <= 0.2) {
-					ScanParam.state.set(numUAV, TARGET_REACHED);
+					MUSCOPParam.state.set(numUAV, TARGET_REACHED);
 				} else {
-					cicleTime = cicleTime + ScanParam.MOVE_CHECK_TIMEOUT;
+					cicleTime = cicleTime + MUSCOPParam.MOVE_CHECK_TIMEOUT;
 				}
 			}
 		}
 		
 		/** TARGET REACHED PHASE */
-		GUI.log(numUAV, ScanText.TARGET_REACHED);
-		GUI.updateProtocolState(numUAV, ScanText.TARGET_REACHED);
-		boolean iAmCenter = ScanParam.iAmCenter[numUAV].get();
+		GUI.log(numUAV, MUSCOPText.TARGET_REACHED);
+		GUI.updateProtocolState(numUAV, MUSCOPText.TARGET_REACHED);
+		boolean iAmCenter = MUSCOPParam.iAmCenter[numUAV].get();
 		long lastReceivedTakeoffEnd = 0;
 		if (iAmCenter) {
-			GUI.logVerbose(numUAV, ScanText.CENTER_TARGET_REACHED_ACK_LISTENER);
+			GUI.logVerbose(numUAV, MUSCOPText.CENTER_TARGET_REACHED_ACK_LISTENER);
 			acks = new HashMap<Long, Long>((int)Math.ceil(numUAVs / 0.75) + 1);
-			while (ScanParam.state.get(numUAV) == TARGET_REACHED) {
+			while (MUSCOPParam.state.get(numUAV) == TARGET_REACHED) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
@@ -475,14 +475,14 @@ public class ListenerThread extends Thread {
 						long idSlave = input.readLong();
 						acks.put(idSlave, idSlave);
 						if (acks.size() == numUAVs - 1) {
-							ScanParam.state.set(numUAV, READY_TO_START);
+							MUSCOPParam.state.set(numUAV, READY_TO_START);
 						}
 					}
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, ScanText.NO_CENTER_WAIT_TAKEOFF_END_LISTENER);
-			while (ScanParam.state.get(numUAV) == TARGET_REACHED) {
+			GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_TAKEOFF_END_LISTENER);
+			while (MUSCOPParam.state.get(numUAV) == TARGET_REACHED) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
@@ -490,19 +490,19 @@ public class ListenerThread extends Thread {
 					
 					if (type == Message.TAKEOFF_END) {
 						lastReceivedTakeoffEnd = System.currentTimeMillis();
-						ScanParam.state.set(numUAV, READY_TO_START);
+						MUSCOPParam.state.set(numUAV, READY_TO_START);
 					}
 				}
 			}
 		}
 		
 		/** READY TO START PHASE */
-		GUI.log(numUAV, ScanText.READY_TO_START);
-		GUI.updateProtocolState(numUAV, ScanText.READY_TO_START);
+		GUI.log(numUAV, MUSCOPText.READY_TO_START);
+		GUI.updateProtocolState(numUAV, MUSCOPText.READY_TO_START);
 		if (iAmCenter) {
-			GUI.logVerbose(numUAV, ScanText.CENTER_TAKEOFF_END_ACK_LISTENER);
+			GUI.logVerbose(numUAV, MUSCOPText.CENTER_TAKEOFF_END_ACK_LISTENER);
 			acks.clear();
-			while (ScanParam.state.get(numUAV) == READY_TO_START) {
+			while (MUSCOPParam.state.get(numUAV) == READY_TO_START) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
@@ -512,15 +512,15 @@ public class ListenerThread extends Thread {
 						long idSlave = input.readLong();
 						acks.put(idSlave, idSlave);
 						if (acks.size() == numUAVs - 1) {
-							ScanParam.state.set(numUAV, SETUP_FINISHED);
+							MUSCOPParam.state.set(numUAV, SETUP_FINISHED);
 						}
 					}
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, ScanText.NO_CENTER_WAIT_TAKEOFF_END_LISTENER);
-			while (ScanParam.state.get(numUAV) == READY_TO_START) {
-				inBuffer = Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+			GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_TAKEOFF_END_LISTENER);
+			while (MUSCOPParam.state.get(numUAV) == READY_TO_START) {
+				inBuffer = Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -530,22 +530,22 @@ public class ListenerThread extends Thread {
 					}
 				}
 				
-				if (System.currentTimeMillis() - lastReceivedTakeoffEnd > ScanParam.TAKEOFF_TIMEOUT) {
-					ScanParam.state.set(numUAV, SETUP_FINISHED);
+				if (System.currentTimeMillis() - lastReceivedTakeoffEnd > MUSCOPParam.TAKEOFF_TIMEOUT) {
+					MUSCOPParam.state.set(numUAV, SETUP_FINISHED);
 				}
 			}
 		}
 		
 		/** SETUP FINISHED PHASE */
-		GUI.log(numUAV, ScanText.SETUP_FINISHED);
-		GUI.updateProtocolState(numUAV, ScanText.SETUP_FINISHED);
-		GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
-		while (ScanParam.state.get(numUAV) == SETUP_FINISHED) {
+		GUI.log(numUAV, MUSCOPText.SETUP_FINISHED);
+		GUI.updateProtocolState(numUAV, MUSCOPText.SETUP_FINISHED);
+		GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
+		while (MUSCOPParam.state.get(numUAV) == SETUP_FINISHED) {
 			// Discard message
-			Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 			// Coordination with ArduSim
 			if (Tools.isExperimentInProgress()) {
-				ScanParam.state.set(numUAV, FOLLOWING_MISSION);
+				MUSCOPParam.state.set(numUAV, FOLLOWING_MISSION);
 			}
 		}
 		
@@ -555,18 +555,18 @@ public class ListenerThread extends Thread {
 			reached = new HashMap<Long, Long>((int)Math.ceil(numUAVs / 0.75) + 1);
 		}
 		int currentWP = 0;
-		ScanParam.moveSemaphore.set(numUAV, 1);	// We reach waypoint 0 and start moving towards waypoint 1
+		MUSCOPParam.moveSemaphore.set(numUAV, 1);	// We reach waypoint 0 and start moving towards waypoint 1
 		UTMCoordinates centerUAVFinalLocation = null;
-		while (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
+		while (MUSCOPParam.state.get(numUAV) == FOLLOWING_MISSION) {
 			
 			/** WP_REACHED PHASE */
-			GUI.log(numUAV, ScanText.WP_REACHED);
-			GUI.updateProtocolState(numUAV, ScanText.WP_REACHED);
+			GUI.log(numUAV, MUSCOPText.WP_REACHED);
+			GUI.updateProtocolState(numUAV, MUSCOPText.WP_REACHED);
 			if (iAmCenter) {
-				GUI.logVerbose(numUAV, ScanText.CENTER_WP_REACHED_ACK_LISTENER);
+				GUI.logVerbose(numUAV, MUSCOPText.CENTER_WP_REACHED_ACK_LISTENER);
 				reached.clear();
 				
-				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
+				while (MUSCOPParam.wpReachedSemaphore.get(numUAV) == currentWP) {
 					inBuffer = Copter.receiveMessage(numUAV);
 					if (inBuffer != null) {
 						input.setBuffer(inBuffer);
@@ -579,17 +579,17 @@ public class ListenerThread extends Thread {
 								reached.put(id, id);
 								if (reached.size() == numUAVs - 1) {
 									if (currentWP == missionUTM.length - 1) {
-										ScanParam.state.set(numUAV, LANDING);
+										MUSCOPParam.state.set(numUAV, LANDING);
 									}
-									ScanParam.wpReachedSemaphore.incrementAndGet(numUAV);
+									MUSCOPParam.wpReachedSemaphore.incrementAndGet(numUAV);
 								}
 							}
 						}
 					}
 				}
 			} else {
-				GUI.logVerbose(numUAV, ScanText.NO_CENTER_WAIT_ORDER_LISTENER);
-				while (ScanParam.wpReachedSemaphore.get(numUAV) == currentWP) {
+				GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_ORDER_LISTENER);
+				while (MUSCOPParam.wpReachedSemaphore.get(numUAV) == currentWP) {
 					inBuffer = Copter.receiveMessage(numUAV);
 					if (inBuffer != null) {
 						input.setBuffer(inBuffer);
@@ -598,43 +598,43 @@ public class ListenerThread extends Thread {
 						if (type == Message.MOVE_TO_WAYPOINT){
 							int wp = input.readInt();
 							if (wp > currentWP) {
-								ScanParam.wpReachedSemaphore.incrementAndGet(numUAV);
+								MUSCOPParam.wpReachedSemaphore.incrementAndGet(numUAV);
 							}
 						}
 						
 						if (type == Message.LAND) {
 							centerUAVFinalLocation = new UTMCoordinates(input.readDouble(), input.readDouble());
-							ScanParam.state.set(numUAV, MOVE_TO_LAND);
-							ScanParam.wpReachedSemaphore.incrementAndGet(numUAV);
+							MUSCOPParam.state.set(numUAV, MOVE_TO_LAND);
+							MUSCOPParam.wpReachedSemaphore.incrementAndGet(numUAV);
 						}
 					}
 				}
 			}
 			
 			/** MOVE_TO_WP PHASE */
-			if (ScanParam.state.get(numUAV) == FOLLOWING_MISSION) {
+			if (MUSCOPParam.state.get(numUAV) == FOLLOWING_MISSION) {
 				currentWP++;
-				GUI.log(numUAV, ScanText.MOVE_TO_WP + " " + currentWP);
-				GUI.updateProtocolState(numUAV, ScanText.MOVE_TO_WP + " " + currentWP);
-				GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
+				GUI.log(numUAV, MUSCOPText.MOVE_TO_WP + " " + currentWP);
+				GUI.updateProtocolState(numUAV, MUSCOPText.MOVE_TO_WP + " " + currentWP);
+				GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 				
 				destinationGeo = missionGeo[currentWP];
 				destinationUTM = missionUTM[currentWP];
 				relAltitude = missionUTM[currentWP].z;
 				if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
-					GUI.exit(ScanText.MOVE_ERROR_1 + " " + selfId);
+					GUI.exit(MUSCOPText.MOVE_ERROR_1 + " " + selfId);
 				}
 				cicleTime = System.currentTimeMillis();
-				while (ScanParam.moveSemaphore.get(numUAV) == currentWP) {
+				while (MUSCOPParam.moveSemaphore.get(numUAV) == currentWP) {
 					// Discard message
-					Copter.receiveMessage(numUAV, ScanParam.RECEIVING_TIMEOUT);
+					Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 					// Wait until target location is reached
-					if (System.currentTimeMillis() - cicleTime > ScanParam.MOVE_CHECK_TIMEOUT) {
-						if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= ScanParam.MIN_DISTANCE_TO_WP
+					if (System.currentTimeMillis() - cicleTime > MUSCOPParam.MOVE_CHECK_TIMEOUT) {
+						if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP
 								&& Math.abs(relAltitude - Copter.getZRelative(numUAV)) <= 0.2) {
-							ScanParam.moveSemaphore.incrementAndGet(numUAV);
+							MUSCOPParam.moveSemaphore.incrementAndGet(numUAV);
 						} else {
-							cicleTime = cicleTime + ScanParam.MOVE_CHECK_TIMEOUT;
+							cicleTime = cicleTime + MUSCOPParam.MOVE_CHECK_TIMEOUT;
 						}
 					}
 				}
@@ -644,29 +644,29 @@ public class ListenerThread extends Thread {
 		/** MOVE TO LAND PHASE */
 		int waitingTime;
 		// This only happens for UAVs not located in the center of the formation
-		if (ScanParam.state.get(numUAV) == MOVE_TO_LAND) {
-			GUI.log(numUAV, ScanText.LAND_LOCATION_REACHED);
-			GUI.updateProtocolState(numUAV, ScanText.LAND_LOCATION_REACHED);
-			GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
+		if (MUSCOPParam.state.get(numUAV) == MOVE_TO_LAND) {
+			GUI.log(numUAV, MUSCOPText.LAND_LOCATION_REACHED);
+			GUI.updateProtocolState(numUAV, MUSCOPText.LAND_LOCATION_REACHED);
+			GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 			FlightFormation flyingFormation =
-					FlightFormation.getFormation(ScanParam.flyingFormation.get(numUAV), numUAVs, FlightFormation.getLandingFormationDistance());
-			int position = ScanParam.flyingFormationPosition.get(numUAV);
-			double formationHeading = ScanParam.flyingFormationHeading.get(numUAV);
+					FlightFormation.getFormation(MUSCOPParam.flyingFormation.get(numUAV), numUAVs, FlightFormation.getLandingFormationDistance());
+			int position = MUSCOPParam.flyingFormationPosition.get(numUAV);
+			double formationHeading = MUSCOPParam.flyingFormationHeading.get(numUAV);
 			UTMCoordinates landingLocation = flyingFormation.getLocation(position, centerUAVFinalLocation, formationHeading);
 			GeoCoordinates target = Tools.UTMToGeo(landingLocation);
 			float currentAltitude = (float)Copter.getZRelative(numUAV);
 			if (!Copter.moveUAVNonBlocking(numUAV, target, currentAltitude)) {
-				GUI.exit(ScanText.MOVE_ERROR_2 + " " + selfId);
+				GUI.exit(MUSCOPText.MOVE_ERROR_2 + " " + selfId);
 			}
 			cicleTime = System.currentTimeMillis();
-			while (ScanParam.state.get(numUAV) == MOVE_TO_LAND) {
+			while (MUSCOPParam.state.get(numUAV) == MOVE_TO_LAND) {
 				// Wait until target location is reached
-				if (landingLocation.distance(Copter.getUTMLocation(numUAV)) <= ScanParam.MIN_DISTANCE_TO_WP
+				if (landingLocation.distance(Copter.getUTMLocation(numUAV)) <= MUSCOPParam.MIN_DISTANCE_TO_WP
 						&& Math.abs(currentAltitude - Copter.getZRelative(numUAV)) <= 0.2) {
-					ScanParam.state.set(numUAV, LANDING);
+					MUSCOPParam.state.set(numUAV, LANDING);
 				}
-				if (ScanParam.state.get(numUAV) != LANDING) {
-					cicleTime = cicleTime + ScanParam.MOVE_CHECK_TIMEOUT;
+				if (MUSCOPParam.state.get(numUAV) != LANDING) {
+					cicleTime = cicleTime + MUSCOPParam.MOVE_CHECK_TIMEOUT;
 					waitingTime = (int) (cicleTime - System.currentTimeMillis());
 					if (waitingTime > 0) {
 						Tools.waiting(waitingTime);
@@ -677,17 +677,17 @@ public class ListenerThread extends Thread {
 		
 		/** LANDING PHASE */
 		if (!Copter.setFlightMode(numUAV, FlightMode.LAND_ARMED)) {
-			GUI.exit(ScanText.LAND_ERROR + " " + selfId);
+			GUI.exit(MUSCOPText.LAND_ERROR + " " + selfId);
 		}
-		GUI.log(numUAV, ScanText.LANDING_UAV);
-		GUI.updateProtocolState(numUAV, ScanText.LANDING_UAV);
-		GUI.logVerbose(numUAV, ScanText.LISTENER_WAITING);
+		GUI.log(numUAV, MUSCOPText.LANDING_UAV);
+		GUI.updateProtocolState(numUAV, MUSCOPText.LANDING_UAV);
+		GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 		cicleTime = System.currentTimeMillis();
-		while (ScanParam.state.get(numUAV) == LANDING) {
+		while (MUSCOPParam.state.get(numUAV) == LANDING) {
 			if(!Copter.isFlying(numUAV)) {
-				ScanParam.state.set(numUAV, FINISH);
+				MUSCOPParam.state.set(numUAV, FINISH);
 			} else {
-				cicleTime = cicleTime + ScanParam.LAND_CHECK_TIMEOUT;
+				cicleTime = cicleTime + MUSCOPParam.LAND_CHECK_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
@@ -696,9 +696,9 @@ public class ListenerThread extends Thread {
 		}
 		
 		/** FINISH PHASE */
-		GUI.log(numUAV, ScanText.FINISH);
-		GUI.updateProtocolState(numUAV, ScanText.FINISH);
-		GUI.logVerbose(numUAV, ScanText.LISTENER_FINISHED);
+		GUI.log(numUAV, MUSCOPText.FINISH);
+		GUI.updateProtocolState(numUAV, MUSCOPText.FINISH);
+		GUI.logVerbose(numUAV, MUSCOPText.LISTENER_FINISHED);
 	}
 
 }

@@ -8,16 +8,17 @@ public class MovedMission implements Comparable<MovedMission> {
 
 	public long id;
 	public int formationPosition;
-	public Point3D[] posiciones;
+	public Point3D[] locations;
 	
 	@SuppressWarnings("unused")
 	private MovedMission() {
 		
 	}
+	
 	public MovedMission(long id, int formationPosition, Point3D[] locations) {
 		this.id=id;
 		this.formationPosition = formationPosition;
-		this.posiciones = locations;
+		this.locations = locations;
 	}
 	
 	@Override

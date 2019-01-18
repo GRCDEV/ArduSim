@@ -3,10 +3,10 @@ package muscop.logic;
 /** This class contains text descriptions for messages used by this protocol.
  * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
 
-public class ScanText {
+public class MUSCOPText {
 	
 	// Configuration dialog
-	public static final String CONFIGURATION_DIALOG_TITLE_SWARM = "Swarm Protocol Configuration";
+	public static final String CONFIGURATION_DIALOG_TITLE_SWARM = "MUSCOP Protocol Configuration";
 	public static final String MISSION_SELECT = "Flight mission:";
 	public static final String BUTTON_SELECT = "...";
 	public static final String GROUND_TEXT = "Ground formation:";
@@ -16,7 +16,7 @@ public class ScanText {
 	public static final String LANDING_TEXT = "Landing:";
 	public static final String PROTOCOL_TEXT = "MUSCOP";
 	public static final String LANDING = "Landing";
-	public static final String ENABLING = "Swarm protocol enabled...";
+	public static final String ENABLING = "MUSCOP protocol enabled...";
 	
 	// Protocol states
 	public static final String START = "Start";							// Master UAV detects slaves

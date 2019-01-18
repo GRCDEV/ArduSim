@@ -5,7 +5,7 @@ package muscop.pojo;
 public final class Message {
 	
 	public static final short HELLO = 0;				// "I am here"
-	public static final short DATA = 1;					// "Sending previous and next UAVs, take off altitude and mission"
+	public static final short DATA = 1;					// "Sending previous and next UAVs, take off altitude, mission, ..."
 	public static final short DATA_ACK = 2;				// "Data received"
 	public static final short READY_TO_FLY = 3;			// "All UAVs have data"
 	public static final short READY_TO_FLY_ACK = 4;		// "Yes, I know that all of us have data"

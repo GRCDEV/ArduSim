@@ -13,7 +13,7 @@ import api.pojo.formations.FlightFormation.Formation;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
-public class ScanParam {
+public class MUSCOPParam {
 	
 	// General parameters
 	public static final int MASTER_POSITION = 0; // Position of master UAV into array of UAVs
@@ -47,7 +47,7 @@ public class ScanParam {
 	public static AtomicReferenceArray<Point3D[]> uavMissionReceivedUTM; // Mission for each UAV in UTM coordinates
 	public static AtomicReferenceArray<GeoCoordinates[]> uavMissionReceivedGeo; // Matrix with individual missions of each Drone GEO
 	// Maximum number of waypoints
-	public static final int MAX_WAYPOINTS = 59;	// MAX_MTU - 2 - 8x4 - 4 - 2 - 4 - 8 - 4 - 3x8xn
+	public static final int MAX_WAYPOINTS = 58;	// api.Tools.DATAGRAM_MAX_LENGTH - 2 - 8x4 - 4 - 2 - 4 - 8 - 8 - 4 - 3x8xn >= 0
 	
 	// Thread and protocol coordination
 	public static AtomicIntegerArray state;

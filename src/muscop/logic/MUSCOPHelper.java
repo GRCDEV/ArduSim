@@ -27,62 +27,62 @@ import api.pojo.GeoCoordinates;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.formations.FlightFormation;
-import muscop.gui.ScanConfigDialog;
+import muscop.gui.MUSCOPConfigDialog;
 import sim.board.BoardPanel;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
-public class ScanHelper extends ProtocolHelper {
+public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public void setProtocol() {
-		this.protocolString = ScanText.PROTOCOL_TEXT;
+		this.protocolString = MUSCOPText.PROTOCOL_TEXT;
 	}
 
 	@Override
 	public boolean loadMission() {
 		// Only the master UAV has a mission (on real UAV, numUAV == 0)
-		boolean isMaster = ScanHelper.isMaster(0);
+		boolean isMaster = MUSCOPHelper.isMaster(0);
 		if (isMaster) {
-			ScanParam.idMaster = Tools.getIdFromPos(ScanParam.MASTER_POSITION);
-		}//	The slave in a real UAV has SwarmProtParam.idMaster == null
+			MUSCOPParam.idMaster = Tools.getIdFromPos(MUSCOPParam.MASTER_POSITION);
+		}//	The slave in a real UAV has MUSCOPParam.idMaster == null
 		return isMaster;
 	}
 
 	@Override
 	public void openConfigurationDialog() {
-		ScanParam.idMaster = ScanParam.SIMULATION_MASTER_ID;
+		MUSCOPParam.idMaster = MUSCOPParam.SIMULATION_MASTER_ID;
 
-		new ScanConfigDialog();
+		new MUSCOPConfigDialog();
 	}
 
 	@Override
 	public void initializeDataStructures() {
 		int numUAVs = Tools.getNumUAVs();
 		
-		ScanParam.iAmCenter = new AtomicBoolean[numUAVs];
+		MUSCOPParam.iAmCenter = new AtomicBoolean[numUAVs];
 		for (int i = 0; i < numUAVs; i++) {
-			ScanParam.iAmCenter[i] = new AtomicBoolean();
+			MUSCOPParam.iAmCenter[i] = new AtomicBoolean();
 		}
-		ScanParam.idPrev = new AtomicLongArray(numUAVs);
-		ScanParam.idNext = new AtomicLongArray(numUAVs);
-		ScanParam.numUAVs = new AtomicIntegerArray(numUAVs);
-		ScanParam.flyingFormation = new AtomicReferenceArray<>(numUAVs);
-		ScanParam.flyingFormationPosition = new AtomicIntegerArray(numUAVs);
-		ScanParam.flyingFormationHeading = new AtomicDoubleArray(numUAVs);
-		ScanParam.takeoffAltitude = new AtomicDoubleArray(numUAVs);
-		ScanParam.uavMissionReceivedUTM = new AtomicReferenceArray<>(numUAVs);
-		ScanParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
-		ScanParam.data = new AtomicReference<>();
+		MUSCOPParam.idPrev = new AtomicLongArray(numUAVs);
+		MUSCOPParam.idNext = new AtomicLongArray(numUAVs);
+		MUSCOPParam.numUAVs = new AtomicIntegerArray(numUAVs);
+		MUSCOPParam.flyingFormation = new AtomicReferenceArray<>(numUAVs);
+		MUSCOPParam.flyingFormationPosition = new AtomicIntegerArray(numUAVs);
+		MUSCOPParam.flyingFormationHeading = new AtomicDoubleArray(numUAVs);
+		MUSCOPParam.takeoffAltitude = new AtomicDoubleArray(numUAVs);
+		MUSCOPParam.uavMissionReceivedUTM = new AtomicReferenceArray<>(numUAVs);
+		MUSCOPParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
+		MUSCOPParam.data = new AtomicReference<>();
 		
-		ScanParam.state = new AtomicIntegerArray(numUAVs);
-		ScanParam.moveSemaphore = new AtomicIntegerArray(numUAVs);
-		ScanParam.wpReachedSemaphore = new AtomicIntegerArray(numUAVs);
+		MUSCOPParam.state = new AtomicIntegerArray(numUAVs);
+		MUSCOPParam.moveSemaphore = new AtomicIntegerArray(numUAVs);
+		MUSCOPParam.wpReachedSemaphore = new AtomicIntegerArray(numUAVs);
 	}
 
 	@Override
 	public String setInitialState() {
-		return ScanText.START;
+		return MUSCOPText.START;
 	}
 
 	@Override
@@ -107,14 +107,14 @@ public class ScanHelper extends ProtocolHelper {
 		int waypoint1pos = 0;
 		boolean waypointFound;
 		List<Waypoint>[] missions = Tools.getLoadedMissions();	// Simplified mission not ready
-		if (missions == null || missions[ScanParam.MASTER_POSITION] == null) {
-			JOptionPane.showMessageDialog(null, ScanText.UAVS_START_ERROR_1 + " " + (ScanParam.MASTER_POSITION + 1) + ".",
-					ScanText.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
+		if (missions == null || missions[MUSCOPParam.MASTER_POSITION] == null) {
+			JOptionPane.showMessageDialog(null, MUSCOPText.UAVS_START_ERROR_1 + " " + (MUSCOPParam.MASTER_POSITION + 1) + ".",
+					MUSCOPText.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		}
 		// 1.2. Get the heading
 		// Locate the first waypoint with coordinates
-		List<Waypoint> masterMission = missions[ScanParam.MASTER_POSITION];
+		List<Waypoint> masterMission = missions[MUSCOPParam.MASTER_POSITION];
 		waypointFound = false;
 		for (int j = 0; j < masterMission.size() && !waypointFound; j++) {
 			waypoint1 = masterMission.get(j);
@@ -124,7 +124,7 @@ public class ScanHelper extends ProtocolHelper {
 			}
 		}
 		if (!waypointFound) {
-			GUI.exit(ScanText.UAVS_START_ERROR_2 + " " + Tools.getIdFromPos(ScanParam.MASTER_POSITION));
+			GUI.exit(MUSCOPText.UAVS_START_ERROR_2 + " " + Tools.getIdFromPos(MUSCOPParam.MASTER_POSITION));
 		}
 		// Locate the second waypoint with coordinates
 		waypointFound = false;
@@ -139,9 +139,9 @@ public class ScanHelper extends ProtocolHelper {
 		UTMCoordinates groundCenterUTMLocation = Tools.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
 		if (waypointFound) {
 			UTMCoordinates wp2 = Tools.geoToUTM(waypoint2.getLatitude(), waypoint2.getLongitude());
-			ScanParam.formationHeading = ScanHelper.getHeading(groundCenterUTMLocation, wp2);
+			MUSCOPParam.formationHeading = MUSCOPHelper.getHeading(groundCenterUTMLocation, wp2);
 		} else {
-			ScanParam.formationHeading = 0.0;
+			MUSCOPParam.formationHeading = 0.0;
 		}
 		
 		// 2. With the ground formation centered on the mission beginning, get ground coordinates
@@ -157,7 +157,7 @@ public class ScanHelper extends ProtocolHelper {
 			if (i == groundCenterUAVPosition) {
 				groundLocations.put((long)i, groundCenterUTMLocation);
 			} else {
-				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, ScanParam.formationHeading);
+				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, MUSCOPParam.formationHeading);
 				groundLocations.put((long)i, locationUTM);
 			}
 		}
@@ -165,7 +165,7 @@ public class ScanHelper extends ProtocolHelper {
 		// 3. Get the ID of the UAV that will be center in the flight formation
 		FlightFormation airFormation = FlightFormation.getFormation(FlightFormation.getFlyingFormation(),
 				numUAVs, FlightFormation.getFlyingFormationDistance());
-		Triplet<Integer, Long, UTMCoordinates>[] match = FlightFormation.matchIDs(groundLocations, ScanParam.formationHeading,
+		Triplet<Integer, Long, UTMCoordinates>[] match = FlightFormation.matchIDs(groundLocations, MUSCOPParam.formationHeading,
 				true, null, airFormation);
 		int airCenterUAVPosition = airFormation.getCenterUAVPosition();
 		Integer airCenterUAVId = null;
@@ -196,7 +196,7 @@ public class ScanHelper extends ProtocolHelper {
 		// 5. Using the ground center UAV location as reference, get the starting location of all the UAVs
 		@SuppressWarnings("unchecked")
 		Pair<GeoCoordinates, Double>[] startingLocation = new Pair[numUAVs];
-		double heading = ScanParam.formationHeading * 180 / Math.PI;
+		double heading = MUSCOPParam.formationHeading * 180 / Math.PI;
 		for (int i = 0; i < numUAVs; i++) {
 			if (i == groundCenterUAVPosition) {
 				startingLocation[i] = Pair.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
@@ -248,7 +248,7 @@ public class ScanHelper extends ProtocolHelper {
 			(new ListenerThread(i)).start();
 			(new TalkerThread(i)).start();
 		}
-		GUI.log(ScanText.ENABLING);
+		GUI.log(MUSCOPText.ENABLING);
 	}
 
 	@Override
@@ -258,12 +258,12 @@ public class ScanHelper extends ProtocolHelper {
 		while (!allFinished) {
 			allFinished = true;
 			for (int i = 0; i < numUAVs && allFinished; i++) {
-				if (ScanParam.state.get(i) < SETUP_FINISHED) {
+				if (MUSCOPParam.state.get(i) < SETUP_FINISHED) {
 					allFinished = false;
 				}
 			}
 			if (!allFinished) {
-				Tools.waiting(ScanParam.STATE_CHANGE_TIMEOUT);
+				Tools.waiting(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 			}
 		}
 	}
@@ -298,14 +298,14 @@ public class ScanHelper extends ProtocolHelper {
 		int role = Tools.getArduSimRole();
 		if (role == Tools.MULTICOPTER) {
 			/** You get the id = MAC for real drone */
-			long idMaster = Tools.getIdFromPos(ScanParam.MASTER_POSITION);
-			for (int i = 0; i < ScanParam.MAC_ID.length; i++) {
-				if (ScanParam.MAC_ID[i] == idMaster) {
+			long idMaster = Tools.getIdFromPos(MUSCOPParam.MASTER_POSITION);
+			for (int i = 0; i < MUSCOPParam.MAC_ID.length; i++) {
+				if (MUSCOPParam.MAC_ID[i] == idMaster) {
 					return true;
 				}
 			}
 		} else if (role == Tools.SIMULATOR) {
-			if (numUAV == ScanParam.MASTER_POSITION) {
+			if (numUAV == MUSCOPParam.MASTER_POSITION) {
 				return true;
 			}
 		}
