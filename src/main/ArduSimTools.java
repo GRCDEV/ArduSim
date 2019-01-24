@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FilenameFilter;
@@ -26,6 +27,8 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +62,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -2162,6 +2167,7 @@ public class ArduSimTools {
 								//  Default flying altitude
 								z = UAVParam.minFlyingAltitude;
 							}
+							
 							// Waypoint 0 is home and current
 							// Waypoint 1 is take off
 							if (j==0) {
@@ -2222,6 +2228,7 @@ public class ArduSimTools {
 					}
 				}
 			}
+			
 			return missions;
 		} catch (ParserConfigurationException e) {
 		} catch (SAXException e) {
@@ -2932,16 +2939,30 @@ public class ArduSimTools {
 		double time;
 		boolean firstExperimentData, firstSetupData;
 		double lastTime = 0;
+		File file5;
+		StringBuilder sb5 = new StringBuilder(2000);
+		sb5.append("<?xml version=\"1.0\"?>\n<kml xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n")
+			.append("\t<Document>\n");
+		String[] colors = new String[] {"FF000000", "FFFF0000", "FF0000FF", "FF00FF00", "FFFFFF00",
+				"FFFF00FF", "FF00A5FF", "FFCBC0FF", "FF00FFFF"};
+		GeoCoordinates geo;
+		boolean newData;
+		
 		for (int i=0; i<Param.numUAVs; i++) {
-			file1 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_TEST_SUFIX);
+			file1 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.PATH_TEST_SUFIX);
 			sb1 = new StringBuilder(2000);
 			sb1.append("x(m),y(m),z(m),heading(rad),t(s),s(m/s),a(m/s\u00B2),\u0394d(m),d(m)\n");
-			file2 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_SETUP_SUFIX);
+			file2 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.PATH_SETUP_SUFIX);
 			sb2 = new StringBuilder(2000);
 			sb2.append("x(m),y(m),z(m),heading(rad),t(s)\n");
-			file3 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_2D_SUFIX);
+			file3 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.PATH_2D_SUFIX);
 			sb3 = new StringBuilder(2000);
 			sb3.append("._PLINE\n");
+			sb5.append("\t\t<Placemark>\n\t\t\t<name>UAV ").append(Param.id[i])
+				.append("</name>\n\t\t\t<Style>\n\t\t\t\t<LineStyle>\n\t\t\t\t\t<color>").append(colors[i % colors.length])
+				.append("</color>\n\t\t\t\t\t<colorMode>normal</colorMode>\n\t\t\t\t\t<width>4</width>\n\t\t\t\t</LineStyle>\n")
+				.append("\t\t\t</Style>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n")
+				.append("\t\t\t\t<altitudeMode>absolute</altitudeMode>\n\t\t\t\t<coordinates>");
 
 			int j = 0;			// Position in the path list
 			double dist = 0;	// Accumulated distance to origin
@@ -2950,7 +2971,7 @@ public class ArduSimTools {
 			z = y = x = null;
 			
 			if (Param.verboseStore) {
-				file4 = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
+				file4 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
 				sb4 = new StringBuilder(2000);
 				sb4.append("._3DPOLY\n");
 
@@ -3006,6 +3027,8 @@ public class ArduSimTools {
 					x = Tools.round(sp.x, 3);
 					y = Tools.round(sp.y, 3);
 					z = Tools.round(sp.z, 3);
+					
+					newData = false;
 					if (firstExperimentData) {
 						// Adding 0 point
 						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
@@ -3023,6 +3046,8 @@ public class ArduSimTools {
 						}
 						spPrev = sp;
 						firstExperimentData = false;
+						geo = Tools.UTMToGeo(sp.x, sp.y);
+						sb5.append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
 					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
 						// Moved horizontally
 						d = sp.distance(spPrev);
@@ -3036,6 +3061,7 @@ public class ArduSimTools {
 							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
+						newData = true;
 					} else if (sp.z!=spPrev.z) {
 						// Only moved vertically
 						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(sp.getHeading())
@@ -3045,6 +3071,11 @@ public class ArduSimTools {
 							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
 						spPrev = sp;
+						newData = true;
+					}
+					if (newData) {
+						geo = Tools.UTMToGeo(sp.x, sp.y);
+						sb5.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
 					}
 				}
 				j++;
@@ -3057,20 +3088,37 @@ public class ArduSimTools {
 				sb4.append("\n");
 				Tools.storeFile(file4, sb4.toString());
 			}
+			sb5.append("</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>\n");
+		}
+		sb5.append("\t</Document>\n</kml>");
+		file5 = new File(folder, baseFileName + "_path_Google_Earth.kmz");
+		try {
+			FileOutputStream out = new FileOutputStream(file5);
+			ZipOutputStream stream = new ZipOutputStream(out);
+			ZipEntry zipEntry = new ZipEntry(baseFileName + "_path_Google_Earth.kml");
+			stream.putNextEntry(zipEntry);
+			stream.write(sb5.toString().getBytes(StandardCharsets.UTF_8));
+			stream.closeEntry();
+			stream.close();
+			out.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		
 		// Storing mobility files, only during the experiment
-		File file5, file6, file7, file8;
-		StringBuilder sb5, sb6, sb7, sb8;
-		file7 = new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_2D);
-		file8 =new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_3D);
-		sb7 = new StringBuilder(2000);
+		File file6, file7, file8, file9;
+		StringBuilder sb6, sb7, sb8, sb9;
+		file8 = new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_2D);
+		file9 =new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_3D);
 		sb8 = new StringBuilder(2000);
+		sb9 = new StringBuilder(2000);
 		for (int i = 0; i < Param.numUAVs; i++) {
-			file5 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_2D);
-			file6 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_3D);
-			sb5 = new StringBuilder(2000);
+			file6 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_2D);
+			file7 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_3D);
 			sb6 = new StringBuilder(2000);
+			sb7 = new StringBuilder(2000);
 			firstExperimentData = true;
 			spPrev = null;
 			for (int j = 0; j < SimParam.uavUTMPath[i].size(); j++) {
@@ -3084,39 +3132,39 @@ public class ArduSimTools {
 						z = Tools.round(sp.z, 2);
 						if (firstExperimentData) {
 							// Adding 0 point
-							sb5.append("$node_(0) set X_ ").append(x).append("\n");
-							sb5.append("$node_(0) set Y_ ").append(y).append("\n");
 							sb6.append("$node_(0) set X_ ").append(x).append("\n");
 							sb6.append("$node_(0) set Y_ ").append(y).append("\n");
-							sb6.append("$node_(0) set Z_ ").append(z).append("\n");
-							sb7.append("0 ").append(x).append(" ").append(y);
-							sb8.append("0 ").append(x).append(" ").append(y).append(" ").append(z);
+							sb7.append("$node_(0) set X_ ").append(x).append("\n");
+							sb7.append("$node_(0) set Y_ ").append(y).append("\n");
+							sb7.append("$node_(0) set Z_ ").append(z).append("\n");
+							sb8.append("0 ").append(x).append(" ").append(y);
+							sb9.append("0 ").append(x).append(" ").append(y).append(" ").append(z);
 							// At the beginning we may need to add a 0 time point
 							if (time != 0) {
-								sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
-								sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
 								sb6.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
 								sb6.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
-								sb6.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
-								sb7.append(" ").append(time).append(" ").append(x).append(" ").append(y);
-								sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+								sb7.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+								sb7.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+								sb7.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
+								sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y);
+								sb9.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
 							}
 							spPrev = sp;
 							firstExperimentData = false;
 						} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
-							sb5.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
-							sb5.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
 							sb6.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
 							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
-							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
-							sb7.append(" ").append(time).append(" ").append(x).append(" ").append(y);
-							sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+							sb7.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+							sb7.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+							sb7.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
+							sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y);
+							sb9.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
 							spPrev = sp;
 						} else if (sp.z!=spPrev.z) {
-							sb6.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
-							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
-							sb6.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
-							sb8.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+							sb7.append("$ns_ at ").append(time).append(" $node_(0) set X_ ").append(x).append("\n");
+							sb7.append("$ns_ at ").append(time).append(" $node_(0) set Y_ ").append(y).append("\n");
+							sb7.append("$ns_ at ").append(time).append(" $node_(0) set Z_ ").append(z).append("\n");
+							sb9.append(" ").append(time).append(" ").append(x).append(" ").append(y).append(" ").append(z);
 							spPrev = sp;
 						}
 					}
@@ -3127,24 +3175,24 @@ public class ArduSimTools {
 				x = Tools.round(spPrev.x, 2);
 				y = Tools.round(spPrev.y, 2);
 				z = Tools.round(spPrev.z, 2);
-				sb5.append("$ns_ at ").append(lastTime).append(" $node_(0) set X_ ").append(x).append("\n");
-				sb5.append("$ns_ at ").append(lastTime).append(" $node_(0) set Y_ ").append(y).append("\n");
 				sb6.append("$ns_ at ").append(lastTime).append(" $node_(0) set X_ ").append(x).append("\n");
 				sb6.append("$ns_ at ").append(lastTime).append(" $node_(0) set Y_ ").append(y).append("\n");
-				sb6.append("$ns_ at ").append(lastTime).append(" $node_(0) set Z_ ").append(z).append("\n");
-				sb7.append(" ").append(lastTime).append(" ").append(x).append(" ").append(y);
-				sb8.append(" ").append(lastTime).append(" ").append(x).append(" ").append(y).append(" ").append(z);
+				sb7.append("$ns_ at ").append(lastTime).append(" $node_(0) set X_ ").append(x).append("\n");
+				sb7.append("$ns_ at ").append(lastTime).append(" $node_(0) set Y_ ").append(y).append("\n");
+				sb7.append("$ns_ at ").append(lastTime).append(" $node_(0) set Z_ ").append(z).append("\n");
+				sb8.append(" ").append(lastTime).append(" ").append(x).append(" ").append(y);
+				sb9.append(" ").append(lastTime).append(" ").append(x).append(" ").append(y).append(" ").append(z);
 			}
 			
-			Tools.storeFile(file5, sb5.toString());
 			Tools.storeFile(file6, sb6.toString());
+			Tools.storeFile(file7, sb7.toString());
 			
-			sb7.append("\n");
 			sb8.append("\n");
+			sb9.append("\n");
 		}
 		
-		Tools.storeFile(file7, sb7.toString());
 		Tools.storeFile(file8, sb8.toString());
+		Tools.storeFile(file9, sb9.toString());
 		
 		return firstExperimentNanoTime;
 	}
@@ -3209,31 +3257,79 @@ public class ArduSimTools {
 	
 	/** Logging to file the UAVs mission, in AutoCAD format. */
 	private static void logMission(String folder, String baseFileName) {
-		File file;
-		StringBuilder sb;
+		File file1, file2;
+		StringBuilder sb1;
+		
+		
+		
+		
+		
+		
+		StringBuilder sb2 = new StringBuilder(2000);
+		sb2.append("<?xml version=\"1.0\"?>\n<kml xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n")
+			.append("\t<Document>\n");
+		String[] colors = new String[] {"FF000000", "FFFF0000", "FF0000FF", "FF00FF00", "FFFFFF00",
+				"FFFF00FF", "FF00A5FF", "FFCBC0FF", "FF00FFFF"};
+		GeoCoordinates geo;
+		
+		int located = 0;
 		int j;
 		for (int i=0; i<Param.numUAVs; i++) {
-			file = new File(folder + File.separator + baseFileName + "_" + Param.id[i] + "_" + Text.MISSION_SUFIX);
-			sb = new StringBuilder(2000);
-			sb.append("._PLINE\n");
-			j = 0;
 			List<WaypointSimplified> missionUTMSimplified = Tools.getUAVMissionSimplified(i);
 			if (missionUTMSimplified != null && missionUTMSimplified.size() > 1) {
+				located++;
+				file1 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MISSION_SUFIX);
+				sb1 = new StringBuilder(2000);
+				sb1.append("._PLINE\n");
+				
+				sb2.append("\t\t<Placemark>\n\t\t\t<name>UAV ").append(Param.id[i])
+				.append("</name>\n\t\t\t<Style>\n\t\t\t\t<LineStyle>\n\t\t\t\t\t<color>").append(colors[i % colors.length])
+				.append("</color>\n\t\t\t\t\t<colorMode>normal</colorMode>\n\t\t\t\t\t<width>1</width>\n\t\t\t\t</LineStyle>\n")
+				.append("\t\t\t</Style>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n")
+				.append("\t\t\t\t<altitudeMode>clampToGround</altitudeMode>\n\t\t\t\t<coordinates>");
+				
+				
+				
+				
+				j = 0;
 				WaypointSimplified prev = null;
 				WaypointSimplified current;
-				while (j<missionUTMSimplified.size()) {
+				for (j = 0; j<missionUTMSimplified.size(); j++) {
 					current = missionUTMSimplified.get(j);
+					geo = Tools.UTMToGeo(current.x, current.y);
 					if (prev == null) {
-						sb.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
+						sb1.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
 						prev = current;
+						sb2.append(geo.longitude).append(",").append(geo.latitude).append(",").append(Tools.round(current.z, 3));
 					} else if (!current.equals(prev)) {
-						sb.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
+						sb1.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
 						prev = current;
+						sb2.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(Tools.round(current.z, 3));
 					}
-					j++;
 				}
-				sb.append("\n");
-				Tools.storeFile(file, sb.toString());
+				sb1.append("\n");
+				Tools.storeFile(file1, sb1.toString());
+				
+				sb2.append("</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>\n");
+			}
+		}
+		
+		if (located > 0) {
+			sb2.append("\t</Document>\n</kml>");
+			file2 = new File(folder, baseFileName + "_mission_Google_Earth.kmz");
+			try {
+				FileOutputStream out = new FileOutputStream(file2);
+				ZipOutputStream stream = new ZipOutputStream(out);
+				ZipEntry zipEntry = new ZipEntry(baseFileName + "_mission_Google_Earth.kml");
+				stream.putNextEntry(zipEntry);
+				stream.write(sb2.toString().getBytes(StandardCharsets.UTF_8));
+				stream.closeEntry();
+				stream.close();
+				out.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
