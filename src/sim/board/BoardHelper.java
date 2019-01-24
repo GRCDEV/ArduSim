@@ -143,9 +143,9 @@ public class BoardHelper {
 				tileCenter = Tools.UTMToGeo(UTMx, UTMy);
 				BoardParam.map[i][j] = new BackgroundMap(tileCenter.latitude,
 						tileCenter.longitude, zoom, PXWidth, PXHeight, UTMx, UTMy);
-				if (BoardParam.map[i][j].img == null) {
-					BoardParam.mapDownloadErrorText[i][j] = Text.DOWNLOAD_ERROR;
-				}
+//				if (BoardParam.map[i][j].img == null) {
+//					BoardParam.mapDownloadErrorText[i][j] = Text.DOWNLOAD_ERROR;
+//				}TODO descomentar
 			}
 		}
 	}
