@@ -112,7 +112,10 @@ The user decides whether to store this information or not. In the former case, a
 * *name_X_mobility_NS2.txt*. One file for each multicopter stores the mobility model to be used in the communications simulator NS2. This file format is compatible with NS3.
 * *name_X_mobility_NS2_3D.txt*. In this case, the altitude of the multicopter is also included.
 * *name_X_mission_AutoCAD.scr*. This file includes the simplified mission shown on screen, and it is stored in AutoCAD format as a single poliline.
-* *name_X_path.csv*. In this case, we include the 3D location, heading, speed, acceleration, and distance to origin over time. We think that this file may be the most useful to mathematically analyze the behavior of the multicopters.
+* *name_X_mission_Google_Earth.kmz*. It includes the simplifed mission planned for all the UAVs, ready to be shown on Google Earth.
+* *name_X_path_test.csv*. In this case, we include the 3D location, heading, speed, acceleration, and distance to origin over time. We think that this file may be the most useful to mathematically analyze the behavior of the multicopters.
+* *name_X_path_setup.csv*. Same file, but incluiding the path followed during the setup phase.
+* *name_X_path_Google_Earth.kmz*. It includes the path followed by all the UAVs, ready to be shown on Google Earth.
 * *name_X_path_AutoCAD.scr*. This is a simplified version of the previous file with an AutoCAD poliline with the path followed by the multicopter.
 * *name_X_path_AutoCAD3d.scr*. This file includes a 3D poliline with the path followed by the multicopter.
 * *name_CPU.txt*. This file is optionally stored for CPU usage analysis, and includes the global system CPU usage and the Java process CPU usage during each state of ArduSim execution. Two measures are provided; the global percentage, and the percentage relative to one core.
@@ -189,10 +192,13 @@ The list of parameters is:
     * *MEASURECPU*. Measure CPU usage during the experiment.
     * *VERBOSELOGGING*. Verbose logging to ArduSim window and console.
     * *VERBOSESTORE*. Allows to store additional files at will.
-    * *MINALTITUDE*. Minimum relative altitude to home for takeoff, and minimum reletive altitude for any waypoint when loading a mission from a Google Earth .kml file.
-    * *MISSIONEND*. Whether to add a land or RTL command at the end of the mission if loaded from Google Earth .xml file. Valid values: unmodified, land, or RTL.
-    * *WAYPOINTDELAY*. Mission delay over each waypoint (seconds).
-    * *WAYPOINTDISTANCE*. Distance to waypoint to assert that it has been reached (centimeters), used only when WAYPOINTDELAY is greater than 0.
+* KML files parameters:
+    * *KMLMINALTITUDE*.Minimum relative altitude for any waypoint.
+    * *KMLOVERRIDEALTITUDE*. Whether to override the altitude values included in the mission or not.
+    * *KMLALTITUDE*. If the altitude values are overriden, the relative altitude for all of them.
+    * *KMLMISSIONEND*. Whether to add a land or RTL command at the end of the mission. Valid values: unmodified, land, or RTL.
+    * *KMLWAYPOINTDELAY*. Mission delay over each waypoint (seconds).
+    * *KMLWAYPOINTDISTANCE*. Distance to waypoint to assert that it has been reached (centimeters), used only when WAYPOINTDELAY is greater than 0.
 * PCCompanion-to-realUAV and realUAV-to-realUAV communication parameters:
     * *BROADCASTIP*. The IP must be the broadcast address of the network configured on the Raspberry Pi.
     * *BROADCASTPORT*. Port where the PC Companion can listen to supervise the protocol communications among real UAVs. The PC Companion can even interact with the multicopters with the functions "Copter.sendBroadcastMessage(byte[])" and "Copter.receiveMessage(int)".

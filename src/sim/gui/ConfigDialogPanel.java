@@ -42,6 +42,7 @@ import uavController.UAVParam;
 public class ConfigDialogPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+	public JTextField iniAltitudeTextField;
 	public JTextField screenDelayTextField;
 	public JTextField minScreenMovementTextField;
 	public JCheckBox loggingEnabledCheckBox;
@@ -73,9 +74,9 @@ public class ConfigDialogPanel extends JPanel {
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 5 };
-		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31 };
+		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31 };
 		gridBagLayout.columnWeights = new double[] { 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 				Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 
@@ -266,24 +267,52 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_speedsButton.gridx = 7;
 		gbc_speedsButton.gridy = 2;
 		add(speedsButton, gbc_speedsButton);
+		
+		JLabel label = new JLabel(Text.STARTING_ALTITUDE);
+		label.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_label = new GridBagConstraints();
+		gbc_label.anchor = GridBagConstraints.EAST;
+		gbc_label.gridwidth = 4;
+		gbc_label.insets = new Insets(0, 0, 5, 5);
+		gbc_label.gridx = 1;
+		gbc_label.gridy = 3;
+		add(label, gbc_label);
+		
+		iniAltitudeTextField = new JTextField();
+		iniAltitudeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+		iniAltitudeTextField.setColumns(10);
+		GridBagConstraints gbc_iniAltitudeTextField = new GridBagConstraints();
+		gbc_iniAltitudeTextField.insets = new Insets(0, 0, 5, 5);
+		gbc_iniAltitudeTextField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_iniAltitudeTextField.gridx = 5;
+		gbc_iniAltitudeTextField.gridy = 3;
+		add(iniAltitudeTextField, gbc_iniAltitudeTextField);
+		
+		JLabel label_1 = new JLabel("m");
+		label_1.setFont(new Font("Dialog", Font.PLAIN, 12));
+		GridBagConstraints gbc_label_1 = new GridBagConstraints();
+		gbc_label_1.anchor = GridBagConstraints.WEST;
+		gbc_label_1.insets = new Insets(0, 0, 5, 5);
+		gbc_label_1.gridx = 6;
+		gbc_label_1.gridy = 3;
+		add(label_1, gbc_label_1);
 
 		JLabel lblNumberOfUAVs = new JLabel(Text.UAV_NUMBER);
 		lblNumberOfUAVs.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblNumberOfUAVs = new GridBagConstraints();
-		gbc_lblNumberOfUAVs.gridwidth = 3;
+		gbc_lblNumberOfUAVs.gridwidth = 4;
 		gbc_lblNumberOfUAVs.anchor = GridBagConstraints.EAST;
 		gbc_lblNumberOfUAVs.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNumberOfUAVs.gridx = 1;
-		gbc_lblNumberOfUAVs.gridy = 3;
+		gbc_lblNumberOfUAVs.gridy = 4;
 		add(lblNumberOfUAVs, gbc_lblNumberOfUAVs);
 
 		UAVsComboBox = new JComboBox<String>();
 		GridBagConstraints gbc_UAVsComboBox = new GridBagConstraints();
-		gbc_UAVsComboBox.gridwidth = 3;
 		gbc_UAVsComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_UAVsComboBox.fill = GridBagConstraints.HORIZONTAL;
-		gbc_UAVsComboBox.gridx = 4;
-		gbc_UAVsComboBox.gridy = 3;
+		gbc_UAVsComboBox.gridx = 5;
+		gbc_UAVsComboBox.gridy = 4;
 		add(UAVsComboBox, gbc_UAVsComboBox);
 
 		JLabel lblVisualizationParameters = new JLabel(Text.PERFORMANCE_PARAMETERS);
@@ -292,7 +321,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblVisualizationParameters.gridwidth = 4;
 		gbc_lblVisualizationParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblVisualizationParameters.gridx = 0;
-		gbc_lblVisualizationParameters.gridy = 4;
+		gbc_lblVisualizationParameters.gridy = 5;
 		add(lblVisualizationParameters, gbc_lblVisualizationParameters);
 
 		JLabel lblTimeBetweenScreen = new JLabel(Text.SCREEN_REFRESH_RATE);
@@ -302,7 +331,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblTimeBetweenScreen.gridwidth = 4;
 		gbc_lblTimeBetweenScreen.insets = new Insets(0, 0, 5, 5);
 		gbc_lblTimeBetweenScreen.gridx = 1;
-		gbc_lblTimeBetweenScreen.gridy = 5;
+		gbc_lblTimeBetweenScreen.gridy = 6;
 		add(lblTimeBetweenScreen, gbc_lblTimeBetweenScreen);
 
 		screenDelayTextField = new JTextField();
@@ -312,7 +341,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_screenDelayTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_screenDelayTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_screenDelayTextField.gridx = 5;
-		gbc_screenDelayTextField.gridy = 5;
+		gbc_screenDelayTextField.gridy = 6;
 		add(screenDelayTextField, gbc_screenDelayTextField);
 		screenDelayTextField.setColumns(10);
 
@@ -322,7 +351,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMs.anchor = GridBagConstraints.WEST;
 		gbc_lblMs.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMs.gridx = 6;
-		gbc_lblMs.gridy = 5;
+		gbc_lblMs.gridy = 6;
 		add(lblMs, gbc_lblMs);
 
 		JLabel lblMinimumMovementOf = new JLabel(Text.REDRAW_DISTANCE);
@@ -332,7 +361,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMinimumMovementOf.gridwidth = 4;
 		gbc_lblMinimumMovementOf.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMinimumMovementOf.gridx = 1;
-		gbc_lblMinimumMovementOf.gridy = 6;
+		gbc_lblMinimumMovementOf.gridy = 7;
 		add(lblMinimumMovementOf, gbc_lblMinimumMovementOf);
 
 		minScreenMovementTextField = new JTextField();
@@ -342,7 +371,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_minScreenMovementTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_minScreenMovementTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_minScreenMovementTextField.gridx = 5;
-		gbc_minScreenMovementTextField.gridy = 6;
+		gbc_minScreenMovementTextField.gridy = 7;
 		add(minScreenMovementTextField, gbc_minScreenMovementTextField);
 		minScreenMovementTextField.setColumns(10);
 
@@ -352,7 +381,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblPixels.anchor = GridBagConstraints.WEST;
 		gbc_lblPixels.insets = new Insets(0, 0, 5, 5);
 		gbc_lblPixels.gridx = 6;
-		gbc_lblPixels.gridy = 6;
+		gbc_lblPixels.gridy = 7;
 		add(lblPixels, gbc_lblPixels);
 		
 		JLabel lblLoggingEnabled = new JLabel(Text.LOGGING);
@@ -362,7 +391,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblLoggingEnabled.anchor = GridBagConstraints.EAST;
 		gbc_lblLoggingEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_lblLoggingEnabled.gridx = 0;
-		gbc_lblLoggingEnabled.gridy = 7;
+		gbc_lblLoggingEnabled.gridy = 8;
 		add(lblLoggingEnabled, gbc_lblLoggingEnabled);
 		
 		loggingEnabledCheckBox = new JCheckBox();
@@ -370,7 +399,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_loggingEnabledCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_loggingEnabledCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_loggingEnabledCheckBox.gridx = 4;
-		gbc_loggingEnabledCheckBox.gridy = 7;
+		gbc_loggingEnabledCheckBox.gridy = 8;
 		add(loggingEnabledCheckBox, gbc_loggingEnabledCheckBox);
 		
 		JLabel lblBattery = new JLabel(Text.BATTERY);
@@ -380,7 +409,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblBattery.anchor = GridBagConstraints.EAST;
 		gbc_lblBattery.insets = new Insets(0, 0, 5, 5);
 		gbc_lblBattery.gridx = 0;
-		gbc_lblBattery.gridy = 8;
+		gbc_lblBattery.gridy = 9;
 		add(lblBattery, gbc_lblBattery);
 		
 		batteryCheckBox = new JCheckBox();
@@ -408,7 +437,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_batteryCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_batteryCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_batteryCheckBox.gridx = 4;
-		gbc_batteryCheckBox.gridy = 8;
+		gbc_batteryCheckBox.gridy = 9;
 		add(batteryCheckBox, gbc_batteryCheckBox);
 		
 		batteryTextField = new JTextField();
@@ -417,7 +446,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_batteryTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_batteryTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_batteryTextField.gridx = 5;
-		gbc_batteryTextField.gridy = 8;
+		gbc_batteryTextField.gridy = 9;
 		add(batteryTextField, gbc_batteryTextField);
 		batteryTextField.setColumns(10);
 		
@@ -427,7 +456,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblmah.anchor = GridBagConstraints.WEST;
 		gbc_lblmah.insets = new Insets(0, 0, 5, 5);
 		gbc_lblmah.gridx = 6;
-		gbc_lblmah.gridy = 8;
+		gbc_lblmah.gridy = 9;
 		add(lblmah, gbc_lblmah);
 		
 		JLabel lblGf = new JLabel(Text.CPU_MEASUREMENT_ENABLED);
@@ -437,7 +466,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblGf.gridwidth = 4;
 		gbc_lblGf.insets = new Insets(0, 0, 5, 5);
 		gbc_lblGf.gridx = 0;
-		gbc_lblGf.gridy = 9;
+		gbc_lblGf.gridy = 10;
 		add(lblGf, gbc_lblGf);
 		
 		cpuCheckBox = new JCheckBox();
@@ -446,7 +475,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_cpuCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_cpuCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_cpuCheckBox.gridx = 4;
-		gbc_cpuCheckBox.gridy = 9;
+		gbc_cpuCheckBox.gridy = 10;
 		add(cpuCheckBox, gbc_cpuCheckBox);
 		
 		JLabel renderQualityLabel = new JLabel(Text.RENDER);
@@ -456,7 +485,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_renderQualityLabel.gridwidth = 3;
 		gbc_renderQualityLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_renderQualityLabel.gridx = 1;
-		gbc_renderQualityLabel.gridy = 10;
+		gbc_renderQualityLabel.gridy = 11;
 		add(renderQualityLabel, gbc_renderQualityLabel);
 		
 		renderQualityComboBox = new JComboBox<String>();
@@ -482,7 +511,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_renderQualityComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_renderQualityComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_renderQualityComboBox.gridx = 4;
-		gbc_renderQualityComboBox.gridy = 10;
+		gbc_renderQualityComboBox.gridy = 11;
 		add(renderQualityComboBox, gbc_renderQualityComboBox);
 		
 		JLabel generalParametersLabel = new JLabel(Text.GENERAL_PARAMETERS);
@@ -491,7 +520,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_generalParametersLabel.anchor = GridBagConstraints.WEST;
 		gbc_generalParametersLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_generalParametersLabel.gridx = 0;
-		gbc_generalParametersLabel.gridy = 11;
+		gbc_generalParametersLabel.gridy = 12;
 		add(generalParametersLabel, gbc_generalParametersLabel);
 		
 		JLabel loggingLabel = new JLabel(Text.VERBOSE_LOGGING_ENABLE);
@@ -501,7 +530,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_loggingLabel.anchor = GridBagConstraints.EAST;
 		gbc_loggingLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_loggingLabel.gridx = 0;
-		gbc_loggingLabel.gridy = 12;
+		gbc_loggingLabel.gridy = 13;
 		add(loggingLabel, gbc_loggingLabel);
 		
 		chckbxLogging = new JCheckBox();
@@ -510,7 +539,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_chckbxLogging.anchor = GridBagConstraints.WEST;
 		gbc_chckbxLogging.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxLogging.gridx = 4;
-		gbc_chckbxLogging.gridy = 12;
+		gbc_chckbxLogging.gridy = 13;
 		add(chckbxLogging, gbc_chckbxLogging);
 		
 		JLabel storageLabel = new JLabel(Text.VERBOSE_STORAGE_ENABLE);
@@ -520,7 +549,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_storageLabel.anchor = GridBagConstraints.EAST;
 		gbc_storageLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_storageLabel.gridx = 0;
-		gbc_storageLabel.gridy = 13;
+		gbc_storageLabel.gridy = 14;
 		add(storageLabel, gbc_storageLabel);
 		
 		chckbxStorage = new JCheckBox();
@@ -529,7 +558,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_chckbxStorage.anchor = GridBagConstraints.WEST;
 		gbc_chckbxStorage.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxStorage.gridx = 4;
-		gbc_chckbxStorage.gridy = 13;
+		gbc_chckbxStorage.gridy = 14;
 		add(chckbxStorage, gbc_chckbxStorage);
 
 		JLabel lblProtocolParameters = new JLabel(Text.UAV_PROTOCOL_USED);
@@ -538,7 +567,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblProtocolParameters.gridwidth = 4;
 		gbc_lblProtocolParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblProtocolParameters.gridx = 0;
-		gbc_lblProtocolParameters.gridy = 14;
+		gbc_lblProtocolParameters.gridy = 15;
 		add(lblProtocolParameters, gbc_lblProtocolParameters);
 
 		protocolComboBox = new JComboBox<String>();
@@ -557,7 +586,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_protocolComboBox.insets = new Insets(0, 0, 5, 5);
 		gbc_protocolComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_protocolComboBox.gridx = 4;
-		gbc_protocolComboBox.gridy = 14;
+		gbc_protocolComboBox.gridy = 15;
 		add(protocolComboBox, gbc_protocolComboBox);
 		
 		JLabel lblUav = new JLabel(Text.COMMUNICATIONS);
@@ -566,7 +595,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblUav.gridwidth = 6;
 		gbc_lblUav.insets = new Insets(0, 0, 5, 5);
 		gbc_lblUav.gridx = 0;
-		gbc_lblUav.gridy = 15;
+		gbc_lblUav.gridy = 16;
 		add(lblUav, gbc_lblUav);
 		
 		JLabel lblP = new JLabel(Text.CARRIER_SENSING);
@@ -576,7 +605,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblP.gridwidth = 4;
 		gbc_lblP.insets = new Insets(0, 0, 5, 5);
 		gbc_lblP.gridx = 0;
-		gbc_lblP.gridy = 16;
+		gbc_lblP.gridy = 17;
 		add(lblP, gbc_lblP);
 		
 		carrierSensingCheckBox = new JCheckBox();
@@ -584,7 +613,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_carrierSensingCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_carrierSensingCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_carrierSensingCheckBox.gridx = 4;
-		gbc_carrierSensingCheckBox.gridy = 16;
+		gbc_carrierSensingCheckBox.gridy = 17;
 		add(carrierSensingCheckBox, gbc_carrierSensingCheckBox);
 		
 		JLabel lblDgh = new JLabel(Text.PACKET_COLLISION_DETECTION);
@@ -594,7 +623,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDgh.gridwidth = 4;
 		gbc_lblDgh.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDgh.gridx = 0;
-		gbc_lblDgh.gridy = 17;
+		gbc_lblDgh.gridy = 18;
 		add(lblDgh, gbc_lblDgh);
 		
 		pCollisionDetectionCheckBox = new JCheckBox();
@@ -602,7 +631,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_pCollisionDetectionCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_pCollisionDetectionCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_pCollisionDetectionCheckBox.gridx = 4;
-		gbc_pCollisionDetectionCheckBox.gridy = 17;
+		gbc_pCollisionDetectionCheckBox.gridy = 18;
 		add(pCollisionDetectionCheckBox, gbc_pCollisionDetectionCheckBox);
 		
 		JLabel lblJ = new JLabel(Text.BUFFER_SIZE);
@@ -612,7 +641,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblJ.gridwidth = 5;
 		gbc_lblJ.insets = new Insets(0, 0, 5, 5);
 		gbc_lblJ.gridx = 0;
-		gbc_lblJ.gridy = 18;
+		gbc_lblJ.gridy = 19;
 		add(lblJ, gbc_lblJ);
 		
 		receivingBufferSizeTextField = new JTextField();
@@ -621,7 +650,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_receivingBufferSizeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_receivingBufferSizeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_receivingBufferSizeTextField.gridx = 5;
-		gbc_receivingBufferSizeTextField.gridy = 18;
+		gbc_receivingBufferSizeTextField.gridy = 19;
 		add(receivingBufferSizeTextField, gbc_receivingBufferSizeTextField);
 		receivingBufferSizeTextField.setColumns(10);
 		
@@ -631,7 +660,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblBytes.anchor = GridBagConstraints.WEST;
 		gbc_lblBytes.insets = new Insets(0, 0, 5, 5);
 		gbc_lblBytes.gridx = 6;
-		gbc_lblBytes.gridy = 18;
+		gbc_lblBytes.gridy = 19;
 		add(lblBytes, gbc_lblBytes);
 
 		JLabel lblWirelessModelParameters = new JLabel(Text.WIFI_MODEL);
@@ -641,7 +670,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblWirelessRangeParameters.gridwidth = 4;
 		gbc_lblWirelessRangeParameters.insets = new Insets(0, 0, 5, 5);
 		gbc_lblWirelessRangeParameters.gridx = 0;
-		gbc_lblWirelessRangeParameters.gridy = 19;
+		gbc_lblWirelessRangeParameters.gridy = 20;
 		add(lblWirelessModelParameters, gbc_lblWirelessRangeParameters);
 
 		wirelessModelComboBox = new JComboBox<String>();
@@ -673,7 +702,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_wirelessModelComboBox.insets = new Insets(0, 0, 5, 0);
 		gbc_wirelessModelComboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_wirelessModelComboBox.gridx = 4;
-		gbc_wirelessModelComboBox.gridy = 19;
+		gbc_wirelessModelComboBox.gridy = 20;
 		add(wirelessModelComboBox, gbc_wirelessModelComboBox);
 
 		JLabel lblFixedRangeDistance = new JLabel(Text.FIXED_RANGE_DISTANCE);
@@ -683,7 +712,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblFixedRangeDistance.gridwidth = 4;
 		gbc_lblFixedRangeDistance.insets = new Insets(0, 0, 5, 5);
 		gbc_lblFixedRangeDistance.gridx = 1;
-		gbc_lblFixedRangeDistance.gridy = 20;
+		gbc_lblFixedRangeDistance.gridy = 21;
 		add(lblFixedRangeDistance, gbc_lblFixedRangeDistance);
 
 		fixedRangeTextField = new JTextField();
@@ -693,7 +722,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_rangeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_rangeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_rangeTextField.gridx = 5;
-		gbc_rangeTextField.gridy = 20;
+		gbc_rangeTextField.gridy = 21;
 		add(fixedRangeTextField, gbc_rangeTextField);
 		fixedRangeTextField.setColumns(10);
 
@@ -703,7 +732,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM_5.anchor = GridBagConstraints.WEST;
 		gbc_lblM_5.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM_5.gridx = 6;
-		gbc_lblM_5.gridy = 20;
+		gbc_lblM_5.gridy = 21;
 		add(lblM_5, gbc_lblM_5);
 		
 		JLabel lblJ_1 = new JLabel(Text.COLLISION_PARAMETERS);
@@ -712,7 +741,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblJ_1.gridwidth = 5;
 		gbc_lblJ_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblJ_1.gridx = 0;
-		gbc_lblJ_1.gridy = 21;
+		gbc_lblJ_1.gridy = 22;
 		add(lblJ_1, gbc_lblJ_1);
 		
 		JLabel lblJ_2 = new JLabel(Text.COLLISION_ENABLE);
@@ -722,7 +751,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblJ_2.gridwidth = 4;
 		gbc_lblJ_2.insets = new Insets(0, 0, 5, 5);
 		gbc_lblJ_2.gridx = 0;
-		gbc_lblJ_2.gridy = 22;
+		gbc_lblJ_2.gridy = 23;
 		add(lblJ_2, gbc_lblJ_2);
 		
 		collisionDetectionCheckBox = new JCheckBox();
@@ -748,7 +777,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionDetectionCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_collisionDetectionCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionDetectionCheckBox.gridx = 4;
-		gbc_collisionDetectionCheckBox.gridy = 22;
+		gbc_collisionDetectionCheckBox.gridy = 23;
 		add(collisionDetectionCheckBox, gbc_collisionDetectionCheckBox);
 		
 		JLabel lblC = new JLabel(Text.COLLISION_PERIOD);
@@ -758,7 +787,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblC.gridwidth = 4;
 		gbc_lblC.insets = new Insets(0, 0, 5, 5);
 		gbc_lblC.gridx = 1;
-		gbc_lblC.gridy = 23;
+		gbc_lblC.gridy = 24;
 		add(lblC, gbc_lblC);
 		
 		collisionCheckPeriodTextField = new JTextField();
@@ -767,7 +796,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionCheckPeriodTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionCheckPeriodTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionCheckPeriodTextField.gridx = 5;
-		gbc_collisionCheckPeriodTextField.gridy = 23;
+		gbc_collisionCheckPeriodTextField.gridy = 24;
 		add(collisionCheckPeriodTextField, gbc_collisionCheckPeriodTextField);
 		collisionCheckPeriodTextField.setColumns(10);
 		
@@ -777,7 +806,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblS.anchor = GridBagConstraints.WEST;
 		gbc_lblS.insets = new Insets(0, 0, 5, 5);
 		gbc_lblS.gridx = 6;
-		gbc_lblS.gridy = 23;
+		gbc_lblS.gridy = 24;
 		add(lblS, gbc_lblS);
 		
 		JLabel lblC_1 = new JLabel(Text.COLLISION_DISTANCE);
@@ -787,7 +816,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblC_1.gridwidth = 5;
 		gbc_lblC_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblC_1.gridx = 0;
-		gbc_lblC_1.gridy = 24;
+		gbc_lblC_1.gridy = 25;
 		add(lblC_1, gbc_lblC_1);
 		
 		collisionDistanceTextField = new JTextField();
@@ -796,7 +825,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionDistanceTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionDistanceTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionDistanceTextField.gridx = 5;
-		gbc_collisionDistanceTextField.gridy = 24;
+		gbc_collisionDistanceTextField.gridy = 25;
 		add(collisionDistanceTextField, gbc_collisionDistanceTextField);
 		collisionDistanceTextField.setColumns(10);
 		
@@ -806,7 +835,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM.anchor = GridBagConstraints.WEST;
 		gbc_lblM.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM.gridx = 6;
-		gbc_lblM.gridy = 24;
+		gbc_lblM.gridy = 25;
 		add(lblM, gbc_lblM);
 		
 		JLabel lblH = new JLabel(Text.COLLISION_ALTITUDE);
@@ -816,7 +845,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblH.gridwidth = 5;
 		gbc_lblH.insets = new Insets(0, 0, 5, 5);
 		gbc_lblH.gridx = 0;
-		gbc_lblH.gridy = 25;
+		gbc_lblH.gridy = 26;
 		add(lblH, gbc_lblH);
 		
 		collisionAltitudeTextField = new JTextField();
@@ -825,7 +854,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_collisionAltitudeTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_collisionAltitudeTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_collisionAltitudeTextField.gridx = 5;
-		gbc_collisionAltitudeTextField.gridy = 25;
+		gbc_collisionAltitudeTextField.gridy = 26;
 		add(collisionAltitudeTextField, gbc_collisionAltitudeTextField);
 		collisionAltitudeTextField.setColumns(10);
 		
@@ -835,7 +864,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblM_1.anchor = GridBagConstraints.WEST;
 		gbc_lblM_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblM_1.gridx = 6;
-		gbc_lblM_1.gridy = 25;
+		gbc_lblM_1.gridy = 26;
 		add(lblM_1, gbc_lblM_1);
 
 		JLabel lblNewLabel = new JLabel(Text.WIND_PARAMETERS);
@@ -844,7 +873,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblNewLabel.anchor = GridBagConstraints.WEST;
 		gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNewLabel.gridx = 0;
-		gbc_lblNewLabel.gridy = 26;
+		gbc_lblNewLabel.gridy = 27;
 		add(lblNewLabel, gbc_lblNewLabel);
 		
 		windCheckBox = new JCheckBox("");
@@ -876,13 +905,13 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblF.gridwidth = 4;
 		gbc_lblF.insets = new Insets(0, 0, 5, 5);
 		gbc_lblF.gridx = 0;
-		gbc_lblF.gridy = 27;
+		gbc_lblF.gridy = 28;
 		add(lblF, gbc_lblF);
 		GridBagConstraints gbc_windCheckBox = new GridBagConstraints();
 		gbc_windCheckBox.anchor = GridBagConstraints.WEST;
 		gbc_windCheckBox.insets = new Insets(0, 0, 5, 5);
 		gbc_windCheckBox.gridx = 4;
-		gbc_windCheckBox.gridy = 27;
+		gbc_windCheckBox.gridy = 28;
 		add(windCheckBox, gbc_windCheckBox);
 
 		JLabel lblDirection = new JLabel(Text.WIND_DIRECTION);
@@ -891,7 +920,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDirection.anchor = GridBagConstraints.EAST;
 		gbc_lblDirection.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDirection.gridx = 3;
-		gbc_lblDirection.gridy = 28;
+		gbc_lblDirection.gridy = 29;
 		add(lblDirection, gbc_lblDirection);
 
 		final ConfigDialogWindPanel windDirPanel = new ConfigDialogWindPanel();
@@ -899,7 +928,7 @@ public class ConfigDialogPanel extends JPanel {
 		GridBagConstraints gbc_windDirPanel = new GridBagConstraints();
 		gbc_windDirPanel.insets = new Insets(0, 0, 5, 5);
 		gbc_windDirPanel.gridx = 4;
-		gbc_windDirPanel.gridy = 28;
+		gbc_windDirPanel.gridy = 29;
 		add(windDirPanel, gbc_windDirPanel);
 
 		windDirTextField = new JTextField();
@@ -952,7 +981,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_windDirTextField.insets = new Insets(0, 0, 5, 5);
 		gbc_windDirTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_windDirTextField.gridx = 5;
-		gbc_windDirTextField.gridy = 28;
+		gbc_windDirTextField.gridy = 29;
 		add(windDirTextField, gbc_windDirTextField);
 		windDirTextField.setColumns(10);
 
@@ -962,7 +991,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblDegrees.anchor = GridBagConstraints.WEST;
 		gbc_lblDegrees.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDegrees.gridx = 6;
-		gbc_lblDegrees.gridy = 28;
+		gbc_lblDegrees.gridy = 29;
 		add(lblDegrees, gbc_lblDegrees);
 
 		JLabel lblSpeedms = new JLabel(Text.WIND_SPEED);
@@ -971,7 +1000,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblSpeedms.anchor = GridBagConstraints.EAST;
 		gbc_lblSpeedms.insets = new Insets(0, 0, 0, 5);
 		gbc_lblSpeedms.gridx = 3;
-		gbc_lblSpeedms.gridy = 29;
+		gbc_lblSpeedms.gridy = 30;
 		add(lblSpeedms, gbc_lblSpeedms);
 
 		windSpeedTextField = new JTextField();
@@ -982,7 +1011,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_windSpeedTextField.insets = new Insets(0, 0, 0, 5);
 		gbc_windSpeedTextField.fill = GridBagConstraints.HORIZONTAL;
 		gbc_windSpeedTextField.gridx = 5;
-		gbc_windSpeedTextField.gridy = 29;
+		gbc_windSpeedTextField.gridy = 30;
 		add(windSpeedTextField, gbc_windSpeedTextField);
 		windSpeedTextField.setColumns(10);
 
@@ -992,7 +1021,7 @@ public class ConfigDialogPanel extends JPanel {
 		gbc_lblMs_1.anchor = GridBagConstraints.WEST;
 		gbc_lblMs_1.insets = new Insets(0, 0, 0, 5);
 		gbc_lblMs_1.gridx = 6;
-		gbc_lblMs_1.gridy = 29;
+		gbc_lblMs_1.gridy = 30;
 		add(lblMs_1, gbc_lblMs_1);
 		
 		UAVsComboBox.addItemListener(new ItemListener() {

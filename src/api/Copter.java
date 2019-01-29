@@ -243,7 +243,8 @@ public class Copter {
 	
 	/**
 	 * Take off all the UAVs: change mode to guided, arm engines, and then perform the guided take off.
-	 * <p>Non blocking method.</p>
+	 * <p>Non blocking method.
+	 * Please, consider that the take-off of all the UAVs should not end before reaching the following altitude: altitude-0.25 for altitude<=10m, altitude*0.95+0.25 for 10<altitude<=50m, and altitude-1.35 otherwise.</p>
 	 * @param altitudes (meters) Array with the target relative altitude for all the UAVs (be sure that <i>altitudes.length == Tools.getNumUAVs()</i>).
 	 * @return true if all the commands were successful.
 	 */
@@ -284,7 +285,7 @@ public class Copter {
 	/**
 	 * Take off all the UAVs one by one: change mode to guided, arm engines, and then perform the guided take off.
 	 * <p>Blocking method.
-	 * It waits until all the UAVs reach 95% of the target relative altitude.</p>
+	 * Please, consider that this method ends when the rules of the <i>Copter.takeOffNonBlocking</i> command are satisfied for all the UAVs.</p>
 	 * @param altitudes (meters) Array with the target relative altitude for all the UAVs (be sure that <i>altitudes.length == Tools.getNumUAVs()</i>).
 	 * @return true if all the commands were successful.
 	 */
@@ -295,8 +296,11 @@ public class Copter {
 		if (!Copter.takeOffAllUAVsNonBlocking(altitudes)) {
 			return false;
 		}
+		
+		double minAltitude;
 		for (int i = 0; i < Param.numUAVs; i++) {
-			while (UAVParam.uavCurrentData[i].getZRelative() < 0.95 * altitudes[i]) {
+			minAltitude = Copter.getMinAltitude(altitudes[i]);
+			while (UAVParam.uavCurrentData[i].getZRelative() < minAltitude) {
 				GUI.logVerbose(SimParam.prefix[i] + Text.ALTITUDE_TEXT
 						+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())
 						+ " " + Text.METERS);
@@ -308,7 +312,8 @@ public class Copter {
 	
 	/**
 	 *  Take off until the target relative altitude: change mode to guided, arm engines, and then perform the guided take off.
-	 * <p>Non blocking method.</p>
+	 * <p>Non blocking method.
+	 * Please, consider that the take-off should not end before reaching the following altitude: altitude-0.25 for altitude<=10m, altitude*0.95+0.25 for 10<altitude<=50m, and altitude-1.35 otherwise.</p>
 	 * @param numUAV UAV position in arrays.
 	 * @param altitude (meters) Target relative altitude for the UAV.
 	 * @return true if the command was successful.
@@ -324,7 +329,7 @@ public class Copter {
 	/**
 	 * Take off until the target relative altitude: change mode to guided, arm engines, and then perform the guided take off.
 	 * <p>Blocking method.
-	 * It waits until the UAV reaches 95% of the target relative altitude.</p>
+	 * Please, consider that this method ends when the rules of the <i>Copter.takeOffNonBlocking</i> command are satisfied.</p>
 	 * @param numUAV UAV position in arrays.
 	 * @param altitude (meters) Target relative altitude for the UAV.
 	 * @return true if the command was successful.
@@ -334,7 +339,8 @@ public class Copter {
 			return false;
 		}
 
-		while (UAVParam.uavCurrentData[numUAV].getZRelative() < 0.95 * altitude) {
+		double minAltitude = Copter.getMinAltitude(altitude);
+		while (UAVParam.uavCurrentData[numUAV].getZRelative() < minAltitude) {
 			GUI.logVerbose(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
 					+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
 					+ " " + Text.METERS);
@@ -499,6 +505,7 @@ public class Copter {
 	/**
 	 * API: Move the UAV to a new location.
 	 * <p>The UAV must be in GUIDED flight mode.</p>
+	 * <p>Please, consider that the UAV could stop somewhere in the following ranges: relAltitude±0.25 for relAltitude<=10m, [relAltitude*0.95+0.25,relAltitude*1.05-0.25] for 10<relAltitude<=50m, and relAltitude±1.35 otherwise.</p>
 	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller.
 	 * The method may return control immediately or in more than 200 ms depending on the reaction of the flight controller.</p>
 	 * @param numUAV UAV position in arrays.
@@ -533,7 +540,7 @@ public class Copter {
 	 * @param geo Geographic coordinates the UAV has to move to.
 	 * @param relAltitude (meters) Relative altitude the UAV has to move to.
 	 * @param destThreshold (meters) Horizontal distance from the destination to assert that the UAV has reached there.
-	 * @param altThreshold (meters) Vertical distance from the destination to assert that the UAV has reached there.
+	 * @param altThreshold (meters) Vertical distance from the destination to assert that the UAV has reached there. Please, consider that altThreshold will be forced to satisfy the rules of the <i>Copter.moveUAVNonBlocking</i> command.
 	 * @return true if the command was successful.
 	 */
 	public static boolean moveUAV(int numUAV, GeoCoordinates geo, float relAltitude, double destThreshold, double altThreshold) {
@@ -542,13 +549,58 @@ public class Copter {
 		}
 		
 		UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
+		double min = Math.min(Copter.getMinAltitude(relAltitude), relAltitude - altThreshold);
+		double max = Math.max(Copter.getMaxAltitude(relAltitude), relAltitude + altThreshold);
+		double altitude;
 		// Once the command is issued, we have to wait until the UAV approaches to destination.
 		// No timeout is defined to reach the destination, as it would depend on speed and distance
-		while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(utm) > destThreshold
-				|| Math.abs(relAltitude - UAVParam.uavCurrentData[numUAV].getZRelative()) > altThreshold) {
-			Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
+		boolean goOn = true;
+		while (goOn) {
+			if (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(utm) <= destThreshold) {
+				altitude = UAVParam.uavCurrentData[numUAV].getZRelative();
+				if (altitude >= min && altitude <= max) {
+					goOn = false;
+				}
+			}
+			if (goOn) {
+				Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
+			}
 		}
 		return true;
+	}
+	
+	/**
+	 * Get minimum approaching altitude for a target relative altitude.
+	 * @param relAltitude Relative altitude (m) over home location.
+	 * @return The minimum altitude where a UAV could stop for a target altitude, when the moveUAV command is used. The rules for that command are applied.
+	 */
+	private static double getMinAltitude(double relAltitude) {
+		double res;
+		if (relAltitude <= 10) {
+			res = relAltitude - 0.25;
+		} else if (relAltitude <= 50) {
+			res = relAltitude * 0.95 + 0.25;
+		} else {
+			res = relAltitude - 1.35;
+		}
+		return res;
+	}
+	
+	/**
+	 * Get maximum approaching altitude for a target relative altitude.
+	 * @param relAltitude Relative altitude (m) over home location.
+	 * @return The maximum altitude where a UAV could stop for a target altitude, when the moveUAV command is used. The rules for that command are applied.
+	 */
+	private static double getMaxAltitude(double relAltitude) {
+		double res;
+		if (relAltitude <= 10) {
+			res = relAltitude + 0.25;
+		} else if (relAltitude <= 50) {
+			res = relAltitude * 1.05 - 0.25;
+		} else {
+			res = relAltitude + 1.35;
+		}
+		return res;
 	}
 
 	/**
@@ -586,8 +638,8 @@ public class Copter {
 			return false;
 		}
 		// There is a minimum altitude to fly (waypoint 0 is home, and waypoint 1 is takeoff)
-		if (list.get(1).getAltitude() < UAVParam.minFlyingAltitude) {
-			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_2 + "(" + UAVParam.minFlyingAltitude + " " + Text.METERS+ ").");
+		if (list.get(1).getAltitude() < UAVParam.minAltitude) {
+			GUI.log(SimParam.prefix[numUAV] + Text.MISSION_SENT_ERROR_2 + "(" + UAVParam.minAltitude + " " + Text.METERS+ ").");
 			return false;
 		}
 		int current = 0;

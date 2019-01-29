@@ -67,6 +67,7 @@ public class Text {
 	public static final String SPEEDS_DIALOG_TITLE = "Select the csv file with the UAVs speeds";
 	public static final String SPEEDS_DIALOG_SELECTION = "Speeds csv file";
 	public static final String FILE_EXTENSION_CSV = "csv";
+	public static final String STARTING_ALTITUDE = "Starting altitude:";
 	public static final String UAV_NUMBER = "Number of UAVs:";
 	public static final String PERFORMANCE_PARAMETERS = "Performance parameters:";
 	public static final String SCREEN_REFRESH_RATE = "Screen refresh rate:";
@@ -142,6 +143,7 @@ public class Text {
 	public static final String SPEEDS_SELECTION_ERROR = "Speeds selection warning";
 	public static final String SPEEDS_ERROR_1 = "The csv file is not valid.\nOne value by row and without header.";
 	public static final String SPEEDS_ERROR_2 = "The file with the UAV(s) speed must be selected.";
+	public static final String INITIAL_ALTITUDE_ERROR = "The initial altitude for virtual UAVs must be a valid double number.";
 	public static final String VALIDATION_WARNING = "Validation warning";
 	public static final String UAVS_NUMBER_ERROR = "A valid number of UAVs to use must be selected.";
 	public static final String SCREEN_DELAY_ERROR_1 = "The time between screen refresh must be a valid positive integer.";
@@ -242,6 +244,7 @@ public class Text {
 	public static final String XML_PARSING_ERROR_2 = "Not enough points to define a path in line:";
 	public static final String XML_PARSING_ERROR_3 = "Wrong file format.";
 	public static final String XML_PARSING_ERROR_4 = "Error parsing line/point:";
+	public static final String XML_PARSING_WARNING = "Found a waypoint with not enough altitude over home location. Altitude set to (m):";
 	public static final String XML_LAND_ADDED = "Land waypoint added at the end of the mission of UAV: ";
 	public static final String XML_RTL_ADDED = "RTL waypoint added at the end of the mission of UAV: ";
 	public static final String FILE_HEADER = "QGC WPL 110";
@@ -255,9 +258,16 @@ public class Text {
 			+ "\twaypoint, spline waypoint, takeoff, land, RTL.";
 	// Loading mission(s) dialog
 	public static final String EXTEND_MISSION = "Mission end:";
+	public static final String MIN_TARGET_ALTITUDE = "Minimum waypoints relative altitude:";
 	public static final String XML_DELAY = "Input mission delay over each waypoint:";
-	public static final String TARGET_DISTANCE = "Distance to waypoint to assert reached:";
-	public static final String TARGET_DISTANCE_ERROR = "The distance must be between 10 and 1000 centimeters.";
+	public static final String TARGET_DISTANCE = "Distance to waypoint to assert WP reached:";
+	public static final String ALTITUDE_OVERRIDE = "Override included altitude values:";
+	public static final String TARGET_ALTITUDE = "Waypoints relative altitude:";
+	public static final String TARGET_MIN_ALTITUDE_ERROR = "The minimum altitude of the waypoints must be a positive number.";
+	public static final String TARGET_DISTANCE_ERROR_1 = "The distance to waypoints must be a positive integer.";
+	public static final String TARGET_DISTANCE_ERROR_2 = "The distance to waypoints must be between 10 and 1000 centimeters.";
+	public static final String TARGET_ALTITUDE_ERROR_1 = "The altitude of the waypoints must be a positive number.";
+	public static final String TARGET_ALTITUDE_ERROR_2 = "The target altitude must be greater than or equal to:";
 	
 	// Parsing speed(s) file(s)
 	public static final String SPEEDS_PARSING_ERROR_1 = "Speeds file: No speed values found.";

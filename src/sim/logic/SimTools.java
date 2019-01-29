@@ -100,6 +100,11 @@ public class SimTools {
 			GUI.warn(Text.VALIDATION_WARNING, Text.SPEEDS_ERROR_2);
 			return false;
 		}
+		validating = panel.iniAltitudeTextField.getText();
+		if (!Tools.isValidDouble(validating)) {
+			GUI.warn(Text.VALIDATION_WARNING, Text.INITIAL_ALTITUDE_ERROR);
+			return false;
+		}
 		validating = (String)panel.UAVsComboBox.getSelectedItem();
 		if (validating==null || validating.length()==0) {
 			GUI.warn(Text.VALIDATION_WARNING, Text.UAVS_NUMBER_ERROR);
@@ -215,6 +220,7 @@ public class SimTools {
 	/** Stores the configuration of the experiment in variables */
 	public static void storeConfiguration(ConfigDialogPanel panel) {
 		//  Simulation parameters
+		UAVParam.initialAltitude = Double.parseDouble(panel.iniAltitudeTextField.getText());
 		Param.numUAVsTemp.set(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
 
 		//  Performance parameters
@@ -287,6 +293,9 @@ public class SimTools {
 	public static void loadDefaultConfiguration(final ConfigDialogPanel panel) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
+				// Simulation parameters
+				panel.iniAltitudeTextField.setText("" + UAVParam.initialAltitude);
+				
 				//  Performance parameters
 				panel.screenDelayTextField.setText("" + BoardParam.screenDelay);
 				panel.minScreenMovementTextField.setText("" + BoardParam.minScreenMovement);

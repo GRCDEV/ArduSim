@@ -403,7 +403,7 @@ public class ListenerThread extends Thread {
 		GUI.log(numUAV, MUSCOPText.TAKING_OFF);
 		GUI.updateProtocolState(numUAV, MUSCOPText.TAKING_OFF);
 		double altitude = MUSCOPParam.takeoffAltitude.get(numUAV);
-		double thresholdAltitude = altitude * 0.95;
+		double minAltitude = MUSCOPHelper.getMinAltitude(altitude);
 		if (!Copter.takeOffNonBlocking(numUAV, altitude)) {
 			GUI.exit(MUSCOPText.TAKE_OFF_ERROR + " " + selfId);
 		}
@@ -415,7 +415,7 @@ public class ListenerThread extends Thread {
 			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 			// Wait until target altitude is reached
 			if (System.currentTimeMillis() - cicleTime > MUSCOPParam.TAKE_OFF_CHECK_TIMEOUT) {
-				if (Copter.getZRelative(numUAV) >= thresholdAltitude) {
+				if (Copter.getZRelative(numUAV) >= minAltitude) {
 					MUSCOPParam.state.set(numUAV, MOVE_TO_TARGET);
 				} else {
 					if (System.currentTimeMillis() - logTime > MUSCOPParam.TAKE_OFF_LOG_TIMEOUT) {
@@ -439,18 +439,23 @@ public class ListenerThread extends Thread {
 		GeoCoordinates destinationGeo = missionGeo[0];
 		Point3D destinationUTM = missionUTM[0];
 		double relAltitude = missionUTM[0].z;
+		double min = MUSCOPHelper.getMinAltitude(relAltitude);
+		double max = MUSCOPHelper.getMaxAltitude(relAltitude);
 		if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
 			GUI.exit(MUSCOPText.MOVE_ERROR_2 + " " + selfId);
 		}
 		cicleTime = System.currentTimeMillis();
+		double alt;
 		while (MUSCOPParam.state.get(numUAV) == MOVE_TO_TARGET) {
 			// Discard message
 			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 			// Wait until target location is reached
 			if (System.currentTimeMillis() - cicleTime > MUSCOPParam.MOVE_CHECK_TIMEOUT) {
-				if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP
-						&& Math.abs(relAltitude - Copter.getZRelative(numUAV)) <= 0.2) {
-					MUSCOPParam.state.set(numUAV, TARGET_REACHED);
+				if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP) {
+					alt = Copter.getZRelative(numUAV);
+					if (alt >= min && alt <= max) {
+						MUSCOPParam.state.set(numUAV, TARGET_REACHED);
+					}
 				} else {
 					cicleTime = cicleTime + MUSCOPParam.MOVE_CHECK_TIMEOUT;
 				}
@@ -621,6 +626,8 @@ public class ListenerThread extends Thread {
 				destinationGeo = missionGeo[currentWP];
 				destinationUTM = missionUTM[currentWP];
 				relAltitude = missionUTM[currentWP].z;
+				min = MUSCOPHelper.getMinAltitude(relAltitude);
+				max = MUSCOPHelper.getMaxAltitude(relAltitude);
 				if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
 					GUI.exit(MUSCOPText.MOVE_ERROR_1 + " " + selfId);
 				}
@@ -630,9 +637,11 @@ public class ListenerThread extends Thread {
 					Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 					// Wait until target location is reached
 					if (System.currentTimeMillis() - cicleTime > MUSCOPParam.MOVE_CHECK_TIMEOUT) {
-						if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP
-								&& Math.abs(relAltitude - Copter.getZRelative(numUAV)) <= 0.2) {
-							MUSCOPParam.moveSemaphore.incrementAndGet(numUAV);
+						if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP) {
+							alt = Copter.getZRelative(numUAV);
+							if (alt >= min && alt <= max) {
+								MUSCOPParam.moveSemaphore.incrementAndGet(numUAV);
+							}
 						} else {
 							cicleTime = cicleTime + MUSCOPParam.MOVE_CHECK_TIMEOUT;
 						}
@@ -654,16 +663,20 @@ public class ListenerThread extends Thread {
 			double formationHeading = MUSCOPParam.flyingFormationHeading.get(numUAV);
 			UTMCoordinates landingLocation = flyingFormation.getLocation(position, centerUAVFinalLocation, formationHeading);
 			GeoCoordinates target = Tools.UTMToGeo(landingLocation);
-			float currentAltitude = (float)Copter.getZRelative(numUAV);
-			if (!Copter.moveUAVNonBlocking(numUAV, target, currentAltitude)) {
+			relAltitude = (float)Copter.getZRelative(numUAV);
+			min = MUSCOPHelper.getMinAltitude(relAltitude);
+			max = MUSCOPHelper.getMaxAltitude(relAltitude);
+			if (!Copter.moveUAVNonBlocking(numUAV, target, (float)relAltitude)) {
 				GUI.exit(MUSCOPText.MOVE_ERROR_2 + " " + selfId);
 			}
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == MOVE_TO_LAND) {
 				// Wait until target location is reached
-				if (landingLocation.distance(Copter.getUTMLocation(numUAV)) <= MUSCOPParam.MIN_DISTANCE_TO_WP
-						&& Math.abs(currentAltitude - Copter.getZRelative(numUAV)) <= 0.2) {
-					MUSCOPParam.state.set(numUAV, LANDING);
+				if (landingLocation.distance(Copter.getUTMLocation(numUAV)) <= MUSCOPParam.MIN_DISTANCE_TO_WP) {
+					alt = Copter.getZRelative(numUAV);
+					if (alt >= min && alt <= max) {
+						MUSCOPParam.state.set(numUAV, LANDING);
+					}
 				}
 				if (MUSCOPParam.state.get(numUAV) != LANDING) {
 					cicleTime = cicleTime + MUSCOPParam.MOVE_CHECK_TIMEOUT;

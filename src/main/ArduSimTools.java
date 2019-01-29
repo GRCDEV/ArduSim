@@ -27,7 +27,6 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -87,9 +86,9 @@ import api.ProtocolHelper;
 import api.Tools;
 import api.WaypointReachedListener;
 import api.pojo.AtomicDoubleArray;
+import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
-import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.LogPoint;
 import api.pojo.MAVParam;
 import api.pojo.Point3D;
@@ -395,19 +394,49 @@ public class ArduSimTools {
 			}
 			Param.verboseStore = Boolean.valueOf(param);
 		}
-		param = parameters.get(Param.MIN_ALTITUDE);
+		param = parameters.get(Param.KML_MIN_ALTITUDE);
 		if (param == null) {
-			GUI.log(Param.MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minFlyingAltitude);
+			GUI.log(Param.KML_MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minAltitude);
 		} else {
 			if (!Tools.isValidPositiveDouble(param)) {
-				GUI.log(Param.MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				GUI.log(Param.KML_MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
-			UAVParam.minFlyingAltitude = Double.parseDouble(param);
+			UAVParam.minAltitude = Double.parseDouble(param);
 		}
-		param = parameters.get(Param.MISSION_END);
+		param = parameters.get(Param.KML_OVERRIDE_ALTITUDE);
 		if (param == null) {
-			GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.missionEnd);
+			GUI.log(Param.KML_OVERRIDE_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.overrideAltitude);
+		} else {
+			if (!Tools.isValidBoolean(param)) {
+				GUI.log(Param.KML_OVERRIDE_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			UAVParam.overrideAltitude = Boolean.parseBoolean(param);
+		}
+		if (UAVParam.overrideAltitude) {
+			param = parameters.get(Param.KML_ALTITUDE);
+			if (param == null) {
+				if (UAVParam.minFlyingAltitude < UAVParam.minAltitude) {
+					UAVParam.minFlyingAltitude = UAVParam.minAltitude;
+				}
+				GUI.log(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minFlyingAltitude);
+			} else {
+				if (!Tools.isValidPositiveDouble(param)) {
+					GUI.log(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				if (Double.parseDouble(param) < UAVParam.minAltitude) {
+					GUI.log(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + UAVParam.minAltitude);
+					UAVParam.minFlyingAltitude = UAVParam.minAltitude;
+				} else {
+					UAVParam.minFlyingAltitude = Double.parseDouble(param);
+				}
+			}
+		}
+		param = parameters.get(Param.KML_MISSION_END);
+		if (param == null) {
+			GUI.log(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.missionEnd);
 		} else {
 			if (param.equalsIgnoreCase(Waypoint.MISSION_END_UNMODIFIED)) {
 				Waypoint.missionEnd = Waypoint.MISSION_END_UNMODIFIED;
@@ -416,44 +445,44 @@ public class ArduSimTools {
 			} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_RTL)) {
 				Waypoint.missionEnd = Waypoint.MISSION_END_RTL;
 			} else {
-				GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-				GUI.log(Param.MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
+				GUI.log(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				GUI.log(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
 			}
 		}
-		param = parameters.get(Param.WAYPOINT_DELAY);
+		param = parameters.get(Param.KML_WAYPOINT_DELAY);
 		if (param == null) {
-			GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDelay);
+			GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDelay);
 		} else {
 			try {
 				int delay = Integer.parseInt(param);
 				if (delay < 0 || delay > 65535) {
-					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-					GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+					GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
 				} else {
 					Waypoint.waypointDelay = delay;
 					if (delay > 0) {
-						param = parameters.get(Param.WAYPOINT_DISTANCE);
+						param = parameters.get(Param.KML_WAYPOINT_DISTANCE);
 						if (param == null) {
-							GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDistance);
+							GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDistance);
 						} else {
 							try {
 								int distance = Integer.parseInt(param);
 								if (distance < 10 || distance > 1000) {
-									GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-									GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
+									GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+									GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
 								} else {
 									Waypoint.waypointDistance = distance;
 								}
 							} catch (NumberFormatException e) {
-								GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-								GUI.log(Param.WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
+								GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+								GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
 							}
 						}
 					}
 				}
 			} catch (NumberFormatException e) {
-				GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-				GUI.log(Param.WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+				GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
 			}
 		}
 	}
@@ -1555,13 +1584,13 @@ public class ArduSimTools {
 						commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
 								+ ";/cygdrive/" + file1.replace("\\", "/").replace(":", "") + " -S -I" + instance
 								+ " --home " + location[i].getValue0().latitude + "," + location[i].getValue0().longitude
-								+ ",-0.1," + location[i].getValue1() + " --model + --speedup 1 --defaults "
+								+ "," + UAVParam.initialAltitude + "," + location[i].getValue1() + " --model + --speedup 1 --defaults "
 								+ "/cygdrive/" + file2.replace("\\", "/").replace(":", ""));
 					} else {
 						commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
 								+ ";/cygdrive/" + SimParam.sitlPath.replace("\\", "/").replace(":", "") + " -S -I" + instance
 								+ " --home " + location[i].getValue0().latitude + "," + location[i].getValue0().longitude
-								+ ",-0.1," + location[i].getValue1() + " --model + --speedup 1 --defaults "
+								+ "," + UAVParam.initialAltitude + "," + location[i].getValue1() + " --model + --speedup 1 --defaults "
 								+ "/cygdrive/" + SimParam.paramPath.replace("\\", "/").replace(":", ""));
 					}
 				}
@@ -1576,7 +1605,7 @@ public class ArduSimTools {
 					commandLine.add("-S");
 					commandLine.add("-I" + instance);
 					commandLine.add("--home");
-					commandLine.add(location[i].getValue0().latitude + "," + location[i].getValue0().longitude + ",-0.1," + location[i].getValue1());
+					commandLine.add(location[i].getValue0().latitude + "," + location[i].getValue0().longitude + "," + UAVParam.initialAltitude + "," + location[i].getValue1());
 					commandLine.add("--model");
 					commandLine.add("+");
 					commandLine.add("--speedup");
@@ -2163,9 +2192,18 @@ public class ArduSimTools {
 							lat = Double.parseDouble(aux[1].trim());
 							//  Usually, Google Earth sets z=0
 							z = Double.parseDouble(aux[2].trim());
-							if (z < UAVParam.minFlyingAltitude) {
-								//  Default flying altitude
-								z = UAVParam.minFlyingAltitude;
+							
+							if (UAVParam.overrideAltitude) {
+								if (z < UAVParam.minFlyingAltitude) {
+									//  Default flying altitude
+									z = UAVParam.minFlyingAltitude;
+								}
+							} else {
+								if (z < UAVParam.minAltitude) {
+									//  Minimum flying altitude
+									z = UAVParam.minAltitude;
+									GUI.log(Text.XML_PARSING_WARNING + " " + UAVParam.minAltitude);
+								}
 							}
 							
 							// Waypoint 0 is home and current
@@ -2863,9 +2901,17 @@ public class ArduSimTools {
 		}
 		
 		sb.append("\n").append(Text.ADDITIONAL_PARAMETERS);
-		sb.append("\n\t").append(Param.MIN_ALTITUDE).append("=").append(UAVParam.minFlyingAltitude);
-		sb.append("\n\t").append(Param.MISSION_END).append("=").append(Waypoint.missionEnd);
-		sb.append("\n\t").append(Param.WAYPOINT_DELAY).append("=").append(Waypoint.waypointDelay);
+		sb.append("\n\t").append(Param.KML_MIN_ALTITUDE).append("=").append(UAVParam.minAltitude);
+		sb.append("\n\t").append(Param.KML_OVERRIDE_ALTITUDE).append("=").append(UAVParam.overrideAltitude);
+		if(UAVParam.overrideAltitude) {
+			sb.append("\n\t").append(Param.KML_ALTITUDE).append("=").append(UAVParam.minFlyingAltitude);
+		}
+		sb.append("\n\t").append(Param.KML_MISSION_END).append("=").append(Waypoint.missionEnd);
+		sb.append("\n\t").append(Param.KML_WAYPOINT_DELAY).append("=").append(Waypoint.waypointDelay);
+		if (Waypoint.waypointDelay != 0) {
+			sb.append("\n\t").append(Param.KML_WAYPOINT_DISTANCE).append("=").append(Waypoint.waypointDistance);
+		}
+		
 		if (Param.role == Tools.MULTICOPTER) {
 			sb.append("\n\t").append(Text.REAL_COMMUNICATIONS_PARAMETERS);
 			sb.append("\n\t\t").append(Param.BROADCAST_IP).append("=").append(UAVParam.broadcastIP);
@@ -3259,12 +3305,6 @@ public class ArduSimTools {
 	private static void logMission(String folder, String baseFileName) {
 		File file1, file2;
 		StringBuilder sb1;
-		
-		
-		
-		
-		
-		
 		StringBuilder sb2 = new StringBuilder(2000);
 		sb2.append("<?xml version=\"1.0\"?>\n<kml xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n")
 			.append("\t<Document>\n");
@@ -3281,15 +3321,11 @@ public class ArduSimTools {
 				file1 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MISSION_SUFIX);
 				sb1 = new StringBuilder(2000);
 				sb1.append("._PLINE\n");
-				
 				sb2.append("\t\t<Placemark>\n\t\t\t<name>UAV ").append(Param.id[i])
 				.append("</name>\n\t\t\t<Style>\n\t\t\t\t<LineStyle>\n\t\t\t\t\t<color>").append(colors[i % colors.length])
 				.append("</color>\n\t\t\t\t\t<colorMode>normal</colorMode>\n\t\t\t\t\t<width>1</width>\n\t\t\t\t</LineStyle>\n")
 				.append("\t\t\t</Style>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n")
 				.append("\t\t\t\t<altitudeMode>clampToGround</altitudeMode>\n\t\t\t\t<coordinates>");
-				
-				
-				
 				
 				j = 0;
 				WaypointSimplified prev = null;

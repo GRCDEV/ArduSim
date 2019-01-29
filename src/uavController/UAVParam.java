@@ -120,7 +120,10 @@ public class UAVParam {
 	
 	// Startup parameters
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
-	public static volatile double minFlyingAltitude = 5.0;// (m) Minimum relative initial flight altitude
+	public static double initialAltitude = 394;			// (m) Initial altitude for all UAVs during simulation
+	public static double minAltitude = 5.0;				// (m) Minimum waypoint relative altitude for KML missions
+	public static volatile boolean overrideAltitude = true;	// Whether to override or not the altitude in KML missions, with the following value
+	public static volatile double minFlyingAltitude = minAltitude;// (m) Waypoint relative altitude for KML missions, when stored values are overrided
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
 	public static final double WIND_THRESHOLD = 0.5;	// (m/s) Minimum wind speed accepted by the simulator, when used
 	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller

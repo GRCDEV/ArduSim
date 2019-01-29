@@ -389,7 +389,7 @@ public class CollisionDetectorThread extends Thread {
 											// Moving
 											UTMCoordinates utm = MBCAPParam.targetLocationUTM.get(numUAV);
 											GeoCoordinates geo = Tools.UTMToGeo(utm);
-											if (Copter.moveUAV(numUAV, geo, (float) Copter.getZRelative(numUAV), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {
+											if (Copter.moveUAV(numUAV, geo, (float) Copter.getZRelative(numUAV), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {//TODO fallará por el safety rage de altitud
 												// Even when the UAV is close to destination, we also wait for it to be almost still
 												long time = System.nanoTime();
 												double speed = Copter.getSpeed(numUAV);
