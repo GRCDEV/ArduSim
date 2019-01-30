@@ -249,7 +249,7 @@ public class MissionDelayDialog extends JDialog {
 					}
 				}
 			});
-			overrideCheckBox.setSelected(true);
+			overrideCheckBox.setSelected(UAVParam.overrideAltitude);
 			GridBagConstraints gbc_overrideCheckBox = new GridBagConstraints();
 			gbc_overrideCheckBox.anchor = GridBagConstraints.WEST;
 			gbc_overrideCheckBox.insets = new Insets(0, 0, 5, 5);
@@ -279,6 +279,9 @@ public class MissionDelayDialog extends JDialog {
 			gbc_altitudeTextField.gridy = 5;
 			contentPanel.add(altitudeTextField, gbc_altitudeTextField);
 			altitudeTextField.setColumns(10);
+		}
+		if (!UAVParam.overrideAltitude) {
+			altitudeTextField.setEnabled(false);
 		}
 		{
 			JLabel label = new JLabel(Text.METERS);
