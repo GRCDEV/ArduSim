@@ -77,6 +77,7 @@ public class Text {
 	public static final String BATTERY_SIZE = "Battery capacity:";
 	public static final String BATTERY_THRESHOLD = "Low level battery threshold:";
 	public static final String CPU_MEASUREMENT_ENABLED = "Measure CPU use:";
+	public static final String MAP_ENABLED = "Enable background map:";
 	public static final String RENDER = "Rendering quality:";
 	public static final String RENDER_QUALITY1 = "Maximum performance";
 	public static final String RENDER_QUALITY2 = "Text smoothed";
@@ -140,6 +141,7 @@ public class Text {
 	public static final String MISSIONS_ERROR_3 = "The kml file is not valid.";
 	public static final String MISSIONS_ERROR_4 = "No valid files were found.";
 	public static final String MISSIONS_ERROR_5 = "The file(s) with the UAV(s) mission must be selected.";
+	public static final String MISSIONS_ERROR_8 = "Mission parameters must be accepted.";
 	public static final String SPEEDS_SELECTION_ERROR = "Speeds selection warning";
 	public static final String SPEEDS_ERROR_1 = "The csv file is not valid.\nOne value by row and without header.";
 	public static final String SPEEDS_ERROR_2 = "The file with the UAV(s) speed must be selected.";
@@ -268,6 +270,8 @@ public class Text {
 	public static final String TARGET_DISTANCE_ERROR_2 = "The distance to waypoints must be between 10 and 1000 centimeters.";
 	public static final String TARGET_ALTITUDE_ERROR_1 = "The altitude of the waypoints must be a positive number.";
 	public static final String TARGET_ALTITUDE_ERROR_2 = "The target altitude must be greater than or equal to:";
+	public static final String WAYPOINT_YAW_TITLE = "Override waypoint yaw behavior:";
+	
 	
 	// Parsing speed(s) file(s)
 	public static final String SPEEDS_PARSING_ERROR_1 = "Speeds file: No speed values found.";

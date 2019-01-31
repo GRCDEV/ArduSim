@@ -41,6 +41,9 @@ public class InitialConfiguration2Thread extends Thread {
 				if (Waypoint.waypointDelay != 0 && !Copter.setParameter(numUAV, UAVParam.ControllerParam.WPNAV_RADIUS, Waypoint.waypointDistance)) {
 					return;
 				}
+				if (UAVParam.overrideYaw && !Copter.setParameter(numUAV, UAVParam.ControllerParam.WP_YAW_BEHAVIOR, UAVParam.yawBehavior)) {
+					return;
+				}
 			}
 		}
 		

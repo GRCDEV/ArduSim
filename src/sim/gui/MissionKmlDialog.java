@@ -2,11 +2,26 @@ package sim.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import api.GUI;
 import api.Tools;
@@ -14,109 +29,71 @@ import api.pojo.Waypoint;
 import main.Text;
 import uavController.UAVParam;
 
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
-import java.awt.GridBagConstraints;
-import javax.swing.JRadioButton;
-import java.awt.Insets;
-import java.util.Enumeration;
-
-import javax.swing.AbstractButton;
-import javax.swing.ButtonGroup;
-import java.awt.Font;
-import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.JSpinner;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import javax.swing.SwingConstants;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.JCheckBox;
-
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
-public class MissionDelayDialog extends JDialog {
+public class MissionKmlDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private final JDialog thisDialog;
 	private final JPanel contentPanel = new JPanel();
-	private final ButtonGroup buttonGroup = new ButtonGroup();
+	private JComboBox<String> missionEndComboBox;
 	private final JSpinner delaySpinner;
 	private JTextField distanceTextField;
-	private JCheckBox overrideCheckBox;
+	private JCheckBox altitudeCheckBox;
 	private JTextField altitudeTextField;
 	private JTextField minAltitudeTextField;
+	private JCheckBox yawCheckBox;
+	private JComboBox<String> yawComboBox;
+	
+	public static volatile boolean success = false;	//To check if the dialog was closed correctly
 	
 	@SuppressWarnings("unused")
-	private MissionDelayDialog() {
+	private MissionKmlDialog() {
 		this.thisDialog = null;
 		this.delaySpinner = null;
 	}
 
-	public MissionDelayDialog(String title) {
-		
-		this.setSize(600, 400);
-		
+	public MissionKmlDialog(String title) {
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.WEST);
 		GridBagLayout gbl_contentPanel = new GridBagLayout();
 		gbl_contentPanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
-		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
+		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_contentPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
-		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		contentPanel.setLayout(gbl_contentPanel);
 		{
 			JLabel lblNewLabel = new JLabel(Text.EXTEND_MISSION);
 			GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
+			gbc_lblNewLabel.anchor = GridBagConstraints.EAST;
 			gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
-			gbc_lblNewLabel.gridx = 0;
+			gbc_lblNewLabel.gridx = 2;
 			gbc_lblNewLabel.gridy = 0;
 			contentPanel.add(lblNewLabel, gbc_lblNewLabel);
 		}
 		{
-			JRadioButton rdbtnUnmodified = new JRadioButton(Waypoint.MISSION_END_UNMODIFIED);
-			rdbtnUnmodified.setFont(new Font("Dialog", Font.PLAIN, 12));
-			buttonGroup.add(rdbtnUnmodified);
-			GridBagConstraints gbc_rdbtnUnmodified = new GridBagConstraints();
-			gbc_rdbtnUnmodified.insets = new Insets(0, 0, 5, 5);
-			gbc_rdbtnUnmodified.gridx = 1;
-			gbc_rdbtnUnmodified.gridy = 0;
-			contentPanel.add(rdbtnUnmodified, gbc_rdbtnUnmodified);
+			missionEndComboBox = new JComboBox<String>();
+			missionEndComboBox.addItem(Waypoint.MISSION_END_UNMODIFIED);
+			missionEndComboBox.addItem(Waypoint.MISSION_END_LAND);
+			missionEndComboBox.addItem(Waypoint.MISSION_END_RTL);
+			GridBagConstraints gbc_missionEndComboBox = new GridBagConstraints();
+			gbc_missionEndComboBox.insets = new Insets(0, 0, 5, 5);
+			gbc_missionEndComboBox.fill = GridBagConstraints.HORIZONTAL;
+			gbc_missionEndComboBox.gridx = 3;
+			gbc_missionEndComboBox.gridy = 0;
+			contentPanel.add(missionEndComboBox, gbc_missionEndComboBox);
 		}
-		{
-			JRadioButton rdbtnLand = new JRadioButton(Waypoint.MISSION_END_LAND);
-			rdbtnLand.setFont(new Font("Dialog", Font.PLAIN, 12));
-			buttonGroup.add(rdbtnLand);
-			GridBagConstraints gbc_rdbtnLand = new GridBagConstraints();
-			gbc_rdbtnLand.insets = new Insets(0, 0, 5, 5);
-			gbc_rdbtnLand.gridx = 2;
-			gbc_rdbtnLand.gridy = 0;
-			contentPanel.add(rdbtnLand, gbc_rdbtnLand);
+		if (Waypoint.missionEnd.equals(Waypoint.MISSION_END_UNMODIFIED)) {
+			missionEndComboBox.setSelectedIndex(0);
 		}
-		{
-			JRadioButton rdbtnRTL = new JRadioButton(Waypoint.MISSION_END_RTL);
-			rdbtnRTL.setFont(new Font("Dialog", Font.PLAIN, 12));
-			buttonGroup.add(rdbtnRTL);
-			GridBagConstraints gbc_rdbtnRTL = new GridBagConstraints();
-			gbc_rdbtnRTL.insets = new Insets(0, 0, 5, 5);
-			gbc_rdbtnRTL.gridx = 3;
-			gbc_rdbtnRTL.gridy = 0;
-			contentPanel.add(rdbtnRTL, gbc_rdbtnRTL);
+		if (Waypoint.missionEnd.equals(Waypoint.MISSION_END_LAND)) {
+			missionEndComboBox.setSelectedIndex(1);
+		}
+		if (Waypoint.missionEnd.equals(Waypoint.MISSION_END_RTL)) {
+			missionEndComboBox.setSelectedIndex(2);
 		}
 		
-		String selection = Waypoint.missionEnd;
-		Enumeration<AbstractButton> buttons = buttonGroup.getElements();
-		AbstractButton button;
-		boolean found = false;
-		while (buttons.hasMoreElements() && !found) {
-			button = buttons.nextElement();
-			if (selection.equals(button.getText())) {
-				button.doClick();
-				found = true;
-			}
-		}
 		{
 			JLabel label = new JLabel(Text.MIN_TARGET_ALTITUDE);
 			GridBagConstraints gbc_label = new GridBagConstraints();
@@ -239,23 +216,23 @@ public class MissionDelayDialog extends JDialog {
 			contentPanel.add(label, gbc_label);
 		}
 		{
-			overrideCheckBox = new JCheckBox();
-			overrideCheckBox.addActionListener(new ActionListener() {
+			altitudeCheckBox = new JCheckBox();
+			altitudeCheckBox.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					if (overrideCheckBox.isSelected()) {
+					if (altitudeCheckBox.isSelected()) {
 						altitudeTextField.setEnabled(true);
 					} else {
 						altitudeTextField.setEnabled(false);
 					}
 				}
 			});
-			overrideCheckBox.setSelected(UAVParam.overrideAltitude);
-			GridBagConstraints gbc_overrideCheckBox = new GridBagConstraints();
-			gbc_overrideCheckBox.anchor = GridBagConstraints.WEST;
-			gbc_overrideCheckBox.insets = new Insets(0, 0, 5, 5);
-			gbc_overrideCheckBox.gridx = 3;
-			gbc_overrideCheckBox.gridy = 4;
-			contentPanel.add(overrideCheckBox, gbc_overrideCheckBox);
+			altitudeCheckBox.setSelected(UAVParam.overrideAltitude);
+			GridBagConstraints gbc_altitudeCheckBox = new GridBagConstraints();
+			gbc_altitudeCheckBox.anchor = GridBagConstraints.WEST;
+			gbc_altitudeCheckBox.insets = new Insets(0, 0, 5, 5);
+			gbc_altitudeCheckBox.gridx = 3;
+			gbc_altitudeCheckBox.gridy = 4;
+			contentPanel.add(altitudeCheckBox, gbc_altitudeCheckBox);
 		}
 		{
 			JLabel label = new JLabel(Text.TARGET_ALTITUDE);
@@ -263,7 +240,7 @@ public class MissionDelayDialog extends JDialog {
 			GridBagConstraints gbc_label = new GridBagConstraints();
 			gbc_label.anchor = GridBagConstraints.EAST;
 			gbc_label.gridwidth = 3;
-			gbc_label.insets = new Insets(0, 0, 0, 5);
+			gbc_label.insets = new Insets(0, 0, 5, 5);
 			gbc_label.gridx = 0;
 			gbc_label.gridy = 5;
 			contentPanel.add(label, gbc_label);
@@ -273,7 +250,7 @@ public class MissionDelayDialog extends JDialog {
 			altitudeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			altitudeTextField.setText("" + UAVParam.minFlyingAltitude);
 			GridBagConstraints gbc_altitudeTextField = new GridBagConstraints();
-			gbc_altitudeTextField.insets = new Insets(0, 0, 0, 5);
+			gbc_altitudeTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_altitudeTextField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_altitudeTextField.gridx = 3;
 			gbc_altitudeTextField.gridy = 5;
@@ -287,10 +264,66 @@ public class MissionDelayDialog extends JDialog {
 			JLabel label = new JLabel(Text.METERS);
 			label.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_label = new GridBagConstraints();
+			gbc_label.insets = new Insets(0, 0, 5, 0);
 			gbc_label.anchor = GridBagConstraints.WEST;
 			gbc_label.gridx = 4;
 			gbc_label.gridy = 5;
 			contentPanel.add(label, gbc_label);
+		}
+		{
+			JLabel lblOverrideWaypointYaw = new JLabel(Text.WAYPOINT_YAW_TITLE);
+			GridBagConstraints gbc_lblOverrideWaypointYaw = new GridBagConstraints();
+			gbc_lblOverrideWaypointYaw.anchor = GridBagConstraints.EAST;
+			gbc_lblOverrideWaypointYaw.gridwidth = 3;
+			gbc_lblOverrideWaypointYaw.insets = new Insets(0, 0, 5, 5);
+			gbc_lblOverrideWaypointYaw.gridx = 0;
+			gbc_lblOverrideWaypointYaw.gridy = 6;
+			contentPanel.add(lblOverrideWaypointYaw, gbc_lblOverrideWaypointYaw);
+		}
+		{
+			yawCheckBox = new JCheckBox();
+			yawCheckBox.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (yawCheckBox.isSelected()) {
+						yawComboBox.setEnabled(true);
+					} else {
+						yawComboBox.setEnabled(false);
+					}
+				}
+			});
+			yawCheckBox.setSelected(UAVParam.overrideYaw);
+			GridBagConstraints gbc_yawCheckBox = new GridBagConstraints();
+			gbc_yawCheckBox.anchor = GridBagConstraints.WEST;
+			gbc_yawCheckBox.insets = new Insets(0, 0, 5, 5);
+			gbc_yawCheckBox.gridx = 3;
+			gbc_yawCheckBox.gridy = 6;
+			contentPanel.add(yawCheckBox, gbc_yawCheckBox);
+		}
+		{
+			JLabel lblValue = new JLabel("Value:");
+			lblValue.setFont(new Font("Dialog", Font.PLAIN, 12));
+			GridBagConstraints gbc_lblValue = new GridBagConstraints();
+			gbc_lblValue.anchor = GridBagConstraints.EAST;
+			gbc_lblValue.insets = new Insets(0, 0, 0, 5);
+			gbc_lblValue.gridx = 2;
+			gbc_lblValue.gridy = 7;
+			contentPanel.add(lblValue, gbc_lblValue);
+		}
+		{
+			yawComboBox = new JComboBox<String>();
+			for (int i = 0; i < UAVParam.YAW_VALUES.length; i++) {
+				yawComboBox.addItem(UAVParam.YAW_VALUES[i]);
+			}
+			yawComboBox.setSelectedIndex(UAVParam.yawBehavior);
+			GridBagConstraints gbc_yawComboBox = new GridBagConstraints();
+			gbc_yawComboBox.insets = new Insets(0, 0, 0, 5);
+			gbc_yawComboBox.fill = GridBagConstraints.HORIZONTAL;
+			gbc_yawComboBox.gridx = 3;
+			gbc_yawComboBox.gridy = 7;
+			contentPanel.add(yawComboBox, gbc_yawComboBox);
+		}
+		if (!UAVParam.overrideYaw) {
+			yawComboBox.setEnabled(false);
 		}
 		{
 			JPanel buttonPane = new JPanel();
@@ -300,17 +333,6 @@ public class MissionDelayDialog extends JDialog {
 				JButton okButton = new JButton(Text.OK);
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						Enumeration<AbstractButton> buttons = buttonGroup.getElements();
-						AbstractButton button;
-						String selection = null;
-						boolean found = false;
-						while (buttons.hasMoreElements() && !found) {
-							button = buttons.nextElement();
-							if (button.isSelected()) {
-								selection = button.getText();
-								found = true;
-							}
-						}
 						
 						String altitudeString = minAltitudeTextField.getText();
 						if (!Tools.isValidPositiveDouble(altitudeString)) {
@@ -336,7 +358,7 @@ public class MissionDelayDialog extends JDialog {
 							}
 						}
 
-						if (overrideCheckBox.isSelected()) {
+						if (altitudeCheckBox.isSelected()) {
 							altitudeString = altitudeTextField.getText();
 							if (!Tools.isValidPositiveDouble(altitudeString)) {
 								GUI.warn(Text.VALIDATION_WARNING, Text.TARGET_ALTITUDE_ERROR_1);
@@ -353,12 +375,22 @@ public class MissionDelayDialog extends JDialog {
 							UAVParam.overrideAltitude = false;
 						}
 						
-						Waypoint.missionEnd = selection;
+						Waypoint.missionEnd = (String) missionEndComboBox.getSelectedItem();
 						
 						UAVParam.minAltitude = minAltitude;
 						
 						Waypoint.waypointDelay = delay;
 						Waypoint.waypointDistance = distance;
+						
+						if (yawCheckBox.isSelected()) {
+							UAVParam.overrideYaw = true;
+							UAVParam.yawBehavior = yawComboBox.getSelectedIndex();
+							
+						} else {
+							UAVParam.overrideYaw = false;
+						}
+						
+						MissionKmlDialog.success = true;
 						
 						thisDialog.dispose();
 					}
@@ -374,6 +406,9 @@ public class MissionDelayDialog extends JDialog {
 		this.pack();
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
+		
+		GUI.addEscapeListener(this, false);
+		
 		this.setVisible(true);
 	}
 

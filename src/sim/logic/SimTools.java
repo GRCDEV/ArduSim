@@ -226,11 +226,7 @@ public class SimTools {
 		//  Performance parameters
 		BoardParam.screenDelay = Integer.parseInt(panel.screenDelayTextField.getText());
 		BoardParam.minScreenMovement = Double.parseDouble(panel.minScreenMovementTextField.getText());
-		if (panel.loggingEnabledCheckBox.isSelected()) {
-			SimParam.arducopterLoggingEnabled = true;
-		} else {
-			SimParam.arducopterLoggingEnabled = false;
-		}
+		SimParam.arducopterLoggingEnabled = panel.loggingEnabledCheckBox.isSelected();
 		if (panel.batteryCheckBox.isSelected()) {
 			UAVParam.batteryCapacity = Integer.parseInt(panel.batteryTextField.getText());
 		} else {
@@ -246,6 +242,7 @@ public class SimTools {
 		} else {
 			Param.measureCPUEnabled = false;
 		}
+		BoardParam.downloadBackground = panel.mapCheckBox.isSelected();
 		
 		// General parameters
 		Param.verboseLogging = panel.chckbxLogging.isSelected();
@@ -299,11 +296,8 @@ public class SimTools {
 				//  Performance parameters
 				panel.screenDelayTextField.setText("" + BoardParam.screenDelay);
 				panel.minScreenMovementTextField.setText("" + BoardParam.minScreenMovement);
-				if (SimParam.arducopterLoggingEnabled) {
-					panel.loggingEnabledCheckBox.setSelected(true);
-				} else {
-					panel.loggingEnabledCheckBox.setSelected(false);
-				}
+				panel.loggingEnabledCheckBox.setSelected(SimParam.arducopterLoggingEnabled);
+				panel.mapCheckBox.setSelected(BoardParam.downloadBackground);
 				SimParam.renderQuality = RenderQuality.Q3;
 				panel.renderQualityComboBox.setSelectedIndex(RenderQuality.Q3.getId());
 				

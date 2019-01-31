@@ -192,6 +192,8 @@ The list of parameters is:
     * *MEASURECPU*. Measure CPU usage during the experiment.
     * *VERBOSELOGGING*. Verbose logging to ArduSim window and console.
     * *VERBOSESTORE*. Allows to store additional files at will.
+    * *YAWOVERRIDE*. Allows to modify the yaw behavior while following a mission, with the next parameter value.
+    * *YAWVALUE*. 0=Fixed, 1=Face next waypoint, 2=Face next waypoint except RTL, 3=Face along GPS course.
 * KML files parameters:
     * *KMLMINALTITUDE*.Minimum relative altitude for any waypoint.
     * *KMLOVERRIDEALTITUDE*. Whether to override the altitude values included in the mission or not.

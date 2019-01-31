@@ -283,8 +283,10 @@ public class Main {
 		//    The background map cannot be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
 		if (Param.role == Tools.SIMULATOR) {
-			BoardParam.panelText.set(Text.COPYRIGHT);
-			BoardHelper.downloadBackground();
+			if (BoardParam.downloadBackground) {
+				BoardParam.panelText.set(Text.COPYRIGHT);
+				BoardHelper.downloadBackground();
+			}
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.setupButton.setEnabled(true);

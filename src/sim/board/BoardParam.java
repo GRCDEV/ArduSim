@@ -70,6 +70,7 @@ public class BoardParam {
 	public static AtomicInteger rescaleQueries = new AtomicInteger(); // Number of rescale queries. Used when loading a mission, or maybe when a UAV goes near the panel limits
 	
 	// Background map parameters
+	public static volatile boolean downloadBackground = false;	// Whether to download or not the Google Static Maps background
 	public static double boardUpLeftUTMX;
 	public static double boardUpLeftUTMY; // (m) Upper-left panel corner UTM coordinates
 	public static final int MAX_IMAGE_PX = 640; // (px) Maximum image size allowed by Google Static Maps in freeware mode

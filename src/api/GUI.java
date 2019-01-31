@@ -30,7 +30,8 @@ import main.Text;
 import pccompanion.logic.PCCompanionParam;
 import sim.board.BoardHelper;
 import sim.gui.MainWindow;
-import sim.gui.MissionDelayDialog;
+import sim.gui.MissionKmlDialog;
+import sim.gui.MissionWaypointsDialog;
 import sim.gui.ProgressDialog;
 import sim.logic.SimParam;
 
@@ -355,7 +356,12 @@ public class GUI {
 		// kml file selected. All missions are loaded from one single file
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
 			// First, configure the missions
-			new MissionDelayDialog(files[0].getName());
+			MissionKmlDialog.success = false;
+			new MissionKmlDialog(files[0].getName());
+			if (!MissionKmlDialog.success) {
+				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
+				return null;
+			}
 			// Next, load the missions
 			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0]);
 			if (missions == null) {
@@ -367,8 +373,22 @@ public class GUI {
 		
 		// One or more .waypoints files selected
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+			// First, configure the missions
+			MissionWaypointsDialog.success = false;
+			String name;
+			if (files.length == 1) {
+				name = files[0].getName();
+			} else {
+				name = files[0].getParentFile().getAbsolutePath();
+			}
+			new MissionWaypointsDialog(name);
+			if (!MissionWaypointsDialog.success) {
+				GUI.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
+				return null;
+			}
+			
 			List<Waypoint>[] missions = new ArrayList[files.length];
-			// Load each mission from one file
+			// Next, load each mission from one file
 			int j = 0;
 			for (int i = 0; i < files.length; i++) {
 				List<Waypoint> current = ArduSimTools.loadMissionFile(files[i].getAbsolutePath());

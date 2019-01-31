@@ -394,6 +394,33 @@ public class ArduSimTools {
 			}
 			Param.verboseStore = Boolean.valueOf(param);
 		}
+		param = parameters.get(Param.WAYPOINT_YAW_OVERRIDE);
+		if (param == null) {
+			GUI.log(Param.WAYPOINT_YAW_OVERRIDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.overrideYaw);
+		} else {
+			if (!Tools.isValidBoolean(param)) {
+				GUI.log(Param.WAYPOINT_YAW_OVERRIDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			UAVParam.overrideYaw = Boolean.valueOf(param);
+		}
+		if (UAVParam.overrideYaw) {
+			param = parameters.get(Param.WAYPOINT_YAW_VALUE);
+			if (param == null) {
+				GUI.log(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.YAW_VALUES[UAVParam.yawBehavior]);
+			} else {
+				if (!Tools.isValidNonNegativeInteger(param)) {
+					GUI.log(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				int yawBehavior = Integer.parseInt(param);
+				if (yawBehavior > 3) {
+					GUI.log(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					System.exit(1);
+				}
+				UAVParam.yawBehavior = yawBehavior;
+			}
+		}
 		param = parameters.get(Param.KML_MIN_ALTITUDE);
 		if (param == null) {
 			GUI.log(Param.KML_MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minAltitude);

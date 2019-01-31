@@ -122,12 +122,16 @@ public class UAVParam {
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
 	public static double initialAltitude = 394;			// (m) Initial altitude for all UAVs during simulation
 	public static double minAltitude = 5.0;				// (m) Minimum waypoint relative altitude for KML missions
-	public static volatile boolean overrideAltitude = true;	// Whether to override or not the altitude in KML missions, with the following value
+	public static volatile boolean overrideAltitude = false;	// Whether to override or not the altitude in KML missions, with the following value
 	public static volatile double minFlyingAltitude = minAltitude;// (m) Waypoint relative altitude for KML missions, when stored values are overrided
 	public static final int ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
 	public static final double WIND_THRESHOLD = 0.5;	// (m/s) Minimum wind speed accepted by the simulator, when used
 	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
 	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
+	public static volatile boolean overrideYaw = false;	// Whether to override or not the yaw behavior while following a mission, with the following value
+	public static volatile int yawBehavior = 0;			// 0=Fixed, 1=Face next waypoint, 2=Face next waypoint except RTL, 3=Face along GPS course
+	public static final String[] YAW_VALUES = new String[] {"Fixed", "Face next waypoint", "Face next WP except RTL", "Face along GPS course"};
+	
 	public static AtomicIntegerArray mavId;				// ID of the multicopter in the MAVLink protocol
 	public static final int MAV_ID = 1;					// ID of the multicopter in the MAVLink protocol by default
 	public static AtomicIntegerArray gcsId;				// ID of the GCS authorized to send commands to the flight controller
@@ -382,8 +386,8 @@ public class UAVParam {
 		RTL_ALTITUDE_FINAL("RTL_ALT_FINAL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),	// Loiter altitude when not desired to land after return to launch
 		// Others
 		CIRCLE_RADIUS("CIRCLE_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),		// (cm) Circle mode radius
-		WPNAV_RADIUS("WPNAV_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32);			// (cm) Distance to the waypoint to assert that it has been reached
-		
+		WPNAV_RADIUS("WPNAV_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),			// (cm) Distance to the waypoint to assert that it has been reached
+		WP_YAW_BEHAVIOR("WP_YAW_BEHAVIOR", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8);		// Yaw behavior while following a mission: 0=Fixed, 1=Face next waypoint, 2=Face next waypoint except RTL, 3=Face along GPS course
 
 		private final String id;
 		private final int type;
