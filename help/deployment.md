@@ -124,13 +124,13 @@ Each time the service writes something to the stdout or sterr, it will be redire
 
 Next, copy the service file and test it to be sure that it is working:
 
-    sudo chmod 644 start.service
-    sudo cp start.service /etc/systemd/system/start.service
+    sudo chmod 644 ardusim.service
+    sudo cp ardusim.service /etc/systemd/system/ardusim.service
     sudo systemctl daemon-reload
-    sudo systemctl start start.service
+    sudo systemctl start ardusim.service
 
 Check the content of the file */home/pi/Desktop/Ardusim.log* to be sure that the service is working fine. If the service fails or behaves unexpectedly, stop the service an repeat all the previous commands but the first, until the service works fine. Then, use the following command to enable the service on startup:
 
-    sudo systemctl enable start.service
+    sudo systemctl enable ardusim.service
 
 Finally, restart the device and check the log file to be sure that ArduSim has started with the system. Don't forget to store a mission file with ArduSim if the protocol under test requires it.

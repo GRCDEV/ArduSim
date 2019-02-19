@@ -85,7 +85,7 @@ public class PCCompanionTalker extends Thread {
 			}
 			
 			// Send emergency command when needed
-			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS
+			if ((Param.simStatus == SimulatorState.SETUP_IN_PROGRESS || Param.simStatus == SimulatorState.TEST_IN_PROGRESS)
 					&& PCCompanionParam.action.get() != PCCompanionParam.ACTION_NONE) {
 				try {
 					output.clear();

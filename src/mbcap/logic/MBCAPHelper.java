@@ -850,6 +850,8 @@ public class MBCAPHelper extends ProtocolHelper {
 		double flyingTime = remainingLocations * MBCAPParam.hopTime;
 		if (acceleration == 0.0) {
 			totalDistance = flyingTime * speed;
+		} else if (acceleration < -0.6) {
+			totalDistance = 0;
 		} else {
 			// Constant acceleration present
 			totalDistance = acceleration * flyingTime * flyingTime / 2.0 + speed * flyingTime;
@@ -982,8 +984,8 @@ public class MBCAPHelper extends ProtocolHelper {
 		long selfTime, beaconTime;
 		Point3D selfPoint, receivedPoint;
 		boolean checkTime = receivedBeacon.state == MBCAPState.NORMAL.getId()
-				&& receivedBeacon.speed >= MBCAPParam.minSpeed
-				&& selfBeacon.speed >= MBCAPParam.minSpeed;
+				&& receivedBeacon.speed >= MBCAPParam.minSpeed && receivedBeacon.points.size() > 1
+				&& selfBeacon.speed >= MBCAPParam.minSpeed && selfBeacon.points.size() > 1;
 		for (int i = 0; i < selfBeacon.points.size(); i++) {
 			selfTime = selfBeacon.time + i * MBCAPParam.hopTimeNS;
 			selfPoint = selfBeacon.points.get(i);

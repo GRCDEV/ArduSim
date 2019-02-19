@@ -63,14 +63,18 @@ public class PCCompanionListener extends Thread {
 						received.status = status;
 						PCCompanionGUI.companion.setState(received.row, status.name());
 					}
-				} else if (Param.simStatus == SimulatorState.STARTING_UAVS) {
-					received = new StatusPacket();
-					received.id = id;
-					received.status = status;
-					receiving.put(id, received);
-					ip = receivedPacket.getAddress().getHostAddress();
-					int row = PCCompanionGUI.companion.insertRow(id, ip, status.name());
-					received.row = row;
+				} else {
+					synchronized(PCCompanionGUI.semaphore) {
+						if (!PCCompanionGUI.setupPressed) {
+							received = new StatusPacket();
+							received.id = id;
+							received.status = status;
+							receiving.put(id, received);
+							ip = receivedPacket.getAddress().getHostAddress();
+							int row = PCCompanionGUI.companion.insertRow(id, ip, status.name());
+							received.row = row;
+						}
+					}
 				}
 				
 				// Peridically check if all UAVs are waiting for the user interaction
@@ -85,13 +89,21 @@ public class PCCompanionListener extends Thread {
 								allConnected = false;
 							}
 						}
-						if (allConnected) {
+						
+						boolean readyForSetup = PCCompanionGUI.companion.setupButton.isEnabled();
+						if (allConnected && !readyForSetup) {
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
 									PCCompanionGUI.companion.setupButton.setEnabled(true);
 								}
 							});
-							Param.simStatus = SimulatorState.UAVS_CONFIGURED;
+						}
+						if (!allConnected && readyForSetup) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									PCCompanionGUI.companion.setupButton.setEnabled(false);
+								}
+							});
 						}
 					}
 					// 3. Have all UAVs finished the setup step?

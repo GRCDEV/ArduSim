@@ -406,7 +406,7 @@ public class Copter {
 				Tools.waiting(UAVParam.STABILIZATION_WAIT_TIME);
 				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
 					GUI.log(SimParam.prefix[numUAV] + Text.STOP_ERROR_1);
-					return false;
+					return true;
 				}
 			}
 
@@ -577,11 +577,11 @@ public class Copter {
 	private static double getMinAltitude(double relAltitude) {
 		double res;
 		if (relAltitude <= 10) {
-			res = relAltitude - 0.25;
+			res = relAltitude - 0.5;
 		} else if (relAltitude <= 50) {
-			res = relAltitude * 0.95 + 0.25;
+			res = relAltitude * 0.95;
 		} else {
-			res = relAltitude - 1.35;
+			res = relAltitude - 1.6;
 		}
 		return res;
 	}
@@ -594,11 +594,11 @@ public class Copter {
 	private static double getMaxAltitude(double relAltitude) {
 		double res;
 		if (relAltitude <= 10) {
-			res = relAltitude + 0.25;
+			res = relAltitude + 0.5;
 		} else if (relAltitude <= 50) {
-			res = relAltitude * 1.05 - 0.25;
+			res = relAltitude * 1.05;
 		} else {
-			res = relAltitude + 1.35;
+			res = relAltitude + 1.6;
 		}
 		return res;
 	}

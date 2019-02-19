@@ -120,7 +120,7 @@ public class UAVParam {
 	
 	// Startup parameters
 	public static double[] initialSpeeds;				// (m/s) Initial UAVs speed
-	public static double initialAltitude = 394;			// (m) Initial altitude for all UAVs during simulation
+	public static double initialAltitude = 0;			// (m) Initial altitude for all UAVs during simulation TODO a 394 de Casinos
 	public static double minAltitude = 5.0;				// (m) Minimum waypoint relative altitude for KML missions
 	public static volatile boolean overrideAltitude = false;	// Whether to override or not the altitude in KML missions, with the following value
 	public static volatile double minFlyingAltitude = minAltitude;// (m) Waypoint relative altitude for KML missions, when stored values are overrided
@@ -196,9 +196,9 @@ public class UAVParam {
 	public static final int COMMAND_WAIT = 200;
 
 	// Stabilization parameters (when the UAV is stopping)
-	public static final double STABILIZATION_SPEED = 0.3;				// (m/s) When it is stopped
+	public static final double STABILIZATION_SPEED = 0.6;				// (m/s) When it is stopped
 	public static final int STABILIZATION_WAIT_TIME = 200;				// (ms) Passively waiting the UAV to stop
-	public static final long STABILIZATION_TIMEOUT = 30 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
+	public static final long STABILIZATION_TIMEOUT = 5 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 
 	// Filter to compensate the acceleration oscillation, applied when a new location is received from the UAV
 	public static final double ACCELERATION_THRESHOLD = 0.2;	// [0, 1] 1=new value, 0=previous value

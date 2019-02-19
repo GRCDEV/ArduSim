@@ -54,9 +54,9 @@ public class MBCAPParam {
 	public static final double PRECISION_MARGIN = 1;					// (m) In case a precision error happens during breaking
 	public static double safePlaceDistance = 2 * MBCAPParam.gpsError + EXTRA_ERROR + PRECISION_MARGIN;// (m) Minimum safety distance to the other UAV path
 	public static final double SAFETY_DISTANCE_RANGE = 1;				// (m) Maximum distance to consider that the UAV has reached the safety position
-	public static final double STABILIZATION_SPEED = 0.2;				// (m/s) When it is stopped
+	public static final double STABILIZATION_SPEED = 0.6;				// (m/s) When it is stopped
 	public static final int STABILIZATION_WAIT_TIME = 200;				// (ms) Time passively waiting the UAV to stop
-	public static final long STABILIZATION_TIMEOUT = 30 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
+	public static final long STABILIZATION_TIMEOUT = 10 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 	
 	// Parameter to decide whether the predicted path must be projected over the theoretical mission or not.
 	public static AtomicIntegerArray projectPath;		// 1 means project, 0 means do not project

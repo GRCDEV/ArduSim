@@ -116,7 +116,7 @@ public class ListenerThread extends Thread {
 			// 2. Set the heading used to orient the formation
 			if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
 				// We use the master heading
-				MUSCOPParam.formationHeading = Copter.getHeading(numUAVs);
+				MUSCOPParam.formationHeading = Copter.getHeading(numUAV);
 			}// In simulation, centerHeading is assigned when MUSCOPHelper.setStartingLocation() is called,
 			 //   using the first mission segment to orient the formation
 			

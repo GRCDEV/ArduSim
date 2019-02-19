@@ -72,6 +72,9 @@ public class PCCompanionGUI {
 	private JButton buttonLand;
 	
 	private Timer timer;
+	
+	public static Object semaphore = new Object();
+	public static volatile boolean setupPressed = false;
 
 	public PCCompanionGUI() {
 		initialize();
@@ -136,23 +139,31 @@ public class PCCompanionGUI {
 		setupButton = new JButton(Text.SETUP_TEST);
 		setupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
-						Text.SETUP_WARNING,
-						Text.DIALOG_TITLE,
-						JOptionPane.YES_NO_OPTION);
-				if (result == JOptionPane.YES_OPTION) {
-					Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-					ProtocolHelper.selectedProtocol = (String)protocolComboBox.getSelectedItem();
-					ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
-					if (ProtocolHelper.selectedProtocolInstance == null) {
-						GUI.exit(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR);
-					}
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							setupButton.setEnabled(false);
-							protocolComboBox.setEnabled(false);
+				synchronized(semaphore) {
+					if (!setupPressed) {
+						int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
+								Text.SETUP_WARNING,
+								Text.DIALOG_TITLE,
+								JOptionPane.YES_NO_OPTION);
+						if (result == JOptionPane.YES_OPTION) {
+							Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
+							ProtocolHelper.selectedProtocol = (String)protocolComboBox.getSelectedItem();
+							ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
+							if (ProtocolHelper.selectedProtocolInstance == null) {
+								GUI.exit(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR);
+							}
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									setupButton.setEnabled(false);
+									protocolComboBox.setEnabled(false);
+									buttonRecoverControl.setEnabled(true);
+									buttonRTL.setEnabled(true);
+									buttonLand.setEnabled(true);
+								}
+							});
 						}
-					});
+						setupPressed = true;
+					}
 				}
 			}
 		});
@@ -169,9 +180,6 @@ public class PCCompanionGUI {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						startButton.setEnabled(false);
-						buttonRecoverControl.setEnabled(true);
-						buttonRTL.setEnabled(true);
-						buttonLand.setEnabled(true);
 					}
 				});
 				timer = new Timer();
@@ -243,7 +251,9 @@ public class PCCompanionGUI {
 		buttonRecoverControl.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_RECOVER_CONTROL);
-				timer.cancel();
+				if (timer != null) {
+					timer.cancel();
+				}
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
@@ -265,7 +275,9 @@ public class PCCompanionGUI {
 		buttonRTL.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_RTL);
-				timer.cancel();
+				if (timer != null) {
+					timer.cancel();
+				}
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
@@ -288,7 +300,9 @@ public class PCCompanionGUI {
 		buttonLand.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				PCCompanionParam.action.set(PCCompanionParam.ACTION_LAND);
-				timer.cancel();
+				if (timer != null) {
+					timer.cancel();
+				}
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {

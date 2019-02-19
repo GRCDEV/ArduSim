@@ -25,7 +25,7 @@ public abstract class ProtocolHelper {
 	public String protocolString = null;
 	
 	/** Assign a protocol name to this implementation. Write something similar to:
-	 * <p>this.protocol = "Some protocol name";</p> */
+	 * <p>this.protocolString = "Some protocol name";</p> */
 	public abstract void setProtocol();
 	
 	/**
@@ -39,7 +39,7 @@ public abstract class ProtocolHelper {
 	 * Open a configuration dialog for protocol specific parameters.
 	 * <p>The dialog will be constructed in the GUI thread (please, avoid heavy calculations).
 	 * When the dialog is accepted, please use the following command:</p>
-	 * <p>api.Tools.setProtocolConfigured(true);</p> */
+	 * <p>api.Tools.setProtocolConfigured();</p> */
 	public abstract void openConfigurationDialog();
 	
 	/**

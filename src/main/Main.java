@@ -286,6 +286,8 @@ public class Main {
 			if (BoardParam.downloadBackground) {
 				BoardParam.panelText.set(Text.COPYRIGHT);
 				BoardHelper.downloadBackground();
+			} else {
+				BoardParam.panelText.set(null);
 			}
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {

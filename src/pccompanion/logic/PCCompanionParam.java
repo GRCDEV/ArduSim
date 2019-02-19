@@ -17,7 +17,7 @@ public class PCCompanionParam {
 	public static final int COMMAND_SEND_TIMEOUT = 250;	// (ms) Period between sent commands
 	public static final int RECEIVE_TIMEOUT = 100;		// (ms) Period between receiving checks
 	public static AtomicLong lastStartCommandTime = null;		// (ms) Time of the last Start command received
-	public static final int STATUS_CHANGE_CHECK_TIMEOUT = 200;	// (ms) Between checks about the status of the UAVs connected
+	public static final int STATUS_CHANGE_CHECK_TIMEOUT = 500;	// (ms) Between checks about the status of the UAVs connected
 	public static final int MAX_TIME_SINCE_LAST_START_COMMAND = 5 * COMMAND_SEND_TIMEOUT;// (ms) Time to detect that all UAVs have started the experiment
 	// Action to take selected by the user
 	public static final int ACTION_NONE = 1;

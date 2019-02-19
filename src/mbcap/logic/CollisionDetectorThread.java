@@ -375,7 +375,8 @@ public class CollisionDetectorThread extends Thread {
 									} else {
 										GUI.log(numUAV, MBCAPText.RESUMING_MISSION_ERROR);
 									}
-								} else if (selfBeacon.uavId < avoidingBeacon.uavId) {
+								} else if (selfBeacon.uavId < avoidingBeacon.uavId
+										&& MBCAPState.getSatateById(auxBeacon.state) == MBCAPState.STAND_STILL) {
 									// UAV with less priority
 
 									// Change to the states moving aside or go on, please
@@ -389,7 +390,7 @@ public class CollisionDetectorThread extends Thread {
 											// Moving
 											UTMCoordinates utm = MBCAPParam.targetLocationUTM.get(numUAV);
 											GeoCoordinates geo = Tools.UTMToGeo(utm);
-											if (Copter.moveUAV(numUAV, geo, (float) Copter.getZRelative(numUAV), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {//TODO fallará por el safety rage de altitud
+											if (Copter.moveUAV(numUAV, geo, (float) Copter.getZRelative(numUAV), MBCAPParam.SAFETY_DISTANCE_RANGE, MBCAPParam.SAFETY_DISTANCE_RANGE)) {
 												// Even when the UAV is close to destination, we also wait for it to be almost still
 												long time = System.nanoTime();
 												double speed = Copter.getSpeed(numUAV);
