@@ -431,7 +431,7 @@ public class UAVControllerThread extends Thread {
 		msg_mission_item_reached message = (msg_mission_item_reached) inMsg;
 		// The received value begins in 0
 		UAVParam.currentWaypoint.set(numUAV, message.seq);
-//		GUI.log(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);// TODO descomentar
+		GUI.log(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
 		
 		ArduSimTools.triggerWaypointReached(numUAV, message.seq);
 	}

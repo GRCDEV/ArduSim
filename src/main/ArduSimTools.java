@@ -3187,6 +3187,7 @@ public class ArduSimTools {
 		file9 =new File(folder, baseFileName + "_" + Text.MOBILITY_OMNET_SUFIX_3D);
 		sb8 = new StringBuilder(2000);
 		sb9 = new StringBuilder(2000);
+		Double t;
 		for (int i = 0; i < Param.numUAVs; i++) {
 			file6 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_2D);
 			file7 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MOBILITY_NS2_SUFIX_3D);
@@ -3198,7 +3199,12 @@ public class ArduSimTools {
 				sp = SimParam.uavUTMPath[i].get(j);
 				state = sp.getSimulatorState();
 				if (state == inExperiment) {
-					time = sp.getTime();
+					t = sp.getTime();
+					if (t == null) {
+						sp.setTime(firstExperimentNanoTime);
+						t = sp.getTime();
+					}
+					time = t;
 					if (time <= lastTime) {
 						x = Tools.round(sp.x, 2);
 						y = Tools.round(sp.y, 2);
