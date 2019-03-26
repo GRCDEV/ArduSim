@@ -60,6 +60,7 @@ public class TestListener extends Thread {
 						if (receivedState != null) {
 							if (receivedState == SimulatorState.SETUP_IN_PROGRESS
 									&& Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
+								Param.setupTime = System.currentTimeMillis();
 								Param.simStatus = receivedState;
 							}
 
@@ -70,6 +71,7 @@ public class TestListener extends Thread {
 									PCCompanionParam.lastStartCommandTime.set(System.currentTimeMillis());
 								}
 								if (Param.simStatus == SimulatorState.READY_FOR_TEST) {
+									Param.startTime = System.currentTimeMillis();
 									Param.simStatus = receivedState;
 								}
 							}

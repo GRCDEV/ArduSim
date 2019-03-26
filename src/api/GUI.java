@@ -20,6 +20,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.javatuples.Pair;
 
+import api.pojo.FlightMode;
 import api.pojo.StatusPacket;
 import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
@@ -34,6 +35,7 @@ import sim.gui.MissionKmlDialog;
 import sim.gui.MissionWaypointsDialog;
 import sim.gui.ProgressDialog;
 import sim.logic.SimParam;
+import uavController.UAVParam;
 
 /** This class consists exclusively of static methods that help the developer to validate and show information on screen.
  * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
@@ -149,7 +151,7 @@ public class GUI {
 
 	/**
 	 * Program termination when a fatal error happens.
-	 * <p>On a real UAV it shows the message in console and exits.
+	 * <p>On a real UAV it shows the message in console, performs RTL, and exits.
 	 * On simulation or PC Companion, the message is shown in a dialog.
 	 * Virtual UAVs are stopped before exiting if needed.</p>
 	 * @param message Error message to be shown.
@@ -159,7 +161,12 @@ public class GUI {
 		if (!exiting) {
 			if (Param.role == Tools.MULTICOPTER) {
 				System.out.println(Text.FATAL_ERROR + ": " + message);
-				System.out.flush();
+				if (UAVParam.flightMode.get(0).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
+					if (!Copter.setFlightMode(0, FlightMode.RTL)) {
+						System.out.println(Text.FATAL_ERROR + ": " + Text.FLIGHT_MODE_ERROR_3);
+						System.out.flush();
+					}
+				}
 			} else {
 				JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
 				if (Param.role == Tools.SIMULATOR) {

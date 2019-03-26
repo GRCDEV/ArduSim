@@ -46,6 +46,14 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 			return res;
 		}
 	}
+	
+	@Override
+	public int hashCode() {
+		long hash = 23;
+		hash = hash * 31 + this.senderPos;
+		hash = hash * 31 + this.start;
+		return (int)hash;
+	}
 
 	@Override
 	public IncomingMessage clone() {

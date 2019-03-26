@@ -322,13 +322,7 @@ public class CollisionDetectorThread extends Thread {
 						if (MBCAPParam.state[numUAV] == MBCAPState.NORMAL) {
 							GUI.log(numUAV, MBCAPText.RISK_DETECTED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 							GUI.updateGlobalInformation(MBCAPText.COLLISION_RISK_DETECTED);
-//							UTMCoordinates coordenadasAntes = Copter.getUTMLocation(numUAV);
-//							double speed = Copter.getSpeed(numUAV);
 							if (Copter.stopUAV(numUAV)) {
-//								GUI.log(numUAV, " Brake distance: "
-//										+ Copter.getUTMLocation(numUAV).distance(coordenadasAntes)
-//										+ " m at " + speed + " m/s (planned = "
-//										+ Copter.getPlannedSpeed(numUAV) + " m/s)");//TODO remove after test with real UAVs
 								stateTime = System.nanoTime();
 								MBCAPParam.idAvoiding.set(numUAV, avoidingBeacon.uavId);
 								// Progress update

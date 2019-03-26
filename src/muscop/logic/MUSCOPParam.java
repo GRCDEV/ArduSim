@@ -32,6 +32,7 @@ public class MUSCOPParam {
 	public static final int MOVE_CHECK_TIMEOUT = 200;		// (ms) Between checks if the target location has been reached
 	public static final int LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
 	public static final int STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
+	public static final int HOVERING_TIMEOUT = 500;			// (ms) Waiting time after takeoff before moving to first waypoint
 	// Wait between ACK
 	
 	// Data beacon info

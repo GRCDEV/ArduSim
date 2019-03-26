@@ -101,5 +101,12 @@ public class Location2D {
 	public synchronized double distance(double utmX, double utmY) {
 		return this.utm.distance(utmX, utmY);
 	}
+
+	@Override
+	public synchronized String toString() {
+		return this.utm.toString() + " - Geo: " + this.geo.toString();
+	}
+	
+	
 	
 }

@@ -12,6 +12,7 @@ import javax.swing.SwingUtilities;
 
 import org.javatuples.Pair;
 
+import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
 import api.Tools;
@@ -28,8 +29,6 @@ import sim.gui.ProgressDialog;
 import sim.gui.ResultsDialog;
 import sim.logic.CollisionDetector;
 import sim.logic.DistanceCalculusThread;
-import sim.logic.FakeReceiverThread;
-import sim.logic.FakeSenderThread;
 import sim.logic.RangeCalculusThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
@@ -276,6 +275,9 @@ public class Main {
 			Tools.waiting(SimParam.SHORT_WAITING_TIME);
 		}
 		if (Param.simStatus != SimulatorState.UAVS_CONFIGURED) {
+			if (Param.role == Tools.MULTICOPTER) {
+				Copter.returnRCControl(0);
+			}
 			return;
 		}
 		
@@ -301,6 +303,9 @@ public class Main {
 			Tools.waiting(SimParam.SHORT_WAITING_TIME);
 		}
 		if (Param.simStatus != SimulatorState.SETUP_IN_PROGRESS) {
+			if (Param.role == Tools.MULTICOPTER) {
+				Copter.returnRCControl(0);
+			}
 			return;
 		}
 
@@ -336,12 +341,16 @@ public class Main {
 				}
 			}, 0, 1000);	// Once each second, without initial waiting time
 		}
+		GUI.log(Text.SETUP_START);
 		ProtocolHelper.selectedProtocolInstance.setupActionPerformed();
 		Param.simStatus = SimulatorState.READY_FOR_TEST;
 		while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
 			Tools.waiting(SimParam.SHORT_WAITING_TIME);
 		}
 		if (Param.simStatus != SimulatorState.READY_FOR_TEST) {
+			if (Param.role == Tools.MULTICOPTER) {
+				Copter.returnRCControl(0);
+			}
 			return;
 		}
 
@@ -359,24 +368,13 @@ public class Main {
 			Tools.waiting(SimParam.SHORT_WAITING_TIME);
 		}
 		if (Param.simStatus != SimulatorState.TEST_IN_PROGRESS) {
+			if (Param.role == Tools.MULTICOPTER) {
+				Copter.returnRCControl(0);
+			}
 			return;
 		}
-		
-		
-		//TODO remove
-		if (FakeSenderThread.fakeCommunicationsEnabled) {
-			for (int i = 0; i < Param.numUAVs; i++) {
-				(new FakeSenderThread(i)).start();
-				(new FakeReceiverThread(i)).start();
-			}
-		}
-		
-		
 
 		// 15. Start the experiment, only if the program is not being closed
-		if (Param.role == Tools.MULTICOPTER) {
-			Param.startTime = System.currentTimeMillis();
-		}
 		GUI.log(Text.TEST_START);
 		ProtocolHelper.selectedProtocolInstance.startExperimentActionPerformed();
 
@@ -406,6 +404,9 @@ public class Main {
 			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 				Tools.waiting(SimParam.LONG_WAITING_TIME);
 			}
+		}
+		if (Param.role == Tools.MULTICOPTER) {
+			Copter.returnRCControl(0);
 		}
 		if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 			return;

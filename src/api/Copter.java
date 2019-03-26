@@ -470,8 +470,8 @@ public class Copter {
 	 * Standard modulation: 1000 (0%) - 2000 (100%).
 	 * Value 0 means that the control of that channel must be returned to the RC radio.
 	 * Value UINT16_MAX means to ignore this field.</p>
-	 * <p>By default, channels can be overridden, but the functionality can be disabled by the command "returnRCControl".
-	 * This method doesn't wait response from the flight controller.
+	 * <p>By default, channels can be overridden on any flight mode different from GUIDED, but the functionality can be disabled by the command "returnRCControl".
+	 * This method doesn't wait a response from the flight controller.
 	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
 	 * @param numUAV UAV position in arrays.
 	 * @param roll Turn on horizontal axes that goes from front to rear of the UAV (tilt the UAV to the left or to the right).

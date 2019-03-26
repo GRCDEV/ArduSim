@@ -226,6 +226,7 @@ public class Text {
 	public static final String SEND_BASIC_CONFIGURATION_2 = "Preparing UAVs internal configuration (phase 2)...";
 	public static final String WAITING_FOR_USER = "Waiting for user interaction.";
 	public static final String TAKING_OFF = "Take off in progress...";
+	public static final String SETUP_START = "Setup started...";
 	public static final String TEST_START = "Test started...";
 	public static final String SHUTTING_DOWN_COMM = "Blocking virtual communications...";
 	public static final String STORING = "Storing results...";
@@ -383,6 +384,7 @@ public class Text {
 	public static final String PARAMETER_ERROR_2 = "Error getting parameter:";
 	public static final String FLIGHT_MODE = "New flight mode";
 	public static final String FLIGHT_MODE_ERROR_1 = "Error changing the flight mode.";
+	public static final String FLIGHT_MODE_ERROR_3 = "Unable to perform the emergency RTL.";
 	public static final String ARM_ENGINES = "Engines armed.";
 	public static final String ARM_ENGINES_ERROR = "Error arming engines.";
 	public static final String TAKE_OFF = "Taking off.";
