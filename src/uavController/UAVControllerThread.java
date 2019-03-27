@@ -314,8 +314,9 @@ public class UAVControllerThread extends Thread {
 			double[] speed = new double[] {message.vx * 0.01, message.vy * 0.01, message.vz * 0.01};
 			// Update the UAV data, including the acceleration calculus
 			double z = message.alt * 0.001;
+			double zRel = message.relative_alt * 0.001;
 			double heading = (message.hdg * 0.01) * Math.PI / 180;
-			UAVParam.uavCurrentData[numUAV].update(time, location, z, message.relative_alt * 0.001, speed, hSpeed, heading);
+			UAVParam.uavCurrentData[numUAV].update(time, location, z, zRel, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
 			SimulatorState currentState = Param.simStatus;
 			int state = currentState.getStateId();
@@ -323,7 +324,7 @@ public class UAVControllerThread extends Thread {
 			if (currentState == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] != 0) {
 				state = SimulatorState.TEST_FINISHED.getStateId();
 			}
-			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTM.x, locationUTM.y, z, heading, hSpeed,
+			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTM.x, locationUTM.y, z, zRel, heading, hSpeed,
 					state)); // UAV under test
 		}
 	}

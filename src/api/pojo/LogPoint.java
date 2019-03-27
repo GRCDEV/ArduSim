@@ -13,12 +13,14 @@ public class LogPoint extends Point3D implements Cloneable {
 	private java.lang.Double elapsedTime = null;
 	private double speed;
 	private int simulatorState;
+	public double zRel;
 	
 	@SuppressWarnings("unused")
 	private LogPoint() {}
 	
-	public LogPoint(long nanoTime, double x, double y, double z, double heading, double speed, int simulatorState) {
+	public LogPoint(long nanoTime, double x, double y, double z, double zRel, double heading, double speed, int simulatorState) {
 		super(x, y, z);
+		this.zRel = zRel;
 		this.heading = heading;
 		this.nanoTime = nanoTime;
 		this.speed = speed;
@@ -57,7 +59,7 @@ public class LogPoint extends Point3D implements Cloneable {
 
 	@Override
 	public LogPoint clone() {
-		return new LogPoint(this.nanoTime, this.x, this.y, this.z, this.heading, this.speed, this.simulatorState);
+		return new LogPoint(this.nanoTime, this.x, this.y, this.z, this.zRel, this.heading, this.speed, this.simulatorState);
 	}
 	
 	
