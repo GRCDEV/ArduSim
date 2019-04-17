@@ -19,7 +19,6 @@ import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
 import api.pojo.GeoCoordinates;
-import api.pojo.Location2D;
 import api.pojo.Point3D;
 import api.pojo.UTMCoordinates;
 import api.pojo.WaypointSimplified;
@@ -28,7 +27,6 @@ import api.pojo.formations.FlightFormation.Formation;
 import main.Text;
 import muscop.pojo.Message;
 import muscop.pojo.MovedMission;
-import uavController.UAVParam;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
@@ -401,19 +399,6 @@ public class ListenerThread extends Thread {
 			}
 		}
 		
-//		if (!Copter.setFlightMode(numUAV, FlightMode.LOITER)) {//TODO opción2
-//			GUI.log(numUAV, "Fallo al usar loiter antes de despegue");
-//		}
-//		Copter.channelsOverride(numUAV, 1500, 1500, 1000, 1500);
-//		long now = System.currentTimeMillis();
-//		while (System.currentTimeMillis() - now < MUSCOPParam.HOVERING_TIMEOUT) {
-//			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
-//		}
-		GUI.log(numUAV, "Antes de despegar: " + Copter.getLocation(numUAV).toString());
-		
-		
-		
-		
 		/** TAKING OFF PHASE */
 		GUI.log(numUAV, MUSCOPText.TAKING_OFF);
 		GUI.updateProtocolState(numUAV, MUSCOPText.TAKING_OFF);
@@ -450,19 +435,16 @@ public class ListenerThread extends Thread {
 		GUI.updateProtocolState(numUAV, MUSCOPText.MOVE_TO_WP + " 0");
 		GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 		
-		GUI.log(numUAV, "Tras despegar: " + Copter.getLocation(numUAV).toString());
-		if (!Copter.setFlightMode(numUAV, FlightMode.LOITER)) {//TODO Necessary to avoid a crash (remote control not present)
-			GUI.log(numUAV, "Fallo con el parche modo loiter al comenzar el despegue");
-		}
-		if (!Copter.setHalfThrottle(numUAV)) {
-			GUI.log(numUAV, "Fallo con el parche half-throttle al comenzar el despegue");
+		//Necessary to avoid a crash (remote control not present)
+		if (!Copter.setFlightMode(numUAV, FlightMode.LOITER) || !Copter.setHalfThrottle(numUAV)) {
+			GUI.exit(MUSCOPText.TAKE_OFF_ERROR_2 + " " + selfId);
 		}
 		long now = System.currentTimeMillis();
 		while (System.currentTimeMillis() - now < MUSCOPParam.HOVERING_TIMEOUT) {
 			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
 		}
 		if (!Copter.setFlightMode(numUAV, FlightMode.GUIDED)) {
-			GUI.log(numUAV, "Fallo con el parche modo guided al comenzar el despegue");
+			GUI.exit(MUSCOPText.TAKE_OFF_ERROR_2 + " " + selfId);
 		}
 		
 		Point3D[] missionUTM = MUSCOPParam.uavMissionReceivedUTM.get(numUAV);
@@ -492,10 +474,6 @@ public class ListenerThread extends Thread {
 				}
 			}
 		}
-		
-		
-		//TODO quitar
-		GUI.log(numUAV, "Listo para start: " + Copter.getLocation(numUAV).toString());
 		
 		/** TARGET REACHED PHASE */
 		GUI.log(numUAV, MUSCOPText.TARGET_REACHED);

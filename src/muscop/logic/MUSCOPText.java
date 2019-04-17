@@ -71,6 +71,7 @@ public class MUSCOPText {
 	
 	// Error messages
 	public static final String TAKE_OFF_ERROR = "Unable to perform the take off of the UAV";
+	public static final String TAKE_OFF_ERROR_2 = "Unable to move to the starting waypoint. UAV";
 	public static final String MOVE_ERROR_1 = "Unable to move to a waypoint. UAV";
 	public static final String MOVE_ERROR_2 = "Unable to move to target location. UAV";
 	public static final String LAND_ERROR = "Unable to land the UAV";

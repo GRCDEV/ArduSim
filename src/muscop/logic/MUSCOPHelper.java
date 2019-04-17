@@ -319,12 +319,12 @@ public class MUSCOPHelper extends ProtocolHelper {
 	 */
 	public static double getMinAltitude(double relAltitude) {
 		double res;
-		if (relAltitude <= 10) {
-			res = relAltitude - 0.5;
+		if (relAltitude <= 20) {
+			res = relAltitude - 1;
 		} else if (relAltitude <= 50) {
 			res = relAltitude * 0.95;
 		} else {
-			res = relAltitude - 1.6;
+			res = relAltitude - 2.5;
 		}
 		return res;
 	}
@@ -336,12 +336,12 @@ public class MUSCOPHelper extends ProtocolHelper {
 	 */
 	public static double getMaxAltitude(double relAltitude) {
 		double res;
-		if (relAltitude <= 10) {
-			res = relAltitude + 0.5;
+		if (relAltitude <= 20) {
+			res = relAltitude + 1;
 		} else if (relAltitude <= 50) {
 			res = relAltitude * 1.05;
 		} else {
-			res = relAltitude + 1.6;
+			res = relAltitude + 2.5;
 		}
 		return res;
 	}
