@@ -55,6 +55,7 @@ public class Main {
 		if (!ArduSimTools.parseArgs(args)) {
 			return;
 		}
+		ArduSimTools.detectOS();
 		ArduSimTools.parseIniFile();
 		if (Param.role == Tools.PCCOMPANION) {
 			Param.numUAVs = 1;
@@ -65,10 +66,9 @@ public class Main {
 			});
 			return;	// In the PC Companion, the control is released to the GUI
 		}
-		
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
-		ArduSimTools.detectOS();
+		
 		if (Param.role == Tools.MULTICOPTER) {
 			// 1. We need to make constant the parameters shown in the GUI
 			Param.numUAVs = 1;	// Always one UAV per Raspberry Pi or whatever the device where the application is deployed

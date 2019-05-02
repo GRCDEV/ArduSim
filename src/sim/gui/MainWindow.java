@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -72,10 +73,11 @@ public class MainWindow {
 		mainWindowFrame.pack();
 
 		//  Adapting the window to the screen size
-		int left = Toolkit.getDefaultToolkit().getScreenInsets(config).left;
-		int right = Toolkit.getDefaultToolkit().getScreenInsets(config).right;
-		int top = Toolkit.getDefaultToolkit().getScreenInsets(config).top;
-		int bottom = Toolkit.getDefaultToolkit().getScreenInsets(config).bottom;
+		Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
+		int left = insets.left;
+		int right = insets.right;
+		int top = insets.top;
+		int bottom = insets.bottom;
 		
 		int width = config.getBounds().width - left - right;
 		int height = config.getBounds().height - top - bottom;

@@ -9,8 +9,10 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.math.BigInteger;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -18,12 +20,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -88,8 +92,7 @@ public class PCCompanionGUI {
 		GraphicsDevice gd = ge.getDefaultScreenDevice();
 		GraphicsConfiguration config = gd.getDefaultConfiguration();
 		assistantFrame = new JFrame(config);
-		assistantFrame.setBounds(100, 100, 700, 300);
-		assistantFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		assistantFrame.setBounds(100, 100, 700, 300);
 		
 		JPanel upperPanel = new JPanel();
 		assistantFrame.getContentPane().add(upperPanel, BorderLayout.NORTH);
@@ -330,7 +333,47 @@ public class PCCompanionGUI {
 		gbc_lblEm.gridy = 1;
 		upperPanel.add(lblEm, gbc_lblEm);
 		
-		assistantFrame.setLocation(config.getBounds().width/2 - assistantFrame.getSize().width/2, 0);
+//		assistantFrame.setLocation(config.getBounds().width/2 - assistantFrame.getSize().width/2, 0);
+		
+		if (Param.runningOperatingSystem != Param.OS_WINDOWS) {
+			assistantFrame.setUndecorated(true);
+		}
+		assistantFrame.pack();
+		
+	//  Adapting the window to the screen size
+		Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
+		int left = insets.left;
+		int right = insets.right;
+		int top = insets.top;
+		int bottom = insets.bottom;
+
+		int width = config.getBounds().width - left - right;
+		int height = config.getBounds().height - top - bottom;
+		
+		assistantFrame.setSize(width, height);
+		assistantFrame.setResizable(false);
+		assistantFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		
+		assistantFrame.setTitle(Text.COMPANION_NAME);
+		ActionListener escListener = new ActionListener() {
+
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	        	(new Thread(new Runnable() {
+	    			@Override
+	    			public void run() {
+	    				assistantFrame.dispose();
+	    				System.exit(0);
+	    			}
+	    		})).start();
+	        }
+	    };
+	    assistantFrame.getRootPane().registerKeyboardAction(escListener,
+	            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+	            JComponent.WHEN_IN_FOCUSED_WINDOW);
+		
+		
 		assistantFrame.setVisible(true);
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 		(new PCCompanionTalker()).start();
@@ -410,11 +453,11 @@ public class PCCompanionGUI {
 	        }
 	    }
 	    
-	    int prevWidth = assistantFrame.getWidth();
-	    assistantFrame.pack();
-	    if (assistantFrame.getWidth() < prevWidth) {
-	    	assistantFrame.setSize(prevWidth, assistantFrame.getHeight());
-	    }
+//	    int prevWidth = assistantFrame.getWidth();
+//	    assistantFrame.pack();
+//	    if (assistantFrame.getWidth() < prevWidth) {
+//	    	assistantFrame.setSize(prevWidth, assistantFrame.getHeight());
+//	    }
 	}
 
 }

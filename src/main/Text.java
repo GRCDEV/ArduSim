@@ -453,6 +453,7 @@ public class Text {
 	public static final String CIRCLE_ARMED = "Circle_armed";
 	
 	// PC Companion
+	public static final String COMPANION_NAME = "ArduSim PC Companion";
 	public static final String NUM_UAVS_COUNTER = " UAVs connected";
 	public static final String PROTOCOL = "Protocol:";
 	public static final String RECOVER_CONTROL = "Recover control";
