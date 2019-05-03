@@ -503,7 +503,7 @@ public class Copter {
 	 */
 	public static void channelsOverride(int numUAV, double roll, double pitch, double throttle, double yaw) {
 		int channelPos = UAVParam.RCmapRoll[numUAV]-1;
-		int minValue = UAVParam.RCminValue[numUAV][channelPos];
+		int minValue = UAVParam.RCminValue[numUAV][channelPos];// TODO implement reverse parameter
 		int deadzone = UAVParam.RCDZValue[numUAV][channelPos];
 		int trim = UAVParam.RCtrimValue[numUAV][channelPos];
 		int maxValue = UAVParam.RCmaxValue[numUAV][channelPos];
