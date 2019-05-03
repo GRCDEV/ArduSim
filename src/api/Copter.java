@@ -490,6 +490,70 @@ public class Copter {
 	}
 	
 	/**
+	 * API: Override the remote control output.
+	 * <p>Values range [-1, 1]</p>
+	 * <p>By default, channels can be overridden on any flight mode different from GUIDED, but the functionality can be disabled by the command "returnRCControl".
+	 * This method doesn't wait a response from the flight controller.
+	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
+	 * @param numUAV UAV position in arrays.
+	 * @param roll Turn on horizontal axes that goes from front to rear of the UAV (value<0 tilts the UAV to the left, and value >0 tilts to the right).
+	 * @param pitch Turn on horizontal axes that goes from left to right of the UAV (value>0 raises the front part of the UAV and it goes back, and value<0  goes forward).
+	 * @param throttle Engine power (value>0 raises the UAV, and value<0 descends the UAV).
+	 * @param yaw Turn on vertical axes (value>0 turns right, and value<0 turns left).
+	 */
+	public static void channelsOverride(int numUAV, double roll, double pitch, double throttle, double yaw) {
+		int channelPos = UAVParam.RCmapRoll[numUAV]-1;
+		int minValue = UAVParam.RCminValue[numUAV][channelPos];
+		int deadzone = UAVParam.RCDZValue[numUAV][channelPos];
+		int trim = UAVParam.RCtrimValue[numUAV][channelPos];
+		int maxValue = UAVParam.RCmaxValue[numUAV][channelPos];
+		int intRoll = Copter.mapValues(minValue, deadzone, trim, maxValue, roll);
+		
+		channelPos = UAVParam.RCmapPitch[numUAV]-1;
+		minValue = UAVParam.RCminValue[numUAV][channelPos];
+		deadzone = UAVParam.RCDZValue[numUAV][channelPos];
+		trim = UAVParam.RCtrimValue[numUAV][channelPos];
+		maxValue = UAVParam.RCmaxValue[numUAV][channelPos];
+		int intPitch = Copter.mapValues(minValue, deadzone, trim, maxValue, pitch);
+		
+		channelPos = UAVParam.RCmapThrottle[numUAV]-1;
+		minValue = UAVParam.RCminValue[numUAV][channelPos];
+		deadzone = UAVParam.throttleDZ[numUAV];
+		trim = UAVParam.stabilizationThrottle[numUAV];
+		maxValue = UAVParam.RCmaxValue[numUAV][channelPos];
+		int intThrottle = Copter.mapValues(minValue, deadzone, trim, maxValue, throttle);
+		
+		channelPos = UAVParam.RCmapYaw[numUAV]-1;
+		minValue = UAVParam.RCminValue[numUAV][channelPos];
+		deadzone = UAVParam.RCDZValue[numUAV][channelPos];
+		trim = UAVParam.RCtrimValue[numUAV][channelPos];
+		maxValue = UAVParam.RCmaxValue[numUAV][channelPos];
+		int intYaw = Copter.mapValues(minValue, deadzone, trim, maxValue, yaw);
+		
+		if (UAVParam.overrideOn.get(numUAV) == 1) {
+			UAVParam.rcs[numUAV].set(new RCValues(intRoll, intPitch, intThrottle, intYaw));
+		}
+	}
+	
+	private static int mapValues(int minValue,int deadzone, int trim, int maxValue,double value) {
+		double max, min;
+		if(value >0 && value <= 1) {
+			//map value between 0 and 1  to value between trim+deadzone and maxValue
+			max = maxValue;
+			min = trim + deadzone;
+			return  (int)Math.round(min + (max-min)*value);
+		}else if(value <0 && value >=-1) {
+			//map value between -1 and 0 to value between minValue and trim-deadzone
+			max = trim - deadzone;
+			min = minValue;
+			return  (int)Math.round(max + (max-min)*value);
+		}else {
+			//value is either 0 or invalid => return trim value
+			return trim;
+		}
+	}
+	
+	/**
 	 * API: Move the UAV to a new location.
 	 * <p>The UAV must be in GUIDED flight mode.</p>
 	 * <p>This method uses the message SET_POSITION_TARGET_GLOBAL_INT, and doesn't wait response from the flight controller.

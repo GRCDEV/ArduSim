@@ -1050,12 +1050,12 @@ public class UAVControllerThread extends Thread {
 	private void msgSetThrottle(int throttle) throws IOException {
 		msg_rc_channels_override message = new msg_rc_channels_override();
 		// Initially, only trim values
-		int[] values = new int[] {UAVParam.RCtrimValue[numUAV].get(0), UAVParam.RCtrimValue[numUAV].get(1),
-				UAVParam.RCtrimValue[numUAV].get(2), UAVParam.RCtrimValue[numUAV].get(3),
-				UAVParam.RCtrimValue[numUAV].get(4), UAVParam.RCtrimValue[numUAV].get(5),
-				UAVParam.RCtrimValue[numUAV].get(6), UAVParam.RCtrimValue[numUAV].get(7)};
+		int[] values = new int[] {UAVParam.RCtrimValue[numUAV][0], UAVParam.RCtrimValue[numUAV][1],
+				UAVParam.RCtrimValue[numUAV][2], UAVParam.RCtrimValue[numUAV][3],
+				UAVParam.RCtrimValue[numUAV][4], UAVParam.RCtrimValue[numUAV][5],
+				UAVParam.RCtrimValue[numUAV][6], UAVParam.RCtrimValue[numUAV][7]};
 		// New throttle value
-		values[UAVParam.RCmapThrottle.get(numUAV)-1] = throttle;
+		values[UAVParam.RCmapThrottle[numUAV]-1] = throttle;
 		// Flight mode
 		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
 		if (fltmode != -1) {
@@ -1099,15 +1099,15 @@ public class UAVControllerThread extends Thread {
 	private void msgrcChannelsOverride(int roll, int pitch, int throttle, int yaw) throws IOException {
 		msg_rc_channels_override message = new msg_rc_channels_override();
 		// Initially, only trim values
-		int[] values = new int[] {UAVParam.RCtrimValue[numUAV].get(0), UAVParam.RCtrimValue[numUAV].get(1),
-				UAVParam.RCtrimValue[numUAV].get(2), UAVParam.RCtrimValue[numUAV].get(3),
-				UAVParam.RCtrimValue[numUAV].get(4), UAVParam.RCtrimValue[numUAV].get(5),
-				UAVParam.RCtrimValue[numUAV].get(6), UAVParam.RCtrimValue[numUAV].get(7)};
+		int[] values = new int[] {UAVParam.RCtrimValue[numUAV][0], UAVParam.RCtrimValue[numUAV][1],
+				UAVParam.RCtrimValue[numUAV][2], UAVParam.RCtrimValue[numUAV][3],
+				UAVParam.RCtrimValue[numUAV][4], UAVParam.RCtrimValue[numUAV][5],
+				UAVParam.RCtrimValue[numUAV][6], UAVParam.RCtrimValue[numUAV][7]};
 		// New roll, pitch, throttle, and yaw values
-		values[UAVParam.RCmapRoll.get(numUAV)-1] = roll;
-		values[UAVParam.RCmapPitch.get(numUAV)-1] = pitch;
-		values[UAVParam.RCmapThrottle.get(numUAV)-1] = throttle;
-		values[UAVParam.RCmapYaw.get(numUAV)-1] = yaw;
+		values[UAVParam.RCmapRoll[numUAV]-1] = roll;
+		values[UAVParam.RCmapPitch[numUAV]-1] = pitch;
+		values[UAVParam.RCmapThrottle[numUAV]-1] = throttle;
+		values[UAVParam.RCmapYaw[numUAV]-1] = yaw;
 		// Flight mode
 		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
 		if (fltmode != -1) {

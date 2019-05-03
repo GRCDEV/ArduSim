@@ -137,14 +137,17 @@ public class UAVParam {
 	public static AtomicIntegerArray gcsId;				// ID of the GCS authorized to send commands to the flight controller
 														//   255 for Mission Planner and DroidPlanner
 														//   252 for APM Planner 2
-	public static AtomicIntegerArray RCmapRoll;			// Channel the roll is mapped to
-	public static AtomicIntegerArray RCmapPitch;		// Channel the pitch is mapped to
-	public static AtomicIntegerArray RCmapThrottle;		// Channel the throttle is mapped to
-	public static AtomicIntegerArray RCmapYaw;			// Channel the yaw is mapped to
-	public static AtomicIntegerArray[] RCminValue;		// Minimum value of all the 8 channels
-	public static AtomicIntegerArray[] RCtrimValue;		// Trim value of all the 8 channels
-	public static AtomicIntegerArray[] RCmaxValue;		// Maximum value of all the 8 channels
-	public static AtomicIntegerArray[] flightModeMap;	// Mapping of the 6 flight modes used in the remote control switch
+	public static int[] RCmapRoll;				// Channel the roll is mapped to
+	public static int[] RCmapPitch;				// Channel the pitch is mapped to
+	public static int[] RCmapThrottle;			// Channel the throttle is mapped to
+	public static int[] RCmapYaw;				// Channel the yaw is mapped to
+	public static int[] stabilizationThrottle;	// Middle throttle value (approx. 1500, mid stick)
+	public static int[] throttleDZ;				// Deadzone around stabilization throttle
+	public static int[][] RCminValue;			// Minimum value of all the 8 channels
+	public static int[][] RCtrimValue;			// Trim value of all the 8 channels
+	public static int[][] RCmaxValue;			// Maximum value of all the 8 channels
+	public static int[][] RCDZValue;			// Dead zone around trim or bottom of all the 8 channels
+	public static int[][] flightModeMap;		// Mapping of the 6 flight modes used in the remote control switch
 	public static int[][] customModeToFlightModeMap;	// Mapping from real custom flight mode to FLTMODEx (provides x)
 														//   WARNING: not all modes are mapped in the remote control. Unmapped modes return -1
 
@@ -277,7 +280,6 @@ public class UAVParam {
 	public static final int MAV_STATUS_ERROR_REQUEST_WP_LIST = 31;
 	public static final int MAV_STATUS_THROTTLE_ON = 32;
 	public static final int MAV_STATUS_THROTTLE_ON_ERROR = 33;
-	public static int[] stabilizationThrottle;	// By default is 1500 (altitude stabilized)
 	public static final int MAV_STATUS_RECOVER_CONTROL = 34;
 	public static final int MAV_STATUS_RECOVER_ERROR = 35;
 	public static AtomicIntegerArray overrideOn;	// ([0,1]) 1 = RC Channels can be overridden

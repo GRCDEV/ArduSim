@@ -105,183 +105,229 @@ public class InitialConfiguration1Thread extends Thread {
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmapRoll.set(numUAV, (int)Math.round(paramValue));
+		UAVParam.RCmapRoll[numUAV] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.RCMAP_PITCH);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmapPitch.set(numUAV, (int)Math.round(paramValue));
+		UAVParam.RCmapPitch[numUAV] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.RCMAP_THROTTLE);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmapThrottle.set(numUAV, (int)Math.round(paramValue));
+		UAVParam.RCmapThrottle[numUAV] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.RCMAP_YAW);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmapYaw.set(numUAV, (int)Math.round(paramValue));
+		UAVParam.RCmapYaw[numUAV] = (int)Math.round(paramValue);
 		// RC levels
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC1);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(0, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][0] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC1);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(0, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][0] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC1);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(0, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][0] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC1);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][0] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC2);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(1, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][1] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC2);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(1, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][1] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC2);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(1, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][1] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC2);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][1] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC3);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(2, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][2] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC3);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(2, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][2] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC3);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(2, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][2] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC3);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][2] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC4);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(3, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][3] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC4);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(3, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][3] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC4);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(3, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][3] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC4);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][3] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC5);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(4, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][4] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC5);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(4, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][4] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC5);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(4, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][4] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC5);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][4] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC6);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(5, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][5] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC6);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(5, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][5] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC6);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(5, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][5] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC6);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][5] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC7);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(6, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][6] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC7);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(6, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][6] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC7);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(6, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][6] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC7);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][6] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MIN_RC8);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCminValue[numUAV].set(7, (int)Math.round(paramValue));
+		UAVParam.RCminValue[numUAV][7] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.TRIM_RC8);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCtrimValue[numUAV].set(7, (int)Math.round(paramValue));
+		UAVParam.RCtrimValue[numUAV][7] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.MAX_RC8);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.RCmaxValue[numUAV].set(7, (int)Math.round(paramValue));
+		UAVParam.RCmaxValue[numUAV][7] = (int)Math.round(paramValue);
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_RC8);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.RCDZValue[numUAV][7] = (int)Math.round(paramValue);
 		// Stablish the middle throttle stick position
-		int throttlePos = UAVParam.RCmapThrottle.get(numUAV);
-		UAVParam.stabilizationThrottle[numUAV] = (UAVParam.RCmaxValue[numUAV].get(throttlePos - 1)
-				+ UAVParam.RCminValue[numUAV].get(throttlePos - 1)) / 2;
+		int throttlePos = UAVParam.RCmapThrottle[numUAV];
+		UAVParam.stabilizationThrottle[numUAV] = (UAVParam.RCmaxValue[numUAV][throttlePos - 1]
+				+ UAVParam.RCminValue[numUAV][throttlePos - 1]) / 2;
+		// Throttle dead zone
+		paramValue = Copter.getParameter(numUAV, ControllerParam.DZ_THROTTLE);
+		if (paramValue == null) {
+			return;
+		}
+		UAVParam.throttleDZ[numUAV] = (int)Math.round(paramValue);
 		// Flight modes mapping
 		paramValue = Copter.getParameter(numUAV, ControllerParam.FLTMODE1);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.flightModeMap[numUAV].set(0, (int)Math.round(paramValue));
+		UAVParam.flightModeMap[numUAV][0] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.FLTMODE2);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.flightModeMap[numUAV].set(1, (int)Math.round(paramValue));
+		UAVParam.flightModeMap[numUAV][1] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.FLTMODE3);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.flightModeMap[numUAV].set(2, (int)Math.round(paramValue));
+		UAVParam.flightModeMap[numUAV][2] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.FLTMODE4);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.flightModeMap[numUAV].set(3, (int)Math.round(paramValue));
+		UAVParam.flightModeMap[numUAV][3] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.FLTMODE5);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.flightModeMap[numUAV].set(4, (int)Math.round(paramValue));
+		UAVParam.flightModeMap[numUAV][4] = (int)Math.round(paramValue);
 		paramValue = Copter.getParameter(numUAV, ControllerParam.FLTMODE6);
 		if (paramValue == null) {
 			return;
 		}
-		UAVParam.flightModeMap[numUAV].set(5, (int)Math.round(paramValue));
+		UAVParam.flightModeMap[numUAV][5] = (int)Math.round(paramValue);
 		// Mapping of custom flight mode to FLTMODE location in array
 		int mode;
 		// For each custom mode mapped in the remote control...
-		for (int i = 0; i < UAVParam.flightModeMap[numUAV].length(); i++) {
-			mode = UAVParam.flightModeMap[numUAV].get(i);
+		for (int i = 0; i < UAVParam.flightModeMap[numUAV].length; i++) {
+			mode = UAVParam.flightModeMap[numUAV][i];
 			// Store the FLTMODE it is mapped to
 			UAVParam.customModeToFlightModeMap[numUAV][mode] = i + 1;
 		}

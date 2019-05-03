@@ -630,14 +630,15 @@ public class ArduSimTools {
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
 		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.gcsId = new AtomicIntegerArray(Param.numUAVs);
-		UAVParam.RCmapRoll = new AtomicIntegerArray(Param.numUAVs);
-		UAVParam.RCmapPitch = new AtomicIntegerArray(Param.numUAVs);
-		UAVParam.RCmapThrottle = new AtomicIntegerArray(Param.numUAVs);
-		UAVParam.RCmapYaw = new AtomicIntegerArray(Param.numUAVs);
-		UAVParam.RCminValue = new AtomicIntegerArray[Param.numUAVs];
-		UAVParam.RCtrimValue = new AtomicIntegerArray[Param.numUAVs];
-		UAVParam.RCmaxValue = new AtomicIntegerArray[Param.numUAVs];
-		UAVParam.flightModeMap = new AtomicIntegerArray[Param.numUAVs];
+		UAVParam.RCmapRoll = new int[Param.numUAVs];
+		UAVParam.RCmapPitch = new int[Param.numUAVs];
+		UAVParam.RCmapThrottle = new int[Param.numUAVs];
+		UAVParam.RCmapYaw = new int[Param.numUAVs];
+		UAVParam.RCminValue = new int[Param.numUAVs][8];
+		UAVParam.RCtrimValue = new int[Param.numUAVs][8];
+		UAVParam.RCmaxValue = new int[Param.numUAVs][8];
+		UAVParam.RCDZValue = new int[Param.numUAVs][8];
+		UAVParam.flightModeMap = new int[Param.numUAVs][6];
 		UAVParam.customModeToFlightModeMap = new int[Param.numUAVs][24];
 		
 		UAVParam.newFlightMode = new FlightMode[Param.numUAVs];
@@ -648,6 +649,7 @@ public class ArduSimTools {
 		UAVParam.newCurrentWaypoint = new int[Param.numUAVs];
 		UAVParam.newGeoMission = new Waypoint[Param.numUAVs][];
 		UAVParam.stabilizationThrottle = new int[Param.numUAVs];
+		UAVParam.throttleDZ = new int[Param.numUAVs];
 		UAVParam.newLocation = new float[Param.numUAVs][3];
 
 		UAVParam.missionUTMSimplified = new AtomicReferenceArray<List<WaypointSimplified>>(Param.numUAVs);
@@ -698,10 +700,6 @@ public class ArduSimTools {
 			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
 			UAVParam.lastUTMLocations[i] = new ConcurrentBoundedQueue<UTMCoordinates>(UTMCoordinates.class, UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
-			UAVParam.RCminValue[i] = new AtomicIntegerArray(8);
-			UAVParam.RCtrimValue[i] = new AtomicIntegerArray(8);
-			UAVParam.RCmaxValue[i] = new AtomicIntegerArray(8);
-			UAVParam.flightModeMap[i] = new AtomicIntegerArray(6);
 			for (int j = 0; j < UAVParam.customModeToFlightModeMap[i].length; j++) {
 				UAVParam.customModeToFlightModeMap[i][j] = -1;
 			}
