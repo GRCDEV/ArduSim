@@ -29,7 +29,8 @@ This dialog allows to introduce several simulation parameters:
 * Simulation parameters:
 
     * *ArduCopter path*. The arducopter executable file is auto-detected if found in the same folder as ArduSim when running from a *.jar* file, or the root folder of the project when running in Eclipse IDE. In any other case, you need to manually locate the file.
-    * *Speeds file*. The user must provide a *.csv* file with the maximum desired speed for the UAVs. One value per line and multicopter must be provided.
+    * *Speeds file*. The user must provide a *.csv* file with the maximum desired speed for the UAVs. One value per line/multicopter must be provided.
+    * *Starting altitude*. Ground altitude of all the simulated UAVs for simulations. On a real UAV, the starting altitude is provided by the GPS.
     * *Number of UAVs*. The user can select the number of multicopters to be simulated depending on the number of speed values in the previous file, the performance of the computer, and the properties of the protocol being developed.
 
 * Performance parameters:
@@ -39,6 +40,7 @@ This dialog allows to introduce several simulation parameters:
     * *Enable arducopter logging*. The firmware of the virtual flight controller can provide a binary log file that can be analyzed with tools like APM Planner 2.
     * *Restrict battery capacity*. By default, the battery capacity is almost infinite. The user can set a normal battery capacity to analyze the energy consumption produced by the protocol.
     * *Measure CPU usage*. If the behavior of the protocol is not the expected, or it includes complex calculus, it is possible that the CPU usage is too high to simulate a large amount of multicopters. Checking this option allows to log the CPU usage to a file for further analysis.
+    * *Enable background map*. if selected, ArduSim tries to download a background map to show below the UAVs. At this moment, this option is useless, as Google has changed the Google Static Maps API policy and you need a paid Key to download images. It is planned to implement a workaround with Bing in the future, and the possibility of using Google Static Maps API with a valid key provided in the INI file.
     * *Rendering quality*. Four rendering quality levels have been analyzed in a [journal article](https://doi.org/10.1016/j.simpat.2018.06.009) about ArduSim, showing that they can be categorized in two groups attending the impact on the system performance. The levels *Maximum performance* and *Text smoothed* have lower impact than *Text and lines smoothed* and *Maximum quality*.
 
 * General parameters:
@@ -75,12 +77,14 @@ If the developer chooses to implement a dialog to input protocol parameters, it 
 
 This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one mission per file, but in the later case the same file can contain several missions. Follows a list of general rules:
 
-* QGroundControl files: The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
-* QGroundControl files: The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
-* QGroundControl files: The following waypoints must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the mission.
-* QGroundControl files: The las waypoint can be of type waypoint, spline waypoint, land, or RTL. It the command is not of type land or RTL, the multicopter will remain flying over the last waypoint until the user takes control of it. Alternatively, the protocol implemented can force the UAV to land as in the protocol MBCAP, or it can also perform any other action just detecting when the UAV is close enough to the last waypoint.
-* Google Earth file: The user can add a land or RTL command at the end of the mission. Also, a hovering time over each waypoint can be set. If the hovering time is set to 0, the multicopter follows the normal behavior (cutting corners while passing through waypoints). This options are controlled with *MISSIONEND* and *WAYPOINTDELAY* parameters from *ardusim.ini* file, and can be modified through the GUI when running simulations.
-* Google Earth file: If a waypoint has an altitude lower than the specified in the file *ardusim.ini*, it is set to that default for security reasons (when you create a *.kml* in Google Earth, by default the altitude is 0. The default altitude is applied if you don't modify that file manually to set new altitude values).
+* QGroundControl files:
+    * The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
+    * The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
+    * The following waypoints must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the mission.
+    * The las waypoint can be of type waypoint, spline waypoint, land, or RTL. If the command is not of type land or RTL, the multicopter will remain flying over the last waypoint until the user takes control of it. Alternatively, the protocol implemented can force the UAV to land as in the protocol MBCAP, or it can also perform any other action just detecting when the UAV is close enough to the last waypoint.
+* Google Earth file:
+    * The user can add a land or RTL command at the end of the mission. Also, a hovering time over each waypoint can be set. If the hovering time is set to 0, the multicopter follows the normal behavior (cutting corners while passing through waypoints). This options are controlled with *MISSIONEND* and *WAYPOINTDELAY* parameters from *ardusim.ini* file, and can be modified through the GUI when running simulations.
+    * If a waypoint has an altitude lower than the specified in the file *ardusim.ini*, it is set to that default for security reasons (when you create a *.kml* in Google Earth, by default the altitude is 0. The default altitude is applied if you don't modify that file manually to set new altitude values).
 
 ### 1.3 Main window
 
@@ -88,7 +92,7 @@ The following picture shows the main window of ArduSim with ten UAVs performing 
 
 ![Main window](mainwindow.png)
 
-On the upper left corner of the window (1) we can find the application log. It shows messages representing the result of commands sent to the UAVs, the progress of the experiment, and any desired information using the function `GUI.log(String)`.
+On the upper left corner of the window (1) we can find the application log. It shows messages representing the result of commands sent to the UAVs, the progress of the experiment, and any desired information using functions `GUI.log(String)`, `GUI.log(int, String)`, etc.
 
 On the right (2), there are a few buttons that allow the user to control the experiment. The *Setup* button starts the actions included in the function `setupActionPerformed()` of the protocol implementation, as explained in section [Protocol development](development.md). On the other hand, the button *Start test* begins the experiment with the function `startExperimentActionPerformed()` of the implementation. The last button lets you to stop the experiment and exit ArduSim at any time, and the first one shows the following dialog, where up-to-date data from the multicopters is shown in real time: location, speed, flight mode, and specific information related to the protocol under test.
 
@@ -102,7 +106,7 @@ When all the virtual multicopters land, the experiment ends. Then, the following
 
 The provided data includes the time used by each multicopter during the experiment. This information is calculated considering that all the running multicopters start the flight sometime during the experiment.
 
-The results include detailed statistics of the virtualized communications among the virtual UAVs and the configuration of the experiments, which enables to repeat the same experiment again. The developer can also include information in the dialog with the corresponding functions of the protocol implementation, as explained in section [Protocol development](development.md).
+The results include detailed statistics of the virtualized communications among the virtual UAVs and the configuration of the experiments, which enables to repeat the same experiment again. The developer can also include information relative to the protocol in the protocol initial dialog, detailing the corresponding parameters of the protocol implementation, as explained in section [Protocol development](development.md).
 
 The user decides whether to store this information or not. In the former case, additional files are stored with many data about the experiment for further analysis. In the following list of files stored, *name* is the file name set by the user, and X is the UAV identifier.
 

@@ -1,8 +1,8 @@
 # ArduSim setup
 
-This Eclipse Oxygen project includes the ArduSim simulator implementation. Once the project is cloned locally, and the protocol is tested you can generate the .jar executable file and perform simulations outside Eclipse.
+This Eclipse Oxygen project includes the ArduSim simulator implementation, and a few protocol examples. Once the project is cloned locally, and the protocol is developed and tested, you can generate the .jar executable file to perform simulations outside Eclipse, or even deploy the protocol on real multicopters.
 
-ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) as an internal module, a program oriented to simulate a single drone, so it is also needed to install SITL, and to compile an executable multicopter from it. Once finished the compilation (see instructions below) just copy the executable multicopter next to the java file, and the simulator will automatically notice the multicopter file.
+ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) as an internal module, a program oriented to simulate a single drone. It is already included for Linux computers, but it is recommeded to install SITL in order to compile an executable multicopter optimized for your computer. Once finished the compilation (see instructions below) just copy the executable multicopter inside the root of the project, or next to the generated java file, and ArduSim will automatically notice the multicopter file.
 
 ## Table of contents
 
@@ -46,7 +46,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 ## 2 Eclipse IDE integration
 
-ArduSim and the included protocols have been developed with Eclipse Oxygen IDE. This section explains how to prepare the developing environment, once Eclipse is correctly installed.
+ArduSim and the included protocols have been developed with Eclipse IDE. This section explains how to prepare the developing environment, once Eclipse and Java JDK are correctly installed.
 
 ### 2.1 Clone the repository
 
@@ -60,13 +60,7 @@ Now copy the following URI in the configuration window and enter your user name 
 
     https://frafabco@bitbucket.org/frafabco/ardusim.git
 
-Finally, select the master branch and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
-
-### 2.2 Import the Eclipse project
-
-The project must be imported in Eclipse to be able to edit its content. First, open the resources perspective: *Window --> Perspective --> Open Perspective --> Other... --> Resource*.
-
-Now click on *File --> Import... --> Git --> Projects from Git --> Existing local repository*. Select the downloaded repository, check the option *Import existing Eclipse projects*, and leave the default options. The project should be available in the *Project Explorer* tab.
+Then, select the master branch, "Import all existing Eclipse projects after clone finishes", and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
 
 Finally, change to the default perspective: *Window --> Perspective -->Open Perspective --> Java*.
 
@@ -74,7 +68,7 @@ We recommend to show packages in hierarchical order in *Package explorer* tab. O
 
 *Git Staging* and *Git Repositories* tabs can also be shown to check periodically if a new version of ArduSim has been released.
 
-### 2.3 Copy necessary files
+### 2.2 Copy necessary files
 
 ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.param*. These files must be put in a place easy to find in order to execute simulations when running ArduSim. If you put them in the root of the Eclipse project (by default: */home/user_name/git/ardusim*), ArduSim will automatically find them when running from Eclipse IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder.
 

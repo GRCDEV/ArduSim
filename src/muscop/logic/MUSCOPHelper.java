@@ -311,39 +311,5 @@ public class MUSCOPHelper extends ProtocolHelper {
 		}
 		return b;
 	}
-	
-	/**
-	 * Get minimum approaching altitude for a target relative altitude.
-	 * @param relAltitude Relative altitude (m) over home location.
-	 * @return The minimum altitude where a UAV could stop for a target altitude, when the moveUAV command is used. The rules for that command are applied.
-	 */
-	public static double getMinAltitude(double relAltitude) {
-		double res;
-		if (relAltitude <= 20) {
-			res = relAltitude - 1;
-		} else if (relAltitude <= 50) {
-			res = relAltitude * 0.95;
-		} else {
-			res = relAltitude - 2.5;
-		}
-		return res;
-	}
-	
-	/**
-	 * Get maximum approaching altitude for a target relative altitude.
-	 * @param relAltitude Relative altitude (m) over home location.
-	 * @return The maximum altitude where a UAV could stop for a target altitude, when the moveUAV command is used. The rules for that command are applied.
-	 */
-	public static double getMaxAltitude(double relAltitude) {
-		double res;
-		if (relAltitude <= 20) {
-			res = relAltitude + 1;
-		} else if (relAltitude <= 50) {
-			res = relAltitude * 1.05;
-		} else {
-			res = relAltitude + 2.5;
-		}
-		return res;
-	}
 
 }

@@ -299,7 +299,7 @@ public class Copter {
 		
 		double minAltitude;
 		for (int i = 0; i < Param.numUAVs; i++) {
-			minAltitude = Copter.getMinAltitude(altitudes[i]);
+			minAltitude = Copter.getMinTargetAltitude(altitudes[i]);
 			while (UAVParam.uavCurrentData[i].getZRelative() < minAltitude) {
 				GUI.logVerbose(SimParam.prefix[i] + Text.ALTITUDE_TEXT
 						+ " = " + String.format("%.2f", UAVParam.uavCurrentData[i].getZ())
@@ -339,7 +339,7 @@ public class Copter {
 			return false;
 		}
 
-		double minAltitude = Copter.getMinAltitude(altitude);
+		double minAltitude = Copter.getMinTargetAltitude(altitude);
 		while (UAVParam.uavCurrentData[numUAV].getZRelative() < minAltitude) {
 			GUI.logVerbose(SimParam.prefix[numUAV] + Text.ALTITUDE_TEXT
 					+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
@@ -613,8 +613,8 @@ public class Copter {
 		}
 		
 		UTMCoordinates utm = Tools.geoToUTM(geo.latitude, geo.longitude);
-		double min = Math.min(Copter.getMinAltitude(relAltitude), relAltitude - altThreshold);
-		double max = Math.max(Copter.getMaxAltitude(relAltitude), relAltitude + altThreshold);
+		double min = Math.min(Copter.getMinTargetAltitude(relAltitude), relAltitude - altThreshold);
+		double max = Math.max(Copter.getMaxTargetAltitude(relAltitude), relAltitude + altThreshold);
 		double altitude;
 		// Once the command is issued, we have to wait until the UAV approaches to destination.
 		// No timeout is defined to reach the destination, as it would depend on speed and distance
@@ -634,11 +634,11 @@ public class Copter {
 	}
 	
 	/**
-	 * Get minimum approaching altitude for a target relative altitude.
+	 * When moving towards a target location with a <i>moveUAV</i> function, it gets the minimum relative altitude to assert that the UAV is close enough to that location.
 	 * @param relAltitude Relative altitude (m) over home location.
 	 * @return The minimum altitude where a UAV could stop for a target altitude, when the moveUAV command is used. The rules for that command are applied.
 	 */
-	private static double getMinAltitude(double relAltitude) {
+	public static double getMinTargetAltitude(double relAltitude) {
 		double res;
 		if (relAltitude <= 20) {
 			res = relAltitude - 1;
@@ -651,11 +651,11 @@ public class Copter {
 	}
 	
 	/**
-	 * Get maximum approaching altitude for a target relative altitude.
+	 * When moving towards a target location with a <i>moveUAV</i> function, it gets the maximum relative altitude to assert that the UAV is close enough to that location.
 	 * @param relAltitude Relative altitude (m) over home location.
 	 * @return The maximum altitude where a UAV could stop for a target altitude, when the moveUAV command is used. The rules for that command are applied.
 	 */
-	private static double getMaxAltitude(double relAltitude) {
+	public static double getMaxTargetAltitude(double relAltitude) {
 		double res;
 		if (relAltitude <= 20) {
 			res = relAltitude + 1;

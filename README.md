@@ -1,6 +1,6 @@
 # ArduSim
 
-ArduSim is a novel real-time flight simulator, oriented to the development of communications and flight coordination protocols among multicopters, performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements, and the TCP and UDP ports needed by SITL are free. Among many information, ArduSim generates the path followed by each UAV in OMNeT++ and NS2 format to provide mobility traces, performing a simulation or even when running ArduSim in a real multicopter.
+ArduSim is a novel real-time flight simulator, oriented to the development of communications and flight coordination protocols among multicopters, performing planned missions or forming a swarm. It is able to simulate up to 256 UAVs (aka. drones) simultaneously, if the hardware meets the recommended requirements, and the TCP and UDP ports needed by SITL are available. Among many information, ArduSim generates the path followed by each UAV in OMNeT++ and NS2 format to provide mobility traces, performing a simulation or even when running ArduSim in a real multicopter.
 
 The Communication with multicopters uses the MAVLink protocol, a *de facto* standard for current open flight controllers, which makes the deployment of a new protocol on real UAVs a trivial task.
 
@@ -11,6 +11,8 @@ Ardusim was developed by [Francisco Fabra](mailto:frafabco@cam.upv.es), Phd stud
 As an example of the capabilities of ArduSim, the next picture shows 72 multicopters following elliptical missions like electrons of an atom. The background image was built with images downloaded from Google Static Maps API, but Google stopped providing them as a free service. At this moment, ArduSim shows a blank background, but we plan to support Bing images, and to give the user the possibility to use a paid key for the current implementation based on Google Static Maps API.
 
 ![Ejemplo ArduSim](help/atomo.png)
+
+We highly recommend to read the full documentation at least once before starting a new protocol.
 
 ## Table of contents
 

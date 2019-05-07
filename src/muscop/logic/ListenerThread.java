@@ -403,7 +403,7 @@ public class ListenerThread extends Thread {
 		GUI.log(numUAV, MUSCOPText.TAKING_OFF);
 		GUI.updateProtocolState(numUAV, MUSCOPText.TAKING_OFF);
 		double altitude = MUSCOPParam.takeoffAltitude.get(numUAV);
-		double minAltitude = MUSCOPHelper.getMinAltitude(altitude);
+		double minAltitude = Copter.getMinTargetAltitude(altitude);
 		if (!Copter.takeOffNonBlocking(numUAV, altitude)) {
 			GUI.exit(MUSCOPText.TAKE_OFF_ERROR + " " + selfId);
 		}
@@ -452,8 +452,8 @@ public class ListenerThread extends Thread {
 		GeoCoordinates destinationGeo = missionGeo[0];
 		Point3D destinationUTM = missionUTM[0];
 		double relAltitude = missionUTM[0].z;
-		double min = MUSCOPHelper.getMinAltitude(relAltitude);
-		double max = MUSCOPHelper.getMaxAltitude(relAltitude);
+		double min = Copter.getMinTargetAltitude(relAltitude);
+		double max = Copter.getMaxTargetAltitude(relAltitude);
 		if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
 			GUI.exit(MUSCOPText.MOVE_ERROR_2 + " " + selfId);
 		}
@@ -639,8 +639,8 @@ public class ListenerThread extends Thread {
 				destinationGeo = missionGeo[currentWP];
 				destinationUTM = missionUTM[currentWP];
 				relAltitude = missionUTM[currentWP].z;
-				min = MUSCOPHelper.getMinAltitude(relAltitude);
-				max = MUSCOPHelper.getMaxAltitude(relAltitude);
+				min = Copter.getMinTargetAltitude(relAltitude);
+				max = Copter.getMaxTargetAltitude(relAltitude);
 				if (!Copter.moveUAVNonBlocking(numUAV, destinationGeo, (float)relAltitude)) {
 					GUI.exit(MUSCOPText.MOVE_ERROR_1 + " " + selfId);
 				}
@@ -677,8 +677,8 @@ public class ListenerThread extends Thread {
 			UTMCoordinates landingLocation = flyingFormation.getLocation(position, centerUAVFinalLocation, formationHeading);
 			GeoCoordinates target = Tools.UTMToGeo(landingLocation);
 			relAltitude = (float)Copter.getZRelative(numUAV);
-			min = MUSCOPHelper.getMinAltitude(relAltitude);
-			max = MUSCOPHelper.getMaxAltitude(relAltitude);
+			min = Copter.getMinTargetAltitude(relAltitude);
+			max = Copter.getMaxTargetAltitude(relAltitude);
 			if (!Copter.moveUAVNonBlocking(numUAV, target, (float)relAltitude)) {
 				GUI.exit(MUSCOPText.MOVE_ERROR_2 + " " + selfId);
 			}

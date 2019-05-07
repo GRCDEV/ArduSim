@@ -30,15 +30,15 @@ To simulate a great number of UAVs simultaneously, we have used the SITL applica
 
 ![architectureVirtual](architectureVirtual.png)
 
-The proposed simulation platform relies on a multiagent simulation architecture that implements a high-level control logic above SITL itself.
+ArduSim relies on a multiagent simulation architecture that implements a high-level control logic above SITL itself.
 
 ArduSim includes the simulation of packet broadcasting between UAVs (*Simulated broadcast*), and the detection of possible collisions (*UAV Collision detector*).
 
-Each virtual multicopter is composed of an agent in charge of controlling the UAV behaviour, and the different threads required for the protocol being tested. The communication between UAVs requires a minimum of two threads, one for sending data packets (*Talker*), and another one for their reception (*Listener*). Both communication threads are automatically blocked when the experiment finishes, it is, when the multicopters land. In any case, we recommend to keep the thread *Listener* listening for data packets continuously, as up-to-date packets could discarded because the reception buffer fills up, and older packets are used.
+Each virtual multicopter is composed of an agent in charge of controlling the UAV behaviour, and the different threads required for the protocol being tested. The communication between UAVs requires a minimum of two threads, one for sending data packets (*Talker*), and another one for their reception (*Listener*). Both communication threads are automatically blocked when the experiment finishes, it is, when the multicopters land. In any case, we recommend to keep the thread *Listener* listening for data packets continuously, as up-to-date packets could be discarded because the reception buffer fills up, and older packets would be used.
 
 An ArduSim agent includes a SITL instance, and a thread (*Controller*) in charge of sending commands to the multicopter, and of receiving the information that it generates.
 
-The protocol under development can run more threads to control the behavior of the multicopter, like *Protocol logic*, but it is highly recommended to control the multicopter from the thread *Listener* if the multicopter behavior depends on the information received from other multicopters, to avoid any lag between the moment it receives information and the moment when the control action is applied.
+The protocol under development can run more threads to control the behavior of the multicopter, like *Protocol logic*, but it is highly recommended to control the multicopter from the thread *Listener* if the multicopter behavior depends on the information received from other multicopters, just to avoid any lag between the moment it receives information and the moment when the control action is applied.
 
 ### 1.2 UAV agent (multicopter)
 
@@ -60,17 +60,18 @@ Two new threads (*Test Listener* and *Test Talker*) communicate with the PC Comp
 
 The Eclipse project in organized in packages. We suggest to enable the hierarchical presentation of packages in Eclipse to easily understand the project structure, which includes the following high level packages:
 
-* **main**. This package includes the main method that runs the application (*Main.java*) as well as general parameters (*Param.java*) and text shown in GUI or messages (*Text.java*).
+* **main**. This package includes the main method that runs the application (*Main.java*) as well as general parameters (*Param.java*) and text shown in GUI or messages (*Text.java*) among other Classes.
 * **sim**. This package includes the parameters, logic and GUI related to simulation but not to the execution on a real multicopter.
+* **files**. This package includes resources used when ArduSim is used as a Simulator.
 * **pccompanion**. This package includes the parameters and GUI needed by the PC Companion, as well as the threads needed to communicate with the real multicopters.
 * **uavController**. This package includes the parameters related to the real or virtual multicopter, the thread needed to control it, and the threads needed to communicate with the PC Companion.
-* **api**. This is the most important package for the developer and it includes the following elements:
-    * *pojo*. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in UTM, geographic or screen frame...
+* **api**. This is the most important package for a developer, and it includes the following elements:
+    * *pojo*. Collection of objects already used in ArduSim and that could be useful for any protocol; FlightMode of the multicopter, coordinates in several coordinate systems, etc.
     * *WaypointReachedListener.java* interface. Any protocol implementing this class can perform actions when the multicopter reaches a waypoint of the current mission (example available in MBCAP protocol, class BeaconingThread).
     * *Copter.java*. Includes methods to gather flight information from the multicopter or perform actions over it, like changing the flight mode, as explained in detail in "[5.2 UAV control](#markdown-header-52-uav-control)" section.
     * *GUI.java*. Includes methods to update the GUI and/or console during the protocol execution, as explained in detail in "[5.3 GUI integration](#markdown-header-53-gui-integration)" section.
     * *Tools.java*. Includes methods to coordinate the execution of the protocol with the simulator, transform coordinates between different frames, and load missions among other utilities, as explained in detail in "[5.4 Available utilities](#markdown-header-54-available-utilities)" section.
-    * *files*. This package includes resources used when ArduSim is used as a Simulator.
+    * *ProtocolHelper.java*. Class that must be extended to implement a new protocol, as explained later on.
 * **... (protocols packages)**
 
 Each new protocol must be selfcontained in an independent package. This way, the protocol code will be fully independent from ArduSim code, making it easy to update ArduSim to a new version, and easyly understandable for other programmers.
@@ -79,20 +80,20 @@ Several protocols have been already included in ArduSim:
 
 * **None**. Completed. Mission based. This protocol simply makes the multicopters to follow a planned mission.
 * **MBCAP**. Completed. Mission based. It avoids collisions among multicopters that are following a planned mission, as explained in the paper [MBCAP: Mission Based Collision Avoidance Protocol for UAVs](http://dx.doi.org/10.1109/AINA.2018.00090), presented in the "Advanced Information Networking and Applications (AINA 2018)" conference.
-* **MUSCOP**. Almost completed. Swarm based. It makes a swarm to follow a mission stored in one of them while keeping the formation stable. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
+* **MUSCOP**. Completed. Swarm based. It makes a swarm to follow a single mission stored in one of them, while keeping the formation stable. Furthermore, the takeoff of all the multicopters is safe until forming up in flight.
 * **Chemotaxis**. Almost completed. Single multicopter. It enables a multicopter to dynamically move around an area looking for a hotspot using a sensor (e.g. heat on wildfires, pollution peaks,...).
 * **Follow Me**. In progress. Swarm based. A swarm follows a multicopter that is manually controlled by a pilot.
 * **Fishing**. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.
 
-Please, feel free to reuse code from this protocols while developing a new one. "None" is the better starting point developing a protocol where all the multicopters must follow a planned mission, while "Swarm protocol" is more adecuate when developing a protocol for a swarm.
+Please, feel free to reuse code from this protocols while developing a new one. "None" is the better starting point for developing a protocol where all the multicopters must follow a planned mission, while "MUSCOP" is more adecuate when developing a protocol for a swarm.
 
 ## 3 Application workflow
 
 As explained in section "[1 ArduSim architecture](#markdown-header-1-ardusim-architecture)", ArduSim can be run performing three different roles. The next diagram shows the timeline of ArduSim execution since it is started until if finishes:
 
-![workflow](ArduSimworkflow.svg)
+Rectangular boxes represent the functions included in section "[4 Protocol implementation](#markdown-header-4-protocol-implementation)" that must be implemented by the developer, while comments are automatic processes performed by ArduSim. These functions are included in the ProtocolHelper.java class that the developer must extend in order to implement a new protocol.
 
-Rectangular boxes represent the functions included in section "[4 Protocol implementation](#markdown-header-4-protocol-implementation)" that must be implemented by the developer, while comments are automatic processes performed by ArduSim.
+![workflow](ArduSimworkflow.svg)
 
 ArduSim starts loading the implemented protocols and parsing the command line to know which role will it run.
 
@@ -114,7 +115,7 @@ Once the experiment is finished, the methods `getExperimentResults()` and `getEx
 
 ### 3.3 Simulator
 
-The most important difference between "*UAV agent*" and "*Simulator*" roles implementations is the number of multicopters that run in the same machine, one in the former and many in the later. It is highly suggested to store data in array variables with the length of the number of UAVs that run in the machine, so in the real UAV the array length will be 1, and the code will be valid for both roles (see section "[5.5 Implementation recomendations](#markdown-header-55-implementation-recomendations)"). Good implementation examples can be found in "MBCAP" and "Swarm protocol" protocols. A function is provided to know which ID (multicopter) corresponds to a specific position in the array, as detailed in section "[5.4 Available utilities](#markdown-header-54-available-utilities)". This function will provide the ID of the multicopter when running on a real UAV, as the array has a length of 1. On the other hand, no function is provided to get a UAV location in the array given the ID, as it will always be 0 in the real UAV, and in simulation the ID is equivalent to the position in the array.
+The most important difference between "*UAV agent*" and "*Simulator*" roles implementations is the number of multicopters that run in the same machine, one in the former and many in the later. It is highly suggested to store data in array variables with the length of the number of UAVs that run in the machine, so in the real UAV the array length will be 1, and the code will be valid for both roles (see section "[5.5 Implementation recomendations](#markdown-header-55-implementation-recomendations)"). Good implementation examples can be found in "MBCAP" and "MUSCOP" protocols. A function is provided to know which ID (multicopter) corresponds to a specific position in the array, as detailed in section "[5.4 Available utilities](#markdown-header-54-available-utilities)". This function will provide the ID of the multicopter when running on a real UAV, as the array has a length of 1. On the other hand, no function is provided to get a UAV location in the array given the ID, as it will always be 0 in the real UAV, and in simulation the ID is equivalent to the position in the array.
 
 When ArduSim is run, it also checks if the computer meets some requirements and opens a general configuration dialog. There, the user can set many simulation parameters, as well as the maximum flight speed for each virtual multicopter. Then, when the configuration is set, the function "*openConfigurationDialog()*" may launch a dialog to introduce values for parameters of the protocol under development. Next, planned missions are loaded for the multicopters specified by the protocol.
 
@@ -128,23 +129,23 @@ There are another two differences compared to a "*UAV agent*". First, a set of p
 
 ## 4 Protocol implementation
 
-To start a new protocol, the developer creates a new package (*ProtocolName*) to contain the corresponding Java classes. Then, the first step consists in create a new Class that "extends" "*api.ProtocolHelper.java*" Class. It forces the developer to implement the functions already mentioned, to integrate the protocol in ArduSim. An extended explanation of these functions follows. All functions must be implemented if not indicated otherwise.
+To start a new protocol, the developer creates a new package (*ProtocolName*) to contain the corresponding Java classes. Then, the first step consists in create a new Class that extends "*api.ProtocolHelper.java*" Class. It forces the developer to implement the functions already mentioned, to integrate the protocol in ArduSim. An extended explanation of these functions follows. All functions must be implemented if not indicated otherwise.
 
-* `void setProtocol()`. It assigns a String name to the protocol to enable the implementation, using the variable `this.protocol`. This way, the protocol is enabled and can be used in ArduSim.
+* `void setProtocol()`. It assigns a String name to the protocol to enable the implementation, using the variable `this.protocolString`. This way, the protocol is enabled and can be used in ArduSim.
 * `void openConfigurationDialog()`. It opens a dialog implemented by the protocol developer, and that allows the user to input parameters related to the protocol. When the dialog is accepted, please remember to issue the command `api.Tools.setProtocolConfigured(true)` to force the simulator to open the main window. It the developer want to skip a dialog, then it is enough to call the forementioned function.
 * `void openPCCompanionDialog(JFrame)`. Optional. This method enables the developer to implement a dialog to analyze the behavior of the protocol on the PC Companion, when the protocol is deployed in real multicopters. If you decide to use this method, an additional thread must be implemented to update the information shown in the dialog, based on the data packets that are being broadcasted from the real UAVs. The thread must be started once the dialog is completely built.
-* `boolean loadMission()`. On a real multicopter it must return true if and only if a planned mission must be followed by the UAV. The mission file must be stored beside the ArduSim *.jar* file.
-* `void initializeDataStructures()`. The protocol being developed will need several variables shared among threads, that should be declared following the package structure, as shown below. This method allows to initialize the variables once the number of UAVs running in the same machine is known (more than one if a simulation is performed).
+* `boolean loadMission()`. On used on a real multicopter. It must return true if and only if a planned mission must be followed by the UAV. The mission file must be stored beside the ArduSim *.jar* file.
+* `void initializeDataStructures()`. The protocol that is being developed will need several variables shared among threads, that should be declared following the package structure, as shown below. This method allows to initialize the variables once the number of UAVs running in the same machine is known (more than one if a simulation is performed).
 * `void loadResources()`. Optional. Used to load from file elements that the protocol will draw in screen.
-* `Pair<GeoCoordinates, Double>[] setStartingLocation()`. Used to set the location where the multicopters appear in simulation, including latitude, longitude and heading. By default, they appear at 0 absolute altitude.
+* `Pair<GeoCoordinates, Double>[] setStartingLocation()`. Used to set the location where the multicopters appear in simulation, including latitude, longitude and heading.
 * `boolean sendInitialConfiguration(int)`. It reads from the multicopter any additional configuration values needed by the protocol, and sends to it any command needed to configure it.
 * `void startThreads()`. This method is used to start the threads used by the protocol. Then, ArduSim waits the user to press the setup button. In general, the threads must use methods included in *api.Tools.java* Class to wait until the setup or start button is pressed before performing any action (see the beginning of section "[5.4 Available utilities](#markdown-header-54-available-utilities)").
-* `void setupActionPerformed()`. This method must wait until any action required for the setup step is finished (blocking method). It is more addecuate to simply wait until the protocol threads finish the action using a shared concurrent variable than implementing here the actions, as the may require the use of more than one thread.
-* `void startExperimentActionPeformed()`. It is useful to perform the takeoff, or to start a mission from the ground. If the protocol needs to perform additional actions over the UAV, it is recommended to do it in the protocol threads to free the thread and allow it to check periodically if the experiment finishes. In any case, you can always perform the actions directly in the protocol threads. If you use this method to perform the take off, the protocol threads should wait until a shared variable is changed when the takeoff process finishes. Nevertheless, while following a mission the control over the multicopter is released immediately after the mission start, so the protocol must have its own logic to decide when to take control over the multicopter.
+* `void setupActionPerformed()`. This method must wait until any action required for the setup step is finished (blocking method). Better than implementing here any action, it is more addecuate to simply wait until the protocol threads finish the action using a shared concurrent variable, as those actions may require the use of more than one thread.
+* `void startExperimentActionPeformed()`. It is useful to perform the takeoff, or to start a mission from the ground. If the protocol needs to perform additional actions over the UAV, it is recommended to do it in the protocol threads to free the thread and allow it to check periodically if the experiment finishes. In any case, you can always perform the actions directly in the protocol threads. If you use this method to perform the take off, the protocol threads should wait until a shared variable is changed when the takeoff process finishes. Nevertheless, while following a mission, the control over the multicopter is lost immediately after the mission start, so the protocol must have its own logic to decide when to take control over the multicopter.
 * `void forceExperimentEnd()`. Optional. An experiment is considered to be finished when all UAVs land and stop engines. Once the previous method finishes, this one is issued periodically and allows to land the UAVs to finish the experiment if a condition is met. For example, when the UAV is following a planned mission and it is close enough to the last waypoint (`api.Copter.landIfMissionEnded(int)`). The protocol may issue other actions to land the UAV from other threads. In that case, this method could be left unimplemented.
 * `String getExperimentResults()`. Optional. Allows to add data related to the protocol to the information shown in the results dialog.
 * `String getExperimentConfiguration()`.Optional. The developer has the option to show the value of the parameters used in the protocol in the results dialog, so they could be stored to be able to reproduce the same experiment again.
-* `void logData(String, String)`. Optional. Stores information gathered by the protocol during the experiment.
+* `void logData(String, String)`. Optional. Allows to store information gathered by the protocol during the experiment.
 * `String setInitialState()`. Optional. ArduSim can show a String representing the state of the protocol for each UAV in the "*progress dialog*". This method sets the initial value or initial state of the protocol, when the multicopter is ready to fly.
 * `void rescaleDataStructures()`. Optional. Used when additional elements are drawn in screen by the protocol. It rescales data structures used for drawing when the drawing scale changes.
 * `void rescaleShownResources()`.Optional. Used when additional elements are drawn in screen by the protocol. It rescales the resources (images) used for drawing when the drawing scale changes.
@@ -152,13 +153,13 @@ To start a new protocol, the developer creates a new package (*ProtocolName*) to
 
 The recommended package structure for the protocol follows:
 
-* **protocolName.gui**. This package should contain graphical elements, such as the dialog used to input values for the protocol parameters, or the dialog used in the PC Companion when deploying the protocol in real multicopters. The later is optional.
+* **protocolName.gui**. This package should contain graphical elements, such as the dialog used to input values for the protocol parameters, or the dialog used in the PC Companion when deploying the protocol in real multicopters. The former is recommended, and the later is completely optional.
 * **protocolName.logic**. It should contain classes related to the protocolo logic, for example:
     * *ProtocolNameHelper.java*. The protocol implementation already detailed.
     * *ProtocolNameParam.java*. Declaration of variables needed by the protocol. Please, see other protocols as example.
     * *ProtocolNameText.java*. Texts used in GUI or messages for the protocol.
     * *ProtocolNamePCCompanionThread.java*. Thread that can be implemented to update data in the dialog used by the PC Companion, if implemented.
-    * *ProtocolNameOtherThreads.java*. Threads needed by the protocol. If more than one multicopter is needed and they have to communicate among them, then at least one thread to talk and another to listen to other UAVs must be implemented. Remember that these threads are automatically blocked once the experiment finishes.
+    * *ProtocolNameOtherThreads.java*. Threads needed by the protocol. If more than one multicopter is needed and they have to communicate among them, then at least one thread to talk and another one to listen to other UAVs must be implemented. Remember that the communication threads are automatically blocked once the experiment finishes.
 * **protocolName.pojo**. Should contain classes to define objects useful for classes implemented in the previous packages.
 
 ## 5 Implementation details
@@ -167,7 +168,7 @@ This sections includes several details about the way ArduSim implements relevant
 
 ### 5.1 UAV-to-UAV Communications
 
-Real multicopters use WiFi to broadcast UDP messages among them. On the other hand, broadcast is simulated among virtual UAVs when ArduSim is run as a simulator. In order to make the same code valid for both roles, an abstraction layer has been implemented over communications. Three functions have been implemented that help the developer to ignore communication details:
+Real multicopters are planned to use WiFi to broadcast UDP messages among them. On the other hand, broadcast transmission is simulated among virtual UAVs when ArduSim is run as a simulator. In order to make the same code valid for both roles, an abstraction layer has been implemented over communications. Three functions have been implemented that help the developer to ignore communication details:
 
 * `void api.Copter.sendBroadcastMessage(int, byte[])`. A multicopter sends a broadcast message to other UAVs encoded in a byte array. Please, remember that broadcast messages may also be received by the sender, so they must be explicitly ignored in the sender *Listener* thread. Moreover, avoid sending messages continuously. First, it would saturate the media in real multicopters, and second, in simulation it would require a core per thread sending messages, as communications are simulated by active code, without passive waiting.
 * `byte[] api.Copter.receiveMessage(int)`. A multicopter receives a message sent from another UAV. The method blocks until a message is received, as in a real socket. We recommend to listen for packets continuously. Otherwise, you would loose data updates, keeping in buffer old messages. Please, use only one thread by multicopter for listening for data packets with this or the later functions. In a real multicopter, it is possible to listen to a port from two sockets, but then you would be unable to control which thread receives each message.
@@ -177,7 +178,7 @@ The last two functions can be used only by one thread on each multicopter, as in
 
 ### 5.2 UAV control
 
-The Class *api.Copter.java* includes several functions to send commands to the multicopter and to retrieve information from it. Most commands return a boolean meaning whether the command was successfully completed or not, which allows the developer to process errors at a higher level. An integer value represents the position of the multicopter the command is applied to in the array of UAVs running in the same machine (one in a real UAV, and many in simulation).
+The *api.Copter.java* Class includes several functions to send commands to the multicopter and to retrieve information from it. Most commands return a boolean meaning whether the command was successfully completed or not, which allows the developer to process errors at a higher level. An integer value represents the position of the multicopter the command is applied to in the array of UAVs running in the same machine (one in a real UAV, and many in simulation).
 
 Simple command functions:
 
@@ -188,6 +189,7 @@ Simple command functions:
 * `boolean guidedTakeOff(int, double)`. It takes off to the target relative altitude. The multicopter must be in GUIDED flight mode and armed.
 * `boolean setHalfThrottle(int)`. To start a mission, the throttle value must be moved from the minimum value (default value when no remote control is present) to a higher value, once the engines are armed and the flight mode is set to AUTO. This method rises the throttle value overriding the corresponding channel of the remote control. Moreover, it sets yaw, pitch and roll to their trim (middle) value to keep the UAV static in the horizontal plane. Channel override is enabled by default and cannot be enabled again once used the function `returnRCControl(int)`.
 * `void channelsOverride(int, int, int, int, int)`. It allows to simulate the joysticks of the remote control, providing values for yaw, pitch, roll and throttle. Commands must be issued at least once a second in a loop or the control could be returned to the real remote (guaranteed crash if no remote control is present). It is also recommended to avoid sending this message with a period lower than 0.4 seconds or some commands could be ignored by the flight controller. Channel override is enabled by default and cannot be enabled again once used the function `returnRCControl(int)`.
+* `void channelsOverride(int, double, double, double, double)`. Similar to the previous function, but the values for the attitude of the multicopter range from -1 to 1 for easier control.
 * `boolean returnRCControl(int)`. It allows to release the control of the flight to the remote control, canceling the channels overriding. It is used by the PC Companion and may be used by any protocol, but be aware, it can only be used once and a pilot must be ready and with the remote control turned on or the multicopter would crash!
 * `boolean setSpeed(int, double)`. It modifies the planned flight speed, it is, the maximum flight speed for the multicopter. In a mission, it is the constant speed it will follow through a straight line, and in GUIDED flight mode it is the maximum speed adopted by the flight controller while executing commands.
 * `boolean moveUAVNonBlocking(int, GeoCoordinates, float)`. It send a command to go to a specific location in GUIDED flight mode.
@@ -198,7 +200,7 @@ Simple command functions:
 * `boolean retrieveMission(int)`. Recovers the mission stored in the flight controller and makes it available with the function `api.Tools.getUAVMission(int)`. It also updates the simplified mission shown on screen, also available with the function `api.Tools.getUAVMissionSimplified(int)`.
 * `boolean setCurrentWaypoint(int, int)`. It changes the current waypoint in the mission the UAV has to follow.
 
-Complex command functions. These functions have been built combining functions from the previous list to perform more complex tasks. To use this functions is preferable than using simple command functions when they are addequate to the programmer purpose.
+Complex command functions. These functions have been built combining functions from the previous list to perform more complex tasks. It is preferable to use this functions than  the simple command functions, when they are addequate to the programmer purpose.
 
 * `boolean startMissionFromGround(int)`. It takes off and starts the planned mission stored in the flight controller. The multicopter must be on the ground and in an armable flight mode. On a real UAV, the hardware switch for safety arm must be pressed before, if available.
 * `boolean startMissionsFromGround()`. It takes off at the same time all the UAVs running in the same machine and starts the planned missions stored in the flight controllers. The multicopters must be on the ground and in an armable flight mode. On real UAVs, the hardware switch for safety arm must be pressed before, if available.
@@ -250,7 +252,7 @@ The next list of functions allow the developer to update the GUI, and even close
 
 Mission loading. The user can load missions from several QGroundControl files or from a single Google Earth *.kml* file. In the second case, it ends when the multicopter reaches the last waypoint, and it remains flying over it. In this case, the user can add an extra waypoint to the end of the mission to make the UAV land or return to the launch location (RTL). In a real UAV, this can be achieved by means of a parameter in the *arducopter.ini* file, and in simulation the user is prompted to select the option.
 
-In a real multicopter, the mission is automatically loaded if the function `loadMission` of the protocol implementation returns true, and in simulation the developer can use the following functions to force the user to load missions (see MBCAP, None or Scan protocols as utilization reference):
+In a real multicopter, the mission is automatically loaded if the function `loadMission` of the protocol implementation returns true, and in simulation the developer can use the following functions to force the user to load missions (see MBCAP, None or MUSCOP as utilization reference):
 
 * `Pair<String, List<Waypoint>[]> loadMissions()`. This method opens a dialog to select a *.kml* file or several *.waypoints* files, and returns the missions loaded, and the path of the *.kml* file or the folder where the *.waypoints* files were located. After this function, the method `Tools.setLoadedMissionsFromFile(List<Waypoint>[])` must be called to provide to ArduSim the missions loaded. The array provided must have at least the same length as the number of UAVs running in the current machine (check `Tools.getNumUAVs()`).
 * `Pair<String, List<Waypoint>[]> loadKMLMissions()`. In this case, the behavior is the same as the previous version, but only a single *.kml* file can be selected.
@@ -351,7 +353,7 @@ Now, we include several functions to retrieve information, and to store specific
 * `void storeFile( File, String)`. It stores a *String* in a *File*.
 * `boolean isVerboseStorageEnabled()`. This function may be used to decide if some information must be stored in a *File*.
 
-Finally, ArduSim provides tools to form the swarm formation. The layout can be built from scratch, but several flying formations have been included to make easier to develop a new protol. The package *api.pojo.formations* includes a general class *FlightFormation*, and several formation implementations that can be used in any protocol, like shown in *Scan Protocol*. Follows a list of implemented formations:
+Finally, ArduSim provides tools to build the swarm formation. The layout can be built from scratch, but several flying formations have been included to make easier to develop a new protol. The package *api.pojo.formations* includes a general class *FlightFormation*, and several formation implementations that can be used in any protocol, like shown in *MUSCOP*. Follows a list of implemented formations:
 
 * *Linear*. The UAVs are ordered in a straight line perpendicular to a specific heading, and numbered from left to right.
 * *Regular matrix*. The UAVs are ordered in a square matrix, and numbered from left to right, and from bottom to up.
@@ -372,7 +374,7 @@ In all cases, the center multicopter is the UAV closest to the rest of UAVs (cen
 * `double getLandingFormationDistance()`. This function provides the minimum distance between cotiguous UAVs while landing.
 * `void setLandingFormationDistance(double)`. It sets the minimum distance between contiguous UAVs while landing.
 
-You can use a swarm formation for the ground UAVs layout or not (it's not mandatory, you can set their starting location manually). As examples, the protocol MBCAP sets the initial location of the UAVs in the first point of the loaded mission, while the Scan Protocol uses the previous flight formations.
+You can use a swarm formation for the ground UAVs layout or not (it's not mandatory, you can set their starting location manually). As examples, the protocol MBCAP sets the initial location of the UAVs in the first point of the loaded mission, while MUSCOP uses the previous flight formations.
 
 The class *api.pojo.formations.FlightFormation* also provides the following methods to define the layout of the swarm:
 
@@ -395,4 +397,4 @@ Any function used to get information from a real or virtual multicopter must be 
 
 It is highly recommended to initialize the variables used by the protocol in the method `initializeDataStructures()` of the implementation with the same approach, with arrays of length `api.Tools.getNumUAVs()` and starting threads in function `startThreads()` of the implementation for all UAVs from 0 to `api.Tools.getNumUAVs() - 1`. This way the protocol code will be correct for real or virtual multicopters regardless the number of UAVs running on the same machine, as it is a dynamic value defined when ArduSim is run.
 
-"MBCAP" and "Swarn protocol" are good examples on how to make the code work for real and virtual UAVs. The ID of each UAV is used inside messages transmitted among UAVs, and the location of the UAV in the arrays is used in functions and variables.
+"MBCAP" and "MUSCOP" are good examples on how to make the code work for real and virtual UAVs. The ID of each UAV is used inside messages transmitted among UAVs, and the location of the UAV in the arrays is used in functions and variables.
