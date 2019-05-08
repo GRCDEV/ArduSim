@@ -118,14 +118,14 @@ The user decides whether to store this information or not. In the former case, a
 * *name_X_mission_AutoCAD.scr*. This file includes the simplified mission shown on screen, and it is stored in AutoCAD format as a single poliline.
 * *name_X_mission_Google_Earth.kmz*. It includes the simplifed mission planned for all the UAVs, ready to be shown on Google Earth.
 * *name_X_path_test.csv*. In this case, we include the 3D location, heading, speed, acceleration, and distance to origin over time. We think that this file may be the most useful to mathematically analyze the behavior of the multicopters.
-* *name_X_path_setup.csv*. Same file, but incluiding the path followed during the setup phase.
+* *name_X_path_setup.csv*. Same file, but incluiding the path followed during the setup phase. This file could be empty or not present at all if the UAV does nothing during the setup phase.
 * *name_X_path_Google_Earth.kmz*. It includes the path followed by all the UAVs, ready to be shown on Google Earth.
 * *name_X_path_AutoCAD.scr*. This is a simplified version of the previous file with an AutoCAD poliline with the path followed by the multicopter.
 * *name_X_path_AutoCAD3d.scr*. This file includes a 3D poliline with the path followed by the multicopter.
 * *name_CPU.txt*. This file is optionally stored for CPU usage analysis, and includes the global system CPU usage and the Java process CPU usage during each state of ArduSim execution. Two measures are provided; the global percentage, and the percentage relative to one core.
 * *name_X_ArduCopter_log.BIN*. This file is also optionally stored and includes the binary logging of the virtual flight controller, when performing simulations. It can be used in software like APM Planner 2 for further analysis.
 
-The user can generate additional files with the function *logData(String, String)* of the protocol implementation.
+The user can generate additional files with the data gathered during the experiment, using the function *logData(String, String)* of the protocol implementation.
 
 ## 2 ArduSim on real multicopters
 
@@ -135,8 +135,10 @@ ArduSim can be executed with the following command line:
 
     java -jar ArduSim.jar <arg>
 
-* *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
+, with the argument:
+
 * *simulator*. ArduSim runs as a multi-UAV simulator in a computer.
+* *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
 * *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution of a group of real multicopters, preferably in a laptop for mobility.
 
 To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, all connected in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer, which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
@@ -152,7 +154,7 @@ A file named *ardusim.ini* must be in the same folder as *ArduSim.jar* in order 
 * The protocol to be launched.
 * The desired flight speed for the multicopter.
 
-An example of the *ardusim.ini* file is included in the root of the Eclipse project, and is used when running ArduSim from Eclipse IDE.
+An example of the *ardusim.ini* file is included in the root of the Eclipse project, and it is used when running ArduSim from Eclipse IDE.
 
 First, ArduSim will wait until the multicopter is ready to fly. Then, it will accept the setup and start commands from the PC Companion. Messages are sent periodically to the PC Companion to inform the user if all the UAVs are ready to fly.
 
@@ -180,11 +182,11 @@ Three buttons allow the user to recover control over the UAVs in case the protoc
 * *RTL*. All the multicopters return to the location they were launched from.
 * *Land*. In this case, the UAVs attempt to land wherever they are.
 
-This PC Companion has been designed for a minimal interaction with the UAVs in order to reduce the media occupancy, as running a high number of real UAVs can collapse the WiFi channel. ArduSim stops sending messages between PC Companion and UAVs, and vice versa, once the experiment starts. Then, it opens an additional dialog if implemented by the developer. With that dialog, the user could supervise the behavior of the protocol, checking the data sent among the real UAVs.
+This PC Companion has been designed for a minimal interaction with the UAVs in order to reduce the media occupancy, as running a high number of real UAVs can collapse the WiFi channel. ArduSim stops sending messages between PC Companion and UAVs, and vice-versa once the experiment starts. Then, it opens an additional dialog if implemented by the developer. With that dialog, the user could supervise the behavior of the protocol, checking the data sent among the real UAVs.
 
 ### 2.3 Results
 
-When the multicopter ends the experiment it should land. On simulation, the user had the option to store flight information or not, but in this case the data is always stored in the same folder where ArduSim is running once the multicopter lands.
+When the multicopter ends the experiment it should land. On simulation, the user had the option to store flight information or not, but in this case the data is always stored in the same folder where ArduSim is running once the multicopter lands. The Raspberry Pi is automatically shutdown to protect the microSD card.
 
 ## 3 INI configuration file
 

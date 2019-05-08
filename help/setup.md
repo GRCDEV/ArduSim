@@ -64,6 +64,8 @@ Then, select the master branch, "Import all existing Eclipse projects after clon
 
 Finally, change to the default perspective: *Window --> Perspective -->Open Perspective --> Java*.
 
+ArduSim was developed with Java 1.8 and Eclipse Oxygen, and with Java 1.7 as the target compliance level, but many new versions of both Java and Eclipse have been released since then. If you are using newer versions, some compilation errors may appear, but the code is right, the problem is that Eclipse mess up with the project, and it has to be cleaned and rebuild. To this aim, right click over the project name and open the project properties, select *Java Compiler*, and under *JDK Compliance* deselet the option *Use compliance from execution environment'JavaSE-1.7' on the Java Build Path* to be able to change the *Java Compliance level* to 1.8 and apply changes and close the dialog. The errors must disappear. Then, open again the project properties and revert the changes to keep the initial configuration (not mandatory but recommended).
+
 We recommend to show packages in hierarchical order in *Package explorer* tab. Open the dropdown menu and select *Package Presentation --> Hierarchical*.
 
 *Git Staging* and *Git Repositories* tabs can also be shown to check periodically if a new version of ArduSim has been released.

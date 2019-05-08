@@ -77,7 +77,7 @@ Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
 
     Finally restart the Raspberry Pi. This way we leave the loopback interface untouched, and ethernet connection under DHCP control. We use a static address for the network named *NETWORK_NAME*. You also have to change the network address for each multicopter used in the group/swarm. We have found that the network manager makes a mess and thinks that the regulatory domain (WiFi country) is unset when using Raspbian in desktop mode. Don't care about it, as you can check, the Ad-hoc network is up and functioning once you restart the device (network manager becomes useless).
 
-    May be you are using other wireless adapters. If this is the case, we found that Raspbian changes randomly the wireless adapter identifier when using more than one at the same time. This issue could avoid ArduSim from working adequately sometimes. To solve it, you have to fix the adapters identifier editing the file */lib/udev/rules.d/75-persistent-net-generator.rules* and replace the corresponding line with:
+    May be you are using other wireless adapters. If this is the case, we found that Raspbian changes randomly the wireless adapter identifier when using more than one at the same time. This issue could prevent ArduSim from working adequately sometimes. To solve it, you have to fix the adapters identifier editing the file */lib/udev/rules.d/75-persistent-net-generator.rules* and replace the corresponding line with:
 
         KERNEL!="eth*[0-9]|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", \
 
@@ -106,14 +106,11 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     [Install]
     WantedBy=multi-user.target
 
-ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini*, which contains the following two parameters among others:
+ArduSim is supposed to be in the Desktop folder, besides the file *ardusim.ini*, which contains the needed parameters to run ArduSim.
 
-    UAVPROTOCOL="some protocol"
-    UAVSPEED=2.5
+This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol indicated in *ardusim.ini*.
 
-This service allows us to execute the application and, at the same time, shows and stores the standard output in a file. It waits the network to be configured and runs ArduSim with the protocol *UAVPROTOCOL*, and with a maximum speed of 2.5 m/s for the multicopter (modify it at will).
-
-To store the output of ArduSim to a file, we also need to specify the target file to the system log service. Create the file */etc/rsyslog.d/ardusim.conf* with the following content:
+To store the console output of ArduSim to a file, we also need to specify the target file to the system log service. Create the file */etc/rsyslog.d/ardusim.conf* with the following content:
 
     if $programname == 'ardusim' then /home/pi/Desktop/ArduSim.log
     if $programname == 'ardusim' then ~
@@ -129,8 +126,8 @@ Next, copy the service file and test it to be sure that it is working:
     sudo systemctl daemon-reload
     sudo systemctl start ardusim.service
 
-Check the content of the file */home/pi/Desktop/Ardusim.log* to be sure that the service is working fine. If the service fails or behaves unexpectedly, stop the service an repeat all the previous commands but the first, until the service works fine. Then, use the following command to enable the service on startup:
+Restart the Raspberry Pi and check the content of the file */home/pi/Desktop/Ardusim.log* to be sure that the service is working fine. If the service fails or behaves unexpectedly, stop the service an repeat all the previous commands but the first, until the service works fine. Then, use the following command to enable the service on startup:
 
     sudo systemctl enable ardusim.service
 
-Finally, restart the device and check the log file to be sure that ArduSim has started with the system. Don't forget to store a mission file with ArduSim if the protocol under test requires it.
+Finally, restart the device and check the log file to be sure that ArduSim has started with the system. Don't forget to store a mission file beside ArduSim if the protocol under test requires it.
