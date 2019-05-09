@@ -1,6 +1,8 @@
 package api;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -9,7 +11,10 @@ import java.math.RoundingMode;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.security.CodeSource;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import api.pojo.GeoCoordinates;
 import api.pojo.LogPoint;
@@ -502,7 +507,46 @@ public class Tools {
 		}
 		return jarFile.getParentFile();
 	}
-
+	
+	/**
+	 * Parse an ini file to retrieve parameters for a protocol.
+	 * @return Map with parameters and their respective value. Empty map if the file has no parameters or it is invalid.
+	 */
+	public static Map<String, String> parseINIFile(File iniFile) {
+		Map<String, String> parameters = new HashMap<>();
+		List<String> lines = new ArrayList<>();
+		try (BufferedReader br = new BufferedReader(new FileReader(iniFile))) {
+			String line = null;
+			while ((line = br.readLine()) != null) {
+		        lines.add(line);
+		    }
+		} catch (IOException e) {
+			return parameters;
+		}
+		// Check file length
+		if (lines==null || lines.size()<1) {
+			return parameters;
+		}
+		List<String> checkedLines = new ArrayList<>();
+		for (int i = 0; i < lines.size(); i++) {
+			String line = lines.get(i).trim();
+			if (line.length() > 0 && !line.startsWith("#") && (line.length() - line.replace("=", "").length() == 1)) {
+				checkedLines.add(line);
+			}
+		}
+		if (checkedLines.size() > 0) {
+			String key, value;
+			String[] pair;
+			for (int i = 0; i < checkedLines.size(); i++) {
+				pair = checkedLines.get(i).split("=");
+				key = pair[0].trim().toUpperCase();
+				value = pair[1].trim();
+				parameters.put(key, value);
+			}
+		}
+		return parameters;
+	}
+	
 	/**
 	 * Get a file extension.
 	 * @param file The file to be checked.

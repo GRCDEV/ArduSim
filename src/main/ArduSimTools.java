@@ -537,7 +537,7 @@ public class ArduSimTools {
 		int pos = -1;
 		boolean found = false;
 		for (int i = 0; i < files.length && !found; i++) {
-			if (files[i].getName().equalsIgnoreCase("ardusim.ini")) {
+			if (files[i].getName().equalsIgnoreCase(Text.INI_FILE_NAME)) {
 				pos = i;
 				found = true;
 			}
@@ -547,37 +547,9 @@ public class ArduSimTools {
 			return parameters;
 		}
 		File iniFile = files[pos];
-		List<String> lines = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new FileReader(iniFile))) {
-			String line = null;
-			while ((line = br.readLine()) != null) {
-		        lines.add(line);
-		    }
-		} catch (IOException e) {
-			return parameters;
-		}
-		// Check file length
-		if (lines==null || lines.size()<1) {
-			GUI.log(Text.INI_FILE_EMPTY);
-			return parameters;
-		}
-		List<String> checkedLines = new ArrayList<>();
-		for (int i = 0; i < lines.size(); i++) {
-			String line = lines.get(i).trim();
-			if (line.length() > 0 && !line.startsWith("#") && (line.length() - line.replace("=", "").length() == 1)) {
-				checkedLines.add(line);
-			}
-		}
-		if (checkedLines.size() > 0) {
-			String key, value;
-			String[] pair;
-			for (int i = 0; i < checkedLines.size(); i++) {
-				pair = checkedLines.get(i).split("=");
-				key = pair[0].trim().toUpperCase();
-				value = pair[1].trim();
-				parameters.put(key, value);
-			}
-		}
+		
+		parameters = Tools.parseINIFile(iniFile);
+		
 		if (parameters.size() > 0) {
 			// Check waste parameters
 			for (final String key : parameters.keySet()) {
@@ -591,6 +563,8 @@ public class ArduSimTools {
 					GUI.log(Text.INI_FILE_WASTE_PARAMETER_WARNING + " " + key);
 				}
 			}
+		} else {
+			GUI.log(Text.INI_FILE_EMPTY);
 		}
 		return parameters;
 	}

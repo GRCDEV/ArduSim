@@ -24,9 +24,10 @@ public class Text {
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
-	public static final String INI_FILE_NOT_FOUND = "ardusim.ini file not found. Using default parameters values.";
-	public static final String INI_FILE_EMPTY = "ardusim.ini file is empty. Using default parameters values.";
-	public static final String INI_FILE_WASTE_PARAMETER_WARNING = "ardusim.ini file contains an invalid parameter:";
+	public static final String INI_FILE_NAME = "ardusim.ini";
+	public static final String INI_FILE_NOT_FOUND = INI_FILE_NAME + " file not found. Using default parameters values.";
+	public static final String INI_FILE_EMPTY = INI_FILE_NAME + " file is invalid or empty. Using default parameters values.";
+	public static final String INI_FILE_WASTE_PARAMETER_WARNING = INI_FILE_NAME + " file contains an invalid parameter:";
 	public static final String INI_FILE_MISSING_PARAMETER_WARNING = "parameter missing. Using default value.";
 	public static final String INI_FILE_PROTOCOL_NOT_FOUND_ERROR = "No protocol specified in INI file.";
 	public static final String INI_FILE_SPEED_NOT_FOUND_ERROR = "No flight speed specified in INI file.";
@@ -303,7 +304,7 @@ public class Text {
 	public static final String MOBILITY_OMNET_SUFIX_2D = "mobility_OMNeT-INET-BoonMotionModel.txt";
 	public static final String MOBILITY_OMNET_SUFIX_3D = "mobility_OMNeT-INET-BoonMotionModel_3D.txt";
 	public static final String CPU_SUFIX = "CPU.txt";
-	public static final String ADDITIONAL_PARAMETERS = "Additional parameters (ardusim.ini):";
+	public static final String ADDITIONAL_PARAMETERS = "Additional parameters (" + INI_FILE_NAME + "):";
 	public static final String REAL_COMMUNICATIONS_PARAMETERS = "Real UAV-to-UAV communications parameters:";
 	public static final String SERIAL_COMMUNICATIONS_PARAMETERS = "ArduSim to Real UAV communications parameters:";
 	public static final String BATTERY_PARAMETERS = "Battery parameters:";

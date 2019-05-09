@@ -351,6 +351,7 @@ Now, we include several functions to retrieve information, and to store specific
 * `double round(double, int)`. It rounds a double to a specific number of decimal digits, useful to show on screen or store in a file.
 * `List<LogPoint> getUTMPath(int)`. It provides the path followed by a UAV for logging purposes.
 * `File getCurrentFolder()`. It provides the folder ArduSim is running in, and is useful to write output files related to the protocol.
+* `Map<String,String> parseINIFile(File)`. It reads a text file with the same format as ardusim.ini, and provides a map with the parameters found and their values.
 * `String getFileExtension(File)`. It returns the file extension of a given *File*.
 * `void storeFile( File, String)`. It stores a *String* in a *File*.
 * `boolean isVerboseStorageEnabled()`. This function may be used to decide if some information must be stored in a *File*.
