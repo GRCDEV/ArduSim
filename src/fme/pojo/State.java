@@ -11,10 +11,11 @@ public final class State {
 	public static final short TAKING_OFF = 4;
 	public static final short MOVE_TO_TARGET = 5;
 	public static final short TARGET_REACHED = 6;
-	public static final short READY_TO_START = 7;
-	public static final short SETUP_FINISHED = 8;
-	public static final short FOLLOWING = 9;
-	public static final short MOVE_TO_LAND = 10;
-	public static final short LANDING = 11;
-	public static final short FINISH = 12;
+	public static final short WAIT_SLAVES = 7;
+	public static final short READY_TO_START = 8;
+	public static final short SETUP_FINISHED = 9;
+	public static final short FOLLOWING = 10;
+	public static final short MOVE_TO_LAND = 11;
+	public static final short LANDING = 12;
+	public static final short FINISH = 13;
 }

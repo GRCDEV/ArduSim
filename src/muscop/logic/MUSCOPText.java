@@ -12,6 +12,7 @@ public class MUSCOPText {
 	public static final String GROUND_TEXT = "Ground formation:";
 	public static final String FORMATION_TEXT = "Formation";
 	public static final String DISTANCE_TEXT = "Min. distance between UAVs";
+	public static final String DISTANCE_TEXT_ERROR = "The min. distance between UAVs must be a positive double";
 	public static final String AIR_TEXT = "Flying formation:";
 	public static final String LANDING_TEXT = "Landing:";
 	public static final String PROTOCOL_TEXT = "MUSCOP";
@@ -30,7 +31,7 @@ public class MUSCOPText {
 	public static final String SETUP_FINISHED = "Setup finished";		// Waiting for the experiment to start
 	public static final String MOVE_TO_WP = "Moving to WP";				// Moving to a waypoint
 	public static final String WP_REACHED = "WP reached";				// Waypoint reached
-	public static final String LAND_LOCATION_REACHED = "Move to land";	// Moving to the final land location
+	public static final String MOVE_TO_LAND = "Move to land";			// Moving to the final land location
 	public static final String LANDING_UAV = "Landing";					// UAV landing
 	public static final String FINISH = "Finished";						// The flight is over
 	
@@ -56,7 +57,8 @@ public class MUSCOPText {
 	public static final String SLAVE_WAIT_READY_TO_FLY_LISTENER = "Slave listener waiting timeout for takeoff.";
 	public static final String SLAVE_READY_TO_FLY_CONFIRM_TALKER = "Slave talker confirms that everybody is ready to fly.";
 	
-	public static final String NO_CENTER_WAIT_TAKEOFF_END_LISTENER = "No center waiting timeout to end takeoff.";
+	public static final String NO_CENTER_WAIT_TAKEOFF_END_ACK = "No center waiting takeoff end ack from center UAV";
+	public static final String NO_CENTER_WAIT_TAKEOFF_END_LISTENER = "No center waiting timeout to end setup.";
 	public static final String NO_CENTER_TARGET_REACHED_TALKER = "No center talker sending target reached ack.";
 	public static final String NO_CENTER_TAKEOFF_END_ACK_TALKER = "No center talker confirms that everybody finished the takeoff step.";
 	public static final String NO_CENTER_WAIT_ORDER_LISTENER = "No center listener waiting move to waypoint or land order.";

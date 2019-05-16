@@ -41,18 +41,11 @@ public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public boolean loadMission() {
-		// Only the master UAV has a mission (on real UAV, numUAV == 0)
-		boolean isMaster = MUSCOPHelper.isMaster(0);
-		if (isMaster) {
-			MUSCOPParam.idMaster = Tools.getIdFromPos(MUSCOPParam.MASTER_POSITION);
-		}//	The slave in a real UAV has MUSCOPParam.idMaster == null
-		return isMaster;
+		return MUSCOPHelper.isMaster(0);
 	}
 
 	@Override
 	public void openConfigurationDialog() {
-		MUSCOPParam.idMaster = MUSCOPParam.SIMULATION_MASTER_ID;
-
 		new MUSCOPConfigDialog();
 	}
 
@@ -75,7 +68,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 		MUSCOPParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
 		MUSCOPParam.data = new AtomicReference<>();
 		
-		MUSCOPParam.state = new AtomicIntegerArray(numUAVs);
+		MUSCOPParam.state = new AtomicIntegerArray(numUAVs);	// Implicit value State.START, as it is equals to 0
 		MUSCOPParam.moveSemaphore = new AtomicIntegerArray(numUAVs);
 		MUSCOPParam.wpReachedSemaphore = new AtomicIntegerArray(numUAVs);
 	}
@@ -269,7 +262,9 @@ public class MUSCOPHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void startExperimentActionPerformed() {}
+	public void startExperimentActionPerformed() {
+		// All the tasks are performed in the protocol threads
+	}
 
 	@Override
 	public void forceExperimentEnd() {}

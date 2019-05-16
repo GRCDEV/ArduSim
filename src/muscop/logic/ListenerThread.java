@@ -103,6 +103,7 @@ public class ListenerThread extends Thread {
 		/** SETUP PHASE */
 		GUI.log(numUAV, MUSCOPText.SETUP);
 		GUI.updateProtocolState(numUAV, MUSCOPText.SETUP);
+		long idPrev = 0;					// Identifier of the previous UAV in the takeoff sequence
 		long lastReceivedReadyToFly = 0;	// Used in slaves to detect the end of this phase
 		Map<Long, Long> acks = null;
 		if (this.isMaster) {
@@ -297,7 +298,8 @@ public class ListenerThread extends Thread {
 							if (this.selfId == input.readLong()) {
 								MUSCOPParam.iAmCenter[numUAV].set(true);
 							}
-							MUSCOPParam.idPrev.set(numUAV, input.readLong());
+							idPrev = input.readLong();
+							MUSCOPParam.idPrev.set(numUAV, idPrev);
 							MUSCOPParam.idNext.set(numUAV, input.readLong());
 							MUSCOPParam.numUAVs.set(numUAV, input.readInt());
 							MUSCOPParam.flyingFormation.set(numUAV, Formation.getFormation(input.readShort()));
@@ -389,9 +391,9 @@ public class ListenerThread extends Thread {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
 					
-					if (type == Message.TAKE_OFF_NOW) {
+					if (type == Message.TAKE_OFF_NOW || type == Message.TARGET_REACHED_ACK) {
 						long id = input.readLong();
-						if (id == selfId) {
+						if (id == idPrev) {
 							MUSCOPParam.state.set(numUAV, TAKING_OFF);
 						}
 					}
@@ -499,7 +501,7 @@ public class ListenerThread extends Thread {
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_TAKEOFF_END_LISTENER);
+			GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_TAKEOFF_END_ACK);
 			while (MUSCOPParam.state.get(numUAV) == TARGET_REACHED) {
 				inBuffer = Copter.receiveMessage(numUAV);
 				if (inBuffer != null) {
@@ -667,8 +669,8 @@ public class ListenerThread extends Thread {
 		int waitingTime;
 		// This only happens for UAVs not located in the center of the formation
 		if (MUSCOPParam.state.get(numUAV) == MOVE_TO_LAND) {
-			GUI.log(numUAV, MUSCOPText.LAND_LOCATION_REACHED);
-			GUI.updateProtocolState(numUAV, MUSCOPText.LAND_LOCATION_REACHED);
+			GUI.log(numUAV, MUSCOPText.MOVE_TO_LAND);
+			GUI.updateProtocolState(numUAV, MUSCOPText.MOVE_TO_LAND);
 			GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 			FlightFormation flyingFormation =
 					FlightFormation.getFormation(MUSCOPParam.flyingFormation.get(numUAV), numUAVs, FlightFormation.getLandingFormationDistance());

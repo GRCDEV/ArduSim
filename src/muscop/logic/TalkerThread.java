@@ -203,7 +203,7 @@ public class TalkerThread extends Thread {
 			GUI.logVerbose(numUAV, MUSCOPText.TALKER_TAKE_OFF_COMMAND);
 			output.clear();
 			output.writeShort(Message.TAKE_OFF_NOW);
-			output.writeLong(idNext);
+			output.writeLong(selfId);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			

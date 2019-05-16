@@ -141,9 +141,9 @@ public abstract class FlightFormation {
 	
 	/**
 	 * Get the match between the current UAVs location and the target formation in the air.
-	 * <p>The center UAV must only be specified if it should be excluded from the takeoff process, and even then, it must be included in the <i>groundLocations> Map, and in the size of the airFormation (<i>airFormation.numUAVs</i>). Returns null if any error happens.</p>
+	 * <p>The center UAV must only be specified if it should be excluded from the takeoff process, and even then, it must be included in the <i>groundLocations</i> Map, and in the size of the airFormation (<i>airFormation.numUAVs</i>). Returns null if any error happens.</p>
 	 * @param groundLocations ID and location of all the UAVs, including the center UAV on the ground, whether it will be excluded or not from the takeoff process.
-	 * @param heading Heading for the flying formation.
+	 * @param heading Heading for the flying formation (rad).
 	 * @param centerIncluded Whether the center UAV on the ground should be included or not in the takeoff process.
 	 * @param centerId ID of the center UAV to be excluded from the takeoff process. Value ignored if all the UAVs will be included in the takeoff process.
 	 * @param airFormation The <i>FlightFormation</i> layout of the UAVs that they will form at the end of the takeoff process.

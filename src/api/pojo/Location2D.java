@@ -33,6 +33,17 @@ public class Location2D {
 		return res;
 	}
 	
+	/** It is assumed that this function is used when at least one coordinate set is received from the UAV, or the function geoToUTM is previously used, in order to get the zone and the letter of the UTM projection. Otherwise, it returns null. */
+	public static Location2D NewLocation(UTMCoordinates location) {
+		if (SimParam.zone == -1) {
+			return null;
+		}
+		Location2D res = new Location2D();
+		res.utm = (UTMCoordinates)location.clone();
+		res.geo = Tools.UTMToGeo(location);
+		return res;
+	}
+	
 	/** Equivalent to the clone function. */
 	public static Location2D copyLocation(Location2D location) {
 		if (location == null) {

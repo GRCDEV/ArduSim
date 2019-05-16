@@ -323,6 +323,7 @@ public class Text {
 	public static final String CENTIMETERS = "cm";
 	public static final String SECONDS = "s";
 	public static final String METERS_PER_SECOND = "m/s";
+	public static final String CENTIMETERS_PER_SECOND = "cm/s";
 	public static final String BATTERY_CAPACITY = "mAh";
 	public static final String BYTES = "bytes";
 	public static final String DEGREE_SYMBOL= "\u00B0";

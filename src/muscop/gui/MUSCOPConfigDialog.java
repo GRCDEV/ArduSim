@@ -16,7 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -96,7 +95,14 @@ public class MUSCOPConfigDialog extends JDialog {
 				@SuppressWarnings("unchecked")
 				public void actionPerformed(ActionEvent e) {
 					final Pair<String, List<Waypoint>[]> missions = GUI.loadMissions();
-					if (missions != null) {
+					if (missions == null) {
+						Tools.setLoadedMissionsFromFile(null);
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								missionsTextField.setText("");
+							}
+						});
+					} else {
 						int numUAVs = Tools.getNumUAVs();
 						/** The master is assigned the first mission in the list */
 						List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
@@ -316,44 +322,21 @@ public class MUSCOPConfigDialog extends JDialog {
 		contentPanel.add(okButton, gbc_okButton);
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				List<Waypoint>[] missions = Tools.getLoadedMissions();
-				if (missions == null) {
-					JOptionPane.showMessageDialog(null, MUSCOPText.BAD_INPUT);
-					return;
-				}
-				int count = 0;
-				for (int i = 0; i < missions.length; i++) {
-					if (missions[i] != null) {
-						count++;
-					}
-				}
-				if (count == 0) {
-					JOptionPane.showMessageDialog(null, MUSCOPText.BAD_INPUT);
-					return;
-				}
 				
-				try {
+				if(isValidConfiguration()) {
 					// In this protocol, the number of UAVs running on this machine (n) is not affected by the number of missions loaded (1)
 					//   , so the function Tools.setNumUAVs() is not used
-					double ground = Double.parseDouble(groundTextField.getText());
-					double flying = Double.parseDouble(flyingTextField.getText());
-					double landing = Double.parseDouble(landingTextField.getText());
-					FlightFormation.setGroundFormation(Formation.getFormation((String)groundComboBox.getSelectedItem()));
-					FlightFormation.setGroundFormationDistance(ground);
-					FlightFormation.setFlyingFormation(Formation.getFormation((String)airComboBox.getSelectedItem()));
-					FlightFormation.setFlyingFormationDistance(flying);
-					FlightFormation.setLandingFormationDistance(landing);
+					storeConfiguration();
 					// State change
 					Tools.setProtocolConfigured();
 					
 					dispose();
-				} catch (NumberFormatException e2) {
-					JOptionPane.showMessageDialog(null, MUSCOPText.BAD_INPUT);
-					return;
-				}			
+				} else {
+					GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.BAD_INPUT);
+				}
 			}
 		});
-		okButton.setActionCommand("OK");
+		okButton.setActionCommand(Text.OK);
 		getRootPane().setDefaultButton(okButton);
 		
 		this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
@@ -373,6 +356,45 @@ public class MUSCOPConfigDialog extends JDialog {
 		this.setLocationRelativeTo(null);
 		this.setModal(true);
 		this.setVisible(true);
+	}
+	
+	private boolean isValidConfiguration() {
+		String validating = missionsTextField.getText();
+		if (validating==null || validating.length()==0) {
+			GUI.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
+			return false;
+		}
+		
+		validating = groundTextField.getText();
+		if (!Tools.isValidPositiveDouble(validating)) {
+			GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
+			return false;
+		}
+		
+		validating = flyingTextField.getText();
+		if (!Tools.isValidPositiveDouble(validating)) {
+			GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
+			return false;
+		}
+		
+		validating = landingTextField.getText();
+		if (!Tools.isValidPositiveDouble(validating)) {
+			GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
+			return false;
+		}
+		return true;
+	}
+	
+	private void storeConfiguration() {
+		// The missions are stored automatically when pressing the button to select the file
+		double ground = Double.parseDouble(groundTextField.getText());
+		double flying = Double.parseDouble(flyingTextField.getText());
+		double landing = Double.parseDouble(landingTextField.getText());
+		FlightFormation.setGroundFormation(Formation.getFormation((String)groundComboBox.getSelectedItem()));
+		FlightFormation.setGroundFormationDistance(ground);
+		FlightFormation.setFlyingFormation(Formation.getFormation((String)airComboBox.getSelectedItem()));
+		FlightFormation.setFlyingFormationDistance(flying);
+		FlightFormation.setLandingFormationDistance(landing);
 	}
 
 }

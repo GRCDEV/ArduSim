@@ -2099,6 +2099,15 @@ public class ArduSimTools {
 				}
 				GUI.log(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
 				GUI.log(Text.ARDUCOPTER_VERSION + " " + UAVParam.arducopterVersion.get());
+				
+				
+//				MAVParam[] values = UAVParam.loadedParams[numUAV].values().toArray(new MAVParam[0]);
+//				Arrays.sort(values);
+//				for (int i = 0; i < values.length; i++) {
+//					System.out.println(values[i]);
+////					System.out.println(values[i].getName() + ": " + values[i].getValue());
+//				}
+				
 			} else {
 				GUI.logVerbose(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
 			}

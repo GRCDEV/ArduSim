@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
-public class MAVParam {
+public class MAVParam implements Comparable<MAVParam>{
 	
 	private String name;
 	private AtomicFloat value;
@@ -51,8 +51,12 @@ public class MAVParam {
 	}
 
 	@Override
+	public int compareTo(MAVParam o) {
+		return this.name.compareTo(o.name);
+	}
+	
+	@Override
 	public String toString() {
 		return this.name + "=" + this.value + "(type: " + this.type + ")";
 	}
-	
 }

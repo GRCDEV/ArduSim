@@ -18,7 +18,6 @@ public class MUSCOPParam {
 	// General parameters
 	public static final int MASTER_POSITION = 0; // Position of master UAV into array of UAVs
 	public static final long SIMULATION_MASTER_ID = 0;
-	public static volatile Long idMaster = null; // Id of the master UAV (known by the master real UAV or in simulations)
 	public static final String[] MAC = new String[] { "b8:27:eb:57:4c:0e", "b8:27:eb:02:19:5b" };// MACs of master (Hexacopter) with standard format
 	public static final long[] MAC_ID = new long[] { 202481591602190L, 202481586018651L };// MACs of master with long format
 	

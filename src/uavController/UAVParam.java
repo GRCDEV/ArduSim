@@ -389,7 +389,8 @@ public class UAVParam {
 		// Others
 		CIRCLE_RADIUS("CIRCLE_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),		// (cm) Circle mode radius
 		WPNAV_RADIUS("WPNAV_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),			// (cm) Distance to the waypoint to assert that it has been reached
-		WP_YAW_BEHAVIOR("WP_YAW_BEHAVIOR", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8);		// Yaw behavior while following a mission: 0=Fixed, 1=Face next waypoint, 2=Face next waypoint except RTL, 3=Face along GPS course
+		WP_YAW_BEHAVIOR("WP_YAW_BEHAVIOR", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),		// Yaw behavior while following a mission: 0=Fixed, 1=Face next waypoint, 2=Face next waypoint except RTL, 3=Face along GPS course
+		LOITER_SPEED_357("WPNAV_LOIT_SPEED", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32);	// (cm/s) Maximum horizontal speed of the UAV while in Loiter mode, valid with ArduCopter 3.5.7 or lower
 
 		private final String id;
 		private final int type;
