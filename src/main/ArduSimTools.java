@@ -1304,24 +1304,6 @@ public class ArduSimTools {
 		return protocolLaunched;
 	}
 	
-	/** Gets all classes that extend ProtocolHelper or implement a protocol.
-	 * <p>Returns null or an array of size 0 if no valid implementations were found.</p> */
-	private static Class<?>[] getAnyProtocolImplementations() {
-		Class<?>[] res = null;
-		// Get all Java classes included in ArduSim
-		List<String> existingClasses = getClasses();
-		// Get classes that extend ProtocolHelper class
-		if (existingClasses != null && existingClasses.size() > 0) {
-			res = getAllImplementations(existingClasses);
-		} else {
-			GUI.log(Text.PROTOCOL_GETTING_CLASSES_ERROR);
-		}
-		if (res.length == 0) {
-			GUI.log(Text.PROTOCOL_GETTING_PROT_CLASSES_ERROR);
-		}
-		return res;
-	}
-	
 	/** Loads the implemented protocols and retrieves the name of each one.
 	 * <p>Protocol names are case-sensitive. Returns null if no valid implementations were found.</p> */
 	public static String[] loadProtocols() {
@@ -1337,11 +1319,16 @@ public class ArduSimTools {
 			Map<String, String> imp = new HashMap<>();
 			ProtocolHelper protocol;
 			try {
+				int size;
 				for (int i = 0; i < validImplementations.length; i++) {
 					protocol = (ProtocolHelper)validImplementations[i].newInstance();
 					protocol.setProtocol();
 					if (protocol.protocolString != null) {
+						size = imp.size();
 						imp.put(protocol.protocolString, protocol.protocolString);
+						if (imp.size() == size) {
+							return null;
+						}
 					}
 				}
 				if (imp.size() > 0) {
@@ -1355,13 +1342,31 @@ public class ArduSimTools {
 		return names;
 	}
 	
+	/** Gets all classes that extend ProtocolHelper or implement a protocol.
+	 * <p>Returns null or an array of size 0 if no valid implementations were found.</p> */
+	private static Class<?>[] getAnyProtocolImplementations() {
+		Class<?>[] res = null;
+		// Get all Java classes included in ArduSim
+		List<String> existingClasses = ArduSimTools.getClasses();
+		// Get classes that extend ProtocolHelper class
+		if (existingClasses != null && existingClasses.size() > 0) {
+			res = ArduSimTools.getAllImplementations(existingClasses);
+		} else {
+			GUI.log(Text.PROTOCOL_GETTING_CLASSES_ERROR);
+		}
+		if (res.length == 0) {
+			GUI.log(Text.PROTOCOL_GETTING_PROT_CLASSES_ERROR);
+		}
+		return res;
+	}
+	
 	/** Returns the existing Java classes in the jar file or Eclipse project.
 	 * <p>Returns null or empty list if some error happens.</p> */
 	private static List<String> getClasses() {
 		List<String> existingClasses = null;
 		if (isRunningFromJar()) {
 			// Process the jar file contents when running from a jar file
-			String jar = getJarFile();
+			String jar = ArduSimTools.getJarFile();
 			if (jar != null) {
 				try {
 					existingClasses = getClassNamesFromJar(jar);

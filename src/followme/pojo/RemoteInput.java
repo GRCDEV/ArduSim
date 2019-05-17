@@ -1,4 +1,4 @@
-package fme.pojo;
+package followme.pojo;
 
 import api.pojo.RCValues;
 

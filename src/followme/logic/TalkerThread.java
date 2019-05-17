@@ -1,6 +1,6 @@
-package fme.logic;
+package followme.logic;
 
-import static fme.pojo.State.*;
+import static followme.pojo.State.*;
 
 import java.util.Arrays;
 
@@ -11,7 +11,7 @@ import api.GUI;
 import api.Tools;
 import api.pojo.UTMCoordinates;
 import api.pojo.formations.FlightFormation;
-import fme.pojo.Message;
+import followme.pojo.Message;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
@@ -36,7 +36,7 @@ public class TalkerThread extends Thread {
 	public TalkerThread(int numUAV) {
 		this.numUAV = numUAV;
 		this.selfId = Tools.getIdFromPos(numUAV);
-		this.isMaster = FMeHelper.isMaster(numUAV);
+		this.isMaster = FollowMeHelper.isMaster(numUAV);
 		
 		this.outBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
@@ -47,17 +47,17 @@ public class TalkerThread extends Thread {
 	@Override
 	public void run() {
 		while (!Tools.areUAVsAvailable()) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** START PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, FMeText.TALKER_WAITING);
-			while (FMeParam.state.get(numUAV) == START) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, FollowMeText.TALKER_WAITING);
+			while (FollowMeParam.state.get(numUAV) == START) {
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
 		} else {
-			GUI.logVerbose(numUAV, FMeText.SLAVE_START_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.SLAVE_START_TALKER);
 			output.clear();
 			output.writeShort(Message.HELLO);
 			output.writeLong(selfId);
@@ -68,28 +68,28 @@ public class TalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == START) {
+			while (FollowMeParam.state.get(numUAV) == START) {
 				Copter.sendBroadcastMessage(numUAV, message);
 
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		}
-		while (FMeParam.state.get(numUAV) < SETUP) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < SETUP) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** SETUP PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, FMeText.MASTER_DATA_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.MASTER_DATA_TALKER);
 			byte[][] messages;
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == SETUP) {
-				messages = FMeParam.data.get();
+			while (FollowMeParam.state.get(numUAV) == SETUP) {
+				messages = FollowMeParam.data.get();
 				if (messages != null) {
 					int length = messages.length;
 					for (int i = 0; i < length; i++) {
@@ -98,14 +98,14 @@ public class TalkerThread extends Thread {
 				}
 				
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, FMeText.SLAVE_WAIT_LIST_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.SLAVE_WAIT_LIST_TALKER);
 			output.clear();
 			output.writeShort(Message.DATA_ACK);
 			output.writeLong(selfId);
@@ -113,44 +113,44 @@ public class TalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == SETUP) {
-				if (FMeParam.flyingFormation.get(numUAV) != null) {
+			while (FollowMeParam.state.get(numUAV) == SETUP) {
+				if (FollowMeParam.flyingFormation.get(numUAV) != null) {
 					Copter.sendBroadcastMessage(numUAV, message);
 				}
 				
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		}
-		while (FMeParam.state.get(numUAV) < READY_TO_FLY) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < READY_TO_FLY) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** READY TO FLY PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, FMeText.MASTER_READY_TO_FLY_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.MASTER_READY_TO_FLY_TALKER);
 			output.clear();
 			output.writeShort(Message.READY_TO_FLY);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == READY_TO_FLY) {
+			while (FollowMeParam.state.get(numUAV) == READY_TO_FLY) {
 				Copter.sendBroadcastMessage(numUAV, message);
 				
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, FMeText.SLAVE_READY_TO_FLY_CONFIRM_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.SLAVE_READY_TO_FLY_CONFIRM_TALKER);
 			output.clear();
 			output.writeShort(Message.READY_TO_FLY_ACK);
 			output.writeLong(selfId);
@@ -158,57 +158,57 @@ public class TalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == READY_TO_FLY) {
+			while (FollowMeParam.state.get(numUAV) == READY_TO_FLY) {
 				Copter.sendBroadcastMessage(numUAV, message);
 				
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		}
-		while (FMeParam.state.get(numUAV) < WAIT_TAKE_OFF) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < WAIT_TAKE_OFF) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		if (this.isMaster) {
 			/** WAIT SLAVES PHASE */
-			GUI.logVerbose(numUAV, FMeText.TALKER_WAITING);
-			while (FMeParam.state.get(numUAV) == TARGET_REACHED) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, FollowMeText.TALKER_WAITING);
+			while (FollowMeParam.state.get(numUAV) == TARGET_REACHED) {
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
 		} else {
 			/** WAIT TAKE OFF PHASE */
-			if (FMeParam.state.get(numUAV) == WAIT_TAKE_OFF) {
-				GUI.logVerbose(numUAV, FMeText.TALKER_WAITING);
-				while (FMeParam.state.get(numUAV) == WAIT_TAKE_OFF) {
-					Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			if (FollowMeParam.state.get(numUAV) == WAIT_TAKE_OFF) {
+				GUI.logVerbose(numUAV, FollowMeText.TALKER_WAITING);
+				while (FollowMeParam.state.get(numUAV) == WAIT_TAKE_OFF) {
+					Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 				}
 			}
-			while (FMeParam.state.get(numUAV) < TAKING_OFF) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			while (FollowMeParam.state.get(numUAV) < TAKING_OFF) {
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
 			
 			/** TAKING OFF PHASE */
-			GUI.logVerbose(numUAV, FMeText.TALKER_WAITING);
-			while (FMeParam.state.get(numUAV) == TAKING_OFF) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, FollowMeText.TALKER_WAITING);
+			while (FollowMeParam.state.get(numUAV) == TAKING_OFF) {
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
-			while (FMeParam.state.get(numUAV) < MOVE_TO_TARGET) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			while (FollowMeParam.state.get(numUAV) < MOVE_TO_TARGET) {
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
 			
 			/** MOVE TO TARGET PHASE */
-			long idNext = FMeParam.idNext.get(numUAV);
+			long idNext = FollowMeParam.idNext.get(numUAV);
 			if (idNext == FlightFormation.BROADCAST_MAC_ID) {
-				GUI.logVerbose(numUAV, FMeText.TALKER_WAITING);
-				while (FMeParam.state.get(numUAV) == MOVE_TO_TARGET) {
-					Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+				GUI.logVerbose(numUAV, FollowMeText.TALKER_WAITING);
+				while (FollowMeParam.state.get(numUAV) == MOVE_TO_TARGET) {
+					Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 				}
 			} else {
-				GUI.logVerbose(numUAV, FMeText.TALKER_TAKE_OFF_COMMAND);
+				GUI.logVerbose(numUAV, FollowMeText.TALKER_TAKE_OFF_COMMAND);
 				output.clear();
 				output.writeShort(Message.TAKE_OFF_NOW);
 				output.writeLong(selfId);
@@ -216,23 +216,23 @@ public class TalkerThread extends Thread {
 				message = Arrays.copyOf(outBuffer, output.position());
 				
 				cicleTime = System.currentTimeMillis();
-				while (FMeParam.state.get(numUAV) == MOVE_TO_TARGET) {
+				while (FollowMeParam.state.get(numUAV) == MOVE_TO_TARGET) {
 					Copter.sendBroadcastMessage(numUAV, message);
 					
 					// Timer
-					cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+					cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 					waitingTime = (int) (cicleTime - System.currentTimeMillis());
 					if (waitingTime > 0) {
 						Tools.waiting(waitingTime);
 					}
 				}
 			}
-			while (FMeParam.state.get(numUAV) < TARGET_REACHED) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			while (FollowMeParam.state.get(numUAV) < TARGET_REACHED) {
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
 			
 			/** TARGET REACHED PHASE */
-			GUI.logVerbose(numUAV, FMeText.SLAVE_TARGET_REACHED_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.SLAVE_TARGET_REACHED_TALKER);
 			output.clear();
 			output.writeShort(Message.TARGET_REACHED_ACK);
 			output.writeLong(selfId);
@@ -240,42 +240,42 @@ public class TalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == TARGET_REACHED) {
+			while (FollowMeParam.state.get(numUAV) == TARGET_REACHED) {
 				Copter.sendBroadcastMessage(numUAV, message);
 				
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		}
-		while (FMeParam.state.get(numUAV) < READY_TO_START) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < READY_TO_START) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** READY TO START */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, FMeText.MASTER_TAKEOFF_END_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.MASTER_TAKEOFF_END_TALKER);
 			output.clear();
 			output.writeShort(Message.TAKEOFF_END);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == READY_TO_START) {
+			while (FollowMeParam.state.get(numUAV) == READY_TO_START) {
 				Copter.sendBroadcastMessage(numUAV, message);
 				
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		} else {
-			GUI.logVerbose(numUAV, FMeText.SLAVE_TAKEOFF_END_ACK_TALKER);
+			GUI.logVerbose(numUAV, FollowMeText.SLAVE_TAKEOFF_END_ACK_TALKER);
 			output.clear();
 			output.writeShort(Message.TAKEOFF_END_ACK);
 			output.writeLong(selfId);
@@ -283,47 +283,47 @@ public class TalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (FMeParam.state.get(numUAV) == READY_TO_START) {
+			while (FollowMeParam.state.get(numUAV) == READY_TO_START) {
 				Copter.sendBroadcastMessage(numUAV, message);
 				
 				// Timer
-				cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 				waitingTime = (int) (cicleTime - System.currentTimeMillis());
 				if (waitingTime > 0) {
 					Tools.waiting(waitingTime);
 				}
 			}
 		}
-		while (FMeParam.state.get(numUAV) < SETUP_FINISHED) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < SETUP_FINISHED) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** SETUP FINISHED PHASE */
 		if (this.isMaster) {
-			GUI.logVerbose(numUAV, FMeText.TALKER_WAITING);
-			while (FMeParam.state.get(numUAV) == SETUP_FINISHED) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			GUI.logVerbose(numUAV, FollowMeText.TALKER_WAITING);
+			while (FollowMeParam.state.get(numUAV) == SETUP_FINISHED) {
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
 		} else {
 			/** FINISH PHASE */
-			GUI.logVerbose(numUAV, FMeText.TALKER_FINISHED);
+			GUI.logVerbose(numUAV, FollowMeText.TALKER_FINISHED);
 			return;
 		}
 		// Only the master UAV reaches this point
-		while (FMeParam.state.get(numUAV) < FOLLOWING) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < FOLLOWING) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** FOLLOWING PHASE */
-		GUI.logVerbose(numUAV, FMeText.MASTER_WAIT_ALTITUDE);
+		GUI.logVerbose(numUAV, FollowMeText.MASTER_WAIT_ALTITUDE);
 		while (!protocolStarted) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		UTMCoordinates here;
 		double z, yaw;
 		cicleTime = System.currentTimeMillis();
-		while (FMeParam.state.get(numUAV) == FOLLOWING) {
+		while (FollowMeParam.state.get(numUAV) == FOLLOWING) {
 			here = Copter.getUTMLocation(numUAV);
 			z = Copter.getZRelative(numUAV);
 			yaw = Copter.getHeading(numUAV);
@@ -339,18 +339,18 @@ public class TalkerThread extends Thread {
 			Copter.sendBroadcastMessage(numUAV, message);
 			
 			// Timer
-			cicleTime = cicleTime + FMeParam.sendPeriod;
+			cicleTime = cicleTime + FollowMeParam.sendPeriod;
 			waitingTime = (int) (cicleTime - System.currentTimeMillis());
 			if (waitingTime > 0) {
 				Tools.waiting(waitingTime);
 			}
 		}
-		while (FMeParam.state.get(numUAV) < LANDING) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < LANDING) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** LANDING PHASE */
-		GUI.logVerbose(numUAV, FMeText.MASTER_SEND_LAND);
+		GUI.logVerbose(numUAV, FollowMeText.MASTER_SEND_LAND);
 		output.clear();
 		output.writeShort(Message.LAND);
 		here = Copter.getUTMLocation(numUAV);
@@ -362,22 +362,22 @@ public class TalkerThread extends Thread {
 		message = Arrays.copyOf(outBuffer, output.position());
 		
 		cicleTime = System.currentTimeMillis();
-		while (FMeParam.state.get(numUAV) == LANDING) {
+		while (FollowMeParam.state.get(numUAV) == LANDING) {
 			Copter.sendBroadcastMessage(numUAV, message);
 			
 			// Timer
-			cicleTime = cicleTime + FMeParam.SENDING_TIMEOUT;
+			cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
 			waitingTime = (int) (cicleTime - System.currentTimeMillis());
 			if (waitingTime > 0) {
 				Tools.waiting(waitingTime);
 			}
 		}
-		while (FMeParam.state.get(numUAV) < FINISH) {
-			Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+		while (FollowMeParam.state.get(numUAV) < FINISH) {
+			Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
 		/** FINISH PHASE */
-		GUI.logVerbose(numUAV, FMeText.TALKER_FINISHED);
+		GUI.logVerbose(numUAV, FollowMeText.TALKER_FINISHED);
 	}
 	
 	

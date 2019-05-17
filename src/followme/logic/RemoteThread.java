@@ -1,6 +1,6 @@
-package fme.logic;
+package followme.logic;
 
-import static fme.pojo.State.LANDING;
+import static followme.pojo.State.LANDING;
 
 import java.util.Queue;
 
@@ -8,7 +8,7 @@ import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
-import fme.pojo.RemoteInput;
+import followme.pojo.RemoteInput;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
@@ -27,7 +27,7 @@ public class RemoteThread extends Thread {
 
 	@Override
 	public void run() {
-		double startingAltitude = FMeParam.slavesStartingAltitude;
+		double startingAltitude = FollowMeParam.slavesStartingAltitude;
 		double protocolStartAltitude = Copter.getMinTargetAltitude(startingAltitude);
 		double finalAltitude = startingAltitude * 0.5;
 		double altitude;
@@ -35,23 +35,23 @@ public class RemoteThread extends Thread {
 		if (Tools.getArduSimRole() == Tools.MULTICOPTER) {
 			
 			while (Copter.getZRelative(numUAV) < protocolStartAltitude) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
 			TalkerThread.protocolStarted = true;
 			while (Copter.getZRelative(numUAV) >= finalAltitude) {
-				Tools.waiting(FMeParam.STATE_CHANGE_TIMEOUT);
+				Tools.waiting(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
-			FMeParam.state.set(numUAV, LANDING);
+			FollowMeParam.state.set(numUAV, LANDING);
 		}
 		
 		if (Tools.getArduSimRole() == Tools.SIMULATOR) {
 			
 			if (!Copter.setFlightMode(numUAV, FlightMode.LOITER)) {
-				GUI.log(numUAV, FMeText.MASTER_LOITER_ERROR);
+				GUI.log(numUAV, FollowMeText.MASTER_LOITER_ERROR);
 				return;
 			}
 			
-			Queue<RemoteInput> path = FMeParam.masterData;
+			Queue<RemoteInput> path = FollowMeParam.masterData;
 			RemoteInput data;
 			
 			boolean landing = false;
@@ -73,7 +73,7 @@ public class RemoteThread extends Thread {
 					if (!TalkerThread.protocolStarted || altitude >= finalAltitude) {
 						Copter.channelsOverride(numUAV, data.roll, data.pitch, data.throttle, data.yaw);
 					} else {
-						FMeParam.state.set(numUAV, LANDING);
+						FollowMeParam.state.set(numUAV, LANDING);
 						landing = true;
 					}
 				}
@@ -81,7 +81,7 @@ public class RemoteThread extends Thread {
 			
 			// In case the path depletes before reaching that altitude
 			if (!landing) {
-				FMeParam.state.set(numUAV, LANDING);
+				FollowMeParam.state.set(numUAV, LANDING);
 			}
 		}
 

@@ -1,4 +1,4 @@
-package fme.pojo;
+package followme.pojo;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 

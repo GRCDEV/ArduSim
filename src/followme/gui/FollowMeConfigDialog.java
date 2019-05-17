@@ -1,4 +1,4 @@
-package fme.gui;
+package followme.gui;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -35,14 +35,14 @@ import api.GUI;
 import api.Tools;
 import api.pojo.formations.FlightFormation;
 import api.pojo.formations.FlightFormation.Formation;
-import fme.logic.FMeParam;
-import fme.logic.FMeText;
-import fme.pojo.RemoteInput;
+import followme.logic.FollowMeParam;
+import followme.logic.FollowMeText;
+import followme.pojo.RemoteInput;
 import main.Text;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
-public class FMeConfigDialog extends JDialog {
+public class FollowMeConfigDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
@@ -59,7 +59,7 @@ public class FMeConfigDialog extends JDialog {
 	private JTextField relAltitudeTextField;
 	private JTextField masterSpeedTextField;
 
-	public FMeConfigDialog() {
+	public FollowMeConfigDialog() {
 		setBounds(100, 100, 450, 300);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{355, 0};
@@ -81,7 +81,7 @@ public class FMeConfigDialog extends JDialog {
 		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		contentPanel.setLayout(gbl_contentPanel);
 		{
-			JLabel lblAdfg = new JLabel(FMeText.GROUND_LOCATION);
+			JLabel lblAdfg = new JLabel(FollowMeText.GROUND_LOCATION);
 			GridBagConstraints gbc_lblAdfg = new GridBagConstraints();
 			gbc_lblAdfg.anchor = GridBagConstraints.WEST;
 			gbc_lblAdfg.insets = new Insets(0, 0, 5, 5);
@@ -90,7 +90,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblAdfg, gbc_lblAdfg);
 		}
 		{
-			JLabel lblSdfh = new JLabel(FMeText.LATITUDE);
+			JLabel lblSdfh = new JLabel(FollowMeText.LATITUDE);
 			lblSdfh.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblSdfh = new GridBagConstraints();
 			gbc_lblSdfh.anchor = GridBagConstraints.EAST;
@@ -102,7 +102,7 @@ public class FMeConfigDialog extends JDialog {
 		{
 			latitudeTextField = new JTextField();
 			latitudeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-			latitudeTextField.setText("" + FMeParam.masterInitialLatitude);
+			latitudeTextField.setText("" + FollowMeParam.masterInitialLatitude);
 			GridBagConstraints gbc_latitudeTextField = new GridBagConstraints();
 			gbc_latitudeTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_latitudeTextField.fill = GridBagConstraints.HORIZONTAL;
@@ -122,7 +122,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblMm, gbc_lblMm);
 		}
 		{
-			JLabel lblAsdfg = new JLabel(FMeText.LONGITUDE);
+			JLabel lblAsdfg = new JLabel(FollowMeText.LONGITUDE);
 			lblAsdfg.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblAsdfg = new GridBagConstraints();
 			gbc_lblAsdfg.anchor = GridBagConstraints.EAST;
@@ -134,7 +134,7 @@ public class FMeConfigDialog extends JDialog {
 		{
 			longitudeTextField = new JTextField();
 			longitudeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-			longitudeTextField.setText("" + FMeParam.masterInitialLongitude);
+			longitudeTextField.setText("" + FollowMeParam.masterInitialLongitude);
 			GridBagConstraints gbc_longitudeTextField = new GridBagConstraints();
 			gbc_longitudeTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_longitudeTextField.fill = GridBagConstraints.HORIZONTAL;
@@ -154,7 +154,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblMm_1, gbc_lblMm_1);
 		}
 		{
-			JLabel lblAdsfg = new JLabel(FMeText.YAW);
+			JLabel lblAdsfg = new JLabel(FollowMeText.YAW);
 			lblAdsfg.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblAdsfg = new GridBagConstraints();
 			gbc_lblAdsfg.anchor = GridBagConstraints.EAST;
@@ -166,7 +166,7 @@ public class FMeConfigDialog extends JDialog {
 		{
 			yawTextField = new JTextField();
 			yawTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-			yawTextField.setText("" + FMeParam.masterInitialYaw);
+			yawTextField.setText("" + FollowMeParam.masterInitialYaw);
 			GridBagConstraints gbc_yawTextField = new GridBagConstraints();
 			gbc_yawTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_yawTextField.fill = GridBagConstraints.HORIZONTAL;
@@ -186,7 +186,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblMm_2, gbc_lblMm_2);
 		}
 		{
-			JLabel groundFormationLabel = new JLabel(FMeText.GROUND_TEXT);
+			JLabel groundFormationLabel = new JLabel(FollowMeText.GROUND_TEXT);
 			GridBagConstraints gbc_groundFormationLabel = new GridBagConstraints();
 			gbc_groundFormationLabel.anchor = GridBagConstraints.WEST;
 			gbc_groundFormationLabel.insets = new Insets(0, 0, 5, 5);
@@ -217,7 +217,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(groundComboBox, gbc_groundComboBox);
 		}
 		{
-			JLabel groundFormationFormationLabel = new JLabel(FMeText.FORMATION_TEXT);
+			JLabel groundFormationFormationLabel = new JLabel(FollowMeText.FORMATION_TEXT);
 			groundFormationFormationLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_groundFormationFormationLabel = new GridBagConstraints();
 			gbc_groundFormationFormationLabel.anchor = GridBagConstraints.EAST;
@@ -227,7 +227,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(groundFormationFormationLabel, gbc_groundFormationFormationLabel);
 		}
 		{
-			JLabel groundFormationDistanceLabel = new JLabel(FMeText.DISTANCE_TEXT);
+			JLabel groundFormationDistanceLabel = new JLabel(FollowMeText.DISTANCE_TEXT);
 			groundFormationDistanceLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_groundFormationDistanceLabel = new GridBagConstraints();
 			gbc_groundFormationDistanceLabel.anchor = GridBagConstraints.EAST;
@@ -258,7 +258,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel, gbc_lblNewLabel);
 		}
 		{
-			JLabel airFormationLabel = new JLabel(FMeText.AIR_TEXT);
+			JLabel airFormationLabel = new JLabel(FollowMeText.AIR_TEXT);
 			GridBagConstraints gbc_airFormationLabel = new GridBagConstraints();
 			gbc_airFormationLabel.anchor = GridBagConstraints.WEST;
 			gbc_airFormationLabel.insets = new Insets(0, 0, 5, 5);
@@ -287,7 +287,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(airComboBox, gbc_airComboBox);
 		}
 		{
-			JLabel airFormationFormationLabel = new JLabel(FMeText.FORMATION_TEXT);
+			JLabel airFormationFormationLabel = new JLabel(FollowMeText.FORMATION_TEXT);
 			airFormationFormationLabel.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_airFormationFormationLabel = new GridBagConstraints();
 			gbc_airFormationFormationLabel.anchor = GridBagConstraints.EAST;
@@ -297,7 +297,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(airFormationFormationLabel, gbc_airFormationFormationLabel);
 		}
 		{
-			JLabel lblFlightDistance = new JLabel(FMeText.DISTANCE_TEXT);
+			JLabel lblFlightDistance = new JLabel(FollowMeText.DISTANCE_TEXT);
 			lblFlightDistance.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblFlightDistance = new GridBagConstraints();
 			gbc_lblFlightDistance.anchor = GridBagConstraints.EAST;
@@ -328,7 +328,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		}
 		{
-			JLabel lblNewLabel_6 = new JLabel(FMeText.INITIAL_RELATIVE_ALTITUDE);
+			JLabel lblNewLabel_6 = new JLabel(FollowMeText.INITIAL_RELATIVE_ALTITUDE);
 			lblNewLabel_6.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblNewLabel_6 = new GridBagConstraints();
 			gbc_lblNewLabel_6.anchor = GridBagConstraints.EAST;
@@ -340,7 +340,7 @@ public class FMeConfigDialog extends JDialog {
 		{
 			relAltitudeTextField = new JTextField();
 			relAltitudeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-			relAltitudeTextField.setText("" + FMeParam.slavesStartingAltitude);
+			relAltitudeTextField.setText("" + FollowMeParam.slavesStartingAltitude);
 			GridBagConstraints gbc_relAltitudeTextField = new GridBagConstraints();
 			gbc_relAltitudeTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_relAltitudeTextField.fill = GridBagConstraints.HORIZONTAL;
@@ -360,7 +360,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_7, gbc_lblNewLabel_7);
 		}
 		{
-			JLabel lblNewLabel_2 = new JLabel(FMeText.LANDING_TEXT);
+			JLabel lblNewLabel_2 = new JLabel(FollowMeText.LANDING_TEXT);
 			GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
 			gbc_lblNewLabel_2.anchor = GridBagConstraints.WEST;
 			gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
@@ -369,7 +369,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_2, gbc_lblNewLabel_2);
 		}
 		{
-			JLabel lblLandDistance = new JLabel(FMeText.DISTANCE_TEXT);
+			JLabel lblLandDistance = new JLabel(FollowMeText.DISTANCE_TEXT);
 			lblLandDistance.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblLandDistance = new GridBagConstraints();
 			gbc_lblLandDistance.anchor = GridBagConstraints.EAST;
@@ -400,7 +400,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_3, gbc_lblNewLabel_3);
 		}
 		{
-			JLabel lblDfg = new JLabel(FMeText.SIMULATED_DATA);
+			JLabel lblDfg = new JLabel(FollowMeText.SIMULATED_DATA);
 			GridBagConstraints gbc_lblDfg = new GridBagConstraints();
 			gbc_lblDfg.anchor = GridBagConstraints.WEST;
 			gbc_lblDfg.insets = new Insets(0, 0, 5, 5);
@@ -430,14 +430,14 @@ public class FMeConfigDialog extends JDialog {
 					JFileChooser chooser;
 					chooser = new JFileChooser();
 					chooser.setCurrentDirectory(Tools.getCurrentFolder());
-					chooser.setDialogTitle(FMeText.SIMULATED_DATA_DIALOG_TITLE);
+					chooser.setDialogTitle(FollowMeText.SIMULATED_DATA_DIALOG_TITLE);
 					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-					FileNameExtensionFilter filter = new FileNameExtensionFilter(FMeText.DATA_TXT_FILE, Text.FILE_EXTENSION_TXT);
+					FileNameExtensionFilter filter = new FileNameExtensionFilter(FollowMeText.DATA_TXT_FILE, Text.FILE_EXTENSION_TXT);
 					chooser.addChoosableFileFilter(filter);
 					chooser.setAcceptAllFileFilterUsed(false);
 					chooser.setMultiSelectionEnabled(false);
 					if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
-						FMeParam.masterData = null;
+						FollowMeParam.masterData = null;
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								dataTextField.setText("");
@@ -449,20 +449,20 @@ public class FMeConfigDialog extends JDialog {
 					selection = chooser.getSelectedFile();
 					Queue<RemoteInput> data = getData(selection);
 					if (data != null && !data.isEmpty()) {
-						FMeParam.masterData = data;data.toString();
+						FollowMeParam.masterData = data;data.toString();
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								dataTextField.setText(selection.getName());
 							}
 						});
 					} else {
-						FMeParam.masterData = null;
+						FollowMeParam.masterData = null;
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								dataTextField.setText("");
 							}
 						});
-						GUI.warn(Text.VALIDATION_WARNING, FMeText.SIMULATED_DATA_ERROR);
+						GUI.warn(Text.VALIDATION_WARNING, FollowMeText.SIMULATED_DATA_ERROR);
 					}
 				}
 			});
@@ -473,7 +473,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(loadDataButton, gbc_loadDataButton);
 		}
 		{
-			JLabel lblNewLabel_8 = new JLabel(FMeText.MASTER_UAV_SPEED);
+			JLabel lblNewLabel_8 = new JLabel(FollowMeText.MASTER_UAV_SPEED);
 			lblNewLabel_8.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblNewLabel_8 = new GridBagConstraints();
 			gbc_lblNewLabel_8.anchor = GridBagConstraints.EAST;
@@ -485,7 +485,7 @@ public class FMeConfigDialog extends JDialog {
 		{
 			masterSpeedTextField = new JTextField();
 			masterSpeedTextField.setHorizontalAlignment(SwingConstants.RIGHT);
-			masterSpeedTextField.setText("" + FMeParam.masterSpeed);
+			masterSpeedTextField.setText("" + FollowMeParam.masterSpeed);
 			GridBagConstraints gbc_masterSpeedTextField = new GridBagConstraints();
 			gbc_masterSpeedTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_masterSpeedTextField.fill = GridBagConstraints.HORIZONTAL;
@@ -515,7 +515,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_4, gbc_lblNewLabel_4);
 		}
 		{
-			JLabel lblNewLabel_5 = new JLabel(FMeText.COMM_PERIOD);
+			JLabel lblNewLabel_5 = new JLabel(FollowMeText.COMM_PERIOD);
 			lblNewLabel_5.setHorizontalAlignment(SwingConstants.CENTER);
 			lblNewLabel_5.setFont(new Font("Dialog", Font.PLAIN, 12));
 			GridBagConstraints gbc_lblNewLabel_5 = new GridBagConstraints();
@@ -526,7 +526,7 @@ public class FMeConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel_5, gbc_lblNewLabel_5);
 		}
 		{
-			messagePeriodTextField = new JTextField("" + FMeParam.sendPeriod);
+			messagePeriodTextField = new JTextField("" + FollowMeParam.sendPeriod);
 			messagePeriodTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_messagePeriodTextField = new GridBagConstraints();
 			gbc_messagePeriodTextField.insets = new Insets(0, 0, 5, 5);
@@ -575,7 +575,7 @@ public class FMeConfigDialog extends JDialog {
 					
 					dispose();
 				} else {
-					GUI.warn(Text.VALIDATION_WARNING, FMeText.BAD_INPUT);
+					GUI.warn(Text.VALIDATION_WARNING, FollowMeText.BAD_INPUT);
 				}		
 			}
 		});
@@ -593,7 +593,7 @@ public class FMeConfigDialog extends JDialog {
 		
 		GUI.addEscapeListener(this, true);
 		
-		this.setTitle(FMeText.CONFIGURATION_DIALOG_TITLE_SWARM);
+		this.setTitle(FollowMeText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
 		this.setResizable(false);
 		this.setLocationRelativeTo(null);
@@ -666,61 +666,61 @@ public class FMeConfigDialog extends JDialog {
 	private boolean isValidConfiguration() {
 		String validating = latitudeTextField.getText();
 		if (!Tools.isValidDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.LATITUDE_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.LATITUDE_ERROR);
 			return false;
 		}
 		
 		validating = longitudeTextField.getText();
 		if (!Tools.isValidDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.LONGITUDE_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.LONGITUDE_ERROR);
 			return false;
 		}
 		
 		validating = yawTextField.getText();
 		if (!Tools.isValidDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.YAW_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.YAW_ERROR);
 			return false;
 		}
 		
 		validating = groundTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.DISTANCE_TEXT_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = flyingTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.DISTANCE_TEXT_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = relAltitudeTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.INITIAL_RELATIVE_ALTITUDE_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.INITIAL_RELATIVE_ALTITUDE_ERROR);
 			return false;
 		}
 		
 		validating = landingTextField.getText();
 		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.DISTANCE_TEXT_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = dataTextField.getText();
 		if (validating == null || validating.length() == 0) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.SIMULATED_DATA_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.SIMULATED_DATA_ERROR);
 			return false;
 		}
 		
 		validating = masterSpeedTextField.getText();
 		if (!Tools.isValidPositiveInteger(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.MASTER_UAV_SPEED_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.MASTER_UAV_SPEED_ERROR);
 			return false;
 		}
 		
 		validating = messagePeriodTextField.getText();
 		if (!Tools.isValidPositiveInteger(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FMeText.DISTANCE_TEXT_ERROR);
+			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
@@ -728,9 +728,9 @@ public class FMeConfigDialog extends JDialog {
 	}
 	
 	private void storeConfiguration() {
-		FMeParam.masterInitialLatitude = Double.parseDouble(latitudeTextField.getText());
-		FMeParam.masterInitialLongitude = Double.parseDouble(longitudeTextField.getText());
-		FMeParam.masterInitialYaw = Double.parseDouble(yawTextField.getText()) * Math.PI / 180.0;
+		FollowMeParam.masterInitialLatitude = Double.parseDouble(latitudeTextField.getText());
+		FollowMeParam.masterInitialLongitude = Double.parseDouble(longitudeTextField.getText());
+		FollowMeParam.masterInitialYaw = Double.parseDouble(yawTextField.getText()) * Math.PI / 180.0;
 		double ground = Double.parseDouble(groundTextField.getText());
 		double flying = Double.parseDouble(flyingTextField.getText());
 		double landing = Double.parseDouble(landingTextField.getText());
@@ -738,10 +738,10 @@ public class FMeConfigDialog extends JDialog {
 		FlightFormation.setGroundFormationDistance(ground);
 		FlightFormation.setFlyingFormation(Formation.getFormation((String)airComboBox.getSelectedItem()));
 		FlightFormation.setFlyingFormationDistance(flying);
-		FMeParam.slavesStartingAltitude = Double.parseDouble(relAltitudeTextField.getText());
+		FollowMeParam.slavesStartingAltitude = Double.parseDouble(relAltitudeTextField.getText());
 		FlightFormation.setLandingFormationDistance(landing);
-		FMeParam.masterSpeed = Integer.parseInt(masterSpeedTextField.getText());
-		FMeParam.sendPeriod = Integer.parseInt(messagePeriodTextField.getText());
+		FollowMeParam.masterSpeed = Integer.parseInt(masterSpeedTextField.getText());
+		FollowMeParam.sendPeriod = Integer.parseInt(messagePeriodTextField.getText());
 		
 	}
 	

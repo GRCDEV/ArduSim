@@ -32,6 +32,7 @@ public class Text {
 	public static final String INI_FILE_PROTOCOL_NOT_FOUND_ERROR = "No protocol specified in INI file.";
 	public static final String INI_FILE_SPEED_NOT_FOUND_ERROR = "No flight speed specified in INI file.";
 	public static final String PROTOCOL_NOT_FOUND_ERROR = "protocol was not found. Valid protocols:";
+	public static final String PROTOCOL_DUPLICATED = "More than one implementation found for a protocol.";
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
 	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR = "param not found. Using default value:";
 	public static final String INI_FILE_PARAM_NOT_VALID_ERROR = "param not valid value:";

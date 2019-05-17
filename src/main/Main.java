@@ -45,18 +45,26 @@ public class Main {
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
-		String[] existingProtocols = ArduSimTools.loadProtocols();
-		if (existingProtocols == null) {
-			return;
-		}
-		ProtocolHelper.ProtocolNames = existingProtocols;
-		
 		// Parse the command line arguments and load configuration file
 		if (!ArduSimTools.parseArgs(args)) {
 			return;
 		}
+		
+		// Load available protocols
+		String[] existingProtocols = ArduSimTools.loadProtocols();
+		if (existingProtocols == null) {
+			GUI.warn(Text.VALIDATION_WARNING, Text.PROTOCOL_DUPLICATED);
+			return;
+		}
+		ProtocolHelper.ProtocolNames = existingProtocols;
+		
+		// Detect the running operating system
 		ArduSimTools.detectOS();
+		
+		// Parse configuration file
 		ArduSimTools.parseIniFile();
+		
+		// Open the PC Companion GUI en finish this thread
 		if (Param.role == Tools.PCCOMPANION) {
 			Param.numUAVs = 1;
 			SwingUtilities.invokeLater(new Runnable() {
@@ -66,6 +74,8 @@ public class Main {
 			});
 			return;	// In the PC Companion, the control is released to the GUI
 		}
+		
+		// From this point, ArduSim would only run as multicopter or simulator
 		System.setProperty("sun.java2d.opengl", "true");
 		Param.simStatus = SimulatorState.CONFIGURING;
 		

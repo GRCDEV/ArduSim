@@ -1,130 +1,53 @@
 package followme.logic;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Queue;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import api.pojo.UTMCoordinates;
-import followme.pojo.RecursoCompartido;
+import api.pojo.formations.FlightFormation.Formation;
+import followme.pojo.RemoteInput;
+
+/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
 public class FollowMeParam {
+	// General parameters
+	public static final int MASTER_POSITION = 0; // Position of master UAV into array of UAVs
+	public static final long SIMULATION_MASTER_ID = 0;
+	public static final String[] MAC = new String[] { "b8:27:eb:57:4c:0e", "b8:27:eb:02:19:5b" };// MACs of master (Hexacopter) with standard format
+	public static final long[] MAC_ID = new long[] { 202481591602190L, 202481586018651L };// MACs of master with long format
 	
-	public static volatile boolean setupFinished = false;
-		
-
-	public static final long MASTER_ID_SIM = 0;
-	public static final String[] MASTER_MAC = { "b8:27:eb:74:0c:d1", "00:c0:ca:90:32:05" };
-	public static final long[] MASTER_ID_REAL = { 202481593486545L, 202481593486545L };
-
-	public static final int MsgIDs = 0;
-	public static final int MsgTakeOff = 1;
-	public static final int MsgReady = 2;
-	public static final int MsgCoordenadas = 3;
-	public static final int MsgLanding = 4;
-
-	public static final double AlturaInitFollowers = 10.0;
-	public static final double AlturaMiminaFollowers = 0.75;
-	public static final double AlturaInitSend = 0.5;
-	public static final long TiempoMaxExperimento = 60000 * 5;
+	public static double slavesStartingAltitude = 19;			// (m) Relative altitude where the UAVs finish the take off process
+	public static int masterSpeed = 500;						// (cm/s) Maximum speed of the master UAV during flight (in Loiter mode)
+	public static final double MIN_DISTANCE_TO_TARGET = 1.0;	// (m) Distance from which it is accepted that you have reached the target
+	
+	// Simulation parameters
+	public static Queue<RemoteInput> masterData = null;					// Real UAV RC values used during a flight
+	public static volatile double masterInitialLatitude = 39.482594;	// (degrees) Latitude for simulations
+	public static volatile double masterInitialLongitude = -0.346265;	// (degrees) Longitude for simulations
+	public static volatile double masterInitialYaw = 0.0;				// (rad) Initial heading of the master UAV for simulations
+	
+	// Thread coordination
+	public static AtomicIntegerArray state;
+	
+	// Timeouts
+	public static final int STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
+	public static final int SENDING_TIMEOUT = 200;			// (ms) Time between packets sent
+	public static final int RECEIVING_TIMEOUT = 50;			// (ms) The port is unlocked after this time when receiving messages
+	public static final long SETUP_TIMEOUT = 2000;			// (ms) Timeout to assert that the configuration step has finished
+	public static final int TAKE_OFF_CHECK_TIMEOUT = 250;	// (ms) Between checks if the target altitude has been reached
+	public static final int TAKE_OFF_LOG_TIMEOUT = 1000;	// (ms) Between checks to show the current altitude during takeoff
+	public static final int HOVERING_TIMEOUT = 500;			// (ms) Waiting time after takeoff before moving to first waypoint
+	public static final int MOVE_CHECK_TIMEOUT = 200;		// (ms) Between checks if the target location has been reached
+	public static final long TAKEOFF_TIMEOUT = 2000;		// (ms) Timeout to assert that the takeoff has finished
+	public static final int LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
+	
+	// Messages sent
+	public static int sendPeriod = 1000;							// (ms) Period between messages from the master during flight
+	public static AtomicReference<byte[][]> data;					// Master: array containing the data sent to the slaves
+	public static AtomicLongArray idNext;							// id of the next UAV to takeoff
+	public static AtomicReferenceArray<Formation> flyingFormation;	// Formation used while flying
 	
 	
-	
-	public static double DistanceLinearOffset;
-	public static double DistanceRadio;
-	
-	
-	//public static final int DistanciaSeparacionHorizontal = 75;
-	public static final int DistanciaSeparacionVertical = 0;
-	//public static final double DistanciaSeparacionRadio = 125;
-
-	// Beaconing parameters
-	public static int FollowMeBeaconingPeriod = 1000;						// (ms) Time between beacons
-	public static int FollowMeNumBeacons = 5;								// Between a new future positions calculus
-		
-	public static final int FormacionLinea = 0;
-	public static final int FormacionMatriz = 1;
-	public static final int FormacionCircular = 2;
-	public static int FormacionUsada;
-
-	public static int posMaster = -1;
-
-	public static boolean realUAVisMaster = false;
-	
-	public static AtomicReferenceArray<UTMCoordinates> takeoffLocation;
-
-	public static AtomicReference<RecursoCompartido> recurso = new AtomicReference<RecursoCompartido>(null);
-
-	public static FollowMeState[] uavs;
-
-	public static ConcurrentHashMap<Integer, Integer> posFormacion;
-
-	public enum FollowMeState {
-		START((short) 1, FollowMeText.START),
-
-		// Master
-		LISTEN_ID((short) 2, FollowMeText.LISTEN_IDs), 
-		WAIT_TAKE_OFF_MASTER((short) 3,FollowMeText.WAIT_TAKE_OFF_MASTER), 
-		READY_TO_START((short) 4, FollowMeText.READY_TO_START), 
-		SENDING((short) 5, FollowMeText.SENDING), 
-		LANDING_MASTER((short) 6, FollowMeText.LANDING_MASTER),
-
-		// Followers
-		SEND_ID((short) 7, FollowMeText.SEND_ID),
-		WAIT_TAKE_OFF_SLAVE((short) 8, FollowMeText.WAIT_TAKE_OFF_SLAVE), 
-		TAKE_OFF((short) 9,	FollowMeText.TAKE_OFF),
-		GOTO_POSITION((short) 10, FollowMeText.GOTO_POSITION),
-		WAIT_MASTER((short) 11, FollowMeText.WAIT_MASTER), 
-		FOLLOW((short) 12,	FollowMeText.FOLLOW), 
-		LANDING_FOLLOWERS((short) 13, FollowMeText.LANDING_FOLLOWERS),
-
-		FINISH((short) 14, FollowMeText.FINISH);
-
-		private final short id;
-		private final String name;
-
-		private FollowMeState(short id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-
-		public short getId() {
-			return this.id;
-		}
-
-		public String getName() {
-			return this.name;
-		}
-
-		public static FollowMeState getStateById(short id) {
-			FollowMeState res = null;
-			for (FollowMeState p : FollowMeState.values()) {
-				if (p.getId() == id) {
-					res = p;
-					break;
-				}
-			}
-			return res;
-		}
-
-	}
-	
-	public static String getTypeMessage(int type) {
-		switch (type) {
-		case MsgIDs:
-			return "MsgIDs";
-		case MsgTakeOff:
-			return "MsgTakeOff";
-		case MsgReady:
-			return "MsgReady";
-		case MsgCoordenadas:
-			return "MsgCoordenadas";
-		case MsgLanding:
-			return "MsgLanding";
-		default:
-			break;
-		}
-		
-		return "Type not found";
-	}
-
 }
