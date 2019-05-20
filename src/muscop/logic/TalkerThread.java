@@ -6,11 +6,13 @@ import java.util.Arrays;
 
 import com.esotericsoftware.kryo.io.Output;
 
+import api.API;
 import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.UTMCoordinates;
 import api.pojo.formations.FlightFormation;
+import main.communications.CommLink;
 import muscop.pojo.Message;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
@@ -24,6 +26,7 @@ public class TalkerThread extends Thread {
 	private byte[] outBuffer;
 	private Output output;
 	private byte[] message;
+	private CommLink link;
 	
 	private long cicleTime;		// Cicle time used for sending messages
 	private int waitingTime;	// Time to wait between two sent messages
@@ -38,6 +41,7 @@ public class TalkerThread extends Thread {
 		
 		this.outBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
+		this.link = API.getCommLink(numUAV);
 		
 		this.cicleTime = 0;
 	}
@@ -68,7 +72,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == START) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -92,7 +96,7 @@ public class TalkerThread extends Thread {
 				if (messages != null) {
 					int length = messages.length;
 					for (int i = 0; i < length; i++) {
-						Copter.sendBroadcastMessage(numUAV, messages[i]);
+						link.sendBroadcastMessage(messages[i]);
 					}
 				}
 				
@@ -114,7 +118,7 @@ public class TalkerThread extends Thread {
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == SETUP) {
 				if (MUSCOPParam.uavMissionReceivedGeo.get(numUAV) != null) {
-					Copter.sendBroadcastMessage(numUAV, message);
+					link.sendBroadcastMessage(message);
 				}
 				
 				// Timer
@@ -139,7 +143,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_FLY) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -158,7 +162,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_FLY) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -209,7 +213,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == MOVE_TO_TARGET) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -240,7 +244,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == TARGET_REACHED) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -264,7 +268,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_START) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -283,7 +287,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_START) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -327,7 +331,7 @@ public class TalkerThread extends Thread {
 				
 				cicleTime = System.currentTimeMillis();
 				while (MUSCOPParam.wpReachedSemaphore.get(numUAV) == currentWP) {
-					Copter.sendBroadcastMessage(numUAV, message);
+					link.sendBroadcastMessage(message);
 					
 					// Timer
 					cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -351,7 +355,7 @@ public class TalkerThread extends Thread {
 					
 					cicleTime = System.currentTimeMillis();
 					while (MUSCOPParam.moveSemaphore.get(numUAV) == currentWP) {
-						Copter.sendBroadcastMessage(numUAV, message);
+						link.sendBroadcastMessage(message);
 						
 						// Timer
 						cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -371,7 +375,7 @@ public class TalkerThread extends Thread {
 					
 					cicleTime = System.currentTimeMillis();
 					while (MUSCOPParam.moveSemaphore.get(numUAV) == currentWP) {
-						Copter.sendBroadcastMessage(numUAV, message);
+						link.sendBroadcastMessage(message);
 						
 						// Timer
 						cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -407,7 +411,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (MUSCOPParam.state.get(numUAV) == LANDING) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;

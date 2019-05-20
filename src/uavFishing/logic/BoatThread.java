@@ -3,10 +3,13 @@ package uavFishing.logic;
 
 
 import com.esotericsoftware.kryo.io.Output;
+
+import api.API;
 import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.UTMCoordinates;
+import main.communications.CommLink;
 
 public class BoatThread extends Thread {
 	
@@ -16,6 +19,7 @@ public class BoatThread extends Thread {
 	UTMCoordinates location;
 	int uavID;
 	Output output;
+	CommLink link;
 	
 	public BoatThread (int uavID) {
 		
@@ -23,6 +27,8 @@ public class BoatThread extends Thread {
 		this.message = new byte[UavFishingParam.DATAGRAM_MAX_LENGTH];
 		this.messagetxt = "";
 		this.output = new Output(message);
+		
+		this.link = API.getCommLink(uavID);
 		
 	}
 	
@@ -50,7 +56,7 @@ public class BoatThread extends Thread {
 		output.writeDouble(heading);
 		output.writeBoolean(Copter.isLastWaypointReached(uavID));
 		output.flush();
-		Copter.sendBroadcastMessage(uavID, message);
+		link.sendBroadcastMessage(message);
 		
 		}
 	}

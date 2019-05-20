@@ -2,9 +2,12 @@ package uavFishing.logic;
 
 
 import com.esotericsoftware.kryo.io.Input;
+
+import api.API;
 import api.Copter;
 import api.GUI;
 import api.Tools;
+import main.communications.CommLink;
 
 public class FisherReceiverThread  extends Thread{
 	
@@ -12,6 +15,7 @@ public class FisherReceiverThread  extends Thread{
 	String messagetxt;
 	private int uavID;
 	private Input input;
+	private CommLink link;
 	public static volatile double[] posBoat;
 	public static volatile double angle,heading,radius,boatAltitude;
 	public static volatile boolean landSignal;
@@ -22,6 +26,7 @@ public class FisherReceiverThread  extends Thread{
 		this.uavID = uavID;
 		this.message = new byte[UavFishingParam.DATAGRAM_MAX_LENGTH];	
 		this.input = new Input(this.message);
+		this.link = API.getCommLink(uavID);
 		this.messagetxt = "";
 		this.posBoat = new double [2];
 	}
@@ -39,7 +44,7 @@ public class FisherReceiverThread  extends Thread{
 		int i=0;
 		while(Tools.isExperimentInProgress()) {
 			
-			message = Copter.receiveMessage(uavID);
+			message = link.receiveMessage(uavID);
 			input.setBuffer(message);
 			if ( message != null) {
 				

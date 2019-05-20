@@ -17,8 +17,6 @@ import java.io.InputStreamReader;
 import java.io.SyncFailedException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -43,8 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,10 +49,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
@@ -80,6 +74,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import api.API;
 import api.Copter;
 import api.GUI;
 import api.ProtocolHelper;
@@ -98,7 +93,7 @@ import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
 import main.Param.SimulatorState;
-import main.Param.WirelessModel;
+import main.communications.CommLinkObject;
 import main.cpuHelper.CPUData;
 import none.ProtocolNoneHelper;
 import pccompanion.logic.PCCompanionParam;
@@ -106,8 +101,6 @@ import sim.board.BoardParam;
 import sim.gui.MainWindow;
 import sim.logic.GPSStartThread;
 import sim.logic.SimParam;
-import sim.pojo.IncomingMessage;
-import sim.pojo.IncomingMessageQueue;
 import sim.pojo.PortScanResult;
 import sim.pojo.WinRegistry;
 import uavController.UAVControllerThread;
@@ -704,63 +697,17 @@ public class ArduSimTools {
 			SimParam.prefix[i] = Text.UAV_ID + " " + Param.id[i] + ": ";
 		}
 		
-		// UAV to UAV communication structures
+		// Collision and communication range parameters
 		if (Param.role == Tools.SIMULATOR) {
 			UAVParam.distances = new AtomicReference[Param.numUAVs][Param.numUAVs];
-			UAVParam.isInRange = new AtomicBoolean[Param.numUAVs][Param.numUAVs];
+			CommLinkObject.isInRange = new AtomicBoolean[Param.numUAVs][Param.numUAVs];
 			for (int i = 0; i < Param.numUAVs; i++) {
 				for (int j = 0; j < Param.numUAVs; j++) {
 					UAVParam.distances[i][j] = new AtomicReference<Double>();
-					UAVParam.isInRange[i][j] = new AtomicBoolean();
+					CommLinkObject.isInRange[i][j] = new AtomicBoolean();
 				}
-			}
-			
-			UAVParam.prevSentMessage = new AtomicReferenceArray<IncomingMessage>(Param.numUAVs);
-			UAVParam.mBuffer = new IncomingMessageQueue[Param.numUAVs];
-			for (int i = 0; i < Param.numUAVs; i++) {
-				UAVParam.mBuffer[i] = new IncomingMessageQueue();
-			}
-			if (UAVParam.pCollisionEnabled) {
-				UAVParam.vBuffer = new ConcurrentSkipListSet[Param.numUAVs];
-				UAVParam.vBufferUsedSpace = new AtomicIntegerArray(Param.numUAVs);
-				for (int i = 0; i < Param.numUAVs; i++) {
-					UAVParam.vBuffer[i] = new ConcurrentSkipListSet<>();
-				}
-				UAVParam.successfullyProcessed = new AtomicIntegerArray(Param.numUAVs);
-				UAVParam.maxCompletedTEndTime = new AtomicLongArray(Param.numUAVs);
-				UAVParam.lock = new ReentrantLock[Param.numUAVs];
-				for (int i = 0; i < Param.numUAVs; i++) {
-					UAVParam.lock[i] = new ReentrantLock();
-				}
-			}
-			
-			UAVParam.packetWaitedPrevSending = new int[Param.numUAVs];
-			UAVParam.packetWaitedMediaAvailable = new int[Param.numUAVs];
-			UAVParam.receiverOutOfRange = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.receiverWasSending = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.receiverVirtualQueueFull = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.receiverQueueFull = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.successfullyReceived = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.discardedForCollision = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.successfullyEnqueued = new AtomicIntegerArray(Param.numUAVs);
-			UAVParam.communicationsClosed = new ConcurrentHashMap<>(Param.numUAVs);
-		} else {
-			try {
-				UAVParam.sendSocket = new DatagramSocket();
-				UAVParam.sendSocket.setBroadcast(true);
-				UAVParam.sendPacket = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH],
-						Tools.DATAGRAM_MAX_LENGTH,
-						InetAddress.getByName(UAVParam.broadcastIP),
-						UAVParam.broadcastPort);
-				UAVParam.receiveSocket = new DatagramSocket(UAVParam.broadcastPort);
-				UAVParam.receiveSocket.setBroadcast(true);
-				UAVParam.receivePacket = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
-			} catch (SocketException | UnknownHostException e) {
-				GUI.exit(Text.THREAD_START_ERROR);
 			}
 		}
-		UAVParam.sentPacket = new int[Param.numUAVs];
-		UAVParam.receivedPacket = new AtomicIntegerArray(Param.numUAVs);
 		
 	}
 	
@@ -2775,121 +2722,9 @@ public class ArduSimTools {
 		}
 		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ProtocolHelper.selectedProtocol);
 		sb.append("\n").append(Text.COMMUNICATIONS);
-		long sentPacketTot = 0;
-		long receivedPacketTot = 0;
-		for (int i = 0; i < Param.numUAVs; i++) {
-			sentPacketTot = sentPacketTot + UAVParam.sentPacket[i];
-			receivedPacketTot = receivedPacketTot + UAVParam.receivedPacket.get(i);
-		}
-		if (Param.role == Tools.MULTICOPTER) {
-			sb.append("\n\t").append(Text.BROADCAST_IP).append(" ").append(UAVParam.broadcastIP);
-			sb.append("\n\t").append(Text.BROADCAST_PORT).append(" ").append(UAVParam.broadcastPort);
-			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);
-			sb.append("\n\t").append(Text.TOT_PROCESSED).append(" ").append(receivedPacketTot);
-		} else if (Param.role == Tools.SIMULATOR) {
-			sb.append("\n\t").append(Text.CARRIER_SENSING_ENABLED).append(" ").append(UAVParam.carrierSensingEnabled);
-			sb.append("\n\t").append(Text.PACKET_COLLISION_DETECTION_ENABLED).append(" ").append(UAVParam.pCollisionEnabled);
-			sb.append("\n\t").append(Text.BUFFER_SIZE).append(" ").append(UAVParam.receivingBufferSize).append(" ").append(Text.BYTES);
-			sb.append("\n\t").append(Text.WIFI_MODEL).append(" ").append(Param.selectedWirelessModel.getName());
-			if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
-				sb.append(": ").append(Param.fixedRange).append(" ").append(Text.METERS);
-			}
-			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);
-			if (Param.numUAVs > 1 && sentPacketTot > 0) {
-				long packetWaitedPrevSendingTot = 0;
-				for (int i = 0; i < Param.numUAVs; i++) {
-					packetWaitedPrevSendingTot = packetWaitedPrevSendingTot + UAVParam.packetWaitedPrevSending[i];
-				}
-				sb.append("\n\t\t").append(Text.TOT_WAITED_PREV_SENDING).append(" ").append(packetWaitedPrevSendingTot)
-					.append(" (").append(Tools.round((100.0 * packetWaitedPrevSendingTot)/sentPacketTot, 3)).append("%)");
-				if (UAVParam.carrierSensingEnabled) {
-					long packetWaitedMediaAvailableTot = 0;
-					for (int i = 0; i < Param.numUAVs; i++) {
-						packetWaitedMediaAvailableTot = packetWaitedMediaAvailableTot + UAVParam.packetWaitedMediaAvailable[i];
-					}
-					sb.append("\n\t\t").append(Text.TOT_WAITED_MEDIA_AVAILABLE).append(" ").append(packetWaitedMediaAvailableTot)
-						.append(" (").append(Tools.round((100.0 * packetWaitedMediaAvailableTot)/sentPacketTot, 3)).append("%)");
-				}
-				long potentiallyReceived = sentPacketTot * (Param.numUAVs - 1);
-				long receiverOutOfRangeTot = 0;
-				long receiverWasSendingTot = 0;
-				long successfullyReceivedTot = 0;
-				for (int i = 0; i < Param.numUAVs; i++) {
-					receiverOutOfRangeTot = receiverOutOfRangeTot + UAVParam.receiverOutOfRange.get(i);
-					receiverWasSendingTot = receiverWasSendingTot + UAVParam.receiverWasSending.get(i);
-					successfullyReceivedTot = successfullyReceivedTot + UAVParam.successfullyReceived.get(i);
-				}
-				long receiverVirtualQueueFullTot = 0;
-				long successfullyEnqueuedTot = 0;
-				if (UAVParam.pCollisionEnabled) {
-					for (int i = 0; i < Param.numUAVs; i++) {
-						receiverVirtualQueueFullTot = receiverVirtualQueueFullTot + UAVParam.receiverVirtualQueueFull.get(i);
-						successfullyEnqueuedTot = successfullyEnqueuedTot + UAVParam.successfullyEnqueued.get(i);
-					}
-				}
-				long receiverQueueFullTot = 0;
-				for (int i = 0; i < Param.numUAVs; i++) {
-					receiverQueueFullTot = receiverQueueFullTot + UAVParam.receiverQueueFull.get(i);
-				}
-				sb.append("\n\t").append(Text.TOT_POTENTIALLY_RECEIVED).append(" ").append(potentiallyReceived);
-				sb.append("\n\t\t").append(Text.TOT_OUT_OF_RANGE).append(" ").append(receiverOutOfRangeTot)
-					.append(" (").append(Tools.round((100.0 * receiverOutOfRangeTot)/potentiallyReceived, 3)).append("%)");
-				sb.append("\n\t\t").append(Text.TOT_LOST_RECEIVER_WAS_SENDING).append(" ").append(receiverWasSendingTot)
-					.append(" (").append(Tools.round((100.0 * receiverWasSendingTot)/potentiallyReceived, 3)).append("%)");
-				if (UAVParam.pCollisionEnabled) {
-					sb.append("\n\t\t").append(Text.TOT_VIRTUAL_QUEUE_WAS_FULL).append(" ").append(receiverVirtualQueueFullTot)
-						.append(" (").append(Tools.round((100.0 * receiverVirtualQueueFullTot)/potentiallyReceived, 3)).append("%)");
-					sb.append("\n\t\t").append(Text.TOT_RECEIVED_IN_VBUFFER).append(" ").append(successfullyEnqueuedTot)
-						.append(" (").append(Tools.round((100.0 * successfullyEnqueuedTot)/potentiallyReceived, 3)).append("%)");
-				} else {
-					// We must include the received messages but discarded because the buffer was full
-					successfullyReceivedTot = successfullyReceivedTot + receiverQueueFullTot;
-					sb.append("\n\t\t").append(Text.TOT_RECEIVED).append(" ").append(successfullyReceivedTot)
-						.append(" (").append(Tools.round((100.0 * successfullyReceivedTot)/potentiallyReceived, 3)).append("%)");
-				}
-				long inBufferTot = successfullyReceivedTot - receiverQueueFullTot - receivedPacketTot;
-				if (UAVParam.pCollisionEnabled) {
-					if (successfullyEnqueuedTot != 0) {
-						long successfullyProcessedTot = 0;
-						for (int i = 0; i < Param.numUAVs; i++) {
-							successfullyProcessedTot = successfullyProcessedTot + UAVParam.successfullyProcessed.get(i);
-						}
-						long inVBufferTot = successfullyEnqueuedTot - successfullyProcessedTot;
-						sb.append("\n\t\t\t").append(Text.TOT_REMAINING_IN_VBUFFER).append(" ").append(inVBufferTot)
-							.append(" (").append(Tools.round((100.0 * inVBufferTot)/successfullyEnqueuedTot, 3)).append("%)");
-						sb.append("\n\t\t\t").append(Text.TOT_PROCESSED).append(" ").append(successfullyProcessedTot)
-							.append(" (").append(Tools.round((100.0 * successfullyProcessedTot)/successfullyEnqueuedTot, 3)).append("%)");
-						if (successfullyProcessedTot != 0) {
-							long discardedForCollisionTot = 0;
-							for (int i = 0; i < Param.numUAVs; i++) {
-								discardedForCollisionTot = discardedForCollisionTot + UAVParam.discardedForCollision.get(i);
-							}
-							sb.append("\n\t\t\t\t").append(Text.TOT_DISCARDED_FOR_COLLISION).append(" ").append(discardedForCollisionTot)
-								.append(" (").append(Tools.round((100.0 * discardedForCollisionTot)/successfullyProcessedTot, 3)).append("%)");
-							sb.append("\n\t\t\t\t").append(Text.TOT_RECEIVED).append(" ").append(successfullyReceivedTot)
-								.append(" (").append(Tools.round((100.0 * successfullyReceivedTot)/successfullyProcessedTot, 3)).append("%)");
-							if (successfullyReceivedTot != 0) {
-								sb.append("\n\t\t\t\t\t").append(Text.TOT_QUEUE_WAS_FULL).append(" ").append(receiverQueueFullTot)
-									.append(" (").append(Tools.round((100.0 * receiverQueueFullTot)/successfullyReceivedTot, 3)).append("%)");
-								sb.append("\n\t\t\t\t\t").append(Text.TOT_REMAINING_IN_BUFFER).append(" ").append(inBufferTot)
-									.append(" (").append(Tools.round((100.0 * inBufferTot)/successfullyReceivedTot, 3)).append("%)");
-								sb.append("\n\t\t\t\t\t").append(Text.TOT_USED_OK).append(" ").append(receivedPacketTot)
-									.append(" (").append(Tools.round((100.0 * receivedPacketTot)/successfullyReceivedTot, 3)).append("%)");
-							}
-						}
-					}
-				} else {
-					if (successfullyReceivedTot != 0) {
-						sb.append("\n\t\t\t").append(Text.TOT_QUEUE_WAS_FULL).append(" ").append(receiverQueueFullTot)
-						.append(" (").append(Tools.round((100.0 * receiverQueueFullTot)/successfullyReceivedTot, 3)).append("%)");
-					sb.append("\n\t\t\t").append(Text.TOT_REMAINING_IN_BUFFER).append(" ").append(inBufferTot)
-						.append(" (").append(Tools.round((100.0 * inBufferTot)/successfullyReceivedTot, 3)).append("%)");
-					sb.append("\n\t\t\t").append(Text.TOT_USED_OK).append(" ").append(receivedPacketTot)
-						.append(" (").append(Tools.round((100.0 * receivedPacketTot)/successfullyReceivedTot, 3)).append("%)");
-					}
-				}
-			}
-			
+		sb.append(API.getCommLink(0).toString());
+		
+		if (Param.role == Tools.SIMULATOR) {
 			sb.append("\n").append(Text.COLLISION_PARAMETERS);
 			boolean collisionCheck = UAVParam.collisionCheckEnabled;
 			sb.append("\n\t").append(Text.COLLISION_ENABLE).append(" ");

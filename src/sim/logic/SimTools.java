@@ -22,6 +22,7 @@ import main.ArduSimTools;
 import main.Param;
 import main.Param.WirelessModel;
 import main.Text;
+import main.communications.CommLinkObject;
 import main.cpuHelper.CPUUsageThread;
 import sim.board.BoardParam;
 import sim.gui.ConfigDialogPanel;
@@ -253,11 +254,11 @@ public class SimTools {
 		ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
 
 		//  UAV to UAV communications parameters
-		UAVParam.carrierSensingEnabled = panel.carrierSensingCheckBox.isSelected();
-		UAVParam.pCollisionEnabled = panel.pCollisionDetectionCheckBox.isSelected();
-		UAVParam.receivingBufferSize = Integer.parseInt(panel.receivingBufferSizeTextField.getText());
-		UAVParam.receivingvBufferSize = UAVParam.V_BUFFER_SIZE_FACTOR * UAVParam.receivingBufferSize;
-		UAVParam.receivingvBufferTrigger = (int)Math.round(UAVParam.BUFFER_FULL_THRESHOLD * UAVParam.receivingvBufferSize);
+		CommLinkObject.carrierSensingEnabled = panel.carrierSensingCheckBox.isSelected();
+		CommLinkObject.pCollisionEnabled = panel.pCollisionDetectionCheckBox.isSelected();
+		CommLinkObject.receivingBufferSize = Integer.parseInt(panel.receivingBufferSizeTextField.getText());
+		CommLinkObject.receivingvBufferSize = CommLinkObject.V_BUFFER_SIZE_FACTOR * CommLinkObject.receivingBufferSize;
+		CommLinkObject.receivingvBufferTrigger = (int)Math.round(CommLinkObject.BUFFER_FULL_THRESHOLD * CommLinkObject.receivingvBufferSize);
 		if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
 			Param.fixedRange = Double.parseDouble(panel.fixedRangeTextField.getText());
 		}
@@ -271,9 +272,9 @@ public class SimTools {
 			UAVParam.collisionDistance = Double.parseDouble(panel.collisionDistanceTextField.getText());
 			UAVParam.collisionAltitudeDifference = Double.parseDouble(panel.collisionAltitudeTextField.getText());
 			// Distance calculus slightly faster than the collision check frequency
-			UAVParam.distanceCalculusPeriod = Math.min(UAVParam.RANGE_CHECK_PERIOD / 2, (int) Math.round(UAVParam.collisionCheckPeriod*950));
+			UAVParam.distanceCalculusPeriod = Math.min(CommLinkObject.RANGE_CHECK_PERIOD / 2, (int) Math.round(UAVParam.collisionCheckPeriod * 950));
 		} else {
-			UAVParam.distanceCalculusPeriod = UAVParam.RANGE_CHECK_PERIOD / 2;
+			UAVParam.distanceCalculusPeriod = CommLinkObject.RANGE_CHECK_PERIOD / 2;
 		}
 
 		//  Wind parameters
@@ -310,9 +311,9 @@ public class SimTools {
 				panel.protocolComboBox.setSelectedIndex(ProtocolHelper.ProtocolNames.length - 1);
 				
 				//  UAV to UAV communications parameters
-				panel.carrierSensingCheckBox.setSelected(UAVParam.carrierSensingEnabled);
-				panel.pCollisionDetectionCheckBox.setSelected(UAVParam.pCollisionEnabled);
-				panel.receivingBufferSizeTextField.setText("" + UAVParam.receivingBufferSize);
+				panel.carrierSensingCheckBox.setSelected(CommLinkObject.carrierSensingEnabled);
+				panel.pCollisionDetectionCheckBox.setSelected(CommLinkObject.pCollisionEnabled);
+				panel.receivingBufferSizeTextField.setText("" + CommLinkObject.receivingBufferSize);
 				Param.selectedWirelessModel = WirelessModel.NONE;
 				panel.wirelessModelComboBox.setSelectedIndex(WirelessModel.NONE.getId());
 				panel.fixedRangeTextField.setText("" + Param.fixedRange);

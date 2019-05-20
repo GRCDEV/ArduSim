@@ -19,6 +19,8 @@ import api.Tools;
 import api.pojo.GeoCoordinates;
 import api.pojo.Waypoint;
 import main.Param.SimulatorState;
+import main.communications.CommLinkObject;
+import main.communications.RangeCalculusThread;
 import main.cpuHelper.CPUUsageThread;
 import pccompanion.gui.PCCompanionGUI;
 import sim.board.BoardHelper;
@@ -29,7 +31,6 @@ import sim.gui.ProgressDialog;
 import sim.gui.ResultsDialog;
 import sim.logic.CollisionDetector;
 import sim.logic.DistanceCalculusThread;
-import sim.logic.RangeCalculusThread;
 import sim.logic.SimParam;
 import sim.logic.SimTools;
 import uavController.TestListener;
@@ -429,7 +430,7 @@ public class Main {
 				GUI.log(Text.SHUTTING_DOWN_COMM);
 				int numThreads = 2 * Param.numUAVs;
 				long now = System.currentTimeMillis();
-				while(UAVParam.communicationsClosed.size() < numThreads && System.currentTimeMillis() - now < UAVParam.CLOSSING_WAITING_TIME) {
+				while(CommLinkObject.communicationsClosed.size() < numThreads && System.currentTimeMillis() - now < CommLinkObject.CLOSSING_WAITING_TIME) {
 					Tools.waiting(SimParam.SHORT_WAITING_TIME);
 				}
 			}

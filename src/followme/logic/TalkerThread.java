@@ -6,12 +6,14 @@ import java.util.Arrays;
 
 import com.esotericsoftware.kryo.io.Output;
 
+import api.API;
 import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.UTMCoordinates;
 import api.pojo.formations.FlightFormation;
 import followme.pojo.Message;
+import main.communications.CommLink;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
@@ -21,6 +23,7 @@ public class TalkerThread extends Thread {
 	private long selfId;
 	private boolean isMaster;
 	
+	private CommLink link;
 	private byte[] outBuffer;
 	private Output output;
 	private byte[] message;
@@ -38,6 +41,7 @@ public class TalkerThread extends Thread {
 		this.selfId = Tools.getIdFromPos(numUAV);
 		this.isMaster = FollowMeHelper.isMaster(numUAV);
 		
+		this.link = API.getCommLink(numUAV);
 		this.outBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		
@@ -69,7 +73,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (FollowMeParam.state.get(numUAV) == START) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 
 				// Timer
 				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
@@ -93,7 +97,7 @@ public class TalkerThread extends Thread {
 				if (messages != null) {
 					int length = messages.length;
 					for (int i = 0; i < length; i++) {
-						Copter.sendBroadcastMessage(numUAV, messages[i]);
+						link.sendBroadcastMessage(messages[i]);
 					}
 				}
 				
@@ -115,7 +119,7 @@ public class TalkerThread extends Thread {
 			cicleTime = System.currentTimeMillis();
 			while (FollowMeParam.state.get(numUAV) == SETUP) {
 				if (FollowMeParam.flyingFormation.get(numUAV) != null) {
-					Copter.sendBroadcastMessage(numUAV, message);
+					link.sendBroadcastMessage(message);
 				}
 				
 				// Timer
@@ -140,7 +144,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (FollowMeParam.state.get(numUAV) == READY_TO_FLY) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
@@ -159,7 +163,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (FollowMeParam.state.get(numUAV) == READY_TO_FLY) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
@@ -217,7 +221,7 @@ public class TalkerThread extends Thread {
 				
 				cicleTime = System.currentTimeMillis();
 				while (FollowMeParam.state.get(numUAV) == MOVE_TO_TARGET) {
-					Copter.sendBroadcastMessage(numUAV, message);
+					link.sendBroadcastMessage(message);
 					
 					// Timer
 					cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
@@ -241,7 +245,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (FollowMeParam.state.get(numUAV) == TARGET_REACHED) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
@@ -265,7 +269,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (FollowMeParam.state.get(numUAV) == READY_TO_START) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
@@ -284,7 +288,7 @@ public class TalkerThread extends Thread {
 			
 			cicleTime = System.currentTimeMillis();
 			while (FollowMeParam.state.get(numUAV) == READY_TO_START) {
-				Copter.sendBroadcastMessage(numUAV, message);
+				link.sendBroadcastMessage(message);
 				
 				// Timer
 				cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
@@ -336,7 +340,7 @@ public class TalkerThread extends Thread {
 			output.writeDouble(yaw);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
-			Copter.sendBroadcastMessage(numUAV, message);
+			link.sendBroadcastMessage(message);
 			
 			// Timer
 			cicleTime = cicleTime + FollowMeParam.sendPeriod;
@@ -363,7 +367,7 @@ public class TalkerThread extends Thread {
 		
 		cicleTime = System.currentTimeMillis();
 		while (FollowMeParam.state.get(numUAV) == LANDING) {
-			Copter.sendBroadcastMessage(numUAV, message);
+			link.sendBroadcastMessage(message);
 			
 			// Timer
 			cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;

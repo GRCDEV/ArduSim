@@ -14,6 +14,7 @@ import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+import api.API;
 import api.Copter;
 import api.GUI;
 import api.Tools;
@@ -25,6 +26,7 @@ import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
 import api.pojo.formations.FlightFormation.Formation;
 import main.Text;
+import main.communications.CommLink;
 import muscop.pojo.Message;
 import muscop.pojo.MovedMission;
 
@@ -36,8 +38,9 @@ public class ListenerThread extends Thread {
 	private long selfId;
 	private boolean isMaster;
 	
-	byte[] inBuffer;
-	Input input;
+	private byte[] inBuffer;
+	private Input input;
+	private CommLink link;
 
 	@SuppressWarnings("unused")
 	private ListenerThread() {}
@@ -49,6 +52,7 @@ public class ListenerThread extends Thread {
 		
 		this.inBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
+		this.link = API.getCommLink(numUAV);
 	}
 
 	@Override
@@ -66,7 +70,7 @@ public class ListenerThread extends Thread {
 			UAVsDetected = new HashMap<Long, UTMCoordinates>();	// Detecting UAVs
 			int numUAVsDetected = 0;
 			while (MUSCOPParam.state.get(numUAV) == START) {
-				inBuffer = Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -92,7 +96,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 			while (MUSCOPParam.state.get(numUAV) == START) {
 				// Discard message
-				Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+				link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 				// Coordination with ArduSim
 				if (Tools.isSetupInProgress() || Tools.isSetupFinished()) {
 					MUSCOPParam.state.set(numUAV, SETUP);
@@ -223,6 +227,7 @@ public class ListenerThread extends Thread {
 					}
 					MUSCOPParam.idPrev.set(numUAV, prevId);
 					MUSCOPParam.idNext.set(numUAV, nextId);
+					idPrev = prevId;
 					MUSCOPParam.numUAVs.set(numUAV, numUAVs);
 					MUSCOPParam.flyingFormation.set(numUAV, flyingFormation);
 					MUSCOPParam.flyingFormationPosition.set(numUAV, formationPosition);
@@ -270,7 +275,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, MUSCOPText.MASTER_DATA_ACK_LISTENER);
 			acks = new HashMap<Long, Long>((int)Math.ceil(numUAVs / 0.75) + 1);
 			while (MUSCOPParam.state.get(numUAV) == SETUP) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -287,7 +292,7 @@ public class ListenerThread extends Thread {
 		} else {
 			GUI.logVerbose(numUAV, MUSCOPText.SLAVE_WAIT_DATA_LISTENER);
 			while (MUSCOPParam.state.get(numUAV) == SETUP) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -339,7 +344,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, MUSCOPText.MASTER_READY_TO_FLY_ACK_LISTENER);
 			acks.clear();
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_FLY) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -360,7 +365,7 @@ public class ListenerThread extends Thread {
 		} else {
 			GUI.logVerbose(numUAV, MUSCOPText.SLAVE_WAIT_READY_TO_FLY_LISTENER);
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_FLY) {
-				inBuffer = Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -386,7 +391,7 @@ public class ListenerThread extends Thread {
 			GUI.updateProtocolState(numUAV, MUSCOPText.WAIT_TAKE_OFF);
 			GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING_TAKE_OFF);
 			while (MUSCOPParam.state.get(numUAV) == WAIT_TAKE_OFF) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -414,7 +419,7 @@ public class ListenerThread extends Thread {
 		long logTime = cicleTime;
 		while (MUSCOPParam.state.get(numUAV) == TAKING_OFF) {
 			// Discard message
-			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 			// Wait until target altitude is reached
 			if (System.currentTimeMillis() - cicleTime > MUSCOPParam.TAKE_OFF_CHECK_TIMEOUT) {
 				if (Copter.getZRelative(numUAV) >= minAltitude) {
@@ -443,7 +448,7 @@ public class ListenerThread extends Thread {
 		}
 		long now = System.currentTimeMillis();
 		while (System.currentTimeMillis() - now < MUSCOPParam.HOVERING_TIMEOUT) {
-			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 		}
 		if (!Copter.setFlightMode(numUAV, FlightMode.GUIDED)) {
 			GUI.exit(MUSCOPText.TAKE_OFF_ERROR_2 + " " + selfId);
@@ -463,7 +468,7 @@ public class ListenerThread extends Thread {
 		double alt;
 		while (MUSCOPParam.state.get(numUAV) == MOVE_TO_TARGET) {
 			// Discard message
-			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 			// Wait until target location is reached
 			if (System.currentTimeMillis() - cicleTime > MUSCOPParam.MOVE_CHECK_TIMEOUT) {
 				if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP) {
@@ -486,7 +491,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, MUSCOPText.CENTER_TARGET_REACHED_ACK_LISTENER);
 			acks = new HashMap<Long, Long>((int)Math.ceil(numUAVs / 0.75) + 1);
 			while (MUSCOPParam.state.get(numUAV) == TARGET_REACHED) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -503,7 +508,7 @@ public class ListenerThread extends Thread {
 		} else {
 			GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_TAKEOFF_END_ACK);
 			while (MUSCOPParam.state.get(numUAV) == TARGET_REACHED) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -523,7 +528,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, MUSCOPText.CENTER_TAKEOFF_END_ACK_LISTENER);
 			acks.clear();
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_START) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -540,7 +545,7 @@ public class ListenerThread extends Thread {
 		} else {
 			GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_TAKEOFF_END_LISTENER);
 			while (MUSCOPParam.state.get(numUAV) == READY_TO_START) {
-				inBuffer = Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -562,7 +567,7 @@ public class ListenerThread extends Thread {
 		GUI.logVerbose(numUAV, MUSCOPText.LISTENER_WAITING);
 		while (MUSCOPParam.state.get(numUAV) == SETUP_FINISHED) {
 			// Discard message
-			Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 			// Coordination with ArduSim
 			if (Tools.isExperimentInProgress()) {
 				MUSCOPParam.state.set(numUAV, FOLLOWING_MISSION);
@@ -587,7 +592,7 @@ public class ListenerThread extends Thread {
 				reached.clear();
 				
 				while (MUSCOPParam.wpReachedSemaphore.get(numUAV) == currentWP) {
-					inBuffer = Copter.receiveMessage(numUAV);
+					inBuffer = link.receiveMessage();
 					if (inBuffer != null) {
 						input.setBuffer(inBuffer);
 						short type = input.readShort();
@@ -610,7 +615,7 @@ public class ListenerThread extends Thread {
 			} else {
 				GUI.logVerbose(numUAV, MUSCOPText.NO_CENTER_WAIT_ORDER_LISTENER);
 				while (MUSCOPParam.wpReachedSemaphore.get(numUAV) == currentWP) {
-					inBuffer = Copter.receiveMessage(numUAV);
+					inBuffer = link.receiveMessage();
 					if (inBuffer != null) {
 						input.setBuffer(inBuffer);
 						short type = input.readShort();
@@ -649,7 +654,7 @@ public class ListenerThread extends Thread {
 				cicleTime = System.currentTimeMillis();
 				while (MUSCOPParam.moveSemaphore.get(numUAV) == currentWP) {
 					// Discard message
-					Copter.receiveMessage(numUAV, MUSCOPParam.RECEIVING_TIMEOUT);
+					link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 					// Wait until target location is reached
 					if (System.currentTimeMillis() - cicleTime > MUSCOPParam.MOVE_CHECK_TIMEOUT) {
 						if (Copter.getUTMLocation(numUAV).distance(destinationUTM) <= MUSCOPParam.MIN_DISTANCE_TO_WP) {

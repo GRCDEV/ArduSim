@@ -1,7 +1,9 @@
-package sim.logic;
+package main.communications;
 
 import api.Tools;
 import main.Param;
+import sim.logic.SimParam;
+import sim.logic.SimTools;
 import uavController.UAVParam;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
@@ -23,12 +25,12 @@ public class RangeCalculusThread extends Thread {
 				for (int i = 0; i < Param.numUAVs - 1; i++) {
 					for (int j = i + 1; j < Param.numUAVs; j++) {
 						isInRange = SimTools.isInRange(UAVParam.distances[i][j].get());
-						UAVParam.isInRange[i][j].set(isInRange);
-						UAVParam.isInRange[j][i].set(isInRange);
+						CommLinkObject.isInRange[i][j].set(isInRange);
+						CommLinkObject.isInRange[j][i].set(isInRange);
 					}
 				}
 			}
-			checkTime = checkTime + UAVParam.RANGE_CHECK_PERIOD;
+			checkTime = checkTime + CommLinkObject.RANGE_CHECK_PERIOD;
 			waitingTime = (int)(checkTime - System.currentTimeMillis());
 			if (waitingTime > 0) {
 				Tools.waiting(waitingTime);

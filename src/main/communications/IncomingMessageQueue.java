@@ -1,8 +1,6 @@
-package sim.pojo;
+package main.communications;
 
 import java.util.ArrayDeque;
-
-import uavController.UAVParam;
 
 /** This implementation is thread-safe.
  * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
@@ -15,7 +13,7 @@ public class IncomingMessageQueue {
 	/** Inserts a new message in the queue.
 	 * <p>If the queue is full, it ignores the message and return false.</p> */
 	public synchronized boolean offerLast(IncomingMessage m) {
-		if (this.byteSize + m.message.length <= UAVParam.receivingBufferSize) {
+		if (this.byteSize + m.message.length <= CommLinkObject.receivingBufferSize) {
 			this.queue.addLast(m);
 			this.byteSize = this.byteSize + m.message.length;
 			return true;
@@ -24,7 +22,7 @@ public class IncomingMessageQueue {
 	}
 	
 	public IncomingMessageQueue() {
-		this.queue = new ArrayDeque<>(UAVParam.RECEIVING_BUFFER_PACKET_SIZE);
+		this.queue = new ArrayDeque<>(CommLinkObject.RECEIVING_BUFFER_PACKET_SIZE);
 		this.byteSize = 0;
 	}
 	

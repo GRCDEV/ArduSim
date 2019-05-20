@@ -13,6 +13,7 @@ import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+import api.API;
 import api.Copter;
 import api.GUI;
 import api.Tools;
@@ -23,6 +24,7 @@ import api.pojo.formations.FlightFormation;
 import api.pojo.formations.FlightFormation.Formation;
 import followme.pojo.Message;
 import main.Text;
+import main.communications.CommLink;
 
 /** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 
@@ -32,6 +34,7 @@ public class ListenerThread extends Thread {
 	private long selfId;
 	private boolean isMaster;
 	
+	private CommLink link;
 	byte[] inBuffer;
 	Input input;
 
@@ -43,6 +46,7 @@ public class ListenerThread extends Thread {
 		this.selfId = Tools.getIdFromPos(numUAV);
 		this.isMaster = FollowMeHelper.isMaster(numUAV);
 		
+		this.link = API.getCommLink(numUAV);
 		this.inBuffer = new byte[Tools.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 	}
@@ -63,7 +67,7 @@ public class ListenerThread extends Thread {
 			Long idSlave;
 			UTMCoordinates slaveLocation;
 			while (FollowMeParam.state.get(numUAV) == START) {
-				inBuffer = Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -89,7 +93,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, FollowMeText.LISTENER_WAITING);
 			while (FollowMeParam.state.get(numUAV) == START) {
 				// Discard message
-				Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+				link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 				// Coordination with ArduSim
 				if (Tools.isSetupInProgress() || Tools.isSetupFinished()) {
 					FollowMeParam.state.set(numUAV, SETUP);
@@ -194,7 +198,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, FollowMeText.MASTER_DATA_ACK_LISTENER);
 			acks = new HashMap<Long, Long>((int)Math.ceil(numSlaves / 0.75) + 1);
 			while (FollowMeParam.state.get(numUAV) == SETUP) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -211,7 +215,7 @@ public class ListenerThread extends Thread {
 		} else {
 			GUI.logVerbose(numUAV, FollowMeText.SLAVE_WAIT_DATA_LISTENER);
 			while (FollowMeParam.state.get(numUAV) == SETUP) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -254,7 +258,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, FollowMeText.MASTER_READY_TO_FLY_ACK_LISTENER);
 			acks.clear();
 			while (FollowMeParam.state.get(numUAV) == READY_TO_FLY) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -275,7 +279,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, FollowMeText.MASTER_TARGET_REACHED_ACK_LISTENER);
 			acks.clear();
 			while (FollowMeParam.state.get(numUAV) == WAIT_SLAVES) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -293,7 +297,7 @@ public class ListenerThread extends Thread {
 		} else {
 			GUI.logVerbose(numUAV, FollowMeText.SLAVE_WAIT_READY_TO_FLY_LISTENER);
 			while (FollowMeParam.state.get(numUAV) == READY_TO_FLY) {
-				inBuffer = Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -318,7 +322,7 @@ public class ListenerThread extends Thread {
 				GUI.updateProtocolState(numUAV, FollowMeText.WAIT_TAKE_OFF);
 				GUI.logVerbose(numUAV, FollowMeText.LISTENER_WAITING_TAKE_OFF);
 				while (FollowMeParam.state.get(numUAV) == WAIT_TAKE_OFF) {
-					inBuffer = Copter.receiveMessage(numUAV);
+					inBuffer = link.receiveMessage();
 					if (inBuffer != null) {
 						input.setBuffer(inBuffer);
 						short type = input.readShort();
@@ -345,7 +349,7 @@ public class ListenerThread extends Thread {
 			long logTime = cicleTime;
 			while (FollowMeParam.state.get(numUAV) == TAKING_OFF) {
 				// Discard message
-				Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+				link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 				// Wait until target altitude is reached
 				if (System.currentTimeMillis() - cicleTime > FollowMeParam.TAKE_OFF_CHECK_TIMEOUT) {
 					if (Copter.getZRelative(numUAV) >= minAltitude) {
@@ -374,7 +378,7 @@ public class ListenerThread extends Thread {
 			}
 			long now = System.currentTimeMillis();
 			while (System.currentTimeMillis() - now < FollowMeParam.HOVERING_TIMEOUT) {
-				Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+				link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 			}
 			if (!Copter.setFlightMode(numUAV, FlightMode.GUIDED)) {
 				GUI.exit(FollowMeText.MOVE_ERROR + " " + selfId);
@@ -390,7 +394,7 @@ public class ListenerThread extends Thread {
 			UTMCoordinates targetLocationUTM = targetLocation.getUTMLocation();
 			while (FollowMeParam.state.get(numUAV) == MOVE_TO_TARGET) {
 				// Discard message
-				Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+				link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 				// Wait until target location is reached
 				if (System.currentTimeMillis() - cicleTime > FollowMeParam.MOVE_CHECK_TIMEOUT) {
 					if (Copter.getUTMLocation(numUAV).distance(targetLocationUTM) <= FollowMeParam.MIN_DISTANCE_TO_TARGET) {
@@ -409,7 +413,7 @@ public class ListenerThread extends Thread {
 			GUI.updateProtocolState(numUAV, FollowMeText.TARGET_REACHED);
 			GUI.logVerbose(numUAV, FollowMeText.SLAVE_WAIT_TAKEOFF_END_ACK);
 			while (FollowMeParam.state.get(numUAV) == TARGET_REACHED) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -430,7 +434,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, FollowMeText.MASTER_TAKEOFF_END_ACK_LISTENER);
 			acks.clear();
 			while (FollowMeParam.state.get(numUAV) == READY_TO_START) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -447,7 +451,7 @@ public class ListenerThread extends Thread {
 		} else {
 			GUI.logVerbose(numUAV, FollowMeText.SLAVE_WAIT_TAKEOFF_END_LISTENER);
 			while (FollowMeParam.state.get(numUAV) == READY_TO_START) {
-				inBuffer = Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -469,7 +473,7 @@ public class ListenerThread extends Thread {
 		GUI.logVerbose(numUAV, FollowMeText.LISTENER_WAITING);
 		while (FollowMeParam.state.get(numUAV) == SETUP_FINISHED) {
 			// Discard message
-			Copter.receiveMessage(numUAV, FollowMeParam.RECEIVING_TIMEOUT);
+			link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
 			// Coordination with ArduSim
 			if (Tools.isExperimentInProgress()) {
 				FollowMeParam.state.set(numUAV, FOLLOWING);
@@ -489,7 +493,7 @@ public class ListenerThread extends Thread {
 			GUI.logVerbose(numUAV, FollowMeText.SLAVE_WAIT_ORDER_LISTENER);
 			UTMCoordinates masterLocation;
 			while (FollowMeParam.state.get(numUAV) == FOLLOWING) {
-				inBuffer = Copter.receiveMessage(numUAV);
+				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();

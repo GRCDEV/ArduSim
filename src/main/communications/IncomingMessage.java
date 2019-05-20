@@ -1,4 +1,4 @@
-package sim.pojo;
+package main.communications;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

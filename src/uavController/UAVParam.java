@@ -1,21 +1,13 @@
 package uavController;
 
 import java.awt.Shape;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.mavlink.messages.MAV_PARAM_TYPE;
 
 import api.pojo.AtomicDoubleArray;
@@ -28,8 +20,6 @@ import api.pojo.UTMCoordinates;
 import api.pojo.Waypoint;
 import api.pojo.WaypointSimplified;
 import api.pojo.formations.FlightFormation;
-import sim.pojo.IncomingMessage;
-import sim.pojo.IncomingMessageQueue;
 
 /** This class includes parameters specifically related to the communication with the flight controller.
  * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
@@ -51,44 +41,15 @@ public class UAVParam {
 	public static volatile String serialPort = "/dev/ttyAMA0";
 	public static volatile int baudRate = 57600;
 	
-	// UAV-UAV connection parameters
-	// TCP (on real UAVs)
+	// UAV-UAV TCP connection parameters (on real UAVs)
 	public static volatile String broadcastIP = "192.168.1.255";// Broadcast IP
 	public static volatile int broadcastPort = 14650;			// Broadcast port
-	public static DatagramSocket sendSocket;					// Sending socket
-	public static DatagramPacket sendPacket;					// Sending packet
-	public static DatagramSocket receiveSocket;					// Receiving socket
-	public static DatagramPacket receivePacket;					// Receiving packet
-	// Range check and receiving virtual buffer (on virtual UAVs)
+	
+	// UAVs collision detection parameters
 	public static volatile int distanceCalculusPeriod;						// (ms) Distance calculus between UAVs period
 																			// It is the minimum of the range check period and the collision check period when applied
 	public static volatile boolean distanceCalculusIsOnline = false;		// Whether the distance calculus service is online or not
 	public static AtomicReference<Double>[][] distances;					// (m) Stored distances between UAVs
-	public static final int RANGE_CHECK_PERIOD = 1000;						// (ms) Between UAVs range check
-	public static AtomicBoolean[][] isInRange;								// Matrix containing the range check result
-	public static AtomicReferenceArray<IncomingMessage> prevSentMessage;	// Stores the last sent message for each UAV
-	public static boolean pCollisionEnabled = true;							// Whether the packet collision detection is enabled or not
-	public static ReentrantLock[] lock;										// Locks for concurrence when detecting  packet collisions
-	public static boolean carrierSensingEnabled = true;						// Whether the carrier sensing is enabled or not
-	public static IncomingMessageQueue[] mBuffer;							// Array with the message queues used as buffers
-	public static final int RECEIVING_BUFFER_PACKET_SIZE = 350;				// (packets) Initial size of the incoming queue q
-	public static int receivingBufferSize = 163840;							// (bytes) By default, the Raspberry Pi 3 receiving buffer size
-	public static AtomicLongArray maxCompletedTEndTime;						// Array with the later completed transfer finish time for each sending UAV when using collision detection
-	public static final int MESSAGE_WAITING_TIME = 1;						// (ms) Waiting time to check if a message arrives
-	public static ConcurrentSkipListSet<IncomingMessage>[] vBuffer;			// Array with virtual buffer to calculate packet collisions when using packet collision detection
-	public static final int V_BUFFER_SIZE_FACTOR = 3;						// vBuffer is this times the size of mBuffer
-	public static int receivingvBufferSize = V_BUFFER_SIZE_FACTOR * receivingBufferSize;	// (bytes) Virtual buffer size
-	public static final double BUFFER_FULL_THRESHOLD = 0.8;					// Size of the buffer when it is flushed to avoid it to be filled
-	public static int receivingvBufferTrigger = (int)Math.round(BUFFER_FULL_THRESHOLD * receivingvBufferSize);// (bytes) Virtual buffer level when it is flushed to avoid it to be filled
-	public static AtomicIntegerArray vBufferUsedSpace;						// (bytes) Array containing the current level of the vBuffer
-	public static ConcurrentHashMap<String, String> communicationsClosed;	// Contains the communication threads that have stop to send or receive messages (<=numUAVs)
-	public static final int CLOSSING_WAITING_TIME = 5000;					// (ms) Time to wait while the communications are being closed
-	// Statistics
-	public static int[] sentPacket, packetWaitedPrevSending, packetWaitedMediaAvailable;
-	public static AtomicIntegerArray receiverOutOfRange, receiverWasSending, receiverVirtualQueueFull, receiverQueueFull, successfullyReceived;
-	public static AtomicIntegerArray receivedPacket, discardedForCollision, successfullyEnqueued, successfullyProcessed;
-	
-	// UAVs collision detection parameters
 	public static volatile boolean collisionCheckEnabled = false;	// Whether the collision check is enabled or not
 	public static volatile double collisionCheckPeriod = 0.5;		// (s) Between two checks
 	public static int appliedCollisionCheckPeriod;					// The same parameter but in milliseconds

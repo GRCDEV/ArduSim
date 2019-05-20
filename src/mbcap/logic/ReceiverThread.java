@@ -3,8 +3,10 @@ package mbcap.logic;
 import java.util.Iterator;
 import java.util.Map;
 
+import api.API;
 import api.Copter;
 import api.Tools;
+import main.communications.CommLink;
 import mbcap.pojo.Beacon;
 
 /** This class receives data packets and stores them for later analysis of risk of collision.
@@ -13,12 +15,14 @@ import mbcap.pojo.Beacon;
 public class ReceiverThread extends Thread {
 	
 	private int numUAV; // UAV identifier, beginning from 0
+	private CommLink link;
 	
 	@SuppressWarnings("unused")
 	private ReceiverThread() {}
 	
 	public ReceiverThread(int numUAV) {
 		this.numUAV = numUAV;
+		this.link = API.getCommLink(numUAV);
 	}
 
 	@Override
@@ -33,7 +37,7 @@ public class ReceiverThread extends Thread {
 		while (Tools.isExperimentInProgress()
 				&& !Tools.isCollisionDetected()) {
 			// Receive message
-			Beacon beacon = Beacon.getBeacon(Copter.receiveMessage(numUAV)); // beacon.numUAV is already INVALID
+			Beacon beacon = Beacon.getBeacon(link.receiveMessage()); // beacon.numUAV is already INVALID
 			
 			// Periodic cleanup of obsolete beacons to take into account UAVs that have gone far enough
 			long now = System.currentTimeMillis();

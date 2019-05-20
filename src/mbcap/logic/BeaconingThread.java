@@ -1,8 +1,10 @@
 package mbcap.logic;
 
+import api.API;
 import api.Copter;
 import api.Tools;
 import api.WaypointReachedListener;
+import main.communications.CommLink;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 
@@ -15,12 +17,14 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 	double distance = Double.MAX_VALUE;
 	
 	private int numUAV; // UAV identifier, beginning from 0
+	private CommLink link;
 
 	@SuppressWarnings("unused")
 	private BeaconingThread() {}
 
 	public BeaconingThread(int numUAV) {
 		this.numUAV = numUAV;
+		this.link = API.getCommLink(numUAV);
 	}
 	
 	@Override
@@ -84,7 +88,7 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 					}
 				}
 				if (!selfBeacon.points.isEmpty()) {
-					Copter.sendBroadcastMessage(numUAV, sendBuffer);
+					link.sendBroadcastMessage(sendBuffer);
 				}
 
 				cicleTime = cicleTime + MBCAPParam.beaconingPeriod;
