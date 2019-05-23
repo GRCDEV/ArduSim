@@ -1,18 +1,16 @@
-package vision.logic;
+package noVision;
 
 import java.awt.Graphics2D;
-import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 import javax.swing.JFrame;
-import org.javatuples.Pair;
 
-import com.esotericsoftware.minlog.Log;
+import org.javatuples.Pair;
 
 import api.Copter;
 import api.GUI;
@@ -24,11 +22,16 @@ import sim.board.BoardPanel;
 import uavController.UAVParam;
 import vision.gui.ConfigDialog;
 import vision.gui.ConfigDialogPanel;
+import vision.logic.visionParam;
 
-/** Developed by: Jamie Wubben, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
-public class visionHelper extends ProtocolHelper{
+public class noVisionHelper extends ProtocolHelper{
+	
+	private static File logFile = new File("experimentLog.csv");
+	private static FileWriter logWriter = null;
+	
+	
 	@Override
-	public void setProtocol() {this.protocolString = "Vision";}
+	public void setProtocol() {this.protocolString = "noVision";}
 
 	@Override
 	public boolean loadMission() {return false;}
@@ -399,13 +402,12 @@ public class visionHelper extends ProtocolHelper{
 			}
 			String respons = "";
 			int count = 0;
-			long time = System.currentTimeMillis(); 
-			//in the test fase wait for 60 seconds
-			//since readLine is blocking only stops after 60 and seeing a marker
-			while(System.currentTimeMillis() < time + 60*1000) {
+			//in the test fase send 50 messages
+			while(count < 50) {
 				GUI.log("count is " + count);
 				try {
 					respons = reader.readLine();
+					GUI.log("count is: " + count);
 					if(respons != null) {
 						count +=1;
 						GUI.log(respons);
@@ -424,30 +426,59 @@ public class visionHelper extends ProtocolHelper{
 		*/
 	}
 
+	private static void log(String text) {
+		try {
+			logWriter.write(text);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static String getCurrentTimeStamp() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	    Date now = new Date();
+	    String strDate = sdf.format(now);
+	    return strDate;
+	}
+	
 	@Override
 	/**
 	 * This methods lets all drones take off
 	 * Starts a thread for each drone and let them navigate trough the planned path.
 	 */
 	public void startExperimentActionPerformed() {
-		for(int numUAV = 0; numUAV< Tools.getNumUAVs();numUAV++) {
-			uavNavigator drone = uavNavigator.getInstance(numUAV);
-			// if during the construction of drone anything went wrong getSucces will return false
-			// and the drone won`t take off
-			if(drone.isRunning()) {
-				GUI.log("taking of drones");
-				if(Copter.takeOff(numUAV, visionParam.ALTITUDE)) {
-					double threshold = visionParam.ALTITUDE - Copter.getMinTargetAltitude(visionParam.ALTITUDE);
-					GUI.log(visionParam.LATITUDE + " : " + visionParam.LONGITUDE);
-					Copter.moveUAV(numUAV, new GeoCoordinates(visionParam.LATITUDE,visionParam.LONGITUDE), (float)visionParam.ALTITUDE, 1.0, threshold);
-					Copter.stopUAV(numUAV);
-					drone.start();
-				}else {
-					GUI.warn("ERROR", "drone could not take off");
-				}
-			}
+		try {
+			logWriter = new FileWriter(logFile, true);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		
+		for(int numUAV = 0; numUAV< Tools.getNumUAVs();numUAV++) {
+			GUI.log("taking of drones");
+			if(Copter.takeOff(numUAV, visionParam.ALTITUDE)) {
+				log("noVision" + ";");
+				log(getCurrentTimeStamp() + ";");
+				
+				double threshold = visionParam.ALTITUDE - Copter.getMinTargetAltitude(visionParam.ALTITUDE);
+				GUI.log(visionParam.LATITUDE + " : " + visionParam.LONGITUDE);
+				Copter.moveUAV(numUAV, new GeoCoordinates(visionParam.LATITUDE,visionParam.LONGITUDE), (float)visionParam.ALTITUDE, 1.0, threshold);
+				
+				Copter.stopUAV(numUAV);
+				Copter.landUAV(numUAV);
+				
+				log(getCurrentTimeStamp() + ";");
+				GeoCoordinates loc = Copter.getGeoLocation(numUAV);
+				log(Double.toString(loc.latitude).replace(".", ",") + ";" + 
+						Double.toString(loc.longitude).replace(".", ",") + "\n");
+				try {
+					logWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}else {
+				GUI.warn("ERROR", "drone could not take off");
+			}
+		}	
 	}
 
 	@Override
@@ -496,10 +527,7 @@ public class visionHelper extends ProtocolHelper{
 			Map<String, String> params = Tools.parseINIFile(iniFile);
 			visionParam.LATITUDE = Double.parseDouble(params.get("LATITUDE"));
 			visionParam.LONGITUDE = Double.parseDouble(params.get("LONGITUDE"));
-			visionParam.ALTITUDE = Double.parseDouble(params.get("ALTITUDE"));
 			GUI.log("landing location set from location.ini");
 		}
 	}
-	
-	
 }

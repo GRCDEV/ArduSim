@@ -97,9 +97,15 @@ public class ListeningServer implements Runnable{
 				}else if(respons.contains("move")){
 					//message from Python format: move,x,y
 					String[] parts = respons.split(",");
-					navi.setTarget(Float.parseFloat(parts[1]), Float.parseFloat(parts[2]));
+					navi.setTarget(Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
 					status = visionParam.status.MOVE;
-				}else if(respons.equals("loiter")) {
+				}else if(respons.contains("rotate")) {
+					//message from Python format: move,x,y
+					String[] parts = respons.split(",");
+					navi.setTarget(Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
+					status = visionParam.status.ROTATE;
+				}
+				else if(respons.equals("loiter")) {
 					status = visionParam.status.LOITER;
 				}else {
 					status = visionParam.status.LAND;

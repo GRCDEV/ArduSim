@@ -1,11 +1,17 @@
 package vision.logic;
 
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 import api.Copter;
 import api.GUI;
 import api.Tools;
 import api.pojo.FlightMode;
+import api.pojo.GeoCoordinates;
 import vision.logic.visionParam.status;
 
 public class uavNavigator extends Thread{
@@ -27,6 +33,10 @@ public class uavNavigator extends Thread{
 	
 	private float difx = 0.0f;
 	private float dify = 0.0f;
+	private float difAlfa = 0.0f;
+	
+	private static File logFile = new File("experimentLog.csv");
+	private static FileWriter logWriter = null;
 	
 	public static uavNavigator getInstance(int numUAV) {
 		if(instance != null) {
@@ -52,9 +62,13 @@ public class uavNavigator extends Thread{
 			e.printStackTrace();
 			succesClient = false;
 		}
-		
 		this.running = succesClient;
 		
+		try {
+			logWriter = new FileWriter(logFile, true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	public Boolean isRunning() {
 		return this.running;
@@ -72,11 +86,35 @@ public class uavNavigator extends Thread{
 		lock.unlock();
 	}
 	
-	public void setTarget(float x, float y) {
+	public void setTarget(float x, float y, float angle) {
 		lock.lock();
-		this.difx = x;
-		this.dify = y;
+		
+		if(false) {
+			//turn the axis such that the coordinates are given in the axis of the drone not the marker
+			double heading = Copter.getHeading(numUAV);
+			this.difx = (float) (x*Math.cos(heading) + y*Math.sin(heading));
+			this.dify = (float) -(x*Math.sin(heading) - y*Math.cos(heading));
+		}else {
+			this.difx = x;
+			this.dify = y;
+		}
+		this.difAlfa = angle;
 		lock.unlock();
+	}
+	
+	private static void log(String text) {
+		try {
+			logWriter.write(text);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static String getCurrentTimeStamp() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	    Date now = new Date();
+	    String strDate = sdf.format(now);
+	    return strDate;
 	}
 
 	public void run() {
@@ -92,7 +130,18 @@ public class uavNavigator extends Thread{
 		*/
 		
 		if(this.running) {
+			log("vision" + ";");
+			log(getCurrentTimeStamp() + ";");
 			visionGuidance();
+			log(getCurrentTimeStamp() + ";");
+			GeoCoordinates loc = Copter.getGeoLocation(numUAV);
+			log(Double.toString(loc.latitude).replace(".", ",") + ";" + 
+					Double.toString(loc.longitude).replace(".", ",") + "\n");
+			try {
+				logWriter.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}else {
 			GUI.warn("ERROR", "no connection with python");
 		}
@@ -134,7 +183,7 @@ public class uavNavigator extends Thread{
 			timeOutTime = java.lang.System.currentTimeMillis();
 			GUI.log("send message to python: find_target");
 			running = commandSocket.sendMessage("find_target").equalsIgnoreCase("ACK");
-			if(running && Copter.setFlightMode(numUAV, FlightMode.LOITER)) {
+			if(running & Copter.setFlightMode(numUAV, FlightMode.LOITER)) {
 				//listen to incomming messages from markersocket thread	
 				this.listeningThread.start();
 				//move uav with signal overwrite
@@ -156,6 +205,10 @@ public class uavNavigator extends Thread{
 		commandSocket.sendMessage("exit");
 	}
 	
+	private float controlSpeed() {
+		return (Copter.getZRelative(numUAV) > 7.0) ? 0.1f :0.05f; 
+	}
+	
 	public boolean moveUAV() {
 		//using lock.lock gives more freedom then using a synchronized method
 		boolean running = false;
@@ -166,21 +219,30 @@ public class uavNavigator extends Thread{
 					//move uav to target position
 					int pitchValue = visionParam.pitchTrim;
 					int rollValue = visionParam.rollTrim;
+					float speed = controlSpeed();
 					//if x is much bigger then y move the UAV in the x axis
 					if(Math.abs(this.difx) > Math.abs(this.dify*0.5)) {
 						//0 if x is 0 else +10% or -10%
-						float speed = (difx == 0) ? 0.0f: (difx > 0 ? 0.05f:-0.05f);
-						GUI.log("roll value: " + speed);
-						rollValue = mapValues("roll",speed);
+						float velocity = (difx == 0) ? 0.0f: (difx > 0 ? speed:-speed);
+						GUI.log("roll value: " + velocity);
+						rollValue = mapValues("roll",velocity);
 					}else {
 						//else move over the y axis
-						float speed = (dify == 0) ? 0.0f: (dify> 0 ? -0.05f:0.05f);
-						GUI.log("pitch value: " + speed);
-						pitchValue = mapValues("pitch",speed);
+						float velocity = (dify == 0) ? 0.0f: (dify> 0 ? -speed:speed);
+						GUI.log("pitch value: " + velocity);
+						pitchValue = mapValues("pitch",velocity);
 					}
 					//System.out.println("roll: " + rollValue + "\t pitch: " + pitchValue);
 					Copter.channelsOverride(numUAV, rollValue, pitchValue,
 							visionParam.throttleTrim, visionParam.yawTrim);
+					running = true;
+					break;
+				case ROTATE:
+					float rotationSpeed = 0.05f;
+					float velocity = (this.difAlfa > 0) ? rotationSpeed :-rotationSpeed;
+					//rotate drone to right angle
+					Copter.channelsOverride(numUAV, visionParam.rollTrim, visionParam.pitchTrim,
+							visionParam.throttleTrim, mapValues("yaw",velocity));
 					running = true;
 					break;
 				case DESCEND:

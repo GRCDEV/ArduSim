@@ -8,9 +8,13 @@ public class visionParam {
 
 	// Parameters used to detect when a UAV reaches the last waypoint
 		public static final double LAST_WP_THRESHOLD = 2.0; // (m) Maximum distance considered to assert that the UAV has reached the last waypoint
-		public static final double ALTITUDE = 7.0;
+		public static double ALTITUDE = 20.0;
 		public static final String PTYHON_SERVER_IP = "127.0.0.1";
-		public static enum status {LAND, DESCEND, MOVE, LOITER}
+		public static enum status {LAND, DESCEND, MOVE, ROTATE, LOITER};
+		
+		//default place in the field
+		public static double LATITUDE = 39.725319;
+		public static double LONGITUDE = -0.733674;
 		
 		//Values for overriding RC controller
 		public static int rollMin;
