@@ -11,7 +11,6 @@ public class MBCAPText {
 	// Configuration dialog window:
 	public static final String OK = "OK";
 	public static final String RESTORE_DEFAULTS = "Restore defaults";
-	public static final String CANCEL = "Cancel";
 	public static final String CONFIGURATION = "configuration";
 	
 	public static final String SIMULATION_PARAMETERS = "Simulation parameters:";

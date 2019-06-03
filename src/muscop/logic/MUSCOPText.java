@@ -16,7 +16,6 @@ public class MUSCOPText {
 	public static final String AIR_TEXT = "Flying formation:";
 	public static final String LANDING_TEXT = "Landing:";
 	public static final String PROTOCOL_TEXT = "MUSCOP";
-	public static final String LANDING = "Landing";
 	public static final String ENABLING = "MUSCOP protocol enabled...";
 	
 	// Protocol states
@@ -73,7 +72,6 @@ public class MUSCOPText {
 	
 	// Error messages
 	public static final String TAKE_OFF_ERROR = "Unable to perform the take off of the UAV";
-	public static final String TAKE_OFF_ERROR_2 = "Unable to move to the starting waypoint. UAV";
 	public static final String MOVE_ERROR_1 = "Unable to move to a waypoint. UAV";
 	public static final String MOVE_ERROR_2 = "Unable to move to target location. UAV";
 	public static final String LAND_ERROR = "Unable to land the UAV";
@@ -83,7 +81,6 @@ public class MUSCOPText {
 	public static final String UAVS_START_ERROR_2 = "No valid coordinates could be found to stablish the home of the UAV";
 	public static final String BAD_INPUT = "Please, check the selected information.";
 	public static final String CENTER_ID_NOT_FOUND = "Center UAV not found in the target flight formation.";
-	public static final String CENTER_LOCATION_NOT_FOUND = "Center UAV location not found.";
 	public static final String MAX_WP_REACHED = "Maximum number of waypoints reached, please use less than 59";
 	
 
