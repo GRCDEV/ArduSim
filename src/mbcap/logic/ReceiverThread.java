@@ -4,18 +4,20 @@ import java.util.Iterator;
 import java.util.Map;
 
 import api.API;
-import api.Copter;
-import api.Tools;
-import main.communications.CommLink;
+import main.api.ArduSim;
+import main.api.Copter;
+import main.api.communications.CommLink;
 import mbcap.pojo.Beacon;
 
 /** This class receives data packets and stores them for later analysis of risk of collision.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class ReceiverThread extends Thread {
 	
 	private int numUAV; // UAV identifier, beginning from 0
 	private CommLink link;
+	private Copter copter;
+	private ArduSim ardusim;
 	
 	@SuppressWarnings("unused")
 	private ReceiverThread() {}
@@ -23,19 +25,22 @@ public class ReceiverThread extends Thread {
 	public ReceiverThread(int numUAV) {
 		this.numUAV = numUAV;
 		this.link = API.getCommLink(numUAV);
+		this.copter = API.getCopter(numUAV);
+		this.ardusim = API.getArduSim();
 	}
 
 	@Override
 	public void run() {
-		while (!Tools.isExperimentInProgress() || !Copter.isFlying(numUAV)) {
-			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
+		while (!ardusim.isExperimentInProgress() || !copter.isFlying()) {
+			ardusim.sleep(MBCAPParam.SHORT_WAITING_TIME);
 		}
 		
 		long expirationCheckTime = System.currentTimeMillis();
-		long selfId = Tools.getIdFromPos(numUAV);
+		long selfId = API.getCopter(numUAV).getID();
 		// If two UAVs collide, the protocol stops (when using the simulator)
-		while (Tools.isExperimentInProgress()
-				&& !Tools.isCollisionDetected()) {
+		ArduSim ardusim = API.getArduSim();
+		while (ardusim.isExperimentInProgress()
+				&& !ardusim.collisionIsDetected()) {
 			// Receive message
 			Beacon beacon = Beacon.getBeacon(link.receiveMessage()); // beacon.numUAV is already INVALID
 			

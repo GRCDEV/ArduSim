@@ -18,13 +18,13 @@ import javax.swing.SwingUtilities;
 
 import org.javatuples.Pair;
 
-import api.GUI;
-import api.Tools;
-import api.pojo.Waypoint;
+import api.API;
+import api.pojo.location.Waypoint;
+import main.api.MissionHelper;
 import mbcap.logic.MBCAPText;
 
 /** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MBCAPConfigDialogPanel extends JPanel {
 
@@ -90,9 +90,10 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		JButton missionsButton = new JButton(MBCAPText.BUTTON_SELECT);
 		missionsButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				final Pair<String, List<Waypoint>[]> missions = GUI.loadMissions();
+				final Pair<String, List<Waypoint>[]> missions = API.getGUI(0).loadMissions();
+				MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
 				if (missions == null) {
-					Tools.setLoadedMissionsFromFile(null);
+					missionHelper.setMissionsLoaded(null);
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							missionsTextField.setText("");
@@ -103,9 +104,9 @@ public class MBCAPConfigDialogPanel extends JPanel {
 				}
 
 				// Missions are stored
-				Tools.setLoadedMissionsFromFile(missions.getValue1());
+				missionHelper.setMissionsLoaded(missions.getValue1());
 				// The number of UAVs is updated
-				final int numUAVs = Math.min(missions.getValue1().length, Tools.getNumUAVs());
+				final int numUAVs = Math.min(missions.getValue1().length, API.getArduSim().getNumUAVs());
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						missionsTextField.setText(missions.getValue0());

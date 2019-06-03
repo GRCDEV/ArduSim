@@ -3,11 +3,12 @@ package main;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import main.api.communications.WirelessModel;
 import main.cpuHelper.CPUData;
-import uavController.UAVControllerThread;
+import main.uavController.UAVControllerThread;
 
 /** This class contains general parameters of the application.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class Param {
 	
@@ -92,7 +93,7 @@ public class Param {
 	public static boolean measureCPUEnabled = false;	// Whether the CPU utilization must be measured or not
 	public static int numCPUs;							// Number of cores available
 	public static ConcurrentLinkedQueue<CPUData> cpu = new ConcurrentLinkedQueue<>();	// CPU usage data
-	public static final int CPU_CHECK_PERIOD = 1;		// (s) Time between measurements
+	public static final long CPU_CHECK_PERIOD = 1;		// (s) Time between measurements
 	public static final long CPU_CONSOLE_TIMEOUT = 50;	// (ms) Timeout waiting the console to read a line when retrieving CPU usage data
 	
 	// Simulator state
@@ -126,57 +127,5 @@ public class Param {
 			return null;
 		}
 	}
-	
-	// Wireless models enumerator
-	public enum WirelessModel {
-		NONE(0, Text.WIRELESS_MODEL_NONE),					// Unrestricted model
-		FIXED_RANGE(1, Text.WIRELESS_MODEL_FIXED_RANGE),	// Fixed distance model
-		DISTANCE_5GHZ(2, Text.WIRELESS_MODEL_5GHZ);			// Real distance model based on WiFi 5.18 GHz (channel 36) 
-		// New models should follow the increasing numeration. The method Tools.isInRange() must also be modified
-		
-		private final int id;
-		private final String name;
-		private WirelessModel(int id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-		public int getId() {
-			return this.id;
-		}
-		public String getName() {
-			return this.name;
-		}
-		public static WirelessModel getHighestIdModel() {
-			WirelessModel res = null;
-			for (WirelessModel p : WirelessModel.values()) {
-				if (res == null) {
-					res = p;
-				} else {
-					if (p.getId() > res.getId()) {
-						res = p;
-					}
-				}
-			}
-			return res;
-		}
-		public static String getModelNameById(int id) {
-			for (WirelessModel p : WirelessModel.values()) {
-				if (p.getId() == id) {
-					return p.getName();
-				}
-			}
-			return "";
-		}
-		public static WirelessModel getModelByName(String name) {
-			for (WirelessModel p : WirelessModel.values()) {
-				if (p.getName().equals(name)) {
-					return p;
-				}
-			}
-			return null;
-		}
-	}
-
-	
 	
 }

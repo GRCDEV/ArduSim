@@ -1,6 +1,6 @@
 package followme.logic;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
 public class FollowMeText {
 	public static final String PROTOCOL_TEXT = "Follow Me";

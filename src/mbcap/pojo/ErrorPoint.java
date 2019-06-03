@@ -1,11 +1,11 @@
 package mbcap.pojo;
 
-import api.pojo.UTMCoordinates;
+import api.pojo.location.Location2DUTM;
 
 /** This class generates objects with UAV location and the instant when the data was retrieved.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-public class ErrorPoint extends UTMCoordinates {
+public class ErrorPoint extends Location2DUTM {
 
 	private static final long serialVersionUID = 1L;
 	public double time;

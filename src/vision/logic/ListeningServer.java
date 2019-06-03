@@ -1,17 +1,13 @@
 package vision.logic;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.locks.ReentrantLock;
 
-import api.Copter;
-import api.GUI;
-import api.Tools;
-import api.pojo.GeoCoordinates;
-import api.pojo.Location2D;
+import api.API;
+import main.api.GUI;
 
 public class ListeningServer implements Runnable{
 
@@ -25,17 +21,19 @@ public class ListeningServer implements Runnable{
 	
 	private uavNavigator navi;
 	private int numUAV = 0;
+	private GUI gui;
 	
 	public ListeningServer(int numUAV) {
 		this.numUAV = numUAV;
 		navi = uavNavigator.getInstance(numUAV);
+		this.gui = API.getGUI(0);
 		
 		try {
 			//TODO port number serverSocket
 			serverSocket = new ServerSocket(5764);
 			running = true;
 		} catch (Exception e) {
-			GUI.warn("error", "Could not setup markerSocket");
+			gui.warn("error", "Could not setup markerSocket");
 			e.printStackTrace();
 			running = false;
 		}	
@@ -43,7 +41,7 @@ public class ListeningServer implements Runnable{
 	
 	@Override
 	public void run() {
-		GUI.log("run listeningSever");
+		gui.log("run listeningSever");
 		listenToSocket();
 	}
 
@@ -58,7 +56,7 @@ public class ListeningServer implements Runnable{
 			if(serverSocket != null)
 				serverSocket.close();
 		} catch (Exception e) {
-			GUI.warn("error", "Could not close the serverSockets");
+			gui.warn("error", "Could not close the serverSockets");
 			e.printStackTrace();
 			return false;
 		}

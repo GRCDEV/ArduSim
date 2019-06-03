@@ -2,7 +2,7 @@ package followme.pojo;
 
 import api.pojo.RCValues;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
 public class RemoteInput extends RCValues implements Comparable<RemoteInput> {
 	
@@ -17,10 +17,19 @@ public class RemoteInput extends RCValues implements Comparable<RemoteInput> {
 
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		
 		if (obj == null || !(obj instanceof RemoteInput)) {
 			return false;
 		}
 		return this.time == ((RemoteInput)obj).time;
+	}
+
+	@Override
+	public int hashCode() {
+		return Long.hashCode(this.time);
 	}
 
 	@Override
@@ -34,8 +43,6 @@ public class RemoteInput extends RCValues implements Comparable<RemoteInput> {
 			return 1;
 		}
 	}
-
-
 
 	@Override
 	public String toString() {

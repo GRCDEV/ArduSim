@@ -1,32 +1,27 @@
 package vision.logic;
 
 import java.awt.Graphics2D;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Map;
 
 import javax.swing.JFrame;
 import org.javatuples.Pair;
 
-import com.esotericsoftware.minlog.Log;
-
-import api.Copter;
-import api.GUI;
+import api.API;
 import api.ProtocolHelper;
-import api.Tools;
-import api.pojo.GeoCoordinates;
-import main.Text;
-import sim.board.BoardPanel;
-import uavController.UAVParam;
-import vision.gui.ConfigDialog;
-import vision.gui.ConfigDialogPanel;
+import api.pojo.CopterParam;
+import api.pojo.location.Location2DGeo;
+import main.api.Copter;
+import main.api.FileTools;
+import main.api.GUI;
+import main.api.MoveToListener;
+import main.api.MoveTo;
+import main.api.TakeOffListener;
+import main.api.TakeOff;
+import main.sim.board.BoardPanel;
 
 /** Developed by: Jamie Wubben, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
-public class visionHelper extends ProtocolHelper{
+public class visionHelper extends ProtocolHelper {
 	@Override
 	public void setProtocol() {this.protocolString = "Vision";}
 
@@ -35,7 +30,7 @@ public class visionHelper extends ProtocolHelper{
 
 	@Override
 	public void openConfigurationDialog() {
-		new ConfigDialog();
+		API.getArduSim().setProtocolConfigured();
 	}
 
 	@Override
@@ -59,14 +54,14 @@ public class visionHelper extends ProtocolHelper{
 	public void drawResources(Graphics2D graphics, BoardPanel panel) {}
 
 	@Override
-	public Pair<GeoCoordinates, Double>[] setStartingLocation(){
+	public Pair<Location2DGeo, Double>[] setStartingLocation(){
 
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		@SuppressWarnings("unchecked")
-		Pair<GeoCoordinates, Double>[] startingLocations = new Pair[numUAVs];
+		Pair<Location2DGeo, Double>[] startingLocations = new Pair[numUAVs];
 		for(int id=0;id<numUAVs;id++) {
 			// just a random location e.g. UPV campus vera
-			startingLocations[id] = Pair.with(new GeoCoordinates(39.725064, -0.733661),0.0);
+			startingLocations[id] = Pair.with(new Location2DGeo(39.725064, -0.733661),0.0);
 		}
 		return startingLocations;
 		/*
@@ -136,21 +131,22 @@ public class visionHelper extends ProtocolHelper{
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
+		Copter copter = API.getCopter(numUAV);
 		
 		Double rcMapRoll = null;
-		rcMapRoll = Copter.getParameter(numUAV, UAVParam.ControllerParam.RCMAP_ROLL);
+		rcMapRoll = copter.getParameter(CopterParam.RCMAP_ROLL);
 		if(rcMapRoll == null) {return false;}
 		
 		Double rcMapPitch = null;
-		rcMapPitch = Copter.getParameter(numUAV, UAVParam.ControllerParam.RCMAP_PITCH);
+		rcMapPitch = copter.getParameter(CopterParam.RCMAP_PITCH);
 		if(rcMapPitch == null) {return false;}
 		
 		Double rcMapThrottle = null;
-		rcMapThrottle = Copter.getParameter(numUAV, UAVParam.ControllerParam.RCMAP_THROTTLE);
+		rcMapThrottle = copter.getParameter(CopterParam.RCMAP_THROTTLE);
 		if(rcMapThrottle == null) {return false;}
 		
 		Double rcMapYaw = null;
-		rcMapYaw = Copter.getParameter(numUAV, UAVParam.ControllerParam.RCMAP_YAW);
+		rcMapYaw = copter.getParameter(CopterParam.RCMAP_YAW);
 		if(rcMapYaw == null) {return false;}
 		
 		
@@ -162,169 +158,169 @@ public class visionHelper extends ProtocolHelper{
 			switch (controls[i]) {
 				case 1:
 					Double rc1Min = null;
-					rc1Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC1);
+					rc1Min = copter.getParameter(CopterParam.MIN_RC1);
 					if (rc1Min == null) {return false;}
 					paramValues[i][0]= rc1Min.intValue();
 					
 					Double rc1Max = null;
-					rc1Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC1);
+					rc1Max = copter.getParameter(CopterParam.MAX_RC1);
 					if (rc1Max == null) {return false;}
 					paramValues[i][1] = rc1Max.intValue();
 					
 					Double rc1Trim = null;
-					rc1Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC1);
+					rc1Trim = copter.getParameter(CopterParam.TRIM_RC1);
 					if (rc1Trim == null) {return false;}
 					paramValues[i][2] = rc1Trim.intValue();
 					
 					Double rc1DZ = null;
-					rc1DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC1);
+					rc1DZ = copter.getParameter(CopterParam.DZ_RC1);
 					if(rc1DZ == null) {return false;}
 					paramValues[i][3] = rc1DZ.intValue();
 					break;
 				case 2:
 					Double rc2Min = null;
-					rc2Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC2);
+					rc2Min = copter.getParameter(CopterParam.MIN_RC2);
 					if (rc2Min == null) {return false;}
 					paramValues[i][0]= rc2Min.intValue();
 					
 					Double rc2Max = null;
-					rc2Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC2);
+					rc2Max = copter.getParameter(CopterParam.MAX_RC2);
 					if (rc2Max == null) {return false;}
 					paramValues[i][1] = rc2Max.intValue();
 					
 					Double rc2Trim = null;
-					rc2Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC2);
+					rc2Trim = copter.getParameter(CopterParam.TRIM_RC2);
 					if (rc2Trim == null) {return false;}
 					paramValues[i][2] = rc2Trim.intValue();
 					
 					Double rc2DZ = null;
-					rc2DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC2);
+					rc2DZ = copter.getParameter(CopterParam.DZ_RC2);
 					if(rc2DZ == null) {return false;}
 					paramValues[i][3] = rc2DZ.intValue();
 					break;
 				case 3:
 					Double rc3Min = null;
-					rc3Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC3);
+					rc3Min = copter.getParameter(CopterParam.MIN_RC3);
 					if (rc3Min == null) {return false;}
 					paramValues[i][0]= rc3Min.intValue();
 					
 					Double rc3Max = null;
-					rc3Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC3);
+					rc3Max = copter.getParameter(CopterParam.MAX_RC3);
 					if (rc3Max == null) {return false;}
 					paramValues[i][1] = rc3Max.intValue();
 					
 					Double rc3Trim = null;
-					rc3Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC3);
+					rc3Trim = copter.getParameter(CopterParam.TRIM_RC3);
 					if (rc3Trim == null) {return false;}
 					paramValues[i][2] = rc3Trim.intValue();
 					
 					Double rc3DZ = null;
-					rc3DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC3);
+					rc3DZ = copter.getParameter(CopterParam.DZ_RC3);
 					if(rc3DZ == null) {return false;}
 					paramValues[i][3] = rc3DZ.intValue();
 					break;
 				case 4:
 					Double rc4Min = null;
-					rc4Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC4);
+					rc4Min = copter.getParameter(CopterParam.MIN_RC4);
 					if (rc4Min == null) {return false;}
 					paramValues[i][0]= rc4Min.intValue();
 					
 					Double rc4Max = null;
-					rc4Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC4);
+					rc4Max = copter.getParameter(CopterParam.MAX_RC4);
 					if (rc4Max == null) {return false;}
 					paramValues[i][1] = rc4Max.intValue();
 					
 					Double rc4Trim = null;
-					rc4Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC4);
+					rc4Trim = copter.getParameter(CopterParam.TRIM_RC4);
 					if (rc4Trim == null) {return false;}
 					paramValues[i][2] = rc4Trim.intValue();
 					
 					Double rc4DZ = null;
-					rc4DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC4);
+					rc4DZ = copter.getParameter(CopterParam.DZ_RC4);
 					if(rc4DZ == null) {return false;}
 					paramValues[i][3] = rc4DZ.intValue();
 					break;
 				case 5:
 					Double rc5Min = null;
-					rc5Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC5);
+					rc5Min = copter.getParameter(CopterParam.MIN_RC5);
 					if (rc5Min == null) {return false;}
 					paramValues[i][0]= rc5Min.intValue();
 					
 					Double rc5Max = null;
-					rc5Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC5);
+					rc5Max = copter.getParameter(CopterParam.MAX_RC5);
 					if (rc5Max == null) {return false;}
 					paramValues[i][1] = rc5Max.intValue();
 					
 					Double rc5Trim = null;
-					rc5Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC5);
+					rc5Trim = copter.getParameter(CopterParam.TRIM_RC5);
 					if (rc5Trim == null) {return false;}
 					paramValues[i][2] = rc5Trim.intValue();
 					
 					Double rc5DZ = null;
-					rc5DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC5);
+					rc5DZ = copter.getParameter(CopterParam.DZ_RC5);
 					if(rc5DZ == null) {return false;}
 					paramValues[i][3] = rc5DZ.intValue();
 					break;
 				case 6:
 					Double rc6Min = null;
-					rc6Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC6);
+					rc6Min = copter.getParameter(CopterParam.MIN_RC6);
 					if (rc6Min == null) {return false;}
 					paramValues[i][0]= rc6Min.intValue();
 					
 					Double rc6Max = null;
-					rc6Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC6);
+					rc6Max = copter.getParameter(CopterParam.MAX_RC6);
 					if (rc6Max == null) {return false;}
 					paramValues[i][1] = rc6Max.intValue();
 					
 					Double rc6Trim = null;
-					rc6Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC6);
+					rc6Trim = copter.getParameter(CopterParam.TRIM_RC6);
 					if (rc6Trim == null) {return false;}
 					paramValues[i][2] = rc6Trim.intValue();
 					
 					Double rc6DZ = null;
-					rc6DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC6);
+					rc6DZ = copter.getParameter(CopterParam.DZ_RC6);
 					if(rc6DZ == null) {return false;}
 					paramValues[i][3] = rc6DZ.intValue();
 					break;
 				case 7:
 					Double rc7Min = null;
-					rc7Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC7);
+					rc7Min = copter.getParameter(CopterParam.MIN_RC7);
 					if (rc7Min == null) {return false;}
 					paramValues[i][0]= rc7Min.intValue();
 					
 					Double rc7Max = null;
-					rc7Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC7);
+					rc7Max = copter.getParameter(CopterParam.MAX_RC7);
 					if (rc7Max == null) {return false;}
 					paramValues[i][1] = rc7Max.intValue();
 					
 					Double rc7Trim = null;
-					rc7Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC7);
+					rc7Trim = copter.getParameter(CopterParam.TRIM_RC7);
 					if (rc7Trim == null) {return false;}
 					paramValues[i][2] = rc7Trim.intValue();
 					
 					Double rc7DZ = null;
-					rc7DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC7);
+					rc7DZ = copter.getParameter(CopterParam.DZ_RC7);
 					if(rc7DZ == null) {return false;}
 					paramValues[i][3] = rc7DZ.intValue();
 					break;
 				case 8:
 					Double rc8Min = null;
-					rc8Min = Copter.getParameter(numUAV, UAVParam.ControllerParam.MIN_RC8);
+					rc8Min = copter.getParameter(CopterParam.MIN_RC8);
 					if (rc8Min == null) {return false;}
 					paramValues[i][0]= rc8Min.intValue();
 					
 					Double rc8Max = null;
-					rc8Max = Copter.getParameter(numUAV, UAVParam.ControllerParam.MAX_RC8);
+					rc8Max = copter.getParameter(CopterParam.MAX_RC8);
 					if (rc8Max == null) {return false;}
 					paramValues[i][1] = rc8Max.intValue();
 					
 					Double rc8Trim = null;
-					rc8Trim = Copter.getParameter(numUAV, UAVParam.ControllerParam.TRIM_RC8);
+					rc8Trim = copter.getParameter(CopterParam.TRIM_RC8);
 					if (rc8Trim == null) {return false;}
 					paramValues[i][2] = rc8Trim.intValue();
 					
 					Double rc8DZ = null;
-					rc8DZ = Copter.getParameter(numUAV, UAVParam.ControllerParam.DZ_RC8);
+					rc8DZ = copter.getParameter(CopterParam.DZ_RC8);
 					if(rc8DZ == null) {return false;}
 					paramValues[i][3] = rc8DZ.intValue();
 					break;
@@ -351,7 +347,7 @@ public class visionHelper extends ProtocolHelper{
 		visionParam.throttleMax = paramValues[2][1];
 		//TODO find true mid value somewhere
 		visionParam.throttleTrim = visionParam.throttleMin + (visionParam.throttleMax - visionParam.throttleMin)/2;
-		visionParam.throttleDeadzone = Copter.getParameter(numUAV,UAVParam.ControllerParam.DZ_THROTTLE).intValue();
+		visionParam.throttleDeadzone = copter.getParameter(CopterParam.DZ_THROTTLE).intValue();
 		
 		visionParam.yawMin = paramValues[3][0];
 		visionParam.yawMax = paramValues[3][1];
@@ -430,21 +426,56 @@ public class visionHelper extends ProtocolHelper{
 	 * Starts a thread for each drone and let them navigate trough the planned path.
 	 */
 	public void startExperimentActionPerformed() {
-		for(int numUAV = 0; numUAV< Tools.getNumUAVs();numUAV++) {
+		int numUAVs = API.getArduSim().getNumUAVs();
+		GUI gui;
+		Copter copter;
+		for(int numUAV = 0; numUAV< numUAVs;numUAV++) {
 			uavNavigator drone = uavNavigator.getInstance(numUAV);
 			// if during the construction of drone anything went wrong getSucces will return false
 			// and the drone won`t take off
 			if(drone.isRunning()) {
-				GUI.log("taking of drones");
-				if(Copter.takeOff(numUAV, visionParam.ALTITUDE)) {
-					double threshold = visionParam.ALTITUDE - Copter.getMinTargetAltitude(visionParam.ALTITUDE);
-					GUI.log(visionParam.LATITUDE + " : " + visionParam.LONGITUDE);
-					Copter.moveUAV(numUAV, new GeoCoordinates(visionParam.LATITUDE,visionParam.LONGITUDE), (float)visionParam.ALTITUDE, 1.0, threshold);
-					Copter.stopUAV(numUAV);
-					drone.start();
-				}else {
-					GUI.warn("ERROR", "drone could not take off");
-				}
+				gui = API.getGUI(numUAV);
+				copter = API.getCopter(numUAV);
+				gui.log("taking of drones");
+				final GUI gui2 = gui;
+				TakeOff takeOff = copter.takeOff(visionParam.ALTITUDE, new TakeOffListener() {
+					
+					@Override
+					public void onFailureListener() {
+						gui2.warn("ERROR", "drone could not take off");
+					}
+					
+					@Override
+					public void onCompletedListener() {
+						// Waiting with Thread.join()
+					}
+				});
+				takeOff.start();
+				try {
+					takeOff.join();
+				} catch (InterruptedException e1) {}
+				
+				gui.log(visionParam.LATITUDE + " : " + visionParam.LONGITUDE);
+				
+				MoveTo moveTo = copter.moveTo(new Location2DGeo(visionParam.LATITUDE,visionParam.LONGITUDE),
+						visionParam.ALTITUDE, new MoveToListener() {
+							
+							@Override
+							public void onFailureListener() {
+								// TODO something in case of failure
+							}
+							
+							@Override
+							public void onCompletedListener() {
+								// Nothing to do, as we wait until the target location is reached with Thread.join()
+							}
+						});
+				moveTo.start();
+				try {
+					moveTo.join();
+				} catch (InterruptedException e) {}
+				
+				drone.start();
 			}
 		}
 		
@@ -472,32 +503,16 @@ public class visionHelper extends ProtocolHelper{
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {}
 
-	/** Checks the validity of the configuration of the protocol. */
-	public static boolean isValidProtocolConfiguration(ConfigDialogPanel panel) {
-		// Simulation parameters
-		String validating = panel.missionsTextField.getText();
-		if (validating==null || validating.length()==0) {
-			GUI.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
-			return false;
-		}
-		return true;
-	}
-	
-	/** Stores the configuration of the protocol in variables. */
-	public static void storeProtocolConfiguration(ConfigDialogPanel panel) {
-		// Simulation parameters
-		Tools.setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
-	}
-	
 	public static void readIniFile(String filename) {
-		File iniFile = new File(Tools.getCurrentFolder() + "/" + filename);
+		FileTools fileTools = API.getFileTools();
+		File iniFile = new File(fileTools.getCurrentFolder() + "/" + filename);
 		
 		if(iniFile.exists()) {
-			Map<String, String> params = Tools.parseINIFile(iniFile);
+			Map<String, String> params = fileTools.parseINIFile(iniFile);
 			visionParam.LATITUDE = Double.parseDouble(params.get("LATITUDE"));
 			visionParam.LONGITUDE = Double.parseDouble(params.get("LONGITUDE"));
 			visionParam.ALTITUDE = Double.parseDouble(params.get("ALTITUDE"));
-			GUI.log("landing location set from location.ini");
+			API.getGUI(0).log("landing location set from location.ini");
 		}
 	}
 	

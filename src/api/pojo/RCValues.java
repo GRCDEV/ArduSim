@@ -1,10 +1,17 @@
 package api.pojo;
 
 /** This class generates objects to store the RC values that are received or sent to the flight controller.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class RCValues {
-	public int roll, pitch, throttle, yaw;
+	/** (degrees) Roll. */
+	public int roll;
+	/** (degrees) Pitch. */
+	public int pitch;
+	/** (degrees) Throttle. */
+	public int throttle;
+	/** (degrees) Yaw. */
+	public int yaw;
 	
 	@SuppressWarnings("unused")
 	private RCValues() {}

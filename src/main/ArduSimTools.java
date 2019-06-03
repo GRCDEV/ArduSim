@@ -75,48 +75,63 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import api.API;
-import api.Copter;
-import api.GUI;
 import api.ProtocolHelper;
-import api.Tools;
-import api.WaypointReachedListener;
 import api.pojo.AtomicDoubleArray;
 import api.pojo.ConcurrentBoundedQueue;
+import api.pojo.CopterParam;
 import api.pojo.FlightMode;
-import api.pojo.GeoCoordinates;
-import api.pojo.LogPoint;
-import api.pojo.MAVParam;
-import api.pojo.Point3D;
 import api.pojo.RCValues;
-import api.pojo.UTMCoordinates;
-import api.pojo.Waypoint;
-import api.pojo.WaypointSimplified;
-import api.pojo.formations.FlightFormation;
+import api.pojo.location.Location2DGeo;
+import api.pojo.location.LogPoint;
+import api.pojo.location.Location3DUTM;
+import api.pojo.location.Location2DUTM;
+import api.pojo.location.Waypoint;
+import api.pojo.location.WaypointSimplified;
 import main.Param.SimulatorState;
-import main.communications.CommLinkObject;
+import main.api.ArduSim;
+import main.api.ArduSimNotReadyException;
+import main.api.CopterParamLoaded;
+import main.api.FileTools;
+import main.api.GUI;
+import main.api.ValidationTools;
+import main.api.WaypointReachedListener;
+import main.api.communications.CommLinkObject;
+import main.api.formations.FlightFormation;
 import main.cpuHelper.CPUData;
-import none.ProtocolNoneHelper;
-import pccompanion.logic.PCCompanionParam;
-import sim.board.BoardParam;
-import sim.gui.MainWindow;
-import sim.logic.GPSStartThread;
-import sim.logic.SimParam;
-import sim.pojo.PortScanResult;
-import sim.pojo.WinRegistry;
-import uavController.UAVControllerThread;
-import uavController.UAVCurrentData;
-import uavController.UAVCurrentStatus;
-import uavController.UAVParam;
-import uavController.UAVParam.ControllerParam;
+import main.pccompanion.logic.PCCompanionParam;
+import main.sim.board.BoardParam;
+import main.sim.gui.MainWindow;
+import main.sim.gui.MissionKmlDialog;
+import main.sim.logic.GPSEnableThread;
+import main.sim.logic.SimParam;
+import main.sim.pojo.PortScanResult;
+import main.sim.pojo.WinRegistry;
+import main.uavController.UAVControllerThread;
+import main.uavController.UAVCurrentData;
+import main.uavController.UAVCurrentStatus;
+import main.uavController.UAVParam;
+import mission.logic.MissionHelper;
 
 /** This class contains general tools used by the simulator.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class ArduSimTools {
+	
+	// Used to avoid the exit dialog to be opened more than once at the same time.
+	private static AtomicBoolean exiting = new AtomicBoolean();
 	
 	public static List<WaypointReachedListener> listeners = new ArrayList<WaypointReachedListener>();
 	
 	private static volatile boolean storingResults = false;
+	
+	// Available protocols (Internal use by ArduSim)
+	public static Class<?>[] ProtocolClasses;
+	public static volatile String[] ProtocolNames = null;
+	public static volatile String noneProtocolName = null;
+
+	// Selected protocol (Internal use by ArduSim)
+	public static volatile String selectedProtocol;
+	public static volatile ProtocolHelper selectedProtocolInstance;
 	
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
@@ -135,13 +150,13 @@ public class ArduSimTools {
 		}
 		
 		if (args[0].equalsIgnoreCase("multicopter")) {
-			Param.role = Tools.MULTICOPTER;
+			Param.role = ArduSim.MULTICOPTER;
 		}
 		if (args[0].equalsIgnoreCase("simulator")) {
-			Param.role = Tools.SIMULATOR;
+			Param.role = ArduSim.SIMULATOR;
 		}
 		if (args[0].equalsIgnoreCase("pccompanion")) {
-			Param.role = Tools.PCCOMPANION;
+			Param.role = ArduSim.PCCOMPANION;
 		}
 		return true;
 	}
@@ -157,40 +172,41 @@ public class ArduSimTools {
 		}
 		
 		// Parse parameters common to real UAV and PC Companion
-		if (Param.role == Tools.PCCOMPANION || Param.role == Tools.MULTICOPTER) {
+		ValidationTools validationTools = API.getValidationTools();
+		if (Param.role == ArduSim.PCCOMPANION || Param.role == ArduSim.MULTICOPTER) {
 			param = parameters.get(Param.COMPUTER_PORT);
 			if (param == null) {
-				GUI.log(Param.COMPUTER_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + PCCompanionParam.computerPort);
+				ArduSimTools.logGlobal(Param.COMPUTER_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + PCCompanionParam.computerPort);
 			} else {
-				if (!Tools.isValidPort(param)) {
-					GUI.log(Param.COMPUTER_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPort(param)) {
+					ArduSimTools.logGlobal(Param.COMPUTER_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				PCCompanionParam.computerPort = Integer.parseInt(param);
 			}
 			param = parameters.get(Param.UAV_PORT);
 			if (param == null) {
-				GUI.log(Param.UAV_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + PCCompanionParam.uavPort);
+				ArduSimTools.logGlobal(Param.UAV_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + PCCompanionParam.uavPort);
 			} else {
-				if (!Tools.isValidPort(param)) {
-					GUI.log(Param.UAV_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPort(param)) {
+					ArduSimTools.logGlobal(Param.UAV_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				PCCompanionParam.uavPort = Integer.parseInt(param);
 			}
 			param = parameters.get(Param.BROADCAST_IP);
 			if (param == null) {
-				GUI.log(Param.BROADCAST_IP + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.broadcastIP);
+				ArduSimTools.logGlobal(Param.BROADCAST_IP + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.broadcastIP);
 			} else {
 				UAVParam.broadcastIP = param;
 			}
-			GUI.log(Text.INI_FILE_PARAM_BROADCAST_IP_WARNING + " " + param);
+			ArduSimTools.logGlobal(Text.INI_FILE_PARAM_BROADCAST_IP_WARNING + " " + param);
 			param = parameters.get(Param.BROADCAST_PORT);
 			if (param == null) {
-				GUI.log(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.broadcastPort);
+				ArduSimTools.logGlobal(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.broadcastPort);
 			} else {
-				if (!Tools.isValidPort(param)) {
-					GUI.log(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPort(param)) {
+					ArduSimTools.logGlobal(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				UAVParam.broadcastPort = Integer.parseInt(param);
@@ -198,40 +214,40 @@ public class ArduSimTools {
 		}
 
 		// Parse parameters for a real UAV
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Param.role == ArduSim.MULTICOPTER) {
 			if (!parameters.containsKey(Param.PROTOCOL)) {
-				GUI.log(Text.INI_FILE_PROTOCOL_NOT_FOUND_ERROR);
+				ArduSimTools.logGlobal(Text.INI_FILE_PROTOCOL_NOT_FOUND_ERROR);
 				System.exit(1);
 			}
 			if (!parameters.containsKey(Param.SPEED)) {
-				GUI.log(Text.INI_FILE_SPEED_NOT_FOUND_ERROR);
+				ArduSimTools.logGlobal(Text.INI_FILE_SPEED_NOT_FOUND_ERROR);
 				System.exit(1);
 			}
 			// Set protocol
 			String pr = parameters.get(Param.PROTOCOL);
 			boolean found = false;
-			for (int i = 0; i < ProtocolHelper.ProtocolNames.length && !found; i++) {
-				if (ProtocolHelper.ProtocolNames[i].equalsIgnoreCase(pr)) {
+			for (int i = 0; i < ArduSimTools.ProtocolNames.length && !found; i++) {
+				if (ArduSimTools.ProtocolNames[i].equalsIgnoreCase(pr)) {
 					found = true;
 				}
 			}
 			if (!found) {
-				GUI.log(pr + " " + Text.PROTOCOL_NOT_FOUND_ERROR + "\n\n");
+				ArduSimTools.logGlobal(pr + " " + Text.PROTOCOL_NOT_FOUND_ERROR + "\n\n");
 
-				for (int i = 0; i < ProtocolHelper.ProtocolNames.length; i++) {
-					GUI.log(ProtocolHelper.ProtocolNames[i]);
+				for (int i = 0; i < ArduSimTools.ProtocolNames.length; i++) {
+					ArduSimTools.logGlobal(ArduSimTools.ProtocolNames[i]);
 				}
 				System.exit(1);
 			}
-			ProtocolHelper.selectedProtocol = pr;
-			ProtocolHelper.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
-			if (ProtocolHelper.selectedProtocolInstance == null) {
+			ArduSimTools.selectedProtocol = pr;
+			ArduSimTools.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
+			if (ArduSimTools.selectedProtocolInstance == null) {
 				System.exit(1);
 			}
 			// Set speed
 			String spe = parameters.get(Param.SPEED);
-			if (!Tools.isValidPositiveDouble(spe)) {
-				GUI.log(Text.SPEED_ERROR + "\n");
+			if (!validationTools.isValidPositiveDouble(spe)) {
+				ArduSimTools.logGlobal(Text.SPEED_ERROR + "\n");
 				System.exit(1);
 			}
 			UAVParam.initialSpeeds = new double[1];
@@ -239,19 +255,19 @@ public class ArduSimTools {
 
 			param = parameters.get(Param.SERIAL_PORT);
 			if (param == null) {
-				GUI.log(Param.SERIAL_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.serialPort);
+				ArduSimTools.logGlobal(Param.SERIAL_PORT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.serialPort);
 			} else {
 				if (!param.equalsIgnoreCase(UAVParam.serialPort)) {
-					GUI.log(Text.INI_FILE_PARAM_SERIAL_PORT_WARNING + " " + param);
+					ArduSimTools.logGlobal(Text.INI_FILE_PARAM_SERIAL_PORT_WARNING + " " + param);
 					UAVParam.serialPort = param;
 				}
 			}
 			param = parameters.get(Param.BAUD_RATE);
 			if (param == null) {
-				GUI.log(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.baudRate);
+				ArduSimTools.logGlobal(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.baudRate);
 			} else {
-				if (!Tools.isValidPositiveInteger(param)) {
-					GUI.log(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPositiveInteger(param)) {
+					ArduSimTools.logGlobal(Param.BAUD_RATE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				UAVParam.baudRate = Integer.parseInt(param);
@@ -259,10 +275,10 @@ public class ArduSimTools {
 			
 			param = parameters.get(Param.BATTERY_CELLS);
 			if (param == null) {
-				GUI.log(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCells);
+				ArduSimTools.logGlobal(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCells);
 			} else {
-				if (!Tools.isValidPositiveInteger(param)) {
-					GUI.log(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPositiveInteger(param)) {
+					ArduSimTools.logGlobal(Param.BATTERY_CELLS + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				UAVParam.lipoBatteryCells = Integer.parseInt(param);
@@ -275,10 +291,10 @@ public class ArduSimTools {
 			}
 			param = parameters.get(Param.BATTERY_CAPACITY);
 			if (param == null) {
-				GUI.log(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCapacity);
+				ArduSimTools.logGlobal(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.lipoBatteryCapacity);
 			} else {
-				if (!Tools.isValidPositiveInteger(param)) {
-					GUI.log(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPositiveInteger(param)) {
+					ArduSimTools.logGlobal(Param.BATTERY_CAPACITY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				UAVParam.lipoBatteryCapacity = Integer.parseInt(param);
@@ -286,7 +302,7 @@ public class ArduSimTools {
 		}
 		
 		// Parse parameters for simulations
-		if (Param.role == Tools.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR) {
 			param = parameters.get(Param.GROUND_FORMATION);
 			// There will not always be a ground formation (i.e. MBCAP)
 			if (param != null) {
@@ -299,17 +315,17 @@ public class ArduSimTools {
 					}
 				}
 				if (formation == null) {
-					GUI.log(Param.GROUND_FORMATION + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					ArduSimTools.logGlobal(Param.GROUND_FORMATION + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				UAVParam.groundFormation.set(formation);
 				// Check if the minimum distance is also included (meters)
 				param = parameters.get(Param.GROUND_DISTANCE);
 				if (param == null) {
-					GUI.log(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.groundDistanceBetweenUAV);
+					ArduSimTools.logGlobal(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.groundDistanceBetweenUAV);
 				} else {
-					if (!Tools.isValidPositiveDouble(param)) {
-						GUI.log(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					if (!validationTools.isValidPositiveDouble(param)) {
+						ArduSimTools.logGlobal(Param.GROUND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 						System.exit(1);
 					}
 					UAVParam.groundDistanceBetweenUAV = Double.parseDouble(param);
@@ -330,17 +346,17 @@ public class ArduSimTools {
 				}
 			}
 			if (formation == null) {
-				GUI.log(Param.AIR_FORMATION + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				ArduSimTools.logGlobal(Param.AIR_FORMATION + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			UAVParam.airFormation.set(formation);
 			// Check if the minimum distance is also included (meters)
 			param = parameters.get(Param.AIR_DISTANCE);
 			if (param == null) {
-				GUI.log(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.airDistanceBetweenUAV);
+				ArduSimTools.logGlobal(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.airDistanceBetweenUAV);
 			} else {
-				if (!Tools.isValidPositiveDouble(param)) {
-					GUI.log(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPositiveDouble(param)) {
+					ArduSimTools.logGlobal(Param.AIR_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				UAVParam.airDistanceBetweenUAV = Double.parseDouble(param);
@@ -349,50 +365,50 @@ public class ArduSimTools {
 		// Check if the minimum distance for landing is also included (meters)
 		param = parameters.get(Param.LAND_DISTANCE);
 		if (param == null) {
-			GUI.log(Param.LAND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.landDistanceBetweenUAV);
+			ArduSimTools.logGlobal(Param.LAND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.landDistanceBetweenUAV);
 		} else {
-			if (!Tools.isValidPositiveDouble(param)) {
-				GUI.log(Param.LAND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+			if (!validationTools.isValidPositiveDouble(param)) {
+				ArduSimTools.logGlobal(Param.LAND_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			UAVParam.landDistanceBetweenUAV = Double.parseDouble(param);
 		}
 		param = parameters.get(Param.MEASURE_CPU);
 		if (param == null) {
-			GUI.log(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.measureCPUEnabled);
+			ArduSimTools.logGlobal(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.measureCPUEnabled);
 		} else {
-			if (!Tools.isValidBoolean(param)) {
-				GUI.log(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+			if (!validationTools.isValidBoolean(param)) {
+				ArduSimTools.logGlobal(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			Param.measureCPUEnabled = Boolean.valueOf(param);
 		}
 		param = parameters.get(Param.VERBOSE_LOGGING);
 		if (param == null) {
-			GUI.log(Param.VERBOSE_LOGGING + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.verboseLogging);
+			ArduSimTools.logGlobal(Param.VERBOSE_LOGGING + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.verboseLogging);
 		} else {
-			if (!Tools.isValidBoolean(param)) {
-				GUI.log(Param.VERBOSE_LOGGING + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+			if (!validationTools.isValidBoolean(param)) {
+				ArduSimTools.logGlobal(Param.VERBOSE_LOGGING + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			Param.verboseLogging = Boolean.valueOf(param);
 		}
 		param = parameters.get(Param.VERBOSE_STORE);
 		if (param == null) {
-			GUI.log(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.verboseStore);
+			ArduSimTools.logGlobal(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Param.verboseStore);
 		} else {
-			if (!Tools.isValidBoolean(param)) {
-				GUI.log(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+			if (!validationTools.isValidBoolean(param)) {
+				ArduSimTools.logGlobal(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			Param.verboseStore = Boolean.valueOf(param);
 		}
 		param = parameters.get(Param.WAYPOINT_YAW_OVERRIDE);
 		if (param == null) {
-			GUI.log(Param.WAYPOINT_YAW_OVERRIDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.overrideYaw);
+			ArduSimTools.logGlobal(Param.WAYPOINT_YAW_OVERRIDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.overrideYaw);
 		} else {
-			if (!Tools.isValidBoolean(param)) {
-				GUI.log(Param.WAYPOINT_YAW_OVERRIDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+			if (!validationTools.isValidBoolean(param)) {
+				ArduSimTools.logGlobal(Param.WAYPOINT_YAW_OVERRIDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			UAVParam.overrideYaw = Boolean.valueOf(param);
@@ -400,15 +416,15 @@ public class ArduSimTools {
 		if (UAVParam.overrideYaw) {
 			param = parameters.get(Param.WAYPOINT_YAW_VALUE);
 			if (param == null) {
-				GUI.log(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.YAW_VALUES[UAVParam.yawBehavior]);
+				ArduSimTools.logGlobal(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.YAW_VALUES[UAVParam.yawBehavior]);
 			} else {
-				if (!Tools.isValidNonNegativeInteger(param)) {
-					GUI.log(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidNonNegativeInteger(param)) {
+					ArduSimTools.logGlobal(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				int yawBehavior = Integer.parseInt(param);
 				if (yawBehavior > 3) {
-					GUI.log(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					ArduSimTools.logGlobal(Param.WAYPOINT_YAW_VALUE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				UAVParam.yawBehavior = yawBehavior;
@@ -416,20 +432,20 @@ public class ArduSimTools {
 		}
 		param = parameters.get(Param.KML_MIN_ALTITUDE);
 		if (param == null) {
-			GUI.log(Param.KML_MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minAltitude);
+			ArduSimTools.logGlobal(Param.KML_MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minAltitude);
 		} else {
-			if (!Tools.isValidPositiveDouble(param)) {
-				GUI.log(Param.KML_MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+			if (!validationTools.isValidPositiveDouble(param)) {
+				ArduSimTools.logGlobal(Param.KML_MIN_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			UAVParam.minAltitude = Double.parseDouble(param);
 		}
 		param = parameters.get(Param.KML_OVERRIDE_ALTITUDE);
 		if (param == null) {
-			GUI.log(Param.KML_OVERRIDE_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.overrideAltitude);
+			ArduSimTools.logGlobal(Param.KML_OVERRIDE_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.overrideAltitude);
 		} else {
-			if (!Tools.isValidBoolean(param)) {
-				GUI.log(Param.KML_OVERRIDE_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+			if (!validationTools.isValidBoolean(param)) {
+				ArduSimTools.logGlobal(Param.KML_OVERRIDE_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
 			UAVParam.overrideAltitude = Boolean.parseBoolean(param);
@@ -440,14 +456,14 @@ public class ArduSimTools {
 				if (UAVParam.minFlyingAltitude < UAVParam.minAltitude) {
 					UAVParam.minFlyingAltitude = UAVParam.minAltitude;
 				}
-				GUI.log(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minFlyingAltitude);
+				ArduSimTools.logGlobal(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + UAVParam.minFlyingAltitude);
 			} else {
-				if (!Tools.isValidPositiveDouble(param)) {
-					GUI.log(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				if (!validationTools.isValidPositiveDouble(param)) {
+					ArduSimTools.logGlobal(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
 				if (Double.parseDouble(param) < UAVParam.minAltitude) {
-					GUI.log(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + UAVParam.minAltitude);
+					ArduSimTools.logGlobal(Param.KML_ALTITUDE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + UAVParam.minAltitude);
 					UAVParam.minFlyingAltitude = UAVParam.minAltitude;
 				} else {
 					UAVParam.minFlyingAltitude = Double.parseDouble(param);
@@ -456,61 +472,62 @@ public class ArduSimTools {
 		}
 		param = parameters.get(Param.KML_MISSION_END);
 		if (param == null) {
-			GUI.log(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.missionEnd);
+			ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + MissionKmlDialog.missionEnd);
 		} else {
-			if (param.equalsIgnoreCase(Waypoint.MISSION_END_UNMODIFIED)) {
-				Waypoint.missionEnd = Waypoint.MISSION_END_UNMODIFIED;
-			} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_LAND)) {
-				Waypoint.missionEnd = Waypoint.MISSION_END_LAND;
-			} else if (param.equalsIgnoreCase(Waypoint.MISSION_END_RTL)) {
-				Waypoint.missionEnd = Waypoint.MISSION_END_RTL;
+			if (param.equalsIgnoreCase(MissionKmlDialog.MISSION_END_UNMODIFIED)) {
+				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_UNMODIFIED;
+			} else if (param.equalsIgnoreCase(MissionKmlDialog.MISSION_END_LAND)) {
+				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_LAND;
+			} else if (param.equalsIgnoreCase(MissionKmlDialog.MISSION_END_RTL)) {
+				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_RTL;
 			} else {
-				GUI.log(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-				GUI.log(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.missionEnd);
+				ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.missionEnd);
 			}
 		}
 		param = parameters.get(Param.KML_WAYPOINT_DELAY);
 		if (param == null) {
-			GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDelay);
+			ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + MissionKmlDialog.waypointDelay);
 		} else {
 			try {
 				int delay = Integer.parseInt(param);
 				if (delay < 0 || delay > 65535) {
-					GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-					GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+					ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+					ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDelay);
 				} else {
-					Waypoint.waypointDelay = delay;
+					MissionKmlDialog.waypointDelay = delay;
 					if (delay > 0) {
 						param = parameters.get(Param.KML_WAYPOINT_DISTANCE);
 						if (param == null) {
-							GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + Waypoint.waypointDistance);
+							ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR + " " + MissionKmlDialog.waypointDistance);
 						} else {
 							try {
 								int distance = Integer.parseInt(param);
 								if (distance < 10 || distance > 1000) {
-									GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-									GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
+									ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+									ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDistance);
 								} else {
-									Waypoint.waypointDistance = distance;
+									MissionKmlDialog.waypointDistance = distance;
 								}
 							} catch (NumberFormatException e) {
-								GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-								GUI.log(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDistance);
+								ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+								ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDistance);
 							}
 						}
 					}
 				}
 			} catch (NumberFormatException e) {
-				GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-				GUI.log(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + Waypoint.waypointDelay);
+				ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDelay);
 			}
 		}
 	}
 	
 	/** Auxiliary method to load parameters from the ArduSim ini configuration file. */
 	private static Map<String, String> loadIniFile() {
+		FileTools fileTools = API.getFileTools();
 		Map<String, String> parameters = new HashMap<>();
-		File folder = Tools.getCurrentFolder();
+		File folder = fileTools.getCurrentFolder();
 		
 		File [] files = folder.listFiles(new FilenameFilter() {
 		    @Override
@@ -524,7 +541,7 @@ public class ArduSimTools {
 		    }
 		});
 		if (files == null || files.length == 0) {
-			GUI.log(Text.INI_FILE_NOT_FOUND);
+			ArduSimTools.logGlobal(Text.INI_FILE_NOT_FOUND);
 			return parameters;
 		}
 		int pos = -1;
@@ -536,12 +553,12 @@ public class ArduSimTools {
 			}
 		}
 		if (pos == -1) {
-			GUI.log(Text.INI_FILE_NOT_FOUND);
+			ArduSimTools.logGlobal(Text.INI_FILE_NOT_FOUND);
 			return parameters;
 		}
 		File iniFile = files[pos];
 		
-		parameters = Tools.parseINIFile(iniFile);
+		parameters = fileTools.parseINIFile(iniFile);
 		
 		if (parameters.size() > 0) {
 			// Check waste parameters
@@ -553,11 +570,11 @@ public class ArduSimTools {
 					}
 				}
 				if (!found) {
-					GUI.log(Text.INI_FILE_WASTE_PARAMETER_WARNING + " " + key);
+					ArduSimTools.logGlobal(Text.INI_FILE_WASTE_PARAMETER_WARNING + " " + key);
 				}
 			}
 		} else {
-			GUI.log(Text.INI_FILE_EMPTY);
+			ArduSimTools.logGlobal(Text.INI_FILE_EMPTY);
 		}
 		return parameters;
 	}
@@ -592,7 +609,7 @@ public class ArduSimTools {
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentGeoMission = new ArrayList[Param.numUAVs];
 		UAVParam.lastWP = new Waypoint[Param.numUAVs];
-		UAVParam.lastWPUTM = new UTMCoordinates[Param.numUAVs];
+		UAVParam.lastWPUTM = new Location2DUTM[Param.numUAVs];
 		UAVParam.RTLAltitude = new double[Param.numUAVs];
 		UAVParam.RTLAltitudeFinal = new double[Param.numUAVs];
 		UAVParam.mavId = new AtomicIntegerArray(Param.numUAVs);
@@ -611,7 +628,7 @@ public class ArduSimTools {
 		UAVParam.newFlightMode = new FlightMode[Param.numUAVs];
 		UAVParam.takeOffAltitude = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newSpeed = new double[Param.numUAVs];
-		UAVParam.newParam = new ControllerParam[Param.numUAVs];
+		UAVParam.newParam = new CopterParam[Param.numUAVs];
 		UAVParam.newParamValue = new AtomicDoubleArray(Param.numUAVs);
 		UAVParam.newCurrentWaypoint = new int[Param.numUAVs];
 		UAVParam.newGeoMission = new Waypoint[Param.numUAVs][];
@@ -637,7 +654,7 @@ public class ArduSimTools {
 
 		Param.testEndTime = new long[Param.numUAVs];
 		
-		if (Param.role == Tools.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR) {
 			// Prepare matrix to brighten the background map image
 			for (int i=0; i<256; i++) {
 				BoardParam.brightness[i] = (short)(128+i/2);
@@ -665,7 +682,7 @@ public class ArduSimTools {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			UAVParam.uavCurrentData[i] = new UAVCurrentData();
 			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
-			UAVParam.lastUTMLocations[i] = new ConcurrentBoundedQueue<UTMCoordinates>(UTMCoordinates.class, UAVParam.LOCATIONS_SIZE);
+			UAVParam.lastUTMLocations[i] = new ConcurrentBoundedQueue<Location2DUTM>(Location2DUTM.class, UAVParam.LOCATIONS_SIZE);
 			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
 			for (int j = 0; j < UAVParam.customModeToFlightModeMap[i].length; j++) {
 				UAVParam.customModeToFlightModeMap[i][j] = -1;
@@ -676,15 +693,15 @@ public class ArduSimTools {
 			UAVParam.rcs[i] = new AtomicReference<RCValues>();
 			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
 			
-			UAVParam.target[i] = new AtomicReference<Point3D>();
+			UAVParam.target[i] = new AtomicReference<Location3DUTM>();
 			
-			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, MAVParam>(1250));
+			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, CopterParamLoaded>(1250));
 			UAVParam.lastParamReceivedTime[i] = new AtomicLong();
 			
 			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
 			
-			if (Param.role == Tools.SIMULATOR) {
+			if (Param.role == ArduSim.SIMULATOR) {
 				UAVParam.MissionPx[i] = new ArrayList<Shape>();
 				BoardParam.uavPXPathLines[i] = new ArrayList<Shape>(SimParam.PATH_INITIAL_SIZE);
 				
@@ -698,7 +715,7 @@ public class ArduSimTools {
 		}
 		
 		// Collision and communication range parameters
-		if (Param.role == Tools.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR) {
 			UAVParam.distances = new AtomicReference[Param.numUAVs][Param.numUAVs];
 			CommLinkObject.isInRange = new AtomicBoolean[Param.numUAVs][Param.numUAVs];
 			for (int i = 0; i < Param.numUAVs; i++) {
@@ -714,17 +731,18 @@ public class ArduSimTools {
 	/** Rescales data structures when the screen scale is modified. */
 	public static void rescaleDataStructures() {
 		// Rescale the collision circles diameter
-		UTMCoordinates locationUTM = null;
+		Location2DUTM locationUTM = null;
 		boolean found = false;
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i=0; i<numUAVs && !found; i++) {
-			locationUTM = Copter.getUTMLocation(i);
+			locationUTM = UAVParam.uavCurrentData[i].getUTMLocation();
 			if (locationUTM != null) {
 				found = true;
 			}
 		}
-		Point2D.Double a = GUI.locatePoint(locationUTM.x, locationUTM.y);
-		Point2D.Double b = GUI.locatePoint(locationUTM.x + UAVParam.collisionDistance, locationUTM.y);
+		GUI gui = API.getGUI(0);
+		Point2D.Double a = gui.locatePoint(locationUTM.x, locationUTM.y);
+		Point2D.Double b = gui.locatePoint(locationUTM.x + UAVParam.collisionDistance, locationUTM.y);
 		UAVParam.collisionScreenDistance = b.x - a.x;
 	}
 	
@@ -885,7 +903,7 @@ public class ArduSimTools {
 		}
 		
 		if (ids.size() == 0) {
-			GUI.exit(Text.MAC_ERROR);
+			ArduSimTools.closeAll(Text.MAC_ERROR);
 		}
 		return Collections.max(ids);
 	}
@@ -951,7 +969,7 @@ public class ArduSimTools {
 		// When it is not possible, use physical storage
 		if ((SimParam.userIsAdmin && Param.runningOperatingSystem == Param.OS_WINDOWS && !SimParam.imdiskIsInstalled)
 				|| !SimParam.userIsAdmin) {
-			return Tools.getCurrentFolder().getAbsolutePath();
+			return API.getFileTools().getCurrentFolder().getAbsolutePath();
 		}
 		return null;
 	}
@@ -988,7 +1006,7 @@ public class ArduSimTools {
 				}
 			}
 			if (freeDrive == null) {
-				GUI.log(Text.MOUNT_DRIVE_ERROR_1);
+				ArduSimTools.logGlobal(Text.MOUNT_DRIVE_ERROR_1);
 				return null;
 			}
 			
@@ -1029,7 +1047,7 @@ public class ArduSimTools {
 			} catch (IOException e) {
 			}
 		} else {
-			GUI.log(Text.MOUNT_DRIVE_ERROR_2);
+			ArduSimTools.logGlobal(Text.MOUNT_DRIVE_ERROR_2);
 		}
 		return null;
 	}
@@ -1233,19 +1251,19 @@ public class ArduSimTools {
 	public static ProtocolHelper getSelectedProtocolInstance() {
 		// Target protocol class and object
 		ProtocolHelper protocolLaunched = null;
-		Class<?>[] validImplementations = ProtocolHelper.ProtocolClasses;
+		Class<?>[] validImplementations = ArduSimTools.ProtocolClasses;
 		if (validImplementations != null && validImplementations.length > 0) {
 			try {
-				ProtocolHelper[] protocolImplementations = getProtocolImplementationInstances(validImplementations, ProtocolHelper.selectedProtocol);
+				ProtocolHelper[] protocolImplementations = getProtocolImplementationInstances(validImplementations, ArduSimTools.selectedProtocol);
 				if (protocolImplementations == null) {
-					GUI.log(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR + ProtocolHelper.selectedProtocol);
+					ArduSimTools.logGlobal(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR + ArduSimTools.selectedProtocol);
 				} else if (protocolImplementations.length > 1) {
-					GUI.log(Text.PROTOCOL_MANY_IMPLEMENTATIONS_ERROR + ProtocolHelper.selectedProtocol);
+					ArduSimTools.logGlobal(Text.PROTOCOL_MANY_IMPLEMENTATIONS_ERROR + ArduSimTools.selectedProtocol);
 				} else {
 					protocolLaunched = protocolImplementations[0];
 				}
 			} catch (InstantiationException | IllegalAccessException e) {
-				GUI.log(Text.PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR);
+				ArduSimTools.logGlobal(Text.PROTOCOL_GETTING_PROTOCOL_CLASSES_ERROR);
 			}
 		}
 		return protocolLaunched;
@@ -1255,13 +1273,13 @@ public class ArduSimTools {
 	 * <p>Protocol names are case-sensitive. Returns null if no valid implementations were found.</p> */
 	public static String[] loadProtocols() {
 		// First store the identifier of None protocol
-		ProtocolNoneHelper noneInstance = new ProtocolNoneHelper();
+		MissionHelper noneInstance = new MissionHelper();
 		noneInstance.setProtocol();
-		ProtocolHelper.noneProtocolName = noneInstance.protocolString;
+		ArduSimTools.noneProtocolName = noneInstance.protocolString;
 		String[] names = null;
 		Class<?>[] validImplementations = ArduSimTools.getAnyProtocolImplementations();
 		if (validImplementations != null && validImplementations.length > 0) {
-			ProtocolHelper.ProtocolClasses = validImplementations;
+			ArduSimTools.ProtocolClasses = validImplementations;
 			// Avoiding more than one implementation of the same protocol and avoiding implementations without name
 			Map<String, String> imp = new HashMap<>();
 			ProtocolHelper protocol;
@@ -1283,7 +1301,7 @@ public class ArduSimTools {
 					Arrays.sort(names);
 				}
 			} catch (InstantiationException | IllegalAccessException e) {
-				GUI.log(Text.PROTOCOL_LOADING_ERROR);
+				ArduSimTools.logGlobal(Text.PROTOCOL_LOADING_ERROR);
 			}
 		}
 		return names;
@@ -1299,10 +1317,10 @@ public class ArduSimTools {
 		if (existingClasses != null && existingClasses.size() > 0) {
 			res = ArduSimTools.getAllImplementations(existingClasses);
 		} else {
-			GUI.log(Text.PROTOCOL_GETTING_CLASSES_ERROR);
+			ArduSimTools.logGlobal(Text.PROTOCOL_GETTING_CLASSES_ERROR);
 		}
 		if (res.length == 0) {
-			GUI.log(Text.PROTOCOL_GETTING_PROT_CLASSES_ERROR);
+			ArduSimTools.logGlobal(Text.PROTOCOL_GETTING_PROT_CLASSES_ERROR);
 		}
 		return res;
 	}
@@ -1321,7 +1339,7 @@ public class ArduSimTools {
 			}
 		} else {
 			// Explore .class file tree for class files when running on Eclipse
-			File projectFolder = new File(Tools.getCurrentFolder(), "bin");
+			File projectFolder = new File(API.getFileTools().getCurrentFolder(), "bin");
 			existingClasses = new ArrayList<>();
 			String projectFolderPath;
 			try {
@@ -1463,9 +1481,9 @@ public class ArduSimTools {
 	}
 	
 	/** Starts the virtual UAVs. */
-	public static void startVirtualUAVs(Pair<GeoCoordinates, Double>[] location) {
+	public static void startVirtualUAVs(Pair<Location2DGeo, Double>[] location) {
 		
-		GUI.log(Text.STARTING_UAVS);
+		ArduSimTools.logGlobal(Text.STARTING_UAVS);
 		
 		try {
 			// 1. Under Windows, first close the possible running SITL processes
@@ -1507,7 +1525,7 @@ public class ArduSimTools {
 					}
 				}
 			} catch (Exception e) {
-				GUI.log(Text.UAVS_START_ERROR_2 + "\n" + parentFolder);
+				ArduSimTools.logGlobal(Text.UAVS_START_ERROR_2 + "\n" + parentFolder);
 				throw new IOException();
 			}
 
@@ -1518,6 +1536,7 @@ public class ArduSimTools {
 			boolean success = false;
 			String tempFolder;
 			int instance;
+			ArduSim ardusim = API.getArduSim();
 			for (int i = 0; i < Param.numUAVs; i++) {
 				tempFolder = (new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i)).getAbsolutePath();
 				instance = (UAVParam.mavPort[i] - UAVParam.MAV_INITIAL_PORT) / 10;
@@ -1583,13 +1602,13 @@ public class ArduSimTools {
 					while (!success) {
 						if (input.ready()) {
 							s = input.readLine();
-							GUI.logVerbose(SimParam.prefix[i] + s);
+							ArduSimTools.logVerboseGlobal(SimParam.prefix[i] + s);
 							if (s.contains("Waiting for connection")) {
-								GUI.logVerbose(SimParam.prefix[i] + Text.SITL_UP);
+								ArduSimTools.logVerboseGlobal(SimParam.prefix[i] + Text.SITL_UP);
 								success = true;
 							}
 						} else {
-							Tools.waiting(SimParam.CONSOLE_READ_RETRY_WAITING_TIME);
+							ardusim.sleep(SimParam.CONSOLE_READ_RETRY_WAITING_TIME);
 							if (System.nanoTime() - startTime > SimParam.SITL_STARTING_TIMEOUT) {
 								break;
 							}
@@ -1599,13 +1618,13 @@ public class ArduSimTools {
 					e.printStackTrace();
 				}
 				if (!success) {
-					GUI.log(Text.UAVS_START_ERROR_5 + " " + i);
+					ArduSimTools.logGlobal(Text.UAVS_START_ERROR_5 + " " + i);
 					throw new IOException();
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-			GUI.exit(Text.APP_NAME + " " + Text.UAVS_START_ERROR_1);
+			ArduSimTools.closeAll(Text.APP_NAME + " " + Text.UAVS_START_ERROR_1);
 		}
 	}
 
@@ -1634,20 +1653,21 @@ public class ArduSimTools {
 		String OS = System.getProperty("os.name").toLowerCase();
 		if (OS.contains("win")) {
 			Param.runningOperatingSystem = Param.OS_WINDOWS;
-			GUI.logVerbose(Text.OPERATING_SYSTEM_WINDOWS);
+			ArduSimTools.logVerboseGlobal(Text.OPERATING_SYSTEM_WINDOWS);
 		} else if (OS.contains("nux") || OS.contains("nix") || OS.contains("aix")) {
 			Param.runningOperatingSystem = Param.OS_LINUX;
-			GUI.logVerbose(Text.OPERATING_SYSTEM_LINUX);
+			ArduSimTools.logVerboseGlobal(Text.OPERATING_SYSTEM_LINUX);
 		}else if (OS.contains("mac")) {
 			Param.runningOperatingSystem = Param.OS_MAC;
-			GUI.logVerbose(Text.OPERATING_SYSTEM_MAC);
+			ArduSimTools.logVerboseGlobal(Text.OPERATING_SYSTEM_MAC);
 		} else {
-			GUI.exit(Text.UAVS_START_ERROR_4);
+			ArduSimTools.closeAll(Text.UAVS_START_ERROR_4);
 		}
 	}
 
 	/** Detects the SITL executable (if it is in the same folder), and Cygwin (the later, only under Windows). */
 	public static void locateSITL() {
+		FileTools fileTools = API.getFileTools();
 		String sitlPath = null;
 		if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 			// Cygwin detection
@@ -1661,16 +1681,16 @@ public class ArduSimTools {
 				}
 			}
 			if (SimParam.cygwinPath == null) {
-				GUI.exit(Text.UAVS_START_ERROR_3 + "\n" + SimParam.CYGWIN_PATH1 + " or,\n" + SimParam.CYGWIN_PATH2);
+				ArduSimTools.closeAll(Text.UAVS_START_ERROR_3 + "\n" + SimParam.CYGWIN_PATH1 + " or,\n" + SimParam.CYGWIN_PATH2);
 			}
-			sitlPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
+			sitlPath = fileTools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_WINDOWS_FILE_NAME;
 		} else if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
-			sitlPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_LINUX_FILE_NAME;
+			sitlPath = fileTools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.SITL_LINUX_FILE_NAME;
 		}
 		// SITL detection
 		if (Param.runningOperatingSystem == Param.OS_WINDOWS
 				|| Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
-			String paramPath = Tools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.PARAM_FILE_NAME;
+			String paramPath = fileTools.getCurrentFolder().getAbsolutePath() + File.separator + SimParam.PARAM_FILE_NAME;
 			File sitlPathFile = new File(sitlPath);
 			File paramPathFile = new File(paramPath);
 			if (sitlPathFile.exists() && sitlPathFile.canExecute() && paramPathFile.exists()) {
@@ -1819,15 +1839,43 @@ public class ArduSimTools {
 		SimParam.imdiskIsInstalled = false;
 	}
 	
+	/**
+	 * For ArduSim internal purposes only.
+	 * @param message Error message to be shown.
+	 */
+	public static void closeAll(String message) {
+		boolean exiting = ArduSimTools.exiting.getAndSet(true);
+		if (!exiting) {
+			if (Param.role == ArduSim.MULTICOPTER) {
+				System.out.println(Text.FATAL_ERROR + ": " + message);
+				if (UAVParam.flightMode.get(0).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
+					if (!API.getCopter(0).setFlightMode(FlightMode.RTL)) {
+						System.out.println(Text.FATAL_ERROR + ": " + Text.FLIGHT_MODE_ERROR_3);
+						System.out.flush();
+					}
+				}
+			} else {
+				JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
+				if (Param.role == ArduSim.SIMULATOR) {
+					if (Param.simStatus != SimulatorState.CONFIGURING
+						&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
+						ArduSimTools.closeSITL();
+					}
+				}
+			}
+			System.exit(1);
+		}
+	}
+	
 	/** Closes the SITL simulator instances, and the application. Also the Cygwin consoles if using Windows. */
 	public static void shutdown() {
 		if (ArduSimTools.storingResults) {
-			GUI.warn(Text.STORE_WARNING, Text.STORING_NOT_FINISHED);
+			ArduSimTools.warnGlobal(Text.STORE_WARNING, Text.STORING_NOT_FINISHED);
 			return;
 		}
 		
 		// 1. Ask for confirmation if the experiment has not started or finished
-		if (Param.role == Tools.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR) {
 			boolean reallyClose = true;
 			if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 				Object[] options = {Text.YES_OPTION, Text.NO_OPTION};
@@ -1847,9 +1895,9 @@ public class ArduSimTools {
 		}
 
 		// 2. Change the status and close SITL
-		GUI.log(Text.CLOSING);
+		ArduSimTools.logGlobal(Text.CLOSING);
 		Param.simStatus = SimulatorState.SHUTTING_DOWN;
-		if (Param.role == Tools.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.exitButton.setEnabled(false);
@@ -1861,12 +1909,12 @@ public class ArduSimTools {
 		}
 		
 		// 3. Close the application
-		GUI.log(Text.EXITING);
+		ArduSimTools.logGlobal(Text.EXITING);
 		try {
 			FileDescriptor.out.sync();
 		} catch (SyncFailedException e1) {}
-		Tools.waiting(SimParam.LONG_WAITING_TIME);
-		if (Param.role == Tools.MULTICOPTER) {
+		API.getArduSim().sleep(SimParam.LONG_WAITING_TIME);
+		if (Param.role == ArduSim.MULTICOPTER) {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				try {
 			    	Runtime.getRuntime().exec("shutdown.exe -s -t 0");
@@ -1876,9 +1924,9 @@ public class ArduSimTools {
 			    	Runtime.getRuntime().exec("sudo shutdown -h now");
 			    } catch (IOException e) {}
 			} else {
-				GUI.log(Text.SHUTDOWN_ERROR);
+				ArduSimTools.logGlobal(Text.SHUTDOWN_ERROR);
 			}
-		} else if (Param.role == Tools.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR) {
 			MainWindow.window.mainWindowFrame.dispose();
 		}
 	    
@@ -1914,14 +1962,14 @@ public class ArduSimTools {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				// Unmount temporal filesystem
 				if (ArduSimTools.checkDriveMountedWindows() != null && !ArduSimTools.dismountDriveWindows(SimParam.tempFolderBasePath)) {
-					GUI.log(Text.DISMOUNT_DRIVE_ERROR);
+					ArduSimTools.logGlobal(Text.DISMOUNT_DRIVE_ERROR);
 				}
 			}
 			
 			if (Param.runningOperatingSystem == Param.OS_LINUX) {
 				// Unmount temporal filesystem and remove folder
 				if (ArduSimTools.checkDriveMountedLinuxMac(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveLinux(SimParam.tempFolderBasePath)) {
-					GUI.log(Text.DISMOUNT_DRIVE_ERROR);
+					ArduSimTools.logGlobal(Text.DISMOUNT_DRIVE_ERROR);
 				}
 				File ramDiskFile = new File(SimParam.tempFolderBasePath);
 				if (ramDiskFile.exists()) {
@@ -1931,7 +1979,7 @@ public class ArduSimTools {
 			if (Param.runningOperatingSystem == Param.OS_MAC) {
 				// Unmount temporal filesystem and remove folder
 				if (ArduSimTools.checkDriveMountedLinuxMac(SimParam.tempFolderBasePath) && !ArduSimTools.dismountDriveMac(SimParam.tempFolderBasePath)) {
-					GUI.log(Text.DISMOUNT_DRIVE_ERROR);
+					ArduSimTools.logGlobal(Text.DISMOUNT_DRIVE_ERROR);
 				}
 				File ramDiskFile = new File(SimParam.tempFolderBasePath);
 				if (ramDiskFile.exists()) {
@@ -1962,9 +2010,9 @@ public class ArduSimTools {
 				Param.controllers[i] = new UAVControllerThread(i);
 				Param.controllers[i].start();
 			}
-			GUI.log(Param.numUAVs + " " + Text.CONTROLLERS_STARTED);
+			ArduSimTools.logGlobal(Param.numUAVs + " " + Text.CONTROLLERS_STARTED);
 		} catch (SocketException e) {
-			GUI.exit(Text.THREAD_START_ERROR);
+			ArduSimTools.closeAll(Text.THREAD_START_ERROR);
 		}
 	}
 	
@@ -1973,6 +2021,7 @@ public class ArduSimTools {
 		long time = System.nanoTime();
 		boolean allReady = false;
 		boolean error = false;
+		ArduSim ardusim = API.getArduSim();
 		while (!allReady) {
 			if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
 				allReady = true;
@@ -1980,9 +2029,9 @@ public class ArduSimTools {
 
 			// On simulation, stop if error happens and they are not online
 			if (System.nanoTime() - time > UAVParam.MAVLINK_ONLINE_TIMEOUT) {
-				if (Param.role == Tools.MULTICOPTER) {
+				if (Param.role == ArduSim.MULTICOPTER) {
 					if (!error) {
-						GUI.log(Text.MAVLINK_ERROR);
+						ArduSimTools.logGlobal(Text.MAVLINK_ERROR);
 						error = true;
 					}
 				} else {
@@ -1990,28 +2039,28 @@ public class ArduSimTools {
 				}
 			}
 			if (!allReady) {
-				Tools.waiting(UAVParam.MAVLINK_WAIT);
+				ardusim.sleep(UAVParam.MAVLINK_WAIT);
 			}
 		}
 		if (!allReady) {
-			GUI.exit(Text.MAVLINK_ERROR);
+			ArduSimTools.closeAll(Text.MAVLINK_ERROR);
 		}
 	}
 
 	/** Forces the UAV to send the GPS location. */
 	public static void forceGPS() {
 		// All UAVs GPS position forced on a different thread, but the first
-		GPSStartThread[] threads = null;
+		GPSEnableThread[] threads = null;
 		if (Param.numUAVs > 1) {
-			threads = new GPSStartThread[Param.numUAVs - 1];
+			threads = new GPSEnableThread[Param.numUAVs - 1];
 			for (int i=1; i<Param.numUAVs; i++) {
-				threads[i-1] = new GPSStartThread(i);
+				threads[i-1] = new GPSEnableThread(i);
 			}
 			for (int i=1; i<Param.numUAVs; i++) {
 				threads[i-1].start();
 			}
 		}
-		GPSStartThread.forceGPS(0);
+		GPSEnableThread.forceGPS(0);
 		if (Param.numUAVs > 1) {
 			for (int i=1; i<Param.numUAVs; i++) {
 				try {
@@ -2020,40 +2069,41 @@ public class ArduSimTools {
 				}
 			}
 		}
-		if (GPSStartThread.GPS_FORCED.get() < Param.numUAVs) {
-			GUI.exit(Text.INITIAL_CONFIGURATION_ERROR_1);
+		if (GPSEnableThread.GPS_FORCED.get() < Param.numUAVs) {
+			ArduSimTools.closeAll(Text.INITIAL_CONFIGURATION_ERROR_1);
 		}
 	}
 	
-	/** API: retrieves all the parameters and the current version of the Arducopter compilation.
+	/** Retrieve all the parameters and the current version of the ArduCopter compilation.
 	 * <p>It is assumed that all the multicopters running in the same machine use the same compilation. Returns null if an error happens.</p> */
 	public static void getArduCopterParameters(int numUAV) {
+		ArduSim ardusim = API.getArduSim();
 		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ALL_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_ALL_PARAM) {
-			Tools.waiting(UAVParam.COMMAND_WAIT);
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
 			if (System.currentTimeMillis() - UAVParam.lastParamReceivedTime[numUAV].get() > UAVParam.ALL_PARAM_TIMEOUT) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			}
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_ALL_PARAM) {
-			GUI.log(SimParam.prefix[numUAV] + Text.ARDUCOPTER_VERSION_ERROR_1);
+			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.ARDUCOPTER_VERSION_ERROR_1);
 		} else {
 			if (numUAV == 0) {
 				long start = System.currentTimeMillis();
 				while (UAVParam.arducopterVersion.get() == null) {
-					Tools.waiting(UAVParam.COMMAND_WAIT);
+					ardusim.sleep(UAVParam.COMMAND_WAIT);
 					if (System.currentTimeMillis() - start > UAVParam.VERSION_TIMEOUT) {
-						GUI.log(SimParam.prefix[numUAV] + Text.ARDUCOPTER_VERSION_ERROR_2);
+						ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.ARDUCOPTER_VERSION_ERROR_2);
 						return;
 					}
 				}
-				GUI.log(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
-				GUI.log(Text.ARDUCOPTER_VERSION + " " + UAVParam.arducopterVersion.get());
+				ArduSimTools.logGlobal(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
+				ArduSimTools.logGlobal(Text.ARDUCOPTER_VERSION + " " + UAVParam.arducopterVersion.get());
 				
 				
-//				MAVParam[] values = UAVParam.loadedParams[numUAV].values().toArray(new MAVParam[0]);
+//				CopterParamLoaded[] values = UAVParam.loadedParams[numUAV].values().toArray(new CopterParamLoaded[0]);
 //				Arrays.sort(values);
 //				for (int i = 0; i < values.length; i++) {
 //					System.out.println(values[i]);
@@ -2061,14 +2111,15 @@ public class ArduSimTools {
 //				}
 				
 			} else {
-				GUI.logVerbose(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
+				ArduSimTools.logVerboseGlobal(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
 			}
 		}
 	}
 	
 	/** Waits until GPS is available in all executing UAVs. */
 	public static void getGPSFix() {
-		GUI.log(Text.WAITING_GPS);
+		ArduSimTools.logGlobal(Text.WAITING_GPS);
+		ArduSim ardusim = API.getArduSim();
 		long time = System.nanoTime();
 		boolean startProcess = false;
 		boolean error = false;
@@ -2077,9 +2128,9 @@ public class ArduSimTools {
 				startProcess = true;
 			}
 			if (System.nanoTime() - time > UAVParam.GPS_FIX_TIMEOUT) {
-				if (Param.role == Tools.MULTICOPTER) {
+				if (Param.role == ArduSim.MULTICOPTER) {
 					if (!error) {
-						GUI.log(Text.GPS_FIX_ERROR_2);
+						ArduSimTools.logGlobal(Text.GPS_FIX_ERROR_2);
 						error = true;
 					}
 				} else {
@@ -2087,14 +2138,14 @@ public class ArduSimTools {
 				}
 			}
 			if (!startProcess) {
-				Tools.waiting(UAVParam.GPS_FIX_WAIT);
+				ardusim.sleep(UAVParam.GPS_FIX_WAIT);
 			}
 		}
 		if (!startProcess) {
-			GUI.exit(Text.GPS_FIX_ERROR_1);
+			ArduSimTools.closeAll(Text.GPS_FIX_ERROR_1);
 		}
-		GUI.log(Text.GPS_OK);
-		if (Param.role == Tools.SIMULATOR) {
+		ArduSimTools.logGlobal(Text.GPS_OK);
+		if (Param.role == ArduSim.SIMULATOR) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.UAVS_ONLINE);
@@ -2116,7 +2167,7 @@ public class ArduSimTools {
 			doc.getDocumentElement().normalize();
 			NodeList nList = doc.getElementsByTagName(Text.LINE_TAG);
 			if (nList.getLength()==0) {
-				GUI.log(Text.XML_PARSING_ERROR_1);
+				ArduSimTools.logGlobal(Text.XML_PARSING_ERROR_1);
 				return null;
 			}
 	
@@ -2132,19 +2183,19 @@ public class ArduSimTools {
 					lines[i] = eElement.getElementsByTagName(Text.COORDINATES_TAG).item(0).getTextContent().trim().split(" ");
 					// Check if there are at least two coordinates to define a mission
 					if (lines[i].length<2) {
-						GUI.log(Text.XML_PARSING_ERROR_2 + " " + (i+1));
+						ArduSimTools.logGlobal(Text.XML_PARSING_ERROR_2 + " " + (i+1));
 						return null;
 					}
 					missions[i] = new ArrayList<>(lines[i].length+2); // Adding fake home, and substitute first real waypoint with take off
 					// Add a fake waypoint for the home position (essential but ignored by the flight controller)
 					wp = new Waypoint(0, true, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 0, 1);
 					missions[i].add(wp);
-					int delay = Waypoint.waypointDelay;
+					int delay = MissionKmlDialog.waypointDelay;
 					// Check the coordinate triplet format
 					for (int j=0; j<lines[i].length; j++) {
 						aux = lines[i][j].split(",");
 						if (aux.length!=3) {
-							GUI.log(Text.XML_PARSING_ERROR_3);
+							ArduSimTools.logGlobal(Text.XML_PARSING_ERROR_3);
 							return null;
 						}
 						try {
@@ -2162,14 +2213,14 @@ public class ArduSimTools {
 								if (z < UAVParam.minAltitude) {
 									//  Minimum flying altitude
 									z = UAVParam.minAltitude;
-									GUI.log(Text.XML_PARSING_WARNING + " " + UAVParam.minAltitude);
+									ArduSimTools.logGlobal(Text.XML_PARSING_WARNING + " " + UAVParam.minAltitude);
 								}
 							}
 							
 							// Waypoint 0 is home and current
 							// Waypoint 1 is take off
 							if (j==0) {
-								if (Param.role == Tools.MULTICOPTER) {
+								if (Param.role == ArduSim.MULTICOPTER) {
 									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
 									missions[i].add(wp);
@@ -2177,18 +2228,18 @@ public class ArduSimTools {
 											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
-								} else if (Param.role == Tools.SIMULATOR) {
+								} else if (Param.role == ArduSim.SIMULATOR) {
 									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, lat, lon, z, 1);
 									missions[i].add(wp);
 								}
 							} else {
-								if (Param.role == Tools.MULTICOPTER) {
+								if (Param.role == ArduSim.MULTICOPTER) {
 									wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
-								} else if (Param.role == Tools.SIMULATOR) {
+								} else if (Param.role == ArduSim.SIMULATOR) {
 									wp = new Waypoint(j+1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
 											lat, lon, z, 1);
@@ -2196,33 +2247,33 @@ public class ArduSimTools {
 								}
 							}
 						} catch (NumberFormatException e) {
-							GUI.log(Text.XML_PARSING_ERROR_4 + " " + (i+1) + "/" + (j+1));
+							ArduSimTools.logGlobal(Text.XML_PARSING_ERROR_4 + " " + (i+1) + "/" + (j+1));
 							return null;
 						}
 					}
 				}
 				// Add a last waypoint to land or RTL depending on the input option
 				int numSeq = missions[i].get(missions[i].size() - 1).getNumSeq() + 1;
-				if (Waypoint.missionEnd.equals(Waypoint.MISSION_END_LAND)) {
+				if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_LAND)) {
 					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 							MAV_CMD.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
-					if (Param.role == Tools.MULTICOPTER) {
-						GUI.logVerbose(Text.XML_LAND_ADDED + Tools.getIdFromPos(i));
+					if (Param.role == ArduSim.MULTICOPTER) {
+						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + API.getCopter(i).getID());
 					}
-					if (Param.role == Tools.SIMULATOR) {
-						GUI.logVerbose(Text.XML_LAND_ADDED + i);
+					if (Param.role == ArduSim.SIMULATOR) {
+						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + i);
 					}
 				}
-				if (Waypoint.missionEnd.equals(Waypoint.MISSION_END_RTL)) {
+				if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
 					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 							MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
-					if (Param.role == Tools.MULTICOPTER) {
-						GUI.logVerbose(Text.XML_RTL_ADDED + Tools.getIdFromPos(i));
+					if (Param.role == ArduSim.MULTICOPTER) {
+						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + API.getCopter(i).getID());
 					}
-					if (Param.role == Tools.SIMULATOR) {
-						GUI.logVerbose(Text.XML_RTL_ADDED + i);
+					if (Param.role == ArduSim.SIMULATOR) {
+						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + i);
 					}
 				}
 			}
@@ -2252,13 +2303,13 @@ public class ArduSimTools {
 		}
 		// Check if there are at least take off and a waypoint to define a mission (first line is header, and wp0 is home)
 		// During simulation an additional waypoint is needed in order to stablish the starting location
-		if (list==null || (Param.role == Tools.MULTICOPTER && list.size()<4) || (Param.role == Tools.SIMULATOR && list.size()<5)) {
-			GUI.log(Text.FILE_PARSING_ERROR_1);
+		if (list==null || (Param.role == ArduSim.MULTICOPTER && list.size()<4) || (Param.role == ArduSim.SIMULATOR && list.size()<5)) {
+			ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_1);
 			return null;
 		}
 		// Check the header of the file
 		if (!list.get(0).trim().toUpperCase().equals(Text.FILE_HEADER)) {
-			GUI.log(Text.FILE_PARSING_ERROR_2);
+			ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_2);
 			return null;
 		}
 	
@@ -2273,7 +2324,7 @@ public class ArduSimTools {
 			// Tabular delimited line
 			line = list.get(i).split("\t");
 			if (line.length!=12) {
-				GUI.log(Text.FILE_PARSING_ERROR_3 + " " + i);
+				ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_3 + " " + i);
 				return null;
 			}
 			int numSeq, frame, command;
@@ -2293,24 +2344,24 @@ public class ArduSimTools {
 				autoContinue = Integer.parseInt(line[11].trim());
 				
 				if (numSeq + 1 != i) {
-					GUI.log(Text.FILE_PARSING_ERROR_6);
+					ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_6);
 					return null;
 				}
 				
 				if (numSeq == 1) {
 					if ((frame != MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT
 							|| command != MAV_CMD.MAV_CMD_NAV_TAKEOFF
-							|| (Param.role == Tools.MULTICOPTER && param7 <= 0))) {
-						GUI.log(Text.FILE_PARSING_ERROR_5);
+							|| (Param.role == ArduSim.MULTICOPTER && param7 <= 0))) {
+						ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_5);
 						return null;
 					}
 					wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 					mission.add(wp);
 				} else {
-					if (Param.role == Tools.MULTICOPTER) {
+					if (Param.role == ArduSim.MULTICOPTER) {
 						wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 						mission.add(wp);
-					} else if (Param.role == Tools.SIMULATOR) {
+					} else if (Param.role == ArduSim.SIMULATOR) {
 						if (numSeq == 2) {
 							// Set takeoff coordinates from the first wapoint that has coordinates
 							wp = mission.get(mission.size()-1);
@@ -2325,7 +2376,7 @@ public class ArduSimTools {
 					}
 				}
 			} catch (NumberFormatException e1) {
-				GUI.log(Text.FILE_PARSING_ERROR_4 + " " + i);
+				ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_4 + " " + i);
 				return null;
 			}
 		}
@@ -2337,7 +2388,7 @@ public class ArduSimTools {
 			command = mission.get(i).getCommand();
 			if (command != MAV_CMD.MAV_CMD_NAV_WAYPOINT
 					&& command != MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT) {
-				GUI.log(Text.FILE_PARSING_ERROR_7);
+				ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_7);
 				return null;
 			}
 		}
@@ -2346,7 +2397,7 @@ public class ArduSimTools {
 					&& command != MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT
 					&& command != MAV_CMD.MAV_CMD_NAV_LAND
 					&& command != MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
-			GUI.log(Text.FILE_PARSING_ERROR_7);
+			ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_7);
 			return null;
 		}
 		
@@ -2367,11 +2418,11 @@ public class ArduSimTools {
 		if (files != null && files.length>0) {
 			// Only one kml file must be on the current folder
 			if (files.length>1) {
-				GUI.exit(Text.MISSIONS_ERROR_6);
+				ArduSimTools.closeAll(Text.MISSIONS_ERROR_6);
 			}
 			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0]);
 			if (missions != null && missions.length>0) {
-				GUI.log(Text.MISSION_XML_SELECTED + " " + files[0].getName());
+				ArduSimTools.logGlobal(Text.MISSION_XML_SELECTED + " " + files[0].getName());
 				return missions[0];
 			}
 		}
@@ -2387,11 +2438,11 @@ public class ArduSimTools {
 		if (files != null && files.length>0) {
 			// Only one waypoints file must be on the current folder
 			if (files.length>1) {
-				GUI.exit(Text.MISSIONS_ERROR_7);
+				ArduSimTools.closeAll(Text.MISSIONS_ERROR_7);
 			}
 			mission = ArduSimTools.loadMissionFile(files[0].getAbsolutePath());
 			if (mission != null) {
-				GUI.log(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
+				ArduSimTools.logGlobal(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
 				return mission;
 			}
 		}
@@ -2407,7 +2458,7 @@ public class ArduSimTools {
 			// Not checking single txt file existence, as other file types can use the same extension
 			mission = ArduSimTools.loadMissionFile(files[0].getAbsolutePath());
 			if (mission != null) {
-				GUI.log(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
+				ArduSimTools.logGlobal(Text.MISSION_WAYPOINTS_SELECTED + "\n" + files[0].getName());
 				return mission;
 			}
 		}
@@ -2417,7 +2468,7 @@ public class ArduSimTools {
 	/** Sends the initial configuration: increases battery capacity, sets wind configuration, retrieves controller configuration, etc. */
 	public static void sendBasicConfiguration1() {
 		
-		GUI.log(Text.SEND_BASIC_CONFIGURATION_1);
+		ArduSimTools.logGlobal(Text.SEND_BASIC_CONFIGURATION_1);
 		// All UAVs configured on a different thread, but the first
 		InitialConfiguration1Thread[] threads = null;
 		if (Param.numUAVs > 1) {
@@ -2428,6 +2479,7 @@ public class ArduSimTools {
 			int size = threads.length;
 			int block = 5;
 			int uav = 1;
+			ArduSim ardusim = API.getArduSim();
 			while (uav <= size) {
 				while (uav % block != 0 && uav <= size) {
 					threads[uav - 1].start();
@@ -2437,7 +2489,7 @@ public class ArduSimTools {
 					threads[uav - 1].start();
 					uav++;
 				}
-				Tools.waiting(200);
+				ardusim.sleep(200);
 			}
 		}
 		InitialConfiguration1Thread.sendBasicConfiguration(0);
@@ -2450,14 +2502,14 @@ public class ArduSimTools {
 			}
 		}
 		if (InitialConfiguration1Thread.UAVS_CONFIGURED.get() < Param.numUAVs) {
-			GUI.exit(Text.INITIAL_CONFIGURATION_ERROR_2);
+			ArduSimTools.closeAll(Text.INITIAL_CONFIGURATION_ERROR_2);
 		}
 	}
 	
 	/** Sends the initial configuration: sends mission (if any), and lauches the protocol instance initial configuration. */
 	public static void sendBasicConfiguration2() {
 		
-		GUI.log(Text.SEND_BASIC_CONFIGURATION_2);
+		ArduSimTools.logGlobal(Text.SEND_BASIC_CONFIGURATION_2);
 		// All UAVs configured on a different thread, but the first
 		InitialConfiguration2Thread[] threads = null;
 		if (Param.numUAVs > 1) {
@@ -2468,6 +2520,7 @@ public class ArduSimTools {
 			int size = threads.length;
 			int block = 5;
 			int uav = 1;
+			ArduSim ardusim = API.getArduSim();
 			while (uav <= size) {
 				while (uav % block != 0 && uav <= size) {
 					threads[uav - 1].start();
@@ -2477,7 +2530,7 @@ public class ArduSimTools {
 					threads[uav - 1].start();
 					uav++;
 				}
-				Tools.waiting(200);
+				ardusim.sleep(200);
 			}
 		}
 		InitialConfiguration2Thread.sendBasicConfiguration(0);
@@ -2490,19 +2543,15 @@ public class ArduSimTools {
 			}
 		}
 		if (InitialConfiguration2Thread.UAVS_CONFIGURED.get() < Param.numUAVs) {
-			GUI.exit(Text.INITIAL_CONFIGURATION_ERROR_3);
+			ArduSimTools.closeAll(Text.INITIAL_CONFIGURATION_ERROR_3);
 		}
 	}
 	
 	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event.
 	 * <p>This method is NOT thread-safe.</p> */
 	public static void triggerWaypointReached(int numUAV, int numSeq) {
-		WaypointReachedListener listener;
 		for (int i = 0; i < ArduSimTools.listeners.size(); i++) {
-			listener = ArduSimTools.listeners.get(i);
-			if (listener.getNumUAV() == numUAV) {
-				listener.onWaypointReached(numSeq);
-			}
+			ArduSimTools.listeners.get(i).onWaypointReached(numUAV, numSeq);
 		}
 	}
 	
@@ -2510,9 +2559,9 @@ public class ArduSimTools {
 	public static void checkBatteryLevel() {
 		int depleted = 0;
 		double alarmLevel = Double.MAX_VALUE;
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Param.role == ArduSim.MULTICOPTER) {
 			alarmLevel = UAVParam.lipoBatteryAlarmVoltage;
-		} else if (Param.role == Tools.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR) {
 			alarmLevel = UAVParam.VIRT_BATTERY_ALARM_VOLTAGE;
 		}
 		int percentage;
@@ -2529,34 +2578,34 @@ public class ArduSimTools {
 				isDepleted = true;
 			}
 			if (percentage != -1 && voltage != -1) {
-				if (Param.role == Tools.MULTICOPTER) {
-					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
-				} else if (Param.role == Tools.SIMULATOR) {
-					GUI.logVerbose(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
+				if (Param.role == ArduSim.MULTICOPTER) {
+					ArduSimTools.logGlobal(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
+				} else if (Param.role == ArduSim.SIMULATOR) {
+					ArduSimTools.logVerboseGlobal(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
 				}
 			} else if (percentage != -1) {
-				if (Param.role == Tools.MULTICOPTER) {
-					GUI.log(Text.BATTERY_LEVEL + " " + percentage + " %");
-				} else if (Param.role == Tools.SIMULATOR) {
-					GUI.logVerbose(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
+				if (Param.role == ArduSim.MULTICOPTER) {
+					ArduSimTools.logGlobal(Text.BATTERY_LEVEL + " " + percentage + " %");
+				} else if (Param.role == ArduSim.SIMULATOR) {
+					ArduSimTools.logVerboseGlobal(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
 				}
 			} else if (voltage != -1) {
-				if (Param.role == Tools.MULTICOPTER) {
-					GUI.log(Text.BATTERY_LEVEL + " " + voltage + " V");
-				} else if (Param.role == Tools.SIMULATOR) {
-					GUI.logVerbose(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
+				if (Param.role == ArduSim.MULTICOPTER) {
+					ArduSimTools.logGlobal(Text.BATTERY_LEVEL + " " + voltage + " V");
+				} else if (Param.role == ArduSim.SIMULATOR) {
+					ArduSimTools.logVerboseGlobal(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
 				}
 			}
 			if (isDepleted) {
-				if (Param.role == Tools.MULTICOPTER) {
-					GUI.log(Text.BATTERY_FAILING2);
-				} else if (Param.role == Tools.SIMULATOR) {
+				if (Param.role == ArduSim.MULTICOPTER) {
+					ArduSimTools.logGlobal(Text.BATTERY_FAILING2);
+				} else if (Param.role == ArduSim.SIMULATOR) {
 					depleted++;
 				}
 			}
 		}
-		if (Param.role == Tools.SIMULATOR && depleted > 0) {
-			GUI.log(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
+		if (Param.role == ArduSim.SIMULATOR && depleted > 0) {
+			ArduSimTools.logGlobal(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
 		}
 	}
 	
@@ -2582,8 +2631,8 @@ public class ArduSimTools {
 				if (UAVParam.lastWP[i] != null
 						&& !UAVParam.lastWaypointReached[i]) {
 					UAVParam.lastWaypointReached[i] = true;
-					GUI.log(i, Text.LAST_WAYPOINT_REACHED);
-					ArduSimTools.triggerWaypointReached(i, Tools.getUAVMission(i).get(Tools.getUAVMission(i).size() - 1).getNumSeq());
+					API.getGUI(i).logUAV(Text.LAST_WAYPOINT_REACHED);
+					ArduSimTools.triggerWaypointReached(i, UAVParam.currentGeoMission[i].get(UAVParam.currentGeoMission[i].size() - 1).getNumSeq());
 				}
 				
 				if (Param.testEndTime[i] == 0) {
@@ -2610,7 +2659,7 @@ public class ArduSimTools {
 				maxTime = Param.testEndTime[i];
 			}
 		}
-		if (!ProtocolHelper.selectedProtocol.equals(ProtocolHelper.noneProtocolName)) {
+		if (!ArduSimTools.selectedProtocol.equals(ArduSimTools.noneProtocolName)) {
 			sb.append(Text.LOG_GLOBAL).append(":\n\n");
 		}
 		
@@ -2621,9 +2670,10 @@ public class ArduSimTools {
 		}
 
 		// 2. Global times
-		sb.append(Text.LOG_TOTAL_TIME).append(": ").append(Tools.timeToString(0, totalTime)).append("\n");
+		ValidationTools validationTools = API.getValidationTools();
+		sb.append(Text.LOG_TOTAL_TIME).append(": ").append(validationTools.timeToString(0, totalTime)).append("\n");
 		for (int i = 0; i < Param.numUAVs; i++) {
-			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(Tools.timeToString(0, uavsTotalTime[i])).append("\n");
+			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(validationTools.timeToString(0, uavsTotalTime[i])).append("\n");
 		}
 
 		return sb.toString();
@@ -2632,7 +2682,7 @@ public class ArduSimTools {
 	/** Builds a String with the experiment parameters. */
 	public static String getTestGlobalConfiguration() {
 		StringBuilder sb = new StringBuilder(2000);
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Param.role == ArduSim.MULTICOPTER) {
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
 			sb.append("\n\t").append(Text.LOG_SPEED).append(UAVParam.initialSpeeds[0]).append(Text.METERS_PER_SECOND);
 			sb.append("\n\t").append(Text.VERBOSE_LOGGING_ENABLE).append(" ");
@@ -2647,7 +2697,7 @@ public class ArduSimTools {
 			} else {
 				sb.append(Text.OPTION_DISABLED);
 			}
-		} else if (Param.role == Tools.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR) {
 			sb.append("\n").append(Text.SIMULATION_PARAMETERS);
 			sb.append("\n\t").append(Text.UAV_NUMBER).append(" ").append(Param.numUAVs);
 			sb.append("\n\t").append(Text.LOG_SPEED).append(" (").append(Text.METERS_PER_SECOND).append("):\n\t");
@@ -2696,11 +2746,12 @@ public class ArduSimTools {
 						global = global / count;
 						processOneCore = processOneCore / count;
 					}
+					ValidationTools validationTools = API.getValidationTools();
 					sb.append("\n\t\tDuring the experiment:")
-						.append("\n\t\t\tGlobalCPU: ").append(Tools.round(global, 3))
-						.append("%\n\t\t\tGlobalCPU(oneCore): ").append(Tools.round(global * Param.numCPUs, 3))
-						.append("%\n\t\t\tJavaCPU: ").append(Tools.round(processOneCore/Param.numCPUs, 3))
-						.append("%\n\t\t\tJavaCPU(oneCore): ").append(Tools.round(processOneCore, 3)).append("%");
+						.append("\n\t\t\tGlobalCPU: ").append(validationTools.roundDouble(global, 3))
+						.append("%\n\t\t\tGlobalCPU(oneCore): ").append(validationTools.roundDouble(global * Param.numCPUs, 3))
+						.append("%\n\t\t\tJavaCPU: ").append(validationTools.roundDouble(processOneCore/Param.numCPUs, 3))
+						.append("%\n\t\t\tJavaCPU(oneCore): ").append(validationTools.roundDouble(processOneCore, 3)).append("%");
 				}
 			} else {
 				sb.append(Text.OPTION_DISABLED);
@@ -2720,11 +2771,11 @@ public class ArduSimTools {
 				sb.append(Text.OPTION_DISABLED);
 			}
 		}
-		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ProtocolHelper.selectedProtocol);
+		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ArduSimTools.selectedProtocol);
 		sb.append("\n").append(Text.COMMUNICATIONS);
 		sb.append(API.getCommLink(0).toString());
 		
-		if (Param.role == Tools.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR) {
 			sb.append("\n").append(Text.COLLISION_PARAMETERS);
 			boolean collisionCheck = UAVParam.collisionCheckEnabled;
 			sb.append("\n\t").append(Text.COLLISION_ENABLE).append(" ");
@@ -2754,13 +2805,13 @@ public class ArduSimTools {
 		if(UAVParam.overrideAltitude) {
 			sb.append("\n\t").append(Param.KML_ALTITUDE).append("=").append(UAVParam.minFlyingAltitude);
 		}
-		sb.append("\n\t").append(Param.KML_MISSION_END).append("=").append(Waypoint.missionEnd);
-		sb.append("\n\t").append(Param.KML_WAYPOINT_DELAY).append("=").append(Waypoint.waypointDelay);
-		if (Waypoint.waypointDelay != 0) {
-			sb.append("\n\t").append(Param.KML_WAYPOINT_DISTANCE).append("=").append(Waypoint.waypointDistance);
+		sb.append("\n\t").append(Param.KML_MISSION_END).append("=").append(MissionKmlDialog.missionEnd);
+		sb.append("\n\t").append(Param.KML_WAYPOINT_DELAY).append("=").append(MissionKmlDialog.waypointDelay);
+		if (MissionKmlDialog.waypointDelay != 0) {
+			sb.append("\n\t").append(Param.KML_WAYPOINT_DISTANCE).append("=").append(MissionKmlDialog.waypointDistance);
 		}
 		
-		if (Param.role == Tools.MULTICOPTER) {
+		if (Param.role == ArduSim.MULTICOPTER) {
 			sb.append("\n\t").append(Text.REAL_COMMUNICATIONS_PARAMETERS);
 			sb.append("\n\t\t").append(Param.BROADCAST_IP).append("=").append(UAVParam.broadcastIP);
 			sb.append("\n\t\t").append(Param.BROADCAST_PORT).append("=").append(UAVParam.broadcastPort);
@@ -2776,7 +2827,7 @@ public class ArduSimTools {
 			sb.append("\n\t\t").append(Param.BATTERY_CAPACITY).append("=").append(UAVParam.lipoBatteryCapacity);
 		}
 		sb.append("\n\t").append(Text.FORMATION_PARAMETERS);
-		if (Param.role == Tools.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR) {
 			sb.append("\n\t\t").append(Param.GROUND_FORMATION).append("=").append(UAVParam.groundFormation.get().getName());
 			sb.append("\n\t\t").append(Param.GROUND_DISTANCE).append("=").append(UAVParam.groundDistanceBetweenUAV);
 		}
@@ -2818,7 +2869,7 @@ public class ArduSimTools {
 		}
 		// Nothing to store if setup and experiment where not recorded
 		if (firstSetupNanoTime == Long.MAX_VALUE && firstExperimentNanoTime == Long.MAX_VALUE) {
-			GUI.warn(Text.STORE_WARNING, Text.STORE_PATH_ERROR);
+			ArduSimTools.warnGlobal(Text.STORE_WARNING, Text.STORE_PATH_ERROR);
 			return firstExperimentNanoTime;
 		}
 		
@@ -2845,11 +2896,14 @@ public class ArduSimTools {
 		StringBuilder sbExperiment;
 		String[] colors = new String[] {"FF000000", "FFFF0000", "FF0000FF", "FF00FF00", "FFFFFF00",
 				"FFFF00FF", "FF00A5FF", "FFCBC0FF", "FF00FFFF"};
-		GeoCoordinates geo;
+		Location2DGeo geo;
 		boolean newData;
 		
 		setupDataPresent = false;
 		experimentDataPresent = false;
+		FileTools fileTools = API.getFileTools();
+		ValidationTools validationTools = API.getValidationTools();
+		boolean coordinateError = false;
 		for (int i=0; i<Param.numUAVs; i++) {
 			file1 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.PATH_TEST_SUFIX);
 			sb1 = new StringBuilder(2000);
@@ -2906,10 +2960,10 @@ public class ArduSimTools {
 				if (state == inSetup) {
 					sp.setTime(firstSetupNanoTime);
 					time = sp.getTime();
-					x = Tools.round(sp.x, 3);
-					y = Tools.round(sp.y, 3);
-					z = Tools.round(sp.z, 3);
-					zRel = Tools.round(sp.zRel, 3);
+					x = validationTools.roundDouble(sp.x, 3);
+					y = validationTools.roundDouble(sp.y, 3);
+					z = validationTools.roundDouble(sp.z, 3);
+					zRel = validationTools.roundDouble(sp.zRel, 3);
 					if (firstSetupData) {
 						// Adding 0 point
 						sb2.append(x).append(",").append(y).append(",").append(z).append(",").append(zRel)
@@ -2921,16 +2975,31 @@ public class ArduSimTools {
 						}
 						spPrev = sp;
 						firstSetupData = false;
-						geo = Tools.UTMToGeo(sp.x, sp.y);
-						sbSetup.append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
-						uavSetupDataPresent = true;
+						try {
+							geo = sp.getGeo();
+							sbSetup.append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
+							uavSetupDataPresent = true;
+						} catch (ArduSimNotReadyException e) {
+							if (!coordinateError) {
+								e.printStackTrace();
+								coordinateError = true;
+							}
+						}
 					} else {
 						if (spPrev == null || sp.x!=spPrev.x || sp.y!=spPrev.y || sp.z!=spPrev.z) {
 							sb2.append(x).append(",").append(y).append(",").append(z).append(",").append(zRel)
 								.append(",").append(sp.getHeading()).append(",").append(time).append("\n");
 							spPrev = sp;
-							geo = Tools.UTMToGeo(sp.x, sp.y);
-							sbSetup.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
+							try {
+								geo = sp.getGeo();
+								sbSetup.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
+								uavSetupDataPresent = true;
+							} catch (ArduSimNotReadyException e) {
+								if (!coordinateError) {
+									e.printStackTrace();
+									coordinateError = true;
+								}
+							}
 						}
 					}
 				}
@@ -2942,17 +3011,17 @@ public class ArduSimTools {
 					if (time > lastTime) {
 						lastTime = time;
 					}
-					x = Tools.round(sp.x, 3);
-					y = Tools.round(sp.y, 3);
-					z = Tools.round(sp.z, 3);
-					zRel = Tools.round(sp.zRel, 3);
+					x = validationTools.roundDouble(sp.x, 3);
+					y = validationTools.roundDouble(sp.y, 3);
+					z = validationTools.roundDouble(sp.z, 3);
+					zRel = validationTools.roundDouble(sp.zRel, 3);
 					
 					newData = false;
 					if (firstExperimentData) {
 						// Adding 0 point
 						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(zRel)
 							.append(",").append(sp.getHeading()).append(",").append(0).append(",")
-							.append(Tools.round(sp.getSpeed(), 3)).append(",").append(Tools.round(a, 3))
+							.append(validationTools.roundDouble(sp.getSpeed(), 3)).append(",").append(validationTools.roundDouble(a, 3))
 							.append(",0.000,0.000\n");
 						sb3.append(x).append(",").append(y).append("\n");
 						if (Param.verboseStore) {
@@ -2962,22 +3031,29 @@ public class ArduSimTools {
 						if (time != 0) {
 							sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(zRel)
 								.append(",").append(sp.getHeading()).append(",").append(time).append(",")
-								.append(Tools.round(sp.getSpeed(), 3)).append(",").append(Tools.round(a, 3))
+								.append(validationTools.roundDouble(sp.getSpeed(), 3)).append(",").append(validationTools.roundDouble(a, 3))
 								.append(",0.000,0.000\n");
 						}
 						spPrev = sp;
 						firstExperimentData = false;
-						geo = Tools.UTMToGeo(sp.x, sp.y);
-						sbExperiment.append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
-						uavExperimentDataPresent = true;
+						try {
+							geo = sp.getGeo();
+							sbExperiment.append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
+							uavExperimentDataPresent = true;
+						} catch (ArduSimNotReadyException e) {
+							if (!coordinateError) {
+								e.printStackTrace();
+								coordinateError = true;
+							}
+						}
 					} else if (sp.x!=spPrev.x || sp.y!=spPrev.y) {
 						// Moved horizontally
 						d = sp.distance(spPrev);
 						dist = dist + d;
 						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(zRel)
 							.append(",").append(sp.getHeading()).append(",").append(time).append(",")
-							.append(Tools.round(sp.getSpeed(), 3)).append(",").append(Tools.round(a, 3))
-							.append(",").append(Tools.round(d, 3)).append(",").append(Tools.round(dist, 3))
+							.append(validationTools.roundDouble(sp.getSpeed(), 3)).append(",").append(validationTools.roundDouble(a, 3))
+							.append(",").append(validationTools.roundDouble(d, 3)).append(",").append(validationTools.roundDouble(dist, 3))
 							.append("\n");
 						sb3.append(x).append(",").append(y).append("\n");
 						if (Param.verboseStore) {
@@ -2989,8 +3065,8 @@ public class ArduSimTools {
 						// Only moved vertically
 						sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(zRel)
 							.append(",").append(sp.getHeading()).append(",").append(time).append(",")
-							.append(Tools.round(sp.getSpeed(), 3)).append(",").append(Tools.round(a, 3))
-							.append(",0.0,").append(Tools.round(dist, 3)).append("\n");
+							.append(validationTools.roundDouble(sp.getSpeed(), 3)).append(",").append(validationTools.roundDouble(a, 3))
+							.append(",0.0,").append(validationTools.roundDouble(dist, 3)).append("\n");
 						if (Param.verboseStore) {
 							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
 						}
@@ -2998,30 +3074,39 @@ public class ArduSimTools {
 						newData = true;
 					}
 					if (newData) {
-						geo = Tools.UTMToGeo(sp.x, sp.y);
-						sbExperiment.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
+						try {
+							geo = sp.getGeo();
+							sbExperiment.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
+							uavExperimentDataPresent = true;
+						} catch (ArduSimNotReadyException e) {
+							if (!coordinateError) {
+								e.printStackTrace();
+								coordinateError = true;
+							}
+						}
+						
 					}
 				}
 				j++;
 			}
-			Tools.storeFile(file1, sb1.toString());
-			Tools.storeFile(file2, sb2.toString());
+			fileTools.storeFile(file1, sb1.toString());
+			fileTools.storeFile(file2, sb2.toString());
 			sb3.append("\n");
-			Tools.storeFile(file3, sb3.toString());
+			fileTools.storeFile(file3, sb3.toString());
 			if (Param.verboseStore) {
 				sb4.append("\n");
-				Tools.storeFile(file4, sb4.toString());
+				fileTools.storeFile(file4, sb4.toString());
 			}
-			if (uavSetupDataPresent) {
+			if (uavSetupDataPresent && !coordinateError) {
 				sb5.append(sbSetup.toString()).append("</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>\n");
 				setupDataPresent = true;
 			}
-			if (uavExperimentDataPresent) {
+			if (uavExperimentDataPresent && !coordinateError) {
 				sb6.append(sbExperiment.toString()).append("</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>\n");
 				experimentDataPresent = true;
 			}
 		}
-		if (setupDataPresent) {
+		if (setupDataPresent && !coordinateError) {
 			sb5.append("\t</Document>\n</kml>");
 			file5 = new File(folder, baseFileName + "_setup_path_Google_Earth.kmz");
 			try {
@@ -3039,7 +3124,7 @@ public class ArduSimTools {
 				e.printStackTrace();
 			}
 		}
-		if (experimentDataPresent) {
+		if (experimentDataPresent && !coordinateError) {
 			sb6.append("\t</Document>\n</kml>");
 			file6 = new File(folder, baseFileName + "_test_path_Google_Earth.kmz");
 			try {
@@ -3084,9 +3169,9 @@ public class ArduSimTools {
 					}
 					time = t;
 					if (time <= lastTime) {
-						x = Tools.round(sp.x, 2);
-						y = Tools.round(sp.y, 2);
-						z = Tools.round(sp.z, 2);
+						x = validationTools.roundDouble(sp.x, 2);
+						y = validationTools.roundDouble(sp.y, 2);
+						z = validationTools.roundDouble(sp.z, 2);
 						if (firstExperimentData) {
 							// Adding 0 point
 							sb7.append("$node_(0) set X_ ").append(x).append("\n");
@@ -3129,9 +3214,9 @@ public class ArduSimTools {
 			}
 			if (spPrev.getTime() < lastTime) {
 				time = spPrev.getTime();
-				x = Tools.round(spPrev.x, 2);
-				y = Tools.round(spPrev.y, 2);
-				z = Tools.round(spPrev.z, 2);
+				x = validationTools.roundDouble(spPrev.x, 2);
+				y = validationTools.roundDouble(spPrev.y, 2);
+				z = validationTools.roundDouble(spPrev.z, 2);
 				sb7.append("$ns_ at ").append(lastTime).append(" $node_(0) set X_ ").append(x).append("\n");
 				sb7.append("$ns_ at ").append(lastTime).append(" $node_(0) set Y_ ").append(y).append("\n");
 				sb8.append("$ns_ at ").append(lastTime).append(" $node_(0) set X_ ").append(x).append("\n");
@@ -3141,15 +3226,15 @@ public class ArduSimTools {
 				sb10.append(" ").append(lastTime).append(" ").append(x).append(" ").append(y).append(" ").append(z);
 			}
 			
-			Tools.storeFile(file7, sb7.toString());
-			Tools.storeFile(file8, sb8.toString());
+			fileTools.storeFile(file7, sb7.toString());
+			fileTools.storeFile(file8, sb8.toString());
 			
 			sb9.append("\n");
 			sb10.append("\n");
 		}
 		
-		Tools.storeFile(file9, sb9.toString());
-		Tools.storeFile(file10, sb10.toString());
+		fileTools.storeFile(file9, sb9.toString());
+		fileTools.storeFile(file10, sb10.toString());
 		
 		return firstExperimentNanoTime;
 	}
@@ -3157,12 +3242,13 @@ public class ArduSimTools {
 	/** Stores the experiment results. */
 	public static void storeResults(String results, File file) {
 		ArduSimTools.storingResults = true;
-		GUI.log(Text.STORING);
+		ArduSimTools.logGlobal(Text.STORING);
 		
 		// Extracting the name of the file without path or extension for later logging
 		String folder = file.getParent();
 		String baseFileName = file.getName();
-		String extension = Tools.getFileExtension(file);
+		FileTools fileTools = API.getFileTools();
+		String extension = fileTools.getFileExtension(file);
 		if (extension.length() > 0 && extension.equalsIgnoreCase(Text.FILE_EXTENSION_TXT)) {
 			baseFileName = baseFileName.substring(0, baseFileName.lastIndexOf(extension) - 1); // Remove also the dot
 		}
@@ -3173,7 +3259,7 @@ public class ArduSimTools {
 			file = new File(file.toString() + "." + Text.FILE_EXTENSION_TXT);
 		}
 		// Store simulation and protocol progress information and configuration
-		Tools.storeFile(file, results);
+		fileTools.storeFile(file, results);
 		
 		// 2. Store the UAV path and general information
 		long startTestNanoTime = ArduSimTools.storeLogAndPath(folder, baseFileName);
@@ -3188,11 +3274,11 @@ public class ArduSimTools {
 		
 		// 5. Store protocol specific information
 		if (startTestNanoTime != Long.MAX_VALUE) {
-			ProtocolHelper.selectedProtocolInstance.logData(folder, baseFileName, startTestNanoTime);
+			ArduSimTools.selectedProtocolInstance.logData(folder, baseFileName, startTestNanoTime);
 		}
 		
 		// 6. Store ArduCopter logs if needed
-		if (Param.role == Tools.SIMULATOR && SimParam.arducopterLoggingEnabled) {
+		if (Param.role == ArduSim.SIMULATOR && SimParam.arducopterLoggingEnabled) {
 			File logSource, logDestination;
 			File parentFolder = new File(SimParam.tempFolderBasePath);
 			for (int i=0; i<Param.numUAVs; i++) {
@@ -3208,30 +3294,57 @@ public class ArduSimTools {
 			}
 		}
 		
-		GUI.log(Text.WAITING_FOR_USER);
+		ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
 		ArduSimTools.storingResults = false;
 	}
 	
 	/** Logging to file the UAVs mission, in AutoCAD format. */
 	private static void logMission(String folder, String baseFileName) {
-		File file1, file2;
+		File file1;
 		StringBuilder sb1;
+		
+		int j;
+		ValidationTools validationTools = API.getValidationTools();
+		List<WaypointSimplified> missionUTMSimplified;
+		for (int i=0; i<Param.numUAVs; i++) {
+			missionUTMSimplified = UAVParam.missionUTMSimplified.get(i);
+			if (missionUTMSimplified != null && missionUTMSimplified.size() > 1) {
+				file1 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MISSION_SUFIX);
+				sb1 = new StringBuilder(2000);
+				sb1.append("._PLINE\n");
+				
+				j = 0;
+				WaypointSimplified prev = null;
+				WaypointSimplified current;
+				for (j = 0; j<missionUTMSimplified.size(); j++) {
+					current = missionUTMSimplified.get(j);
+					if (prev == null) {
+						sb1.append(validationTools.roundDouble(current.x, 3)).append(",").append(validationTools.roundDouble(current.y, 3)).append("\n");
+						prev = current;
+					} else if (!current.equals(prev)) {
+						sb1.append(validationTools.roundDouble(current.x, 3)).append(",").append(validationTools.roundDouble(current.y, 3)).append("\n");
+						prev = current;
+					}
+				}
+				sb1.append("\n");
+				API.getFileTools().storeFile(file1, sb1.toString());
+			}
+		}
+		
+		
+		File file2;
 		StringBuilder sb2 = new StringBuilder(2000);
 		sb2.append("<?xml version=\"1.0\"?>\n<kml xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n")
 			.append("\t<Document>\n");
 		String[] colors = new String[] {"FF000000", "FFFF0000", "FF0000FF", "FF00FF00", "FFFFFF00",
 				"FFFF00FF", "FF00A5FF", "FFCBC0FF", "FF00FFFF"};
-		GeoCoordinates geo;
-		
+		Location2DGeo geo;
 		int located = 0;
-		int j;
-		for (int i=0; i<Param.numUAVs; i++) {
-			List<WaypointSimplified> missionUTMSimplified = Tools.getUAVMissionSimplified(i);
+		boolean coordinateError = false;
+		for (int i=0; i<Param.numUAVs && !coordinateError; i++) {
+			missionUTMSimplified = UAVParam.missionUTMSimplified.get(i);
 			if (missionUTMSimplified != null && missionUTMSimplified.size() > 1) {
 				located++;
-				file1 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MISSION_SUFIX);
-				sb1 = new StringBuilder(2000);
-				sb1.append("._PLINE\n");
 				sb2.append("\t\t<Placemark>\n\t\t\t<name>UAV ").append(Param.id[i])
 				.append("</name>\n\t\t\t<Style>\n\t\t\t\t<LineStyle>\n\t\t\t\t\t<color>").append(colors[i % colors.length])
 				.append("</color>\n\t\t\t\t\t<colorMode>normal</colorMode>\n\t\t\t\t\t<width>1</width>\n\t\t\t\t</LineStyle>\n")
@@ -3241,27 +3354,27 @@ public class ArduSimTools {
 				j = 0;
 				WaypointSimplified prev = null;
 				WaypointSimplified current;
-				for (j = 0; j<missionUTMSimplified.size(); j++) {
+				for (j = 0; j<missionUTMSimplified.size() && !coordinateError; j++) {
 					current = missionUTMSimplified.get(j);
-					geo = Tools.UTMToGeo(current.x, current.y);
-					if (prev == null) {
-						sb1.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
-						prev = current;
-						sb2.append(geo.longitude).append(",").append(geo.latitude).append(",").append(Tools.round(current.z, 3));
-					} else if (!current.equals(prev)) {
-						sb1.append(Tools.round(current.x, 3)).append(",").append(Tools.round(current.y, 3)).append("\n");
-						prev = current;
-						sb2.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(Tools.round(current.z, 3));
+					try {
+						geo = current.getGeo();
+						if (prev == null) {
+							sb2.append(geo.longitude).append(",").append(geo.latitude).append(",").append(validationTools.roundDouble(current.z, 3));
+							prev = current;
+						} else if (!current.equals(prev)) {
+							sb2.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(validationTools.roundDouble(current.z, 3));
+							prev = current;
+						}
+					} catch (ArduSimNotReadyException e) {
+						e.printStackTrace();
+						coordinateError = true;
 					}
 				}
-				sb1.append("\n");
-				Tools.storeFile(file1, sb1.toString());
-				
 				sb2.append("</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>\n");
 			}
 		}
 		
-		if (located > 0) {
+		if (located > 0 && !coordinateError) {
 			sb2.append("\t</Document>\n</kml>");
 			file2 = new File(folder, baseFileName + "_mission_Google_Earth.kmz");
 			try {
@@ -3287,16 +3400,85 @@ public class ArduSimTools {
 		StringBuilder sb = new StringBuilder(2000);
 		sb.append("time(ns),GlobalCPU(%),GlobalCPU(%oneCore),JavaCPU(%),JavaCPU(%oneCore),ArduSimState\n");
 		CPUData data = Param.cpu.poll();
+		ValidationTools validationTools = API.getValidationTools();
 		while (data != null) {
 			sb.append(data.time).append(",")
-				.append(Tools.round(data.globalCPU, 1)).append(",")
-				.append(Tools.round(data.globalCPU * Param.numCPUs, 2)).append(",")
+				.append(validationTools.roundDouble(data.globalCPU, 1)).append(",")
+				.append(validationTools.roundDouble(data.globalCPU * Param.numCPUs, 2)).append(",")
 				.append(data.processCPU/Param.numCPUs).append(",")
 				.append(data.processCPU).append(",")
 				.append(data.simState).append("\n");
 			data = Param.cpu.poll();
 		}
-		Tools.storeFile(file, sb.toString());
+		API.getFileTools().storeFile(file, sb.toString());
+	}
+
+	/**
+	 * For ArduSim internal purposes only.
+	 * @param text Text to be shown.
+	 */
+	public static void logGlobal(String text) {
+		final String res;
+		if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
+			res = API.getValidationTools().timeToString(Param.setupTime, System.currentTimeMillis())
+					+ " " + text;
+		} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+			res = API.getValidationTools().timeToString(Param.startTime, System.currentTimeMillis())
+					+ " " + text;
+		} else {
+			res = text;
+		}
+		System.out.println(res);
+		System.out.flush();
+		// Update GUI only when using simulator and the main window is already loaded
+		if (Param.role == ArduSim.SIMULATOR && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.logArea.append(res + "\n");
+					int pos = MainWindow.buttonsPanel.logArea.getText().length();
+					MainWindow.buttonsPanel.logArea.setCaretPosition( pos );
+				}
+			});
+		}
+	}
+
+	/**
+	 * For ArduSim internal purposes only.
+	 * @param text Text to be shown.
+	 */
+	public static void logVerboseGlobal(String text) {
+		if (Param.verboseLogging) {
+			logGlobal(text);
+		}
+	}
+
+	/**
+	 * For ArduSim internal purposes only.
+	 * @param text Text to be shown.
+	 */
+	public static void updateGlobalInformation(final String text) {
+		// Update GUI only when using simulator
+		if (Param.role == ArduSim.SIMULATOR) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.statusLabel.setText(text);
+				}
+			});
+		}
+	}
+
+	/**
+	 * For ArduSim internal purposes only.
+	 * @param title Title for the dialog.
+	 * @param message Message to be shown.
+	 */
+	public static void warnGlobal(String title, String message) {
+		if (Param.role == ArduSim.MULTICOPTER) {
+			System.out.println(title + ": " + message);
+			System.out.flush();
+		} else {
+			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
+		}
 	}
 
 }

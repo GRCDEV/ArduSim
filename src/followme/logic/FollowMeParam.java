@@ -6,10 +6,10 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import api.pojo.formations.FlightFormation.Formation;
 import followme.pojo.RemoteInput;
+import main.api.formations.FlightFormation.Formation;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
 public class FollowMeParam {
 	// General parameters
@@ -32,19 +32,19 @@ public class FollowMeParam {
 	public static AtomicIntegerArray state;
 	
 	// Timeouts
-	public static final int STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
-	public static final int SENDING_TIMEOUT = 200;			// (ms) Time between packets sent
+	public static final long STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
+	public static final long SENDING_TIMEOUT = 200;			// (ms) Time between packets sent
 	public static final int RECEIVING_TIMEOUT = 50;			// (ms) The port is unlocked after this time when receiving messages
 	public static final long SETUP_TIMEOUT = 2000;			// (ms) Timeout to assert that the configuration step has finished
-	public static final int TAKE_OFF_CHECK_TIMEOUT = 250;	// (ms) Between checks if the target altitude has been reached
-	public static final int TAKE_OFF_LOG_TIMEOUT = 1000;	// (ms) Between checks to show the current altitude during takeoff
-	public static final int HOVERING_TIMEOUT = 500;			// (ms) Waiting time after takeoff before moving to first waypoint
-	public static final int MOVE_CHECK_TIMEOUT = 200;		// (ms) Between checks if the target location has been reached
+	public static final long TAKE_OFF_CHECK_TIMEOUT = 250;	// (ms) Between checks if the target altitude has been reached
+	public static final long TAKE_OFF_LOG_TIMEOUT = 1000;	// (ms) Between checks to show the current altitude during takeoff
+	public static final long HOVERING_TIMEOUT = 500;		// (ms) Waiting time after takeoff before moving to first waypoint
+	public static final long MOVE_CHECK_TIMEOUT = 200;		// (ms) Between checks if the target location has been reached
 	public static final long TAKEOFF_TIMEOUT = 2000;		// (ms) Timeout to assert that the takeoff has finished
-	public static final int LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
+	public static final long LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
 	
 	// Messages sent
-	public static int sendPeriod = 1000;							// (ms) Period between messages from the master during flight
+	public static long sendPeriod = 1000;							// (ms) Period between messages from the master during flight
 	public static AtomicReference<byte[][]> data;					// Master: array containing the data sent to the slaves
 	public static AtomicLongArray idNext;							// id of the next UAV to takeoff
 	public static AtomicReferenceArray<Formation> flyingFormation;	// Formation used while flying

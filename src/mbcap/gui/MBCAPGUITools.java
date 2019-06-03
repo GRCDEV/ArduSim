@@ -10,134 +10,140 @@ import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
-import api.GUI;
-import api.Tools;
-import api.pojo.Point3D;
+import api.API;
+import api.pojo.location.Location3DUTM;
 import main.Text;
+import main.api.ArduSim;
+import main.api.GUI;
+import main.api.ValidationTools;
+import main.sim.board.BoardPanel;
 import mbcap.logic.MBCAPParam;
 import mbcap.pojo.MBCAPState;
 import mbcap.logic.MBCAPText;
 import mbcap.pojo.ProgressState;
-import sim.board.BoardPanel;
 
 /** This class contains exclusively static methods used by the GUI.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MBCAPGUITools {
 
 	/** Checks the validity of the configuration of the protocol. */
 	public static boolean isValidProtocolConfiguration(MBCAPConfigDialogPanel panel) {
+		GUI gui = API.getGUI(0);
+		ValidationTools validationTools = API.getValidationTools();
+		
 		// Simulation parameters
 		String validating = panel.missionsTextField.getText();
 		if (validating==null || validating.length()==0) {
-			GUI.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
+			gui.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
 			return false;
 		}
 		
 		// Beaconing parameters
 		validating = panel.beaconingPeriodTextField.getText();
-		if (!Tools.isValidPositiveInteger(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_PERIOD_ERROR);
+		if (!validationTools.isValidPositiveLong(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_PERIOD_ERROR);
 			return false;
 		}
 		validating = panel.numBeaconsTextField.getText();
-		if (!Tools.isValidPositiveInteger(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_REFRESH_ERROR);
+		if (!validationTools.isValidPositiveInteger(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_REFRESH_ERROR);
 			return false;
 		}
 		validating = panel.hopTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.HOP_TIME_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.HOP_TIME_ERROR);
 			return false;
 		}
 		validating = panel.minSpeedTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.MIN_SPEED_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.MIN_SPEED_ERROR);
 			return false;
 		}
 		validating = panel.beaconExpirationTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_EXPIRATION_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.BEACON_EXPIRATION_ERROR);
 			return false;
 		}
 		double beaconExpirationTime = Double.parseDouble(validating);
 
 		// Collision avoidance protocol parameters
 		validating = panel.collisionRiskDistanceTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_1);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_1);
 			return false;
 		}
-		boolean checkCollision = Tools.isCollisionCheckEnabled();
+		ArduSim ardusim = API.getArduSim();
+		boolean checkCollision = ardusim.collisionIsCheckEnabled();
 		if (checkCollision) {
 			double collisionRiskDistance = Double.parseDouble(validating);
-			double collisionDistance = Tools.getCollisionHorizontalDistance();
+			double collisionDistance = ardusim.collisionGetHorizontalDistance();
 			if (collisionRiskDistance < collisionDistance + 1) {
-				GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_2);
+				gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_DISTANCE_ERROR_2);
 				return false;
 			}
 		}
 		validating = panel.collisionRiskAltitudeDifferenceTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_1);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_1);
 			return false;
 		}
 		if (checkCollision) {
 			double collisionRiskAltitudeDifference = Double.parseDouble(validating);
-			double collisionAltitudeDifference = Tools.getCollisionVerticalDistance();
+			double collisionAltitudeDifference = ardusim.collisionGetVerticalDistance();
 			if (collisionRiskAltitudeDifference <= collisionAltitudeDifference) {
-				GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_2);
+				gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_ALTITUDE_ERROR_2);
 				return false;
 			}
 		}
 		validating = panel.maxTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_TIME_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.WARN_TIME_ERROR);
 			return false;
 		}
 		validating = panel.riskCheckPeriodTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.CHECK_PERIOD_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.CHECK_PERIOD_ERROR);
 			return false;
 		}
 		validating = panel.packetLossTextField.getText();
-		if (!Tools.isValidPositiveInteger(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.PACKET_LOSS_ERROR);
+		if (!validationTools.isValidPositiveInteger(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.PACKET_LOSS_ERROR);
 			return false;
 		}
 		validating = panel.gpsErrorTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.GPS_ERROR_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.GPS_ERROR_ERROR);
 			return false;
 		}
 		validating = panel.standStillTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.HOVERING_TIMEOUT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.HOVERING_TIMEOUT_ERROR);
 			return false;
 		}
 		validating = panel.passingTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.OVERTAKE_TIMEOUT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.OVERTAKE_TIMEOUT_ERROR);
 			return false;
 		}
 		validating = panel.solvedTimeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.RESUME_MODE_DELAY_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.RESUME_MODE_DELAY_ERROR);
 			return false;
 		}
 		validating = panel.recheckTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.RECHECK_DELAY_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.RECHECK_DELAY_ERROR);
 			return false;
 		}
 		validating = panel.deadlockTimeoutTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.DEADLOCK_TIMEOUT_ERROR_1);
+		if (!validationTools.isValidPositiveInteger(validating)) {
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.DEADLOCK_TIMEOUT_ERROR_1);
 			return false;
 		}
-		double deadlockTimeout = Double.parseDouble(validating);
+		double deadlockTimeout = Integer.parseInt(validating);
 		if (deadlockTimeout < beaconExpirationTime) {
-			GUI.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.DEADLOCK_TIMEOUT_ERROR_2);
+			gui.warn(MBCAPText.VALIDATION_WARNING, MBCAPText.DEADLOCK_TIMEOUT_ERROR_2);
 			return false;
 		}
 		return true;
@@ -146,10 +152,10 @@ public class MBCAPGUITools {
 	/** Stores the configuration of the protocol in variables. */
 	public static void storeProtocolConfiguration(MBCAPConfigDialogPanel panel) {
 		// Simulation parameters
-		Tools.setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
+		API.getArduSim().setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
 		
 		// Beaconing parameters
-		MBCAPParam.beaconingPeriod = Integer.parseInt(panel.beaconingPeriodTextField.getText());
+		MBCAPParam.beaconingPeriod = Long.parseLong(panel.beaconingPeriodTextField.getText());
 		MBCAPParam.numBeacons = Integer.parseInt(panel.numBeaconsTextField.getText());
 		MBCAPParam.hopTime = Double.parseDouble(panel.hopTimeTextField.getText());
 		MBCAPParam.hopTimeNS = (long) (MBCAPParam.hopTime * 1000000000l);
@@ -193,25 +199,27 @@ public class MBCAPGUITools {
 				panel.passingTimeTextField.setText("" + ((double) MBCAPParam.passingTimeout) / 1000000000l);
 				panel.solvedTimeTextField.setText("" + ((double) MBCAPParam.resumeTimeout) / 1000000000l);
 				panel.recheckTextField.setText("" + ((double) MBCAPParam.recheckTimeout) / 1000l);
-				panel.deadlockTimeoutTextField.setText("" + (int) (((double) MBCAPParam.globalDeadlockTimeout) / 1000000000l));
+				panel.deadlockTimeoutTextField.setText("" + (int) (MBCAPParam.globalDeadlockTimeout / 1000000000l));
 			}
 		});
 	}
 
 	/** Draws the circles that represent the future locations of the UAV. */
 	public static void drawPredictedLocations(Graphics2D g) {
-		Point3D predictedUTMLocation;
-		List<Point3D> locationsUTM;
+		Location3DUTM predictedUTMLocation;
+		List<Location3DUTM> locationsUTM;
 		Point2D.Double predictedPXLocation;
 		Ellipse2D.Double ellipse;
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
+		GUI gui;
 		for (int i = 0; i < numUAVs; i++) {
 			locationsUTM = MBCAPGUIParam.predictedLocation.get(i);
+			gui = API.getGUI(i);
 			if (locationsUTM != null && locationsUTM.size() > 0) {
-				g.setColor(GUI.getUAVColor(i));
+				g.setColor(gui.getColor());
 				for (int j = 0; j < locationsUTM.size(); j++) {
 					predictedUTMLocation = locationsUTM.get(j);
-					predictedPXLocation = GUI.locatePoint(predictedUTMLocation.x, predictedUTMLocation.y);
+					predictedPXLocation = gui.locatePoint(predictedUTMLocation.x, predictedUTMLocation.y);
 					ellipse = new Ellipse2D.Double(predictedPXLocation.x - MBCAPParam.collisionRiskScreenDistance,
 							predictedPXLocation.y - MBCAPParam.collisionRiskScreenDistance, 2 * MBCAPParam.collisionRiskScreenDistance,
 							2 * MBCAPParam.collisionRiskScreenDistance);
@@ -222,12 +230,12 @@ public class MBCAPGUITools {
 	}
 
 	/** Stores (or removes when riskUTMLocation==null) the collision risk location that is drawn. */
-	public static void locateImpactRiskMark(Point3D riskUTMLocation, int numUAV, long beaconId) {
-		if (Tools.getArduSimRole() == Tools.SIMULATOR) {
+	public static void locateImpactRiskMark(Location3DUTM riskUTMLocation, int numUAV, long beaconId) {
+		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR) {
 			if (riskUTMLocation == null) {
 				MBCAPParam.impactLocationPX[numUAV].remove(beaconId);
 			} else {
-				Point2D.Double riskPXLocation = GUI.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
+				Point2D.Double riskPXLocation = API.getGUI(numUAV).locatePoint(riskUTMLocation.x, riskUTMLocation.y);
 				MBCAPParam.impactLocationPX[numUAV].put(beaconId, riskPXLocation);
 			}
 		}
@@ -235,7 +243,7 @@ public class MBCAPGUITools {
 	
 	/** Removes all the collision risk locations used for drawing. */
 	public static void removeImpactRiskMarks() {
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i=0; i<numUAVs; i++) {
 			MBCAPParam.impactLocationUTM[i].clear();
 			MBCAPParam.impactLocationPX[i].clear();
@@ -247,7 +255,7 @@ public class MBCAPGUITools {
 		Iterator<Map.Entry<Long, Point2D.Double>> entries;
 		Map.Entry<Long, Point2D.Double> entry;
 		Point2D.Double riskLocationPX;
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
 			entries = MBCAPParam.impactLocationPX[i].entrySet().iterator();
 			while (entries.hasNext()) {
@@ -266,14 +274,14 @@ public class MBCAPGUITools {
 	
 	/** Draws the target location when moving aside. */
 	public static void drawSafetyLocation(Graphics2D g) {
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		Point2D.Double location;
 		for (int i = 0; i < numUAVs; i++) {
 			location = MBCAPParam.targetLocationPX.get(i);
 			if (location != null) {
 				int x = (int)location.x;
 				int y = (int)location.y;
-				g.setColor(GUI.getUAVColor(i));
+				g.setColor(API.getGUI(i).getColor());
 				g.drawLine(x - 10, y - 10, x + 10, y + 10);
 				g.drawLine(x + 10, y - 10, x - 10, y + 10);
 //				g.drawOval((int)location.x - 2, (int)location.y - 2, 4, 4);
@@ -289,9 +297,10 @@ public class MBCAPGUITools {
 		MBCAPParam.progress[numUAV].add(new ProgressState(state, System.currentTimeMillis()));
 
 		// Update the log in the main window
-		GUI.log(numUAV, MBCAPText.CAP + " = " + state.getName());
+		GUI gui = API.getGUI(numUAV);
+		gui.logUAV(MBCAPText.CAP + " = " + state.getName());
 		// Update the progress dialog
-		GUI.updateProtocolState(numUAV, state.getName());
+		gui.updateProtocolState(state.getName());
 	}
 
 }

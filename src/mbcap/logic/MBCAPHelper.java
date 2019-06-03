@@ -19,17 +19,22 @@ import javax.swing.JFrame;
 
 import org.javatuples.Pair;
 
-import api.Copter;
-import api.GUI;
+import api.API;
 import api.ProtocolHelper;
-import api.Tools;
-import api.pojo.GeoCoordinates;
-import api.pojo.LogPoint;
-import api.pojo.Point3D;
-import api.pojo.UTMCoordinates;
-import api.pojo.Waypoint;
-import api.pojo.WaypointSimplified;
+import api.pojo.location.Location2DGeo;
+import api.pojo.location.LogPoint;
+import api.pojo.location.Location3DUTM;
+import api.pojo.location.Location2DUTM;
+import api.pojo.location.Waypoint;
+import api.pojo.location.WaypointSimplified;
 import main.Param.SimulatorState;
+import main.api.ArduSim;
+import main.api.FileTools;
+import main.api.GUI;
+import main.api.MissionHelper;
+import main.api.ValidationTools;
+import main.sim.board.BoardPanel;
+import main.uavController.UAVParam;
 import mbcap.gui.MBCAPConfigDialog;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.gui.MBCAPGUITools;
@@ -38,10 +43,8 @@ import mbcap.pojo.Beacon;
 import mbcap.pojo.ErrorPoint;
 import mbcap.pojo.MBCAPState;
 import mbcap.pojo.ProgressState;
-import sim.board.BoardPanel;
-import uavController.UAVParam;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
 public class MBCAPHelper extends ProtocolHelper {
 
@@ -63,8 +66,8 @@ public class MBCAPHelper extends ProtocolHelper {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void initializeDataStructures() {
-		int numUAVs = Tools.getNumUAVs();
-		MBCAPGUIParam.predictedLocation = new AtomicReferenceArray<List<Point3D>>(numUAVs);
+		int numUAVs = API.getArduSim().getNumUAVs();
+		MBCAPGUIParam.predictedLocation = new AtomicReferenceArray<List<Location3DUTM>>(numUAVs);
 
 		MBCAPParam.event = new AtomicIntegerArray(numUAVs);
 		MBCAPParam.eventDeadlockSolved = new AtomicIntegerArray(numUAVs);
@@ -78,7 +81,7 @@ public class MBCAPHelper extends ProtocolHelper {
 		MBCAPParam.impactLocationUTM = new ConcurrentHashMap[numUAVs];
 		MBCAPParam.impactLocationPX = new ConcurrentHashMap[numUAVs];
 
-		MBCAPParam.targetLocationUTM = new AtomicReferenceArray<UTMCoordinates>(numUAVs);
+		MBCAPParam.targetLocationUTM = new AtomicReferenceArray<Location2DUTM>(numUAVs);
 		MBCAPParam.targetLocationPX = new AtomicReferenceArray<Point2D.Double>(numUAVs);
 		MBCAPParam.beaconsStored = new ArrayList[numUAVs];
 
@@ -88,7 +91,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			MBCAPParam.projectPath.set(i, 1);		// Begin projecting the predicted path over the theoretical mission
 
 			MBCAPParam.beacons[i] = new ConcurrentHashMap<Long, Beacon>();
-			MBCAPParam.impactLocationUTM[i] = new ConcurrentHashMap<Long, Point3D>();
+			MBCAPParam.impactLocationUTM[i] = new ConcurrentHashMap<Long, Location3DUTM>();
 			MBCAPParam.impactLocationPX[i] = new ConcurrentHashMap<Long, Point2D.Double>();
 			
 			MBCAPParam.beaconsStored[i] =  new ArrayList<Beacon>();
@@ -109,17 +112,18 @@ public class MBCAPHelper extends ProtocolHelper {
 	@Override
 	public void rescaleDataStructures() {
 		// Rescale the safety circles diameter
-		UTMCoordinates locationUTM = null;
+		Location2DUTM locationUTM = null;
 		boolean found = false;
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i=0; i<numUAVs && !found; i++) {
-			locationUTM = Copter.getUTMLocation(i);
+			locationUTM = API.getCopter(i).getLocationUTM();
 			if (locationUTM != null) {
 				found = true;
 			}
 		}
-		Point2D.Double a = GUI.locatePoint(locationUTM.x, locationUTM.y);
-		Point2D.Double b = GUI.locatePoint(locationUTM.x + MBCAPParam.collisionRiskDistance, locationUTM.y);
+		GUI gui = API.getGUI(0);
+		Point2D.Double a = gui.locatePoint(locationUTM.x, locationUTM.y);
+		Point2D.Double b = gui.locatePoint(locationUTM.x + MBCAPParam.collisionRiskDistance, locationUTM.y);
 		MBCAPParam.collisionRiskScreenDistance =b.x - a.x;
 	}
 
@@ -132,26 +136,27 @@ public class MBCAPHelper extends ProtocolHelper {
 			MBCAPGUIParam.exclamationDrawScale = MBCAPGUIParam.EXCLAMATION_PX_SIZE
 					/ MBCAPGUIParam.exclamationImage.getWidth();
 		} catch (IOException e) {
-			GUI.exit(MBCAPText.WARN_IMAGE_LOAD_ERROR);
+			API.getGUI(0).exit(MBCAPText.WARN_IMAGE_LOAD_ERROR);
 		}
 	}
 	
 	@Override
 	public void rescaleShownResources() {
-		Iterator<Map.Entry<Long, Point3D>> entries;
-		Map.Entry<Long, Point3D> entry;
-		Point3D riskLocationUTM;
-		UTMCoordinates targetLocationUTM;
+		Iterator<Map.Entry<Long, Location3DUTM>> entries;
+		Map.Entry<Long, Location3DUTM> entry;
+		Location3DUTM riskLocationUTM;
+		Location2DUTM targetLocationUTM;
 		Point2D.Double riskLocationPX, targetLocationPX;
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
 			// Collision risk locations
 			entries = MBCAPParam.impactLocationUTM[i].entrySet().iterator();
 			MBCAPParam.impactLocationPX[i].clear();
+			GUI gui = API.getGUI(i);
 			while (entries.hasNext()) {
 				entry = entries.next();
 				riskLocationUTM = entry.getValue();
-				riskLocationPX = GUI.locatePoint(riskLocationUTM.x, riskLocationUTM.y);
+				riskLocationPX = gui.locatePoint(riskLocationUTM.x, riskLocationUTM.y);
 				MBCAPParam.impactLocationPX[i].put(entry.getKey(), riskLocationPX);
 			}
 			
@@ -160,7 +165,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			if (targetLocationUTM == null) {
 				MBCAPParam.targetLocationPX.set(i, null);
 			} else {
-				targetLocationPX = GUI.locatePoint(targetLocationUTM.x, targetLocationUTM.y);
+				targetLocationPX = gui.locatePoint(targetLocationUTM.x, targetLocationUTM.y);
 				MBCAPParam.targetLocationPX.set(i, targetLocationPX);
 			}
 		}
@@ -168,7 +173,7 @@ public class MBCAPHelper extends ProtocolHelper {
 
 	@Override
 	public void drawResources(Graphics2D g2, BoardPanel p) {
-		if (!Tools.isCollisionDetected()) {
+		if (!API.getArduSim().collisionIsDetected()) {
 			g2.setStroke(MBCAPParam.STROKE_POINT);
 			MBCAPGUITools.drawPredictedLocations(g2);
 			MBCAPGUITools.drawImpactRiskMarks(g2, p);
@@ -177,19 +182,19 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public Pair<GeoCoordinates, Double>[] setStartingLocation() {
+	public Pair<Location2DGeo, Double>[] setStartingLocation() {
 		// Gets the current coordinates from the mission when it is loaded, and the heading pointing towards the next waypoint
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		@SuppressWarnings("unchecked")
-		Pair<GeoCoordinates, Double>[] startingLocations = new Pair[numUAVs];
+		Pair<Location2DGeo, Double>[] startingLocations = new Pair[numUAVs];
 		double heading = 0.0;
 		Waypoint waypoint1, waypoint2;
 		waypoint1 = waypoint2 = null;
 		int waypoint1pos = 0;
 		boolean waypointFound;
-		UTMCoordinates p1UTM, p2UTM;
+		Location2DUTM p1UTM, p2UTM;
 		double incX, incY;
-		List<Waypoint>[] missions = Tools.getLoadedMissions();
+		List<Waypoint>[] missions = API.getCopter(0).getMissionHelper().getMissionsLoaded();
 		List<Waypoint> mission;
 		for (int i = 0; i < numUAVs; i++) {
 			mission = missions[i];
@@ -203,7 +208,7 @@ public class MBCAPHelper extends ProtocolHelper {
 					}
 				}
 				if (!waypointFound) {
-					GUI.exit(MBCAPText.UAVS_START_ERROR_2 + " " + Tools.getIdFromPos(i));
+					API.getGUI(0).exit(MBCAPText.UAVS_START_ERROR_2 + " " + API.getCopter(i).getID());
 				}
 				waypointFound = false;
 				for (int j=waypoint1pos+1; j<mission.size() && !waypointFound; j++) {
@@ -214,8 +219,8 @@ public class MBCAPHelper extends ProtocolHelper {
 				}
 				if (waypointFound) {
 					// We only can set a heading if at least two points with valid coordinates are found
-					p1UTM = Tools.geoToUTM(waypoint1.getLatitude(), waypoint1.getLongitude());
-					p2UTM = Tools.geoToUTM(waypoint2.getLatitude(), waypoint2.getLongitude());
+					p1UTM = waypoint1.getUTM();
+					p2UTM = waypoint2.getUTM();
 					incX = p2UTM.x - p1UTM.x;
 					incY = p2UTM.y - p1UTM.y;
 					if (incX != 0 || incY != 0) {
@@ -234,9 +239,9 @@ public class MBCAPHelper extends ProtocolHelper {
 				}
 			} else {
 				// Assuming that all UAVs have a mission loaded
-				GUI.exit(MBCAPText.APP_NAME + ": " + MBCAPText.UAVS_START_ERROR_1 + " " + Tools.getIdFromPos(i) + ".");
+				API.getGUI(0).exit(MBCAPText.APP_NAME + ": " + MBCAPText.UAVS_START_ERROR_1 + " " + API.getCopter(i).getID() + ".");
 			}
-			startingLocations[i] = Pair.with(new GeoCoordinates(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
+			startingLocations[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
 		}
 		return startingLocations;
 	}
@@ -250,15 +255,15 @@ public class MBCAPHelper extends ProtocolHelper {
 	@Override
 	public void startThreads() {
 		BeaconingThread thread;
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
 			thread = new BeaconingThread(i);
-			Copter.setWaypointReachedListener(thread);
+			API.getCopter(i).getMissionHelper().setWaypointReachedListener(thread);
 			thread.start();
 			(new ReceiverThread(i)).start();
 			(new CollisionDetectorThread(i)).start();
 		}
-		GUI.log(MBCAPText.ENABLING);
+		API.getGUI(0).log(MBCAPText.ENABLING);
 	}
 
 	@Override
@@ -268,28 +273,54 @@ public class MBCAPHelper extends ProtocolHelper {
 
 	@Override
 	public void startExperimentActionPerformed() {
-		if (!Copter.startMissionsFromGround()) {
-			GUI.warn(this.protocolString, MBCAPText.START_MISSION_ERROR);
+		
+		// We start the experiment for different UAVs in different Threads to make it simultaneous
+		// This is useful when running a huge amount of UAVs, as it avoid a heavy CPU overhead in simulations.
+		StartExperimentThread[] threads = null;
+		int numUAVs = API.getArduSim().getNumUAVs();
+		if (numUAVs > 1) {
+			threads = new StartExperimentThread[numUAVs - 1];
+			for (int i=1; i<numUAVs; i++) {
+				threads[i-1] = new StartExperimentThread(i);
+			}
+			for (int i=1; i<numUAVs; i++) {
+				threads[i-1].start();
+			}
+		}
+		if (API.getCopter(0).getMissionHelper().start()) {
+			StartExperimentThread.UAVS_TESTING.incrementAndGet();
+		}
+		if (numUAVs > 1) {
+			for (int i=1; i<numUAVs; i++) {
+				try {
+					threads[i-1].join();
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+		if (StartExperimentThread.UAVS_TESTING.get() < numUAVs) {
+			API.getGUI(0).warn(this.protocolString, MBCAPText.START_MISSION_ERROR);
 		}
 	}
 
 	@Override
 	public void forceExperimentEnd() {
 		// When the UAVs are close to the last waypoint a LAND command is issued
-		int numUAVs = Tools.getNumUAVs();
+		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
-			Copter.landIfMissionEnded(i, UAVParam.LAST_WP_THRESHOLD);
+			API.getCopter(i).getMissionHelper().landIfEnded(UAVParam.LAST_WP_THRESHOLD);
 		}
 	}
 
 	@Override
 	public String getExperimentResults() {
 		// 1. Calculus of the experiment length and protocol times
-		long startTime = Tools.getExperimentStartTime();
-		int numUAVs = Tools.getNumUAVs();
+		ArduSim ardusim = API.getArduSim();
+		long startTime = ardusim.getExperimentStartTime();
+		int numUAVs = ardusim.getNumUAVs();
 		long[] uavsTotalTime = new long[numUAVs];
 		for (int i = 0; i < numUAVs; i++) {
-			uavsTotalTime[i] = Tools.getExperimentEndTime(i) - startTime;
+			uavsTotalTime[i] = ardusim.getExperimentEndTime()[i] - startTime;
 		}
 		StringBuilder sb = new StringBuilder(2000);
 		long[] uavNormalTime = new long[numUAVs];
@@ -299,8 +330,8 @@ public class MBCAPHelper extends ProtocolHelper {
 		long[] uavPassingTime = new long[numUAVs];
 		long[] uavEmergencyLandTime = new long[numUAVs];
 		for (int i = 0; i < numUAVs; i++) {
-			long endTime = Tools.getExperimentEndTime(i);
-			sb.append(MBCAPText.UAV_ID).append(" ").append(Tools.getIdFromPos(i)).append("\n");
+			long endTime = ardusim.getExperimentEndTime()[i];
+			sb.append(MBCAPText.UAV_ID).append(" ").append(API.getCopter(i).getID()).append("\n");
 			if (MBCAPParam.progress[i].size() == 0) {
 				// In this case, only the global time is available
 				uavNormalTime[i] = endTime - startTime;
@@ -360,17 +391,18 @@ public class MBCAPHelper extends ProtocolHelper {
 					break;
 				}
 			}
-			sb.append(MBCAPState.NORMAL.getName()).append(" = ").append(Tools.timeToString(0, uavNormalTime[i])).append(" (")
+			ValidationTools validationTools = API.getValidationTools();
+			sb.append(MBCAPState.NORMAL.getName()).append(" = ").append(validationTools.timeToString(0, uavNormalTime[i])).append(" (")
 			.append(String.format("%.2f%%", 100 * uavNormalTime[i] / (double) uavsTotalTime[i])).append(")\n");
-			sb.append(MBCAPState.STAND_STILL.getName()).append(" = ").append(Tools.timeToString(0, uavStandStillTime[i])).append(" (")
+			sb.append(MBCAPState.STAND_STILL.getName()).append(" = ").append(validationTools.timeToString(0, uavStandStillTime[i])).append(" (")
 			.append(String.format("%.2f%%", 100 * uavStandStillTime[i] / (double) uavsTotalTime[i])).append(")\n");
-			sb.append(MBCAPState.MOVING_ASIDE.getName()).append(" = ").append(Tools.timeToString(0, uavMovingTime[i])).append(" (")
+			sb.append(MBCAPState.MOVING_ASIDE.getName()).append(" = ").append(validationTools.timeToString(0, uavMovingTime[i])).append(" (")
 			.append(String.format("%.2f%%", 100 * uavMovingTime[i] / (double) uavsTotalTime[i])).append(")\n");
-			sb.append(MBCAPState.GO_ON_PLEASE.getName()).append(" = ").append(Tools.timeToString(0, uavGoOnPleaseTime[i])).append(" (")
+			sb.append(MBCAPState.GO_ON_PLEASE.getName()).append(" = ").append(validationTools.timeToString(0, uavGoOnPleaseTime[i])).append(" (")
 			.append(String.format("%.2f%%", 100 * uavGoOnPleaseTime[i] / (double) uavsTotalTime[i])).append(")\n");
-			sb.append(MBCAPState.OVERTAKING.getName()).append(" = ").append(Tools.timeToString(0, uavPassingTime[i])).append(" (")
+			sb.append(MBCAPState.OVERTAKING.getName()).append(" = ").append(validationTools.timeToString(0, uavPassingTime[i])).append(" (")
 			.append(String.format("%.2f%%", 100 * uavPassingTime[i] / (double) uavsTotalTime[i])).append(")\n");
-			sb.append(MBCAPState.EMERGENCY_LAND.getName()).append(" = ").append(Tools.timeToString(0, uavEmergencyLandTime[i])).append(" (")
+			sb.append(MBCAPState.EMERGENCY_LAND.getName()).append(" = ").append(validationTools.timeToString(0, uavEmergencyLandTime[i])).append(" (")
 			.append(String.format("%.2f%%", 100 * uavEmergencyLandTime[i] / (double) uavsTotalTime[i])).append(")\n");
 			sb.append(MBCAPText.SITUATIONS_SOLVED).append(" ").append(MBCAPParam.event.get(i)).append("\n");
 			sb.append(MBCAPText.DEADLOCKS).append(" ").append(MBCAPParam.eventDeadlockSolved.get(i)).append("\n");
@@ -406,7 +438,8 @@ public class MBCAPHelper extends ProtocolHelper {
 	@Override
 	public void logData(String folder, String baseFileName, long baseNanoTime) {
 		// Logging to file the error predicting the location during the experiment (and the beacons itself if needed).
-		int numUAVs = Tools.getNumUAVs();
+		ArduSim ardusim = API.getArduSim();
+		int numUAVs = ardusim.getNumUAVs();
 		@SuppressWarnings("unchecked")
 		List<ErrorPoint>[] realUAVPaths = new ArrayList[numUAVs];
 
@@ -419,7 +452,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			realPrevLocation = null;
 			realUAVPaths[i] = new ArrayList<ErrorPoint>();
 
-			List<LogPoint> fullPath = Tools.getUTMPath(i);
+			List<LogPoint> fullPath = ardusim.getUTMPath()[i];
 			for (int j = 0; j < fullPath.size(); j++) {
 				realPostLocation = fullPath.get(j);
 
@@ -455,15 +488,18 @@ public class MBCAPHelper extends ProtocolHelper {
 		ErrorPoint predictedLocation;
 		@SuppressWarnings("unchecked")
 		List<List<ErrorPoint>>[] totalPredictedLocations = new ArrayList[numUAVs];
-		boolean verboseStore = Tools.isVerboseStorageEnabled();
+		boolean verboseStore = ardusim.isVerboseStorageEnabled();
 		// For each UAV
+		FileTools fileTools = API.getFileTools();
+		ValidationTools validationTools = API.getValidationTools();
 		for (int i=0; i<numUAVs; i++) {
 			List<Beacon> beacons = MBCAPParam.beaconsStored[i];
 			totalPredictedLocations[i] = new ArrayList<List<ErrorPoint>>(beacons.size());
 			
+			long id = API.getCopter(i).getID();
 			if (verboseStore) {
 				// Store each beacon also
-				beaconsFile = new File(folder + File.separator + baseFileName + "_" + Tools.getIdFromPos(i) + "_" + MBCAPText.BEACONS_SUFIX);
+				beaconsFile = new File(folder + File.separator + baseFileName + "_" + id + "_" + MBCAPText.BEACONS_SUFIX);
 				sb1 = new StringBuilder(2000);
 				sb1.append("time(s),x1,y2,x2,y2,...,xn,yn\n");
 			}
@@ -472,20 +508,20 @@ public class MBCAPHelper extends ProtocolHelper {
 			Beacon beacon;
 			for (j=0; j<beacons.size(); j++) {
 				beacon = beacons.get(j);
-				time = Tools.round(((double) (beacon.time - baseNanoTime)) / 1000000000l, 9);
+				time = validationTools.roundDouble(((double) (beacon.time - baseNanoTime)) / 1000000000l, 9);
 				if (time >= 0 && time <= realUAVPaths[i].get(realUAVPaths[i].size() - 1).time
 						&& beacon.points!=null && beacon.points.size()>0) {
 					if (verboseStore) {
 						sb1.append(time);
 					}
 					
-					List<Point3D> locations = beacon.points;
+					List<Location3DUTM> locations = beacon.points;
 					List<ErrorPoint> predictions = new ArrayList<ErrorPoint>(beacon.points.size());
 					// For each point in each beacon
 					for (int k=0; k<locations.size(); k++) {
 						if (verboseStore) {
-							sb1.append(",").append(Tools.round(locations.get(k).x, 3))
-								.append(",").append(Tools.round(locations.get(k).y, 3));
+							sb1.append(",").append(validationTools.roundDouble(locations.get(k).x, 3))
+								.append(",").append(validationTools.roundDouble(locations.get(k).y, 3));
 						}
 						predictedLocation = new ErrorPoint(time + MBCAPParam.hopTime*k, locations.get(k).x, locations.get(k).y);
 						// Predicted positions for later calculus of the error in prediction
@@ -498,7 +534,7 @@ public class MBCAPHelper extends ProtocolHelper {
 				}
 			}
 			if (verboseStore) {
-				Tools.storeFile(beaconsFile, sb1.toString());
+				fileTools.storeFile(beaconsFile, sb1.toString());
 			}
 
 			// 3. Calculus of the mean and maximum distance error on each beacon
@@ -509,39 +545,39 @@ public class MBCAPHelper extends ProtocolHelper {
 				List<List<ErrorPoint>> predictedLocations = totalPredictedLocations[i];
 				double[] maxBeaconDistance = new double[numBeacons]; // One per beacon
 				double[] meanBeaconDistance = new double[numBeacons];
-				if (Tools.isVerboseStorageEnabled()) {
+				if (ardusim.isVerboseStorageEnabled()) {
 					// Log the line from the real to the predicted location, with maximum error
-					maxErrorFile = new File(folder + File.separator + baseFileName + "_" + Tools.getIdFromPos(i) + "_" + MBCAPText.MAX_ERROR_LINES_SUFIX);
+					maxErrorFile = new File(folder + File.separator + baseFileName + "_" + id + "_" + MBCAPText.MAX_ERROR_LINES_SUFIX);
 					sb2 = new StringBuilder(2000);
 				}
 				// For each beacon get the max and mean distance errors
 				for (j=0; j<predictedLocations.size(); j++) {
-					Pair<UTMCoordinates, UTMCoordinates> pair =
+					Pair<Location2DUTM, Location2DUTM> pair =
 							beaconErrorCalculation(realUAVPath, predictedLocations, j,
 									maxBeaconDistance, j, meanBeaconDistance);
-					if (pair!=null && Tools.isVerboseStorageEnabled()) {
+					if (pair!=null && ardusim.isVerboseStorageEnabled()) {
 						sb2.append("._LINE\n");
-						sb2.append(Tools.round(pair.getValue0().x, 3)).append(",")
-							.append(Tools.round(pair.getValue0().y, 3)).append("\n");
-						sb2.append(Tools.round(pair.getValue1().x, 3)).append(",")
-							.append(Tools.round(pair.getValue1().y, 3)).append("\n\n");
+						sb2.append(validationTools.roundDouble(pair.getValue0().x, 3)).append(",")
+							.append(validationTools.roundDouble(pair.getValue0().y, 3)).append("\n");
+						sb2.append(validationTools.roundDouble(pair.getValue1().x, 3)).append(",")
+							.append(validationTools.roundDouble(pair.getValue1().y, 3)).append("\n\n");
 					}
 				}
-				if (Tools.isVerboseStorageEnabled()) {
-					Tools.storeFile(maxErrorFile, sb2.toString());
+				if (ardusim.isVerboseStorageEnabled()) {
+					fileTools.storeFile(maxErrorFile, sb2.toString());
 				}
 				
 				// 4. Storage of the mean and maximum distance error on each beacon
-				beaconsErrorFile = new File(folder + File.separator + baseFileName + "_" + Tools.getIdFromPos(i) + "_" + MBCAPText.BEACON_TOTAL_ERROR_SUFIX);
+				beaconsErrorFile = new File(folder + File.separator + baseFileName + "_" + id + "_" + MBCAPText.BEACON_TOTAL_ERROR_SUFIX);
 				sb3 = new StringBuilder(2000);
 				sb3.append("max(m),mean(m)\n");
 				for (int k=0; k<maxBeaconDistance.length-1; k++) {
-					sb3.append(Tools.round(maxBeaconDistance[k], 3)).append(",")
-						.append(Tools.round(meanBeaconDistance[k], 3)).append("\n");
+					sb3.append(validationTools.roundDouble(maxBeaconDistance[k], 3)).append(",")
+						.append(validationTools.roundDouble(meanBeaconDistance[k], 3)).append("\n");
 				}
-				sb3.append(Tools.round(maxBeaconDistance[maxBeaconDistance.length-1], 3)).append(",")
-					.append(Tools.round(meanBeaconDistance[meanBeaconDistance.length-1], 3));
-				Tools.storeFile(beaconsErrorFile, sb3.toString());
+				sb3.append(validationTools.roundDouble(maxBeaconDistance[maxBeaconDistance.length-1], 3)).append(",")
+					.append(validationTools.roundDouble(meanBeaconDistance[meanBeaconDistance.length-1], 3));
+				fileTools.storeFile(beaconsErrorFile, sb3.toString());
 				
 				// 5. Calculus and storage of the mean and maximum distance error on each position of each beacon
 				// First, get the maximum size of the beacons
@@ -555,16 +591,16 @@ public class MBCAPHelper extends ProtocolHelper {
 				double[] maxTimeDistance = new double[size];
 				double[] meanTimeDistance = new double[size];
 				timeErrorCalculation(realUAVPath, predictedLocations, maxTimeDistance, meanTimeDistance);
-				timeErrorFile = new File(folder + File.separator + baseFileName + "_" + Tools.getIdFromPos(i) + "_" + MBCAPText.BEACON_POINT_ERROR_SUFIX);
+				timeErrorFile = new File(folder + File.separator + baseFileName + "_" + id + "_" + MBCAPText.BEACON_POINT_ERROR_SUFIX);
 				sb4 = new StringBuilder(2000);
 				sb4.append("max(m),mean(m)\n");
 				for (int k=0; k<maxTimeDistance.length-1; k++) {
-					sb4.append(Tools.round(maxTimeDistance[k], 3)).append(",")
-						.append(Tools.round(meanTimeDistance[k], 3)).append("\n");
+					sb4.append(validationTools.roundDouble(maxTimeDistance[k], 3)).append(",")
+						.append(validationTools.roundDouble(meanTimeDistance[k], 3)).append("\n");
 				}
-				sb4.append(Tools.round(maxTimeDistance[maxTimeDistance.length-1], 3)).append(",")
-					.append(Tools.round(meanTimeDistance[meanTimeDistance.length-1], 3));
-				Tools.storeFile(timeErrorFile, sb4.toString());
+				sb4.append(validationTools.roundDouble(maxTimeDistance[maxTimeDistance.length-1], 3)).append(",")
+					.append(validationTools.roundDouble(meanTimeDistance[meanTimeDistance.length-1], 3));
+				fileTools.storeFile(timeErrorFile, sb4.toString());
 			}
 		}
 	}
@@ -576,16 +612,16 @@ public class MBCAPHelper extends ProtocolHelper {
 	
 	/** Auxiliary method to calculate the mean and maximum error in the prediction error of each beacon.
 	 * Also returns the starting and ending point of the line that represents the maximum distance error in the beacon. */
-	private static Pair<UTMCoordinates, UTMCoordinates> beaconErrorCalculation(
+	private static Pair<Location2DUTM, Location2DUTM> beaconErrorCalculation(
 			ErrorPoint[] realUAVPath, List<List<ErrorPoint>> predictedLocations, int predictedPos,
 			double[] maxBeaconDistance, int distancePos, double[] meanBeaconDistance) {
 		double dist;
 		int num = 0;
-		UTMCoordinates ini, fin = ini = null;
+		Location2DUTM ini, fin = ini = null;
 		List<ErrorPoint> predictedLocs = predictedLocations.get(predictedPos);
 		ErrorPoint predictedLocation, realPrev, realPost;
 		predictedLocation = null;
-		UTMCoordinates realIntersection;
+		Location2DUTM realIntersection;
 		int prev, post;
 
 		// Calculus for each one of the predicted locations
@@ -611,7 +647,7 @@ public class MBCAPHelper extends ProtocolHelper {
 				double incT = Math.abs((predictedLocation.time-realPrev.time)/(realPost.time-realPrev.time));
 				double x = realPrev.x + (realPost.x-realPrev.x) * incT;
 				double y = realPrev.y + (realPost.y-realPrev.y) * incT;
-				realIntersection = new UTMCoordinates(x, y);
+				realIntersection = new Location2DUTM(x, y);
 				
 				dist = predictedLocation.distance(realIntersection);
 				meanBeaconDistance[distancePos] = meanBeaconDistance[distancePos] + dist;
@@ -644,7 +680,7 @@ public class MBCAPHelper extends ProtocolHelper {
 		int[] num = new int[maxTimeDistance.length];
 		List<ErrorPoint> predictedLocs;
 		ErrorPoint predictedLocation, realPrev, realPost;
-		UTMCoordinates realIntersection;
+		Location2DUTM realIntersection;
 		int prev, post;
 
 		// For each beacon
@@ -673,7 +709,7 @@ public class MBCAPHelper extends ProtocolHelper {
 					double incT = Math.abs((predictedLocation.time-realPrev.time)/(realPost.time-realPrev.time));
 					double x = realPrev.x + (realPost.x-realPrev.x) * incT;
 					double y = realPrev.y + (realPost.y-realPrev.y) * incT;
-					realIntersection = new UTMCoordinates(x, y);
+					realIntersection = new Location2DUTM(x, y);
 					
 					dist = predictedLocation.distance(realIntersection);
 					meanTimeDistance[j] = meanTimeDistance[j] + dist;
@@ -694,8 +730,8 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 	
 	/** Predicts the future positions of the UAV. Returns empty list in case of problems. */
-	public static List<Point3D> getPredictedPath(int numUAV, double speed, double acceleration, UTMCoordinates currentUTMLocation, double currentZ) {
-		List<Point3D> predictedPath = new ArrayList<Point3D>(MBCAPParam.POINTS_SIZE);
+	public static List<Location3DUTM> getPredictedPath(int numUAV, double speed, double acceleration, Location2DUTM currentUTMLocation, double currentZ) {
+		List<Location3DUTM> predictedPath = new ArrayList<Location3DUTM>(MBCAPParam.POINTS_SIZE);
 		// Multiple cases to study:
 		
 		// 1. At the beginning, without GPS, the initial position can be null
@@ -705,45 +741,46 @@ public class MBCAPHelper extends ProtocolHelper {
 		
 		// 2. If the UAV is in the "go on, please" state, only the current position and the predicted collision risk location are sent
 		if (MBCAPParam.state[numUAV] == MBCAPState.GO_ON_PLEASE) {
-			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
-			Point3D riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(MBCAPParam.selfBeacon.get(numUAV).idAvoiding);
+			predictedPath.add(new Location3DUTM(currentUTMLocation.x, currentUTMLocation.y, currentZ));
+			Location3DUTM riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(MBCAPParam.selfBeacon.get(numUAV).idAvoiding);
 			if (riskLocation != null) {
 				predictedPath.add(riskLocation);
 			} else {
-				predictedPath.add(new Point3D(0, 0, 0));	// If no risk point was detected, a fake point is sent
+				predictedPath.add(new Location3DUTM(0, 0, 0));	// If no risk point was detected, a fake point is sent
 			}
 			return predictedPath;
 		}
 
 		// 3. If moving slowly or still but not in the "stand still" state, only the current position is sent
 		if (speed < MBCAPParam.minSpeed && MBCAPParam.state[numUAV] != MBCAPState.STAND_STILL) {
-			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
+			predictedPath.add(new Location3DUTM(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 			return predictedPath;
 		}
 
 		// 4. If the UAV is moving aside, send the current position and prediction towards the destination safe point
 		if (MBCAPParam.state[numUAV] == MBCAPState.MOVING_ASIDE) {
-			UTMCoordinates destination = MBCAPParam.targetLocationUTM.get(numUAV);
+			Location2DUTM destination = MBCAPParam.targetLocationUTM.get(numUAV);
 			double length = destination.distance(currentUTMLocation);
 			int numLocations1 = (int)Math.ceil(length/(speed * MBCAPParam.hopTime));
 			int numLocations2 = (int)Math.ceil(MBCAPHelper.getReactionDistance(speed) / (speed * MBCAPParam.hopTime));
 			int numLocations = Math.min(numLocations1, numLocations2);
-			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
+			predictedPath.add(new Location3DUTM(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 			double xUTM, yUTM;
 			double incX = (destination.x - currentUTMLocation.x) * (speed * MBCAPParam.hopTime)/length;
 			double incY = (destination.y - currentUTMLocation.y) * (speed * MBCAPParam.hopTime)/length;
 			for (int i=1; i<numLocations; i++) {
 				xUTM = currentUTMLocation.x + i*incX;
 				yUTM = currentUTMLocation.y + i*incY;
-				predictedPath.add(new Point3D(xUTM, yUTM, currentZ));
+				predictedPath.add(new Location3DUTM(xUTM, yUTM, currentZ));
 			}
 			return predictedPath;
 		}
 
 		// Reasonable hypothesis: The UAV moves in the waypoint list in increasing order
 		// First of all, we have to locate the waypoint the UAV is moving toward (posNextWaypoint)
-		int currentWaypoint = Copter.getCurrentWaypoint(numUAV);
-		List<WaypointSimplified> mission = Tools.getUAVMissionSimplified(numUAV);
+		MissionHelper helper = API.getCopter(numUAV).getMissionHelper();
+		int currentWaypoint = helper.getCurrentWaypoint();
+		List<WaypointSimplified> mission = helper.getSimplified();
 		if (mission != null) {
 			int posNextWaypoint = 0;
 			boolean found = false;
@@ -754,26 +791,26 @@ public class MBCAPHelper extends ProtocolHelper {
 				}
 			}
 			if (!found) {
-				GUI.log(numUAV, MBCAPText.WAYPOINT_LOST);
+				API.getGUI(numUAV).logUAV(MBCAPText.WAYPOINT_LOST);
 				return predictedPath;
 			}
 			
 			// 5. In the stand still state, send remaining waypoints so the other UAV could decide whether to move aside or not
 			if (MBCAPParam.state[numUAV] == MBCAPState.STAND_STILL) {
 				// The first point is the current position
-				predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
+				predictedPath.add(new Location3DUTM(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 				// The rest of the points are the waypoints not reached jet, if they fit in the beacon
 				int locations = 1;
 				int i=posNextWaypoint;
 				while (i<mission.size() && locations < MBCAPParam.MAX_BEACON_LOCATIONS
 						&& mission.get(i).distance(currentUTMLocation) < MBCAPParam.MAX_WAYPOINT_DISTANCE) {
-					predictedPath.add(new Point3D(mission.get(i).x, mission.get(i).y, mission.get(i).z));
+					predictedPath.add(new Location3DUTM(mission.get(i).x, mission.get(i).y, mission.get(i).z));
 					locations++;
 					i++;
 				}
 				// May be the next waypoint is too far, so we add an additional waypoint
 				if (i<mission.size() && locations < MBCAPParam.MAX_BEACON_LOCATIONS) {
-					predictedPath.add(new Point3D(mission.get(i).x, mission.get(i).y, mission.get(i).z));
+					predictedPath.add(new Location3DUTM(mission.get(i).x, mission.get(i).y, mission.get(i).z));
 					locations++;
 				}
 				return predictedPath;
@@ -783,17 +820,17 @@ public class MBCAPHelper extends ProtocolHelper {
 			if (posNextWaypoint == mission.size()) {
 				posNextWaypoint--; // So it could be drawn until the end
 				if (currentUTMLocation.distance(mission.get(posNextWaypoint)) < MBCAPParam.DISTANCE_TO_MISSION_END) {
-					predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
+					predictedPath.add(new Location3DUTM(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 					return predictedPath;
 				}
 			}
 
 			// 7. General case
 			// Initial location calculated depending on the protocol version
-			Pair<UTMCoordinates, Integer> currentLocation = MBCAPHelper.getCurrentLocation(numUAV, mission, currentUTMLocation, posNextWaypoint);
+			Pair<Location2DUTM, Integer> currentLocation = MBCAPHelper.getCurrentLocation(numUAV, mission, currentUTMLocation, posNextWaypoint);
 			currentUTMLocation = currentLocation.getValue0();
 			posNextWaypoint = currentLocation.getValue1();
-			predictedPath.add(new Point3D(currentUTMLocation.x, currentUTMLocation.y, currentZ));
+			predictedPath.add(new Location3DUTM(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 			// Calculate the rest of the points
 			MBCAPHelper.getPredictedLocations(numUAV, speed, acceleration, currentUTMLocation, mission, posNextWaypoint, currentWaypoint, currentZ, predictedPath);
 		}
@@ -802,8 +839,8 @@ public class MBCAPHelper extends ProtocolHelper {
 
 	/** Calculates the first point of the predicted positions list.
 	 * <p>It also decides which is the next waypoint the UAV is moving towards.</p> */
-	private static Pair<UTMCoordinates, Integer> getCurrentLocation(int numUAV, List<WaypointSimplified> mission, UTMCoordinates currentUTMLocation, int posNextWaypoint) {
-		UTMCoordinates baseLocation = null;
+	private static Pair<Location2DUTM, Integer> getCurrentLocation(int numUAV, List<WaypointSimplified> mission, Location2DUTM currentUTMLocation, int posNextWaypoint) {
+		Location2DUTM baseLocation = null;
 		int nextWaypointPosition = posNextWaypoint;
 		if (MBCAPParam.projectPath.get(numUAV) == 0) {
 			// The next waypoint position has been already set
@@ -819,11 +856,11 @@ public class MBCAPHelper extends ProtocolHelper {
 				// In any other case... (there is a previous segment in the planned path)
 				// The current location can be projected over the previous or the following segment
 				WaypointSimplified sp1 = mission.get(posNextWaypoint-2);	// Segment 1 previous point
-				UTMCoordinates location1 = new UTMCoordinates(sp1.x, sp1.y);
+				Location2DUTM location1 = new Location2DUTM(sp1.x, sp1.y);
 				WaypointSimplified sp2 = mission.get(posNextWaypoint-1);	// Segments 1-2 joining point
-				UTMCoordinates location2 = new UTMCoordinates(sp2.x, sp2.y);
+				Location2DUTM location2 = new Location2DUTM(sp2.x, sp2.y);
 				WaypointSimplified sp3 = mission.get(posNextWaypoint);		// Segment 2 final point
-				UTMCoordinates location3 = new UTMCoordinates(sp3.x, sp3.y);
+				Location2DUTM location3 = new Location2DUTM(sp3.x, sp3.y);
 
 				// Detect if moving towards the conflicting waypoint or from it
 				boolean waypointOvertaken = MBCAPHelper.isMovingAway(numUAV, location2);
@@ -840,8 +877,8 @@ public class MBCAPHelper extends ProtocolHelper {
 
 	/** Calculates the predicted positions. */
 	private static void getPredictedLocations(int numUAV, double speed, double acceleration,
-			UTMCoordinates currentUTMLocation, List<WaypointSimplified> mission, int posNextWaypoint, int currentWaypoint, double currentZ,
-			List<Point3D> predictedPath) {
+			Location2DUTM currentUTMLocation, List<WaypointSimplified> mission, int posNextWaypoint, int currentWaypoint, double currentZ,
+			List<Location3DUTM> predictedPath) {
 		// 1. Calculus of the segments over which we have to obtain the points
 		List<Double> distances = new ArrayList<Double>(MBCAPParam.DISTANCES_SIZE);
 		double totalDistance = 0.0;
@@ -905,7 +942,7 @@ public class MBCAPHelper extends ProtocolHelper {
 					xp = prevWaypoint.x + (nextWaypoint.x - prevWaypoint.x) * (incDistance * (locations + 1)) / currentSegmentLength;
 					yp = prevWaypoint.y + (nextWaypoint.y - prevWaypoint.y) * (incDistance * (locations + 1)) / currentSegmentLength;
 					zp = prevWaypoint.z + (nextWaypoint.z - prevWaypoint.z) * (incDistance * (locations + 1)) / currentSegmentLength;
-					predictedPath.add(new Point3D(xp, yp, zp));
+					predictedPath.add(new Location3DUTM(xp, yp, zp));
 					locations++;
 					remainingSegment = remainingSegment - incDistance;
 					distanceAcum = distanceAcum + incDistance;
@@ -934,7 +971,7 @@ public class MBCAPHelper extends ProtocolHelper {
 					xp = prevWaypoint.x + (nextWaypoint.x - prevWaypoint.x) * incDistance / currentSegmentLength;
 					yp = prevWaypoint.y + (nextWaypoint.y - prevWaypoint.y) * incDistance / currentSegmentLength;
 					zp = prevWaypoint.z + (nextWaypoint.z - prevWaypoint.z) * incDistance / currentSegmentLength;
-					predictedPath.add(new Point3D(xp, yp, zp));
+					predictedPath.add(new Location3DUTM(xp, yp, zp));
 					locations++;
 
 					longPrev = d;
@@ -949,7 +986,7 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 
 	/** Gets the intersection point of a line (prev->post) and the perpendicular one which includes a third point (currentUTMLocation). */
-	private static UTMCoordinates getIntersection(Point2D.Double currentUTMLocation, Point2D.Double prev, Point2D.Double post) {
+	private static Location2DUTM getIntersection(Point2D.Double currentUTMLocation, Point2D.Double prev, Point2D.Double post) {
 		double currentX = currentUTMLocation.x;
 		double currentY = currentUTMLocation.y;
 		double prevX = prev.x;
@@ -973,16 +1010,16 @@ public class MBCAPHelper extends ProtocolHelper {
 			x = (currentY - prevY + currentX / slope + slope * prevX) / (slope + 1 / slope);
 			y = prevY + slope*(x - prevX);
 		}
-		return new UTMCoordinates(x, y);
+		return new Location2DUTM(x, y);
 	}
 	
 	/** Calculates if two UAVs have collision risk.
 	 * <p>Requires to be in the normal protocol state.
 	 * Returns null if no risk has been detected, or the location of the risky point otherwise.</p> */
-	public static Point3D hasCollisionRisk(int numUAV, Beacon selfBeacon, Beacon receivedBeacon) {
+	public static Location3DUTM hasCollisionRisk(int numUAV, Beacon selfBeacon, Beacon receivedBeacon) {
 		double distance;
 		long selfTime, beaconTime;
-		Point3D selfPoint, receivedPoint;
+		Location3DUTM selfPoint, receivedPoint;
 		boolean checkTime = receivedBeacon.state == MBCAPState.NORMAL.getId()
 				&& receivedBeacon.speed >= MBCAPParam.minSpeed && receivedBeacon.points.size() > 1
 				&& selfBeacon.speed >= MBCAPParam.minSpeed && selfBeacon.points.size() > 1;
@@ -1038,14 +1075,14 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 	
 	/** Calculates if the current UAV has overtaken another UAV. */
-	public static boolean overtakingFinished(int numUAV, long avoidingId, Point3D target) {
+	public static boolean overtakingFinished(int numUAV, long avoidingId, Location3DUTM target) {
 		// Overtaken happened if the distance to the target UAV and to the risk location is increasing
 		boolean success = MBCAPHelper.isMovingAway(numUAV, target);
 		if (!success) {
 			return false;
 		}
 		if (MBCAPParam.impactLocationUTM[numUAV] != null) {
-			Point3D riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(avoidingId);
+			Location3DUTM riskLocation = MBCAPParam.impactLocationUTM[numUAV].get(avoidingId);
 			if (riskLocation != null) {
 				success = MBCAPHelper.isMovingAway(numUAV, riskLocation);
 				if (!success) {
@@ -1061,7 +1098,7 @@ public class MBCAPHelper extends ProtocolHelper {
 	/** Calculates if the current UAV is moving away from a target point. */
 	public static boolean isMovingAway(int numUAV, Point2D.Double target) {
 		// true if the distance to the target is increasing
-		UTMCoordinates[] lastLocations = Copter.getLastKnownUTMLocations(numUAV);
+		Location2DUTM[] lastLocations = API.getCopter(numUAV).getLocationUTMLastKnown();
 		if (lastLocations.length <= 1) {
 			return false;	// There is no information enough to decide
 		}
@@ -1078,22 +1115,22 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 	
 	/** Checks if the UAV has to move aside, and it gets that safe point when needed. */
-	public static boolean needsToMoveAside(int numUAV, List<Point3D> avoidPredictedLocations, double plannedSpeed) {
+	public static boolean needsToMoveAside(int numUAV, List<Location3DUTM> avoidPredictedLocations, double plannedSpeed) {
 		// Errors detection
 		if (avoidPredictedLocations == null || avoidPredictedLocations.size() <= 1) {
-			GUI.log(numUAV, MBCAPText.REPOSITION_ERROR_1);
+			API.getGUI(numUAV).logUAV(MBCAPText.REPOSITION_ERROR_1);
 			return false;
 		}
 		int locations = avoidPredictedLocations.size();
 		
 		
-		Point3D[][] segment = new Point3D[locations - 1][2];
+		Location3DUTM[][] segment = new Location3DUTM[locations - 1][2];
 		for (int i = 0; i < segment.length; i++) {
 			segment[i][0] = avoidPredictedLocations.get(i);
 			segment[i][1] = avoidPredictedLocations.get(i+1);
 		}
 
-		UTMCoordinates currentUTMLocation = Copter.getUTMLocation(numUAV);
+		Location2DUTM currentUTMLocation = API.getCopter(numUAV).getLocationUTM();
 		
 		// Calculus of the angle with each segment with the previous and next segment
 		double[][] angles;
@@ -1118,10 +1155,10 @@ public class MBCAPHelper extends ProtocolHelper {
 		}
 		
 		// Checking the distance of the UAV to the segments of the mission of the other UAV, and to the vertex of the mission
-		UTMCoordinates newLocation = null;
+		Location2DUTM newLocation = null;
 		boolean isInSafePlace = false;
 		boolean foundConflict;
-		UTMCoordinates auxLocation;
+		Location2DUTM auxLocation;
 		double waypointThreshold = MBCAPHelper.getWaypointThreshold(plannedSpeed);
 		while (!isInSafePlace) {
 			foundConflict = false;
@@ -1136,7 +1173,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			}
 			if (!foundConflict) {
 				// Check if the UAV is close to any vertex (waypoint) of the mission
-				Point3D currentWaypoint;
+				Location3DUTM currentWaypoint;
 				for (int i = 1; i < locations - 1; i++) {
 					currentWaypoint = avoidPredictedLocations.get(i);
 					auxLocation = MBCAPHelper.getWaypointSafeLocation(currentUTMLocation, currentWaypoint);
@@ -1155,7 +1192,7 @@ public class MBCAPHelper extends ProtocolHelper {
 		// If new coordinates have been found, it means that the UAV must move to a safer position
 		if (newLocation != null) {
 			MBCAPParam.targetLocationUTM.set(numUAV, newLocation);
-			MBCAPParam.targetLocationPX.set(numUAV, GUI.locatePoint(newLocation.x, newLocation.y));
+			MBCAPParam.targetLocationPX.set(numUAV, API.getGUI(numUAV).locatePoint(newLocation.x, newLocation.y));
 			return true;
 		}
 		return false;
@@ -1214,8 +1251,8 @@ public class MBCAPHelper extends ProtocolHelper {
 	
 	/** Calculates the safe place to move aside from a path segment.
 	 * <p>Returns null if there is no need of moving aside.</p> */
-	private static UTMCoordinates getSegmentSafeLocation(UTMCoordinates currentLocation,
-			Point3D prev, Point3D post, double[] angles, double plannedSpeed, double waypointThreshold) {
+	private static Location2DUTM getSegmentSafeLocation(Location2DUTM currentLocation,
+			Location3DUTM prev, Location3DUTM post, double[] angles, double plannedSpeed, double waypointThreshold) {
 		double currentX = currentLocation.x;
 		double currentY = currentLocation.y;
 		double prevX = prev.x;
@@ -1224,7 +1261,7 @@ public class MBCAPHelper extends ProtocolHelper {
 		double postY = post.y;
 		double x, y;
 		
-		UTMCoordinates intersection = MBCAPHelper.getIntersection(currentLocation, prev, post);
+		Location2DUTM intersection = MBCAPHelper.getIntersection(currentLocation, prev, post);
 		
 		// currentLocation out of the segment case
 		double incX = postX - prevX;
@@ -1342,7 +1379,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			}
 			y = currentY - incX / incY * (x - currentX);
 		}
-		UTMCoordinates res = new UTMCoordinates(x, y);
+		Location2DUTM res = new Location2DUTM(x, y);
 		
 		// Returns the safe place in UTM coordinates
 		return res;
@@ -1405,7 +1442,7 @@ public class MBCAPHelper extends ProtocolHelper {
 	
 	/** Calculates the safe place to move aside from a waypoint.
 	 * <p>Returns null if there is no need of moving aside.</p> */
-	private static UTMCoordinates getWaypointSafeLocation(UTMCoordinates currentUTMLocation, Point3D currentWaypoint) {
+	private static Location2DUTM getWaypointSafeLocation(Location2DUTM currentUTMLocation, Location3DUTM currentWaypoint) {
 		double currentDistance = currentUTMLocation.distance(currentWaypoint);
 		if (currentDistance > MBCAPParam.safePlaceDistance) {
 			return null;
@@ -1441,7 +1478,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			}
 			y = currentWaypoint.y + incY / incX * (x - currentWaypoint.x);
 		}
-		return new UTMCoordinates(x, y);
+		return new Location2DUTM(x, y);
 	}
 
 }

@@ -26,9 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 
- * <DIV lang="en"></DIV>
- * <DIV lang="ja"></DIV>
- * 
  * @author Makoto YUI (yuin405+xbird@gmail.com)
  */
 public class AtomicFloat extends Number {

@@ -3,7 +3,7 @@ package main.cpuHelper;
 import main.Param;
 
 /** Stores the current CPU usage level at a certain instant.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class CPUData {
 	
