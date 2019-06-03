@@ -3,7 +3,7 @@ package mbcap.pojo;
 import mbcap.pojo.MBCAPState;
 
 /** This class generates objects with the MBCAP protocol state and the instant when the data was retrieved.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class ProgressState {
 	public MBCAPState state;

@@ -1,15 +1,15 @@
 package mbcap.logic;
 
 import api.API;
-import api.Copter;
-import api.Tools;
-import api.WaypointReachedListener;
-import main.communications.CommLink;
+import main.api.ArduSim;
+import main.api.Copter;
+import main.api.WaypointReachedListener;
+import main.api.communications.CommLink;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 
 /** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class BeaconingThread extends Thread implements WaypointReachedListener {
 	
@@ -18,6 +18,8 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 	
 	private int numUAV; // UAV identifier, beginning from 0
 	private CommLink link;
+	private Copter copter;
+	private ArduSim ardusim;
 
 	@SuppressWarnings("unused")
 	private BeaconingThread() {}
@@ -25,35 +27,35 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 	public BeaconingThread(int numUAV) {
 		this.numUAV = numUAV;
 		this.link = API.getCommLink(numUAV);
+		this.copter = API.getCopter(numUAV);
+		this.ardusim = API.getArduSim();
 	}
 	
 	@Override
-	public void onWaypointReached(int numSeq) {
+	public void onWaypointReached(int numUAV, int numSeq) {
 		// Project the predicted path over the planned mission
-		MBCAPParam.projectPath.set(numUAV, 1);
-	}
-
-	@Override
-	public int getNumUAV() {
-		return this.numUAV;
+		if (this.numUAV == numUAV) {
+			MBCAPParam.projectPath.set(numUAV, 1);
+		}
 	}
 
 	@Override
 	public void run() {
-		while (!Tools.isExperimentInProgress() || !Copter.isFlying(numUAV)) {
-			Tools.waiting(MBCAPParam.SHORT_WAITING_TIME);
+		while (!ardusim.isExperimentInProgress() || !copter.isFlying()) {
+			ardusim.sleep(MBCAPParam.SHORT_WAITING_TIME);
 		}
 		
 		Beacon selfBeacon = null;
 		byte[] sendBuffer = null;
-		int waitingTime;
+		long waitingTime;
 		short prevState = 0;
 
 		// Send beacons while the UAV is flying during the experiment
 		// The protocol is stopped when two UAVs collide
 		long cicleTime = System.currentTimeMillis();
-		while (Tools.isExperimentInProgress() && Copter.isFlying(numUAV)
-				&& !Tools.isCollisionDetected()) {
+		ArduSim ardusim = API.getArduSim();
+		while (ardusim.isExperimentInProgress() && copter.isFlying()
+				&& !ardusim.collisionIsDetected()) {
 			// Each beacon is sent a number of times before renewing the predicted positions
 			for (long i = 0; i < MBCAPParam.numBeacons; i++) {
 				
@@ -65,9 +67,9 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 					prevState = selfBeacon.state;
 
 					// Beacon store for logging purposes
-					if (Tools.isVerboseStorageEnabled()
-							&& Tools.getExperimentEndTime(numUAV) == 0) {
-						MBCAPParam.beaconsStored[numUAV].add(selfBeacon.clone());
+					if (ardusim.isVerboseStorageEnabled()
+							&& ardusim.getExperimentEndTime()[numUAV] == 0) {
+						MBCAPParam.beaconsStored[numUAV].add(new Beacon(selfBeacon));
 					}
 				} else {
 					// In any other case, only time, state and idAvoiding are updated
@@ -80,9 +82,9 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 						prevState = selfBeacon.state;
 
 						// Beacon store for logging purposes
-						if (Tools.isVerboseStorageEnabled()
-								&& Tools.getExperimentEndTime(numUAV) == 0) {
-							MBCAPParam.beaconsStored[numUAV].add(selfBeacon.clone());
+						if (ardusim.isVerboseStorageEnabled()
+								&& ardusim.getExperimentEndTime()[numUAV] == 0) {
+							MBCAPParam.beaconsStored[numUAV].add(new Beacon(selfBeacon));
 						}
 						i = 0;	// Reset value to start again
 					}
@@ -92,9 +94,9 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 				}
 
 				cicleTime = cicleTime + MBCAPParam.beaconingPeriod;
-				waitingTime = (int)(cicleTime - System.currentTimeMillis());
+				waitingTime = cicleTime - System.currentTimeMillis();
 				if (waitingTime > 0) {
-					Tools.waiting(waitingTime);
+					ardusim.sleep(waitingTime);
 				}
 			}
 		}

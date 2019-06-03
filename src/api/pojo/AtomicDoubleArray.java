@@ -16,10 +16,10 @@ package api.pojo;
 import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
 
-import api.pojo.atomicDoubleArrayHelpers.CanIgnoreReturnValue;
-import api.pojo.atomicDoubleArrayHelpers.GwtIncompatible;
-
 import java.util.concurrent.atomic.AtomicLongArray;
+
+import main.api.atomicDoubleArrayHelpers.CanIgnoreReturnValue;
+import main.api.atomicDoubleArrayHelpers.GwtIncompatible;
 
 /**
  * A {@code double} array in which elements may be updated atomically. See the {@link

@@ -16,13 +16,14 @@ import java.util.Locale;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
-import api.GUI;
-import api.Tools;
+import api.API;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** 
+ * Thread used to measure the CPU usage.
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class CPUUsageThread extends Thread {
 	
@@ -74,14 +75,14 @@ public class CPUUsageThread extends Thread {
 						} catch (SigarException se) {}
 						delta = prevTime + interval - System.currentTimeMillis();
 						if (delta > 0) {
-							Tools.waiting((int)delta);
+							API.getArduSim().sleep(delta);
 						}
 					}
 				} catch (SigarException e) {
-					GUI.log(Text.CPU_ERROR_2);
+					ArduSimTools.logGlobal(Text.CPU_ERROR_2);
 				}
 			} catch (IOException e2) {
-				GUI.log(Text.CPU_ERROR_1);
+				ArduSimTools.logGlobal(Text.CPU_ERROR_1);
 			}
 		}
 		
@@ -191,13 +192,13 @@ public class CPUUsageThread extends Thread {
 							}
 						} catch (IOException e) {}
 					} catch (IOException e) {
-						GUI.log(Text.CPU_ERROR_4);
+						ArduSimTools.logGlobal(Text.CPU_ERROR_4);
 					}
 				}catch (IOException e) {
-					GUI.log(Text.CPU_ERROR_3);
+					ArduSimTools.logGlobal(Text.CPU_ERROR_3);
 				}
 			} catch (IOException e1) {
-				GUI.log(Text.CPU_ERROR_2);
+				ArduSimTools.logGlobal(Text.CPU_ERROR_2);
 			}
 		}
 	}

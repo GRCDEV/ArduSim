@@ -18,19 +18,20 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import api.GUI;
-import api.ProtocolHelper;
-import api.Tools;
-import api.pojo.Point3D;
+import api.API;
 import api.pojo.StatusPacket;
+import api.pojo.location.Location3DUTM;
 import main.Param.SimulatorState;
+import main.api.ValidationTools;
+import main.sim.gui.VerticalFlowLayout;
 import mbcap.logic.MBCAPPCCompanionListener;
 import mbcap.logic.MBCAPText;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.MBCAPState;
-import sim.gui.VerticalFlowLayout;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** 
+ * Dialog opened in the PC Companion to monitor the messages sent among the UAVs.
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MBCAPPCCompanionDialog extends JDialog {
 
@@ -52,7 +53,7 @@ public class MBCAPPCCompanionDialog extends JDialog {
 
 	public MBCAPPCCompanionDialog(Frame owner) {
 		super(owner);
-		setTitle(ProtocolHelper.selectedProtocol);
+		setTitle(API.getArduSim().getSelectedProtocolName());
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
 		{
@@ -80,7 +81,7 @@ public class MBCAPPCCompanionDialog extends JDialog {
 			panel_2.setLayout(new BorderLayout(0, 0));
 			panel_2.add(panel_1);
 
-			connected = GUI.getDetectedUAVs();
+			connected = API.getGUI(0).getDetectedUAVs();
 			int count = 0;
 			for (int i = 0; i < connected.length; i++) {
 				if (connected[i].status == SimulatorState.READY_FOR_TEST
@@ -120,15 +121,16 @@ public class MBCAPPCCompanionDialog extends JDialog {
 			final Beacon b = beacon;
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
+					ValidationTools validationTools = API.getValidationTools();
 					tableModel.setValueAt(b.event, row, 1);
 					tableModel.setValueAt(MBCAPState.getSatateById(b.state), row, 2);
 					tableModel.setValueAt(b.idAvoiding, row, 3);
-					tableModel.setValueAt(Tools.round(b.speed, 3), row, 4);
+					tableModel.setValueAt(validationTools.roundDouble(b.speed, 3), row, 4);
 					if (b.points.size() > 0) {
-						Point3D p = b.points.get(0);
-						tableModel.setValueAt(Tools.round(p.x, 3), row, 5);
-						tableModel.setValueAt(Tools.round(p.y, 3), row, 6);
-						tableModel.setValueAt(Tools.round(p.z, 2), row, 7);
+						Location3DUTM p = b.points.get(0);
+						tableModel.setValueAt(validationTools.roundDouble(p.x, 3), row, 5);
+						tableModel.setValueAt(validationTools.roundDouble(p.y, 3), row, 6);
+						tableModel.setValueAt(validationTools.roundDouble(p.z, 2), row, 7);
 					}
 					resizeColumnWidth();
 				}

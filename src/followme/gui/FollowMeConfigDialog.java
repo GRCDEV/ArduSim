@@ -31,20 +31,25 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import api.GUI;
-import api.Tools;
-import api.pojo.formations.FlightFormation;
-import api.pojo.formations.FlightFormation.Formation;
+import api.API;
 import followme.logic.FollowMeParam;
 import followme.logic.FollowMeText;
 import followme.pojo.RemoteInput;
 import main.Text;
+import main.api.GUI;
+import main.api.ValidationTools;
+import main.api.formations.FlightFormation;
+import main.api.formations.FlightFormation.Formation;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
 public class FollowMeConfigDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
+	
+	private GUI gui;
+	private ValidationTools validationTools;
+	
 	private final JPanel contentPanel = new JPanel();
 	private JComboBox<String> groundComboBox;
 	private JComboBox<String> airComboBox;
@@ -61,6 +66,10 @@ public class FollowMeConfigDialog extends JDialog {
 
 	public FollowMeConfigDialog() {
 		setBounds(100, 100, 450, 300);
+		
+		this.gui = API.getGUI(0);
+		this.validationTools = API.getValidationTools();
+		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{355, 0};
 		gridBagLayout.rowHeights = new int[]{163, 0};
@@ -237,7 +246,7 @@ public class FollowMeConfigDialog extends JDialog {
 			contentPanel.add(groundFormationDistanceLabel, gbc_groundFormationDistanceLabel);
 		}
 		{
-			groundTextField = new JTextField("" + Tools.round(FlightFormation.getGroundFormationDistance(), 6));
+			groundTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getGroundFormationDistance(), 6));
 			groundTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_groundTextField = new GridBagConstraints();
 			gbc_groundTextField.insets = new Insets(0, 0, 5, 5);
@@ -307,7 +316,7 @@ public class FollowMeConfigDialog extends JDialog {
 			contentPanel.add(lblFlightDistance, gbc_lblFlightDistance);
 		}
 		{
-			flyingTextField = new JTextField("" + Tools.round(FlightFormation.getFlyingFormationDistance(), 6));
+			flyingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getFlyingFormationDistance(), 6));
 			flyingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_flyingTextField = new GridBagConstraints();
 			gbc_flyingTextField.insets = new Insets(0, 0, 5, 5);
@@ -379,7 +388,7 @@ public class FollowMeConfigDialog extends JDialog {
 			contentPanel.add(lblLandDistance, gbc_lblLandDistance);
 		}
 		{
-			landingTextField = new JTextField("" + Tools.round(FlightFormation.getLandingFormationDistance(), 6));
+			landingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getLandingFormationDistance(), 6));
 			landingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_landingTextField = new GridBagConstraints();
 			gbc_landingTextField.insets = new Insets(0, 0, 5, 5);
@@ -429,7 +438,7 @@ public class FollowMeConfigDialog extends JDialog {
 					final File selection;
 					JFileChooser chooser;
 					chooser = new JFileChooser();
-					chooser.setCurrentDirectory(Tools.getCurrentFolder());
+					chooser.setCurrentDirectory(API.getFileTools().getCurrentFolder());
 					chooser.setDialogTitle(FollowMeText.SIMULATED_DATA_DIALOG_TITLE);
 					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 					FileNameExtensionFilter filter = new FileNameExtensionFilter(FollowMeText.DATA_TXT_FILE, Text.FILE_EXTENSION_TXT);
@@ -462,7 +471,7 @@ public class FollowMeConfigDialog extends JDialog {
 								dataTextField.setText("");
 							}
 						});
-						GUI.warn(Text.VALIDATION_WARNING, FollowMeText.SIMULATED_DATA_ERROR);
+						gui.warn(Text.VALIDATION_WARNING, FollowMeText.SIMULATED_DATA_ERROR);
 					}
 				}
 			});
@@ -571,11 +580,11 @@ public class FollowMeConfigDialog extends JDialog {
 					//   , so the function Tools.setNumUAVs() is not used
 					storeConfiguration();
 					// State change
-					Tools.setProtocolConfigured();
+					API.getArduSim().setProtocolConfigured();
 					
 					dispose();
 				} else {
-					GUI.warn(Text.VALIDATION_WARNING, FollowMeText.BAD_INPUT);
+					gui.warn(Text.VALIDATION_WARNING, FollowMeText.BAD_INPUT);
 				}		
 			}
 		});
@@ -591,7 +600,7 @@ public class FollowMeConfigDialog extends JDialog {
 			}
 		});
 		
-		GUI.addEscapeListener(this, true);
+		gui.addEscapeListener(this, true);
 		
 		this.setTitle(FollowMeText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
@@ -665,62 +674,62 @@ public class FollowMeConfigDialog extends JDialog {
 	
 	private boolean isValidConfiguration() {
 		String validating = latitudeTextField.getText();
-		if (!Tools.isValidDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.LATITUDE_ERROR);
+		if (!validationTools.isValidDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.LATITUDE_ERROR);
 			return false;
 		}
 		
 		validating = longitudeTextField.getText();
-		if (!Tools.isValidDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.LONGITUDE_ERROR);
+		if (!validationTools.isValidDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.LONGITUDE_ERROR);
 			return false;
 		}
 		
 		validating = yawTextField.getText();
-		if (!Tools.isValidDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.YAW_ERROR);
+		if (!validationTools.isValidDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.YAW_ERROR);
 			return false;
 		}
 		
 		validating = groundTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = flyingTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = relAltitudeTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.INITIAL_RELATIVE_ALTITUDE_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.INITIAL_RELATIVE_ALTITUDE_ERROR);
 			return false;
 		}
 		
 		validating = landingTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = dataTextField.getText();
 		if (validating == null || validating.length() == 0) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.SIMULATED_DATA_ERROR);
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.SIMULATED_DATA_ERROR);
 			return false;
 		}
 		
 		validating = masterSpeedTextField.getText();
-		if (!Tools.isValidPositiveInteger(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.MASTER_UAV_SPEED_ERROR);
+		if (!validationTools.isValidPositiveInteger(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.MASTER_UAV_SPEED_ERROR);
 			return false;
 		}
 		
 		validating = messagePeriodTextField.getText();
-		if (!Tools.isValidPositiveInteger(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
+		if (!validationTools.isValidPositiveInteger(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, FollowMeText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
@@ -741,7 +750,7 @@ public class FollowMeConfigDialog extends JDialog {
 		FollowMeParam.slavesStartingAltitude = Double.parseDouble(relAltitudeTextField.getText());
 		FlightFormation.setLandingFormationDistance(landing);
 		FollowMeParam.masterSpeed = Integer.parseInt(masterSpeedTextField.getText());
-		FollowMeParam.sendPeriod = Integer.parseInt(messagePeriodTextField.getText());
+		FollowMeParam.sendPeriod = Long.parseLong(messagePeriodTextField.getText());
 		
 	}
 	

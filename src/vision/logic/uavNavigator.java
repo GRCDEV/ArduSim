@@ -7,19 +7,24 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
-import api.Copter;
-import api.GUI;
-import api.Tools;
+
+import api.API;
 import api.pojo.FlightMode;
-import api.pojo.GeoCoordinates;
+import api.pojo.location.Location2DGeo;
+import main.api.ArduSim;
+import main.api.Copter;
+import main.api.GUI;
 import vision.logic.visionParam.status;
 
-public class uavNavigator extends Thread{
+public class uavNavigator extends Thread {
 	private static uavNavigator instance; 
 	
 	private int numUAV;
 	private long id;
+	private ArduSim ardusim;
 	private ClientSocket commandSocket;
+	private Copter copter;
+	private GUI gui;
 
 	private visionParam.status droneStatus = visionParam.status.LOITER;
 	
@@ -49,16 +54,19 @@ public class uavNavigator extends Thread{
 	
 	private  uavNavigator(int numUAV) {
 		this.numUAV =numUAV;
-		this.id = Tools.getIdFromPos(numUAV);
+		this.ardusim = API.getArduSim();
+		this.copter = API.getCopter(numUAV);
+		this.gui = API.getGUI(numUAV);
+		this.id = copter.getID();
 		//TCP ports already in use: 5760 + n10
 		//TODO check portnumbers
-		GUI.log("setting up serversocket");
+		gui.log("setting up serversocket");
 		boolean succesClient;
 		try {
 			this.commandSocket = new ClientSocket(visionParam.PTYHON_SERVER_IP,5761);	
 			succesClient = this.commandSocket.isConnected();
 		}catch(Exception e) {
-			GUI.warn("error", "Could not setup commandSocket");
+			gui.warn("error", "Could not setup commandSocket");
 			e.printStackTrace();
 			succesClient = false;
 		}
@@ -77,7 +85,7 @@ public class uavNavigator extends Thread{
 	public void setDroneStatus( status status) {
 		lock.lock();
 		if(status != this.droneStatus) {
-			GUI.log("status changed: " + status);
+			gui.log("status changed: " + status);
 			this.droneStatus = status;
 			if(this.droneStatus == visionParam.status.LOITER) {
 				timeOutTime = java.lang.System.currentTimeMillis();
@@ -91,7 +99,7 @@ public class uavNavigator extends Thread{
 		
 		if(false) {
 			//turn the axis such that the coordinates are given in the axis of the drone not the marker
-			double heading = Copter.getHeading(numUAV);
+			double heading = copter.getHeading();
 			this.difx = (float) (x*Math.cos(heading) + y*Math.sin(heading));
 			this.dify = (float) -(x*Math.sin(heading) - y*Math.cos(heading));
 		}else {
@@ -134,7 +142,7 @@ public class uavNavigator extends Thread{
 			log(getCurrentTimeStamp() + ";");
 			visionGuidance();
 			log(getCurrentTimeStamp() + ";");
-			GeoCoordinates loc = Copter.getGeoLocation(numUAV);
+			Location2DGeo loc = copter.getLocationGeo();
 			log(Double.toString(loc.latitude).replace(".", ",") + ";" + 
 					Double.toString(loc.longitude).replace(".", ",") + "\n");
 			try {
@@ -143,7 +151,7 @@ public class uavNavigator extends Thread{
 				e.printStackTrace();
 			}
 		}else {
-			GUI.warn("ERROR", "no connection with python");
+			gui.warn("ERROR", "no connection with python");
 		}
 		
 		System.out.println("listeningServer setting running to false");
@@ -177,36 +185,36 @@ public class uavNavigator extends Thread{
 	 */
 	public void visionGuidance() {
     ////////////////////////EXPERIMENT : TAKE OF AND LAND WITH CAMERA ///////////////
-		GUI.log("Send message to python: start_camera");
+		gui.log("Send message to python: start_camera");
 		running = commandSocket.sendMessage("start_camera").equalsIgnoreCase("ACK");
 		if(running) {
 			timeOutTime = java.lang.System.currentTimeMillis();
-			GUI.log("send message to python: find_target");
+			gui.log("send message to python: find_target");
 			running = commandSocket.sendMessage("find_target").equalsIgnoreCase("ACK");
-			if(running & Copter.setFlightMode(numUAV, FlightMode.LOITER)) {
+			if(running) {
 				//listen to incomming messages from markersocket thread	
 				this.listeningThread.start();
 				//move uav with signal overwrite
 				do {						
 					running = moveUAV();
-					Tools.waiting(100);
+					ardusim.sleep(100);
 					if(this.droneStatus == visionParam.status.LOITER &&(java.lang.System.currentTimeMillis()-timeOutTime > 30*1000)) {
 						running = false;
 					}
-				}while(running && Copter.getZRelative(numUAV)>0.3);
+				}while(running && copter.getAltitudeRelative()>0.3);
 			}
 		}
 		
-		Copter.landUAV(numUAV);
-		while (Copter.getFlightMode(numUAV) != FlightMode.LAND) {
-			Tools.waiting(100);
+		copter.land();
+		while (copter.getFlightMode() != FlightMode.LAND) {
+			ardusim.sleep(100);
 		};
 		commandSocket.sendMessage("stop_camera");
 		commandSocket.sendMessage("exit");
 	}
 	
 	private float controlSpeed() {
-		return (Copter.getZRelative(numUAV) > 7.0) ? 0.1f :0.05f; 
+		return (copter.getAltitudeRelative() > 7.0) ? 0.1f :0.05f; 
 	}
 	
 	public boolean moveUAV() {
@@ -224,16 +232,16 @@ public class uavNavigator extends Thread{
 					if(Math.abs(this.difx) > Math.abs(this.dify*0.5)) {
 						//0 if x is 0 else +10% or -10%
 						float velocity = (difx == 0) ? 0.0f: (difx > 0 ? speed:-speed);
-						GUI.log("roll value: " + velocity);
+						gui.log("roll value: " + velocity);
 						rollValue = mapValues("roll",velocity);
 					}else {
 						//else move over the y axis
 						float velocity = (dify == 0) ? 0.0f: (dify> 0 ? -speed:speed);
-						GUI.log("pitch value: " + velocity);
+						gui.log("pitch value: " + velocity);
 						pitchValue = mapValues("pitch",velocity);
 					}
 					//System.out.println("roll: " + rollValue + "\t pitch: " + pitchValue);
-					Copter.channelsOverride(numUAV, rollValue, pitchValue,
+					copter.channelsOverride(rollValue, pitchValue,
 							visionParam.throttleTrim, visionParam.yawTrim);
 					running = true;
 					break;
@@ -241,18 +249,18 @@ public class uavNavigator extends Thread{
 					float rotationSpeed = 0.05f;
 					float velocity = (this.difAlfa > 0) ? rotationSpeed :-rotationSpeed;
 					//rotate drone to right angle
-					Copter.channelsOverride(numUAV, visionParam.rollTrim, visionParam.pitchTrim,
+					copter.channelsOverride(visionParam.rollTrim, visionParam.pitchTrim,
 							visionParam.throttleTrim, mapValues("yaw",velocity));
 					running = true;
 					break;
 				case DESCEND:
-					Copter.channelsOverride(numUAV, visionParam.rollTrim, visionParam.pitchTrim,
+					copter.channelsOverride(visionParam.rollTrim, visionParam.pitchTrim,
 							mapValues("throttle",-0.1f), visionParam.yawTrim);
 					running = true;
 					break;
 				case LOITER:
 					//do nothing, drone stays where it is
-					Copter.channelsOverride(numUAV, visionParam.rollTrim, visionParam.pitchTrim,
+					copter.channelsOverride(visionParam.rollTrim, visionParam.pitchTrim,
 							visionParam.throttleTrim, visionParam.yawTrim);
 					running = true;
 					break;
@@ -260,7 +268,7 @@ public class uavNavigator extends Thread{
 					running = false;
 					break;
 				default:
-					GUI.warn("unknown dronestatus", "drone status is unknown, switched to default and land UAV");
+					gui.warn("unknown dronestatus", "drone status is unknown, switched to default and land UAV");
 					running = false;
 					break;
 			}

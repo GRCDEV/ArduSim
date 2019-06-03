@@ -13,13 +13,12 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import api.GUI;
-import api.ProtocolHelper;
-import api.Tools;
+import api.API;
+import main.api.ArduSim;
 import mbcap.logic.MBCAPText;
 
 /** This class generates the dialog to input the configuration of the MBCAP protocol.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MBCAPConfigDialog extends JDialog {
 
@@ -36,6 +35,7 @@ public class MBCAPConfigDialog extends JDialog {
       panel = new MBCAPConfigDialogPanel();
       contentPanel.add(panel);
     }
+    final ArduSim ardusim = API.getArduSim();
     {
       JPanel buttonPane = new JPanel();
       buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -46,7 +46,7 @@ public class MBCAPConfigDialog extends JDialog {
           public void actionPerformed(ActionEvent e) {
             if(MBCAPGUITools.isValidProtocolConfiguration(panel)) {
               MBCAPGUITools.storeProtocolConfiguration(panel);
-              Tools.setProtocolConfigured();
+              ardusim.setProtocolConfigured();
               SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
@@ -81,10 +81,10 @@ public class MBCAPConfigDialog extends JDialog {
       }
     });
     
-    GUI.addEscapeListener(this, true);
+    API.getGUI(0).addEscapeListener(this, true);
     
     MBCAPGUITools.loadDefaultProtocolConfiguration(panel);
-    this.setTitle(ProtocolHelper.selectedProtocol + " " + MBCAPText.CONFIGURATION);
+    this.setTitle(ardusim.getSelectedProtocolName() + " " + MBCAPText.CONFIGURATION);
     this.pack();
     this.setModal(true);
     this.setResizable(false);

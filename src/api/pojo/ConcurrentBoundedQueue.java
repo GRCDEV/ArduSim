@@ -4,7 +4,7 @@ import java.lang.reflect.Array;
 
 /** Concurrent, generic and bounded FIFO queue.
  * <p>When the queue is filled, the oldest element is removed. Elements cannot be removed. The list of elements stored is provided in the same order they were inserted.</p>
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class ConcurrentBoundedQueue<T> {
 	
@@ -15,8 +15,12 @@ public class ConcurrentBoundedQueue<T> {
 	@SuppressWarnings("unused")
 	private ConcurrentBoundedQueue() {}
 	
-	/** Creates a bounded FIFO queue of the provided size. Example with Integers:
-	 * <p>LastElements<Integer> elements = new LastElements<>(Integer.class, 5);</p> */
+	/**
+	 * Creates a bounded FIFO queue of the provided size. Example with Integers:
+	 * <p>LastElements&lt;Integer&gt; elements = new LastElements<>(Integer.class, 5);</p>
+	 * @param c Class of objects to include in the queue.
+	 * @param size Size of the queue.
+	 */
 	@SuppressWarnings("unchecked")
 	public ConcurrentBoundedQueue(Class<T> c, int size) {
 		this.c = c;
@@ -26,8 +30,11 @@ public class ConcurrentBoundedQueue<T> {
 		this.positions = (T[]) Array.newInstance(c, size);
 	}
 	
-	/** Adds a new element at the end of the queue.
-	 * <p>If the queue is full, the oldest element is removed.</p> */
+	/**
+	 * Add a new element at the end of the queue.
+	 * <p>If the queue is full, the oldest element is removed.</p>
+	 * @param element Element to add to the queue.
+	 */
 	public synchronized void add(T element) {
 		positions[p] = element;
 		if (this.count < this.size) {
@@ -43,6 +50,10 @@ public class ConcurrentBoundedQueue<T> {
 		}
 	}
 	
+	/**
+	 * Get an array containing all the current values included in the queue.
+	 * @return Array with the elements of the queue.
+	 */
 	public synchronized T[] getLastValues() {
 		@SuppressWarnings("unchecked")
 		T[] res = (T[]) Array.newInstance(c, this.count);

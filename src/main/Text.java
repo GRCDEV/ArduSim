@@ -1,11 +1,11 @@
 package main;
 
-import api.Tools;
-import sim.board.BoardParam;
-import uavController.UAVParam;
+import main.api.communications.CommLink;
+import main.sim.board.BoardParam;
+import main.uavController.UAVParam;
 
 /** This class contains text descriptions used on the application and on the simulator GUI.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class Text {
 	
@@ -97,7 +97,7 @@ public class Text {
 	public static final String PACKET_COLLISION_DETECTION_ENABLED = "Packet Collision detection enabled:";
 	public static final String BUFFER_SIZE = "Receiving buffer size:";
 	public static final String BUFFER_SIZE_ERROR_1 = "The receiving buffer must be a positive number of bytes.";
-	public static final String BUFFER_SIZE_ERROR_2 = "The receiving buffer must be big enough to store at least one frame (" + Tools.DATAGRAM_MAX_LENGTH + ")";
+	public static final String BUFFER_SIZE_ERROR_2 = "The receiving buffer must be big enough to store at least one frame (" + CommLink.DATAGRAM_MAX_LENGTH + ")";
 	public static final String WIFI_MODEL = "Wireless communications model:";
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
 	public static final String TOT_SENT_PACKETS = "Total sent packets:";
@@ -330,6 +330,8 @@ public class Text {
 	public static final String DEGREE_SYMBOL= "\u00B0";
 	
 	// General errors
+	public static final String NOT_READY_EXCEPTION = "UAV not already located exception.";
+	public static final String TAKE_OFF_EXCEPTION = "UAV failed taking off exception.";
 	public static final String PORT_ERROR = "Communications error";
 	public static final String PORT_ERROR_1 = "Some ports are in use, so only can be simulated a maximum of ";
 	public static final String PORT_ERROR_2 = "It was not possible to get valid ports to connect to SITL instances.";
@@ -357,7 +359,6 @@ public class Text {
 	public static final String BATTERY_FAILING2 = "Battery failing.";
 	public static final String BATTERY_LEVEL = "Battery level:";
 	public static final String BATTERY_LEVEL2 = "Battery level of UAV";
-	public static final String TAKE_OFF_ERROR_1 = "Failed executing the take off of the UAV.";
 	public static final String WIRELESS_ERROR = "Error. The function Tools.isInRange() must be modified.";
 	public static final String DOWNLOAD_ERROR = "Image not available";
 	public static final String DISMOUNT_DRIVE_ERROR = "Failed dismounting the virtual RAM drive.";
@@ -365,6 +366,8 @@ public class Text {
 	public static final String STORE_QUESTION = "Do you want to overwrite the file?";
 	public static final String STORE_PATH_ERROR = "UAV path not found. Unable to store in file.";
 	public static final String LAST_WAYPOINT_REACHED = "Last waypoint reached.";
+	public static final String TAKE_OFF_ERROR = "Unable to take off.";
+	public static final String MOVE_TO_ERROR = "Unable to move to target location.";
 	public static final String LAND_ERROR = "Was unable to land.";
 	
 	// System properties

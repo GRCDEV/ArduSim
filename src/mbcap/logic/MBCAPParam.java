@@ -9,21 +9,21 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import api.pojo.Point3D;
-import api.pojo.UTMCoordinates;
+import api.pojo.location.Location3DUTM;
+import api.pojo.location.Location2DUTM;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.MBCAPState;
 import mbcap.pojo.ProgressState;
 
 /** This class contains parameters related to MBCAP protocol.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MBCAPParam {
 	
 	// Beaconing parameters
 	public static final int MAX_BEACON_LOCATIONS = 59;				// Maximum number of locations that can be sent in the beacon
 	public static final double MAX_WAYPOINT_DISTANCE = 400;			// (m) Maximum distance to a waypoint to be included in the beacon while in stand still state
-	public static int beaconingPeriod = 200;						// (ms) Time between beacons
+	public static long beaconingPeriod = 200;						// (ms) Time between beacons
 	public static int numBeacons = 5;								// Between a new future positions calculus
 	public static double hopTime = 0.5;								// (s) Between two predicted positions
 	public static long hopTimeNS = (long) (hopTime * 1000000000l);	// (ns) The same in nanoseconds
@@ -42,12 +42,12 @@ public class MBCAPParam {
 	public static long passingTimeout = 5 * 1000000000l;			// (ns) Timeout when the UAV starts overtaking the other UAV before checking if it was successful
 	public static long resumeTimeout = 4 * 1000000000l;				// (ns) Timeout when going back to normal state before checking if another UAV considers that there is collision risk with you
 	public static long recheckTimeout = 5 * 1000;					// (ms) Timeout to check if there is a collision risk with the same UAV, once solved the previous risk
-	public static long globalDeadlockTimeout = 120 * 1000000000l;// (ns) Base timeout to consider a deadlock (maximum time available applying a protocol state)
+	public static long globalDeadlockTimeout = 120 * 1000000000l;	// (ns) Base timeout to consider a deadlock (maximum time available applying a protocol state)
 
 	// Additional parameters
 	public static final long BEACON_EXPIRATION_CHECK_PERIOD = 2 * 1000;	// (ms) Expired beacons removing check frequency
 	public static final double DISTANCE_TO_MISSION_END = 2.0;			// (m) Maximum distance to the last waypoint used to stop calculating future positions
-	public static final int SHORT_WAITING_TIME = 200; 					// (ms) Waiting timeout between threads
+	public static final long SHORT_WAITING_TIME = 200; 					// (ms) Waiting timeout between threads
 	public static final Stroke STROKE_POINT = new BasicStroke(1f);		// Shown circles format
 	// Moving aside parameters
 	public static final double EXTRA_ERROR = 1.5;						// (m) Additional distance error for the safety distance (curve compensation)
@@ -55,7 +55,7 @@ public class MBCAPParam {
 	public static double safePlaceDistance = 2 * MBCAPParam.gpsError + EXTRA_ERROR + PRECISION_MARGIN;// (m) Minimum safety distance to the other UAV path
 	public static final double SAFETY_DISTANCE_RANGE = 1;				// (m) Maximum distance to consider that the UAV has reached the safety position
 	public static final double STABILIZATION_SPEED = 0.6;				// (m/s) When it is stopped
-	public static final int STABILIZATION_WAIT_TIME = 200;				// (ms) Time passively waiting the UAV to stop
+	public static final long STABILIZATION_WAIT_TIME = 200;				// (ms) Time passively waiting the UAV to stop
 	public static final long STABILIZATION_TIMEOUT = 10 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 	
 	// Parameter to decide whether the predicted path must be projected over the theoretical mission or not.
@@ -90,9 +90,9 @@ public class MBCAPParam {
 	public static Map<Long, Beacon>[] beacons;					// Beacons received from other UAVs
 	public static List<Beacon>[] beaconsStored;					// Used to log the sent beacons
 	public static List<ProgressState>[] progress;				// Used to register when the state of the protocol is modified
-	public static Map<Long, Point3D>[] impactLocationUTM;		// Detected risk location in UTM coordinates
+	public static Map<Long, Location3DUTM>[] impactLocationUTM;		// Detected risk location in UTM coordinates
 	public static Map<Long, Point2D.Double>[] impactLocationPX;	// Detected risk location shown on screen
-	public static AtomicReferenceArray<UTMCoordinates> targetLocationUTM;	// Safety location to move towards (UTM coordinates)
+	public static AtomicReferenceArray<Location2DUTM> targetLocationUTM;	// Safety location to move towards (UTM coordinates)
 	public static AtomicReferenceArray<Point2D.Double> targetLocationPX;	// Safety location to move towards (screen coordinates)
 	
 	public static MBCAPState[] state; // Protocol state included in the beacon

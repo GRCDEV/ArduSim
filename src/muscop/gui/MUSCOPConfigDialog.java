@@ -25,18 +25,25 @@ import javax.swing.border.EmptyBorder;
 
 import org.javatuples.Pair;
 
-import api.GUI;
-import api.Tools;
-import api.pojo.Waypoint;
-import api.pojo.formations.FlightFormation;
-import api.pojo.formations.FlightFormation.Formation;
+import api.API;
+import api.pojo.location.Waypoint;
 import main.Text;
+import main.api.GUI;
+import main.api.MissionHelper;
+import main.api.ValidationTools;
+import main.api.formations.FlightFormation;
+import main.api.formations.FlightFormation.Formation;
 import muscop.logic.MUSCOPParam;
 import muscop.logic.MUSCOPText;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** 
+ * This dialog shows the configuration needed for the MUSCOP protocol during simulations.
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MUSCOPConfigDialog extends JDialog {
+	
+	private GUI gui;
+	private ValidationTools validationTools;
 
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
@@ -49,6 +56,10 @@ public class MUSCOPConfigDialog extends JDialog {
 
 	public MUSCOPConfigDialog() {
 		setBounds(100, 100, 450, 300);
+		
+		this.gui = API.getGUI(0);
+		validationTools = API.getValidationTools();
+		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{355, 0};
 		gridBagLayout.rowHeights = new int[]{163, 0};
@@ -94,20 +105,21 @@ public class MUSCOPConfigDialog extends JDialog {
 			btnMap.addActionListener(new ActionListener() {
 				@SuppressWarnings("unchecked")
 				public void actionPerformed(ActionEvent e) {
-					final Pair<String, List<Waypoint>[]> missions = GUI.loadMissions();
+					final Pair<String, List<Waypoint>[]> missions = gui.loadMissions();
+					MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
 					if (missions == null) {
-						Tools.setLoadedMissionsFromFile(null);
+						missionHelper.setMissionsLoaded(null);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								missionsTextField.setText("");
 							}
 						});
 					} else {
-						int numUAVs = Tools.getNumUAVs();
+						int numUAVs = API.getArduSim().getNumUAVs();
 						/** The master is assigned the first mission in the list */
 						List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
 						missionsFinal[MUSCOPParam.MASTER_POSITION] = missions.getValue1()[0];
-						Tools.setLoadedMissionsFromFile(missionsFinal);
+						missionHelper.setMissionsLoaded(missionsFinal);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
 								missionsTextField.setText(missions.getValue0());
@@ -173,7 +185,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(groundFormationDistanceLabel, gbc_groundFormationDistanceLabel);
 		}
 		{
-			groundTextField = new JTextField("" + Tools.round(FlightFormation.getGroundFormationDistance(), 6));
+			groundTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getGroundFormationDistance(), 6));
 			groundTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_groundTextField = new GridBagConstraints();
 			gbc_groundTextField.insets = new Insets(0, 0, 5, 5);
@@ -243,7 +255,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(lblFlightDistance, gbc_lblFlightDistance);
 		}
 		{
-			flyingTextField = new JTextField("" + Tools.round(FlightFormation.getFlyingFormationDistance(), 6));
+			flyingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getFlyingFormationDistance(), 6));
 			flyingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_flyingTextField = new GridBagConstraints();
 			gbc_flyingTextField.insets = new Insets(0, 0, 5, 5);
@@ -283,7 +295,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(lblLandDistance, gbc_lblLandDistance);
 		}
 		{
-			landingTextField = new JTextField("" + Tools.round(FlightFormation.getLandingFormationDistance(), 6));
+			landingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getLandingFormationDistance(), 6));
 			landingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_landingTextField = new GridBagConstraints();
 			gbc_landingTextField.insets = new Insets(0, 0, 5, 5);
@@ -328,11 +340,11 @@ public class MUSCOPConfigDialog extends JDialog {
 					//   , so the function Tools.setNumUAVs() is not used
 					storeConfiguration();
 					// State change
-					Tools.setProtocolConfigured();
+					API.getArduSim().setProtocolConfigured();
 					
 					dispose();
 				} else {
-					GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.BAD_INPUT);
+					gui.warn(Text.VALIDATION_WARNING, MUSCOPText.BAD_INPUT);
 				}
 			}
 		});
@@ -348,7 +360,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			}
 		});
 		
-		GUI.addEscapeListener(this, true);
+		gui.addEscapeListener(this, true);
 		
 		this.setTitle(MUSCOPText.CONFIGURATION_DIALOG_TITLE_SWARM);
 		this.pack();
@@ -361,25 +373,25 @@ public class MUSCOPConfigDialog extends JDialog {
 	private boolean isValidConfiguration() {
 		String validating = missionsTextField.getText();
 		if (validating==null || validating.length()==0) {
-			GUI.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
+			gui.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
 			return false;
 		}
 		
 		validating = groundTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = flyingTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		
 		validating = landingTextField.getText();
-		if (!Tools.isValidPositiveDouble(validating)) {
-			GUI.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
+		if (!validationTools.isValidPositiveDouble(validating)) {
+			gui.warn(Text.VALIDATION_WARNING, MUSCOPText.DISTANCE_TEXT_ERROR);
 			return false;
 		}
 		return true;

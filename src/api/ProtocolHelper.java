@@ -6,22 +6,16 @@ import javax.swing.JFrame;
 
 import org.javatuples.Pair;
 
-import api.pojo.GeoCoordinates;
-import sim.board.BoardPanel;
+import api.pojo.location.Location2DGeo;
+import main.sim.board.BoardPanel;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** 
+ * The developer must extend this class to implement a new protocol.
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public abstract class ProtocolHelper {
 	
-	// Available protocols (Internal use by ArduSim)
-	public static Class<?>[] ProtocolClasses;
-	public static volatile String[] ProtocolNames = null;
-	public static volatile String noneProtocolName = null;
-	// Selected protocol (Internal use by ArduSim)
-	public static volatile String selectedProtocol;
-	public static volatile ProtocolHelper selectedProtocolInstance;
-	
-	// Protocol identifier
+	/** Text that identifies the protocol (protocol name). */
 	public String protocolString = null;
 	
 	/** Assign a protocol name to this implementation. Write something similar to:
@@ -31,25 +25,26 @@ public abstract class ProtocolHelper {
 	/**
 	 * Assert if it is needed to load a mission.
 	 * <p>This method is used when the protocol is deployed in a real multicopter (on simulations, the mission must be loaded in the dialog built in <i>openConfigurationDialog()</i> method).</p>
-	 * @return true if this UAV must follow a mission.
+	 * @return must return true if this UAV must follow a mission.
 	 */
 	public abstract boolean loadMission();
 	
 	/**
 	 * Open a configuration dialog for protocol specific parameters.
 	 * <p>The dialog will be constructed in the GUI thread (please, avoid heavy calculations).
-	 * When the dialog is accepted, please use the following command:</p>
-	 * <p>api.Tools.setProtocolConfigured();</p> */
+	 * When the dialog is accepted, or here IF NO DIALOG IS IMPLEMENTED, please use the following command:</p>
+	 * <p>API.getArduSim().setProtocolConfigured();</p> */
 	public abstract void openConfigurationDialog();
 	
 	/**
-	 * Initialize data structures used by the protocol, once the number of multicopters running in the same machine is known:
-	 * <p>int numUAVs = api.Tools.getNumUAVs().</p>
-	 * <p>numUAVs > 1 in simulation, numUAVs == 1 running in a real UAV.</p> */
+	 * Initialize data structures used by the protocol. At this point, the number of multicopters running in the same machine is known:
+	 * <p>int numUAVs = API.getArduSim().getNumUAVs().</p>
+	 * <p>numUAVs > 1 in simulation, numUAVs == 1 running in a real UAV.</p>
+	 * <p>We suggest you to initialize data structures as arrays with length depending on <i>numUAVs</i> value.</p> */
 	public abstract void initializeDataStructures();
 	
 	/**
-	 * Set the state to be shown in the progress dialog when ArduSim starts.
+	 * Set the protocol state to be shown in the progress dialog when ArduSim starts.
 	 * @return The state to be shown in the progress dialog.
 	 */
 	public abstract String setInitialState();
@@ -60,7 +55,8 @@ public abstract class ProtocolHelper {
 	public abstract void rescaleDataStructures();
 	
 	/**
-	 * Optional: Load resources to be shown on screen. */
+	 * Optional: Load resources to be shown on screen.
+	 * <p>It is used when the protocol shows additional elements in the main panel.</p> */
 	public abstract void loadResources();
 	
 	/**
@@ -76,16 +72,16 @@ public abstract class ProtocolHelper {
 	public abstract void drawResources(Graphics2D graphics, BoardPanel panel);
 	
 	/**
-	 * Set the initial location where all the UAVs running will appear (only for simulation).
+	 * Set the initial location where all the running UAVs will appear (only for simulation).
 	 * @return The calculated Geographic coordinates (latitude and longitude), and the heading (degrees).
 	 */
-	public abstract Pair<GeoCoordinates, Double>[] setStartingLocation();
+	public abstract Pair<Location2DGeo, Double>[] setStartingLocation();
 	
 	/**
 	 * Send to the specific UAV the basic configuration needed by the protocol, in an early stage before the setup step.
 	 * <p>Must be a blocking method!</p>
-	 * @param numUAV UAV position in arrays.
-	 * @return true if all the commands included in the method end successfully.
+	 * @param numUAV This specific UAV position in the data arrays (see documentation).
+	 * @return true if all the commands included in the method end successfully, or you don't include commands at all.
 	 */
 	public abstract boolean sendInitialConfiguration(int numUAV);
 	
@@ -102,24 +98,24 @@ public abstract class ProtocolHelper {
 	
 	/**
 	 * Action automatically performed when the user presses the Start button.
-	 * <p>This must NOT be a blocking method, just should force a protocol thread to move the UAVs.</p> */
+	 * <p>This must NOT be a blocking method, just should force a protocol thread to start the protocol.</p> */
 	public abstract void startExperimentActionPerformed();
 	
 	/**
 	 * Optional: Periodically issued to analyze if the experiment must be finished, and to apply measures to make the UAVs land.
 	 * <p>For example, it can be finished when the user presses a button, the UAV is approaching to a location, or ending a mission.
-	 * ArduSim stops the experiment when all the UAVs have landed.</p>*/
+	 * ArduSim stops the experiment when all the UAVs have landed. Please, see an example in MBCAP protocol.</p>*/
 	public abstract void forceExperimentEnd();
 	
 	/**
 	 * Optional: Provide general results of the experiment to be appended to the text shown on the results dialog.
-	 * @return String with the results to be included on the results dialog.
+	 * @return String with the results of the protocol to be included on the results dialog.
 	 */
 	public abstract String getExperimentResults();
 	
 	/**
 	 * Optional: Provide the protocol configuration to be appended to the text shown on the results dialog.
-	 * @return String with the configuration to be included on the results dialog.
+	 * @return String with the configuration of the protocol to be included on the results dialog.
 	 */
 	public abstract String getExperimentConfiguration();
 	
@@ -132,9 +128,9 @@ public abstract class ProtocolHelper {
 	public abstract void logData(String folder, String baseFileName, long baseNanoTime);
 	
 	/**
-	 * Optional: Opens a configuration dialog for protocol specific parameters.
+	 * Optional: Open a configuration dialog for protocol specific parameters, when running ArduSim as a PC Companion.
 	 * <p>The dialog will be constructed in the GUI thread (avoid heavy calculations).
-	 * Launch dialog information updates in an independent thread to let the dialog construction finish.</p>
+	 * Please, launch dialog information updates in an independent thread to let the dialog construction finish (see example in MBCAP protocol).</p>
 	 * @param PCCompanionFrame The Frame of the PC Companion instance. It can be set as the owner of the dialog to be built, if needed.
 	 */
 	public abstract void openPCCompanionDialog(JFrame PCCompanionFrame);

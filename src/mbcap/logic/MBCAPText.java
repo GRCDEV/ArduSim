@@ -1,7 +1,7 @@
 package mbcap.logic;
 
 /** This class contains messages used by MBCAP protocol.
- * <p>Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain).</p> */
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MBCAPText {
 	
@@ -11,7 +11,6 @@ public class MBCAPText {
 	// Configuration dialog window:
 	public static final String OK = "OK";
 	public static final String RESTORE_DEFAULTS = "Restore defaults";
-	public static final String CANCEL = "Cancel";
 	public static final String CONFIGURATION = "configuration";
 	
 	public static final String SIMULATION_PARAMETERS = "Simulation parameters:";
@@ -88,6 +87,8 @@ public class MBCAPText {
 	public static final String MISSION_RESUME_ERROR = "Error resuming the mission.";
 	public static final String DEADLOCK = "Landing due to interlock situation with another UAV.";
 	public static final String DEADLOCK_ERROR = "It was not possible to land after an interlock situation.";
+	public static final String LOCATION_ERROR_1 = "Unable to get the current location of the UAV.";
+	public static final String LOCATION_ERROR_2 = "Unable to land after failing getting the current location of the UAV.";
 	public static final String PROT_ERROR = "Protocol error";
 	public static final String RISK_DETECTED = "Stop. Collision risk detected with UAV";
 	public static final String RISK_DETECTED_ERROR = "Error stopping the UAV.";

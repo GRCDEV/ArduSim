@@ -54,7 +54,7 @@ This dialog allows to introduce several simulation parameters:
 
     * *Enable carrier sensing*. When checked, this option forces to verify if the virtual media is busy before sending a new data packet.
     * *Enable packet collision detection*. Messages are discarded if this option is active and several are received at the same time on destination. 
-    * *Receiving buffer size*. The default value is the UDP receiving buffer size in Raspbian, in a Raspberry Pi 3.
+    * *Receiving buffer size*. The default value is the UDP receiving buffer size in Raspbian, in a Raspberry Pi 3 B+.
     * *Wireless communications model*. Three propagation models have been implemented until now. *unrestricted* model allows data packets to arrive to destination always. *fixed range* model delivers packets only to UAVs that are at a distance lower than a certain threshold. Finally, *802.11a with 5dBi antenna* model has been implemented considering the communication link quality between two real multicopters (realistic model), where a packets reaches another UAV or not depending on the distance between sender and receiver.
     * *Fixed range distance*. If the second model is used, this option sets the range distance.
 
@@ -92,7 +92,7 @@ The following picture shows the main window of ArduSim with ten UAVs performing 
 
 ![Main window](mainwindow.png)
 
-On the upper left corner of the window (1) we can find the application log. It shows messages representing the result of commands sent to the UAVs, the progress of the experiment, and any desired information using functions `GUI.log(String)`, `GUI.log(int, String)`, etc.
+On the upper left corner of the window (1) we can find the application log. It shows messages representing the result of commands sent to the UAVs, the progress of the experiment, and any desired information using functions `API.getGUI().log(String)`, `API.getGUI.logUAV(String)`, etc.
 
 On the right (2), there are a few buttons that allow the user to control the experiment. The *Setup* button starts the actions included in the function `setupActionPerformed()` of the protocol implementation, as explained in section [Protocol development](development.md). On the other hand, the button *Start test* begins the experiment with the function `startExperimentActionPerformed()` of the implementation. The last button lets you to stop the experiment and exit ArduSim at any time, and the first one shows the following dialog, where up-to-date data from the multicopters is shown in real time: location, speed, flight mode, and specific information related to the protocol under test.
 
@@ -186,7 +186,7 @@ This PC Companion has been designed for a minimal interaction with the UAVs in o
 
 ### 2.3 Results
 
-When the multicopter ends the experiment it should land. On simulation, the user had the option to store flight information or not, but in this case the data is always stored in the same folder where ArduSim is running once the multicopter lands. The Raspberry Pi is automatically shutdown to protect the microSD card.
+When the multicopter ends the experiment it must land. On simulation, the user had the option to store flight information or not, but in this case the data is always stored in the same folder where ArduSim is running once the multicopter lands. The Raspberry Pi is automatically shutdown to protect the microSD card.
 
 ## 3 INI configuration file
 

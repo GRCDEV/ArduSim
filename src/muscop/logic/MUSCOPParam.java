@@ -7,11 +7,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import api.pojo.AtomicDoubleArray;
-import api.pojo.GeoCoordinates;
-import api.pojo.Point3D;
-import api.pojo.formations.FlightFormation.Formation;
+import api.pojo.location.Location2DGeo;
+import api.pojo.location.Location3DUTM;
+import main.api.formations.FlightFormation.Formation;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** 
+ * Parameters needed by the protocol.
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MUSCOPParam {
 	
@@ -25,13 +27,13 @@ public class MUSCOPParam {
 
 	// Timeouts
 	public static final int RECEIVING_TIMEOUT = 50;			// (ms) The port is unlocked after this time when receiving messages
-	public static final int SENDING_TIMEOUT = 200;			// (ms) Time between packets sent
-	public static final int TAKE_OFF_CHECK_TIMEOUT = 250;	// (ms) Between checks if the target altitude has been reached
-	public static final int TAKE_OFF_LOG_TIMEOUT = 1000;	// (ms) Between checks to show the current altitude during takeoff
-	public static final int MOVE_CHECK_TIMEOUT = 200;		// (ms) Between checks if the target location has been reached
-	public static final int LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
-	public static final int STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
-	public static final int HOVERING_TIMEOUT = 500;			// (ms) Waiting time after takeoff before moving to first waypoint
+	public static final long SENDING_TIMEOUT = 200;			// (ms) Time between packets sent
+	public static final long TAKE_OFF_CHECK_TIMEOUT = 250;	// (ms) Between checks if the target altitude has been reached
+	public static final long TAKE_OFF_LOG_TIMEOUT = 1000;	// (ms) Between checks to show the current altitude during takeoff
+	public static final long MOVE_CHECK_TIMEOUT = 200;		// (ms) Between checks if the target location has been reached
+	public static final long LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
+	public static final long STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
+	public static final long HOVERING_TIMEOUT = 500;		// (ms) Waiting time after takeoff before moving to first waypoint
 	// Wait between ACK
 	
 	// Data beacon info
@@ -44,8 +46,8 @@ public class MUSCOPParam {
 	public static AtomicDoubleArray flyingFormationHeading;			// (rad) Heading of the formation while flying
 	public static AtomicDoubleArray takeoffAltitude;		// (m) Altitude for the takeoff
 	public static AtomicReference<byte[][]> data;			// Master: array containing the data sent to the slaves
-	public static AtomicReferenceArray<Point3D[]> uavMissionReceivedUTM; // Mission for each UAV in UTM coordinates
-	public static AtomicReferenceArray<GeoCoordinates[]> uavMissionReceivedGeo; // Matrix with individual missions of each Drone GEO
+	public static AtomicReferenceArray<Location3DUTM[]> uavMissionReceivedUTM; // Mission for each UAV in UTM coordinates
+	public static AtomicReferenceArray<Location2DGeo[]> uavMissionReceivedGeo; // Matrix with individual missions of each Drone GEO
 	// Maximum number of waypoints
 	public static final int MAX_WAYPOINTS = 58;	// api.Tools.DATAGRAM_MAX_LENGTH - 2 - 8x4 - 4 - 2 - 4 - 8 - 8 - 4 - 3x8xn >= 0
 	
@@ -53,9 +55,6 @@ public class MUSCOPParam {
 	public static AtomicIntegerArray state;
 	public static AtomicIntegerArray moveSemaphore;
 	public static AtomicIntegerArray wpReachedSemaphore;
-	
-	// Distance from which it is accepted that you have reached the waypoint
-	public static final double MIN_DISTANCE_TO_WP = 1.0;
 	
 	// (ms) Timeout to assert that the configuration step has finished
 	public static final long SETUP_TIMEOUT = 2000;

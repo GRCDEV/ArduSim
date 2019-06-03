@@ -1,40 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="libs/org.mavlink.library.jar"/>
-	<classpathentry kind="lib" path="libs/org.mavlink.util-1.00.jar"/>
-	<classpathentry kind="lib" path="libs/kryo-4.0.0.jar" sourcepath="libs/kryo-4.0.0-sources.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/CollisionSimulator/libs/kryo-4.0.0-javadoc.jar!/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="libs/minlog-1.3.0.jar"/>
-	<classpathentry kind="lib" path="libs/objenesis-2.2.jar"/>
-	<classpathentry kind="lib" path="libs/reflectasm-1.11.3.jar"/>
-	<classpathentry kind="lib" path="libs/javatuples/javatuples-1.2.jar" sourcepath="libs/javatuples/javatuples-1.2-sources.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/CollisionSimulator/libs/javatuples/javatuples-1.2-javadoc.jar!/"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-core-1.5.1.jar"/>
-	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-data-1.5.1.jar"/>
-	<classpathentry kind="lib" path="libs/com.github.haifengl.smile-interpolation-1.5.1.jar"/>
-	<classpathentry kind="lib" path="libs/smile-math-1.5.1.jar"/>
-	<classpathentry kind="lib" path="libs/sigar.jar" sourcepath="libs/hyperic-sigar-1.6.4-src.zip">
+	<classpathentry kind="lib" path="libs/ardusim/javatuples/javatuples-1.2.jar" sourcepath="libs/ardusim/javatuples/javatuples-1.2-sources.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/sigar_javadoc.zip!/"/>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="ArduSim/src"/>
+			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/ardusim/javatuples/javatuples-1.2-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/jSerialComm-2.0.2.jar">
+	<classpathentry kind="lib" path="libs/ardusim/jSerialComm/jSerialComm-2.0.2.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/jSerialComm-javadoc.zip!/"/>
+			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/ardusim/jSerialComm/jSerialComm-javadoc.zip!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="libs/ardusim/kryo/kryo-4.0.0.jar" sourcepath="libs/ardusim/kryo/kryo-4.0.0-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/ardusim/kryo/kryo-4.0.0-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/ardusim/mavlink/org.mavlink.library.jar"/>
+	<classpathentry kind="lib" path="libs/ardusim/mavlink/org.mavlink.util-1.00.jar"/>
+	<classpathentry kind="lib" path="libs/ardusim/sigar/sigar.jar" sourcepath="libs/ardusim/sigar/hyperic-sigar-1.6.4-src.zip">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/ardusim/sigar/sigar_javadoc.zip!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/ardusim/kryo/minlog-1.3.0.jar"/>
+	<classpathentry kind="lib" path="libs/ardusim/kryo/objenesis-2.2.jar"/>
+	<classpathentry kind="lib" path="libs/ardusim/kryo/reflectasm-1.11.3.jar"/>
+	<classpathentry kind="lib" path="libs/chemotaxis/com.github.haifengl.smile-core-1.5.1.jar"/>
+	<classpathentry kind="lib" path="libs/chemotaxis/com.github.haifengl.smile-data-1.5.1.jar"/>
+	<classpathentry kind="lib" path="libs/chemotaxis/com.github.haifengl.smile-interpolation-1.5.1.jar"/>
+	<classpathentry kind="lib" path="libs/chemotaxis/smile-math-1.5.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

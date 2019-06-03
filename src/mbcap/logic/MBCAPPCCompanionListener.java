@@ -5,13 +5,15 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-import api.GUI;
-import api.Tools;
+import api.API;
 import main.Text;
+import main.api.communications.CommLink;
 import mbcap.gui.MBCAPPCCompanionDialog;
 import mbcap.pojo.Beacon;
 
-/** Developed by: Francisco José Fabra Collado, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
+/** 
+ * Thread used in the PC Companion to receive messages from the UAVs.
+ * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MBCAPPCCompanionListener extends Thread {
 	
@@ -30,9 +32,9 @@ public class MBCAPPCCompanionListener extends Thread {
 		Beacon b;
 		try {
 			@SuppressWarnings("resource")
-			DatagramSocket s = new DatagramSocket(Tools.getUDPBroadcastPort());
+			DatagramSocket s = new DatagramSocket(API.getArduSim().getUDPBroadcastPort());
 			s.setBroadcast(true);
-			DatagramPacket p = new DatagramPacket(new byte[Tools.DATAGRAM_MAX_LENGTH], Tools.DATAGRAM_MAX_LENGTH);
+			DatagramPacket p = new DatagramPacket(new byte[CommLink.DATAGRAM_MAX_LENGTH], CommLink.DATAGRAM_MAX_LENGTH);
 			while (true) {
 				try {
 					s.receive(p);
@@ -40,11 +42,11 @@ public class MBCAPPCCompanionListener extends Thread {
 					b = Beacon.getBeacon(array);
 					this.dialog.updateRow(b);
 				} catch (IOException e) {}
-				p.setData(new byte[Tools.DATAGRAM_MAX_LENGTH], 0, Tools.DATAGRAM_MAX_LENGTH);
+				p.setData(new byte[CommLink.DATAGRAM_MAX_LENGTH], 0, CommLink.DATAGRAM_MAX_LENGTH);
 			}
 //			s.close();
 		} catch (SocketException e) {
-			GUI.exit(Text.THREAD_START_ERROR);
+			API.getGUI(0).exit(Text.THREAD_START_ERROR);
 		}
 	}
 
