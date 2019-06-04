@@ -43,6 +43,11 @@ public class uavNavigator extends Thread {
 	private static File logFile = new File("experimentLog.csv");
 	private static FileWriter logWriter = null;
 	
+	/**
+	 * returns instance of this class
+	 * @param numUAV
+	 * @return instance of UAVnavigator
+	 */
 	public static uavNavigator getInstance(int numUAV) {
 		if(instance != null) {
 			return instance;
@@ -82,6 +87,10 @@ public class uavNavigator extends Thread {
 		return this.running;
 	}
 	
+	/**
+	 * set the internal status of the drone. this is not the same the different flighmodes
+	 * @param status
+	 */
 	public void setDroneStatus( status status) {
 		lock.lock();
 		if(status != this.droneStatus) {
@@ -94,18 +103,16 @@ public class uavNavigator extends Thread {
 		lock.unlock();
 	}
 	
+	/**
+	 * sets the location of the target
+	 * @param x distance in m along the x axis of the marker
+	 * @param y distance in m along the y axis of the marker
+	 * @param angle yaw angle of marker in degrees
+	 */
 	public void setTarget(float x, float y, float angle) {
 		lock.lock();
-		
-		if(false) {
-			//turn the axis such that the coordinates are given in the axis of the drone not the marker
-			double heading = copter.getHeading();
-			this.difx = (float) (x*Math.cos(heading) + y*Math.sin(heading));
-			this.dify = (float) -(x*Math.sin(heading) - y*Math.cos(heading));
-		}else {
-			this.difx = x;
-			this.dify = y;
-		}
+		this.difx = x;
+		this.dify = y;
 		this.difAlfa = angle;
 		lock.unlock();
 	}
@@ -125,19 +132,17 @@ public class uavNavigator extends Thread {
 	    return strDate;
 	}
 
+	/**
+	 * methods which starts visionGuidance and does some extra logging
+	 */
 	public void run() {
 		
 		listeningServer = new ListeningServer(numUAV);
 		listeningThread = new Thread(listeningServer);
 		running = listeningServer.getRunning() && running;
 		
-		/*
-		GUI.log("drone "+id+" follows path");
-		followPath();
-		GUI.log("drone "+id+" arrived at end point. Starting camera now");
-		*/
-		
 		if(this.running) {
+			copter.setFlightMode(FlightMode.LOITER);
 			log("vision" + ";");
 			log(getCurrentTimeStamp() + ";");
 			visionGuidance();
@@ -153,29 +158,9 @@ public class uavNavigator extends Thread {
 		}else {
 			gui.warn("ERROR", "no connection with python");
 		}
-		
-		System.out.println("listeningServer setting running to false");
 		listeningServer.setRunning(false);
-		System.out.println("exit listeningServer");
 		listeningServer.exit();
-		System.out.println("shutting down program");
 	}
-	
-	/**
-	 * This method takes all the waypoints convert them to GeoCoordinates and lets the drone fly until the last one
-	 * notice that the drone does not land on the last waypoint. Landing is proceed in visionGuidance()
-	 */
-	/*
-	public void followPath() {
-		List<Waypoint>[] waypoints;
-		waypoints = UAVParam.missionGeoLoaded;
-		for(int i = 1;i<waypoints[numUAV].size();i++) {
-			Waypoint waypoint = waypoints[numUAV].get(i);
-			Copter.moveUAV(numUAV, new GeoCoordinates(waypoint.getLatitude(),
-					waypoint.getLongitude()), (float) visionParam.ALTITUDE, visionParam.LAST_WP_THRESHOLD, visionParam.LAST_WP_THRESHOLD);
-		}
-	}
-	*/
 	
 	/**
 	 * In this method the camera on the drone is activated.
@@ -184,7 +169,6 @@ public class uavNavigator extends Thread {
 	 * The drone lowers it altitude until it`s on the bottom.
 	 */
 	public void visionGuidance() {
-    ////////////////////////EXPERIMENT : TAKE OF AND LAND WITH CAMERA ///////////////
 		gui.log("Send message to python: start_camera");
 		running = commandSocket.sendMessage("start_camera").equalsIgnoreCase("ACK");
 		if(running) {
@@ -206,6 +190,7 @@ public class uavNavigator extends Thread {
 		}
 		
 		copter.land();
+		// wait until the uav is on the ground to stop the camera
 		while (copter.getFlightMode() != FlightMode.LAND) {
 			ardusim.sleep(100);
 		};
@@ -217,6 +202,14 @@ public class uavNavigator extends Thread {
 		return (copter.getAltitudeRelative() > 7.0) ? 0.1f :0.05f; 
 	}
 	
+	/**
+	 * moves the uav with the use of channeloverride
+	 * 5 cases are possible: move (uav moves in xy plane), rotate (uav rotates allong his yaw axis),
+	 * descend (uav descends),loiter(uav stays still in the air),
+	 * land(entire process stops no more messages gets accepted)
+	 * @return true is the uav is still moving, false if land. returning false
+	 * will result in stopping the protocol and landing
+	 */
 	public boolean moveUAV() {
 		//using lock.lock gives more freedom then using a synchronized method
 		boolean running = false;
@@ -225,43 +218,34 @@ public class uavNavigator extends Thread {
 			switch(droneStatus){
 				case MOVE:
 					//move uav to target position
-					int pitchValue = visionParam.pitchTrim;
-					int rollValue = visionParam.rollTrim;
+					float picthVelocity = 0;
+					float rollVelocity = 0;
 					float speed = controlSpeed();
 					//if x is much bigger then y move the UAV in the x axis
 					if(Math.abs(this.difx) > Math.abs(this.dify*0.5)) {
 						//0 if x is 0 else +10% or -10%
-						float velocity = (difx == 0) ? 0.0f: (difx > 0 ? speed:-speed);
-						gui.log("roll value: " + velocity);
-						rollValue = mapValues("roll",velocity);
+						rollVelocity = (difx == 0) ? 0.0f: (difx > 0 ? speed:-speed);
 					}else {
 						//else move over the y axis
-						float velocity = (dify == 0) ? 0.0f: (dify> 0 ? -speed:speed);
-						gui.log("pitch value: " + velocity);
-						pitchValue = mapValues("pitch",velocity);
+						picthVelocity = (dify == 0) ? 0.0f: (dify> 0 ? -speed:speed);
 					}
-					//System.out.println("roll: " + rollValue + "\t pitch: " + pitchValue);
-					copter.channelsOverride(rollValue, pitchValue,
-							visionParam.throttleTrim, visionParam.yawTrim);
+					copter.channelsOverride(rollVelocity, picthVelocity,0, 0);
 					running = true;
 					break;
 				case ROTATE:
 					float rotationSpeed = 0.05f;
 					float velocity = (this.difAlfa > 0) ? rotationSpeed :-rotationSpeed;
 					//rotate drone to right angle
-					copter.channelsOverride(visionParam.rollTrim, visionParam.pitchTrim,
-							visionParam.throttleTrim, mapValues("yaw",velocity));
+					copter.channelsOverride(0, 0, 0, velocity);
 					running = true;
 					break;
 				case DESCEND:
-					copter.channelsOverride(visionParam.rollTrim, visionParam.pitchTrim,
-							mapValues("throttle",-0.1f), visionParam.yawTrim);
+					copter.channelsOverride(0, 0,-0.1, 0);
 					running = true;
 					break;
 				case LOITER:
 					//do nothing, drone stays where it is
-					copter.channelsOverride(visionParam.rollTrim, visionParam.pitchTrim,
-							visionParam.throttleTrim, visionParam.yawTrim);
+					copter.channelsOverride(0, 0, 0, 0);
 					running = true;
 					break;
 				case LAND:
@@ -277,46 +261,4 @@ public class uavNavigator extends Thread {
 		}
 		return running;
 	}
-	
-	private int mapValues(String param,float value) {
-		//TODO make use of rcx.reversed value
-		if(param.equals("throttle")){
-			return mapValues(visionParam.throttleMin, visionParam.throttleDeadzone,
-					visionParam.throttleTrim,visionParam.throttleMax,value);
-		}else if(param.equals("pitch")) {
-			//use -value because pitch is defined for an plane and therefore a value higher then
-			//the trim value will make the front of the UAV rise and make it go backwards
-			return mapValues(visionParam.pitchMin, visionParam.pitchDeadzone,
-					visionParam.pitchTrim, visionParam.pitchMax,-value);
-		}else if(param.equals("yaw")) {
-			return mapValues(visionParam.yawMin, visionParam.yawDeadzone,
-					visionParam.yawTrim, visionParam.yawMax,value);
-		}else if(param.equals("roll")) {
-			return mapValues(visionParam.rollMin, visionParam.rollDeadzone,
-					visionParam.rollTrim, visionParam.rollMax,value);
-		}else {
-			return mapValues(visionParam.pitchMin, visionParam.pitchDeadzone,
-					visionParam.pitchTrim, visionParam.pitchMax,0);
-		}
-	}
-	
-	private int mapValues(int minValue,int deadzone, int trim, int maxValue,float value) {
-		float max, min;
-		if(value >0 && value <= 1) {
-			//map value between 0 and 1  to value between trim+deadzone and maxValue
-			max = maxValue;
-			min = trim + deadzone;
-			return  (int)((max-min)*Math.abs(value) + min);
-		}else if(value <0 && value >=-1) {
-			//map value between -1 and 0 to value between minValue and trim-deadzone
-			max = trim - deadzone;
-			min = minValue;
-			return  (int)(max - (max-min)*Math.abs(value));
-		}else {
-			//value is either 0 or invalid => return trim value
-			return trim;
-		}
-		
-	}
-
 }

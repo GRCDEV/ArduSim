@@ -16,6 +16,11 @@ public class ClientSocket {
     private BufferedReader in;
     private GUI gui;
     
+    /**
+     * Opens a new TCP socket (as a client)
+     * @param ip: ip adress of the socket
+     * @param port: port number of the socket
+     */
 	public ClientSocket(String ip,int port) {
 		this.gui = API.getGUI(0);
         try {
@@ -26,18 +31,27 @@ public class ClientSocket {
         	gui.warn("ERROR", "could not set up a connection with python.");
         }
 	}
-	public String sendMessage(String msg) {
-        out.println(msg);
-        String resp = null;
+	
+	/**
+	 * Sends a message with the use of the open socket and reads the responds
+	 * @param message
+	 * @return respons
+	 */
+	public String sendMessage(String message) {
+        out.println(message);
+        String respons = null;
         try {
-            resp = in.readLine();
+            respons = in.readLine();
         } catch (IOException e) {
             gui.warn("ERROR", "could not send message.");
             return "NACK";
         }
-        return resp;
+        return respons;
     }
 
+	/**
+	 * closes the connection
+	 */
 	public void stopConnection() {
         try {
             in.close();
@@ -48,6 +62,10 @@ public class ClientSocket {
         }
     }
 	
+	/**
+	 * checks if socket is connected
+	 * @return true if client is connected
+	 */
 	public Boolean isConnected() {
 		return clientSocket.isConnected();
 	}

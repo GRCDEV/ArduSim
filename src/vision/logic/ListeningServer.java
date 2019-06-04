@@ -16,15 +16,16 @@ public class ListeningServer implements Runnable{
 	private BufferedReader reader;
 	
 	private volatile boolean running = false;
-	private ReentrantLock lock = new ReentrantLock();
 	private visionParam.status status = visionParam.status.LOITER;
-	
 	private uavNavigator navi;
-	private int numUAV = 0;
 	private GUI gui;
 	
+	/**
+	 * creates a listener to listen to the python messages at port 5764.
+	 * uses an instance of the uavNavigator in order to change the uavMode
+	 * @param numUAV
+	 */
 	public ListeningServer(int numUAV) {
-		this.numUAV = numUAV;
 		navi = uavNavigator.getInstance(numUAV);
 		this.gui = API.getGUI(0);
 		
@@ -45,8 +46,12 @@ public class ListeningServer implements Runnable{
 		listenToSocket();
 	}
 
+	/**
+	 * closing all the open ports
+	 * @return false is error occurred
+	 */
 	public boolean exit() {
-		System.out.println("start exiting in listeingServer");
+		//TODO some sockets are not closing
 		running = false;
 		try {
 			if(reader != null)
@@ -72,6 +77,9 @@ public class ListeningServer implements Runnable{
 	}
 
 	
+	/**
+	 * listening continuously for messages from python and changing the status of the UAVnavigator
+	 */
 	public void listenToSocket() {
 		try {
 			markerSocket = serverSocket.accept();
@@ -93,12 +101,12 @@ public class ListeningServer implements Runnable{
 				}else if(respons.equals("descend")) {
 					status = visionParam.status.DESCEND;
 				}else if(respons.contains("move")){
-					//message from Python format: move,x,y
+					//message from Python format: move,x,y,angle
 					String[] parts = respons.split(",");
 					navi.setTarget(Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
 					status = visionParam.status.MOVE;
 				}else if(respons.contains("rotate")) {
-					//message from Python format: move,x,y
+					//message from Python format: move,x,y,angle
 					String[] parts = respons.split(",");
 					navi.setTarget(Float.parseFloat(parts[1]), Float.parseFloat(parts[2]), Float.parseFloat(parts[3]));
 					status = visionParam.status.ROTATE;
