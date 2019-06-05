@@ -92,13 +92,13 @@ import main.api.ArduSim;
 import main.api.ArduSimNotReadyException;
 import main.api.CopterParamLoaded;
 import main.api.FileTools;
-import main.api.GUI;
 import main.api.ValidationTools;
 import main.api.WaypointReachedListener;
 import main.api.communications.CommLinkObject;
 import main.api.formations.FlightFormation;
 import main.cpuHelper.CPUData;
 import main.pccompanion.logic.PCCompanionParam;
+import main.sim.board.BoardHelper;
 import main.sim.board.BoardParam;
 import main.sim.gui.MainWindow;
 import main.sim.gui.MissionKmlDialog;
@@ -733,16 +733,15 @@ public class ArduSimTools {
 		// Rescale the collision circles diameter
 		Location2DUTM locationUTM = null;
 		boolean found = false;
-		int numUAVs = API.getArduSim().getNumUAVs();
+		int numUAVs = Param.numUAVs;
 		for (int i=0; i<numUAVs && !found; i++) {
 			locationUTM = UAVParam.uavCurrentData[i].getUTMLocation();
 			if (locationUTM != null) {
 				found = true;
 			}
 		}
-		GUI gui = API.getGUI(0);
-		Point2D.Double a = gui.locatePoint(locationUTM.x, locationUTM.y);
-		Point2D.Double b = gui.locatePoint(locationUTM.x + UAVParam.collisionDistance, locationUTM.y);
+		Point2D.Double a = BoardHelper.locatePoint(locationUTM.x, locationUTM.y);
+		Point2D.Double b = BoardHelper.locatePoint(locationUTM.x + UAVParam.collisionDistance, locationUTM.y);
 		UAVParam.collisionScreenDistance = b.x - a.x;
 	}
 	
@@ -2259,7 +2258,7 @@ public class ArduSimTools {
 							MAV_CMD.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
 					if (Param.role == ArduSim.MULTICOPTER) {
-						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + API.getCopter(i).getID());
+						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + Param.id[i]);
 					}
 					if (Param.role == ArduSim.SIMULATOR) {
 						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + i);
@@ -2270,7 +2269,7 @@ public class ArduSimTools {
 							MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
 					if (Param.role == ArduSim.MULTICOPTER) {
-						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + API.getCopter(i).getID());
+						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + Param.id[i]);
 					}
 					if (Param.role == ArduSim.SIMULATOR) {
 						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + i);

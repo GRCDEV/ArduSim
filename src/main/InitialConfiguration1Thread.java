@@ -351,7 +351,7 @@ public class InitialConfiguration1Thread extends Thread {
 		}
 		
 		// Set STABILIZE flight mode if needed
-		if (copter.getFlightMode() != FlightMode.STABILIZE) {
+		if (UAVParam.flightMode.get(numUAV) != FlightMode.STABILIZE) {
 			if (!copter.setFlightMode(FlightMode.STABILIZE)) {
 				return;
 			}
