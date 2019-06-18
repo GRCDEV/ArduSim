@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.esotericsoftware.minlog.Log;
+
 import api.API;
 import api.pojo.FlightMode;
 import api.pojo.location.Location2DGeo;
@@ -42,6 +44,8 @@ public class uavNavigator extends Thread {
 	
 	private static File logFile = new File("experimentLog.csv");
 	private static FileWriter logWriter = null;
+	
+	private double recoverTimer = -1;
 	
 	/**
 	 * returns instance of this class
@@ -185,10 +189,11 @@ public class uavNavigator extends Thread {
 					if(this.droneStatus == visionParam.status.LOITER &&(java.lang.System.currentTimeMillis()-timeOutTime > 30*1000)) {
 						running = false;
 					}
-				}while(running && copter.getAltitudeRelative()>0.3);
+				}while(running && copter.getAltitudeRelative()>0.5);
 			}
 		}
-		
+		//loiter
+		copter.channelsOverride(0.0, 0.0, 0.0, 0.0);
 		copter.land();
 		// wait until the uav is on the ground to stop the camera
 		while (copter.getFlightMode() != FlightMode.LAND) {
@@ -198,9 +203,6 @@ public class uavNavigator extends Thread {
 		commandSocket.sendMessage("exit");
 	}
 	
-	private float controlSpeed() {
-		return (copter.getAltitudeRelative() > 7.0) ? 0.1f :0.05f; 
-	}
 	
 	/**
 	 * moves the uav with the use of channeloverride
@@ -220,12 +222,18 @@ public class uavNavigator extends Thread {
 					//move uav to target position
 					float picthVelocity = 0;
 					float rollVelocity = 0;
-					float speed = controlSpeed();
+					float speed = 0.5f;
 					//if x is much bigger then y move the UAV in the x axis
 					if(Math.abs(this.difx) > Math.abs(this.dify*0.5)) {
+						if(Math.abs(this.difx) > 1) {
+							speed = 0.15f;
+						}
 						//0 if x is 0 else +10% or -10%
 						rollVelocity = (difx == 0) ? 0.0f: (difx > 0 ? speed:-speed);
 					}else {
+						if(Math.abs(this.dify) > 1) {
+							speed = 0.15f;
+						}
 						//else move over the y axis
 						picthVelocity = (dify == 0) ? 0.0f: (dify> 0 ? -speed:speed);
 					}
@@ -240,21 +248,52 @@ public class uavNavigator extends Thread {
 					running = true;
 					break;
 				case DESCEND:
-					copter.channelsOverride(0, 0,-0.1, 0);
+					float descendSpeed = -0.1f;
+					double z =copter.getAltitudeRelative(); 
+					if( z> 10) {
+						if(z > 30) {
+							descendSpeed = -0.3f;
+						}else {
+							descendSpeed = (float) (-z/100);
+						}
+					}
+					copter.channelsOverride(0, 0,descendSpeed, 0);
 					running = true;
 					break;
 				case LOITER:
 					//do nothing, drone stays where it is
-					copter.channelsOverride(0, 0, 0, 0);
+					copter.channelsOverride(0.0, 0.0, 0.0, 0.0);
 					running = true;
 					break;
 				case LAND:
 					running = false;
 					break;
+				case RECOVER:
+					if(this.recoverTimer == -1) {
+						recoverTimer = System.currentTimeMillis();
+					}
+					//first 2 seconds of loiter
+					if(System.currentTimeMillis() <= recoverTimer +2000) {
+						copter.channelsOverride(0.0, 0.0, 0.0, 0.0);
+					}else {
+						//later (4 s changed in python) going up
+						//check if the UAV is not already flying to high
+						if(copter.getAltitudeRelative() < 50) {
+							System.out.println("up");
+							copter.channelsOverride(0, 0, 0.1, 0);
+						}else {
+							copter.channelsOverride(0, 0, 0, 0);
+						}
+					}
+					running = true;
+					break;
 				default:
 					gui.warn("unknown dronestatus", "drone status is unknown, switched to default and land UAV");
 					running = false;
 					break;
+			}
+			if(recoverTimer != -1 && droneStatus != status.RECOVER) {
+				recoverTimer = -1;
 			}
 		}finally {
 			lock.unlock();

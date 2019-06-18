@@ -100,6 +100,8 @@ public class ListeningServer implements Runnable{
 					status = visionParam.status.LAND;
 				}else if(respons.equals("descend")) {
 					status = visionParam.status.DESCEND;
+				}else if(respons.equals("recover")) {
+					status = visionParam.status.RECOVER;
 				}else if(respons.contains("move")){
 					//message from Python format: move,x,y,angle
 					String[] parts = respons.split(",");
