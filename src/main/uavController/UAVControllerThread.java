@@ -48,8 +48,8 @@ import api.pojo.FlightMode;
 import api.pojo.RCValues;
 import api.pojo.location.Location2D;
 import api.pojo.location.LogPoint;
-import api.pojo.location.Location3DUTM;
 import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3DGeo;
 import api.pojo.location.Waypoint;
 import main.ArduSimTools;
 import main.Param;
@@ -558,10 +558,10 @@ public class UAVControllerThread extends Thread {
 			}
 		}
 		
-		Location3DUTM target = UAVParam.target[numUAV].getAndSet(null);
+		Location3DGeo target = UAVParam.target[numUAV].getAndSet(null);
 		if (target != null) {
 			try {
-				msgMoveToTarget(target.x, target.y, target.z);
+				msgMoveToTarget(target.longitude, target.latitude, target.altitude);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

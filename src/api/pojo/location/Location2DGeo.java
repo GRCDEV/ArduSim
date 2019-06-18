@@ -14,12 +14,10 @@ public class Location2DGeo {
 	/** (degrees) Longitude. */
 	public double longitude;
 
-	@SuppressWarnings("unused")
-	private Location2DGeo() {
-	}
+	protected Location2DGeo() {}
 
 	/**
-	 * Create a location in geographic coordiantes.
+	 * Create a location in geographic coordinates.
 	 * @param latitude (degrees).
 	 * @param longitude (degrees).
 	 */

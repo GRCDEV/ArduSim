@@ -28,12 +28,10 @@ import org.javatuples.Pair;
 import api.API;
 import api.pojo.location.Waypoint;
 import main.Text;
+import main.api.FlightFormationTools;
 import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.ValidationTools;
-import main.api.formations.FlightFormation;
-import main.api.formations.FlightFormation.Formation;
-import muscop.logic.MUSCOPParam;
 import muscop.logic.MUSCOPText;
 
 /** 
@@ -44,6 +42,7 @@ public class MUSCOPConfigDialog extends JDialog {
 	
 	private GUI gui;
 	private ValidationTools validationTools;
+	private FlightFormationTools formationTools;
 
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
@@ -58,7 +57,8 @@ public class MUSCOPConfigDialog extends JDialog {
 		setBounds(100, 100, 450, 300);
 		
 		this.gui = API.getGUI(0);
-		validationTools = API.getValidationTools();
+		this.validationTools = API.getValidationTools();
+		this.formationTools = API.getFlightFormationTools();
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{355, 0};
@@ -118,7 +118,8 @@ public class MUSCOPConfigDialog extends JDialog {
 						int numUAVs = API.getArduSim().getNumUAVs();
 						/** The master is assigned the first mission in the list */
 						List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
-						missionsFinal[MUSCOPParam.MASTER_POSITION] = missions.getValue1()[0];
+						// The master UAV is always in the position 0 of arrays
+						missionsFinal[0] = missions.getValue1()[0];
 						missionHelper.setMissionsLoaded(missionsFinal);
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
@@ -153,7 +154,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_groundFormationFormationLabel.gridy = 3;
 			contentPanel.add(groundFormationFormationLabel, gbc_groundFormationFormationLabel);
 		}
-		Formation[] formations = Formation.values();
+		String[] formations = formationTools.getAvailableFormations();
 		{
 			groundComboBox = new JComboBox<String>();
 			GridBagConstraints gbc_groundComboBox = new GridBagConstraints();
@@ -163,10 +164,9 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_groundComboBox.gridy = 3;
 			if (formations.length > 0) {
 				int pos = -1;
-				String formation = FlightFormation.getGroundFormation().getName();
 				for (int i = 0; i < formations.length; i++) {
-					groundComboBox.addItem(formations[i].getName());
-					if (formation.equalsIgnoreCase(formations[i].getName())) {
+					groundComboBox.addItem(formations[i]);
+					if (formationTools.getGroundFormationName().equalsIgnoreCase(formations[i])) {
 						pos = i;
 					}
 				}
@@ -185,7 +185,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(groundFormationDistanceLabel, gbc_groundFormationDistanceLabel);
 		}
 		{
-			groundTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getGroundFormationDistance(), 6));
+			groundTextField = new JTextField("" + validationTools.roundDouble(formationTools.getGroundFormationMinimumDistance(), 6));
 			groundTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_groundTextField = new GridBagConstraints();
 			gbc_groundTextField.insets = new Insets(0, 0, 5, 5);
@@ -233,10 +233,10 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_airComboBox.gridy = 7;
 			if (formations.length > 0) {
 				int pos = -1;
-				String formation = FlightFormation.getFlyingFormation().getName();
+				String formationString = formationTools.getFlyingFormationName();
 				for (int i = 0; i < formations.length; i++) {
-					airComboBox.addItem(formations[i].getName());
-					if (formation.equalsIgnoreCase(formations[i].getName())) {
+					airComboBox.addItem(formations[i]);
+					if (formationString.equalsIgnoreCase(formations[i])) {
 						pos = i;
 					}
 				}
@@ -255,7 +255,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(lblFlightDistance, gbc_lblFlightDistance);
 		}
 		{
-			flyingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getFlyingFormationDistance(), 6));
+			flyingTextField = new JTextField("" + validationTools.roundDouble(formationTools.getFlyingFormationMinimumDistance(), 6));
 			flyingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_flyingTextField = new GridBagConstraints();
 			gbc_flyingTextField.insets = new Insets(0, 0, 5, 5);
@@ -295,7 +295,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(lblLandDistance, gbc_lblLandDistance);
 		}
 		{
-			landingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getLandingFormationDistance(), 6));
+			landingTextField = new JTextField("" + validationTools.roundDouble(formationTools.getLandingFormationMinimumDistance(), 6));
 			landingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_landingTextField = new GridBagConstraints();
 			gbc_landingTextField.insets = new Insets(0, 0, 5, 5);
@@ -372,7 +372,7 @@ public class MUSCOPConfigDialog extends JDialog {
 	
 	private boolean isValidConfiguration() {
 		String validating = missionsTextField.getText();
-		if (validating==null || validating.length()==0) {
+		if (validationTools.isEmpty(validating)) {
 			gui.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
 			return false;
 		}
@@ -402,11 +402,9 @@ public class MUSCOPConfigDialog extends JDialog {
 		double ground = Double.parseDouble(groundTextField.getText());
 		double flying = Double.parseDouble(flyingTextField.getText());
 		double landing = Double.parseDouble(landingTextField.getText());
-		FlightFormation.setGroundFormation(Formation.getFormation((String)groundComboBox.getSelectedItem()));
-		FlightFormation.setGroundFormationDistance(ground);
-		FlightFormation.setFlyingFormation(Formation.getFormation((String)airComboBox.getSelectedItem()));
-		FlightFormation.setFlyingFormationDistance(flying);
-		FlightFormation.setLandingFormationDistance(landing);
+		formationTools.setGroundFormation((String)groundComboBox.getSelectedItem(), ground);
+		formationTools.setFlyingFormation((String)airComboBox.getSelectedItem(), flying);
+		formationTools.setLandingFormationMinimumDistance(landing);
 	}
 
 }

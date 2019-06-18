@@ -129,12 +129,12 @@ public class ChemotaxisHelper extends ProtocolHelper {
 		TakeOff takeOff = copter.takeOff(ChemotaxisParam.altitude, new TakeOffListener() {
 			
 			@Override
-			public void onFailureListener() {
+			public void onFailure() {
 				// TODO tratar el error
 			}
 			
 			@Override
-			public void onCompletedListener() {
+			public void onCompleteActionPerformed() {
 				// Nothing to do, just waiting the end with Thread.join()
 			}
 		});

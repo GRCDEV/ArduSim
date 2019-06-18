@@ -11,6 +11,7 @@ import api.API;
 import api.ProtocolHelper;
 import api.pojo.CopterParam;
 import api.pojo.location.Location2DGeo;
+import api.pojo.location.Location3D;
 import main.api.Copter;
 import main.api.FileTools;
 import main.api.GUI;
@@ -154,12 +155,12 @@ public class visionHelper extends ProtocolHelper {
 				TakeOff takeOff = copter.takeOff(visionParam.ALTITUDE, new TakeOffListener() {
 					
 					@Override
-					public void onFailureListener() {
+					public void onFailure() {
 						gui2.warn("ERROR", "drone could not take off");
 					}
 					
 					@Override
-					public void onCompletedListener() {
+					public void onCompleteActionPerformed() {
 						// Waiting with Thread.join()
 					}
 				});
@@ -170,16 +171,16 @@ public class visionHelper extends ProtocolHelper {
 				
 				gui.log(visionParam.LATITUDE + " : " + visionParam.LONGITUDE);
 				
-				MoveTo moveTo = copter.moveTo(new Location2DGeo(visionParam.LATITUDE,visionParam.LONGITUDE),
-						visionParam.ALTITUDE, new MoveToListener() {
+				MoveTo moveTo = copter.moveTo(new Location3D(visionParam.LATITUDE,visionParam.LONGITUDE, visionParam.ALTITUDE),
+						new MoveToListener() {
 							
 							@Override
-							public void onFailureListener() {
+							public void onFailure() {
 								gui2.warn("ERROR", "drone could not take off");
 							}
 							
 							@Override
-							public void onCompletedListener() {
+							public void onCompleteActionPerformed() {
 								// Nothing to do, as we wait until the target location is reached with Thread.join()
 							}
 						});

@@ -6,12 +6,12 @@ import mbcap.logic.MBCAPText;
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public enum MBCAPState {
-	NORMAL((short)1, MBCAPText.STATE_NORMAL),
-	STAND_STILL((short)2, MBCAPText.STATE_STAND_STILL),
-	MOVING_ASIDE((short)3, MBCAPText.STATE_MOVING_ASIDE),
-	GO_ON_PLEASE((short)4, MBCAPText.STATE_GO_ON_PLEASE),
-	OVERTAKING((short)5, MBCAPText.STATE_OVERTAKING),
-	EMERGENCY_LAND((short)6, MBCAPText.STATE_EMERGENCY_LAND);
+	NORMAL((short)0, MBCAPText.STATE_NORMAL),
+	STAND_STILL((short)1, MBCAPText.STATE_STAND_STILL),
+	MOVING_ASIDE((short)2, MBCAPText.STATE_MOVING_ASIDE),
+	GO_ON_PLEASE((short)3, MBCAPText.STATE_GO_ON_PLEASE),
+	OVERTAKING((short)4, MBCAPText.STATE_OVERTAKING),
+	EMERGENCY_LAND((short)5, MBCAPText.STATE_EMERGENCY_LAND);
 	
 	private final short id;
 	private final String name;

@@ -4,6 +4,7 @@ import api.API;
 import api.pojo.FlightMode;
 import main.Param;
 import main.Text;
+import main.api.hiddenFunctions.HiddenFunctions;
 import main.uavController.UAVParam;
 
 /**
@@ -25,7 +26,7 @@ public class TakeOff extends Thread {
 	private TakeOff() {}
 	
 	public TakeOff(int numUAV, double relAltitude, TakeOffListener listener) {
-		super("TakeOff thread");
+		super(Text.TAKEOFF_THREAD + numUAV);
 		this.numUAV = numUAV;
 		this.relAltitude = relAltitude;
 		this.minAltitude = relAltitude - Copter.getAltitudeGPSError(relAltitude);
@@ -52,10 +53,10 @@ public class TakeOff extends Thread {
 		
 		if (UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
 				|| !copter.setFlightMode(FlightMode.LOITER)
-				|| !copter.stabilize()) {
+				|| !HiddenFunctions.stabilize(numUAV)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
 			System.out.println("Error fase 1");//TODO limpiar debugging
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
@@ -65,21 +66,21 @@ public class TakeOff extends Thread {
 		if (!copter.setFlightMode(FlightMode.GUIDED)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
 			System.out.println("Error para guided");
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
-		if (!copter.armEngines()) {
+		if (!HiddenFunctions.armEngines(numUAV)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
 			System.out.println("Error para armar");
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
-		if (!copter.takeOffGuided(relAltitude)) {
+		if (!HiddenFunctions.takeOffGuided(numUAV, relAltitude)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
 			System.out.println("Error al iniciar despegue");
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
@@ -106,7 +107,7 @@ public class TakeOff extends Thread {
 			}
 		}
 		
-		listener.onCompletedListener();
+		listener.onCompleteActionPerformed();
 		
 	}
 	
@@ -118,12 +119,12 @@ public class TakeOff extends Thread {
 		
 		if (UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
 				|| !copter.setFlightMode(FlightMode.GUIDED)
-				|| !copter.armEngines()
-				|| !copter.takeOffGuided(relAltitude)
+				|| !HiddenFunctions.armEngines(numUAV)
+				|| !HiddenFunctions.takeOffGuided(numUAV, relAltitude)
 				) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
 			System.out.println("Error fase 1");//TODO limpiar debugging
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
@@ -156,10 +157,10 @@ public class TakeOff extends Thread {
 			}
 		}
 		
-		if (!copter.setFlightMode(FlightMode.LOITER) || !copter.stabilize())  {
+		if (!copter.setFlightMode(FlightMode.LOITER) || !HiddenFunctions.stabilize(numUAV))  {
 			gui.logUAV(Text.TAKE_OFF_ERROR);
 			System.out.println("Error fase 2");//TODO limpiar debugging
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
@@ -169,14 +170,11 @@ public class TakeOff extends Thread {
 		if (!copter.setFlightMode(FlightMode.GUIDED)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR);
 			System.out.println("Error fase 3");//TODO limpiar debugging
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
-		listener.onCompletedListener();
+		listener.onCompleteActionPerformed();
 		
 	}
-	
-	
-	
 }

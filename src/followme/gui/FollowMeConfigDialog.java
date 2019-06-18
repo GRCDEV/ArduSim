@@ -36,10 +36,9 @@ import followme.logic.FollowMeParam;
 import followme.logic.FollowMeText;
 import followme.pojo.RemoteInput;
 import main.Text;
+import main.api.FlightFormationTools;
 import main.api.GUI;
 import main.api.ValidationTools;
-import main.api.formations.FlightFormation;
-import main.api.formations.FlightFormation.Formation;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -49,6 +48,7 @@ public class FollowMeConfigDialog extends JDialog {
 	
 	private GUI gui;
 	private ValidationTools validationTools;
+	private FlightFormationTools formationTools;
 	
 	private final JPanel contentPanel = new JPanel();
 	private JComboBox<String> groundComboBox;
@@ -69,6 +69,7 @@ public class FollowMeConfigDialog extends JDialog {
 		
 		this.gui = API.getGUI(0);
 		this.validationTools = API.getValidationTools();
+		this.formationTools = API.getFlightFormationTools();
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{355, 0};
@@ -203,7 +204,7 @@ public class FollowMeConfigDialog extends JDialog {
 			gbc_groundFormationLabel.gridy = 4;
 			contentPanel.add(groundFormationLabel, gbc_groundFormationLabel);
 		}
-		Formation[] formations = Formation.values();
+		String[] formations = formationTools.getAvailableFormations();
 		{
 			groundComboBox = new JComboBox<String>();
 			GridBagConstraints gbc_groundComboBox = new GridBagConstraints();
@@ -213,10 +214,10 @@ public class FollowMeConfigDialog extends JDialog {
 			gbc_groundComboBox.gridy = 5;
 			if (formations.length > 0) {
 				int pos = -1;
-				String formation = FlightFormation.getGroundFormation().getName();
+				String formation = formationTools.getGroundFormationName();
 				for (int i = 0; i < formations.length; i++) {
-					groundComboBox.addItem(formations[i].getName());
-					if (formation.equalsIgnoreCase(formations[i].getName())) {
+					groundComboBox.addItem(formations[i]);
+					if (formation.equalsIgnoreCase(formations[i])) {
 						pos = i;
 					}
 				}
@@ -246,7 +247,7 @@ public class FollowMeConfigDialog extends JDialog {
 			contentPanel.add(groundFormationDistanceLabel, gbc_groundFormationDistanceLabel);
 		}
 		{
-			groundTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getGroundFormationDistance(), 6));
+			groundTextField = new JTextField("" + validationTools.roundDouble(formationTools.getGroundFormationMinimumDistance(), 6));
 			groundTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_groundTextField = new GridBagConstraints();
 			gbc_groundTextField.insets = new Insets(0, 0, 5, 5);
@@ -284,10 +285,10 @@ public class FollowMeConfigDialog extends JDialog {
 			gbc_airComboBox.gridy = 8;
 			if (formations.length > 0) {
 				int pos = -1;
-				String formation = FlightFormation.getFlyingFormation().getName();
+				String formationString = formationTools.getFlyingFormationName();
 				for (int i = 0; i < formations.length; i++) {
-					airComboBox.addItem(formations[i].getName());
-					if (formation.equalsIgnoreCase(formations[i].getName())) {
+					airComboBox.addItem(formations[i]);
+					if (formationString.equalsIgnoreCase(formations[i])) {
 						pos = i;
 					}
 				}
@@ -316,7 +317,7 @@ public class FollowMeConfigDialog extends JDialog {
 			contentPanel.add(lblFlightDistance, gbc_lblFlightDistance);
 		}
 		{
-			flyingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getFlyingFormationDistance(), 6));
+			flyingTextField = new JTextField("" + validationTools.roundDouble(formationTools.getFlyingFormationMinimumDistance(), 6));
 			flyingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_flyingTextField = new GridBagConstraints();
 			gbc_flyingTextField.insets = new Insets(0, 0, 5, 5);
@@ -388,7 +389,7 @@ public class FollowMeConfigDialog extends JDialog {
 			contentPanel.add(lblLandDistance, gbc_lblLandDistance);
 		}
 		{
-			landingTextField = new JTextField("" + validationTools.roundDouble(FlightFormation.getLandingFormationDistance(), 6));
+			landingTextField = new JTextField("" + validationTools.roundDouble(formationTools.getLandingFormationMinimumDistance(), 6));
 			landingTextField.setHorizontalAlignment(SwingConstants.RIGHT);
 			GridBagConstraints gbc_landingTextField = new GridBagConstraints();
 			gbc_landingTextField.insets = new Insets(0, 0, 5, 5);
@@ -716,7 +717,7 @@ public class FollowMeConfigDialog extends JDialog {
 		}
 		
 		validating = dataTextField.getText();
-		if (validating == null || validating.length() == 0) {
+		if (validationTools.isEmpty(validating)) {
 			gui.warn(Text.VALIDATION_WARNING, FollowMeText.SIMULATED_DATA_ERROR);
 			return false;
 		}
@@ -743,12 +744,10 @@ public class FollowMeConfigDialog extends JDialog {
 		double ground = Double.parseDouble(groundTextField.getText());
 		double flying = Double.parseDouble(flyingTextField.getText());
 		double landing = Double.parseDouble(landingTextField.getText());
-		FlightFormation.setGroundFormation(Formation.getFormation((String)groundComboBox.getSelectedItem()));
-		FlightFormation.setGroundFormationDistance(ground);
-		FlightFormation.setFlyingFormation(Formation.getFormation((String)airComboBox.getSelectedItem()));
-		FlightFormation.setFlyingFormationDistance(flying);
+		formationTools.setGroundFormation((String)groundComboBox.getSelectedItem(), ground);
+		formationTools.setFlyingFormation((String)airComboBox.getSelectedItem(), flying);
 		FollowMeParam.slavesStartingAltitude = Double.parseDouble(relAltitudeTextField.getText());
-		FlightFormation.setLandingFormationDistance(landing);
+		formationTools.setLandingFormationMinimumDistance(landing);
 		FollowMeParam.masterSpeed = Integer.parseInt(masterSpeedTextField.getText());
 		FollowMeParam.sendPeriod = Long.parseLong(messagePeriodTextField.getText());
 		

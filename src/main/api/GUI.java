@@ -334,7 +334,6 @@ public class GUI {
 	 * Send information related to a specific UAV to the main window log and console, only if verbose mode is enabled.
 	 * <p>This function adds a prefix to the message with the UAV ID.
 	 * The window log is only updated when performing simulations.</p>
-	 * @param numUAV UAV position in arrays.
 	 * @param text Text to be shown.
 	 */
 	public void logVerboseUAV(String text) {

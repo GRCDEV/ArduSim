@@ -43,6 +43,15 @@ public class Location2DUTM extends Point2D.Double {
 	public double distance(Location2D location) {
 		return this.distance(location.getUTMLocation());
 	}
+	
+	/**
+	 * Get the horizontal distance to another location.
+	 * @param location location Location of the second point.
+	 * @return (m) Distance between this and the provided location.
+	 */
+	public double distance(Location3D location) {
+		return this.distance(location.getUTMLocation());
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -72,7 +81,7 @@ public class Location2DUTM extends Point2D.Double {
 	 * @param x (m) East.
 	 * @param y (m) North.
 	 * @return Coordinates in Geographic coordinate system.
-	 * @throws ArduSimNotReadyException Thrown if the UAV is not located already. If you use <i>Location2DGeo.getUTM</i> function at least once, the exception will also not be thrown.
+	 * @throws ArduSimNotReadyException Thrown if the UAV is not located already. If you use <i>LocationXGeo.getUTM</i> function at least once, the exception will also not be thrown.
 	 */
 	public static Location2DGeo getGeo(double x, double y) throws ArduSimNotReadyException {
 		if (SimParam.zone == -1) {
@@ -105,7 +114,7 @@ public class Location2DUTM extends Point2D.Double {
 	/**
 	 * Transform this UTM coordinates into Geographic coordinates.
 	 * @return Coordinates in Geographic coordinate system.
-	 * @throws ArduSimNotReadyException Thrown if the UAV is not located already. If you use <i>Location2DGeo.getUTM</i> function at least once, the exception will also not be thrown.
+	 * @throws ArduSimNotReadyException Thrown if the UAV is not located already. If you use <i>LocationXGeo.getUTM</i> function at least once, the exception will also not be thrown.
 	 */
 	public Location2DGeo getGeo() throws ArduSimNotReadyException {
 		return Location2DUTM.getGeo(this.x, this.y);

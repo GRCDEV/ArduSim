@@ -8,8 +8,8 @@ import main.api.formations.helpers.FormationPoint;
 
 public class FormationMatrix extends FlightFormation {
 
-	protected FormationMatrix(int numUAVs, double minDistance) {
-		super(numUAVs, minDistance);
+	protected FormationMatrix(int numUAVs, double minDistance, Formation formation) {
+		super(numUAVs, minDistance, formation);
 	}
 
 	@Override
@@ -18,7 +18,7 @@ public class FormationMatrix extends FlightFormation {
 		int rows = (int)Math.ceil(this.numUAVs / cols);
 		int prevColsCenter = (cols - 1) / 2;
 		int prevRowsCenter = rows / 2;
-		this.centerUAV = prevRowsCenter * cols + prevColsCenter;
+		this.centerUAVPosition = prevRowsCenter * cols + prevColsCenter;
 		
 		int prevRows, prevCols;
 		double x, y;

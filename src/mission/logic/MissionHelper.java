@@ -104,7 +104,7 @@ public class MissionHelper extends ProtocolHelper {
 	public static boolean isValidProtocolConfiguration(MissionConfigDialogPanel panel) {
 		// Simulation parameters
 		String validating = panel.missionsTextField.getText();
-		if (validating==null || validating.length()==0) {
+		if (API.getValidationTools().isEmpty(validating)) {
 			API.getGUI(0).warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
 			return false;
 		}

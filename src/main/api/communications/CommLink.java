@@ -1,6 +1,9 @@
 package main.api.communications;
 
-import main.uavController.UAVParam;
+import api.API;
+import main.Param;
+import main.Text;
+import main.api.ArduSim;
 
 /**
  * UAV-to-UAV communications link.
@@ -14,38 +17,40 @@ public class CommLink {
 	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
 	
 	private int numUAV;
-	private int port;
 	private static volatile CommLinkObject publicCommLink = null;
 	private static final Object PUBLIC_LOCK = new Object();
+	
+	private volatile boolean advertised = false;
 	
 	@SuppressWarnings("unused")
 	private CommLink() {}
 	
 	public CommLink(int numUAV, int numUAVs, int port) {
 		this.numUAV = numUAV;
-		this.port = port;
 		
-		if (port == UAVParam.broadcastPort) {
-			synchronized(PUBLIC_LOCK) {
-				if (CommLink.publicCommLink == null) {
-					CommLink.publicCommLink = new CommLinkObject(numUAVs, port);
-				}
+		synchronized(PUBLIC_LOCK) {
+			if (CommLink.publicCommLink == null) {
+				CommLink.publicCommLink = new CommLinkObject(numUAVs, port);
 			}
-		}//TODO lo mismo con las comunicaciones internas
+		}
 		
 	}
 	
 	/**
-	 * Send a message to other UAVs.
+	 * Send a message to other UAVs. This function is only allowed for real or virtual multicopters. In other words, the PC Companion cannot inject messages during the experiment, but it can listen to messages from the real multicopters.
 	 * <p>Blocking method. Depending on the system implementation, the message can also be received by the sender UAV. Please, avoid sending messages from more than one thread at a time.</p>
 	 * @param message Message to be sent, and encoded by the protocol.
 	 */
 	public void sendBroadcastMessage(byte[] message) {
 		
-		if (port == UAVParam.broadcastPort) {
+		if (Param.role == ArduSim.PCCOMPANION) {
+			if (!advertised) {
+				API.getGUI(0).log(Text.SEND_NOT_PERMITTED);
+				advertised = true;
+			}
+		} else {
 			CommLink.publicCommLink.sendBroadcastMessage(numUAV, message);
 		}
-		
 	}
 	
 	/**
@@ -55,10 +60,7 @@ public class CommLink {
 	 */
 	public byte[] receiveMessage() {
 		
-		if (port == UAVParam.broadcastPort) {
-			return CommLink.publicCommLink.receiveMessage(numUAV, 0);
-		}
-		return null;
+		return CommLink.publicCommLink.receiveMessage(numUAV, 0);
 		
 	}
 	
@@ -70,10 +72,7 @@ public class CommLink {
 	 */
 	public byte[] receiveMessage(int socketTimeout) {
 		
-		if (port == UAVParam.broadcastPort) {
-			return CommLink.publicCommLink.receiveMessage(numUAV, socketTimeout);
-		}
-		return null;
+		return CommLink.publicCommLink.receiveMessage(numUAV, socketTimeout);
 		
 	}
 
@@ -82,7 +81,9 @@ public class CommLink {
 	 */
 	@Override
 	public String toString() {
+		
 		return CommLink.publicCommLink.toString();
+		
 	}
 	
 }

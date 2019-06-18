@@ -101,15 +101,6 @@ public class ArduSim {
 	}
 	
 	/**
-	 * Get the UDP port used for communications.
-	 * <p>This is useful in the PC Companion dialog, to listen data packets from the protocol.</p>
-	 * @return the UDP port used by real UAVs for communication.
-	 */
-	public int getUDPBroadcastPort() {
-		return UAVParam.broadcastPort;
-	}
-	
-	/**
 	 * Get the path followed during the experiment by all the multicopters running on the same machine.
 	 * <p>Useful to log protocol data related to the path followed by the UAV.
 	 * If you need this, it is suggested to use this method once the experiment has finished and the UAV is on the ground.</p>

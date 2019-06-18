@@ -14,6 +14,7 @@ import api.pojo.location.WaypointSimplified;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
+import main.api.hiddenFunctions.HiddenFunctions;
 import main.sim.board.BoardParam;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
@@ -140,7 +141,7 @@ public class MissionHelper {
 	 * @return true if all the commands were successful.
 	 */
 	public boolean pause() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
-		if (this.copter.stabilize() && this.copter.setFlightMode(FlightMode.LOITER)) {
+		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.LOITER)) {
 			long time = System.nanoTime();
 			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
 				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
@@ -158,7 +159,7 @@ public class MissionHelper {
 	}
 	
 	public boolean pause2() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
-		if (this.copter.stabilize() && this.copter.setFlightMode(FlightMode.BRAKE)) {
+		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.BRAKE)) {
 			long time = System.nanoTime();
 			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
 				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
@@ -372,7 +373,7 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Set the loaded missions from file/s for the UAVs, in geographic coordinates. Used in the configuration window, when needed.
+	 * Set the loaded missions from file/s for the UAVs, in geographic coordinates. Used in the configuration window or in the method <i>setStartingLocation</i> of the protocol implementation, when needed.
 	 * <p>Please, check that the length of the array is the same as the number of running UAVs in the same machine (method <i>API.getArduSim.getNumUAVs()</i>).</p>
 	 * @param missions Missions that must be loaded and set with this method in the protocol configuration window, when needed.
 	 */
@@ -390,7 +391,7 @@ public class MissionHelper {
 	
 	/**
 	 * Take off a UAV and start the planned mission.
-	 * <p>Issues three commands: armEngines, setFlightMode --> AUTO, and setHalfThrottle.
+	 * <p>Issues three commands: armEngines, setFlightMode --> AUTO, and stabilize.
 	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
 	 * The UAV must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
 	 * @return true if all the commands were successful.
@@ -398,9 +399,9 @@ public class MissionHelper {
 	public boolean start() {
 		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
-		if (this.copter.armEngines()
+		if (HiddenFunctions.armEngines(numUAV)
 				&& this.copter.setFlightMode(FlightMode.AUTO)
-				&& this.copter.stabilize()) {
+				&& HiddenFunctions.stabilize(numUAV)) {
 			return true;
 		}
 		return false;

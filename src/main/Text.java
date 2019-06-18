@@ -34,7 +34,8 @@ public class Text {
 	public static final String PROTOCOL_NOT_FOUND_ERROR = "protocol was not found. Valid protocols:";
 	public static final String PROTOCOL_DUPLICATED = "More than one implementation found for a protocol.";
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
-	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR = "param not found. Using default value:";
+	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_1 = "param not found. Using default value:";
+	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_2 = "param not found. Unable to continue.";
 	public static final String INI_FILE_PARAM_NOT_VALID_ERROR = "param not valid value:";
 	public static final String INI_FILE_PARAM_USING_DEFAULT = "param not valid. Using default value:";
 	public static final String INI_FILE_PARAM_SERIAL_PORT_WARNING = "The serial link could not work properly if the serial port name is wrong:";
@@ -473,7 +474,19 @@ public class Text {
 	public static final String EMERGENCY_NOT_FOUND = "Emergency command not found.";
 	public static final String EMERGENCY_SUCCESS = "Emergency command applied successfully:";
 	public static final String EMERGENCY_FAILED = "Emergency command failed:";
+	public static final String SEND_NOT_PERMITTED = "You cannot send messages to the UAVs from the PC Companion.";
 	
+	// Thread names
+	public static final String TAKEOFF_THREAD = "TakeOff thread ";
+	public static final String DISCOVERY_MASTER_LISTENER = "Discovery master listener: ";
+	public static final String DISCOVERY_MASTER_TALKER = "Discovery master talker: ";
+	public static final String DISCOVERY_SLAVE_LISTENER = "Discovery slave listener: ";
+	public static final String DISCOVERY_SLAVE_TALKER = "Discovery slave talker: ";
+	public static final String SAFE_TAKE_OFF_MASTER_CONTEXT_LISTENER = "Safe take off master context retrieval listener";
+	public static final String SAFE_TAKE_OFF_MASTER_CONTEXT_TALKER = "Safe take off master context retrieval talker";
+	public static final String SAFE_TAKE_OFF_SLAVE_CONTEXT_LISTENER = "Safe take off slave context retrieval listener";
+	public static final String SAFE_TAKE_OFF_SLAVE_CONTEXT_TALKER = "Safe take off slave context retrieval talker";
+	public static final String SAFE_TAKE_OFF_LISTENER = "Safe take off listener: ";
+	public static final String SAFE_TAKE_OFF_TAKER = "Safe take off talker: ";
 	
-
 }

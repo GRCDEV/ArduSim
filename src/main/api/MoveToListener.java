@@ -7,12 +7,12 @@ package main.api;
 public interface MoveToListener {
 
 	/**
-	 * Actions to perform when the take off has finished.
+	 * Actions to perform when the UAV reaches the target location.
 	 */
-	abstract void onCompletedListener();
+	abstract void onCompleteActionPerformed();
 	
 	/**
 	 * Actions to perform if some error happens during the take off.
 	 */
-	abstract void onFailureListener();
+	abstract void onFailure();
 }

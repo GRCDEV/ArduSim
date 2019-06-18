@@ -11,7 +11,18 @@ import main.uavController.UAVParam;
 
 public class ValidationTools {
 	
-	//TODO add function to detect if a string is null or empty (isEmpty)
+	/**
+	 * Check if a String is null or empty.
+	 * @param validating String to validate.
+	 * @return true if the String is null or empty.
+	 */
+	public boolean isEmpty(String validating) {
+		if (validating == null || validating.length() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	
 	/**
 	 * Validate a boolean String.

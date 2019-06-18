@@ -14,8 +14,8 @@ import api.pojo.FlightMode;
 import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.CopterParam;
 import api.pojo.RCValues;
-import api.pojo.location.Location3DUTM;
 import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3DGeo;
 import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
 import main.api.CopterParamLoaded;
@@ -44,6 +44,7 @@ public class UAVParam {
 	// UAV-UAV TCP connection parameters (on real UAVs)
 	public static volatile String broadcastIP = "192.168.1.255";// Broadcast IP
 	public static volatile int broadcastPort = 14650;			// Broadcast port
+	public static volatile int broadcastInternalPort = 14750;	// Broadcast port used for ArduSim internal communications
 	
 	// UAVs collision detection parameters
 	public static volatile long distanceCalculusPeriod;						// (ms) Distance calculus between UAVs period
@@ -185,7 +186,7 @@ public class UAVParam {
 	public static AtomicReference<RCValues>[] rcs;
 	
 	// Target location for continuous movement
-	public static AtomicReference<Location3DUTM>[] target;
+	public static AtomicReference<Location3DGeo>[] target;
 
 	// Communications finite state machine. States of the MAVLink protocol
 	public static AtomicIntegerArray MAVStatus;

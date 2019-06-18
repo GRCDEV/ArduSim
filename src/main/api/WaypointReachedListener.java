@@ -11,6 +11,6 @@ public interface WaypointReachedListener {
 	 * @param numUAV This specific UAV position in the data arrays (see documentation).
 	 * @param numSeq Sequence number of the waypoint reached.
 	 */
-	void onWaypointReached(int numUAV, int numSeq);
+	void onWaypointReachedActionPerformed(int numUAV, int numSeq);
 	
 }

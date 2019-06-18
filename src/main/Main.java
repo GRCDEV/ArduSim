@@ -357,15 +357,6 @@ public class Main {
 		ArduSimTools.logGlobal(Text.SETUP_START);
 		ArduSimTools.selectedProtocolInstance.setupActionPerformed();
 		Param.simStatus = SimulatorState.READY_FOR_TEST;
-		while (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
-			ardusim.sleep(SimParam.SHORT_WAITING_TIME);
-		}
-		if (Param.simStatus != SimulatorState.READY_FOR_TEST) {
-			if (Param.role == ArduSim.MULTICOPTER) {
-				API.getCopter(0).cancelRCOverride();
-			}
-			return;
-		}
 
 		// 14. Waiting for the user to start the experiment
 		if (Param.role == ArduSim.SIMULATOR) {

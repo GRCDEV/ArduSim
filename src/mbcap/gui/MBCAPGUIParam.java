@@ -2,7 +2,7 @@ package mbcap.gui;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.atomic.AtomicReference;
 
 import api.pojo.location.Location3DUTM;
 
@@ -12,7 +12,7 @@ import api.pojo.location.Location3DUTM;
 public class MBCAPGUIParam {
 
 	// List of the predicted positions of each UAV in UTM coordinates
-	public static AtomicReferenceArray<List<Location3DUTM>> predictedLocation;
+	public static AtomicReference<List<Location3DUTM>>[] predictedLocation;
 
 	// Parameters needed to draw the warning image when a collision risk is detected
 	public static final String EXCLAMATION_IMAGE_PATH = "/resources/mbcap/Exclamation.png";	// Warning image file path

@@ -215,9 +215,9 @@ The list of parameters is:
 * **MANDATORY** parameters when running in real UAVs:
     * *UAVPROTOCOL*. Protocol to be deployed.
     * *UAVSPEED*. Maximum planned speed of the multicopter.
+* Optional parameter for protocols that use the master-slave pattern.
+    * *MACS*. MAC addresses of the adapters of the master UAV (colon notation, and comma separated)
 * Optional parameters for protocols that use flight formations:
-    * *GROUNDFORMATION*.UAV ground formation (only for simulations). Used to set the layout of virtual UAVs, as specified in the *FlightFormation* Class.
-    * *GROUNDDISTANCE*. Minimum distance between contiguous UAVs in the ground formation (only for simulation). It must be an integer value in meters.
     * *AIRFORMATION*. UAV flying formation. Used to set the flying layout.
     * *AIRDISTANCE*. Minimum distance between contiguous UAVs in the flying formation. It must be an integer value in meters.
     * *LANDDISTANCE*. Minimum distance between contiguous UAVs for the landing phase.

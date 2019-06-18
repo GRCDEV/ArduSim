@@ -1,12 +1,8 @@
 package mbcap.logic;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
+import com.esotericsoftware.kryo.io.Input;
 
 import api.API;
-import main.Text;
 import main.api.communications.CommLink;
 import mbcap.gui.MBCAPPCCompanionDialog;
 import mbcap.pojo.Beacon;
@@ -18,35 +14,27 @@ import mbcap.pojo.Beacon;
 public class MBCAPPCCompanionListener extends Thread {
 	
 	private MBCAPPCCompanionDialog dialog;
+	
+	private CommLink link;
+	private byte[] inBuffer;
+	private Input input;
 
 	@SuppressWarnings("unused")
 	private MBCAPPCCompanionListener() {}
 	
 	public MBCAPPCCompanionListener(MBCAPPCCompanionDialog dialog) {
 		this.dialog = dialog;
+		this.link = API.getCommLink(0);
+		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.input = new Input(inBuffer);
 	}
 	
 	@Override
 	public void run() {
-		byte[] array;
 		Beacon b;
-		try {
-			@SuppressWarnings("resource")
-			DatagramSocket s = new DatagramSocket(API.getArduSim().getUDPBroadcastPort());
-			s.setBroadcast(true);
-			DatagramPacket p = new DatagramPacket(new byte[CommLink.DATAGRAM_MAX_LENGTH], CommLink.DATAGRAM_MAX_LENGTH);
-			while (true) {
-				try {
-					s.receive(p);
-					array = p.getData();
-					b = Beacon.getBeacon(array);
-					this.dialog.updateRow(b);
-				} catch (IOException e) {}
-				p.setData(new byte[CommLink.DATAGRAM_MAX_LENGTH], 0, CommLink.DATAGRAM_MAX_LENGTH);
-			}
-//			s.close();
-		} catch (SocketException e) {
-			API.getGUI(0).exit(Text.THREAD_START_ERROR);
+		while(true) {
+			b = ReceiverThread.getBeacon(link.receiveMessage(), input);
+			this.dialog.updateRow(b);
 		}
 	}
 

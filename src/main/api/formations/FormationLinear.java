@@ -9,18 +9,18 @@ import main.api.formations.helpers.FormationPoint;
 
 public class FormationLinear extends FlightFormation {
 
-	protected FormationLinear(int numUAVs, double minDistance) {
-		super(numUAVs, minDistance);
+	protected FormationLinear(int numUAVs, double minDistance, Formation formation) {
+		super(numUAVs, minDistance, formation);
 	}
 
 	@Override
 	protected void initializeFormation() {
-		this.centerUAV = this.numUAVs / 2;
+		this.centerUAVPosition = this.numUAVs / 2;
 		
 		double x;
 		ValidationTools validationTools = API.getValidationTools();
 		for (int i = 0; i < this.numUAVs; i++) {
-			x = validationTools.roundDouble((i - this.centerUAV) * this.minDistance, 6);
+			x = validationTools.roundDouble((i - this.centerUAVPosition) * this.minDistance, 6);
 			this.point[i] = new FormationPoint(i, x, 0);
 		}
 	}
