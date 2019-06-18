@@ -102,11 +102,11 @@ public class GUI {
 		Pair<String, List<Waypoint>[]> missions = this.loadAndParseMissions(selection);
 		if (missions != null) {
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
-				this.log(Text.MISSIONS_LOADED + " " + selection[0].getName());
+				ArduSimTools.logGlobal(Text.MISSIONS_LOADED + " " + selection[0].getName());
 				return new Pair<String, List<Waypoint>[]>(selection[0].getName(), missions.getValue1());
 			}
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
-				this.log(Text.MISSIONS_LOADED + " " + selection[0].getName());
+				ArduSimTools.logGlobal(Text.MISSIONS_LOADED + " " + selection[0].getName());
 				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
 			}
 		}
@@ -126,14 +126,14 @@ public class GUI {
 		String extension = fileTools.getFileExtension(files[0]);
 		// Only one "kml" file is accepted
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase()) && files.length > 1) {
-			this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
+			ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
 			return null;
 		}
 		// waypoints files can not be mixed with kml files
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
 			for (int i = 1; i < files.length; i++) {
 				if (!fileTools.getFileExtension(files[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-					this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
+					ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
 					return null;
 				}
 			}
@@ -145,13 +145,13 @@ public class GUI {
 			MissionKmlDialog.success = false;
 			new MissionKmlDialog(files[0].getName());
 			if (!MissionKmlDialog.success) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
 				return null;
 			}
 			// Next, load the missions
 			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0]);
 			if (missions == null) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 				return null;
 			}
 			return new Pair<String, List<Waypoint>[]>(Text.FILE_EXTENSION_KML, missions);
@@ -169,7 +169,7 @@ public class GUI {
 			}
 			new MissionWaypointsDialog(name);
 			if (!MissionWaypointsDialog.success) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
 				return null;
 			}
 			
@@ -185,7 +185,7 @@ public class GUI {
 			}
 			// If no valid missions were found, just ignore the action
 			if (j == 0) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
 				return null;
 			}
 			

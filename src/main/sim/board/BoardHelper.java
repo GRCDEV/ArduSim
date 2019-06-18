@@ -17,7 +17,6 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import api.API;
 import api.pojo.location.Location2DGeo;
 import api.pojo.location.LogPoint;
 import api.pojo.location.Location3DUTM;
@@ -27,7 +26,6 @@ import main.ArduSimTools;
 import main.InitialConfiguration2Thread;
 import main.Param;
 import main.Param.SimulatorState;
-import main.api.ArduSim;
 import main.api.ArduSimNotReadyException;
 import main.sim.board.pojo.MercatorProjection;
 import main.sim.gui.MainWindow;
@@ -614,14 +612,14 @@ public class BoardHelper {
 	private static void drawCollisionCircle(Graphics2D g) {
 		LogPoint currentPXLocation;
 		Ellipse2D.Double ellipse;
-		ArduSim ardusim = API.getArduSim();
-		int numUAVs = ardusim.getNumUAVs();
+		int numUAVs = Param.numUAVs;
 		for (int i=0; i<numUAVs; i++) {
 			// Only drawn when there is known current position
 			currentPXLocation = BoardParam.uavCurrentPXLocation[i];
 			if (currentPXLocation != null) {
-				if ((ardusim.isExperimentInProgress() || ardusim.isExperimentFinished())
-						&& API.getCopter(i).isFlying()) {
+				if ((Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS
+						|| Param.simStatus == Param.SimulatorState.TEST_FINISHED)
+						&& UAVParam.flightMode.get(i).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
 					g.setColor(Color.RED);
 					ellipse = new Ellipse2D.Double(
 							currentPXLocation.x-UAVParam.collisionScreenDistance, currentPXLocation.y-UAVParam.collisionScreenDistance,

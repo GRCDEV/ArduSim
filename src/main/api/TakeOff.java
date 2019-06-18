@@ -59,7 +59,7 @@ public class TakeOff extends Thread {
 			return;
 		}
 		
-		// We need to wait the stabilize metho to take effect
+		// We need to wait the stabilize method to take effect
 		ardusim.sleep(TakeOff.HOVERING_TIMEOUT);
 		
 		if (!copter.setFlightMode(FlightMode.GUIDED)) {
@@ -93,7 +93,7 @@ public class TakeOff extends Thread {
 			} else {
 				if (System.currentTimeMillis() - logTime > TakeOff.LOG_PERIOD) {
 					gui.logVerboseUAV(Text.ALTITUDE_TEXT
-							+ " = " + String.format("%.2f", copter.getAltitude())
+							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
 							+ " " + Text.METERS);
 					logTime = logTime + TakeOff.LOG_PERIOD;
 				}
@@ -141,7 +141,7 @@ public class TakeOff extends Thread {
 					
 					if (System.currentTimeMillis() - logTime > TakeOff.LOG_PERIOD) {
 						gui.logVerboseUAV(Text.ALTITUDE_TEXT
-								+ " = " + String.format("%.2f", copter.getAltitude())
+								+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
 								+ " " + Text.METERS);
 						logTime = logTime + TakeOff.LOG_PERIOD;
 					}

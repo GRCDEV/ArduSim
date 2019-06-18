@@ -118,7 +118,7 @@ public class MissionHelper {
 				return;
 			}
 			// Do nothing if the UAV is already landing
-			FlightMode mode = this.copter.getFlightMode();
+			FlightMode mode = UAVParam.flightMode.get(numUAV);
 			if (mode == FlightMode.LAND_ARMED
 					&& mode == FlightMode.LAND) {
 				return;
@@ -126,7 +126,7 @@ public class MissionHelper {
 			// Land only if the UAV is really close to the last waypoint force it to land
 			List<WaypointSimplified> mission = UAVParam.missionUTMSimplified.get(numUAV);
 			if (mission != null
-					&& this.copter.getLocationUTM().distance(mission.get(mission.size()-1)) < distanceThreshold) {
+					&& UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(mission.get(mission.size()-1)) < distanceThreshold) {
 				if (!this.copter.land()) {
 					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAND_ERROR);
 				}
@@ -141,6 +141,24 @@ public class MissionHelper {
 	 */
 	public boolean pause() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
 		if (this.copter.stabilize() && this.copter.setFlightMode(FlightMode.LOITER)) {
+			long time = System.nanoTime();
+			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
+				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
+				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STOP_ERROR_1);
+					return true;
+				}
+			}
+
+			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.STOP);
+			return true;
+		}
+		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STOP_ERROR_2);
+		return false;
+	}
+	
+	public boolean pause2() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
+		if (this.copter.stabilize() && this.copter.setFlightMode(FlightMode.BRAKE)) {
 			long time = System.nanoTime();
 			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
 				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
