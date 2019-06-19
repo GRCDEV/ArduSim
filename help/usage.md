@@ -205,6 +205,7 @@ The list of parameters is:
     * *KMLOVERRIDEALTITUDE*. Whether to override the altitude values included in the mission or not.
     * *KMLALTITUDE*. If the altitude values are overriden, the relative altitude for all of them.
     * *KMLMISSIONEND*. Whether to add a land or RTL command at the end of the mission. Valid values: unmodified, land, or RTL.
+    * *KMLRTLENDALTITUDE*. Altitude where to stop the UAV when KMLMISSIONEND is assigned RTL value. If set to 0, it lands.
     * *KMLWAYPOINTDELAY*. Mission delay over each waypoint (seconds).
     * *KMLWAYPOINTDISTANCE*. Distance to waypoint to assert that it has been reached (centimeters), used only when WAYPOINTDELAY is greater than 0.
 * PCCompanion-to-realUAV and realUAV-to-realUAV communication parameters:

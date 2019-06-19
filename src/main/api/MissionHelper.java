@@ -48,22 +48,6 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Get the last waypoint of the current mission.
-	 * @return The last waypoint of the current mission, or <i>null</i> if the UAV is not following a mission.
-	 */
-	public Waypoint getLastWaypoint() {
-		return UAVParam.lastWP[numUAV];
-	}
-	
-	/**
-	 * Get the UTM coordinates of the last waypoint of the current mission.
-	 * @return The UTM coordinates of the last waypoint of the current mission, or <i>null</i> if the UAV is not following a mission.
-	 */
-	public Location2DUTM getLastWaypointUTM() {
-		return UAVParam.lastWPUTM[numUAV];
-	}
-	
-	/**
 	 * Get the mission currently stored on the multicopter.
 	 * <p>Mission only available if it is previously sent to the drone <i>updateUAV(List&lt;Waypoint&gt;)</i>.</p>
 	 * @return The mission currently stored in the UAV in geographic coordinates.
@@ -94,7 +78,7 @@ public class MissionHelper {
 	 * @return true if the last waypoint of the mission has been reached.
 	 */
 	public boolean isLastWaypointReached() {
-		return UAVParam.lastWaypointReached[numUAV];
+		return UAVParam.lastWaypointReached[numUAV].get();
 	}
 	
 	/**
@@ -104,30 +88,20 @@ public class MissionHelper {
 	 * @param distanceThreshold (meters) Horizontal distance from the last waypoint of the mission to assert that the UAV has to land.
 	 */
 	public void landIfEnded(double distanceThreshold) {
-		int currentWaypoint = this.getCurrentWaypoint();
 		Waypoint lastWP = UAVParam.lastWP[numUAV];
 		// Only check when the last waypoint is reached
-		if (lastWP != null && currentWaypoint > 0 && currentWaypoint == lastWP.getNumSeq()) {
-			// Inform only once that the last waypoint has been reached
-			if (!UAVParam.lastWaypointReached[numUAV]) {
-				UAVParam.lastWaypointReached[numUAV] = true;
-				ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);	// never shown when RTL is used (workaround in ArduSimTools.isTestFinished())
+		if (UAVParam.lastWaypointReached[numUAV].get()) {
+			// Do nothing if the UAV is already landing
+			if (UAVParam.flightMode.get(numUAV).getCustomMode() == 9) {
+				return;
 			}
-			// Do nothing if the mission plans to land autonomously
 			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
 					|| (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
 				return;
 			}
-			// Do nothing if the UAV is already landing
-			FlightMode mode = UAVParam.flightMode.get(numUAV);
-			if (mode == FlightMode.LAND_ARMED
-					&& mode == FlightMode.LAND) {
-				return;
-			}
+			
 			// Land only if the UAV is really close to the last waypoint force it to land
-			List<WaypointSimplified> mission = UAVParam.missionUTMSimplified.get(numUAV);
-			if (mission != null
-					&& UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(mission.get(mission.size()-1)) < distanceThreshold) {
+			if (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(UAVParam.lastWPUTM[numUAV]) < distanceThreshold) {
 				if (!this.copter.land()) {
 					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAND_ERROR);
 				}

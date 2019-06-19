@@ -143,9 +143,9 @@ public enum CopterParam {
 	/** Flight custom mode for RC level 6 (x>1749). */
 	FLTMODE6("FLTMODE6", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT8),
 	
-	/** (m) Relative altitude over home location during return to launch. */
+	/** (cm) Relative altitude over home location during return to launch. */
 	RTL_ALTITUDE("RTL_ALT", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),
-	/** (m) Loiter relative altitude over home location when not desired to land after return to launch. */
+	/** (cm) Loiter relative altitude over home location when not desired to land after return to launch. */
 	RTL_ALTITUDE_FINAL("RTL_ALT_FINAL", MAV_PARAM_TYPE.MAV_PARAM_TYPE_INT16),
 	/** (cm) Distance to a waypoint to assert that it has been reached. */
 	WPNAV_RADIUS("WPNAV_RADIUS", MAV_PARAM_TYPE.MAV_PARAM_TYPE_REAL32),

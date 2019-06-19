@@ -19,7 +19,9 @@ import main.api.ArduSim;
 import main.api.ArduSimNotReadyException;
 import main.api.Copter;
 import main.api.GUI;
+import main.api.MissionHelper;
 import main.api.MoveToListener;
+import main.api.WaypointReachedListener;
 import main.api.MoveTo;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.pojo.MBCAPState;
@@ -29,7 +31,7 @@ import mbcap.pojo.Beacon;
 /** This class implements the collision risk check finite state machine.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-public class CollisionDetectorThread extends Thread {
+public class CollisionDetectorThread extends Thread implements WaypointReachedListener {
 	
 	private AtomicInteger event;
 	private AtomicInteger deadlockSolved;
@@ -44,8 +46,10 @@ public class CollisionDetectorThread extends Thread {
 	private Map<Long, Point2D.Double> impactLocationPX;
 	private Map<Long, Beacon> beacons;
 	private List<ProgressState> progress;
+	private int numUAV;
 	
 	private Copter copter;
+	private MissionHelper missionHelper;
 	private GUI gui;
 	private ArduSim ardusim;
 	
@@ -70,8 +74,10 @@ public class CollisionDetectorThread extends Thread {
 		this.impactLocationPX = MBCAPParam.impactLocationPX[numUAV];
 		this.beacons = MBCAPParam.beacons[numUAV];
 		this.progress = MBCAPParam.progress[numUAV];
+		this.numUAV = numUAV;
 		
 		this.copter = API.getCopter(numUAV);
+		this.missionHelper = this.copter.getMissionHelper();
 		this.gui = API.getGUI(numUAV);
 		this.ardusim = API.getArduSim();
 		
@@ -117,7 +123,7 @@ public class CollisionDetectorThread extends Thread {
 					// Case a. The UAV can resume the mission
 					if (avoidingBeacon == null
 							&& state != MBCAPState.OVERTAKING) {
-						if (copter.getMissionHelper().resume()) {
+						if (missionHelper.resume()) {
 							stateTime = System.nanoTime();
 							gui.logUAV(MBCAPText.MISSION_RESUME);
 							
@@ -160,6 +166,7 @@ public class CollisionDetectorThread extends Thread {
 						} else {
 							gui.logUAV(MBCAPText.DEADLOCK_ERROR);
 						}
+						
 						stateTime = System.nanoTime();
 						prevRiskId = avoidingBeacon.uavId;
 						prevSolvedTimeout = System.currentTimeMillis();
@@ -191,7 +198,7 @@ public class CollisionDetectorThread extends Thread {
 						// Progress update
 						this.updateState(MBCAPState.NORMAL);
 					} else {
-						if (copter.getMissionHelper().resume()) {
+						if (missionHelper.resume()) {
 							prevRiskId = avoidingBeacon.uavId;
 							prevSolvedTimeout = System.currentTimeMillis();
 							if (!isRealUAV) {
@@ -220,7 +227,7 @@ public class CollisionDetectorThread extends Thread {
 					state = currentState.get();
 					if (state == MBCAPState.NORMAL) {
 						if (selfBeacon.state == MBCAPState.NORMAL.getId()
-								&& !selfBeacon.isLanding) {	// Only check if the beacon has been updated (avoid race condition)
+								&& !missionHelper.isLastWaypointReached()) {
 							// Sorting the beacons by priority
 							sortingQueue.clear();
 							Iterator<Map.Entry<Long, Beacon>> entries = beacons.entrySet().iterator();
@@ -364,14 +371,17 @@ public class CollisionDetectorThread extends Thread {
 
 					// 3. Machine state analysis based on the previous information
 					if (avoidingBeacon != null) {
-						// 3.1 In normal flight state. Stop due to a new collision risk
-						if (state == MBCAPState.NORMAL) {
+						// 3.1 In normal flight state. Stop due to a new collision risk unless this UAV is landing
+						if (state == MBCAPState.NORMAL && !missionHelper.isLastWaypointReached()
+								&& copter.getFlightMode().getCustomMode() != 9) {
 							gui.logUAV(MBCAPText.RISK_DETECTED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 							gui.updateGlobalInformation(MBCAPText.COLLISION_RISK_DETECTED);
 							Location2DUTM antes = copter.getLocationUTM();
-							if (copter.getMissionHelper().pause()) {
-//							if (copter.getMissionHelper().pause2()) {
-								gui.logUAV("Frenada en " + copter.getLocationUTM().distance(antes) + " m");
+							double velocidad = copter.getSpeed();
+							if (missionHelper.pause()) {
+//							if (missionHelper.pause2()) {TODO probar
+								gui.logUAV("Frenada en " + copter.getLocationUTM().distance(antes) + " m a "
+										+ velocidad + " m/s");
 								stateTime = System.nanoTime();
 								idAvoiding.set(avoidingBeacon.uavId);
 								// Progress update
@@ -387,7 +397,7 @@ public class CollisionDetectorThread extends Thread {
 							
 							// If the other UAV starts landing, the situation is solved
 							if (avoidingBeacon.isLanding) {
-								if (copter.getMissionHelper().resume()) {
+								if (missionHelper.resume()) {
 									prevRiskId = avoidingBeacon.uavId;
 									prevSolvedTimeout = System.currentTimeMillis();
 									if (!isRealUAV) {
@@ -411,7 +421,7 @@ public class CollisionDetectorThread extends Thread {
 								if (selfBeacon.uavId > avoidingBeacon.uavId
 										&& MBCAPState.getSatateById(avoidingBeacon.state) == MBCAPState.GO_ON_PLEASE) {
 									gui.logUAV(MBCAPText.RESUMING_MISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
-									if (copter.getMissionHelper().resume()) {
+									if (missionHelper.resume()) {
 										stateTime = System.nanoTime();
 										// Progress update
 										this.updateState(MBCAPState.OVERTAKING);
@@ -545,7 +555,7 @@ public class CollisionDetectorThread extends Thread {
 						if (state == MBCAPState.GO_ON_PLEASE
 								&& hasBeenOvertaken) {
 							hasBeenOvertaken = false;
-							if (copter.getMissionHelper().resume()) {
+							if (missionHelper.resume()) {
 								gui.logUAV(MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 								if (!isRealUAV) {
 									impactLocationUTM.remove(avoidingBeacon.uavId);
@@ -1030,6 +1040,14 @@ public class CollisionDetectorThread extends Thread {
 				Point2D.Double riskPXLocation = gui.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
 				impactLocationPX.put(beaconId, riskPXLocation);
 			}
+		}
+	}
+
+	@Override
+	public void onWaypointReachedActionPerformed(int numUAV, int numSeq) {
+		// Project the predicted path over the planned mission
+		if (this.numUAV == numUAV) {
+			projectPath.set(1);
 		}
 	}
 	

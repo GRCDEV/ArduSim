@@ -44,10 +44,10 @@ public class ReceiverThread extends Thread {
 		while (!ardusim.isExperimentInProgress() || !copter.isFlying()) {
 			ardusim.sleep(MBCAPParam.SHORT_WAITING_TIME);
 		}
-		new CollisionDetectorThread(numUAV).start();
-		BeaconingThread thread = new BeaconingThread(numUAV);
-		copter.getMissionHelper().setWaypointReachedListener(thread);
-		thread.start();
+		CollisionDetectorThread detector = new CollisionDetectorThread(numUAV);
+		copter.getMissionHelper().setWaypointReachedListener(detector);
+		detector.start();
+		new BeaconingThread(numUAV).start();
 		
 		long expirationCheckTime = System.currentTimeMillis();
 		long selfId = copter.getID();

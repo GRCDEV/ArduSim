@@ -433,6 +433,22 @@ public class UAVControllerThread extends Thread {
 		UAVParam.currentWaypoint.set(numUAV, message.seq);
 		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
 		
+		Waypoint lastWP = UAVParam.lastWP[numUAV];
+		if (message.seq > 0) {
+			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
+					|| lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+				if (message.seq == lastWP.getNumSeq() - 1) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
+					UAVParam.lastWaypointReached[numUAV].set(true);
+				}
+			} else {
+				if (message.seq == lastWP.getNumSeq()) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
+					UAVParam.lastWaypointReached[numUAV].set(true);
+				}
+			}
+		}
+		
 		ArduSimTools.triggerWaypointReached(numUAV, message.seq);
 	}
 

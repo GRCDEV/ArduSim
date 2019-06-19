@@ -7,6 +7,7 @@ import api.pojo.CopterParam;
 import api.pojo.FlightMode;
 import main.api.ArduSim;
 import main.api.Copter;
+import main.sim.gui.MissionKmlDialog;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 
@@ -339,11 +340,19 @@ public class InitialConfiguration1Thread extends Thread {
 			return;
 		}
 		UAVParam.RTLAltitude[numUAV] = paramValue*0.01;			// Data received in centimeters
-		paramValue = copter.getParameter(CopterParam.RTL_ALTITUDE_FINAL);
-		if (paramValue == null) {
-			return;
+		
+		if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
+			if (!copter.setParameter(CopterParam.RTL_ALTITUDE_FINAL, MissionKmlDialog.rtlFinalAltitude * 100)) {
+				return;
+			}
+			UAVParam.RTLAltitudeFinal[numUAV] = MissionKmlDialog.rtlFinalAltitude;
+		} else {
+			paramValue = copter.getParameter(CopterParam.RTL_ALTITUDE_FINAL);
+			if (paramValue == null) {
+				return;
+			}
+			UAVParam.RTLAltitudeFinal[numUAV] = paramValue * 0.01;	// Data received in centimeters
 		}
-		UAVParam.RTLAltitudeFinal[numUAV] = paramValue*0.01;	// Data received in centimeters
 		
 		// Set the speed when following a mission
 		if (UAVParam.initialSpeeds[numUAV] != 0.0 && !copter.setPlannedSpeed(UAVParam.initialSpeeds[numUAV])) {

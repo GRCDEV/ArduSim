@@ -57,6 +57,26 @@ public class ValidationTools {
 	}
 	
 	/**
+	 * Validate a non negative double number.
+	 * @param validating String representation of a non negative double.
+	 * @return true if the String represents a valid non negative double.
+	 */
+	public boolean isValidNonNegativeDouble(String validating) {
+		if (validating == null) {
+			return false;
+		}
+		try {
+			double x = Double.parseDouble(validating);
+			if (x < 0) {
+				return false;
+			}
+		} catch (NumberFormatException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
 	 * Validate a non negative integer number.
 	 * @param validating String representation of a non negative integer.
 	 * @return true if the String represents a valid non negative integer.

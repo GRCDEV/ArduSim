@@ -264,6 +264,8 @@ public class Text {
 			+ "\twaypoint, spline waypoint, takeoff, land, RTL.";
 	// Loading mission(s) dialog
 	public static final String EXTEND_MISSION = "Mission end:";
+	public static final String RTL_ALTITUDE = "Final altitude for RTL:";
+	public static final String RTL_ALTITUDE_ERROR = "The minimum altitude for RTL must be a positive number.";
 	public static final String MIN_TARGET_ALTITUDE = "Minimum waypoints relative altitude:";
 	public static final String XML_DELAY = "Input mission delay over each waypoint:";
 	public static final String TARGET_DISTANCE = "Distance to waypoint to assert WP reached:";

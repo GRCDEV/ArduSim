@@ -10,23 +10,17 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.javatuples.Pair;
 import org.javatuples.Quintet;
-import org.mavlink.messages.MAV_CMD;
-
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
-import api.pojo.FlightMode;
 import api.pojo.location.Location2DUTM;
 import api.pojo.location.Location3DUTM;
-import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.MissionHelper;
-import main.api.WaypointReachedListener;
 import main.api.communications.CommLink;
-import main.uavController.UAVParam;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.MBCAPState;
@@ -34,7 +28,7 @@ import mbcap.pojo.MBCAPState;
 /** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-public class BeaconingThread extends Thread implements WaypointReachedListener {
+public class BeaconingThread extends Thread {
 	
 	private AtomicReference<List<Location3DUTM>> predictedLocations;
 	private AtomicInteger event;
@@ -54,9 +48,6 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 	private Copter copter;
 	private long selfID;
 	private GUI gui;
-	
-	private Waypoint lastWP;
-	private Location2DUTM lastWPUTM;
 
 	@SuppressWarnings("unused")
 	private BeaconingThread() {}
@@ -79,14 +70,6 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 		this.copter = API.getCopter(numUAV);
 		this.selfID = this.copter.getID();
 		this.gui = API.getGUI(numUAV);
-	}
-	
-	@Override
-	public void onWaypointReachedActionPerformed(int numUAV, int numSeq) {
-		// Project the predicted path over the planned mission
-		if (this.numUAV == numUAV) {
-			projectPath.set(1);
-		}
 	}
 
 	@Override
@@ -181,7 +164,7 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 		res.statePos = output.position();
 		output.writeShort(res.state);
 		res.isLandingPos = output.position();
-		res.isLanding = this.isLanding();
+		res.isLanding = !copter.isFlying() || this.isLanding();
 		if (res.isLanding) {
 			output.writeShort(1);
 		} else {
@@ -211,28 +194,12 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 		return res;
 	}
 	
-	/** Analyzes if the UAV is landing and the protocol must be disabled. */
+	/** Analyzes if the UAV is landing or performing RTL, and the protocol must be disabled. */
 	private boolean isLanding() {
-		FlightMode mode = copter.getFlightMode();
-		if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
+		if (copter.getFlightMode().getCustomMode() == 9) {	// Land flight mode
 			return true;
 		}
-		if (this.lastWP == null) {
-			this.lastWP = copter.getMissionHelper().getLastWaypoint();
-			this.lastWPUTM = copter.getMissionHelper().getLastWaypointUTM();
-		}
-		int currentWP = copter.getMissionHelper().getCurrentWaypoint();
-//		if (this.lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND) {
-//			if (currentWP >= this.lastWP.getNumSeq() - 1) {
-//				return true;
-//			}
-//		} else
-		//TODO repetir prueba con 100 drones a ver cuántas colisiones hay
-		if (this.lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND) {
-			if (currentWP >= this.lastWP.getNumSeq() - 1 && copter.getLocationUTM().distance(lastWPUTM) < UAVParam.LAST_WP_THRESHOLD) {
-				return true;
-			}
-		} else if (mode.getCustomMode() == 9) {	// Land flight mode
+		if (copter.getMissionHelper().isLastWaypointReached()) {
 			return true;
 		}
 		return false;
@@ -519,7 +486,7 @@ public class BeaconingThread extends Thread implements WaypointReachedListener {
 		beacon.state = currentState.get().getId();
 		output.writeShort(beacon.state);
 		output.setPosition(beacon.isLandingPos);
-		beacon.isLanding = this.isLanding();
+		beacon.isLanding = !copter.isFlying() || this.isLanding();
 		if (beacon.isLanding) {
 			output.writeShort(1);
 		} else {

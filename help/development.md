@@ -214,8 +214,6 @@ With `getMasterSlaveHelper()` a few functions are available to coordinate a swar
 With `getMissionHelper()` a new set of functions appear that help to interact with the UAV to perform planned missions:
 
 * `int getCurrentWaypoint()`. It provides the identifier of the current waypoint of the mission.
-* `Waypoint getLastWaypoint()`. It provides the last waypoint of the current mission.
-* `Location2DUTM getLastWaypointUTM()`. It provices the UTM coordinates of the last waypoint of the current mission.
 * `List<Waypoint> get()`.This method provides the mission currently stored in the UAV. It must be previously sent to the flight controller with the function `updateUAV(List<Waypoint>)`.
 * `List<Waypoint>[] getMissionsLoaded()`. This function provides the missions already loaded from file. This function must not be used before the `setMissionsLoaded(List<Waypoint[])` function.
 * `List<WaypointSimplified> getSimplified()`. This method must be invoked once the mission is sent to the drone with `updateUAV(List<Waypoint>)`. It provides the mission that is show on screen when performing a simulation. This mission is simplified, as it lacks of waypoints that don't add new line segments to the shown path. As example, it is used in *MUSCOP* protocol to build the path the UAVs have to follow.
@@ -328,6 +326,7 @@ The function `API.getValidationTools()` provides a context object to validate an
 
 * `boolean isValidBoolean(String)`. It checks if a String represents a valid boolean value.
 * `boolean isValidDouble(String)`. It checks if a String represents a double.
+* `boolean isValidNonNegativeDouble(String)`. It checks if a String represents 0, or a positive double.
 * `boolean isValidNonNegativeInteger(String)`. It checks if a String represents 0, or a positive integer.
 * `boolean isValidPort(String)`. It checks if a String represents a TCP port in the range [1024, 65535].
 * `boolean isValidPositiveInteger(String)`. It checks if a String represents a positive integer.

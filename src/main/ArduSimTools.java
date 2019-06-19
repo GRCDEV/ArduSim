@@ -39,8 +39,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -121,7 +123,7 @@ public class ArduSimTools {
 	// Used to avoid the exit dialog to be opened more than once at the same time.
 	private static AtomicBoolean exiting = new AtomicBoolean();
 	
-	public static List<WaypointReachedListener> listeners = new ArrayList<WaypointReachedListener>();
+	public static Queue<WaypointReachedListener> listeners = new ConcurrentLinkedQueue<WaypointReachedListener>();
 	
 	private static volatile boolean storingResults = false;
 	
@@ -487,6 +489,18 @@ public class ArduSimTools {
 				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_LAND;
 			} else if (param.equalsIgnoreCase(MissionKmlDialog.MISSION_END_RTL)) {
 				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_RTL;
+				
+				param = parameters.get(Param.KML_RTL_END_ALT);
+				if (param == null) {
+					ArduSimTools.logGlobal(Param.KML_RTL_END_ALT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlDialog.rtlFinalAltitude);
+				} else {
+					if (!validationTools.isValidPositiveDouble(param)) {
+						ArduSimTools.logGlobal(Param.KML_RTL_END_ALT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+						System.exit(1);
+					} else {
+						MissionKmlDialog.rtlFinalAltitude = Double.parseDouble(param);
+					}
+				}
 			} else {
 				ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.missionEnd);
@@ -496,10 +510,11 @@ public class ArduSimTools {
 		if (param == null) {
 			ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlDialog.waypointDelay);
 		} else {
-			try {
+			if (!validationTools.isValidNonNegativeInteger(param)) {
+				ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDelay);
+			} else {
 				int delay = Integer.parseInt(param);
 				if (delay < 0 || delay > 65535) {
-					ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDelay);
 				} else {
 					MissionKmlDialog.waypointDelay = delay;
@@ -523,9 +538,6 @@ public class ArduSimTools {
 						}
 					}
 				}
-			} catch (NumberFormatException e) {
-				ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-				ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDelay);
 			}
 		}
 	}
@@ -644,7 +656,7 @@ public class ArduSimTools {
 		UAVParam.newLocation = new float[Param.numUAVs][3];
 
 		UAVParam.missionUTMSimplified = new AtomicReferenceArray<List<WaypointSimplified>>(Param.numUAVs);
-		UAVParam.lastWaypointReached = new boolean[Param.numUAVs];
+		UAVParam.lastWaypointReached = new AtomicBoolean[Param.numUAVs];
 		
 		UAVParam.rcs = new AtomicReference[Param.numUAVs];
 		UAVParam.overrideOn = new AtomicIntegerArray(Param.numUAVs);
@@ -695,7 +707,7 @@ public class ArduSimTools {
 				UAVParam.customModeToFlightModeMap[i][j] = -1;
 			}
 			
-			UAVParam.lastWaypointReached[i] = false;
+			UAVParam.lastWaypointReached[i] = new AtomicBoolean();
 			
 			UAVParam.rcs[i] = new AtomicReference<RCValues>();
 			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
@@ -2556,8 +2568,8 @@ public class ArduSimTools {
 	/** Method used by ArduSim (forbidden to users) to trigger a waypoint reached event.
 	 * <p>This method is NOT thread-safe.</p> */
 	public static void triggerWaypointReached(int numUAV, int numSeq) {
-		for (int i = 0; i < ArduSimTools.listeners.size(); i++) {
-			ArduSimTools.listeners.get(i).onWaypointReachedActionPerformed(numUAV, numSeq);
+		for (WaypointReachedListener listener : ArduSimTools.listeners) {
+			listener.onWaypointReachedActionPerformed(numUAV, numSeq);
 		}
 	}
 	
@@ -2633,14 +2645,6 @@ public class ArduSimTools {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			FlightMode mode = UAVParam.flightMode.get(i);
 			if (mode.getBaseMode() < UAVParam.MIN_MODE_TO_BE_FLYING) {
-				// Inform only once that the last waypoint has been reached
-				if (UAVParam.lastWP[i] != null
-						&& !UAVParam.lastWaypointReached[i]) {
-					UAVParam.lastWaypointReached[i] = true;
-					API.getGUI(i).logUAV(Text.LAST_WAYPOINT_REACHED);
-					ArduSimTools.triggerWaypointReached(i, UAVParam.currentGeoMission[i].get(UAVParam.currentGeoMission[i].size() - 1).getNumSeq());
-				}
-				
 				if (Param.testEndTime[i] == 0) {
 					Param.testEndTime[i] = System.currentTimeMillis();
 					if (Param.testEndTime[i] > latest) {

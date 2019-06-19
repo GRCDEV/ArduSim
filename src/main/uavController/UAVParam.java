@@ -3,6 +3,7 @@ package main.uavController;
 import java.awt.Shape;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
@@ -180,7 +181,7 @@ public class UAVParam {
 	public static final long MODE_CHANGE_TIMEOUT = 5000;	// (ms)
 	
 	// Auxiliary variable needed to ensure that the message thrown when the UAV gets to the end is shown only once
-	public static boolean[] lastWaypointReached;
+	public static AtomicBoolean[] lastWaypointReached;
 	
 	// RC Channels message sent values
 	public static AtomicReference<RCValues>[] rcs;
