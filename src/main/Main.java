@@ -417,7 +417,7 @@ public class Main {
 		}
 
 		// 17. Inform that the experiment has finished, and wait virtual communications to be closed
-		ArduSimTools.logGlobal(validationTools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);//TODO ¿Muestra dos veces el tiempo?
+		ArduSimTools.logGlobal(validationTools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 		if (Param.role == ArduSim.SIMULATOR) {
 			if (Param.numUAVs > 1) {
 				ArduSimTools.logGlobal(Text.SHUTTING_DOWN_COMM);

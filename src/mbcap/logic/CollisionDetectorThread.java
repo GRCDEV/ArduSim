@@ -379,7 +379,7 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 							Location2DUTM antes = copter.getLocationUTM();
 							double velocidad = copter.getSpeed();
 							if (missionHelper.pause()) {
-//							if (missionHelper.pause2()) {TODO probar
+//							if (missionHelper.pause2()) {//TODO probar
 								gui.logUAV("Frenada en " + copter.getLocationUTM().distance(antes) + " m a "
 										+ velocidad + " m/s");
 								stateTime = System.nanoTime();

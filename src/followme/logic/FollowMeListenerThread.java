@@ -135,8 +135,7 @@ public class FollowMeListenerThread extends Thread {
 		gui.updateProtocolState(FollowMeText.SETUP_FINISHED);
 		gui.logVerboseUAV(FollowMeText.LISTENER_WAITING);
 		while (currentState.get() == SETUP_FINISHED) {
-			// Discard message
-			link.receiveMessage(FollowMeParam.RECEIVING_TIMEOUT);
+			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			// Coordination with ArduSim
 			if (ardusim.isExperimentInProgress()) {
 				currentState.set(FOLLOWING);

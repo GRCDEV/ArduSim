@@ -132,6 +132,11 @@ public class MissionHelper {
 		return false;
 	}
 	
+	/**
+	 * Stops the mission and stabilizes the UAV in the current location, changing to brake flight mode.
+	 * <p>Blocking method until the UAV is almost stopped.</p>
+	 * @return true if all the commands were successful.
+	 */
 	public boolean pause2() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
 		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.BRAKE)) {
 			long time = System.nanoTime();

@@ -213,7 +213,7 @@ public class SafeTakeOffListenerThread extends Thread {
 					
 				}
 			}
-			ardusim.sleep(MSParam.TAKE_OFF_TIMEOUT);
+			ardusim.sleep(MSParam.TAKE_OFF_TIMEOUT);	// Wait to slaves timeout
 		} else {
 			gui.logVerboseUAV(MSText.NO_CENTER_WAIT_TAKEOFF_END_LISTENER);
 			while (state.get() == MSParam.STATE_TAKE_OFF_CHECK) {

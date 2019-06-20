@@ -67,7 +67,7 @@ public class MUSCOPTalkerThread extends Thread {
 	@Override
 	public void run() {
 		
-		/** SEND MISSION PHASE */
+		/** SHARE MISSION PHASE */
 		if (this.isMaster) {
 			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_TALKER);
 			Location3DUTM[] mission;
@@ -88,7 +88,7 @@ public class MUSCOPTalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (currentState.get() == SEND_MISSION) {
+			while (currentState.get() == SHARE_MISSION) {
 				link.sendBroadcastMessage(message);
 				
 				// Timer
@@ -107,7 +107,7 @@ public class MUSCOPTalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (currentState.get() == SEND_MISSION) {
+			while (currentState.get() == SHARE_MISSION) {
 				if (missionReceived.get()) {
 					link.sendBroadcastMessage(message);
 				}

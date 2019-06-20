@@ -30,17 +30,15 @@ public class DiscoverSlaveListener extends Thread {
 		byte[] inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		Input input = new Input(inBuffer);
 		
-		boolean masterFound = false;
 		long lastReceivedTime = 0;
 		
-		while (!masterFound || System.currentTimeMillis() - lastReceivedTime <= MSParam.DISCOVERY_TIMEOUT) {
+		while (lastReceivedTime == 0 || System.currentTimeMillis() - lastReceivedTime <= MSParam.DISCOVERY_TIMEOUT) {
 			inBuffer = commLink.receiveMessage(MSParam.RECEIVING_TIMEOUT);
 			if (inBuffer != null) {
 				input.setBuffer(inBuffer);
 				short type = input.readShort();
 				
 				if (type == MSMessageID.DISCOVERING) {
-					masterFound = true;
 					lastReceivedTime = System.currentTimeMillis();
 				}
 			}

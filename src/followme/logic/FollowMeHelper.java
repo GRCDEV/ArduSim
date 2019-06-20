@@ -166,7 +166,7 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
-		// TODO Auto-generated method stub
+		// TODO Optional dialog
 	}
 
 }

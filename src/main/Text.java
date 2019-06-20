@@ -38,6 +38,7 @@ public class Text {
 	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_2 = "param not found. Unable to continue.";
 	public static final String INI_FILE_PARAM_NOT_VALID_ERROR = "param not valid value:";
 	public static final String INI_FILE_PARAM_USING_DEFAULT = "param not valid. Using default value:";
+	public static final String INI_FILE_PARAM_PORT_IN_USE = "param not valid. Por in use by the internal ArduSim communications.";
 	public static final String INI_FILE_PARAM_SERIAL_PORT_WARNING = "The serial link could not work properly if the serial port name is wrong:";
 	public static final String INI_FILE_PARAM_BROADCAST_IP_WARNING = "Broadcast IP:";
 	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;

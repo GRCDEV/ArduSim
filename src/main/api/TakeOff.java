@@ -65,21 +65,21 @@ public class TakeOff extends Thread {
 		
 		if (!copter.setFlightMode(FlightMode.GUIDED)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error para guided");
+			System.out.println("Error para guided");//TODO limpiar debugging
 			listener.onFailure();
 			return;
 		}
 		
 		if (!HiddenFunctions.armEngines(numUAV)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error para armar");
+			System.out.println("Error para armar");//TODO limpiar debugging
 			listener.onFailure();
 			return;
 		}
 		
 		if (!HiddenFunctions.takeOffGuided(numUAV, relAltitude)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error al iniciar despegue");
+			System.out.println("Error al iniciar despegue");//TODO limpiar debugging
 			listener.onFailure();
 			return;
 		}

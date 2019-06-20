@@ -5,8 +5,8 @@ package muscop.pojo;
 
 public final class State {
 	public static final short START = 0;
-	public static final short SETUP = 1;
-	public static final short SEND_MISSION = 2;
+	public static final short SHARE_TAKE_OFF_DATA = 1;
+	public static final short SHARE_MISSION = 2;
 	public static final short TAKING_OFF = 3;
 	public static final short SETUP_FINISHED = 4;
 	public static final short FOLLOWING_MISSION = 5;

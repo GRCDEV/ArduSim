@@ -102,8 +102,8 @@ public class MUSCOPListenerThread extends Thread {
 			msHelper.DiscoverMaster();
 		}
 		
-		/** SETUP PHASE */
-		currentState.set(SETUP);
+		/** SHARE TAKE OFF DATA PHASE */
+		currentState.set(SHARE_TAKE_OFF_DATA);
 		gui.logUAV(MUSCOPText.SETUP);
 		gui.updateProtocolState(MUSCOPText.SETUP);
 		SafeTakeOffContext takeOff;
@@ -127,10 +127,10 @@ public class MUSCOPListenerThread extends Thread {
 			takeOff = takeOffHelper.getSlaveContext(false);
 		}
 		
-		/** SEND MISSION PHASE */
+		/** SHARE MISSION PHASE */
 		// The mission could be sent when  they are in the air, but it is better to do it now
 		//   because the are closer and messages are less prone to be lost.
-		currentState.set(SEND_MISSION);
+		currentState.set(SHARE_MISSION);
 		AtomicBoolean missionReceived = new AtomicBoolean();
 		AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
 		final AtomicInteger moveSemaphore = new AtomicInteger(1);	// We start in waypoint 0 and move to waypoint 1
@@ -170,7 +170,7 @@ public class MUSCOPListenerThread extends Thread {
 			// 3. Wait for data ack from all the slaves
 			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_ACK_LISTENER);
 			acks = new HashMap<Long, Long>((int)Math.ceil(numSlaves / 0.75) + 1);
-			while (currentState.get() == SEND_MISSION) {
+			while (currentState.get() == SHARE_MISSION) {
 				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
@@ -185,11 +185,11 @@ public class MUSCOPListenerThread extends Thread {
 					}
 				}
 			}
-			ardusim.sleep(MUSCOPParam.MISSION_TIMEOUT);
+			ardusim.sleep(MUSCOPParam.MISSION_TIMEOUT);	// Wait to slaves timeout
 		} else {
 			gui.logVerboseUAV(MUSCOPText.SLAVE_WAIT_DATA_LISTENER);
 			long lastReceivedData = 0;
-			while (currentState.get() == SEND_MISSION) {
+			while (currentState.get() == SHARE_MISSION) {
 				inBuffer = link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);

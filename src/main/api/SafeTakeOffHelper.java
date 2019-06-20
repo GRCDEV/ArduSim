@@ -50,7 +50,7 @@ public class SafeTakeOffHelper {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		API.getArduSim().sleep(MSParam.TAKE_OFF_DATA_TIMEOUT);
+		API.getArduSim().sleep(MSParam.TAKE_OFF_DATA_TIMEOUT);	//Wait slaves timeout
 		return result.get();
 	}
 

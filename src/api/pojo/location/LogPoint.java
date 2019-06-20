@@ -16,7 +16,6 @@ public class LogPoint extends Location3DUTM {
 	private double speed;
 	private int simulatorState;
 	
-	@SuppressWarnings("unused")
 	protected LogPoint() {}
 	
 	
