@@ -342,6 +342,7 @@ The function `API.getFlightFormationTools()` provides tools to build the swarm f
 * *Compact matrix*. The center UAV is surrounded by the remaining at the closest location to the center of the formation.
 * *Circle*. A center UAV is surrounded by the remaining forming a circle, and the are numbered; first the center UAV, and then the remaining counterclockwise starting on the right.
 * *Compact mesh*. The center UAV is surrounded by the remaining at the closest location to the center of the formation. Always, the distance from a UAV to the surrounding UAVs is the same.
+* *Random*.  The center UAV is surrounded by the remaining at the closest location to the center of the formation, but deploying the UAVs at random locations (variable distances). This formation is mainly oriented to simulations, in order to mimic a realistic deployment on the ground (use this in the <i>setStartingLocations</i> of the protocol implementation).
 
 In all cases, the center multicopter is the UAV closest to the rest of UAVs (center of line, matrix or circle). You can set values in the `openConfigurationDialog()` function of the protocol implementation, or retrieve them wherever you want (i.e. when setting the initial location for the UAVs in simulation, or preparing the take off of the UAVs).
 

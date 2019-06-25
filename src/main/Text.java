@@ -21,6 +21,7 @@ public class Text {
 	public static final String MATRIX_COMPACT_FORMATION = "Compact matrix";
 	public static final String CIRCLE_FORMATION = "Circle";
 	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
+	public static final String RANDOM = "Random";
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
