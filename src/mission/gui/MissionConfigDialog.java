@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -47,7 +45,6 @@ public class MissionConfigDialog extends JDialog {
           public void actionPerformed(ActionEvent e) {
             if(MissionHelper.isValidProtocolConfiguration(panel)) {
               MissionHelper.storeProtocolConfiguration(panel);
-              ardusim.setProtocolConfigured();
               SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
@@ -63,24 +60,7 @@ public class MissionConfigDialog extends JDialog {
       }
     }
     
-    //  If the dialog is closed, then it closes the whole program
-    this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-    this.addWindowListener(new WindowAdapter() {
-      public void windowClosing(WindowEvent we) {
-        dispose();
-        System.gc(); // Needed to avoid the error: Exception while removing reference.
-        System.exit(0);
-      }
-    });
-    
-    API.getGUI(0).addEscapeListener(this, true);
-    
     this.setTitle(ardusim.getSelectedProtocolName() + " " + MBCAPText.CONFIGURATION);
-    this.pack();
-    this.setModal(true);
-    this.setResizable(false);
-    this.setLocationRelativeTo(null);
-    this.setVisible(true);
   }
   
 }

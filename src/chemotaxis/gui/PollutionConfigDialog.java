@@ -16,6 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import api.API;
@@ -46,9 +47,6 @@ public class PollutionConfigDialog extends JDialog {
 		super();
 		
 		/** Set up dialog and main container **/
-		this.setModal(true);
-		this.setResizable(false);
-		this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		Container contentPane = this.getContentPane();
 		BoxLayout mainLayout = new BoxLayout(contentPane, BoxLayout.PAGE_AXIS);
 		contentPane.setLayout(mainLayout);
@@ -209,10 +207,6 @@ public class PollutionConfigDialog extends JDialog {
 				okAction();
 			}
 		});
-		
-		
-		
-		this.pack();
 	}
 	
 	private void okAction() {
@@ -225,8 +219,12 @@ public class PollutionConfigDialog extends JDialog {
 			ChemotaxisParam.altitude = Double.parseDouble(altitudeField.getText());
 			ChemotaxisParam.pollutionDataFile = pollutionDataField.getText();
 			ChemotaxisParam.isSimulation = isSimulationCheckBox.isSelected();
-			API.getArduSim().setProtocolConfigured();
-			dispose();
+			SwingUtilities.invokeLater(new Runnable() {
+  			  @Override
+  			  public void run() {
+  				  dispose();
+  			  }
+  		  });
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);
 		}

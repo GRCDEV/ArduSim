@@ -4,6 +4,8 @@ import static followme.pojo.State.SETUP_FINISHED;
 
 import java.awt.Graphics2D;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
@@ -36,8 +38,8 @@ public class FollowMeHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		new FollowMeConfigDialog();
+	public JDialog openConfigurationDialog() {
+		return new FollowMeConfigDialog();
 	}
 
 	@Override

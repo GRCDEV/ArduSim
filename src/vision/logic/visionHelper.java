@@ -4,12 +4,12 @@ import java.awt.Graphics2D;
 import java.io.File;
 import java.util.Map;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.CopterParam;
 import api.pojo.location.Location2DGeo;
 import api.pojo.location.Location3D;
 import main.api.Copter;
@@ -30,8 +30,8 @@ public class visionHelper extends ProtocolHelper {
 	public boolean loadMission() {return false;}
 
 	@Override
-	public void openConfigurationDialog() {
-		API.getArduSim().setProtocolConfigured();
+	public JDialog openConfigurationDialog() {
+		return null;
 	}
 
 	@Override

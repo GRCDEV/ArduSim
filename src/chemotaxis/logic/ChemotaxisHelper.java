@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
@@ -32,9 +33,8 @@ public class ChemotaxisHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		PollutionConfigDialog cofigDialog = new PollutionConfigDialog();
-		cofigDialog.setVisible(true);
+	public JDialog openConfigurationDialog() {
+		return new PollutionConfigDialog();
 		//sim.logic.SimTools.println(PollutionParam.startLocation.latitude + ", " + PollutionParam.startLocation.longitude);
 	}//TODO
 

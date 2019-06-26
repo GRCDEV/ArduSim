@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import org.javatuples.Pair;
 import api.API;
@@ -40,8 +42,8 @@ public class MUSCOPHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		new MUSCOPConfigDialog();
+	public JDialog openConfigurationDialog() {
+		return new MUSCOPConfigDialog();
 	}
 
 	@Override

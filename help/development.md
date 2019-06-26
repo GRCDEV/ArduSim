@@ -248,7 +248,6 @@ The `SafeTakeOffContext` object provides several methods to get information befo
 
 A few functions have been implemented in the object provided by *API.getGUI(int)* to update the GUI and console.
 
-* `void addEscapeListener(JDialog)`. This method allows to close the configuration dialog or the PC Companion dialog used for any protocol, whenever the escape key is pressed. It can be used once the dialog is builded.
 * `void exit(String)`. On a real UAV, it writes a message to console, it warns the user with a dialog, and it closes ArduSim with an error code. If ArduSim runs as a simulator and before exiting, all SITL instances are closed and temporary files are removed.
 * `StatusPacket[] getDetectedUAVs()`. It returns an array of objects with the ID of the detected UAVs, and with their number as size. This can be used in the protocol PC Companion dialog. It is useful to build the GUI before launching a thread to update it depending on the present UAVs. A usage example can be found in the PC Companion dialog implemented for the *MBCAP* protocol.
 * `Color getColor()`. It provides the Color assigned to a UAV to be used to draw linear elements on the screen, like the path followed by the UAV, which is  automatically drawn. Please, notice that each multicopter has a different color asigned.
@@ -310,7 +309,6 @@ The following functions allow the protocol to synchronize its execution with Ard
 
 * `boolean isVerboseStorageEnabled()`. This function may be used to decide if some information must be stored in a *File*.
 * `void setNumUAVs(int)`. A protocol may need to change the number of running UAVs on the same machine when performing a simulation. This method may be used in the configuration dialog of the protocol for that purpose. For example, if the protocol needs to load missions for the multicopters, it can reduce the number of simulated UAVs if the number of missions loaded is lower than expected (i.e. protocol *MBCAP*).
-* `void setProtocolConfigured()`. This function must be used when the protocol configuration dialog is closed to inform ArduSim that it can continue, opening the main window.
 * `void sleep(long)`. Wrapper method to make the current Thread wait for a period of time.
 
 ### 5.5 Available utilities

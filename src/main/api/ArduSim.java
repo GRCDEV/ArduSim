@@ -5,7 +5,6 @@ import java.util.List;
 import api.pojo.location.LogPoint;
 import main.ArduSimTools;
 import main.Param;
-import main.Param.SimulatorState;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 
@@ -21,8 +20,6 @@ public class ArduSim {
 	public static final int SIMULATOR = 1;
 	/** ArduSim runs as a PC Companion to control real multicopters. */
 	public static final int PCCOMPANION = 2;
-	
-	
 	
 	/**
 	 * Get the security distance used to assert that a collision between UAVs has happened.
@@ -176,13 +173,6 @@ public class ArduSim {
 	 */
 	public void setNumUAVs(int numUAVs) {
 		Param.numUAVsTemp.set(numUAVs);
-	}
-	
-	/**
-	 * Use this function to assert that the configuration of the protocol has finished when the corresponding dialog is closed.
-	 * <p>In order the parameters of the protocol to work properly, please establish default values for all of them to be used automatically when ArduSim is loaded.</p> */
-	public void setProtocolConfigured() {
-		Param.simStatus = SimulatorState.STARTING_UAVS;
 	}
 	
 	/**

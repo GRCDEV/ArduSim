@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.imageio.ImageIO;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
@@ -56,8 +57,8 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		new MBCAPConfigDialog();
+	public JDialog openConfigurationDialog() {
+		return new MBCAPConfigDialog();
 	}
 
 	@SuppressWarnings("unchecked")

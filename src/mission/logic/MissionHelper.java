@@ -2,6 +2,7 @@ package mission.logic;
 
 import java.awt.Graphics2D;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
@@ -37,8 +38,8 @@ public class MissionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		new MissionConfigDialog();
+	public JDialog openConfigurationDialog() {
+		return new MissionConfigDialog();
 	}
 
 	@Override

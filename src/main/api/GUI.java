@@ -5,7 +5,6 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -25,7 +24,6 @@ import main.sim.gui.MissionKmlDialog;
 import main.sim.gui.MissionWaypointsDialog;
 import main.sim.gui.ProgressDialog;
 import main.sim.logic.SimParam;
-import main.sim.logic.SimTools;
 
 /** API to update the information shown on screen during simulations.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -39,16 +37,6 @@ public class GUI {
 	
 	public GUI(int numUAV) {
 		this.numUAV = numUAV;
-	}
-	
-	/**
-	 * Allows to close a dialog when the escape key is pressed on the keyboard.
-	 * <p>This method should be invoked when the configuration dialog of each protocol is built.</p>
-	 * @param dialog Dialog where this method enables the escape key.
-	 * @param closeArduSim Whether to close ArduSim or not when the key is pressed.
-	 */
-	public void addEscapeListener(final JDialog dialog, final boolean closeArduSim) {
-	    SimTools.addEscListener(dialog, closeArduSim);
 	}
 	
 	/**

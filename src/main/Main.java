@@ -1,13 +1,18 @@
 package main;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.SocketException;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
 
 import org.javatuples.Pair;
@@ -147,15 +152,51 @@ public class Main {
 
 			// 2. Opening the configuration dialog of the protocol under test
 			if (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
-					}
-				});
+				final AtomicBoolean configurationOpened = new AtomicBoolean();
+				try {
+					SwingUtilities.invokeAndWait(new Runnable() {
+						public void run() {
+							final JDialog configurationDialog = ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
+							if (configurationDialog ==null) {
+								Param.simStatus = SimulatorState.STARTING_UAVS;
+							} else {
+								configurationDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+								configurationDialog.addWindowListener(new WindowAdapter() {
+									@Override
+									public void windowClosing(WindowEvent we) {
+										configurationDialog.dispose();
+										System.gc();
+										System.exit(0);
+									}
+									
+									@Override
+								    public void windowClosed(WindowEvent e) {
+								        configurationOpened.set(false);
+								    }
+								});
+								
+								SimTools.addEscListener(configurationDialog, true);
+								
+								configurationDialog.pack();
+								configurationDialog.setResizable(false);
+								configurationDialog.setLocationRelativeTo(null);
+								configurationDialog.setModal(true);
+								configurationDialog.setVisible(true);
+								configurationOpened.set(true);
+							}
+						}
+					});
+				} catch (InvocationTargetException | InterruptedException e) {
+					ArduSimTools.closeAll(Text.CONFIGURATION_ERROR);
+				}
 				
 				// Waiting the protocol configuration to be finished
 				while (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
 					ardusim.sleep(SimParam.SHORT_WAITING_TIME);
+					
+					if (!configurationOpened.get()) {
+						Param.simStatus = SimulatorState.STARTING_UAVS;
+					}
 				}
 				if (Param.numUAVs != Param.numUAVsTemp.get()) {
 					Param.numUAVs = Param.numUAVsTemp.get();

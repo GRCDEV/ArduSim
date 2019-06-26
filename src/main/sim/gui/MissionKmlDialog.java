@@ -19,6 +19,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -472,7 +473,12 @@ public class MissionKmlDialog extends JDialog {
 						
 						MissionKmlDialog.success = true;
 						
-						thisDialog.dispose();
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								thisDialog.dispose();
+							}
+						});
 					}
 				});
 				buttonPane.add(okButton);

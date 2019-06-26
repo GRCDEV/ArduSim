@@ -340,6 +340,7 @@ public class Text {
 	public static final String PORT_ERROR = "Communications error";
 	public static final String PORT_ERROR_1 = "Some ports are in use, so only can be simulated a maximum of ";
 	public static final String PORT_ERROR_2 = "It was not possible to get valid ports to connect to SITL instances.";
+	public static final String CONFIGURATION_ERROR = "Error building the protocol configuration dialog.";
 	public static final String MAC_ERROR = "Not valid MAC address could be found on any network interface.";
 	public static final String MESSAGE_ERROR = "Error sending a message.";
 	public static final String FATAL_ERROR = "Fatal error";
