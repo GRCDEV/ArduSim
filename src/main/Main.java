@@ -454,6 +454,7 @@ public class Main {
 		}
 		if (Param.role == ArduSim.MULTICOPTER) {
 			Calendar cal = Calendar.getInstance();
+			cal.setTimeInMillis(cal.getTimeInMillis() + Param.timeOffset);
 			String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
 					+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
 					+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;

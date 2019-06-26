@@ -56,6 +56,7 @@ public class PCCompanionTalker extends Thread {
 		boolean send;
 		boolean dialogAlreadyOpened = false;
 		ArduSim ardusim = API.getArduSim();
+		SimulatorState state;
 		while (Param.simStatus != SimulatorState.TEST_FINISHED
 				&& Param.simStatus != SimulatorState.SHUTTING_DOWN) {
 			if (listener.isAlive()) {
@@ -68,9 +69,13 @@ public class PCCompanionTalker extends Thread {
 				}
 				if (send) {
 					try {
+						state = Param.simStatus;
 						output.clear();
 						output.writeInt(PCCompanionParam.CHANGE_STATE_COMMAND);
-						output.writeInt(Param.simStatus.getStateId());
+						output.writeInt(state.getStateId());
+						if (state == SimulatorState.SETUP_IN_PROGRESS) {
+							output.writeLong(System.currentTimeMillis());
+						}
 						sentPacket.setData(sendBuffer, 0, output.position());
 						sendSocket.send(sentPacket);
 					} catch (KryoException e) {} catch (IOException e) {}
