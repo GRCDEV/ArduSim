@@ -74,15 +74,12 @@ public class ListenerThread extends Thread{
 		try {
 			System.out.println("Sending message...");
 			sendMessage("Start");
-			System.out.println("Message sent");
 			DatagramPacket respons = new DatagramPacket(buffer, buffer.length);
 			String message = "";
 			while(running) {
 				try {
 					socketUDP.receive(respons);
-					message = new String(respons.getData());
-					System.out.println("Receiving data...");
-					System.out.println(message);
+					message = new String(respons.getData(), respons.getOffset(), respons.getLength());
 				}catch(Exception e) {
 					System.err.println("cannot read DatagramPacket");
 					e.printStackTrace();
@@ -103,12 +100,13 @@ public class ListenerThread extends Thread{
 					running = false;
 				}
 				else if(message.contains("DisAndPos")) {
-					String[] parts = message.split(",");
-					System.out.println(parts);
+					System.out.println(message);
 					status = CatchMeParams.status.MOVE;
 				}
-				else {
+				else if(message.equals("Finish")){
+					System.out.println(message);
 					status = CatchMeParams.status.LAND;
+					running = false;
 				}
 			}
 		}

@@ -1,14 +1,25 @@
 package catchme.logic;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.geom.Point2D;
+import java.util.concurrent.atomic.AtomicReference;
 
+import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
 
 import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.location.Location2DGeo;
+import main.sim.gui.MainWindow;
+import mbcap.logic.MBCAPParam;
 
 public class CatchMeHelper extends ProtocolHelper {
 
@@ -23,13 +34,13 @@ public class CatchMeHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		API.getArduSim().setProtocolConfigured();
+	public JDialog openConfigurationDialog() {
+		return null;
 	}
 
 	@Override
 	public void initializeDataStructures() {
-		// TODO Auto-generated method stub
+		CatchMeParams.targetLocationPX = new AtomicReference();
 		
 	}
 
@@ -58,13 +69,22 @@ public class CatchMeHelper extends ProtocolHelper {
 
 	@Override
 	public void drawResources(Graphics2D graphics, main.sim.board.BoardPanel panel) {
-		// TODO Auto-generated method stub
-		
+		graphics.setStroke(CatchMeParams.STROKE_POINT);
+		int numUAVs = 1;
+		Point2D.Double position;
+		position = CatchMeParams.targetLocationPX.get();
+		if(position != null) {
+			int x = (int)position.x;
+			int y = (int)position.y;
+			graphics.setColor(new Color(255,0,0));
+			graphics.drawLine(x - 10, y - 10, x + 10, y + 10);
+			graphics.drawLine(x + 10, y - 10, x - 10, y + 10);
+		}
 	}
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		return new Pair[] {Pair.with(new Location2DGeo(CatchMeParams.LATITUDE, CatchMeParams.LONGITUDE), 0)};
+		return new Pair[] {Pair.with(CatchMeParams.startingLocation.getGeoLocation(), 0)};
 	}
 
 	@Override
@@ -89,6 +109,39 @@ public class CatchMeHelper extends ProtocolHelper {
 	@Override
 	public void startExperimentActionPerformed() {
 		// TODO Auto-generated method stub
+		ActionListener left = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				StartExpWithDraws.move("left");
+			}
+		};
+		ActionListener right = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				StartExpWithDraws.move("right");
+			}
+		};
+		ActionListener up = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				StartExpWithDraws.move("up");
+			}
+		};
+		ActionListener down = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				StartExpWithDraws.move("down");
+			}
+		};
+		
+		MainWindow.boardPanel.registerKeyboardAction(left,
+				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+		MainWindow.boardPanel.registerKeyboardAction(right,
+				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+		MainWindow.boardPanel.registerKeyboardAction(up,
+				KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+		MainWindow.boardPanel.registerKeyboardAction(down,
+				KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
 		
 	}
 
