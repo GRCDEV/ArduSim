@@ -83,8 +83,7 @@ public class MissionHelper {
 	
 	/**
 	 * Land the UAV if it is close enough to the last waypoint.
-	 * <p>This method can be launched periodically, it only informs that the last waypoint is reached once, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
-	 * Use only when the UAV is performing a planned mission.</p>
+	 * <p>This method can be launched periodically, it only informs that the last waypoint is reached once, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.</p>
 	 * @param distanceThreshold (meters) Horizontal distance from the last waypoint of the mission to assert that the UAV has to land.
 	 */
 	public void landIfEnded(double distanceThreshold) {
@@ -92,7 +91,8 @@ public class MissionHelper {
 		// Only check when the last waypoint is reached
 		if (UAVParam.lastWaypointReached[numUAV].get()) {
 			// Do nothing if the UAV is already landing
-			if (UAVParam.flightMode.get(numUAV).getCustomMode() == 9) {
+			FlightMode current = UAVParam.flightMode.get(numUAV);
+			if (current.getCustomMode() == 9) {
 				return;
 			}
 			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
@@ -102,8 +102,11 @@ public class MissionHelper {
 			
 			// Land only if the UAV is really close to the last waypoint force it to land
 			if (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(UAVParam.lastWPUTM[numUAV]) < distanceThreshold) {
-				if (!this.copter.land()) {
-					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAND_ERROR);
+				if (current.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
+						&& current != FlightMode.LAND_ARMED) {
+					// We assume that the command will not fail to avoid concurrency problems when several UAVs are run in the same machine (simulations)
+					UAVParam.newFlightMode[numUAV] = FlightMode.LAND;
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MODE);
 				}
 			}
 		}
@@ -160,6 +163,9 @@ public class MissionHelper {
 	 * @return true if the command was successful.
 	 */
 	private boolean remove() {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_CLEAR_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_CLEAR_WP_LIST) {
@@ -191,6 +197,9 @@ public class MissionHelper {
 	 * @return true if the command was successful.
 	 */
 	private boolean retrieve() {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_REQUEST_WP_LIST) {
@@ -283,6 +292,9 @@ public class MissionHelper {
 	 * @return true if the command was successful.
 	 */
 	private boolean setCurrentWaypoint(int currentWP) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newCurrentWaypoint[numUAV] = currentWP;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_CURRENT_WP);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -321,6 +333,9 @@ public class MissionHelper {
 			if (list.get(i).isCurrent()) {
 				current = i;
 			}
+		}
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
 		}
 		// Specify the current waypoint
 		UAVParam.currentWaypoint.set(numUAV, current);

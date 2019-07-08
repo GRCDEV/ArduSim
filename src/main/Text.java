@@ -340,6 +340,7 @@ public class Text {
 	public static final String PORT_ERROR = "Communications error";
 	public static final String PORT_ERROR_1 = "Some ports are in use, so only can be simulated a maximum of ";
 	public static final String PORT_ERROR_2 = "It was not possible to get valid ports to connect to SITL instances.";
+	public static final String PORT_ERROR_3 = "Port used by another application:";
 	public static final String CONFIGURATION_ERROR = "Error building the protocol configuration dialog.";
 	public static final String MAC_ERROR = "Not valid MAC address could be found on any network interface.";
 	public static final String MESSAGE_ERROR = "Error sending a message.";
@@ -374,7 +375,6 @@ public class Text {
 	public static final String LAST_WAYPOINT_REACHED = "Last waypoint reached.";
 	public static final String TAKE_OFF_ERROR = "Unable to take off.";
 	public static final String MOVE_TO_ERROR = "Unable to move to target location.";
-	public static final String LAND_ERROR = "Was unable to land.";
 	
 	// System properties
 	public static final String HOME_DIR = "user.home";

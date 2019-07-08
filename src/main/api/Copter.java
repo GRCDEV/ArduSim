@@ -46,6 +46,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean cancelRCOverride() {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_RECOVER_CONTROL);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_RECOVER_ERROR) {
@@ -285,6 +288,9 @@ public class Copter {
 			return (double) UAVParam.loadedParams[numUAV].get(parameter.getId()).getValue();
 		}
 		
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_GET_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -390,6 +396,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean setFlightMode(FlightMode mode) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newFlightMode[numUAV] = mode;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MODE);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -427,6 +436,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean setParameter(CopterParam parameter, double value) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.newParamValue.set(numUAV, value);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_PARAM);
@@ -449,6 +461,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean setPlannedSpeed(double speed) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newSpeed[numUAV] = speed;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_SPEED);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK

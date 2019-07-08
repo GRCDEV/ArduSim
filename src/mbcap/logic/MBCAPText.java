@@ -99,7 +99,6 @@ public class MBCAPText {
 	public static final String GRANT_PERMISSION = "Granting permission to go on to UAV";
 	public static final String MISSION_RESUMED = "Mission resumed. Collision risk avoided with UAV";
 	public static final String SAFE_PLACE = "Safe place reached.";
-	public static final String LANDING_ERROR = "It was not possible to land all the UAVs.";
 
 	// Protocol name
 	public static final String MBCAP_TEXT = "MBCAP";

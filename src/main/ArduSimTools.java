@@ -17,10 +17,11 @@ import java.io.InputStreamReader;
 import java.io.SyncFailedException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.Socket;
+import java.net.ServerSocket;
 import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -773,54 +774,127 @@ public class ArduSimTools {
 	public static Integer[] getSITLPorts() throws InterruptedException, ExecutionException {
 		// SITL starts using TCP5760 and UDP5501,5502,5503
 		ExecutorService es = Executors.newFixedThreadPool(20);
+		List<Integer> reservedPort = new ArrayList<>();
+		reservedPort.add(UAVParam.broadcastPort);
+		reservedPort.add(UAVParam.broadcastInternalPort);
+		reservedPort.add(PCCompanionParam.computerPort);
+		reservedPort.add(PCCompanionParam.uavPort);
 	    List<Future<PortScanResult>> tcpMain = new ArrayList<Future<PortScanResult>>();
 	    List<Future<PortScanResult>> udpAux1 = new ArrayList<Future<PortScanResult>>();
 	    List<Future<PortScanResult>> udpAux2 = new ArrayList<Future<PortScanResult>>();
 	    List<Future<PortScanResult>> udpAux3 = new ArrayList<Future<PortScanResult>>();
+	    List<Future<PortScanResult>> irLockAux = new ArrayList<Future<PortScanResult>>();
 	    List<Integer> ports = new ArrayList<Integer>(UAVParam.MAX_SITL_INSTANCES);
 	    int tcpPort = UAVParam.MAV_INITIAL_PORT;
 	    int udp1Port = UAVParam.MAV_INTERNAL_PORT[0];
 	    int udp2Port = UAVParam.MAV_INTERNAL_PORT[1];
 	    int udp3Port = UAVParam.MAV_INTERNAL_PORT[2];
-	    while (tcpPort <= UAVParam.MAV_FINAL_PORT) {
-	    	tcpMain.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, tcpPort, UAVParam.PORT_CHECK_TIMEOUT));
-	    	udpAux1.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, udp1Port, UAVParam.PORT_CHECK_TIMEOUT));
-	    	udpAux2.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, udp2Port, UAVParam.PORT_CHECK_TIMEOUT));
-	    	udpAux3.add(portIsOpen(es, UAVParam.MAV_NETWORK_IP, udp3Port, UAVParam.PORT_CHECK_TIMEOUT));
-	    	tcpPort = tcpPort + 10;
-	    	udp1Port = udp1Port + 10;
-	    	udp2Port = udp2Port + 10;
-	    	udp3Port = udp3Port + 10;
-	    }
-	    es.awaitTermination((long)UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
-	    Future<PortScanResult> tcp, udp1, udp2, udp3;
-	    for (int i=0; i<tcpMain.size(); i++) {
-	    	tcp = tcpMain.get(i);
-	    	udp1 = udpAux1.get(i);
-	    	udp2 = udpAux2.get(i);
-	    	udp3 = udpAux3.get(i);
-	    	if (!tcp.get().isOpen() && !udp1.get().isOpen() && !udp2.get().isOpen() && !udp3.get().isOpen()) {
-	    		ports.add(tcp.get().getPort());
+	    int irLockPort = UAVParam.MAV_INTERNAL_PORT[3];
+	    int remaining = UAVParam.MAX_SITL_INSTANCES;
+	    PortScanResult tcp, udp1, udp2, udp3, irLock;
+	    while (irLockPort <= UAVParam.MAX_PORT && remaining > 0) {
+	    	for (int i = 0; irLockPort <= UAVParam.MAX_PORT && i < remaining; i++) {
+	    		while (reservedPort.contains(tcpPort) || reservedPort.contains(udp1Port)
+	    				|| reservedPort.contains(udp2Port) || reservedPort.contains(udp3Port)
+	    				|| reservedPort.contains(irLockPort)) {
+	    			tcpPort = tcpPort + 10;
+			    	udp1Port = udp1Port + 10;
+			    	udp2Port = udp2Port + 10;
+			    	udp3Port = udp3Port + 10;
+			    	irLockPort = irLockPort + 10;
+	    		}
+	    		if (irLockPort <= UAVParam.MAX_PORT) {
+	    			tcpMain.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, tcpPort, UAVParam.PORT_CHECK_TIMEOUT));
+			    	udpAux1.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, udp1Port, UAVParam.PORT_CHECK_TIMEOUT));
+			    	udpAux2.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, udp2Port, UAVParam.PORT_CHECK_TIMEOUT));
+			    	udpAux3.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, udp3Port, UAVParam.PORT_CHECK_TIMEOUT));
+			    	irLockAux.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, irLockPort, UAVParam.PORT_CHECK_TIMEOUT));
+			    	tcpPort = tcpPort + 10;
+			    	udp1Port = udp1Port + 10;
+			    	udp2Port = udp2Port + 10;
+			    	udp3Port = udp3Port + 10;
+			    	irLockPort = irLockPort + 10;
+	    		}
 	    	}
+	    	es.awaitTermination((long)UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
+	    	
+	    	for (int i = 0; i < tcpMain.size(); i++) {
+	    		tcp = tcpMain.get(i).get();
+		    	udp1 = udpAux1.get(i).get();
+		    	udp2 = udpAux2.get(i).get();
+		    	udp3 = udpAux3.get(i).get();
+		    	irLock = irLockAux.get(i).get();
+	    		if (tcp.isOpen() && udp1.isOpen() && udp2.isOpen() && udp3.isOpen() && irLock.isOpen()) {
+	    			ports.add(tcp.getPort());
+	    		} else {
+	    			if (!tcp.isOpen()) {
+	    				System.out.println(Text.PORT_ERROR_3 + " " + tcp.getPort());
+	    			}
+	    			if (!udp1.isOpen()) {
+	    				System.out.println(Text.PORT_ERROR_3 + " " + udp1.getPort());
+	    			}
+	    			if (!udp2.isOpen()) {
+	    				System.out.println(Text.PORT_ERROR_3 + " " + udp2.getPort());
+	    			}
+	    			if (!udp3.isOpen()) {
+	    				System.out.println(Text.PORT_ERROR_3 + " " + udp3.getPort());
+	    			}
+	    			if (!irLock.isOpen()) {
+	    				System.out.println(Text.PORT_ERROR_3 + " " + irLock.getPort());
+	    			}
+	    		}
+	    	}
+	    	
+	    	tcpMain.clear();
+	    	udpAux1.clear();
+	    	udpAux2.clear();
+	    	udpAux3.clear();
+	    	irLockAux.clear();
+	    	remaining = UAVParam.MAX_SITL_INSTANCES - ports.size();
 	    }
+	    
 	    es.shutdown();
 		return ports.toArray(new Integer[ports.size()]);
 	}
 	
-	/** Auxiliary method to detect asynchronously if a TCP port is in use by the system or any other application. */
-	private static Future<PortScanResult> portIsOpen(final ExecutorService es, final String ip, final int port,
+	/** Auxiliary method to detect asynchronously if a port is in use by the system or any other application. */
+	private static Future<PortScanResult> portIsAvailable(final ExecutorService es, final String ip, final int port,
 	        final int timeout) {
 	    return es.submit(new Callable<PortScanResult>() {
 	        @Override
 	        public PortScanResult call() {
+	            boolean isAvailable = true;
+	            DatagramSocket socketUDP = null;
 	            try {
-	                Socket socket = new Socket();
-	                socket.connect(new InetSocketAddress(ip, port), timeout);
-	                socket.close();
-	                return new PortScanResult(port, true);
-	            } catch (Exception ex) {
-	                return new PortScanResult(port, false);
+					socketUDP = new DatagramSocket(new InetSocketAddress(ip, port));
+				} catch (Exception ex) {
+					isAvailable = false;
+				} finally {
+					if (socketUDP != null) {
+						socketUDP.close();
+					}
+				}
+	            
+	            if (isAvailable) {
+	            	ServerSocket socketTCP = null;
+					try {
+						socketTCP = new ServerSocket();
+						socketTCP.setReuseAddress(false);	// Needed for MacOS
+						socketTCP.bind(new InetSocketAddress(ip, port), 1);
+					} catch (Exception ex) {
+						isAvailable = false;
+					} finally {
+						if (socketTCP != null) {
+							try {
+								socketTCP.close();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					}
 	            }
+	            
+	            return new PortScanResult(port, isAvailable);
 	        }
 	    });
 	}
@@ -1558,11 +1632,16 @@ public class ArduSimTools {
 			String s, file1, file2;
 			boolean success = false;
 			String tempFolder;
-			int instance;
+			int tcpPort, udp1Port, udp2Port, udp3Port, irLockPort;
 			ArduSim ardusim = API.getArduSim();
 			for (int i = 0; i < Param.numUAVs; i++) {
 				tempFolder = (new File(parentFolder, SimParam.TEMP_FOLDER_PREFIX + i)).getAbsolutePath();
-				instance = (UAVParam.mavPort[i] - UAVParam.MAV_INITIAL_PORT) / 10;
+				
+				tcpPort = UAVParam.mavPort[i];
+				udp1Port = tcpPort + UAVParam.MAV_PORT_OFFSET[0];
+				udp2Port = tcpPort + UAVParam.MAV_PORT_OFFSET[1];
+				udp3Port = tcpPort + UAVParam.MAV_PORT_OFFSET[2];
+				irLockPort = tcpPort + UAVParam.MAV_PORT_OFFSET[3];
 				
 				// Under Windows, launch Cygwin console with arducopter command:
 				if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
@@ -1575,14 +1654,18 @@ public class ArduSimTools {
 						file1 = (new File(parentFolder, (new File(SimParam.sitlPath)).getName())).getAbsolutePath();
 						file2 = (new File(parentFolder, (new File(SimParam.paramPath)).getName())).getAbsolutePath();
 						commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
-								+ ";/cygdrive/" + file1.replace("\\", "/").replace(":", "") + " -S -I" + instance
-								+ " --home " + location[i].getValue0().latitude + "," + location[i].getValue0().longitude
+								+ ";/cygdrive/" + file1.replace("\\", "/").replace(":", "") + " -S --base-port " + tcpPort
+								+ " --sim-port-in " + udp1Port + " --sim-port-out " + udp2Port + " --rc-in-port " + udp3Port
+								+ " --irlock-port " + irLockPort + " --disable-fgview --home "
+								+ location[i].getValue0().latitude + "," + location[i].getValue0().longitude
 								+ "," + UAVParam.initialAltitude + "," + location[i].getValue1() + " --model + --speedup 1 --defaults "
 								+ "/cygdrive/" + file2.replace("\\", "/").replace(":", ""));
 					} else {
 						commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
-								+ ";/cygdrive/" + SimParam.sitlPath.replace("\\", "/").replace(":", "") + " -S -I" + instance
-								+ " --home " + location[i].getValue0().latitude + "," + location[i].getValue0().longitude
+								+ ";/cygdrive/" + SimParam.sitlPath.replace("\\", "/").replace(":", "") + " -S --base-port " + tcpPort
+								+ " --sim-port-in " + udp1Port + " --sim-port-out " + udp2Port + " --rc-in-port " + udp3Port
+								+ " --irlock-port " + irLockPort + " --disable-fgview --home "
+								+ location[i].getValue0().latitude + "," + location[i].getValue0().longitude
 								+ "," + UAVParam.initialAltitude + "," + location[i].getValue1() + " --model + --speedup 1 --defaults "
 								+ "/cygdrive/" + SimParam.paramPath.replace("\\", "/").replace(":", ""));
 					}
@@ -1596,7 +1679,17 @@ public class ArduSimTools {
 						commandLine.add(SimParam.sitlPath);
 					}
 					commandLine.add("-S");
-					commandLine.add("-I" + instance);
+					commandLine.add("--base-port");
+					commandLine.add("" + tcpPort);
+					commandLine.add("--sim-port-in");
+					commandLine.add("" + udp1Port);
+					commandLine.add("--sim-port-out");
+					commandLine.add("" + udp2Port);
+					commandLine.add("--rc-in-port");	// Flight Gear uses RC input
+					commandLine.add("" + udp3Port);
+					commandLine.add("--irlock-port");	// Used for sensor input for precision landing (not supported)
+					commandLine.add("" + irLockPort);
+					commandLine.add("--disable-fgview");	// Flight Gear View disabled for performance
 					commandLine.add("--home");
 					commandLine.add(location[i].getValue0().latitude + "," + location[i].getValue0().longitude + "," + UAVParam.initialAltitude + "," + location[i].getValue1());
 					commandLine.add("--model");
@@ -2101,6 +2194,9 @@ public class ArduSimTools {
 	 * <p>It is assumed that all the multicopters running in the same machine use the same compilation. Returns null if an error happens.</p> */
 	public static void getArduCopterParameters(int numUAV) {
 		ArduSim ardusim = API.getArduSim();
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ALL_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -2677,18 +2773,13 @@ public class ArduSimTools {
 		if (!ArduSimTools.selectedProtocol.equals(ArduSimTools.noneProtocolName)) {
 			sb.append(Text.LOG_GLOBAL).append(":\n\n");
 		}
-		
-		long totalTime = maxTime - Param.startTime;
-		long[] uavsTotalTime = new long[Param.numUAVs];
-		for (int i = 0; i < Param.numUAVs; i++) {
-			uavsTotalTime[i] = Param.testEndTime[i] - Param.startTime;
-		}
 
 		// 2. Global times
 		ValidationTools validationTools = API.getValidationTools();
-		sb.append(Text.LOG_TOTAL_TIME).append(": ").append(validationTools.timeToString(0, totalTime)).append("\n");
+		sb.append(Text.LOG_TOTAL_TIME).append(": ").append(validationTools.timeToString(Param.startTime, maxTime)).append("\n");
 		for (int i = 0; i < Param.numUAVs; i++) {
-			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ").append(validationTools.timeToString(0, uavsTotalTime[i])).append("\n");
+			sb.append("\t").append(Text.UAV_ID).append(" ").append(Param.id[i]).append(": ")
+				.append(validationTools.timeToString(Param.startTime, Param.testEndTime[i])).append("\n");
 		}
 
 		return sb.toString();

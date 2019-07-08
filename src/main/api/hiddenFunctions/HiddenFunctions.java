@@ -20,8 +20,11 @@ public class HiddenFunctions {
 	 * @return true if the command was successful.
 	 */
 	public static boolean armEngines(int numUAV) {
-		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ARM);
 		ArduSim ardusim = API.getArduSim();
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
+		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ARM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_ARM) {
 			ardusim.sleep(UAVParam.COMMAND_WAIT);
@@ -42,8 +45,11 @@ public class HiddenFunctions {
 	 */
 	public static  boolean stabilize(int numUAV) {
 		if (UAVParam.overrideOn.get(numUAV) == 1) {
-			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
 			ArduSim ardusim = API.getArduSim();
+			while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+				ardusim.sleep(UAVParam.COMMAND_WAIT);
+			}
+			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
 			while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 					&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
 				ardusim.sleep(UAVParam.COMMAND_WAIT);
@@ -68,9 +74,12 @@ public class HiddenFunctions {
 	 * @return true if the command was successful.
 	 */
 	public static boolean takeOffGuided(int numUAV, double altitude) {
+		ArduSim ardusim = API.getArduSim();
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.takeOffAltitude.set(numUAV, altitude);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_TAKE_OFF);
-		ArduSim ardusim = API.getArduSim();
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_TAKE_OFF) {
 			ardusim.sleep(UAVParam.COMMAND_WAIT);

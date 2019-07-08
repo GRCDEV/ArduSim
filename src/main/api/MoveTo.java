@@ -38,6 +38,9 @@ public class MoveTo extends Thread {
 		UAVParam.newLocation[numUAV][0] = (float)targetLocation.getLatitude();
 		UAVParam.newLocation[numUAV][1] = (float)targetLocation.getLongitude();
 		UAVParam.newLocation[numUAV][2] = (float)relAltitude;
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_MOVE_UAV);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_MOVE_UAV_ERROR) {

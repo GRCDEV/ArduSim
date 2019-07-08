@@ -29,12 +29,14 @@ public class UAVParam {
 
 	// ArduSim-flight controller connection parameters
 	// TCP (on virtual UAVs)
-	public static final int MAX_SITL_INSTANCES = 256;	// Maximum number of SITL instances allowed by ArduCopter implementation
+	public static final int MAX_SITL_INSTANCES = 515;	// Maximum number of SITL instances allowed (only limited by hardware capabilities)
 	public static final String MAV_NETWORK_IP = "127.0.0.1";
 	public static final int MAX_PORT = 65535;			// Maximum port value
 	public static final int MAV_INITIAL_PORT = 5760;	// SITL initial listening port
-	public static final int[] MAV_INTERNAL_PORT = new int[] {5501, 5502, 5503};
-	public static final int MAV_FINAL_PORT = Math.min(MAV_INITIAL_PORT + 10*(MAX_SITL_INSTANCES-1), MAX_PORT);
+	public static final int[] MAV_INTERNAL_PORT = new int[] {5501, 5502, 5503, 9005};
+	public static final int[] MAV_PORT_OFFSET = new int[] {MAV_INTERNAL_PORT[0] - MAV_INITIAL_PORT,
+			MAV_INTERNAL_PORT[1] - MAV_INITIAL_PORT,MAV_INTERNAL_PORT[2] - MAV_INITIAL_PORT,
+			MAV_INTERNAL_PORT[3] - MAV_INITIAL_PORT};
 	
 	public static final int PORT_CHECK_TIMEOUT = 200;	// (ms) Timeout while checking if a port is available
 	public static Integer[] mavPort;					// List of ports really used by SITL instances
