@@ -1,8 +1,7 @@
 package main.api;
 
 import api.API;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3D;
 import main.Text;
 import main.uavController.UAVParam;
 
@@ -15,21 +14,17 @@ public class MoveTo extends Thread {
 	private static final double TARGET_THRESHOLD = 1.0;	// (m) Distance to target location to assert that the UAV has reached it.
 	
 	private int numUAV;
-	private Location2DGeo targetLocationGeo;
-	private Location2DUTM targetLocationUTM;
-	private double relAltitude;
+	private Location3D targetLocation;
 	private double altitudeThreshold;
 	private MoveToListener listener;
 	
 	@SuppressWarnings("unused")
 	private MoveTo() {}
 	
-	public MoveTo(int numUAV, Location2DGeo targetLocation, double relAltitude, MoveToListener listener) {
+	public MoveTo(int numUAV, Location3D targetLocation, MoveToListener listener) {
 		this.numUAV = numUAV;
-		this.targetLocationGeo = targetLocation;
-		this.targetLocationUTM = targetLocation.getUTM();
-		this.relAltitude = relAltitude;
-		this.altitudeThreshold = Copter.getAltitudeGPSError(relAltitude);
+		this.targetLocation = targetLocation;
+		this.altitudeThreshold = Copter.getAltitudeGPSError(targetLocation.getAltitude());
 		this.listener = listener;
 	}
 
@@ -39,9 +34,13 @@ public class MoveTo extends Thread {
 		ArduSim ardusim = API.getArduSim();
 		GUI gui = API.getGUI(numUAV);
 		
-		UAVParam.newLocation[numUAV][0] = (float)targetLocationGeo.latitude;
-		UAVParam.newLocation[numUAV][1] = (float)targetLocationGeo.longitude;
+		double relAltitude = targetLocation.getAltitude();
+		UAVParam.newLocation[numUAV][0] = (float)targetLocation.getLatitude();
+		UAVParam.newLocation[numUAV][1] = (float)targetLocation.getLongitude();
 		UAVParam.newLocation[numUAV][2] = (float)relAltitude;
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_MOVE_UAV);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_MOVE_UAV_ERROR) {
@@ -49,16 +48,16 @@ public class MoveTo extends Thread {
 		}
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_MOVE_UAV_ERROR) {
 			gui.logUAV(Text.MOVE_TO_ERROR);
-			listener.onFailureListener();
+			listener.onFailure();
 			return;
 		}
 		
-		while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(targetLocationUTM) > MoveTo.TARGET_THRESHOLD
+		while (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(targetLocation) > MoveTo.TARGET_THRESHOLD
 				|| Math.abs(UAVParam.uavCurrentData[numUAV].getZRelative() - relAltitude) > altitudeThreshold) {
 			ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
 		}
 		
-		listener.onCompletedListener();
+		listener.onCompleteActionPerformed();
 	}
 	
 }

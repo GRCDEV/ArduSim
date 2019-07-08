@@ -2,6 +2,7 @@ package mission.logic;
 
 import java.awt.Graphics2D;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
@@ -37,8 +38,8 @@ public class MissionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		new MissionConfigDialog();
+	public JDialog openConfigurationDialog() {
+		return new MissionConfigDialog();
 	}
 
 	@Override
@@ -104,7 +105,7 @@ public class MissionHelper extends ProtocolHelper {
 	public static boolean isValidProtocolConfiguration(MissionConfigDialogPanel panel) {
 		// Simulation parameters
 		String validating = panel.missionsTextField.getText();
-		if (validating==null || validating.length()==0) {
+		if (API.getValidationTools().isEmpty(validating)) {
 			API.getGUI(0).warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
 			return false;
 		}

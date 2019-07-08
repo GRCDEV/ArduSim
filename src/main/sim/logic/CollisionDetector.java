@@ -11,7 +11,6 @@ import main.Param;
 import main.Text;
 import main.api.ArduSim;
 import main.uavController.UAVParam;
-import mbcap.logic.MBCAPText;
 
 /** 
  * Thread used to detect possible collisions among UAVs in simulations.
@@ -100,9 +99,7 @@ public class CollisionDetector extends Thread {
 											
 											// The protocols must be stopped
 											UAVParam.collisionDetected = true;
-											if (!this.landAll()) {
-												ArduSimTools.logGlobal(MBCAPText.LANDING_ERROR);
-											}
+											this.landAll();
 											// Advising the user
 											ArduSimTools.warnGlobal(Text.COLLISION_TITLE, Text.COLLISION_DETECTED_ERROR_2 + " " + i + " - " + j);
 										}
@@ -125,12 +122,14 @@ public class CollisionDetector extends Thread {
 	 * Land all the UAVs that are flying.
 	 * @return true if all the commands were successful, or even when they are not needed because one or more UAVs were not flying.
 	 */
-	private boolean landAll() {
+	private void landAll() {
 		for (int i=0; i<Param.numUAVs; i++) {
-			if (!API.getCopter(i).land()) {
-				return false;
+			FlightMode current = UAVParam.flightMode.get(i);
+			if (current.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
+					&& current != FlightMode.LAND_ARMED) {
+				UAVParam.newFlightMode[i] = FlightMode.LAND;
+				UAVParam.MAVStatus.set(i, UAVParam.MAV_STATUS_REQUEST_MODE);
 			}
 		}
-		return true;
 	}
 }

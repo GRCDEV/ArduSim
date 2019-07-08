@@ -3,6 +3,7 @@ package followme.logic;
 import static followme.pojo.State.LANDING;
 
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import api.API;
 import api.pojo.FlightMode;
@@ -15,7 +16,8 @@ import main.api.GUI;
 
 public class RemoteThread extends Thread {
 	
-	private int numUAV;
+	private AtomicInteger currentState;
+	
 	private Copter copter;
 	private GUI gui;
 	private ArduSim ardusim;
@@ -24,7 +26,7 @@ public class RemoteThread extends Thread {
 	private RemoteThread() {}
 	
 	public RemoteThread(int numUAV) {
-		this.numUAV = numUAV;
+		this.currentState = FollowMeParam.state[numUAV];
 		this.copter = API.getCopter(numUAV);
 		this.gui = API.getGUI(numUAV);
 		this.ardusim = API.getArduSim();
@@ -43,11 +45,11 @@ public class RemoteThread extends Thread {
 			while (copter.getAltitudeRelative() < startingAltitude) {
 				ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
-			TalkerThread.protocolStarted = true;
+			FollowMeTalkerThread.protocolStarted = true;
 			while (copter.getAltitudeRelative() >= finalAltitude) {
 				ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 			}
-			FollowMeParam.state.set(numUAV, LANDING);
+			currentState.set(LANDING);
 		}
 		
 		if (role == ArduSim.SIMULATOR) {
@@ -72,14 +74,14 @@ public class RemoteThread extends Thread {
 						ardusim.sleep(wait);
 					}
 					altitude = copter.getAltitudeRelative();
-					if (!TalkerThread.protocolStarted && altitude >= startingAltitude) {
-						TalkerThread.protocolStarted = true;
+					if (!FollowMeTalkerThread.protocolStarted && altitude >= startingAltitude) {
+						FollowMeTalkerThread.protocolStarted = true;
 					}
 					
-					if (!TalkerThread.protocolStarted || altitude >= finalAltitude) {
+					if (!FollowMeTalkerThread.protocolStarted || altitude >= finalAltitude) {
 						copter.channelsOverride(data.roll, data.pitch, data.throttle, data.yaw);
 					} else {
-						FollowMeParam.state.set(numUAV, LANDING);
+						currentState.set(LANDING);
 						landing = true;
 					}
 				}
@@ -87,7 +89,7 @@ public class RemoteThread extends Thread {
 			
 			// In case the path depletes before reaching that altitude
 			if (!landing) {
-				FollowMeParam.state.set(numUAV, LANDING);
+				currentState.set(LANDING);
 			}
 		}
 

@@ -4,6 +4,9 @@ package fishing.logic;
 import api.API;
 import api.pojo.location.Location2DGeo;
 import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3D;
+import api.pojo.location.Location3DGeo;
+import api.pojo.location.Location3DUTM;
 import fishing.pojo.VectorMath;
 import main.Param;
 import main.api.ArduSim;
@@ -45,7 +48,7 @@ public class FisherControllerThread extends Thread{
 	@Override
 	public void run() {
 		
-		Location2DGeo GeoNextPoint,GeoBoatPoint;
+		Location3DGeo GeoBoatPoint, GeoNextPoint;
 		Location2DUTM UTMActualPoint, UTMPreviousPoint=new Location2DUTM(0,0),UTMNextPoint=new Location2DUTM(0,0);
 		long startTime,currentTime;
 		double distanceToNextPoint, distanceToBoat,distanceTotal;
@@ -61,12 +64,12 @@ public class FisherControllerThread extends Thread{
 		TakeOff takeOff = copter.takeOff(FishingParam.UavAltitude, new TakeOffListener() {
 			
 			@Override
-			public void onFailureListener() {
+			public void onFailure() {
 				gui.log("Error en el despegue");
 			}
 			
 			@Override
-			public void onCompletedListener() {
+			public void onCompleteActionPerformed() {
 				// Nothing to do, waiting with Thread.join()
 			}
 		});
@@ -93,8 +96,8 @@ public class FisherControllerThread extends Thread{
 				while (!FisherReceiverThread.landSignal) {
 					
 					try {
-						GeoBoatPoint = Location2DUTM.getGeo(FisherReceiverThread.posBoat[0],FisherReceiverThread.posBoat[1]);
-						copter.moveTo(GeoBoatPoint, FisherReceiverThread.boatAltitude);
+						GeoBoatPoint = Location3DUTM.getGeo3D(FisherReceiverThread.posBoat[0],FisherReceiverThread.posBoat[1], FisherReceiverThread.boatAltitude);
+						copter.moveTo(GeoBoatPoint);
 					} catch (ArduSimNotReadyException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -108,17 +111,19 @@ public class FisherControllerThread extends Thread{
 			else if(FisherReceiverThread.landSignal) {
 				
 				try {
-					GeoBoatPoint = Location2DUTM.getGeo(FisherReceiverThread.posBoat[0],FisherReceiverThread.posBoat[1]);
+					Double x = FisherReceiverThread.posBoat[0];
+					Double y = FisherReceiverThread.posBoat[1];
+					Location3D landPoint = new Location3D(x, y, FisherReceiverThread.boatAltitude);
 					
-					MoveTo moveTo = copter.moveTo(GeoBoatPoint, FisherReceiverThread.boatAltitude, new MoveToListener() {
+					MoveTo moveTo = copter.moveTo(landPoint, new MoveToListener() {
 						
 						@Override
-						public void onFailureListener() {
+						public void onFailure() {
 							// TODO Tratar el error
 						}
 						
 						@Override
-						public void onCompletedListener() {
+						public void onCompleteActionPerformed() {
 							// No necesario porque esperamos al hilo con Thread.join()
 						}
 					});
@@ -126,7 +131,7 @@ public class FisherControllerThread extends Thread{
 					try {
 						moveTo.join();
 					} catch (InterruptedException e) {}
-					copter.land();
+					copter.land();						// TODO esto solo se tiene que hacer una vez ¿es así?
 				} catch (ArduSimNotReadyException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -142,9 +147,9 @@ public class FisherControllerThread extends Thread{
 				UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vDirection[0];
 				UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vDirection[1];
 				try {
-					GeoNextPoint=UTMNextPoint.getGeo();
+					GeoNextPoint= new Location3DGeo(UTMNextPoint.getGeo(), FishingParam.UavAltitude);
 					gui.log("Moviendose al punto UTM: "+UTMNextPoint.x + ", " + UTMNextPoint.y);
-					copter.moveTo(GeoNextPoint, FishingParam.UavAltitude);
+					copter.moveTo(GeoNextPoint);
 					waypointReached = false;
 					while(!waypointReached && !fligthTimeReached && !batteryAlarm && !FisherReceiverThread.landSignal) {
 						ardusim.sleep(100);
@@ -158,9 +163,9 @@ public class FisherControllerThread extends Thread{
 						distanceToBoat = UTMActualPoint.distance(new Location2DUTM(FisherReceiverThread.posBoat[0],FisherReceiverThread.posBoat[1]));
 						UTMNextPoint.x = FisherReceiverThread.posBoat[0] + vDirection[0];
 						UTMNextPoint.y = FisherReceiverThread.posBoat[1] + vDirection[1];
-						GeoNextPoint=UTMNextPoint.getGeo();
+						GeoNextPoint= new Location3DGeo(UTMNextPoint.getGeo(), FishingParam.UavAltitude);
 						gui.log("Moviendose al punto UTM: "+UTMNextPoint.x + ", " + UTMNextPoint.y);
-						copter.moveTo(GeoNextPoint, FishingParam.UavAltitude);
+						copter.moveTo(GeoNextPoint);
 						
 						distanceToNextPoint = UTMActualPoint.distance(UTMNextPoint);
 						gui.log("Distancia al siguiente punto UTM (m): " + distanceToNextPoint);
@@ -194,6 +199,7 @@ public class FisherControllerThread extends Thread{
 					vDirection = VectorMath.rotateVector(vDirection, FishingParam.rotationAngle, FishingParam.clockwise);
 					gui.log("\n-------------------------------------------------------------------------------------------------------------\n");
 				} catch (ArduSimNotReadyException e) {
+					e.printStackTrace();
 					API.getGUI(0).log(e.getMessage());
 					//TODO quizá convendría enviar orden de volver al barco
 				}

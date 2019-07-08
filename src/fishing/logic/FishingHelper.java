@@ -3,6 +3,7 @@ package fishing.logic;
 import java.awt.Graphics2D;
 import java.util.List;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
@@ -30,11 +31,12 @@ public class FishingHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialog() {
+	public JDialog openConfigurationDialog() {
 		GUI gui = API.getGUI(0);
 		gui.log("Mostrando Ventana de Configuración");
 		FishingConfigDialog dialog = new FishingConfigDialog();
 		gui.log("Configuración Terminada");
+		return dialog;
 	}
 
 	@Override

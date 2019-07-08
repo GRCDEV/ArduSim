@@ -7,11 +7,13 @@ import api.pojo.FlightMode;
 import api.pojo.RCValues;
 import api.pojo.location.Location2DGeo;
 import api.pojo.location.Location2D;
-import api.pojo.location.Location3DUTM;
 import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3D;
+import api.pojo.location.Location3DGeo;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
+import main.api.masterslavepattern.MasterSlaveHelper;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 
@@ -23,6 +25,8 @@ public class Copter {
 	private ArduSim ardusim;
 	private int numUAV;
 	private MissionHelper missionHelper;
+	private MasterSlaveHelper msHelper;
+	private SafeTakeOffHelper takeOffHelper;
 	
 	@SuppressWarnings("unused")
 	private Copter() {}
@@ -31,27 +35,8 @@ public class Copter {
 		this.numUAV = numUAV;
 		this.ardusim = API.getArduSim();
 		this.missionHelper = new MissionHelper(numUAV, this);
-	}
-	
-	/**
-	 * Arm the engines.
-	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
-	 * The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
-	 * @return true if the command was successful.
-	 */
-	public boolean armEngines() {
-		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_ARM);
-		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
-				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_ARM) {
-			ardusim.sleep(UAVParam.COMMAND_WAIT);
-		}
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_ARM) {
-			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.ARM_ENGINES_ERROR);
-			return false;
-		} else {
-			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.ARM_ENGINES);
-			return true;
-		}
+		this.msHelper = new MasterSlaveHelper(numUAV);
+		this.takeOffHelper = new SafeTakeOffHelper(numUAV);
 	}
 	
 	/**
@@ -61,6 +46,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean cancelRCOverride() {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_RECOVER_CONTROL);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_RECOVER_ERROR) {
@@ -274,6 +262,14 @@ public class Copter {
 	}
 	
 	/**
+	 * Get additional functions to use the master-slave pattern in the coordination protocol.
+	 * @return Context needed to interact using the master-slave pattern.
+	 */
+	public MasterSlaveHelper getMasterSlaveHelper() {
+		return this.msHelper;
+	}
+	
+	/**
 	 * Get additional functions to interact with the UAV to follow planned missions.
 	 * @return Context needed to use commands related to missions.
 	 */
@@ -292,6 +288,9 @@ public class Copter {
 			return (double) UAVParam.loadedParams[numUAV].get(parameter.getId()).getValue();
 		}
 		
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_GET_PARAM);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -313,6 +312,14 @@ public class Copter {
 	 */
 	public double getPlannedSpeed() {
 		return UAVParam.initialSpeeds[numUAV];
+	}
+	
+	/**
+	 * Get additional functions to perform a coordinated take off that avoids collisions among multicopters. The take off strategy is based on the master-slave pattern, where the master UAV gathers data and coordinates the process. Later, the UAVs take off one by one avoiding collisions when possible.
+	 * @return Context needed to perform a safe take off.
+	 */
+	public SafeTakeOffHelper getSafeTakeOffHelper() {
+		return this.takeOffHelper;
 	}
 	
 	/**
@@ -360,11 +367,10 @@ public class Copter {
 	 * <p>The UAV must be in GUIDED flight mode.</p>
 	 * <p>This method uses the message SET_POSITION_TARGET_GLOBAL_INT, and doesn't wait response from the flight controller.
 	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
-	 * @param location Geographic coordinates the UAV has to move to.
-	 * @param relAltitude (m) Relative altitude the UAV has to move to.
+	 * @param location Geographic coordinates and relative altitude the UAV has to move to.
 	 */
-	public void moveTo(Location2DGeo location, double relAltitude) {
-		UAVParam.target[numUAV].set(new Location3DUTM(location.longitude, location.latitude, relAltitude));
+	public void moveTo(Location3DGeo location) {
+		UAVParam.target[numUAV].set(location);
 	}
 	
 	/**
@@ -374,14 +380,13 @@ public class Copter {
 	 * <p>This method uses the message MISSION_ITEM, and waits response from the flight controller.
 	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
 	 * <p>The Thread sends the command and allows to check when the UAV has reached the target location, or to wait to this event.</p>
-	 * @param location Geographic coordinates the UAV has to move to.
-	 * @param relAltitude (m) Relative altitude the UAV has to move to.
+	 * @param location Geographic coordinates and relative altitude the UAV has to move to.
 	 * @param listener Please, create an anonymous inner element to implement the provided methods.
 	 * @return MoveTo A thread that moves the UAV, and continuously checks if it has reached the target location.
 	 */
-	public MoveTo moveTo(Location2DGeo location, double relAltitude, MoveToListener listener) {
+	public MoveTo moveTo(Location3D location, MoveToListener listener) {
 		
-		return new MoveTo(numUAV, location, relAltitude, listener);
+		return new MoveTo(numUAV, location, listener);
 		
 	}
 	
@@ -391,6 +396,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean setFlightMode(FlightMode mode) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newFlightMode[numUAV] = mode;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MODE);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -428,6 +436,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean setParameter(CopterParam parameter, double value) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newParam[numUAV] = parameter;
 		UAVParam.newParamValue.set(numUAV, value);
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_PARAM);
@@ -450,6 +461,9 @@ public class Copter {
 	 * @return true if the command was successful.
 	 */
 	public boolean setPlannedSpeed(double speed) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newSpeed[numUAV] = speed;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_SPEED);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -466,31 +480,7 @@ public class Copter {
 	}
 	
 	/**
-	 * Center the joysticks of the virtual remote control to stabilize the UAV.
-	 * <p>Useful to stabilize altitude when the take off process finishes, or for starting AUTO flight while being on the ground.</p>
-	 * @return true if the command was successful.
-	 */
-	public boolean stabilize() {
-		if (UAVParam.overrideOn.get(numUAV) == 1) {
-			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_THROTTLE_ON);
-			while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
-					&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
-				ardusim.sleep(UAVParam.COMMAND_WAIT);
-			}
-			if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_THROTTLE_ON_ERROR) {
-				ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE_ERROR);
-				return false;
-			} else {
-				ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.STABILIZE_ALTITUDE);
-				return true;
-			}
-		}
-		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.RC_CHANNELS_OVERRIDE_FORBIDEN_ERROR);
-		return false;
-	}
-	
-	/**
-	 * Take off until the target relative altitude: it changes the flight mode to guided, arms engines, and then performs the guided take off.
+	 * Take off until the target relative altitude: it changes the flight mode to guided, arms engines, and then performs the guided take off. Before, it changes the flight mode to loiter and overrides the controls of the remote control to avoid a crash that happens with real multicopters.
 	 * <p>You must start the thread provided and start a loop in order to wait the take off process to finish.
 	 * @param altitude (m) Relative altitude to go to.
 	 * @param listener Please, create an anonymous inner element to implement the provided methods.
@@ -502,26 +492,4 @@ public class Copter {
 		
 	}
 	
-	/**
-	 * Take off a previously armed UAV.
-	 * <p>The UAV must be in GUIDED mode and armed.
-	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.</p>
-	 * @param altitude Target altitude over the home location.
-	 * @return true if the command was successful.
-	 */
-	public boolean takeOffGuided(double altitude) {
-		UAVParam.takeOffAltitude.set(numUAV, altitude);
-		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_TAKE_OFF);
-		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
-				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_TAKE_OFF) {
-			ardusim.sleep(UAVParam.COMMAND_WAIT);
-		}
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_TAKE_OFF) {
-			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.TAKE_OFF_ERROR_2);
-			return false;
-		} else {
-			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.TAKE_OFF);
-			return true;
-		}
-	}
 }

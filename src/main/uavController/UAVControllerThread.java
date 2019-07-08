@@ -48,8 +48,8 @@ import api.pojo.FlightMode;
 import api.pojo.RCValues;
 import api.pojo.location.Location2D;
 import api.pojo.location.LogPoint;
-import api.pojo.location.Location3DUTM;
 import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3DGeo;
 import api.pojo.location.Waypoint;
 import main.ArduSimTools;
 import main.Param;
@@ -433,6 +433,22 @@ public class UAVControllerThread extends Thread {
 		UAVParam.currentWaypoint.set(numUAV, message.seq);
 		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
 		
+		Waypoint lastWP = UAVParam.lastWP[numUAV];
+		if (message.seq > 0) {
+			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
+					|| lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+				if (message.seq == lastWP.getNumSeq() - 1) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
+					UAVParam.lastWaypointReached[numUAV].set(true);
+				}
+			} else {
+				if (message.seq == lastWP.getNumSeq()) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
+					UAVParam.lastWaypointReached[numUAV].set(true);
+				}
+			}
+		}
+		
 		ArduSimTools.triggerWaypointReached(numUAV, message.seq);
 	}
 
@@ -558,10 +574,10 @@ public class UAVControllerThread extends Thread {
 			}
 		}
 		
-		Location3DUTM target = UAVParam.target[numUAV].getAndSet(null);
+		Location3DGeo target = UAVParam.target[numUAV].getAndSet(null);
 		if (target != null) {
 			try {
-				msgMoveToTarget(target.x, target.y, target.z);
+				msgMoveToTarget(target.longitude, target.latitude, target.altitude);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

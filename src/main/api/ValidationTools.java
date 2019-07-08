@@ -11,7 +11,18 @@ import main.uavController.UAVParam;
 
 public class ValidationTools {
 	
-	//TODO add function to detect if a string is null or empty (isEmpty)
+	/**
+	 * Check if a String is null or empty.
+	 * @param validating String to validate.
+	 * @return true if the String is null or empty.
+	 */
+	public boolean isEmpty(String validating) {
+		if (validating == null || validating.length() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	
 	/**
 	 * Validate a boolean String.
@@ -39,6 +50,26 @@ public class ValidationTools {
 		}
 		try {
 			Double.parseDouble(validating);
+		} catch (NumberFormatException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Validate a non negative double number.
+	 * @param validating String representation of a non negative double.
+	 * @return true if the String represents a valid non negative double.
+	 */
+	public boolean isValidNonNegativeDouble(String validating) {
+		if (validating == null) {
+			return false;
+		}
+		try {
+			double x = Double.parseDouble(validating);
+			if (x < 0) {
+				return false;
+			}
 		} catch (NumberFormatException e) {
 			return false;
 		}

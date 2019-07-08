@@ -18,9 +18,7 @@ import main.api.GUI;
 import main.api.ValidationTools;
 import main.sim.board.BoardPanel;
 import mbcap.logic.MBCAPParam;
-import mbcap.pojo.MBCAPState;
 import mbcap.logic.MBCAPText;
-import mbcap.pojo.ProgressState;
 
 /** This class contains exclusively static methods used by the GUI.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -34,7 +32,7 @@ public class MBCAPGUITools {
 		
 		// Simulation parameters
 		String validating = panel.missionsTextField.getText();
-		if (validating==null || validating.length()==0) {
+		if (validationTools.isEmpty(validating)) {
 			gui.warn(Text.VALIDATION_WARNING, Text.MISSIONS_ERROR_5);
 			return false;
 		}
@@ -213,7 +211,7 @@ public class MBCAPGUITools {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		GUI gui;
 		for (int i = 0; i < numUAVs; i++) {
-			locationsUTM = MBCAPGUIParam.predictedLocation.get(i);
+			locationsUTM = MBCAPGUIParam.predictedLocation[i].get();
 			gui = API.getGUI(i);
 			if (locationsUTM != null && locationsUTM.size() > 0) {
 				g.setColor(gui.getColor());
@@ -229,18 +227,6 @@ public class MBCAPGUITools {
 		}
 	}
 
-	/** Stores (or removes when riskUTMLocation==null) the collision risk location that is drawn. */
-	public static void locateImpactRiskMark(Location3DUTM riskUTMLocation, int numUAV, long beaconId) {
-		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR) {
-			if (riskUTMLocation == null) {
-				MBCAPParam.impactLocationPX[numUAV].remove(beaconId);
-			} else {
-				Point2D.Double riskPXLocation = API.getGUI(numUAV).locatePoint(riskUTMLocation.x, riskUTMLocation.y);
-				MBCAPParam.impactLocationPX[numUAV].put(beaconId, riskPXLocation);
-			}
-		}
-	}
-	
 	/** Removes all the collision risk locations used for drawing. */
 	public static void removeImpactRiskMarks() {
 		int numUAVs = API.getArduSim().getNumUAVs();
@@ -277,30 +263,15 @@ public class MBCAPGUITools {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		Point2D.Double location;
 		for (int i = 0; i < numUAVs; i++) {
-			location = MBCAPParam.targetLocationPX.get(i);
+			location = MBCAPParam.targetLocationPX[i].get();
 			if (location != null) {
 				int x = (int)location.x;
 				int y = (int)location.y;
 				g.setColor(API.getGUI(i).getColor());
 				g.drawLine(x - 10, y - 10, x + 10, y + 10);
 				g.drawLine(x + 10, y - 10, x - 10, y + 10);
-//				g.drawOval((int)location.x - 2, (int)location.y - 2, 4, 4);
 			}
 		}
-	}
-
-	/** Update the protocol state. */
-	public static void updateState(int numUAV, MBCAPState state) {
-		// Update the protocol state
-		MBCAPParam.state[numUAV] = state;
-		// Update the record of states used
-		MBCAPParam.progress[numUAV].add(new ProgressState(state, System.currentTimeMillis()));
-
-		// Update the log in the main window
-		GUI gui = API.getGUI(numUAV);
-		gui.logUAV(MBCAPText.CAP + " = " + state.getName());
-		// Update the progress dialog
-		gui.updateProtocolState(state.getName());
 	}
 
 }

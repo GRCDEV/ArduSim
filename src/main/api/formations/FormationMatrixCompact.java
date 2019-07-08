@@ -15,13 +15,13 @@ import main.api.formations.helpers.FormationPointHelper;
 
 public class FormationMatrixCompact extends FlightFormation {
 	
-	protected FormationMatrixCompact(int numUAVs, double minDistance) {
-		super(numUAVs, minDistance);
+	protected FormationMatrixCompact(int numUAVs, double minDistance, Formation formation) {
+		super(numUAVs, minDistance, formation);
 	}
 
 	@Override
 	protected void initializeFormation() {
-		this.centerUAV = 0;
+		this.centerUAVPosition = 0;
 		
 		// 1. Get the number of layers around the center UAV to contain all the UAVs
 		// 1.1. First, the minimum number of layers

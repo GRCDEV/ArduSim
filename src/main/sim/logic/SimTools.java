@@ -124,12 +124,12 @@ public class SimTools {
 		
 		//  Simulation parameters
 		String validating = panel.arducopterPathTextField.getText();
-		if (validating==null || validating.length()==0) {
+		if (validationTools.isEmpty(validating)) {
 			ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.SITL_ERROR_3);
 			return false;
 		}
 		validating = panel.speedsTextField.getText();
-		if (validating==null || validating.length()==0) {
+		if (validationTools.isEmpty(validating)) {
 			ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.SPEEDS_ERROR_2);
 			return false;
 		}
@@ -139,7 +139,7 @@ public class SimTools {
 			return false;
 		}
 		validating = (String)panel.UAVsComboBox.getSelectedItem();
-		if (validating==null || validating.length()==0) {
+		if (validationTools.isEmpty(validating)) {
 			ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.UAVS_NUMBER_ERROR);
 			return false;
 		}

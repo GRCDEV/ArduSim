@@ -1,18 +1,17 @@
 package main.api;
 
-/**
- * Interface that must be implemented to apply actions when the UAV reaches the target altitude. */
+/** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
 public interface TakeOffListener {
 	
 	/**
-	 * Actions to perform when the take off has finished.
+	 * Actions to perform when the take off finishes.
 	 */
-	abstract void onCompletedListener();
+	abstract void onCompleteActionPerformed();
 	
 	/**
 	 * Actions to perform if some error happens during the take off.
 	 */
-	abstract void onFailureListener();
+	abstract void onFailure();
 	
 }

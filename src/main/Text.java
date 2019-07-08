@@ -21,6 +21,7 @@ public class Text {
 	public static final String MATRIX_COMPACT_FORMATION = "Compact matrix";
 	public static final String CIRCLE_FORMATION = "Circle";
 	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
+	public static final String RANDOM = "Random";
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
@@ -34,9 +35,11 @@ public class Text {
 	public static final String PROTOCOL_NOT_FOUND_ERROR = "protocol was not found. Valid protocols:";
 	public static final String PROTOCOL_DUPLICATED = "More than one implementation found for a protocol.";
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
-	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR = "param not found. Using default value:";
+	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_1 = "param not found. Using default value:";
+	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_2 = "param not found. Unable to continue.";
 	public static final String INI_FILE_PARAM_NOT_VALID_ERROR = "param not valid value:";
 	public static final String INI_FILE_PARAM_USING_DEFAULT = "param not valid. Using default value:";
+	public static final String INI_FILE_PARAM_PORT_IN_USE = "param not valid. Por in use by the internal ArduSim communications.";
 	public static final String INI_FILE_PARAM_SERIAL_PORT_WARNING = "The serial link could not work properly if the serial port name is wrong:";
 	public static final String INI_FILE_PARAM_BROADCAST_IP_WARNING = "Broadcast IP:";
 	public static final String PROTOCOL_GETTING_CLASSES_ERROR = "Unable to retrieve the existing classes in " + APP_NAME;
@@ -263,6 +266,8 @@ public class Text {
 			+ "\twaypoint, spline waypoint, takeoff, land, RTL.";
 	// Loading mission(s) dialog
 	public static final String EXTEND_MISSION = "Mission end:";
+	public static final String RTL_ALTITUDE = "Final altitude for RTL:";
+	public static final String RTL_ALTITUDE_ERROR = "The minimum altitude for RTL must be a positive number.";
 	public static final String MIN_TARGET_ALTITUDE = "Minimum waypoints relative altitude:";
 	public static final String XML_DELAY = "Input mission delay over each waypoint:";
 	public static final String TARGET_DISTANCE = "Distance to waypoint to assert WP reached:";
@@ -335,6 +340,8 @@ public class Text {
 	public static final String PORT_ERROR = "Communications error";
 	public static final String PORT_ERROR_1 = "Some ports are in use, so only can be simulated a maximum of ";
 	public static final String PORT_ERROR_2 = "It was not possible to get valid ports to connect to SITL instances.";
+	public static final String PORT_ERROR_3 = "Port used by another application:";
+	public static final String CONFIGURATION_ERROR = "Error building the protocol configuration dialog.";
 	public static final String MAC_ERROR = "Not valid MAC address could be found on any network interface.";
 	public static final String MESSAGE_ERROR = "Error sending a message.";
 	public static final String FATAL_ERROR = "Fatal error";
@@ -368,7 +375,6 @@ public class Text {
 	public static final String LAST_WAYPOINT_REACHED = "Last waypoint reached.";
 	public static final String TAKE_OFF_ERROR = "Unable to take off.";
 	public static final String MOVE_TO_ERROR = "Unable to move to target location.";
-	public static final String LAND_ERROR = "Was unable to land.";
 	
 	// System properties
 	public static final String HOME_DIR = "user.home";
@@ -473,7 +479,19 @@ public class Text {
 	public static final String EMERGENCY_NOT_FOUND = "Emergency command not found.";
 	public static final String EMERGENCY_SUCCESS = "Emergency command applied successfully:";
 	public static final String EMERGENCY_FAILED = "Emergency command failed:";
+	public static final String SEND_NOT_PERMITTED = "You cannot send messages to the UAVs from the PC Companion.";
 	
+	// Thread names
+	public static final String TAKEOFF_THREAD = "TakeOff thread ";
+	public static final String DISCOVERY_MASTER_LISTENER = "Discovery master listener: ";
+	public static final String DISCOVERY_MASTER_TALKER = "Discovery master talker: ";
+	public static final String DISCOVERY_SLAVE_LISTENER = "Discovery slave listener: ";
+	public static final String DISCOVERY_SLAVE_TALKER = "Discovery slave talker: ";
+	public static final String SAFE_TAKE_OFF_MASTER_CONTEXT_LISTENER = "Safe take off master context retrieval listener";
+	public static final String SAFE_TAKE_OFF_MASTER_CONTEXT_TALKER = "Safe take off master context retrieval talker";
+	public static final String SAFE_TAKE_OFF_SLAVE_CONTEXT_LISTENER = "Safe take off slave context retrieval listener";
+	public static final String SAFE_TAKE_OFF_SLAVE_CONTEXT_TALKER = "Safe take off slave context retrieval talker";
+	public static final String SAFE_TAKE_OFF_LISTENER = "Safe take off listener: ";
+	public static final String SAFE_TAKE_OFF_TAKER = "Safe take off talker: ";
 	
-
 }

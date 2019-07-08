@@ -6,6 +6,7 @@ import main.Param;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.FileTools;
+import main.api.FlightFormationTools;
 import main.api.GUI;
 import main.api.ValidationTools;
 import main.api.communications.CommLink;
@@ -25,7 +26,9 @@ public class API {
 	private static volatile AtomicReferenceArray<Copter> copter = null;
 	private static final Object lockCopter = new Object();
 	
-	private static volatile FileTools fileTools = new FileTools();
+	private static FileTools fileTools = new FileTools();
+	
+	private static FlightFormationTools flightTools = new FlightFormationTools();
 	
 	private static volatile AtomicReferenceArray<GUI> gui = null;
 	private static final Object lockGUI = new Object();
@@ -89,6 +92,16 @@ public class API {
 	public static FileTools getFileTools() {
 		
 		return API.fileTools;
+		
+	}
+	
+	/**
+	 * Get tools to build and manage flight formations.
+	 * @return Tools to manage flight formations.
+	 */
+	public static FlightFormationTools getFlightFormationTools() {
+		
+		return API.flightTools;
 		
 	}
 	

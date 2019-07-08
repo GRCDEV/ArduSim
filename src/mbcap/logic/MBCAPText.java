@@ -11,7 +11,6 @@ public class MBCAPText {
 	// Configuration dialog window:
 	public static final String OK = "OK";
 	public static final String RESTORE_DEFAULTS = "Restore defaults";
-	public static final String CANCEL = "Cancel";
 	public static final String CONFIGURATION = "configuration";
 	
 	public static final String SIMULATION_PARAMETERS = "Simulation parameters:";
@@ -88,8 +87,7 @@ public class MBCAPText {
 	public static final String MISSION_RESUME_ERROR = "Error resuming the mission.";
 	public static final String DEADLOCK = "Landing due to interlock situation with another UAV.";
 	public static final String DEADLOCK_ERROR = "It was not possible to land after an interlock situation.";
-	public static final String LOCATION_ERROR_1 = "Unable to get the current location of the UAV.";
-	public static final String LOCATION_ERROR_2 = "Unable to land after failing getting the current location of the UAV.";
+	public static final String LOCATION_ERROR = "Unable to land after failing getting the current location of the UAV.";
 	public static final String PROT_ERROR = "Protocol error";
 	public static final String RISK_DETECTED = "Stop. Collision risk detected with UAV";
 	public static final String RISK_DETECTED_ERROR = "Error stopping the UAV.";
@@ -101,7 +99,6 @@ public class MBCAPText {
 	public static final String GRANT_PERMISSION = "Granting permission to go on to UAV";
 	public static final String MISSION_RESUMED = "Mission resumed. Collision risk avoided with UAV";
 	public static final String SAFE_PLACE = "Safe place reached.";
-	public static final String LANDING_ERROR = "It was not possible to land all the UAVs.";
 
 	// Protocol name
 	public static final String MBCAP_TEXT = "MBCAP";

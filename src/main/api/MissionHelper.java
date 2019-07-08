@@ -14,6 +14,7 @@ import api.pojo.location.WaypointSimplified;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
+import main.api.hiddenFunctions.HiddenFunctions;
 import main.sim.board.BoardParam;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
@@ -47,22 +48,6 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Get the last waypoint of the current mission.
-	 * @return The last waypoint of the current mission, or <i>null</i> if the UAV is not following a mission.
-	 */
-	public Waypoint getLastWaypoint() {
-		return UAVParam.lastWP[numUAV];
-	}
-	
-	/**
-	 * Get the UTM coordinates of the last waypoint of the current mission.
-	 * @return The UTM coordinates of the last waypoint of the current mission, or <i>null</i> if the UAV is not following a mission.
-	 */
-	public Location2DUTM getLastWaypointUTM() {
-		return UAVParam.lastWPUTM[numUAV];
-	}
-	
-	/**
 	 * Get the mission currently stored on the multicopter.
 	 * <p>Mission only available if it is previously sent to the drone <i>updateUAV(List&lt;Waypoint&gt;)</i>.</p>
 	 * @return The mission currently stored in the UAV in geographic coordinates.
@@ -93,42 +78,35 @@ public class MissionHelper {
 	 * @return true if the last waypoint of the mission has been reached.
 	 */
 	public boolean isLastWaypointReached() {
-		return UAVParam.lastWaypointReached[numUAV];
+		return UAVParam.lastWaypointReached[numUAV].get();
 	}
 	
 	/**
 	 * Land the UAV if it is close enough to the last waypoint.
-	 * <p>This method can be launched periodically, it only informs that the last waypoint is reached once, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.
-	 * Use only when the UAV is performing a planned mission.</p>
+	 * <p>This method can be launched periodically, it only informs that the last waypoint is reached once, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.</p>
 	 * @param distanceThreshold (meters) Horizontal distance from the last waypoint of the mission to assert that the UAV has to land.
 	 */
 	public void landIfEnded(double distanceThreshold) {
-		int currentWaypoint = this.getCurrentWaypoint();
 		Waypoint lastWP = UAVParam.lastWP[numUAV];
 		// Only check when the last waypoint is reached
-		if (lastWP != null && currentWaypoint > 0 && currentWaypoint == lastWP.getNumSeq()) {
-			// Inform only once that the last waypoint has been reached
-			if (!UAVParam.lastWaypointReached[numUAV]) {
-				UAVParam.lastWaypointReached[numUAV] = true;
-				ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);	// never shown when RTL is used (workaround in ArduSimTools.isTestFinished())
+		if (UAVParam.lastWaypointReached[numUAV].get()) {
+			// Do nothing if the UAV is already landing
+			FlightMode current = UAVParam.flightMode.get(numUAV);
+			if (current.getCustomMode() == 9) {
+				return;
 			}
-			// Do nothing if the mission plans to land autonomously
 			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
 					|| (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
 				return;
 			}
-			// Do nothing if the UAV is already landing
-			FlightMode mode = this.copter.getFlightMode();
-			if (mode == FlightMode.LAND_ARMED
-					&& mode == FlightMode.LAND) {
-				return;
-			}
+			
 			// Land only if the UAV is really close to the last waypoint force it to land
-			List<WaypointSimplified> mission = UAVParam.missionUTMSimplified.get(numUAV);
-			if (mission != null
-					&& this.copter.getLocationUTM().distance(mission.get(mission.size()-1)) < distanceThreshold) {
-				if (!this.copter.land()) {
-					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAND_ERROR);
+			if (UAVParam.uavCurrentData[numUAV].getUTMLocation().distance(UAVParam.lastWPUTM[numUAV]) < distanceThreshold) {
+				if (current.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
+						&& current != FlightMode.LAND_ARMED) {
+					// We assume that the command will not fail to avoid concurrency problems when several UAVs are run in the same machine (simulations)
+					UAVParam.newFlightMode[numUAV] = FlightMode.LAND;
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MODE);
 				}
 			}
 		}
@@ -140,7 +118,30 @@ public class MissionHelper {
 	 * @return true if all the commands were successful.
 	 */
 	public boolean pause() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
-		if (this.copter.stabilize() && this.copter.setFlightMode(FlightMode.LOITER)) {
+		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.LOITER)) {
+			long time = System.nanoTime();
+			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
+				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
+				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STOP_ERROR_1);
+					return true;
+				}
+			}
+
+			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.STOP);
+			return true;
+		}
+		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STOP_ERROR_2);
+		return false;
+	}
+	
+	/**
+	 * Stops the mission and stabilizes the UAV in the current location, changing to brake flight mode.
+	 * <p>Blocking method until the UAV is almost stopped.</p>
+	 * @return true if all the commands were successful.
+	 */
+	public boolean pause2() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
+		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.BRAKE)) {
 			long time = System.nanoTime();
 			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
 				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
@@ -162,6 +163,9 @@ public class MissionHelper {
 	 * @return true if the command was successful.
 	 */
 	private boolean remove() {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_CLEAR_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_CLEAR_WP_LIST) {
@@ -193,6 +197,9 @@ public class MissionHelper {
 	 * @return true if the command was successful.
 	 */
 	private boolean retrieve() {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP_LIST);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_REQUEST_WP_LIST) {
@@ -285,6 +292,9 @@ public class MissionHelper {
 	 * @return true if the command was successful.
 	 */
 	private boolean setCurrentWaypoint(int currentWP) {
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		UAVParam.newCurrentWaypoint[numUAV] = currentWP;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_CURRENT_WP);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
@@ -324,6 +334,9 @@ public class MissionHelper {
 				current = i;
 			}
 		}
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
 		// Specify the current waypoint
 		UAVParam.currentWaypoint.set(numUAV, current);
 		UAVParam.newCurrentWaypoint[numUAV] = current;
@@ -354,7 +367,7 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Set the loaded missions from file/s for the UAVs, in geographic coordinates. Used in the configuration window, when needed.
+	 * Set the loaded missions from file/s for the UAVs, in geographic coordinates. Used in the configuration window or in the method <i>setStartingLocation</i> of the protocol implementation, when needed.
 	 * <p>Please, check that the length of the array is the same as the number of running UAVs in the same machine (method <i>API.getArduSim.getNumUAVs()</i>).</p>
 	 * @param missions Missions that must be loaded and set with this method in the protocol configuration window, when needed.
 	 */
@@ -372,7 +385,7 @@ public class MissionHelper {
 	
 	/**
 	 * Take off a UAV and start the planned mission.
-	 * <p>Issues three commands: armEngines, setFlightMode --> AUTO, and setHalfThrottle.
+	 * <p>Issues three commands: armEngines, setFlightMode --> AUTO, and stabilize.
 	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
 	 * The UAV must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
 	 * @return true if all the commands were successful.
@@ -380,9 +393,9 @@ public class MissionHelper {
 	public boolean start() {
 		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
-		if (this.copter.armEngines()
+		if (HiddenFunctions.armEngines(numUAV)
 				&& this.copter.setFlightMode(FlightMode.AUTO)
-				&& this.copter.stabilize()) {
+				&& HiddenFunctions.stabilize(numUAV)) {
 			return true;
 		}
 		return false;

@@ -20,14 +20,13 @@ public class Param {
 	public static final String UAV_PORT = "UAVPORT";
 	public static final String PROTOCOL = "UAVPROTOCOL";
 	public static final String SPEED = "UAVSPEED";
+	public static final String MACS = "MACS";
 	public static final String SERIAL_PORT = "SERIALPORT";
 	public static final String BAUD_RATE = "BAUDRATE";
 	public static final String BROADCAST_IP = "BROADCASTIP";
 	public static final String BROADCAST_PORT = "BROADCASTPORT";
 	public static final String BATTERY_CELLS = "BATTERYCELLS";
 	public static final String BATTERY_CAPACITY = "BATTERYCAPACITY";
-	public static final String GROUND_FORMATION= "GROUNDFORMATION";
-	public static final String GROUND_DISTANCE = "GROUNDDISTANCE";
 	public static final String AIR_FORMATION = "AIRFORMATION";
 	public static final String AIR_DISTANCE = "AIRDISTANCE";
 	public static final String LAND_DISTANCE = "LANDDISTANCE";
@@ -40,12 +39,16 @@ public class Param {
 	public static final String KML_OVERRIDE_ALTITUDE = "KMLOVERRIDEALTITUDE";
 	public static final String KML_ALTITUDE = "KMLALTITUDE";
 	public static final String KML_MISSION_END = "KMLMISSIONEND";
+	public static final String KML_RTL_END_ALT = "KMLRTLENDALTITUDE";
 	public static final String KML_WAYPOINT_DELAY = "KMLWAYPOINTDELAY";
 	public static final String KML_WAYPOINT_DISTANCE = "KMLWAYPOINTDISTANCE";
-	public static final String[] PARAMETERS = {COMPUTER_PORT, UAV_PORT, PROTOCOL, SPEED,
-			SERIAL_PORT, BAUD_RATE, BROADCAST_IP, BROADCAST_PORT, BATTERY_CELLS, BATTERY_CAPACITY, GROUND_FORMATION, GROUND_DISTANCE,
+	public static final String[] PARAMETERS = {COMPUTER_PORT, UAV_PORT, PROTOCOL, SPEED, MACS,
+			SERIAL_PORT, BAUD_RATE, BROADCAST_IP, BROADCAST_PORT, BATTERY_CELLS, BATTERY_CAPACITY,
 			AIR_FORMATION, AIR_DISTANCE,LAND_DISTANCE,MEASURE_CPU, VERBOSE_LOGGING, VERBOSE_STORE, WAYPOINT_YAW_OVERRIDE, WAYPOINT_YAW_VALUE,
-			KML_MIN_ALTITUDE, KML_OVERRIDE_ALTITUDE, KML_ALTITUDE, KML_MISSION_END, KML_WAYPOINT_DELAY, KML_WAYPOINT_DISTANCE};
+			KML_MIN_ALTITUDE, KML_OVERRIDE_ALTITUDE, KML_ALTITUDE, KML_MISSION_END, KML_RTL_END_ALT, KML_WAYPOINT_DELAY, KML_WAYPOINT_DISTANCE};
+	// Additional simulation parameters not included in the INI file
+	public static final String GROUND_FORMATION = "GROUNDFORMATION";
+	public static final String GROUND_DISTANCE = "GROUNDDISTANCE";
 	
 	// Number of UAVs to be simulated
 	public static int numUAVs;
@@ -83,6 +86,7 @@ public class Param {
 	public static volatile long startTime;	// (ms) experiment start in local time
 	public static long[] testEndTime;		// (ms) one UAV experiment finish in local time
 	public static long latestEndTime;		// (ms) experiment finish in local time
+	public static volatile long timeOffset;	// (ms) time offset between PC Companion and real multicopter clock
 
 	// Selected wireless model
 	public static WirelessModel selectedWirelessModel;

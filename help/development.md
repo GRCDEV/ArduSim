@@ -175,11 +175,10 @@ The last two functions can be used only by one thread on each multicopter, as in
 
 ### 5.2 UAV control
 
-With *API.getCopter(int)* you get an object that provides several functions to send commands to the multicopter and to retrieve information from it. An integer value represents the position of the multicopter the command is applied to in the array of UAVs running in the same machine (one in a real UAV, and many in simulation). Most commands return a boolean meaning whether the command was successfully completed or not, which allows the developer to process errors at a higher level.
+With *API.getCopter(int)* you get an object that provides several functions to send commands to the multicopter and to retrieve information from it. The integer value represents the position of the multicopter the command is applied to in the array of UAVs running in the same machine (one in a real UAV, and many in simulation). Most commands return a boolean meaning whether the command was successfully completed or not, which allows the developer to process errors at a higher level.
 
 General functions:
 
-* `boolean armEngines()`. It arms the engines so the flight could be started. The multicopter must be on the ground and in an armable flight mode. On a real UAV, the hardware switch for safety arm must be pressed before, if available.
 * `boolean cancelRCOverride()`. It allows to release the control of the flight to the remote control, canceling the channels overriding. It is used by the PC Companion and may be used by any protocol. but be aware, it can only be used once and a pilot must be ready and with the remote control turned on or the multicopter would crash!
 * `void channelsOverride(int, int, int, int)`. It allows to simulate the joysticks of the remote control, providing values for yaw, pitch, roll and throttle. According to the documentation, commands should be issued at least once a second in a loop or the control could be returned to the real remote (guaranteed crash if no remote control is present), but we have notice that a single command keeps moving the UAV, at least as long as the flight controller receives the heartbeat that is automatically sent from ArduSim. It is also recommended to avoid sending this message with a period lower than 0.4 seconds or some commands could be ignored by the flight controller. Channel override is enabled by default and cannot be enabled again once used the function `cancelRCOverride()`.
 * `void channelsOverride(double, double, double, double)`. Similar to the previous function, but the values for the attitude of the multicopter range from -1 to 1 for easier control.
@@ -199,20 +198,22 @@ General functions:
 * `double[] getSpeeds()`. In this case, the current flight speed for the three cartesian axes is provided.
 * `boolean isFlying()`. It reports whether the multicopter is flying or not (on the ground and engines off).
 * `boolean land()`. This method is used to land the UAV.
-* `void moveTo(Location2DGeo, double)`. It sends a command to move to a specific location without blocking, and without waiting response from the flight controller. It uses the command *SET_POSITION_TARGET_GLOBAL_INT*. This function is useful when a continuous control of the multicopter is desired (frequent changes in the target location).
-* `MoveTo moveTo(Location2DGeo, double, MoveToListener)`. As the previous function, it sends a command to go to a specific location in GUIDED flight mode, but using the message *MISSION_ITEM*. The function provides a Thread object that must be started. The listener allows to perform actions when the UAV reaches the target location, or if any error happens. In order to force the current thread to wait until the end of the movement, you can join the provided Thread, or you can do a passive wait until some shared variable is modified in the listener. The second approach is more addequate if more than one thread must react when the movement ends.
+* `void moveTo(Location3DGeo)`. It sends a command to move to a specific location without blocking, and without waiting response from the flight controller. It uses the command *SET_POSITION_TARGET_GLOBAL_INT*. This function is useful when a continuous control of the multicopter is desired (frequent changes in the target location).
+* `MoveTo moveTo(Location3DGeo, MoveToListener)`. As the previous function, it sends a command to go to a specific location in GUIDED flight mode, but using the message *MISSION_ITEM*. The function provides a Thread object that must be started. The listener allows to perform actions when the UAV reaches the target location, or if any error happens. In order to force the current thread to wait until the end of the movement, you can join the provided Thread, or you can do a passive wait until some shared variable is modified in the listener. The second approach is more adequate if more than one thread must react when the movement ends.
 * `boolean setFlightMode(FlightMode)`. It changes the flight mode as defined in *api.pojo.FlightMode* enumeration.
 * `boolean setParameter(CopterParam, double)`. The developer can modify one of the parameters of the flight controller as included in *api.pojo.CopterParam* enumeration. The most appropriate place would be the function `sendInitialConfiguration(int)` of the protocol implementation, before starting the protocol threads (see section "[3 Application workflow](#markdown-header-3-application-workflow)").
 * `boolean setPlannedSpeed(double)`. It modifies the planned flight speed, it is, the maximum flight speed for the multicopter. In a mission, it is the constant speed it will follow through a straight line, and in GUIDED flight mode it is the maximum speed adopted by the flight controller while executing commands.
-* `boolean stabilize()`. This method rises the throttle value overriding the corresponding channel of the remote control. Moreover, it sets yaw, pitch and roll to their trim (middle) value to keep the UAV static in the horizontal plane. Channel override is enabled by default and cannot be enabled again once used the function `cancelRCOverride()`. This method is automatically used to start a mission, and during the take off process in GUIDED flight mode.
 * `TakeOff takeOff(double, TakeOffListener)`. It takes off from the ground, stabilizing the UAV, changing to GUIDED flight mode, arming engines, and issuing the following command. Similarly to one of the `moveTo` commands, it provides a thread that periodically checks if the take off process finishes. The current thread can wait that event simply joining to the provided Thread, or you can use a passive wait until the listener changes a shared variable. The multicopter must be on the ground and not armed.
-* `boolean takeOffGuided(double)`. It takes off to the target relative altitude. The multicopter must be in GUIDED flight mode and armed.
 
-Finally, with `getMissionHelper()` a new set of functions appear that help to interact with the UAV to perform planned missions:
+With `getMasterSlaveHelper()` a few functions are available to coordinate a swarm of UAVs with the master-slave pattern:
+
+* `boolean isMaster()`. For real multicopters, the file *ardusim.ini* includes a list of MAC addresses. If the MAC of any of the network adapters of the UAV is included in this list, then this multicopter becomes master. In simulations, the UAV with ID=0 is always the master if the master-slave pattern is used.
+* `void DiscoverMaster()`. Blocking method. It allows slaves to inform the master about their presence.
+* `Map<Long, Location2DUTM> DiscoverSlaves(DiscoveryProgressListener)`. Blocking method. In this case, the master waits to detect slaves. Implementing an anonymous listener you decide when to stop waiting to discover UAV. You can use a timeout, but we recommend the scheme used in MUSCOP and FollowMe, where the process is started when the UAVs get GPS fix, and finishes when the user presses the Setup button. This approach is valid for simulations and also for UAVs deployment.
+
+With `getMissionHelper()` a new set of functions appear that help to interact with the UAV to perform planned missions:
 
 * `int getCurrentWaypoint()`. It provides the identifier of the current waypoint of the mission.
-* `Waypoint getLastWaypoint()`. It provides the last waypoint of the current mission.
-* `Location2DUTM getLastWaypointUTM()`. It provices the UTM coordinates of the last waypoint of the current mission.
 * `List<Waypoint> get()`.This method provides the mission currently stored in the UAV. It must be previously sent to the flight controller with the function `updateUAV(List<Waypoint>)`.
 * `List<Waypoint>[] getMissionsLoaded()`. This function provides the missions already loaded from file. This function must not be used before the `setMissionsLoaded(List<Waypoint[])` function.
 * `List<WaypointSimplified> getSimplified()`. This method must be invoked once the mission is sent to the drone with `updateUAV(List<Waypoint>)`. It provides the mission that is show on screen when performing a simulation. This mission is simplified, as it lacks of waypoints that don't add new line segments to the shown path. As example, it is used in *MUSCOP* protocol to build the path the UAVs have to follow.
@@ -225,11 +226,28 @@ Finally, with `getMissionHelper()` a new set of functions appear that help to in
 * `boolean start()`. It takes off and starts the planned mission stored in the flight controller. The multicopter must be on the ground and in an armable flight mode. On a real UAV, the hardware switch for safety arm must be pressed before, if available.
 * `boolean updateUAV(List<Waypoint>)`. It deletes the current mission of the UAV, sends a new one, and retrieves it from the flight controller to show it on the GUI. This function is automatically used by ArduSim before the `sendInitialConfiguration(int)` method of the protocol implementation.
 
+Finally, with `getSafeTakeOffHelper()` you get a set of functions to coordinate the take off of a swarm defining a flight formation, and avoiding collisions among them. The UAVs take off sequentially and in two steps, moving first the UAVs that must go further to reduce the probability of collision.
+
+* `SafeTakeOffContext getMasterContext(Map<Long, Location2DUTM>, FlightFormation, double, double, boolean, boolean)`. Blocking method. Allows the master UAV to coordinate the take off process sharing the needed information. First, it requires to detect the slave UAVs (see the functions provided with `getMasterSlaveHelper()` method). The object provided allows the master UAV take off with the method shown below.
+* `SafeTakeOffContext getSlaveContext(boolean)`. Blocking method. Allows the slave UAV to join the coordinated take off receiving the needed information.
+* `void start(SafeTakeOffContext, SafeTakeOffListener)`.Non blocking method. It executes the coordinated take off for the current UAV, with the context provided. You must implement a loop to wait the take off to finish. The anonymous listener can help you to break the loop when the process finishes (see MUSCOP and FollowMe protocols as example).
+
+The `SafeTakeOffContext` object provides several methods to get information before performing the take off:
+
+* `Location2DUTM getCenterUAVLocation()`. It provides the future location of the UAV that will be in the center of the flight formation.
+* `FlightFormation getFormationFlying()`. It provides the flight formation that will be used while flying.
+* `FlightFormation getFormationLanding()`. It provides the flight formation that can be used while landing. By default, it is the same as the previous one, but the UAVs are closer to facilitate to collect them from the ground.
+* `int getFormationPosition()`. It provides the position of the current UAV in the previous formations.
+* `double getInitialYaw()`. It provides the yaw of the flight formation when the take off process finishes.
+* `long getNextID()`. With this you get the ID of the next UAV in the take off sequence.
+* `int getNumUAVs()`.It provides the number of UAVs coordinated for the take off process, even when some of them could remain on the ground after the process.
+* `long getPrevID()`. It provides the ID of the previous UAV in the take off sequence.
+* `boolean isCenter()`. It returns true if this UAV will be the  one in the center of the flight formation.
+
 ### 5.3 GUI integration
 
 A few functions have been implemented in the object provided by *API.getGUI(int)* to update the GUI and console.
 
-* `void addEscapeListener(JDialog)`. This method allows to close the configuration dialog or the PC Companion dialog used for any protocol, whenever the escape key is pressed. It can be used once the dialog is builded.
 * `void exit(String)`. On a real UAV, it writes a message to console, it warns the user with a dialog, and it closes ArduSim with an error code. If ArduSim runs as a simulator and before exiting, all SITL instances are closed and temporary files are removed.
 * `StatusPacket[] getDetectedUAVs()`. It returns an array of objects with the ID of the detected UAVs, and with their number as size. This can be used in the protocol PC Companion dialog. It is useful to build the GUI before launching a thread to update it depending on the present UAVs. A usage example can be found in the PC Companion dialog implemented for the *MBCAP* protocol.
 * `Color getColor()`. It provides the Color assigned to a UAV to be used to draw linear elements on the screen, like the path followed by the UAV, which is  automatically drawn. Please, notice that each multicopter has a different color asigned.
@@ -261,7 +279,6 @@ The following functions allow the protocol to synchronize its execution with Ard
 * `long[] getExperimentEndTime()`. It returns the Java VM time value when the UAVs finished the experiment, it is, when they landed.
 * `int getNumUAVs()`. This method returns the number of UAVs that are running on the same machine, 1 when running on a real UAV or many when performing a simulation.
 * `String getSelectedProtocolName()`. It provides the name of the protocol that is currently running in ArduSim.
-* `int getUDPBroadcastPort()`. With this function you can get the port number where the UAVs are listening for data packets. It is useful to listen to the transmissions in the swarm in the PC Companion.
 * `List<LogPoint> getUTMPath()`. It provides the path followed by this UAV for logging purposes.
 * `boolean isAvailable()`. Now follows a list of functions used to know which is the current execution state of ArduSim. This methods should be used in the protocol threads to wait the adequate moment to perform any action. In this case, the function returns *true* when the multicopter/multicopters are ready to fly or even flying.
 * `boolean isReadyForSetup()`. In this case, the UAVs are ready, but the setup step has not been started.
@@ -270,7 +287,7 @@ The following functions allow the protocol to synchronize its execution with Ard
 * `boolean isExperimentInProgress()`. This method returns *true* if the experiment is in progress.
 * `boolean isExperimentFinished()`. Finally, this method returns *true* if the experiment has ended, it is, if all the UAVs running in this machine have landed.
 
-    Two code examples follow. The first and second examples wait until the setup step starts, but the second option could cause a race condition if the programmer decides to skip the setup step. The third case waits from the beginning until the experiment starts, and until the multicopter starts the flight.
+    Three code examples follow. The first and second examples wait until the setup step starts, but the second option could cause a race condition if the programmer decides to skip the setup step. The third case waits from the beginning until the experiment starts, and until the multicopter starts the flight.
     
     ```java
     while(!isAvailable() || isReadyForSetup()) {
@@ -289,9 +306,9 @@ The following functions allow the protocol to synchronize its execution with Ard
             sleep(time);
         }
     ```
+
 * `boolean isVerboseStorageEnabled()`. This function may be used to decide if some information must be stored in a *File*.
 * `void setNumUAVs(int)`. A protocol may need to change the number of running UAVs on the same machine when performing a simulation. This method may be used in the configuration dialog of the protocol for that purpose. For example, if the protocol needs to load missions for the multicopters, it can reduce the number of simulated UAVs if the number of missions loaded is lower than expected (i.e. protocol *MBCAP*).
-* `void setProtocolConfigured()`. This function must be used when the protocol configuration dialog is closed to inform ArduSim that it can continue, opening the main window.
 * `void sleep(long)`. Wrapper method to make the current Thread wait for a period of time.
 
 ### 5.5 Available utilities
@@ -307,53 +324,60 @@ The function `API.getValidationTools()` provides a context object to validate an
 
 * `boolean isValidBoolean(String)`. It checks if a String represents a valid boolean value.
 * `boolean isValidDouble(String)`. It checks if a String represents a double.
+* `boolean isValidNonNegativeDouble(String)`. It checks if a String represents 0, or a positive double.
 * `boolean isValidNonNegativeInteger(String)`. It checks if a String represents 0, or a positive integer.
 * `boolean isValidPort(String)`. It checks if a String represents a TCP port in the range [1024, 65535].
 * `boolean isValidPositiveInteger(String)`. It checks if a String represents a positive integer.
 * `boolean isValidPositiveLong(String)`. It checks if a String represents a positive long.
 * `boolean isValidPositiveDouble(String)`. It checks if a String represents a positive double.
-* `double round(double, int)`. It rounds a double to a specific number of decimal digits, useful to show on screen or store in a file.
+* `double roundDouble(double, int)`. It rounds a double to a specific number of decimal digits, useful to show on screen or store in a file.
 * `String timeToString(long, long)`. Given an initial and final time provided by the function `System.currentTimeMillis()`, it transforms the elapsed time in human readable text.
 
-Finally, ArduSim provides tools to build the swarm formation. The layout can be built from scratch, but several flying formations have been included to make easier to develop a new protocol. The package *main.api.pojo.formations* includes a general class *FlightFormation*, and several formation implementations that can be used in any protocol, like shown in *MUSCOP*. Follows a list of implemented formations:
+The function `API.getFlightFormationTools()` provides tools to build the swarm formation. The layout can be built from scratch, but several flying formations have been included to make easier to develop a new protocol. Follows a list of implemented formations:
 
 * *Linear*. The UAVs are ordered in a straight line perpendicular to a specific heading, and numbered from left to right.
 * *Regular matrix*. The UAVs are ordered in a square matrix, and numbered from left to right, and from bottom to up.
 * *Compact matrix*. The center UAV is surrounded by the remaining at the closest location to the center of the formation.
 * *Circle*. A center UAV is surrounded by the remaining forming a circle, and the are numbered; first the center UAV, and then the remaining counterclockwise starting on the right.
 * *Compact mesh*. The center UAV is surrounded by the remaining at the closest location to the center of the formation. Always, the distance from a UAV to the surrounding UAVs is the same.
+* *Random*.  The center UAV is surrounded by the remaining at the closest location to the center of the formation, but deploying the UAVs at random locations (variable distances). This formation is mainly oriented to simulations, in order to mimic a realistic deployment on the ground (use this in the <i>setStartingLocations</i> of the protocol implementation).
 
-In all cases, the center multicopter is the UAV closest to the rest of UAVs (center of line, matrix or circle). The following general functions of the class *main.api.pojo.formations.FlightFormation* allow the developer to use this feature. You can set values in the `openConfigurationDialog()` function of the protocol implementation, or retrieve them wherever you want.
+In all cases, the center multicopter is the UAV closest to the rest of UAVs (center of line, matrix or circle). You can set values in the `openConfigurationDialog()` function of the protocol implementation, or retrieve them wherever you want (i.e. when setting the initial location for the UAVs in simulation, or preparing the take off of the UAVs).
 
-* `Formation getGroundFormation()`. This method provides the formation of UAVs used for the ground layout in simulations.
-* `void setGroundFormation(Formation)`. It sets the flight formation of UAVs used for the ground layout in simulations (after user input).
-* `double getGroundFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations.
-* `void setGroundFormationDistance(double)`. It sets the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations (after user input).
-* `Formation getFlyingFormation()`. This function provides the formation of UAVs used for the flying layout.
-* `void setFlyingFormation(Formation)`. It sets the flight formation of UAVs used for the flying layout (after user input).
-* `double getFlyingFormationDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the flying layout.
-* `void setFlyingFormationDistance(double)`. It sets the minimum distance between contiguous UAVs in the formation used for the flying layout (after user input).
-* `double getLandingFormationDistance()`. This function provides the minimum distance between cotiguous UAVs while landing.
-* `void setLandingFormationDistance(double)`. It sets the minimum distance between contiguous UAVs while landing.
+* `String[] getAvailableFormations()`. It provides a list with the names of the available formations. It can be used in the configuration dialog of the protocol to allow the user to chose among them.
+* `Pair<Long, Location2DUTM> getCenterUAV(Map<Long, Location2DUTM>, double, boolean)`. This method must be used only in the `setStartingLocation()` method of the protocol implementation. It allows to know which will be the UAV in the center of the flight formation (see *MUSCOP* protocol for an example).
+* `FlightFormation getFlyingFormation(int)`. This function provides the formation of UAVs used for the flying layout.
+* `double getFlyingFormationMinimumDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the flying layout.
+* `String getFlyingFormationName()`. It provides the name of the formation type that will be used during the flight.
+* `FlightFormation getGroundFormation(int)`. This method provides the formation of UAVs used for the ground layout in simulations. This is useful to set the initial location of the UAV in simulations (`setStartingLocation()` method).
+* `double getGroundFormationMinimumDistance()`. In this case, it provides the minimum distance between contiguous UAVs in the formation used for the ground layout in simulations.
+* `String getGroundFormationName()`. It provides the name of the formation type that will be used to deploy virtual UAVs for simulations.
+* `double getLandingFormationMinimumDistance()`. This function provides the minimum distance between contiguous UAVs while landing.
+* `void setFlyingFormation(String, double)`. It sets the flight formation of UAVs used for the flying layout (after user input). If not specified, the default value is the one included in *ardusim.ini*. If it is not included in the file, the default value is the linear formation.
+* `void setGroundFormation(String, double)`. It sets the flight formation of UAVs used for the ground layout in simulations (after user input). The default value is the linear formation.
+* `void setLandingFormationMinimumDistance(double)`. It sets the minimum distance between contiguous UAVs while landing.
+
+The landing formation is by default the same than the flight formation, but the minimum distance between UAVs is lower to facilitate to collect the UAVs.
 
 You can use a swarm formation for the ground UAVs layout or not (it's not mandatory, you can set their starting location manually). As examples, the protocol MBCAP sets the initial location of the UAVs in the first point of the loaded mission, while MUSCOP uses the previous flight formations.
 
-The class *main.api.pojo.formations.FlightFormation* also provides the following methods to define the layout of the swarm:
+The `FlightFormation` object also provides the following methods:
 
-* `static FlightFormation getFormation(Formation, int, double)`. Once you know which formation type to use (Formation), you can instantiate the formation with this method, providing the number of UAVs in the formation, and the minimum distance between contiguous UAVs. It returns an object with the rest of functions.
 * `int getCenterUAVPosition()`. It provides the position of the UAV in the center of the formation. 
+* `short getFormationId()`. It provides the value that identifies the type of formation.
+* `double getFormationMinimumDistance()`. It provides the minimum distance between contiguous UAVs.
+* `String getFormationName()`. It provides the name of the formation type.
+* `int getNumUAVs()`. It provides the number of UAVs that will take part in the flight formation.
 * `Location2DUTM getOffset(int, double)`. With this method you can get the offset of the UAV from the center UAV in UTM coordinates, given its position in the formation, and the center UAV heading.
 * `Location2DUTM getLocation(int, Location2DUTM, double)`. It provides the location of a UAV in UTM coordinates, given its position in the formation, and the center UAV location (UTM) and heading (rad).
-* `Triplet<Integer, Long, Location2DUTM>[] matchIDs(UAV2DLocation[], double, boolean, Long, FlightFormation)`. This function matches the best formation in flight for the given ground location for the UAVs, and heading towards the formation must be built. The best formation is the one where the UAVs have to move less distance to the flying formation during the takeoff phase.
-* `Pair<Integer, Long>[] getTakeoffSequence(Map< Long, Location2DUTM>, Triplet<Integer, Long, Location2DUTM>[])`. This function provides a sorted array beginning with the UAVs that have to move further (takeoff order), with their position in the formation, and their ID, allowing to define a takeoff sequence optimal to avoid possible collisions.
 
-Finally, you can build a new type of formation. You have to create a Class that extends *FlightFormation.java* Class, and then implement the `void initializeFormation()` method to generate the layout (center UAV position, and an array with the points of the formation with their corresponding offset from the center UAV). The constructor only has to call the *super* equivalent. Finally, you need to add the new implemented formation to the `static FlightFormation getFormation(Formation, int, double)` method, and to the *FlightFormation.Formation* enumerator.
+Finally, you can build a new type of formation. You have to create a Class that extends *FlightFormation.java* Class in the same folder, and then implement the `void initializeFormation()` method to generate the layout (center UAV position, and an array with the points of the formation with their corresponding offset from the center UAV). The constructor only has to call the *super* equivalent. Finally, you need to add the new implemented formation to the `static FlightFormation getFormation(Formation, int, double)` method, and to the *FlightFormation.Formation* enumerator.
 
 ### 5.6 Implementation recomendations
 
 At this moment, the developer has enough information to implement a new protocol, using the already included protocols as reference. Nevertheless, the code could be fully functional on simulation, but not in a real multicopter. The developer must understand the way ArduSim implements the communications with UAVs to make the protocol work also in a real multicopter without modifying the code.
 
-Any internal variable of ArduSim is stored as an array. The function `API.getArduSim().getNumUAVs()` gives the number of UAVs that are running on the current machine, with the current instance of ArduSim, and represents the length of the arrays. On simulation, it is any number between 1 and 256, and in a real multicopter it is always 1, the real flight controller ArduSim is connected to.
+Any internal variable of ArduSim is stored as an array. The function `API.getArduSim().getNumUAVs()` gives the number of UAVs that are running on the current machine, with the current instance of ArduSim, and represents the length of the arrays. On simulation, it is any number between 1 and 515, and in a real multicopter it is always 1, the real flight controller ArduSim is connected to.
 
 In order to get information from a real or virtual multicopter the Copter, CommLink, and GUI instances should be get with the  parameter "numUAV", which is the position of the UAV in the arrays, a number in the range `[0, API.getArduSim().getNumUAVs() - 1]`. In a real UAV, the length of the arrays is 1, the position of the real UAV is 0, and the ID is based on the MAC address of the network adapter. On the other hand, in simulation, the UAVs ID starts in 0, and their position in the arrays also has the same value.
 

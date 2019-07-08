@@ -5,6 +5,8 @@ import java.util.Iterator;
 import api.*;
 import api.pojo.FlightMode;
 import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3D;
+import api.pojo.location.Location3DUTM;
 import chemotaxis.pojo.Point;
 import chemotaxis.pojo.PointSet;
 import chemotaxis.pojo.Value;
@@ -33,18 +35,18 @@ public class ChemotaxisThread extends Thread {
 		move(p.getX(), p.getY());
 	}
 	void move(int x, int y) throws ArduSimNotReadyException {
-		double xTarget = ChemotaxisParam.origin.x + (x * ChemotaxisParam.density);
-		double yTarget = ChemotaxisParam.origin.y + (y * ChemotaxisParam.density);
+		Double xTarget = ChemotaxisParam.origin.x + (x * ChemotaxisParam.density);
+		Double yTarget = ChemotaxisParam.origin.y + (y * ChemotaxisParam.density);
 		
-		MoveTo moveTo = copter.moveTo(Location2DUTM.getGeo(xTarget, yTarget), ChemotaxisParam.altitude, new MoveToListener() {
+		MoveTo moveTo = copter.moveTo(new Location3D(xTarget, yTarget, ChemotaxisParam.altitude), new MoveToListener() {
 			
 			@Override
-			public void onFailureListener() {
+			public void onFailure() {
 				// TODO tratar el error
 			}
 			
 			@Override
-			public void onCompletedListener() {
+			public void onCompleteActionPerformed() {
 				// No necesario ya que esperamos a que el hilo termine
 			}
 		});

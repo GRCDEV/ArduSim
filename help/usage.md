@@ -205,6 +205,7 @@ The list of parameters is:
     * *KMLOVERRIDEALTITUDE*. Whether to override the altitude values included in the mission or not.
     * *KMLALTITUDE*. If the altitude values are overriden, the relative altitude for all of them.
     * *KMLMISSIONEND*. Whether to add a land or RTL command at the end of the mission. Valid values: unmodified, land, or RTL.
+    * *KMLRTLENDALTITUDE*. Altitude where to stop the UAV when KMLMISSIONEND is assigned RTL value. If set to 0, it lands.
     * *KMLWAYPOINTDELAY*. Mission delay over each waypoint (seconds).
     * *KMLWAYPOINTDISTANCE*. Distance to waypoint to assert that it has been reached (centimeters), used only when WAYPOINTDELAY is greater than 0.
 * PCCompanion-to-realUAV and realUAV-to-realUAV communication parameters:
@@ -215,9 +216,9 @@ The list of parameters is:
 * **MANDATORY** parameters when running in real UAVs:
     * *UAVPROTOCOL*. Protocol to be deployed.
     * *UAVSPEED*. Maximum planned speed of the multicopter.
+* Optional parameter for protocols that use the master-slave pattern.
+    * *MACS*. MAC addresses of the adapters of the master UAV (colon notation, and comma separated)
 * Optional parameters for protocols that use flight formations:
-    * *GROUNDFORMATION*.UAV ground formation (only for simulations). Used to set the layout of virtual UAVs, as specified in the *FlightFormation* Class.
-    * *GROUNDDISTANCE*. Minimum distance between contiguous UAVs in the ground formation (only for simulation). It must be an integer value in meters.
     * *AIRFORMATION*. UAV flying formation. Used to set the flying layout.
     * *AIRDISTANCE*. Minimum distance between contiguous UAVs in the flying formation. It must be an integer value in meters.
     * *LANDDISTANCE*. Minimum distance between contiguous UAVs for the landing phase.

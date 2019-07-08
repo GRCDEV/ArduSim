@@ -19,6 +19,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -44,6 +45,8 @@ public class MissionKmlDialog extends JDialog {
 	public static final String MISSION_END_RTL = "RTL";
 	/** Last waypoint behavior for a mission loaded from a Google Earth .kml file. Please, set the same default value in <i>ardusim.ini</i> file. */
 	public static volatile String missionEnd = MISSION_END_UNMODIFIED;
+	/** (m) Final altitude when performing RTL. */
+	public static volatile double rtlFinalAltitude;
 	/**
 	 * (s) Hovering time over each waypoint before going on to the next waypoint.
 	 * <p>Please, modify WPNAV_RADIUS [10-1000 cm] parameter if needed to change where the mission waypoint is reached.</p> */
@@ -66,6 +69,7 @@ public class MissionKmlDialog extends JDialog {
 	private JComboBox<String> yawComboBox;
 	
 	public static volatile boolean success = false;	//To check if the dialog was closed correctly
+	private JTextField rtlAltitudeTextField;
 	
 	@SuppressWarnings("unused")
 	private MissionKmlDialog() {
@@ -79,9 +83,9 @@ public class MissionKmlDialog extends JDialog {
 		getContentPane().add(contentPanel, BorderLayout.WEST);
 		GridBagLayout gbl_contentPanel = new GridBagLayout();
 		gbl_contentPanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
-		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_contentPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
-		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		contentPanel.setLayout(gbl_contentPanel);
 		{
 			JLabel lblNewLabel = new JLabel(Text.EXTEND_MISSION);
@@ -104,14 +108,59 @@ public class MissionKmlDialog extends JDialog {
 			gbc_missionEndComboBox.gridy = 0;
 			contentPanel.add(missionEndComboBox, gbc_missionEndComboBox);
 		}
-		if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_UNMODIFIED)) {
-			missionEndComboBox.setSelectedIndex(0);
+		{
+			JLabel lblAsg = new JLabel(Text.RTL_ALTITUDE);
+			lblAsg.setFont(new Font("Dialog", Font.PLAIN, 12));
+			GridBagConstraints gbc_lblAsg = new GridBagConstraints();
+			gbc_lblAsg.anchor = GridBagConstraints.EAST;
+			gbc_lblAsg.gridwidth = 3;
+			gbc_lblAsg.insets = new Insets(0, 0, 5, 5);
+			gbc_lblAsg.gridx = 0;
+			gbc_lblAsg.gridy = 1;
+			contentPanel.add(lblAsg, gbc_lblAsg);
 		}
-		if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_LAND)) {
-			missionEndComboBox.setSelectedIndex(1);
+		{
+			rtlAltitudeTextField = new JTextField();
+			rtlAltitudeTextField.setHorizontalAlignment(SwingConstants.RIGHT);
+			rtlAltitudeTextField.setText("" + MissionKmlDialog.rtlFinalAltitude);
+			GridBagConstraints gbc_rtlAltitudeTextField = new GridBagConstraints();
+			gbc_rtlAltitudeTextField.insets = new Insets(0, 0, 5, 5);
+			gbc_rtlAltitudeTextField.fill = GridBagConstraints.HORIZONTAL;
+			gbc_rtlAltitudeTextField.gridx = 3;
+			gbc_rtlAltitudeTextField.gridy = 1;
+			contentPanel.add(rtlAltitudeTextField, gbc_rtlAltitudeTextField);
+			rtlAltitudeTextField.setColumns(10);
+			if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_UNMODIFIED)) {
+				missionEndComboBox.setSelectedIndex(0);
+				rtlAltitudeTextField.setEnabled(false);
+			}
+			if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_LAND)) {
+				missionEndComboBox.setSelectedIndex(1);
+				rtlAltitudeTextField.setEnabled(false);
+			}
+			if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
+				missionEndComboBox.setSelectedIndex(2);
+				rtlAltitudeTextField.setEnabled(true);
+			}
+			missionEndComboBox.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if(((String)missionEndComboBox.getSelectedItem()).equals(MissionKmlDialog.MISSION_END_RTL)) {
+						rtlAltitudeTextField.setEnabled(true);
+					} else {
+						rtlAltitudeTextField.setEnabled(false);
+					}
+				}
+			});
 		}
-		if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
-			missionEndComboBox.setSelectedIndex(2);
+		{
+			JLabel lblFdgfh = new JLabel(Text.METERS);
+			lblFdgfh.setFont(new Font("Dialog", Font.PLAIN, 12));
+			GridBagConstraints gbc_lblFdgfh = new GridBagConstraints();
+			gbc_lblFdgfh.anchor = GridBagConstraints.WEST;
+			gbc_lblFdgfh.insets = new Insets(0, 0, 5, 0);
+			gbc_lblFdgfh.gridx = 4;
+			gbc_lblFdgfh.gridy = 1;
+			contentPanel.add(lblFdgfh, gbc_lblFdgfh);
 		}
 		
 		{
@@ -121,7 +170,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_label.gridwidth = 3;
 			gbc_label.insets = new Insets(0, 0, 5, 5);
 			gbc_label.gridx = 0;
-			gbc_label.gridy = 1;
+			gbc_label.gridy = 2;
 			contentPanel.add(label, gbc_label);
 		}
 		{
@@ -133,7 +182,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_minAltitudeTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_minAltitudeTextField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_minAltitudeTextField.gridx = 3;
-			gbc_minAltitudeTextField.gridy = 1;
+			gbc_minAltitudeTextField.gridy = 2;
 			contentPanel.add(minAltitudeTextField, gbc_minAltitudeTextField);
 		}
 		{
@@ -143,7 +192,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_label.anchor = GridBagConstraints.WEST;
 			gbc_label.insets = new Insets(0, 0, 5, 0);
 			gbc_label.gridx = 4;
-			gbc_label.gridy = 1;
+			gbc_label.gridy = 2;
 			contentPanel.add(label, gbc_label);
 		}
 		
@@ -154,7 +203,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_lblNewLabel_1.anchor = GridBagConstraints.EAST;
 			gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
 			gbc_lblNewLabel_1.gridx = 0;
-			gbc_lblNewLabel_1.gridy = 2;
+			gbc_lblNewLabel_1.gridy = 3;
 			contentPanel.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		}
 		{
@@ -174,7 +223,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_delaySpinner.anchor = GridBagConstraints.EAST;
 			gbc_delaySpinner.insets = new Insets(0, 0, 5, 5);
 			gbc_delaySpinner.gridx = 3;
-			gbc_delaySpinner.gridy = 2;
+			gbc_delaySpinner.gridy = 3;
 			contentPanel.add(delaySpinner, gbc_delaySpinner);
 		}
 		{
@@ -184,7 +233,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_lblNewLabel_2.anchor = GridBagConstraints.WEST;
 			gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 0);
 			gbc_lblNewLabel_2.gridx = 4;
-			gbc_lblNewLabel_2.gridy = 2;
+			gbc_lblNewLabel_2.gridy = 3;
 			contentPanel.add(lblNewLabel_2, gbc_lblNewLabel_2);
 		}
 		{
@@ -195,7 +244,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_lblNewLabel_3.anchor = GridBagConstraints.EAST;
 			gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
 			gbc_lblNewLabel_3.gridx = 0;
-			gbc_lblNewLabel_3.gridy = 3;
+			gbc_lblNewLabel_3.gridy = 4;
 			contentPanel.add(lblNewLabel_3, gbc_lblNewLabel_3);
 		}
 		{
@@ -208,7 +257,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_distanceTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_distanceTextField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_distanceTextField.gridx = 3;
-			gbc_distanceTextField.gridy = 3;
+			gbc_distanceTextField.gridy = 4;
 			contentPanel.add(distanceTextField, gbc_distanceTextField);
 			distanceTextField.setColumns(10);
 		}
@@ -222,7 +271,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_lblNewLabel_4.insets = new Insets(0, 0, 5, 0);
 			gbc_lblNewLabel_4.anchor = GridBagConstraints.WEST;
 			gbc_lblNewLabel_4.gridx = 4;
-			gbc_lblNewLabel_4.gridy = 3;
+			gbc_lblNewLabel_4.gridy = 4;
 			contentPanel.add(lblNewLabel_4, gbc_lblNewLabel_4);
 		}
 		{
@@ -232,7 +281,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_label.anchor = GridBagConstraints.EAST;
 			gbc_label.insets = new Insets(0, 0, 5, 5);
 			gbc_label.gridx = 0;
-			gbc_label.gridy = 4;
+			gbc_label.gridy = 5;
 			contentPanel.add(label, gbc_label);
 		}
 		{
@@ -251,7 +300,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_altitudeCheckBox.anchor = GridBagConstraints.WEST;
 			gbc_altitudeCheckBox.insets = new Insets(0, 0, 5, 5);
 			gbc_altitudeCheckBox.gridx = 3;
-			gbc_altitudeCheckBox.gridy = 4;
+			gbc_altitudeCheckBox.gridy = 5;
 			contentPanel.add(altitudeCheckBox, gbc_altitudeCheckBox);
 		}
 		{
@@ -262,7 +311,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_label.gridwidth = 3;
 			gbc_label.insets = new Insets(0, 0, 5, 5);
 			gbc_label.gridx = 0;
-			gbc_label.gridy = 5;
+			gbc_label.gridy = 6;
 			contentPanel.add(label, gbc_label);
 		}
 		{
@@ -273,7 +322,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_altitudeTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_altitudeTextField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_altitudeTextField.gridx = 3;
-			gbc_altitudeTextField.gridy = 5;
+			gbc_altitudeTextField.gridy = 6;
 			contentPanel.add(altitudeTextField, gbc_altitudeTextField);
 			altitudeTextField.setColumns(10);
 		}
@@ -287,7 +336,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_label.insets = new Insets(0, 0, 5, 0);
 			gbc_label.anchor = GridBagConstraints.WEST;
 			gbc_label.gridx = 4;
-			gbc_label.gridy = 5;
+			gbc_label.gridy = 6;
 			contentPanel.add(label, gbc_label);
 		}
 		{
@@ -297,7 +346,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_lblOverrideWaypointYaw.gridwidth = 3;
 			gbc_lblOverrideWaypointYaw.insets = new Insets(0, 0, 5, 5);
 			gbc_lblOverrideWaypointYaw.gridx = 0;
-			gbc_lblOverrideWaypointYaw.gridy = 6;
+			gbc_lblOverrideWaypointYaw.gridy = 7;
 			contentPanel.add(lblOverrideWaypointYaw, gbc_lblOverrideWaypointYaw);
 		}
 		{
@@ -316,7 +365,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_yawCheckBox.anchor = GridBagConstraints.WEST;
 			gbc_yawCheckBox.insets = new Insets(0, 0, 5, 5);
 			gbc_yawCheckBox.gridx = 3;
-			gbc_yawCheckBox.gridy = 6;
+			gbc_yawCheckBox.gridy = 7;
 			contentPanel.add(yawCheckBox, gbc_yawCheckBox);
 		}
 		{
@@ -326,7 +375,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_lblValue.anchor = GridBagConstraints.EAST;
 			gbc_lblValue.insets = new Insets(0, 0, 0, 5);
 			gbc_lblValue.gridx = 2;
-			gbc_lblValue.gridy = 7;
+			gbc_lblValue.gridy = 8;
 			contentPanel.add(lblValue, gbc_lblValue);
 		}
 		{
@@ -339,7 +388,7 @@ public class MissionKmlDialog extends JDialog {
 			gbc_yawComboBox.insets = new Insets(0, 0, 0, 5);
 			gbc_yawComboBox.fill = GridBagConstraints.HORIZONTAL;
 			gbc_yawComboBox.gridx = 3;
-			gbc_yawComboBox.gridy = 7;
+			gbc_yawComboBox.gridy = 8;
 			contentPanel.add(yawComboBox, gbc_yawComboBox);
 		}
 		if (!UAVParam.overrideYaw) {
@@ -354,8 +403,16 @@ public class MissionKmlDialog extends JDialog {
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						
-						String altitudeString = minAltitudeTextField.getText();
 						ValidationTools validationTools = API.getValidationTools();
+						if (((String)missionEndComboBox.getSelectedItem()).equals(MissionKmlDialog.MISSION_END_RTL)) {
+							String rtlAltitude = rtlAltitudeTextField.getText();
+							if (!validationTools.isValidNonNegativeDouble(rtlAltitude)) {
+								ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.RTL_ALTITUDE_ERROR);
+								return;
+							}
+						}
+						
+						String altitudeString = minAltitudeTextField.getText();
 						if (!validationTools.isValidPositiveDouble(altitudeString)) {
 							ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_MIN_ALTITUDE_ERROR);
 							return;
@@ -397,6 +454,9 @@ public class MissionKmlDialog extends JDialog {
 						}
 						
 						MissionKmlDialog.missionEnd = (String) missionEndComboBox.getSelectedItem();
+						if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
+							MissionKmlDialog.rtlFinalAltitude = Double.parseDouble(rtlAltitudeTextField.getText());
+						}
 						
 						UAVParam.minAltitude = minAltitude;
 						
@@ -413,7 +473,12 @@ public class MissionKmlDialog extends JDialog {
 						
 						MissionKmlDialog.success = true;
 						
-						thisDialog.dispose();
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								thisDialog.dispose();
+							}
+						});
 					}
 				});
 				buttonPane.add(okButton);

@@ -7,26 +7,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-
 import org.javatuples.Pair;
-import org.javatuples.Triplet;
-
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.AtomicDoubleArray;
 import api.pojo.location.Location2DGeo;
 import api.pojo.location.Location2DUTM;
 import api.pojo.location.Waypoint;
 import main.api.ArduSim;
 import main.api.ArduSimNotReadyException;
+import main.api.FlightFormationTools;
+import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.formations.FlightFormation;
 import main.sim.board.BoardPanel;
@@ -43,36 +37,24 @@ public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public boolean loadMission() {
-		return MUSCOPHelper.isMaster(0);
+		// In a real multicopter, the UAV is always in position 0. The master UAV is which has a mission to load.
+		return API.getCopter(0).getMasterSlaveHelper().isMaster();
 	}
 
 	@Override
-	public void openConfigurationDialog() {
-		new MUSCOPConfigDialog();
+	public JDialog openConfigurationDialog() {
+		return new MUSCOPConfigDialog();
 	}
 
 	@Override
 	public void initializeDataStructures() {
 		int numUAVs = API.getArduSim().getNumUAVs();
-		
-		MUSCOPParam.iAmCenter = new AtomicBoolean[numUAVs];
+		AtomicInteger[] state = new AtomicInteger[numUAVs];
 		for (int i = 0; i < numUAVs; i++) {
-			MUSCOPParam.iAmCenter[i] = new AtomicBoolean();
+			state[i] = new AtomicInteger();	// Implicit value State.START, as it is equals to 0
 		}
-		MUSCOPParam.idPrev = new AtomicLongArray(numUAVs);
-		MUSCOPParam.idNext = new AtomicLongArray(numUAVs);
-		MUSCOPParam.numUAVs = new AtomicIntegerArray(numUAVs);
-		MUSCOPParam.flyingFormation = new AtomicReferenceArray<>(numUAVs);
-		MUSCOPParam.flyingFormationPosition = new AtomicIntegerArray(numUAVs);
-		MUSCOPParam.flyingFormationHeading = new AtomicDoubleArray(numUAVs);
-		MUSCOPParam.takeoffAltitude = new AtomicDoubleArray(numUAVs);
-		MUSCOPParam.uavMissionReceivedUTM = new AtomicReferenceArray<>(numUAVs);
-		MUSCOPParam.uavMissionReceivedGeo = new AtomicReferenceArray<>(numUAVs);
-		MUSCOPParam.data = new AtomicReference<>();
 		
-		MUSCOPParam.state = new AtomicIntegerArray(numUAVs);	// Implicit value State.START, as it is equals to 0
-		MUSCOPParam.moveSemaphore = new AtomicIntegerArray(numUAVs);
-		MUSCOPParam.wpReachedSemaphore = new AtomicIntegerArray(numUAVs);
+		MUSCOPParam.state = state;
 	}
 
 	@Override
@@ -94,86 +76,86 @@ public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		// 1. Get the heading of the master given the current mission
-		//    We only can set a heading if at least two points with valid coordinates are found
-		// 1.1. Check that master mission exists
+		// As a design decision:
+		// The ground formation will appear with the UAV in the center in the first waypoint of the mission from the master
+		// The mission to be followed will start in the location where the flight center UAV will be after taking off
+		// We overlap the original master mission with the center UAV mission for visualization
+		
+		// 1. Get the yaw of the master given the current mission
+		//    We only can set yaw if at least two points with valid coordinates are found
+		// 1.1. Check if master mission exists
 		Waypoint waypoint1, waypoint2;
 		waypoint1 = waypoint2 = null;
 		int waypoint1pos = 0;
 		boolean waypointFound;
+		GUI gui = API.getGUI(0);
 		MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
-		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();	// Simplified mission not ready
-		if (missions == null || missions[MUSCOPParam.MASTER_POSITION] == null) {
-			JOptionPane.showMessageDialog(null, MUSCOPText.UAVS_START_ERROR_1 + " " + (MUSCOPParam.MASTER_POSITION + 1) + ".",
-					MUSCOPText.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
-			System.exit(1);
-		}
-		// 1.2. Get the heading
-		// Locate the first waypoint with coordinates
-		List<Waypoint> masterMission = missions[MUSCOPParam.MASTER_POSITION];
-		waypointFound = false;
-		for (int j = 0; j < masterMission.size() && !waypointFound; j++) {
-			waypoint1 = masterMission.get(j);
-			if (waypoint1.getLatitude() != 0 || waypoint1.getLongitude() != 0) {
-				waypoint1pos = j;
-				waypointFound = true;
-			}
-		}
-		if (!waypointFound) {
-			API.getGUI(0).exit(MUSCOPText.UAVS_START_ERROR_2 + " " + API.getCopter(MUSCOPParam.MASTER_POSITION).getID());
-		}
-		// Locate the second waypoint with coordinates
-		waypointFound = false;
-		for (int j = waypoint1pos + 1; j < masterMission.size()
-				&& !waypointFound; j++) {
-			waypoint2 = masterMission.get(j);
-			if (waypoint2.getLatitude() != 0 || waypoint2.getLongitude() != 0) {
-				waypointFound = true;
-			}
-		}
-		// Get the heading
-		Location2DUTM groundCenterUTMLocation = waypoint1.getUTM();
-		if (waypointFound) {
-			Location2DUTM wp2 = waypoint2.getUTM();
-			MUSCOPParam.formationHeading = MUSCOPHelper.getHeading(groundCenterUTMLocation, wp2);
+		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();	// Simplified mission would be better, but it is not ready jet
+		// The master UAV is always in the position 0 of arrays
+		List<Waypoint> masterMission = null;
+		if (missions == null || missions[0] == null) {
+			gui.exit(MUSCOPText.UAVS_START_ERROR_1);
 		} else {
-			MUSCOPParam.formationHeading = 0.0;
+			// 1.2. Get the heading
+			// Locate the first waypoint with coordinates
+			masterMission = missions[0];
+			waypointFound = false;
+			for (int i = 0; i < masterMission.size() && !waypointFound; i++) {
+				waypoint1 = masterMission.get(i);
+				if (waypoint1.getLatitude() != 0 || waypoint1.getLongitude() != 0) {
+					waypoint1pos = i;
+					waypointFound = true;
+				}
+			}
+			if (waypointFound) {
+				// Locate the second waypoint with coordinates
+				waypointFound = false;
+				for (int i = waypoint1pos + 1; i < masterMission.size()
+						&& !waypointFound; i++) {
+					waypoint2 = masterMission.get(i);
+					if (waypoint2.getLatitude() != 0 || waypoint2.getLongitude() != 0) {
+						waypointFound = true;
+					}
+				}
+				// Get the heading
+				if (waypointFound) {
+					MUSCOPParam.formationYaw = MUSCOPHelper.getYaw(waypoint1.getUTM(), waypoint2.getUTM());
+				} else {
+					MUSCOPParam.formationYaw = 0.0;
+				}
+			} else {
+				gui.exit(MUSCOPText.UAVS_START_ERROR_2);
+			}
 		}
 		
-		// 2. With the ground formation centered on the mission beginning, get ground coordinates
-		//   The UAVs appear with the center UAV in the first waypoint of the initial mission
-		//   As this is simulation, ID and position on the ground are the same for all the UAVs
+		// 2. With the ground formation centered on the mission beginning, get ground coordinates.
+		//   The UAVs appear with the center UAV in the first waypoint of the initial mission.
+		//   As this is simulation, ID and position on the ground are the same for all the UAVs.
 		int numUAVs = API.getArduSim().getNumUAVs();
-		FlightFormation groundFormation = FlightFormation.getFormation(FlightFormation.getGroundFormation(),
-				numUAVs, FlightFormation.getGroundFormationDistance());
+		
+		FlightFormationTools formationTools = API.getFlightFormationTools();
+		FlightFormation groundFormation = formationTools.getGroundFormation(numUAVs);
+		
+		
 		int groundCenterUAVPosition = groundFormation.getCenterUAVPosition();
 		Map<Long, Location2DUTM> groundLocations = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		Location2DUTM locationUTM;
+		Location2DUTM groundCenterUTMLocation = waypoint1.getUTM();
 		for (int i = 0; i < numUAVs; i++) {
 			if (i == groundCenterUAVPosition) {
 				groundLocations.put((long)i, groundCenterUTMLocation);
 			} else {
-				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, MUSCOPParam.formationHeading);
+				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, MUSCOPParam.formationYaw);
 				groundLocations.put((long)i, locationUTM);
 			}
 		}
 		
 		// 3. Get the ID of the UAV that will be center in the flight formation
-		FlightFormation airFormation = FlightFormation.getFormation(FlightFormation.getFlyingFormation(),
-				numUAVs, FlightFormation.getFlyingFormationDistance());
-		Triplet<Integer, Long, Location2DUTM>[] match = FlightFormation.matchIDs(groundLocations, MUSCOPParam.formationHeading,
-				true, null, airFormation);
-		int airCenterUAVPosition = airFormation.getCenterUAVPosition();
-		Integer airCenterUAVId = null;
-		Triplet<Integer, Long, Location2DUTM> triplet = null;
-		for (int i = 0; i < numUAVs && airCenterUAVId == null; i++) {
-			triplet = match[i];
-			if (triplet.getValue0() == airCenterUAVPosition) {
-				airCenterUAVId = triplet.getValue1().intValue();
-			}
-		}
+		Pair<Long, Location2DUTM> flightCenterUAV = formationTools.getCenterUAV(groundLocations, MUSCOPParam.formationYaw, false);
 		
 		// 4. Copy the mission to the location where the UAV in the center of the flight formation will be
+		//   We do this to show the real path followed by the swarm as a mission for the flight center UAV, as it will follow this mission coordinating the remaining UAVs.
+		//   First, we copy the mission as is
 		List<Waypoint> centerMission = new ArrayList<>(masterMission.size());
 		int p = -1;
 		for (int i = 0; i < masterMission.size(); i++) {
@@ -182,19 +164,21 @@ public class MUSCOPHelper extends ProtocolHelper {
 				p = i;
 			}
 		}
+		//   Now we modify the first waypoint with coordinates to match the air location of the UAV that will be in the center of the formation.
 		Waypoint moved = centerMission.get(p);
 		Location2DGeo movedGeo;
 		try {
-			movedGeo = triplet.getValue2().getGeo();
+			movedGeo = flightCenterUAV.getValue1().getGeo();
 			moved.setLatitude(movedGeo.latitude);
 			moved.setLongitude(movedGeo.longitude);
-			missions[airCenterUAVId] = centerMission;
+			// Finally, we set the mission in the center UAV. As this is simulation, position and ID always match.
+			missions[flightCenterUAV.getValue0().intValue()] = centerMission;
 			missionHelper.setMissionsLoaded(missions);
 			
 			// 5. Using the ground center UAV location as reference, get the starting location of all the UAVs
 			@SuppressWarnings("unchecked")
 			Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
-			double heading = MUSCOPParam.formationHeading * 180 / Math.PI;
+			double heading = MUSCOPParam.formationYaw * 180 / Math.PI;
 			for (int i = 0; i < numUAVs; i++) {
 				if (i == groundCenterUAVPosition) {
 					startingLocation[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
@@ -204,15 +188,14 @@ public class MUSCOPHelper extends ProtocolHelper {
 			}
 			return startingLocation;
 		} catch (ArduSimNotReadyException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			API.getGUI(0).exit(e.getMessage());
+			gui.exit(e.getMessage());
 		}
 		return null;
 	}
 
-	/** Calculates the heading (rad) from p1 to p2. */
-	private static double getHeading(Location2DUTM p1, Location2DUTM p2) {
+	/** Calculates the yaw (rad) from p1 to p2. */
+	private static double getYaw(Location2DUTM p1, Location2DUTM p2) {
 		double incX, incY;
 		double heading = 0.0;
 		incX = p2.x - p1.x;
@@ -220,14 +203,14 @@ public class MUSCOPHelper extends ProtocolHelper {
 		if (incX != 0 || incY != 0) {
 			if (incX == 0) {
 				if (incY > 0)
-					heading = 0.0;
+					heading = 0.0;				// Pointing north
 				else
-					heading = Math.PI;			// 180º
+					heading = Math.PI;			// Pointing south
 			} else if (incY == 0) {
 				if (incX > 0)
-					heading = Math.PI / 2;// 90º
+					heading = Math.PI / 2;		// Pointing east
 				else
-					heading = 3 * Math.PI / 2;	// 270º
+					heading = 3 * Math.PI / 2;	// Pointing west
 			} else {
 				if (incX > 0)
 					heading = Math.PI / 2 - Math.atan(incY / incX);
@@ -248,8 +231,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 	public void startThreads() {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
-			(new ListenerThread(i)).start();
-			(new TalkerThread(i)).start();
+			(new MUSCOPListenerThread(i)).start();
 		}
 		API.getGUI(0).log(MUSCOPText.ENABLING);
 	}
@@ -262,7 +244,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 		while (!allFinished) {
 			allFinished = true;
 			for (int i = 0; i < numUAVs && allFinished; i++) {
-				if (MUSCOPParam.state.get(i) < SETUP_FINISHED) {
+				if (MUSCOPParam.state[i].get() < SETUP_FINISHED) {
 					allFinished = false;
 				}
 			}
@@ -296,26 +278,6 @@ public class MUSCOPHelper extends ProtocolHelper {
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
 		//TODO
-	}
-	
-	/** Asserts if the UAV is master. */
-	public static boolean isMaster(int numUAV) {
-		boolean b = false;
-		int role = API.getArduSim().getArduSimRole();
-		if (role == ArduSim.MULTICOPTER) {
-			/** You get the id = MAC for real drone */
-			long idMaster = API.getCopter(MUSCOPParam.MASTER_POSITION).getID();
-			for (int i = 0; i < MUSCOPParam.MAC_ID.length; i++) {
-				if (MUSCOPParam.MAC_ID[i] == idMaster) {
-					return true;
-				}
-			}
-		} else if (role == ArduSim.SIMULATOR) {
-			if (numUAV == MUSCOPParam.MASTER_POSITION) {
-				return true;
-			}
-		}
-		return b;
 	}
 
 }

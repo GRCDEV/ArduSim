@@ -5,7 +5,6 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -25,7 +24,6 @@ import main.sim.gui.MissionKmlDialog;
 import main.sim.gui.MissionWaypointsDialog;
 import main.sim.gui.ProgressDialog;
 import main.sim.logic.SimParam;
-import main.sim.logic.SimTools;
 
 /** API to update the information shown on screen during simulations.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -39,16 +37,6 @@ public class GUI {
 	
 	public GUI(int numUAV) {
 		this.numUAV = numUAV;
-	}
-	
-	/**
-	 * Allows to close a dialog when the escape key is pressed on the keyboard.
-	 * <p>This method should be invoked when the configuration dialog of each protocol is built.</p>
-	 * @param dialog Dialog where this method enables the escape key.
-	 * @param closeArduSim Whether to close ArduSim or not when the key is pressed.
-	 */
-	public void addEscapeListener(final JDialog dialog, final boolean closeArduSim) {
-	    SimTools.addEscListener(dialog, closeArduSim);
 	}
 	
 	/**
@@ -102,11 +90,11 @@ public class GUI {
 		Pair<String, List<Waypoint>[]> missions = this.loadAndParseMissions(selection);
 		if (missions != null) {
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
-				this.log(Text.MISSIONS_LOADED + " " + selection[0].getName());
+				ArduSimTools.logGlobal(Text.MISSIONS_LOADED + " " + selection[0].getName());
 				return new Pair<String, List<Waypoint>[]>(selection[0].getName(), missions.getValue1());
 			}
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
-				this.log(Text.MISSIONS_LOADED + " " + selection[0].getName());
+				ArduSimTools.logGlobal(Text.MISSIONS_LOADED + " " + selection[0].getName());
 				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
 			}
 		}
@@ -126,14 +114,14 @@ public class GUI {
 		String extension = fileTools.getFileExtension(files[0]);
 		// Only one "kml" file is accepted
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase()) && files.length > 1) {
-			this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
+			ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
 			return null;
 		}
 		// waypoints files can not be mixed with kml files
 		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
 			for (int i = 1; i < files.length; i++) {
 				if (!fileTools.getFileExtension(files[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
-					this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
+					ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
 					return null;
 				}
 			}
@@ -145,13 +133,13 @@ public class GUI {
 			MissionKmlDialog.success = false;
 			new MissionKmlDialog(files[0].getName());
 			if (!MissionKmlDialog.success) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
 				return null;
 			}
 			// Next, load the missions
 			List<Waypoint>[] missions = ArduSimTools.loadXMLMissionsFile(files[0]);
 			if (missions == null) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 				return null;
 			}
 			return new Pair<String, List<Waypoint>[]>(Text.FILE_EXTENSION_KML, missions);
@@ -169,7 +157,7 @@ public class GUI {
 			}
 			new MissionWaypointsDialog(name);
 			if (!MissionWaypointsDialog.success) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
 				return null;
 			}
 			
@@ -185,7 +173,7 @@ public class GUI {
 			}
 			// If no valid missions were found, just ignore the action
 			if (j == 0) {
-				this.warn(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
+				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_4);
 				return null;
 			}
 			
@@ -334,7 +322,6 @@ public class GUI {
 	 * Send information related to a specific UAV to the main window log and console, only if verbose mode is enabled.
 	 * <p>This function adds a prefix to the message with the UAV ID.
 	 * The window log is only updated when performing simulations.</p>
-	 * @param numUAV UAV position in arrays.
 	 * @param text Text to be shown.
 	 */
 	public void logVerboseUAV(String text) {

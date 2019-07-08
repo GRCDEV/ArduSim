@@ -1,32 +1,55 @@
 package mbcap.logic;
 
+import java.awt.geom.Point2D;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import api.API;
 import api.pojo.FlightMode;
-import api.pojo.location.Location2DGeo;
 import api.pojo.location.Location3DUTM;
 import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3D;
 import main.api.ArduSim;
 import main.api.ArduSimNotReadyException;
 import main.api.Copter;
 import main.api.GUI;
+import main.api.MissionHelper;
 import main.api.MoveToListener;
+import main.api.WaypointReachedListener;
 import main.api.MoveTo;
 import mbcap.gui.MBCAPGUITools;
 import mbcap.pojo.MBCAPState;
+import mbcap.pojo.ProgressState;
 import mbcap.pojo.Beacon;
 
 /** This class implements the collision risk check finite state machine.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-public class CollisionDetectorThread extends Thread {
-
-	private int numUAV; // UAV identifier in the simulator, beginning from 0
+public class CollisionDetectorThread extends Thread implements WaypointReachedListener {
+	
+	private AtomicInteger event;
+	private AtomicInteger deadlockSolved;
+	private AtomicInteger deadlockFailed;
+	private AtomicReference<MBCAPState> currentState;
+	private AtomicLong idAvoiding;
+	private AtomicInteger projectPath;
+	private AtomicReference<Beacon> beacon;
+	private AtomicReference<Location2DUTM> targetLocationUTM;
+	private AtomicReference<Point2D.Double> targetLocationPX;
+	private Map<Long, Location3DUTM> impactLocationUTM;
+	private Map<Long, Point2D.Double> impactLocationPX;
+	private Map<Long, Beacon> beacons;
+	private List<ProgressState> progress;
+	private int numUAV;
+	
 	private Copter copter;
+	private MissionHelper missionHelper;
 	private GUI gui;
 	private ArduSim ardusim;
 	
@@ -38,8 +61,23 @@ public class CollisionDetectorThread extends Thread {
 	}
 
 	public CollisionDetectorThread(int numUAV) {
+		this.event = MBCAPParam.event[numUAV];
+		this.deadlockSolved = MBCAPParam.deadlockSolved[numUAV];
+		this.deadlockFailed = MBCAPParam.deadlockFailed[numUAV];
+		this.currentState = MBCAPParam.state[numUAV];
+		this.idAvoiding = MBCAPParam.idAvoiding[numUAV];
+		this.projectPath = MBCAPParam.projectPath[numUAV];
+		this.beacon = MBCAPParam.selfBeacon[numUAV];
+		this.targetLocationUTM = MBCAPParam.targetLocationUTM[numUAV];
+		this.targetLocationPX = MBCAPParam.targetLocationPX[numUAV];
+		this.impactLocationUTM = MBCAPParam.impactLocationUTM[numUAV];
+		this.impactLocationPX = MBCAPParam.impactLocationPX[numUAV];
+		this.beacons = MBCAPParam.beacons[numUAV];
+		this.progress = MBCAPParam.progress[numUAV];
 		this.numUAV = numUAV;
+		
 		this.copter = API.getCopter(numUAV);
+		this.missionHelper = this.copter.getMissionHelper();
 		this.gui = API.getGUI(numUAV);
 		this.ardusim = API.getArduSim();
 		
@@ -77,7 +115,7 @@ public class CollisionDetectorThread extends Thread {
 				//   a) The other UAV has gone, so the current UAV can continue the mission
 				//   b) The UAV was overtaking. As it has priority, we assume that it can directly change the state (it is already moving)
 				//   c) Deadlock. The UAVs have to be landed
-				MBCAPState state = MBCAPParam.state[numUAV];
+				MBCAPState state = currentState.get();
 				if (state != MBCAPState.NORMAL
 						&& state != MBCAPState.EMERGENCY_LAND
 						&& System.nanoTime() - stateTime > MBCAPParam.globalDeadlockTimeout) {
@@ -85,7 +123,7 @@ public class CollisionDetectorThread extends Thread {
 					// Case a. The UAV can resume the mission
 					if (avoidingBeacon == null
 							&& state != MBCAPState.OVERTAKING) {
-						if (copter.getMissionHelper().resume()) {
+						if (missionHelper.resume()) {
 							stateTime = System.nanoTime();
 							gui.logUAV(MBCAPText.MISSION_RESUME);
 							
@@ -95,11 +133,11 @@ public class CollisionDetectorThread extends Thread {
 							}
 							
 							// Status update
-							MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-							MBCAPParam.event.incrementAndGet(numUAV);
-							MBCAPParam.eventDeadlockSolved.incrementAndGet(numUAV);
+							idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+							event.incrementAndGet();
+							deadlockSolved.incrementAndGet();
 							// Progress update
-							MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
+							this.updateState(MBCAPState.NORMAL);
 							
 						} else {
 							gui.logUAV(MBCAPText.MISSION_RESUME_ERROR);
@@ -110,17 +148,17 @@ public class CollisionDetectorThread extends Thread {
 							prevRiskId = avoidingBeacon.uavId;
 							prevSolvedTimeout = System.currentTimeMillis();
 							if (!isRealUAV) {
-								MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
-								MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+								impactLocationUTM.remove(avoidingBeacon.uavId);
+								this.locateImpactRiskMark(null, avoidingBeacon.uavId);
 							}
 							avoidingBeacon = null;
 						}
 						stateTime = System.nanoTime();
-						MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-						MBCAPParam.event.incrementAndGet(numUAV);
-						MBCAPParam.eventDeadlockSolved.incrementAndGet(numUAV);
+						idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+						event.incrementAndGet();
+						deadlockSolved.incrementAndGet();
 						// Progress update
-						MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
+						this.updateState(MBCAPState.NORMAL);
 					} else {
 						// Case c. Deadlock. Landing the UAV
 						if (copter.land()) {
@@ -128,15 +166,16 @@ public class CollisionDetectorThread extends Thread {
 						} else {
 							gui.logUAV(MBCAPText.DEADLOCK_ERROR);
 						}
+						
 						stateTime = System.nanoTime();
 						prevRiskId = avoidingBeacon.uavId;
 						prevSolvedTimeout = System.currentTimeMillis();
 						avoidingBeacon = null;
-						MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-						MBCAPParam.event.incrementAndGet(numUAV);
-						MBCAPParam.eventDeadlockFailed.incrementAndGet(numUAV);
+						idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+						event.incrementAndGet();
+						deadlockFailed.incrementAndGet();
 						// Progress update
-						MBCAPGUITools.updateState(numUAV, MBCAPState.EMERGENCY_LAND);
+						this.updateState(MBCAPState.EMERGENCY_LAND);
 					}
 				}
 				
@@ -147,33 +186,33 @@ public class CollisionDetectorThread extends Thread {
 						prevRiskId = avoidingBeacon.uavId;
 						prevSolvedTimeout = System.currentTimeMillis();
 						if (!isRealUAV) {
-							MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
-							MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+							impactLocationUTM.remove(avoidingBeacon.uavId);
+							this.locateImpactRiskMark(null, avoidingBeacon.uavId);
 						}
 						avoidingBeacon = null;
 						
 						stateTime = System.nanoTime();
-						MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-						MBCAPParam.event.incrementAndGet(numUAV);
-						MBCAPParam.eventDeadlockSolved.incrementAndGet(numUAV);
+						idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+						event.incrementAndGet();
+						deadlockSolved.incrementAndGet();
 						// Progress update
-						MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
+						this.updateState(MBCAPState.NORMAL);
 					} else {
-						if (copter.getMissionHelper().resume()) {
+						if (missionHelper.resume()) {
 							prevRiskId = avoidingBeacon.uavId;
 							prevSolvedTimeout = System.currentTimeMillis();
 							if (!isRealUAV) {
-								MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
-								MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+								impactLocationUTM.remove(avoidingBeacon.uavId);
+								this.locateImpactRiskMark(null, avoidingBeacon.uavId);
 							}
 							avoidingBeacon = null;
 							
 							stateTime = System.nanoTime();
-							MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-							MBCAPParam.event.incrementAndGet(numUAV);
-							MBCAPParam.eventDeadlockSolved.incrementAndGet(numUAV);
+							idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+							event.incrementAndGet();
+							deadlockSolved.incrementAndGet();
 							// Progress update
-							MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
+							this.updateState(MBCAPState.NORMAL);
 						} else {
 							gui.logUAV(MBCAPText.MISSION_RESUME_ERROR);
 						}
@@ -181,16 +220,17 @@ public class CollisionDetectorThread extends Thread {
 				}
 
 				// 2. Update the collision risk status information
-				selfBeacon = MBCAPParam.selfBeacon.get(numUAV);
+				selfBeacon = beacon.get();
 				// Only start to check the collision risk if this UAV has started to send beacons
 				if (selfBeacon != null) {
 					// 2.1. In normal flight mode, decide if there is risk of collision with other UAV
-					if (MBCAPParam.state[numUAV] == MBCAPState.NORMAL) {
+					state = currentState.get();
+					if (state == MBCAPState.NORMAL) {
 						if (selfBeacon.state == MBCAPState.NORMAL.getId()
-								&& !selfBeacon.isLanding) {	// Only check if the beacon has been updated (avoid race condition)
+								&& !missionHelper.isLastWaypointReached()) {
 							// Sorting the beacons by priority
 							sortingQueue.clear();
-							Iterator<Map.Entry<Long, Beacon>> entries = MBCAPParam.beacons[numUAV].entrySet().iterator();
+							Iterator<Map.Entry<Long, Beacon>> entries = beacons.entrySet().iterator();
 							while (entries.hasNext()) {
 								Map.Entry<Long, Beacon> entry = entries.next();
 								// Ignoring obsolete beacons
@@ -216,10 +256,10 @@ public class CollisionDetectorThread extends Thread {
 									}
 									
 									if (check) {
-										riskyLocation = MBCAPHelper.hasCollisionRisk(numUAV, selfBeacon, auxBeacon);
+										riskyLocation = this.hasCollisionRisk(selfBeacon, auxBeacon);
 										if (riskyLocation != null && !auxBeacon.isLanding) {
-											MBCAPParam.impactLocationUTM[numUAV].put(auxBeacon.uavId, riskyLocation);
-											MBCAPGUITools.locateImpactRiskMark(riskyLocation, numUAV, auxBeacon.uavId);
+											impactLocationUTM.put(auxBeacon.uavId, riskyLocation);
+											this.locateImpactRiskMark(riskyLocation, auxBeacon.uavId);
 											riskyUAVs.add(auxBeacon);
 										}
 									}
@@ -230,13 +270,13 @@ public class CollisionDetectorThread extends Thread {
 							if (riskyUAVs.isEmpty()) {
 								// Timeout needed if a collision risk situation has just been solved
 								if (System.nanoTime()-stateTime > MBCAPParam.resumeTimeout) {
-									entries = MBCAPParam.beacons[numUAV].entrySet().iterator();
+									entries = beacons.entrySet().iterator();
 									while (entries.hasNext()) {
 										Map.Entry<Long, Beacon> entry = entries.next();
 										if (avoidingBeacon == null
 												&& entry.getValue().idAvoiding == selfBeacon.uavId) {
 											avoidingBeacon = entry.getValue();
-											MBCAPParam.idAvoiding.set(numUAV, avoidingBeacon.uavId);
+											idAvoiding.set(avoidingBeacon.uavId);
 										}
 									}
 								}
@@ -247,22 +287,22 @@ public class CollisionDetectorThread extends Thread {
 								if (avoidingBeacon==null
 										|| avoidingBeacon.uavId<first.uavId) {
 									avoidingBeacon = first;
-									MBCAPParam.idAvoiding.set(numUAV, avoidingBeacon.uavId);
+									idAvoiding.set(avoidingBeacon.uavId);
 								}
 							}
 						}
 
-					} else if (MBCAPParam.state[numUAV] != MBCAPState.EMERGENCY_LAND) {
+					} else if (state != MBCAPState.EMERGENCY_LAND) {
 						// 2.2. If the protocol is being applied, a collision risk is already being analyzed
 
 						// Special case, when the UAV stands still
-						if (MBCAPParam.state[numUAV] == MBCAPState.STAND_STILL) {
+						if (state == MBCAPState.STAND_STILL) {
 
 							// While waiting the timeout for protocol stability we check if other UAV with higher priority appears
 							if (System.nanoTime()-stateTime < MBCAPParam.standStillTimeout) {
 								boolean newRiskDetected = false;
 								Beacon update = null;
-								Iterator<Map.Entry<Long, Beacon>> entries = MBCAPParam.beacons[numUAV].entrySet().iterator();
+								Iterator<Map.Entry<Long, Beacon>> entries = beacons.entrySet().iterator();
 								while (entries.hasNext() && !newRiskDetected) {
 									Map.Entry<Long, Beacon> entry = entries.next();
 									auxBeacon = entry.getValue();
@@ -272,7 +312,7 @@ public class CollisionDetectorThread extends Thread {
 											&& auxBeacon.idAvoiding==selfBeacon.uavId
 											&& (avoidingBeacon == null || auxBeacon.uavId>avoidingBeacon.uavId)) {
 										avoidingBeacon = auxBeacon;
-										MBCAPParam.idAvoiding.set(numUAV, avoidingBeacon.uavId);
+										idAvoiding.set(avoidingBeacon.uavId);
 										newRiskDetected = true;
 									}
 									// b. If no other UAV with higher priority is detected, update avoiding UAV information
@@ -287,7 +327,7 @@ public class CollisionDetectorThread extends Thread {
 							} else if (avoidingBeacon!=null) {
 								// Stand still timeout exceeded, so we look for an update of the avoiding UAV
 								boolean updateLocated = false;
-								Iterator<Map.Entry<Long, Beacon>> entries = MBCAPParam.beacons[numUAV].entrySet().iterator();
+								Iterator<Map.Entry<Long, Beacon>> entries = beacons.entrySet().iterator();
 								while (entries.hasNext() && !updateLocated) {
 									Map.Entry<Long, Beacon> entry = entries.next();
 									auxBeacon = entry.getValue();
@@ -300,13 +340,13 @@ public class CollisionDetectorThread extends Thread {
 						} else if (avoidingBeacon!=null) {
 							// If the protocol is in other state, the UAV information is updated
 							boolean updateLocated = false;
-							Iterator<Map.Entry<Long, Beacon>> entries = MBCAPParam.beacons[numUAV].entrySet().iterator();
+							Iterator<Map.Entry<Long, Beacon>> entries = beacons.entrySet().iterator();
 							while (entries.hasNext() && !updateLocated) {
 								Map.Entry<Long, Beacon> entry = entries.next();
 								auxBeacon = entry.getValue();
 								if (auxBeacon.equals(avoidingBeacon)) {
 									// Detecting the fact that this UAV has overtaken the other UAV
-									if (MBCAPParam.state[numUAV] == MBCAPState.GO_ON_PLEASE
+									if (state == MBCAPState.GO_ON_PLEASE
 											&& auxBeacon.event > avoidingBeacon.event) {
 										hasBeenOvertaken = true;
 									} else {
@@ -315,12 +355,12 @@ public class CollisionDetectorThread extends Thread {
 									avoidingBeacon = auxBeacon;
 									// Store the other UAV risk location in case this UAV has not detected the risk by itself
 									//  and that UAV is in "go on, please" state
-									if (!MBCAPParam.impactLocationUTM[numUAV].containsKey(avoidingBeacon.uavId)
+									if (!impactLocationUTM.containsKey(avoidingBeacon.uavId)
 											&& avoidingBeacon.state == MBCAPState.GO_ON_PLEASE.getId()) {
 										Location3DUTM riskLocation = avoidingBeacon.points.get(1);
 										if (riskLocation.x != 0 || riskLocation.y != 0 || riskLocation.z != 0) {
-											MBCAPParam.impactLocationUTM[numUAV].put(avoidingBeacon.uavId, riskLocation);
-											MBCAPGUITools.locateImpactRiskMark(riskLocation, numUAV, avoidingBeacon.uavId);
+											impactLocationUTM.put(avoidingBeacon.uavId, riskLocation);
+											this.locateImpactRiskMark(riskLocation, avoidingBeacon.uavId);
 										}
 									}
 									updateLocated = true;
@@ -331,54 +371,60 @@ public class CollisionDetectorThread extends Thread {
 
 					// 3. Machine state analysis based on the previous information
 					if (avoidingBeacon != null) {
-						// 3.1 In normal flight state. Stop due to a new collision risk
-						if (MBCAPParam.state[numUAV] == MBCAPState.NORMAL) {
+						// 3.1 In normal flight state. Stop due to a new collision risk unless this UAV is landing
+						if (state == MBCAPState.NORMAL && !missionHelper.isLastWaypointReached()
+								&& copter.getFlightMode().getCustomMode() != 9) {
 							gui.logUAV(MBCAPText.RISK_DETECTED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 							gui.updateGlobalInformation(MBCAPText.COLLISION_RISK_DETECTED);
-							if (copter.getMissionHelper().pause()) {
+							Location2DUTM antes = copter.getLocationUTM();
+							double velocidad = copter.getSpeed();
+							if (missionHelper.pause()) {
+//							if (missionHelper.pause2()) {//TODO probar
+								gui.logUAV("Frenada en " + copter.getLocationUTM().distance(antes) + " m a "
+										+ velocidad + " m/s");
 								stateTime = System.nanoTime();
-								MBCAPParam.idAvoiding.set(numUAV, avoidingBeacon.uavId);
+								idAvoiding.set(avoidingBeacon.uavId);
 								// Progress update
-								MBCAPGUITools.updateState(numUAV, MBCAPState.STAND_STILL);
+								this.updateState(MBCAPState.STAND_STILL);
 							} else {
 								gui.logUAV(MBCAPText.RISK_DETECTED_ERROR);
 							}
 						}
 						
 						// 3.2 In stand still state (fist also wait for the UAV to stabilize)
-						if (MBCAPParam.state[numUAV] == MBCAPState.STAND_STILL
+						if (state == MBCAPState.STAND_STILL
 								&& System.nanoTime() - stateTime >= MBCAPParam.standStillTimeout) {
 							
 							// If the other UAV starts landing, the situation is solved
 							if (avoidingBeacon.isLanding) {
-								if (copter.getMissionHelper().resume()) {
+								if (missionHelper.resume()) {
 									prevRiskId = avoidingBeacon.uavId;
 									prevSolvedTimeout = System.currentTimeMillis();
 									if (!isRealUAV) {
-										MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
-										MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+										impactLocationUTM.remove(avoidingBeacon.uavId);
+										this.locateImpactRiskMark(null, avoidingBeacon.uavId);
 									}
 									avoidingBeacon = null;
 									
 									stateTime = System.nanoTime();
-									MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-									MBCAPParam.event.incrementAndGet(numUAV);
-									MBCAPParam.eventDeadlockSolved.incrementAndGet(numUAV);
+									idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+									event.incrementAndGet();
+									deadlockSolved.incrementAndGet();
 									// Progress update
-									MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
+									this.updateState(MBCAPState.NORMAL);
 								} else {
 									gui.logUAV(MBCAPText.MISSION_RESUME_ERROR);
 								}
 							} else if (avoidingBeacon.idAvoiding == selfBeacon.uavId
-									&& MBCAPParam.idAvoiding.get(numUAV) == avoidingBeacon.uavId) {
+									&& idAvoiding.get() == avoidingBeacon.uavId) {
 								// Change to passing by state (UAV with more priority)
 								if (selfBeacon.uavId > avoidingBeacon.uavId
 										&& MBCAPState.getSatateById(avoidingBeacon.state) == MBCAPState.GO_ON_PLEASE) {
 									gui.logUAV(MBCAPText.RESUMING_MISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
-									if (copter.getMissionHelper().resume()) {
+									if (missionHelper.resume()) {
 										stateTime = System.nanoTime();
 										// Progress update
-										MBCAPGUITools.updateState(numUAV, MBCAPState.OVERTAKING);
+										this.updateState(MBCAPState.OVERTAKING);
 									} else {
 										gui.logUAV(MBCAPText.RESUMING_MISSION_ERROR);
 									}
@@ -387,28 +433,28 @@ public class CollisionDetectorThread extends Thread {
 									// UAV with less priority
 
 									// Change to the states moving aside or go on, please
-									if (MBCAPHelper.needsToMoveAside(numUAV, avoidingBeacon.points, avoidingBeacon.plannedSpeed)) {
+									if (this.needsToMoveAside(avoidingBeacon.points, avoidingBeacon.plannedSpeed)) {
 										// Change to the state moving aside. Changing MAV mode as previous step
 										if (copter.setFlightMode(FlightMode.GUIDED)) {
 											gui.logUAV(MBCAPText.MOVING + "...");
 											stateTime = System.nanoTime();
 											// Progress update
-											MBCAPGUITools.updateState(numUAV, MBCAPState.MOVING_ASIDE);
+											this.updateState(MBCAPState.MOVING_ASIDE);
 											// Moving
-											Location2DUTM utm = MBCAPParam.targetLocationUTM.get(numUAV);
-											Location2DGeo geo;
+											Location2DUTM utm = targetLocationUTM.get();
+											Location3D location;
 											try {
-												geo = utm.getGeo();
+												location = new Location3D(utm, copter.getAltitudeRelative());
 												
-												MoveTo moveTo = copter.moveTo(geo, copter.getAltitudeRelative(), new MoveToListener() {
+												MoveTo moveTo = copter.moveTo(location, new MoveToListener() {
 													
 													@Override
-													public void onFailureListener() {
+													public void onFailure() {
 														gui.logUAV(MBCAPText.MOVING_ERROR);
 													}
 													
 													@Override
-													public void onCompletedListener() {
+													public void onCompleteActionPerformed() {
 														// Not needed as we wait the thread to finish
 													}
 												});
@@ -434,19 +480,19 @@ public class CollisionDetectorThread extends Thread {
 											} catch (ArduSimNotReadyException e) {
 												e.printStackTrace();
 												if (copter.land()) {
-													gui.warnUAV(MBCAPText.PROT_ERROR, MBCAPText.LOCATION_ERROR_1);
+													gui.warnUAV(MBCAPText.PROT_ERROR, e.getMessage());
 												} else {
-													gui.logUAV(MBCAPText.LOCATION_ERROR_2);
+													gui.logUAV(MBCAPText.LOCATION_ERROR);
 												}
 												stateTime = System.nanoTime();
 												prevRiskId = avoidingBeacon.uavId;
 												prevSolvedTimeout = System.currentTimeMillis();
 												avoidingBeacon = null;
-												MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-												MBCAPParam.event.incrementAndGet(numUAV);
-												MBCAPParam.eventDeadlockFailed.incrementAndGet(numUAV);
+												idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+												event.incrementAndGet();
+												deadlockFailed.incrementAndGet();
 												// Progress update
-												MBCAPGUITools.updateState(numUAV, MBCAPState.EMERGENCY_LAND);
+												this.updateState(MBCAPState.EMERGENCY_LAND);
 											}
 										} else {
 											gui.logUAV(MBCAPText.MOVING_ERROR);
@@ -457,7 +503,7 @@ public class CollisionDetectorThread extends Thread {
 										gui.logUAV(MBCAPText.GRANT_PERMISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 										stateTime = System.nanoTime();
 										// Progress update
-										MBCAPGUITools.updateState(numUAV, MBCAPState.GO_ON_PLEASE);
+										this.updateState(MBCAPState.GO_ON_PLEASE);
 									}
 								} else if (avoidingBeacon.idAvoiding != MBCAPParam.ID_AVOIDING_DEFAULT
 										&& avoidingBeacon.idAvoiding != selfBeacon.uavId) {
@@ -469,60 +515,60 @@ public class CollisionDetectorThread extends Thread {
 						
 						// 3.3 In passing by state. Change to normal state after overtaking the lower priority UAV
 						// A timeout is used to increase stability
-						if (MBCAPParam.state[numUAV] == MBCAPState.OVERTAKING
+						if (state == MBCAPState.OVERTAKING
 								&& selfBeacon.uavId > avoidingBeacon.uavId
 								&& System.nanoTime() - stateTime > MBCAPParam.passingTimeout) {
 							Location3DUTM avoidingLocation = avoidingBeacon.points.get(0);
-							if (MBCAPHelper.overtakingFinished(numUAV, avoidingBeacon.uavId, avoidingLocation)) {
+							if (this.overtakingFinished(avoidingBeacon.uavId, avoidingLocation)) {
 								// There is no need to apply commands to the UAV
 								gui.logUAV(MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 								if (!isRealUAV) {
-									MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
-									MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+									impactLocationUTM.remove(avoidingBeacon.uavId);
+									this.locateImpactRiskMark(null, avoidingBeacon.uavId);
 								}
 								stateTime = System.nanoTime();
 								prevRiskId = avoidingBeacon.uavId;
 								prevSolvedTimeout = System.currentTimeMillis();
 								avoidingBeacon = null;
-								MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-								MBCAPParam.event.incrementAndGet(numUAV);
+								idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+								event.incrementAndGet();
 								// Progress update
-								MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
+								this.updateState(MBCAPState.NORMAL);
 							}
 						}
 						
 						// 3.4 In moving aside state. Change to go on, please state
-						if (MBCAPParam.state[numUAV] == MBCAPState.MOVING_ASIDE
+						if (state == MBCAPState.MOVING_ASIDE
 								&& copter.getLocationUTM()
-								.distance(MBCAPParam.targetLocationUTM.get(numUAV)) < MBCAPParam.SAFETY_DISTANCE_RANGE) {
+								.distance(targetLocationUTM.get()) < MBCAPParam.SAFETY_DISTANCE_RANGE) {
 							// There is no need to apply commands to the UAV
 							gui.logUAV(MBCAPText.SAFE_PLACE + " " + MBCAPText.GRANT_PERMISSION + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 							stateTime = System.nanoTime();
 							// Progress update
-							MBCAPGUITools.updateState(numUAV, MBCAPState.GO_ON_PLEASE);
-							MBCAPParam.projectPath.set(numUAV, 0);	// Avoid projecting the predicted path over the theoretical one
-							MBCAPParam.targetLocationUTM.set(numUAV, null);
-							MBCAPParam.targetLocationPX.set(numUAV, null);
+							this.updateState(MBCAPState.GO_ON_PLEASE);
+							projectPath.set(0);	// Avoid projecting the predicted path over the theoretical one
+							targetLocationUTM.set(null);
+							targetLocationPX.set(null);
 						}
 						
 						// 3.5 In go on, please state. Change to normal state when the risk collision is solved
-						if (MBCAPParam.state[numUAV] == MBCAPState.GO_ON_PLEASE
+						if (state == MBCAPState.GO_ON_PLEASE
 								&& hasBeenOvertaken) {
 							hasBeenOvertaken = false;
-							if (copter.getMissionHelper().resume()) {
+							if (missionHelper.resume()) {
 								gui.logUAV(MBCAPText.MISSION_RESUMED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 								if (!isRealUAV) {
-									MBCAPParam.impactLocationUTM[numUAV].remove(avoidingBeacon.uavId);
-									MBCAPGUITools.locateImpactRiskMark(null, numUAV, avoidingBeacon.uavId);
+									impactLocationUTM.remove(avoidingBeacon.uavId);
+									this.locateImpactRiskMark(null, avoidingBeacon.uavId);
 								}
 								stateTime = System.nanoTime();
 								prevRiskId = avoidingBeacon.uavId;
 								prevSolvedTimeout = System.currentTimeMillis();
 								avoidingBeacon = null;
-								MBCAPParam.idAvoiding.set(numUAV, MBCAPParam.ID_AVOIDING_DEFAULT);
-								MBCAPParam.event.incrementAndGet(numUAV);
+								idAvoiding.set(MBCAPParam.ID_AVOIDING_DEFAULT);
+								event.incrementAndGet();
 								// Progress update
-								MBCAPGUITools.updateState(numUAV, MBCAPState.NORMAL);
+								this.updateState(MBCAPState.NORMAL);
 								
 							} else {
 								gui.logUAV(MBCAPText.RESUMING_MISSION_ERROR);
@@ -540,4 +586,469 @@ public class CollisionDetectorThread extends Thread {
 			}
 		}
 	}
+	
+	/** Update the protocol state. */
+	public void updateState(MBCAPState state) {
+		// Update the protocol state
+		currentState.set(state);
+		// Update the record of states used
+		progress.add(new ProgressState(state, System.currentTimeMillis()));
+
+		// Update the log in the main window
+		gui.logUAV(MBCAPText.CAP + " = " + state.getName());
+		// Update the progress dialog
+		gui.updateProtocolState(state.getName());
+	}
+	
+	/** Calculates if two UAVs have collision risk.
+	 * <p>Requires to be in the normal protocol state.
+	 * Returns null if no risk has been detected, or the location of the risky point otherwise.</p> */
+	private Location3DUTM hasCollisionRisk(Beacon selfBeacon, Beacon receivedBeacon) {
+		double distance;
+		long selfTime, beaconTime;
+		Location3DUTM selfPoint, receivedPoint;
+		boolean checkTime = receivedBeacon.state == MBCAPState.NORMAL.getId()
+				&& receivedBeacon.speed >= MBCAPParam.minSpeed && receivedBeacon.points.size() > 1
+				&& selfBeacon.speed >= MBCAPParam.minSpeed && selfBeacon.points.size() > 1;
+		for (int i = 0; i < selfBeacon.points.size(); i++) {
+			selfTime = selfBeacon.time + i * MBCAPParam.hopTimeNS;
+			selfPoint = selfBeacon.points.get(i);
+			for (int j = 0; j < receivedBeacon.points.size(); j++) {
+				// Do not check if the other UAV is in Go on, please and the location is the detected risk location
+				if (j == 1
+						&& (receivedBeacon.state == MBCAPState.GO_ON_PLEASE.getId() || receivedBeacon.state == MBCAPState.STAND_STILL.getId())) {
+					break;
+				}
+				
+				boolean risky = true;
+				// Temporal collision risk (only if the other UAV is also in the normal protocol state, and with enough speed)
+				if (checkTime) {
+					beaconTime = receivedBeacon.time + j * MBCAPParam.hopTimeNS;
+					if (Math.abs(selfTime - beaconTime) >= MBCAPParam.collisionRiskTime) {
+						risky = false;
+					}
+				}
+				
+				// X,Y, Z collision risk
+				if (risky) {
+					receivedPoint = receivedBeacon.points.get(j);
+					distance = selfPoint.distance(receivedPoint);
+					if (distance < MBCAPParam.collisionRiskDistance
+							&& Math.abs(selfPoint.z - receivedPoint.z) < MBCAPParam.collisionRiskAltitudeDifference) {
+						return selfPoint;
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	/** Calculates if the current UAV has overtaken another UAV. */
+	private boolean overtakingFinished(long avoidingId, Location3DUTM target) {
+		// Overtaken happened if the distance to the target UAV and to the risk location is increasing
+		boolean success = MBCAPHelper.isMovingAway(copter.getLocationUTMLastKnown(), target);
+		if (!success) {
+			return false;
+		}
+		if (impactLocationUTM != null) {
+			Location3DUTM riskLocation = impactLocationUTM.get(avoidingId);
+			if (riskLocation != null) {
+				success = MBCAPHelper.isMovingAway(copter.getLocationUTMLastKnown(), riskLocation);
+				if (!success) {
+					return false;
+				}
+			}
+		}
+		
+		// AND the UAV has moved far enough
+		return target.distance(beacon.get().points.get(0)) > MBCAPParam.collisionRiskDistance;
+	}
+	
+	/** Checks if the UAV has to move aside, and it gets that safe point when needed. */
+	private boolean needsToMoveAside(List<Location3DUTM> avoidPredictedLocations, double plannedSpeed) {
+		// Errors detection
+		if (avoidPredictedLocations == null || avoidPredictedLocations.size() <= 1) {
+			gui.logUAV(MBCAPText.REPOSITION_ERROR_1);
+			return false;
+		}
+		int locations = avoidPredictedLocations.size();
+		
+		
+		Location3DUTM[][] segment = new Location3DUTM[locations - 1][2];
+		for (int i = 0; i < segment.length; i++) {
+			segment[i][0] = avoidPredictedLocations.get(i);
+			segment[i][1] = avoidPredictedLocations.get(i+1);
+		}
+
+		Location2DUTM currentUTMLocation = copter.getLocationUTM();
+		
+		// Calculus of the angle with each segment with the previous and next segment
+		double[][] angles;
+		if (segment.length == 1) {
+			angles = new double[][] {{0, 0}};
+		} else {
+			angles = new double[segment.length][2];
+			Double angle = 0.0;
+			for (int i = 0; i < segment.length; i++) {
+				if (angle != null) {
+					angles[i][0] = angle;
+				}
+				if (i == segment.length - 1) {
+					angle = 0.0;
+				} else {
+					angle = CollisionDetectorThread.getAngleDifference(segment[i][0], segment[i][1], segment[i + 1][0], segment[i + 1][1]);
+				}
+				if (angle != null) {
+					angles[i][1] = angle;
+				}
+			}
+		}
+		
+		// Checking the distance of the UAV to the segments of the mission of the other UAV, and to the vertex of the mission
+		Location2DUTM newLocation = null;
+		boolean isInSafePlace = false;
+		boolean foundConflict;
+		Location2DUTM auxLocation;
+		double waypointThreshold = CollisionDetectorThread.getWaypointThreshold(plannedSpeed);
+		while (!isInSafePlace) {
+			foundConflict = false;
+			for (int i = 0; i < segment.length; i++) {
+				auxLocation = CollisionDetectorThread.getSegmentSafeLocation(currentUTMLocation, segment[i][0], segment[i][1], angles[i],
+						plannedSpeed, waypointThreshold);
+				if (auxLocation != null) {
+					currentUTMLocation = auxLocation;
+					newLocation = auxLocation;
+					foundConflict = true;
+				}
+			}
+			if (!foundConflict) {
+				// Check if the UAV is close to any vertex (waypoint) of the mission
+				Location3DUTM currentWaypoint;
+				for (int i = 1; i < locations - 1; i++) {
+					currentWaypoint = avoidPredictedLocations.get(i);
+					auxLocation = CollisionDetectorThread.getWaypointSafeLocation(currentUTMLocation, currentWaypoint);
+					if (auxLocation != null) {
+						currentUTMLocation = auxLocation;
+						newLocation = auxLocation;
+						foundConflict = true;
+					}
+				}
+				if (!foundConflict) {
+					isInSafePlace = true;
+				}
+			}
+		}
+
+		// If new coordinates have been found, it means that the UAV must move to a safer position
+		if (newLocation != null) {
+			targetLocationUTM.set(newLocation);
+			targetLocationPX.set(gui.locatePoint(newLocation.x, newLocation.y));
+			return true;
+		}
+		return false;
+	}
+	
+	private static double getWaypointThreshold(double speed) {
+		double[] function = MBCAPParam.FUNCTION_WAYPOINT_THRESHOLD;
+		return function[0] + function[1] * speed + function[2] * speed * speed;
+	}
+	
+	/** Get the angle between two lines.
+	 * <p>Returns null if any error happens, or the angle [-Math.PI, Math.PI] otherwise (positive if the second line turns left).</p> */
+	private static Double getAngleDifference(Point2D.Double l0Start, Point2D.Double l0End,
+			Point2D.Double l1Start, Point2D.Double l1End) {
+		Double l0Angle = CollisionDetectorThread.getAngle(l0Start, l0End);
+		Double l1Angle = CollisionDetectorThread.getAngle(l1Start, l1End);
+		if (l0Angle == null || l1Angle == null) {
+			return null;
+		}
+		double res = l1Angle - l0Angle;
+		if (res < -Math.PI) {
+			res = Math.PI * 2 + res;
+		}
+		if (res > Math.PI) {
+			res = -Math.PI * 2 + res;
+		}
+		return res;
+	}
+
+	/** Get the angle between a line, and the line that goes from left to right (X axis, positive direction). */
+	private static Double getAngle(Point2D.Double Start, Point2D.Double End) {
+		double angle;
+		double incX = End.x - Start.x;
+		double incY = End.y - Start.y;
+		if (incX == 0) {
+			if (incY > 0) {
+				angle = Math.PI / 2;
+			} else if (incY < 0) {
+				angle = -Math.PI / 2;
+			} else {
+				return null;
+			}
+		} else {
+			angle = Math.atan(incY / incX);
+			if (incX < 0) {
+				if (angle > 0) {
+					angle = angle - Math.PI;
+				} else {
+					angle = angle + Math.PI;
+					// if the UAV is moving in opposite direction, the angle will be: Math.PI
+				}
+			}
+		}
+		return angle;
+	}
+	
+	/** Calculates the safe place to move aside from a path segment.
+	 * <p>Returns null if there is no need of moving aside.</p> */
+	private static Location2DUTM getSegmentSafeLocation(Location2DUTM currentLocation,
+			Location3DUTM prev, Location3DUTM post, double[] angles, double plannedSpeed, double waypointThreshold) {
+		double currentX = currentLocation.x;
+		double currentY = currentLocation.y;
+		double prevX = prev.x;
+		double prevY = prev.y;
+		double postX = post.x;
+		double postY = post.y;
+		double x, y;
+		
+		Location2DUTM intersection = MBCAPHelper.getIntersection(currentLocation, prev, post);
+		
+		// currentLocation out of the segment case
+		double incX = postX - prevX;
+		double incY = postY - prevY;
+		if (incX == 0) {
+			// Vertical line case
+			if (currentY < Math.min(prevY, postY)
+					|| currentY > Math.max(prevY, postY)) {
+				return null;
+			}
+		} else if (incY == 0) {
+			// Horizontal line case
+			if (currentX < Math.min(prevX, postX)
+					|| currentX > Math.max(prevX, postX)) {
+				return null;
+			}
+		} else {
+			// General case
+			if (intersection.x < Math.min(prevX, postX)
+					|| intersection.x > Math.max(prevX, postX)) {
+				return null;
+			}
+		}
+		
+		// Maybe it is close to one of the waypoints
+		boolean goToTheOtherSide = false;
+		double maxDistance = 0;
+		Double currentAngle = CollisionDetectorThread.getAngleDifference(prev, post, prev, currentLocation);
+		double currentDistance = currentLocation.distance(intersection);
+		if (currentAngle != null) {
+			double dPrev = intersection.distance(prev);
+			double dPost = intersection.distance(post);
+
+			boolean isPrevCloser = dPrev <= dPost;
+			// Analyze the waypoint the UAV is closer to, and if the distance is adequate
+			if (isPrevCloser && dPrev < waypointThreshold) {
+				// UAV in the inner side of the waypoint
+				if ((currentAngle > 0 && angles[0] > 0 && angles[0] <= Math.PI / 2)
+						|| (currentAngle < 0 && angles[0] < 0 && angles[0] >= -Math.PI / 2)) {
+					// Analyze if the distance to the segment is enough
+					maxDistance = CollisionDetectorThread.getCurveDistance(plannedSpeed, angles[0]);
+					if (currentDistance < maxDistance + MBCAPParam.safePlaceDistance) {
+						goToTheOtherSide = true;
+					}
+				}
+			}
+			if (!isPrevCloser && dPost < waypointThreshold) {
+				// UAV in the inner side of the waypoint
+				if ((currentAngle > 0 && angles[1] > 0 && angles[1] <= Math.PI / 2)
+						|| (currentAngle < 0 && angles[1] < 0 && angles[1] >= -Math.PI / 2)) {
+					// Analyze if the distance to the segment is enough
+					maxDistance = CollisionDetectorThread.getCurveDistance(plannedSpeed, angles[1]);
+					if (currentDistance < maxDistance + MBCAPParam.safePlaceDistance) {
+						goToTheOtherSide = true;
+					}
+				}
+			}
+		}
+		
+		// Far enough case
+		if (!goToTheOtherSide && currentDistance > MBCAPParam.safePlaceDistance) {
+			return null;
+		}
+		
+		// Has to move apart case
+		if (incX == 0) {
+			// Vertical line case
+			if (currentX < prevX) {
+				if (goToTheOtherSide) {
+					x = prevX + MBCAPParam.safePlaceDistance + 0.1;	// We add a little margin due to double precision errors
+				} else {
+					x = prevX - MBCAPParam.safePlaceDistance - 0.1;
+				}
+			} else {
+				if (goToTheOtherSide) {
+					x = prevX - MBCAPParam.safePlaceDistance - 0.1;
+				} else {
+					x = prevX + MBCAPParam.safePlaceDistance + 0.1;
+				}
+			}
+			y = currentY;
+		} else if (incY == 0) {
+			// Horizontal line case
+			if (currentY < prevY) {
+				if (goToTheOtherSide) {
+					y = prevY + MBCAPParam.safePlaceDistance + 0.1;
+				} else {
+					y = prevY - MBCAPParam.safePlaceDistance - 0.1;
+				}
+			} else {
+				if (goToTheOtherSide) {
+					y = prevY - MBCAPParam.safePlaceDistance - 0.1;
+				} else {
+					y = prevY + MBCAPParam.safePlaceDistance + 0.1;
+				}
+			}
+			x = currentX;
+		} else {
+			// General case
+			double ds = MBCAPParam.safePlaceDistance + 0.1;
+			double d12 = prev.distance(post);
+			double incXS = ds / d12 * Math.abs(incY);
+			if (currentX <= intersection.x) {
+				if (goToTheOtherSide) {
+					x = intersection.x + incXS;
+				} else {
+					x = intersection.x - incXS;
+				}
+			} else {
+				if (goToTheOtherSide) {
+					x = intersection.x - incXS;
+				} else {
+					x = intersection.x + incXS;
+				}
+			}
+			y = currentY - incX / incY * (x - currentX);
+		}
+		Location2DUTM res = new Location2DUTM(x, y);
+		
+		// Returns the safe place in UTM coordinates
+		return res;
+	}
+	
+	/** Get the maximum distance a UAV moves aside a waypoint performing a mission, depending on the flight speed and the angle between the two segments of the mission.
+	 * <p> We get the values from experimental equations for the previous and next values available, and then we interpolate for the given speed and angle. */
+	private static double getCurveDistance(double speed, double angle) {
+		
+		double[][] fSpeed = MBCAPParam.FUNCTION_DISTANCE_VS_SPEED;
+		double[][] fAlpha = MBCAPParam.FUNCTION_DISTANCE_VS_ALPHA;
+		double alpha = Math.abs(angle);
+		
+		double[] dS = new double[2];
+		
+		// We already know that the first equation (i == 0) is for the angle 0 radians, so the previous value starts in 0
+		int prevSpeed = 0;
+		int postSpeed;
+		for (int i = 1; i < fSpeed.length; i++) {
+			if (fSpeed[i][0] < alpha) {
+				prevSpeed = i;
+			}
+		}
+		double inc;
+		if (prevSpeed == fSpeed.length - 1) {
+			postSpeed = prevSpeed;
+			inc = 0;
+		} else {
+			postSpeed = prevSpeed + 1;
+			inc = (alpha - fSpeed[prevSpeed][0]) / (fSpeed[postSpeed][0] -fSpeed[prevSpeed][0]);
+		}
+		dS[0] = fSpeed[prevSpeed][1] + fSpeed[prevSpeed][2] * speed + fSpeed[prevSpeed][3] * speed * speed;
+		dS[1] = fSpeed[postSpeed][1] + fSpeed[postSpeed][2] * speed + fSpeed[postSpeed][3] * speed * speed;
+		
+		double dSpeed = dS[0] + (dS[1] - dS[0]) * inc;
+		
+		double[] dA = new double[2];
+		int prevAngle = 0;
+		int postAngle;
+		for (int i = 1; i < fAlpha.length; i++) {
+			if (fAlpha[i][0] < speed) {
+				prevAngle = i;
+			}
+		}
+		
+		if (prevAngle == fAlpha.length - 1) {
+			postAngle = prevAngle;
+			inc = 0;
+		} else {
+			postAngle = prevAngle + 1;
+			inc = (speed - fAlpha[prevAngle][0]) / (fAlpha[postAngle][0] -fAlpha[prevAngle][0]);
+		}
+		dA[0] = fAlpha[prevAngle][1] + fAlpha[prevAngle][2] * alpha + fAlpha[prevAngle][3] * alpha * alpha;
+		dA[1] = fAlpha[postAngle][1] + fAlpha[postAngle][2] * alpha + fAlpha[postAngle][3] * alpha * alpha;
+		
+		double dAngle = dA[0] + (dA[1] - dA[0]) * inc;
+		
+		return Math.max(dSpeed, dAngle);
+	}
+	
+	/** Calculates the safe place to move aside from a waypoint.
+	 * <p>Returns null if there is no need of moving aside.</p> */
+	private static Location2DUTM getWaypointSafeLocation(Location2DUTM currentUTMLocation, Location3DUTM currentWaypoint) {
+		double currentDistance = currentUTMLocation.distance(currentWaypoint);
+		if (currentDistance > MBCAPParam.safePlaceDistance) {
+			return null;
+		}
+		double incX, incY;
+		incX = currentUTMLocation.x - currentWaypoint.x;
+		incY = currentUTMLocation.y - currentWaypoint.y;
+		double x, y;
+		if (incX == 0) {
+			// Vertical line case
+			if (currentUTMLocation.y < currentWaypoint.y) {
+				y = currentWaypoint.y - MBCAPParam.safePlaceDistance - 0.1;	// We add a little margin due to double precision errors;
+			} else {
+				y = currentWaypoint.y + MBCAPParam.safePlaceDistance + 0.1;
+			}
+			x = currentUTMLocation.x;
+		} else if (incY == 0) {
+			// Horizontal line case
+			if (currentUTMLocation.x < currentWaypoint.x) {
+				x = currentWaypoint.x - MBCAPParam.safePlaceDistance - 0.1;
+			} else {
+				x = currentWaypoint.x + MBCAPParam.safePlaceDistance + 0.1;
+			}
+			y = currentUTMLocation.y;
+		} else {
+			// General case
+			double ds = MBCAPParam.safePlaceDistance + 0.1;
+			double incXS = ds / currentDistance * Math.abs(incX);
+			if (currentUTMLocation.x < currentWaypoint.x) {
+				x = currentWaypoint.x - incXS;
+			} else {
+				x = currentWaypoint.x + incXS;
+			}
+			y = currentWaypoint.y + incY / incX * (x - currentWaypoint.x);
+		}
+		return new Location2DUTM(x, y);
+	}
+	
+	/** Stores (or removes when riskUTMLocation==null) the collision risk location that is drawn. */
+	public void locateImpactRiskMark(Location3DUTM riskUTMLocation, long beaconId) {
+		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR) {
+			if (riskUTMLocation == null) {
+				impactLocationPX.remove(beaconId);
+			} else {
+				Point2D.Double riskPXLocation = gui.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
+				impactLocationPX.put(beaconId, riskPXLocation);
+			}
+		}
+	}
+
+	@Override
+	public void onWaypointReachedActionPerformed(int numUAV, int numSeq) {
+		// Project the predicted path over the planned mission
+		if (this.numUAV == numUAV) {
+			projectPath.set(1);
+		}
+	}
+	
 }

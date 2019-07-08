@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import org.javatuples.Pair;
@@ -55,10 +56,7 @@ public class FishingConfigDialog extends JDialog{
 		setTitle(API.getArduSim().getSelectedProtocolName() +" configuration");
 		Point screenCenter = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
 		this.setBounds(screenCenter.x-(Panelwith/2), screenCenter.y-(Panelheitgth/2), Panelwith, Panelheitgth);
-		gui.log("Posicion ventana :" + screenCenter.x + ", " + screenCenter.y);
-		this.setModal(true);
-		this.setResizable(false);
-		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);		
+		gui.log("Posicion ventana :" + screenCenter.x + ", " + screenCenter.y);	
 		getContentPane().setLayout(new GridLayout(3,1));
 		
 		JPanel cpFishers = new JPanel();
@@ -164,7 +162,6 @@ public class FishingConfigDialog extends JDialog{
 			}
 			
 		});
-		this.setVisible(true);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -182,8 +179,12 @@ public class FishingConfigDialog extends JDialog{
 			FishingParam.boatMission[0]= fitxData.getValue1()[0];
 			FishingParam.distanceTreshold = 0.1*FishingParam.radius;
 			API.getCopter(0).getMissionHelper().setMissionsLoaded(FishingParam.boatMission);
-			API.getArduSim().setProtocolConfigured();
-			dispose();
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					dispose();
+				}
+			});
 			
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(this, "Angle, altitude and distance must be a number.", "Format error", JOptionPane.ERROR_MESSAGE);
@@ -194,9 +195,12 @@ public class FishingConfigDialog extends JDialog{
 	}
 	
 	private void CancelAction() {
-				
-		dispose();
-	
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				dispose();
+			}
+		});
 	}
 
 }

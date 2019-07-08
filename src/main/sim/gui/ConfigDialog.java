@@ -16,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
@@ -56,7 +57,12 @@ public class ConfigDialog extends JDialog {
 						if (SimTools.isValidConfiguration(panel)) {
 							SimTools.storeConfiguration(panel);
 							Param.simStatus = SimulatorState.CONFIGURING_PROTOCOL;
-							dispose();
+							SwingUtilities.invokeLater(new Runnable() {
+								@Override
+								public void run() {
+									dispose();
+								}
+							});
 						}
 					}
 				});

@@ -11,14 +11,14 @@ import main.api.formations.helpers.FormationPoint;
 
 public class FormationCircular extends FlightFormation {
 
-	protected FormationCircular(int numUAVs, double minDistance) {
-		super(numUAVs, minDistance);
+	protected FormationCircular(int numUAVs, double minDistance, Formation formation) {
+		super(numUAVs, minDistance, formation);
 	}
 
 	@Override
 	protected void initializeFormation() {
-		this.centerUAV = 0;
-		this.point[this.centerUAV] = new FormationPoint(this.centerUAV, 0, 0);
+		this.centerUAVPosition = 0;
+		this.point[this.centerUAVPosition] = new FormationPoint(this.centerUAVPosition, 0, 0);
 		if (this.numUAVs > 1) {
 			double radius;
 			if (this.numUAVs <= 7) {

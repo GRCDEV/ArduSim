@@ -65,6 +65,7 @@ public class TestListener extends Thread {
 						if (receivedState != null) {
 							if (receivedState == SimulatorState.SETUP_IN_PROGRESS
 									&& Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
+								Param.timeOffset = input.readLong() - System.currentTimeMillis();
 								Param.setupTime = System.currentTimeMillis();
 								Param.simStatus = receivedState;
 							}

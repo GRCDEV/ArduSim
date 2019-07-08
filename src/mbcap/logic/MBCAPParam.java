@@ -5,9 +5,9 @@ import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import api.pojo.location.Location3DUTM;
 import api.pojo.location.Location2DUTM;
@@ -59,7 +59,7 @@ public class MBCAPParam {
 	public static final long STABILIZATION_TIMEOUT = 10 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
 	
 	// Parameter to decide whether the predicted path must be projected over the theoretical mission or not.
-	public static AtomicIntegerArray projectPath;		// 1 means project, 0 means do not project
+	public static AtomicInteger[] projectPath;		// 1 means project, 0 means do not project
 	
 	// Equation parameters for the minimum distance between a UAV and a mission segment when near of a waypoint to avoid the other UAV when moving towards the next segment
 	//  d=f(speed, angle between mission segments)
@@ -79,22 +79,23 @@ public class MBCAPParam {
 	public static final double[] FUNCTION_WAYPOINT_THRESHOLD = new double[] {0.61904761904762, -0.44142857142857, 0.49466666666666667};	// d = [1] + [2] * speed + [3] * speed^2
 	
 	// Data structures for storing data
-	public static AtomicIntegerArray event;						// Event number included in the beacon
-	public static AtomicIntegerArray eventDeadlockSolved;		// Number of deadlock events solved
-	public static AtomicIntegerArray eventDeadlockFailed;		// Number of deadlock events failed
-	public static AtomicLongArray idAvoiding;					// UAV with risk of collision included in the beacon
+	public static AtomicInteger[] event;						// Event number included in the beacon
+	public static AtomicInteger[] deadlockSolved;				// Number of deadlock events solved
+	public static AtomicInteger[] deadlockFailed;				// Number of deadlock events failed
+	public static AtomicLong[] idAvoiding;						// UAV with risk of collision included in the beacon
 	public static final long ID_AVOIDING_DEFAULT = -1;			// Default value (not avoiding collision)
 	public static final int POINTS_SIZE = 59;					// Initial predicted positions list size
 	public static final int DISTANCES_SIZE = 20;				// Initial distances list size, used to calculate the predicted points
-	public static AtomicReferenceArray<Beacon> selfBeacon;		// Last sent beacon from the current UAV
+	public static AtomicReference<Beacon>[] selfBeacon;			// Last sent beacon from the current UAV
 	public static Map<Long, Beacon>[] beacons;					// Beacons received from other UAVs
 	public static List<Beacon>[] beaconsStored;					// Used to log the sent beacons
 	public static List<ProgressState>[] progress;				// Used to register when the state of the protocol is modified
-	public static Map<Long, Location3DUTM>[] impactLocationUTM;		// Detected risk location in UTM coordinates
+	public static Map<Long, Location3DUTM>[] impactLocationUTM;	// Detected risk location in UTM coordinates
 	public static Map<Long, Point2D.Double>[] impactLocationPX;	// Detected risk location shown on screen
-	public static AtomicReferenceArray<Location2DUTM> targetLocationUTM;	// Safety location to move towards (UTM coordinates)
-	public static AtomicReferenceArray<Point2D.Double> targetLocationPX;	// Safety location to move towards (screen coordinates)
+	public static AtomicReference<Location2DUTM>[] targetLocationUTM;	// Safety location to move towards (UTM coordinates)
+	public static AtomicReference<Point2D.Double>[] targetLocationPX;	// Safety location to move towards (screen coordinates)
 	
-	public static MBCAPState[] state; // Protocol state included in the beacon
+	/** Current protocol state for each UAV. */
+	public static AtomicReference<MBCAPState>[] state;
 
 }
