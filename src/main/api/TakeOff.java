@@ -36,17 +36,6 @@ public class TakeOff extends Thread {
 	@Override
 	public void run() {
 		
-		int a = 0;
-		if (a == 0) {
-			this.versionBuena();//TODO probar ambas versiones y quitar la peor
-		} else {
-			this.versionMala();
-		}
-		
-	}
-	
-	private void versionBuena() {
-		
 		ArduSim ardusim = API.getArduSim();
 		Copter copter = API.getCopter(numUAV);
 		GUI gui = API.getGUI(numUAV);
@@ -55,7 +44,6 @@ public class TakeOff extends Thread {
 				|| !copter.setFlightMode(FlightMode.LOITER)
 				|| !HiddenFunctions.stabilize(numUAV)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error fase 1");//TODO limpiar debugging
 			listener.onFailure();
 			return;
 		}
@@ -65,21 +53,18 @@ public class TakeOff extends Thread {
 		
 		if (!copter.setFlightMode(FlightMode.GUIDED)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error para guided");//TODO limpiar debugging
 			listener.onFailure();
 			return;
 		}
 		
 		if (!HiddenFunctions.armEngines(numUAV)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error para armar");//TODO limpiar debugging
 			listener.onFailure();
 			return;
 		}
 		
 		if (!HiddenFunctions.takeOffGuided(numUAV, relAltitude)) {
 			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error al iniciar despegue");//TODO limpiar debugging
 			listener.onFailure();
 			return;
 		}
@@ -105,73 +90,6 @@ public class TakeOff extends Thread {
 					ardusim.sleep(waitTime);
 				}
 			}
-		}
-		
-		listener.onCompleteActionPerformed();
-		
-	}
-	
-	private void versionMala() {
-		
-		ArduSim ardusim = API.getArduSim();
-		Copter copter = API.getCopter(numUAV);
-		GUI gui = API.getGUI(numUAV);
-		
-		if (UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
-				|| !copter.setFlightMode(FlightMode.GUIDED)
-				|| !HiddenFunctions.armEngines(numUAV)
-				|| !HiddenFunctions.takeOffGuided(numUAV, relAltitude)
-				) {
-			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			System.out.println("Error fase 1");//TODO limpiar debugging
-			listener.onFailure();
-			return;
-		}
-		
-		long cicleTime = System.currentTimeMillis();
-		long logTime = cicleTime;
-		long waitTime;
-		boolean goOn = true;
-		while (goOn) {
-			if (System.currentTimeMillis() - cicleTime > TakeOff.CHECK_PERIOD) {
-				
-				if (UAVParam.uavCurrentData[numUAV].getZRelative() >= minAltitude) {
-					goOn = false;
-				} else {
-					cicleTime = cicleTime + TakeOff.CHECK_PERIOD;
-					
-					if (System.currentTimeMillis() - logTime > TakeOff.LOG_PERIOD) {
-						gui.logVerboseUAV(Text.ALTITUDE_TEXT
-								+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
-								+ " " + Text.METERS);
-						logTime = logTime + TakeOff.LOG_PERIOD;
-					}
-				}
-			}
-			
-			if (goOn) {
-				waitTime = cicleTime - System.currentTimeMillis();
-				if (waitTime > 0) {
-					ardusim.sleep(waitTime);
-				}
-			}
-		}
-		
-		if (!copter.setFlightMode(FlightMode.LOITER) || !HiddenFunctions.stabilize(numUAV))  {
-			gui.logUAV(Text.TAKE_OFF_ERROR);
-			System.out.println("Error fase 2");//TODO limpiar debugging
-			listener.onFailure();
-			return;
-		}
-		
-		// We need to wait the stabilize metho to take effect
-		ardusim.sleep(TakeOff.HOVERING_TIMEOUT);
-		
-		if (!copter.setFlightMode(FlightMode.GUIDED)) {
-			gui.logUAV(Text.TAKE_OFF_ERROR);
-			System.out.println("Error fase 3");//TODO limpiar debugging
-			listener.onFailure();
-			return;
 		}
 		
 		listener.onCompleteActionPerformed();

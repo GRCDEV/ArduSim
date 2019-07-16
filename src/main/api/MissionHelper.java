@@ -113,34 +113,11 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Stops the mission and stabilizes the UAV in the current location, changing to loiter flight mode.
-	 * <p>Blocking method until the UAV is almost stopped.</p>
-	 * @return true if all the commands were successful.
-	 */
-	public boolean pause() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
-		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.LOITER)) {
-			long time = System.nanoTime();
-			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
-				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
-				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
-					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STOP_ERROR_1);
-					return true;
-				}
-			}
-
-			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.STOP);
-			return true;
-		}
-		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STOP_ERROR_2);
-		return false;
-	}
-	
-	/**
 	 * Stops the mission and stabilizes the UAV in the current location, changing to brake flight mode.
 	 * <p>Blocking method until the UAV is almost stopped.</p>
 	 * @return true if all the commands were successful.
 	 */
-	public boolean pause2() {//TODO test changing both commands with the BRAKE flight mode, and first only with LOITER
+	public boolean pause() {
 		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.BRAKE)) {
 			long time = System.nanoTime();
 			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
