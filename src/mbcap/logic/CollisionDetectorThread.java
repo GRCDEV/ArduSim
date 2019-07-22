@@ -376,11 +376,7 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 								&& copter.getFlightMode().getCustomMode() != 9) {
 							gui.logUAV(MBCAPText.RISK_DETECTED + " " + avoidingBeacon.uavId + "."); // uavId==numUAV in the simulator
 							gui.updateGlobalInformation(MBCAPText.COLLISION_RISK_DETECTED);
-							Location2DUTM antes = copter.getLocationUTM();
-							double velocidad = copter.getSpeed();
 							if (missionHelper.pause()) {
-								gui.logUAV("Frenada en " + copter.getLocationUTM().distance(antes) + " m a "
-										+ velocidad + " m/s");
 								stateTime = System.nanoTime();
 								idAvoiding.set(avoidingBeacon.uavId);
 								// Progress update
