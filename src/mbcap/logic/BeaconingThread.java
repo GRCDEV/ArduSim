@@ -318,12 +318,12 @@ public class BeaconingThread extends Thread {
 	private double getReactionDistance(double speed) {
 		double d = 0;
 		if (speed >= MBCAPParam.minSpeed) {
-			if (speed < 5) {
-				d = 2.76 * speed - 0.42;
-			} else if (speed < 7.5) {
-				d = 0.58 * speed + 10.48;
+			if (speed < 6) {
+				d = 1.7 * speed - 0.1;
+			} else if (speed < 8) {
+				d = 1.3 * speed + 2.3;
 			} else {
-				d = 1.8 * speed + 1.33;
+				d = 1.87 * speed - 2.26;
 			}
 			d = d + MBCAPParam.gpsError
 					+ MBCAPParam.riskCheckPeriod / 1000000000l * speed

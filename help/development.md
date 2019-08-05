@@ -73,14 +73,16 @@ Each new protocol must be selfcontained in an independent package. This way, the
 
 Several protocols have been already included in ArduSim:
 
-* **Mission**. Completed. Mission based. This protocol simply makes the multicopters to follow a planned mission.
-* **MBCAP**. Completed. Mission based. It avoids collisions among multicopters that are following a planned mission, as explained in the article [A Distributed Approach for Collision Avoidance between Multirotor UAVs Following Planned Missions](https://doi.org/10.3390/s19102404), presented in the journal "SENSORS".
-* **MUSCOP**. Completed. Swarm based. It makes a swarm to follow a single mission stored in one of them, while keeping the formation stable. Furthermore, the takeoff of all the multicopters is safe until forming up in flight. Work being presented in the paper "An UAV Swarm Coordination Protocol Supporting
-Planned Missions", in conference "28th International Conference on Computer Communications and Networks (ICCCN 2019)".
+* **Mission**. This protocol simply makes a group of multicopters to follow a planned mission.
+* **MBCAP**. It avoids collisions among multicopters that are following a planned mission, as explained in the article [A Distributed Approach for Collision Avoidance between Multirotor UAVs Following Planned Missions](https://doi.org/10.3390/s19102404), presented in the journal "SENSORS".
+* **MUSCOP**. It makes a swarm to follow a single mission stored in one of them (master), while keeping the formation stable. Furthermore, the takeoff of all the multicopters is safe until forming up in flight. Work being presented in the paper "An UAV Swarm Coordination Protocol Supporting Planned Missions", in conference "28th International Conference on Computer Communications and Networks (ICCCN 2019)".
+* **Follow Me**. A swarm follows a multicopter that is manually controlled by a pilot, as presented in the article [Automatic system supporting multicopter swarms with manual guidance](https://doi.org/10.1016/j.compeleceng.2019.01.026), presented in the journal "Computers and Electrical Engineering".
+
+Other protocols are being implemented, and therefore they are not ready to be deployed on real multicopters:
+
 * **Chemotaxis**. Almost completed. Single multicopter. It enables a multicopter to dynamically move around an area looking for a hotspot using a sensor (e.g. heat on wildfires, pollution peaks,...).
-* **Follow Me**. Almost completed. Swarm based. A swarm follows a multicopter that is manually controlled by a pilot.
-* **Fishing**. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.
 * **Vision**. In progress. Single multicopter. A multicopter is guided with the Raspberry Pi camera to land with high accuracy over a mark.
+* **Fishing**. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.
 
 Please, feel free to reuse code from this protocols while developing a new one. "Mission" is the better starting point for developing a protocol where all the multicopters must follow a planned mission, while "Follow Me" and "MUSCOP" are more adequate when developing a protocol for a swarm.
 
