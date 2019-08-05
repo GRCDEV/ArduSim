@@ -6,13 +6,15 @@ import java.awt.geom.Point2D;
 import java.util.concurrent.atomic.AtomicReference;
 
 import api.pojo.location.Location2D;
+import api.pojo.location.Location2DGeo;
+import api.pojo.location.Location2DUTM;
 
 public class CatchMeParams {
 	
 	/* Default params*/
 	/*Position*/
 	public static double ALTITUDE = 7.0;
-	public static Location2D startingLocation = new Location2D(39.480221, -0.350269);
+	public static AtomicReference<Location2DUTM> startingLocation = new AtomicReference<Location2DUTM>();
 	
 	
 	public static final String PTYHON_SERVER_IP = "127.0.0.1";

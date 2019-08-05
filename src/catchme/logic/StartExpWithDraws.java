@@ -4,9 +4,14 @@ import api.API;
 import api.pojo.location.Location2DUTM;
 import main.api.ArduSimNotReadyException;
 
-public class StartExpWithDraws {
+public class StartExpWithDraws{
+	
+	static int  x = 0;
+	
 	public static void move(String direction) {
 		Location2DUTM current = CatchMeParams.startingLocation.getUTMLocation();
+		System.out.println(x);
+		x++;
 		//modificar current
 		switch (direction) {
 		case "left":

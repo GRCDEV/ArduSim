@@ -18,8 +18,13 @@ import org.javatuples.Pair;
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.location.Location2DGeo;
+import main.api.Copter;
+import main.api.GUI;
+import main.api.TakeOff;
+import main.api.TakeOffListener;
 import main.sim.gui.MainWindow;
 import mbcap.logic.MBCAPParam;
+import vision.logic.visionParam;
 
 public class CatchMeHelper extends ProtocolHelper {
 
@@ -84,7 +89,7 @@ public class CatchMeHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		return new Pair[] {Pair.with(CatchMeParams.startingLocation.getGeoLocation(), 0)};
+		return new Pair[] {Pair.with(new Location2DGeo(39.480221, -0.350269), 0)};
 	}
 
 	@Override
@@ -103,34 +108,57 @@ public class CatchMeHelper extends ProtocolHelper {
 	@Override
 	public void setupActionPerformed() {
 		// TODO Auto-generated method stub
-		
+		final GUI gui = API.getGUI(0);
+		Copter copter = API.getCopter(0);
+		TakeOff takeOff = copter.takeOff(CatchMeParams.ALTITUDE, new TakeOffListener() {
+			
+			@Override
+			public void onFailure() {
+				gui.warn("ERROR", "drone could not take off");
+			}
+			
+			@Override
+			public void onCompleteActionPerformed() {
+				// Waiting with Thread.join()
+			}
+		});
+		takeOff.start();
+		try {
+			takeOff.join();
+		} catch (InterruptedException e1) {}
 	}
 
 	@Override
 	public void startExperimentActionPerformed() {
+		Copter copter = API.getCopter(0);
+		CatchMeParams.startingLocation.set(copter.getLocationUTM());
+		final Mark mark = new Mark();
+		new MarkThread(mark).start();
+		
 		// TODO Auto-generated method stub
+		
 		ActionListener left = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				StartExpWithDraws.move("left");
+				mark.add(-1,0,0,0);
 			}
 		};
 		ActionListener right = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				StartExpWithDraws.move("right");
+				mark.add(0,1,0,0);
 			}
 		};
 		ActionListener up = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				StartExpWithDraws.move("up");
+				mark.add(0,0,1,0);
 			}
 		};
 		ActionListener down = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				StartExpWithDraws.move("down");
+				mark.add(0,0,0,-1);
 			}
 		};
 		
