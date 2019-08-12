@@ -18,6 +18,8 @@ import org.javatuples.Pair;
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.location.Location2DGeo;
+import api.pojo.location.Location2DUTM;
+import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.TakeOff;
@@ -76,11 +78,12 @@ public class CatchMeHelper extends ProtocolHelper {
 	public void drawResources(Graphics2D graphics, main.sim.board.BoardPanel panel) {
 		graphics.setStroke(CatchMeParams.STROKE_POINT);
 		int numUAVs = 1;
-		Point2D.Double position;
-		position = CatchMeParams.targetLocationPX.get();
+		Location2DUTM position = CatchMeParams.startingLocation.get();
 		if(position != null) {
-			int x = (int)position.x;
-			int y = (int)position.y;
+			Point2D.Double screen = API.getGUI(0).locatePoint(position);
+			
+			int x = (int)screen.x;
+			int y = (int)screen.y;
 			graphics.setColor(new Color(255,0,0));
 			graphics.drawLine(x - 10, y - 10, x + 10, y + 10);
 			graphics.drawLine(x + 10, y - 10, x - 10, y + 10);
@@ -100,9 +103,56 @@ public class CatchMeHelper extends ProtocolHelper {
 
 	@Override
 	public void startThreads() {
-		ListenerThread listen = new ListenerThread();
-		listen.start();
 		
+		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR) {
+			Copter copter = API.getCopter(0);
+			
+			Location2DUTM here = copter.getLocationUTM();
+			here.y = here.y + 50;
+			
+			CatchMeParams.startingLocation.set(here);
+			final Mark mark = new Mark();
+			new MarkThread(mark).start();
+			
+			ActionListener left = new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					System.out.println("left");
+					mark.add(-1,0,0,0);
+				}
+			};
+			ActionListener right = new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					System.out.println("right");
+					mark.add(0,1,0,0);
+				}
+			};
+			ActionListener up = new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					System.out.println("up");
+					mark.add(0,0,1,0);
+				}
+			};
+			ActionListener down = new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					System.out.println("down");
+					mark.add(0,0,0,-1);
+				}
+			};
+			
+			MainWindow.boardPanel.registerKeyboardAction(left,
+					KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+			MainWindow.boardPanel.registerKeyboardAction(right,
+					KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+			MainWindow.boardPanel.registerKeyboardAction(up,
+					KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+			MainWindow.boardPanel.registerKeyboardAction(down,
+					KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+				
+		}
 	}
 
 	@Override
@@ -130,47 +180,9 @@ public class CatchMeHelper extends ProtocolHelper {
 
 	@Override
 	public void startExperimentActionPerformed() {
-		Copter copter = API.getCopter(0);
-		CatchMeParams.startingLocation.set(copter.getLocationUTM());
-		final Mark mark = new Mark();
-		new MarkThread(mark).start();
 		
-		// TODO Auto-generated method stub
-		
-		ActionListener left = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mark.add(-1,0,0,0);
-			}
-		};
-		ActionListener right = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mark.add(0,1,0,0);
-			}
-		};
-		ActionListener up = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mark.add(0,0,1,0);
-			}
-		};
-		ActionListener down = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mark.add(0,0,0,-1);
-			}
-		};
-		
-		MainWindow.boardPanel.registerKeyboardAction(left,
-				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-		MainWindow.boardPanel.registerKeyboardAction(right,
-				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-		MainWindow.boardPanel.registerKeyboardAction(up,
-				KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-		MainWindow.boardPanel.registerKeyboardAction(down,
-				KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-		
+		ListenerThread listen = new ListenerThread();
+		listen.start();
 	}
 
 	@Override

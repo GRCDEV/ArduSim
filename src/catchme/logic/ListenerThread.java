@@ -4,10 +4,19 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
+import api.pojo.location.Location2DUTM;
+import api.pojo.location.Location3DUTM;
 import catchme.logic.CatchMeParams;
+import main.api.Copter;
 import main.api.GUI;
+import muscop.pojo.Message;
 
 public class ListenerThread extends Thread{
 
@@ -17,19 +26,26 @@ public class ListenerThread extends Thread{
 	private int javaPort = 5581;
 	private int pythonPort = 5580;
 	private byte[] buffer = new byte[1000];
+	private Input input;
+	private Output output;
+	private byte[] message;
 	
 	private GUI gui;
+	private Copter copter;
 	
 	private volatile boolean running = false;
 	private CatchMeParams.status status = CatchMeParams.status.LOITER;
 	
 	public ListenerThread() {
 		gui = API.getGUI(0);
+		copter = API.getCopter(0);
 		try {
 			hostServidor = InetAddress.getByName(CatchMeParams.PTYHON_SERVER_IP);
 			socketUDP = new DatagramSocket(javaPort);
 			pysocketUDP = new DatagramSocket();
 			running = true;
+			this.input = new Input(buffer);
+			this.output = new Output(buffer);
 		} catch (Exception e) {
 			gui.warn("error", "Could not setup SocketUDP");
 			e.printStackTrace();
@@ -64,26 +80,74 @@ public class ListenerThread extends Thread{
 		return true;
 	}
 
-    public void sendMessage(String message) throws IOException {
-        byte[] data = message.getBytes();
-        DatagramPacket packet = new DatagramPacket(data, data.length, hostServidor, pythonPort);
+    public void sendMessage(byte[] message) throws IOException {   
+        DatagramPacket packet = new DatagramPacket(message, message.length, hostServidor, pythonPort);
         pysocketUDP.send(packet);
 }
 	
 	private void startListening() {
 		try {
 			System.out.println("Sending message...");
-			sendMessage("Start");
+			output.clear();
+			output.writeShort(1);
+			message = Arrays.copyOf(buffer, output.position());
 			DatagramPacket respons = new DatagramPacket(buffer, buffer.length);
-			String message = "";
+			sendMessage(message);
+			Location2DUTM offset = null;
+			Location2DUTM targetUTM;
+			
 			while(running) {
 				try {
 					socketUDP.receive(respons);
-					message = new String(respons.getData(), respons.getOffset(), respons.getLength());
+					input.setBuffer(respons.getData());
+					//message = new String(respons.getData(), respons.getOffset(), respons.getLength());
 				}catch(Exception e) {
 					System.err.println("cannot read DatagramPacket");
 					e.printStackTrace();
 				}
+				short type = input.readShort();
+				switch(type) {
+				case 1:
+					status = CatchMeParams.status.LAND;
+					running = false;
+					break;
+				case 2:
+					status = CatchMeParams.status.LAND;
+					running = false;
+					break;
+				case 3:
+					status = CatchMeParams.status.LOITER;
+					break;
+				case 4:
+					double x = input.readDouble();
+					double y = input.readDouble();
+					System.out.println("(" + x + ", " +y + ")");
+					double h = copter.getHeading();
+					double xp = x * Math.cos(h) + y * Math.sin(h);
+					double yp =  -x * Math.sin(h) + y * Math.cos(h);
+					if (offset == null) {
+						offset = new Location2DUTM(xp, yp);
+					}
+					double moveX = xp - offset.x;
+					double moveY = yp - offset.y;
+					targetUTM = copter.getLocationUTM();
+					targetUTM.x = targetUTM.x + moveX;
+					targetUTM.y = targetUTM.y + moveY;
+					
+					copter.moveTo(new Location3DUTM(targetUTM, copter.getAltitudeRelative()).getGeo3D());
+					status = CatchMeParams.status.MOVE;
+					break;
+				case 5:
+					System.out.println(message);
+					status = CatchMeParams.status.LAND;
+					running = false;
+					break;
+				default:
+					status = CatchMeParams.status.LAND;
+					running = false;
+					break;
+				}
+				/*
 				if(message.equals("error")) {
 					status = CatchMeParams.status.LAND;
 					running = false;
@@ -108,6 +172,7 @@ public class ListenerThread extends Thread{
 					status = CatchMeParams.status.LAND;
 					running = false;
 				}
+				*/
 			}
 		}
 		catch(Exception e) {
