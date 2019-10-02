@@ -122,7 +122,7 @@ public class ListenerThread extends Thread{
 					double x = input.readDouble();
 					double y = input.readDouble();
 					System.out.println("(" + x + ", " +y + ")");
-					double h = copter.getHeading();
+					double h = 0;//copter.getHeading();
 					double xp = x * Math.cos(h) + y * Math.sin(h);
 					double yp =  -x * Math.sin(h) + y * Math.cos(h);
 					if (offset == null) {
