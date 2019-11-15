@@ -217,7 +217,8 @@ The list of parameters is:
     * *UAVPROTOCOL*. Protocol to be deployed.
     * *UAVSPEED*. Maximum planned speed of the multicopter.
 * Optional parameter for protocols that use the master-slave pattern.
-    * *MACS*. MAC addresses of the adapters of the master UAV (colon notation, and comma separated)
+    * *MACS*. MAC addresses of the adapters of the master UAV (colon notation, and comma separated). This parameter is only used on real UAVs.
+    * *TAKEOFFALGORITHM*. Safety strategy used for a safe takeoff (Optimal, Simplified, or Random). Optimal used an NP-hard solution that any hardware is able to solve, so it should only be used for simulations, and with a reduced number of UAVs, tipically less than 13. Simplified proposes a safe takeoff strategy that avoids collisions, and that can be calculated in limited hardware in an acceptable amount of time. Finally, Random provides a random definition to the takeoff sequence, so NEVER use in on real UAVs or they could collide durint takeoff!!!
 * Optional parameters for protocols that use flight formations:
     * *AIRFORMATION*. UAV flying formation. Used to set the flying layout.
     * *AIRDISTANCE*. Minimum distance between contiguous UAVs in the flying formation. It must be an integer value in meters.

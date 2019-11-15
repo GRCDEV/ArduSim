@@ -230,8 +230,10 @@ With `getMissionHelper()` a new set of functions appear that help to interact wi
 
 Finally, with `getSafeTakeOffHelper()` you get a set of functions to coordinate the take off of a swarm defining a flight formation, and avoiding collisions among them. The UAVs take off sequentially and in two steps, moving first the UAVs that must go further to reduce the probability of collision.
 
+* `String[] getAvailableTakeOffAlgorithms()`. Provides an array with the name of the take off strategies available. They have different computational cost. This function can be used in the configuration dialog of the protocol to list on screen the available options.
 * `SafeTakeOffContext getMasterContext(Map<Long, Location2DUTM>, FlightFormation, double, double, boolean, boolean)`. Blocking method. Allows the master UAV to coordinate the take off process sharing the needed information. First, it requires to detect the slave UAVs (see the functions provided with `getMasterSlaveHelper()` method). The object provided allows the master UAV take off with the method shown below.
 * `SafeTakeOffContext getSlaveContext(boolean)`. Blocking method. Allows the slave UAV to join the coordinated take off receiving the needed information.
+* `void setTakeOffAlgorithm(String)`. Allows to change the default take off strategy. This function can be used in the configuration dialog of the protocol to set an specific take off strategy between the  options provided by the function `getAvailableTakeOffAlgorithms()`.
 * `void start(SafeTakeOffContext, SafeTakeOffListener)`.Non blocking method. It executes the coordinated take off for the current UAV, with the context provided. You must implement a loop to wait the take off to finish. The anonymous listener can help you to break the loop when the process finishes (see MUSCOP and FollowMe protocols as example).
 
 The `SafeTakeOffContext` object provides several methods to get information before performing the take off:
@@ -319,6 +321,7 @@ The function `API.getFileTools()` provides a context object to load and write fi
 
 * `File getCurrentFolder()`. It provides the folder ArduSim is running in, and is useful to write output files related to the protocol.
 * `String getFileExtension(File)`. It returns the file extension of a given *File*.
+* `File getHomeFolder()`. It provides the home folder of the current user.
 * `Map<String,String> parseINIFile(File)`. It reads a text file with the same format as ardusim.ini, and provides a map with the parameters found and their values.
 * `void storeFile( File, String)`. It stores a *String* in a *File*.
 

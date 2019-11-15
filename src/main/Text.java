@@ -218,6 +218,7 @@ public class Text {
 	public static final String INSTALL_IMDISK_USE_ADMIN = "It i suggested to install ImDisk, and run " + Text.APP_NAME + " as administrator in order to improve performance.";
 	public static final String USE_ROOT = "It is suggested to run " + Text.APP_NAME + " as root in order to improve performance.";
 	public static final String PROTOCOL_IN_USE = "Protocol in use:";
+	public static final String TAKEOFF_ALGORITHM_IN_USE = "Safe takeoff algorithm in use:";
 	public static final String WIRELESS_MODEL_IN_USE = "Wireless model in use:";
 	public static final String SIMULATED_WIND_SPEED = "Wind speed:";
 	public static final String STARTING_UAVS = "Starting up virtual UAVs...";

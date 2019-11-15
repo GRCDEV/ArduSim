@@ -67,6 +67,14 @@ public class FileTools {
 	}
 	
 	/**
+	 * Get the home folder of the current user.
+	 * @return The home folder of the current user.
+	 */
+	public File getHomeFolder() {
+		return new File(System.getProperty("user.home"));
+	}
+	
+	/**
 	 * Parse an ini file to retrieve parameters for a protocol.
 	 * @return Map with parameters and their respective value. Empty map if the file has no parameters or it is invalid.
 	 */

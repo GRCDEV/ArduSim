@@ -100,6 +100,8 @@ import main.api.WaypointReachedListener;
 import main.api.communications.CommLinkObject;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.MSParam;
+import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import main.cpuHelper.CPUData;
 import main.pccompanion.logic.PCCompanionParam;
 import main.sim.board.BoardHelper;
@@ -343,6 +345,26 @@ public class ArduSimTools {
 		}
 		
 		// Parse remaining parameters, for real UAV or simulation
+		
+		// Master-slave parameters
+		param = parameters.get(Param.TAKEOFF_ALGORITHM);
+		if (param == null) {
+			ArduSimTools.logGlobal(Param.TAKEOFF_ALGORITHM + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + TakeOffMasterDataListenerThread.selectedAlgorithm.getName());
+		} else {
+			TakeOffAlgorithm[] algorithms = TakeOffAlgorithm.values();
+			TakeOffAlgorithm algorithm = null;
+			for (int i = 0; i < algorithms.length && algorithm == null; i++) {
+				if (param.equalsIgnoreCase(algorithms[i].getName())) {
+					algorithm = algorithms[i];
+				}
+			}
+			if (algorithm == null) {
+				ArduSimTools.logGlobal(Param.TAKEOFF_ALGORITHM + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				System.exit(1);
+			}
+			TakeOffMasterDataListenerThread.selectedAlgorithm = algorithm;
+		}
+		
 		param = parameters.get(Param.AIR_FORMATION);
 		if (param == null) {
 			ArduSimTools.logGlobal(Param.AIR_FORMATION + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + UAVParam.airFormation.get().getName());
@@ -1383,15 +1405,21 @@ public class ArduSimTools {
 			try {
 				int size;
 				for (int i = 0; i < validImplementations.length; i++) {
-					protocol = (ProtocolHelper)validImplementations[i].newInstance();
-					protocol.setProtocol();
-					if (protocol.protocolString != null) {
-						size = imp.size();
-						imp.put(protocol.protocolString, protocol.protocolString);
-						if (imp.size() == size) {
-							return null;
+					try {
+						protocol = (ProtocolHelper)validImplementations[i].getDeclaredConstructor().newInstance();
+						protocol.setProtocol();
+						if (protocol.protocolString != null) {
+							size = imp.size();
+							imp.put(protocol.protocolString, protocol.protocolString);
+							if (imp.size() == size) {
+								return null;
+							}
 						}
+					} catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+							| SecurityException e) {
+						e.printStackTrace();
 					}
+					
 				}
 				if (imp.size() > 0) {
 					names = imp.values().toArray(new String[imp.size()]);
@@ -1565,10 +1593,15 @@ public class ArduSimTools {
 		List<ProtocolHelper> imp = new ArrayList<>();
 		for (int i = 0; i < implementations.length; i++) {
 			c = implementations[i];
-			o = (ProtocolHelper)c.newInstance();
-			o.setProtocol();
-			if (o.protocolString.equalsIgnoreCase(selectedProtocol)) {
-				imp.add(o);
+			try {
+				o = (ProtocolHelper)c.getDeclaredConstructor().newInstance();
+				o.setProtocol();
+				if (o.protocolString.equalsIgnoreCase(selectedProtocol)) {
+					imp.add(o);
+				}
+			} catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+					| SecurityException e) {
+				e.printStackTrace();
 			}
 		}
 		if (imp.size() > 0) {

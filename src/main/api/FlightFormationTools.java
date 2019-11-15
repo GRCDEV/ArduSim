@@ -3,7 +3,10 @@ package main.api;
 import java.util.Map;
 
 import org.javatuples.Pair;
+
 import api.pojo.location.Location2DUTM;
+import main.ArduSimTools;
+import main.Text;
 import main.api.formations.FlightFormation;
 import main.api.formations.FlightFormation.Formation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
@@ -30,7 +33,7 @@ public class FlightFormationTools {
 	}
 	
 	/**
-	 * Get which will be the center UAV in the flight formation. Use this in the master UAV only, which will be located in the position 0 in the data arrays (see documentation). This function is provided to be used in <i>setStartingLocation</i> method of the protocol implementation. This could be useful to know which would be the center UAV while flying before performing the safe take off (see example in protocol <i>MUSCOP</i>).
+	 * Get which will be the UAV in the center of the flight formation. Use this in the master UAV only, which will be located in the position 0 in the data arrays (see documentation). This function is provided to be used in <i>setStartingLocation</i> method of the protocol implementation. This could be useful to know which would be the center UAV while flying before performing the safe take off (see example in protocol <i>MUSCOP</i>).
 	 * @param groundLocations Location and ID of each of all the UAVs, including the UAV that could be in the center of the flight formation.
 	 * @param formationYaw (rad) Yaw that will be set for the flight formation.
 	 * @param isCenterUAV Whether the master UAV will be in the center of the flight formation or not. In the first case, the flight formation will be built around the current location of the master UAV.
@@ -38,6 +41,8 @@ public class FlightFormationTools {
 	 */
 	public Pair<Long, Location2DUTM> getCenterUAV(Map<Long, Location2DUTM> groundLocations,
 			double formationYaw, boolean isCenterUAV) {
+		
+		ArduSimTools.logGlobal(Text.TAKEOFF_ALGORITHM_IN_USE + " " + TakeOffMasterDataListenerThread.selectedAlgorithm.getName());
 		
 		return TakeOffMasterDataListenerThread.getCenterUAV(groundLocations, formationYaw, isCenterUAV);
 		

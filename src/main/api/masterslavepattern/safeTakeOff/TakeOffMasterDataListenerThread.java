@@ -1,23 +1,20 @@
 package main.api.masterslavepattern.safeTakeOff;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.javatuples.Pair;
-import org.javatuples.Triplet;
-
+import org.javatuples.Quartet;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
 import api.pojo.location.Location2DGeo;
 import api.pojo.location.Location2DUTM;
+import main.ArduSimTools;
 import main.Text;
 import main.api.ArduSimNotReadyException;
 import main.api.Copter;
@@ -25,7 +22,6 @@ import main.api.GUI;
 import main.api.communications.CommLink;
 import main.api.formations.FlightFormation;
 import main.api.formations.FlightFormation.Formation;
-import main.api.formations.helpers.Permutation;
 import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
@@ -37,6 +33,8 @@ import main.uavController.UAVParam;
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class TakeOffMasterDataListenerThread extends Thread {
+	
+	public static volatile TakeOffAlgorithm selectedAlgorithm = TakeOffAlgorithm.OPTIMAL;
 	
 	private int numUAV;
 	private long selfID;
@@ -84,6 +82,8 @@ public class TakeOffMasterDataListenerThread extends Thread {
 	@Override
 	public void run() {
 		
+		ArduSimTools.logGlobal(Text.TAKEOFF_ALGORITHM_IN_USE + " " + TakeOffMasterDataListenerThread.selectedAlgorithm.getName());
+		
 		AtomicInteger state = new AtomicInteger(MSParam.STATE_EXCLUDE);
 		
 		gui.logVerboseUAV(MSText.MASTER_LISTENER_WAITING_EXCLUDES);
@@ -111,12 +111,12 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		
 		// 1. Take off altitude step 1
 		double takeOffAltitudeStep1;
-		if (targetAltitude <= 5.0) {
+		if (this.targetAltitude <= 5.0) {
 			takeOffAltitudeStep1 = 2.0;
-		} else if (targetAltitude >= 10.0) {
+		} else if (this.targetAltitude >= 10.0) {
 			takeOffAltitudeStep1 = 5.0;
 		} else {
-			takeOffAltitudeStep1 = targetAltitude / 2;
+			takeOffAltitudeStep1 = this.targetAltitude / 2;
 		}
 		
 		// 2. Get the best match between current ground locations and flight locations
@@ -126,12 +126,19 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		if (isCenterUAV) {
 			masterID = selfID;
 		}
-		Triplet<Integer, Long, Location2DUTM>[] match = TakeOffMasterDataListenerThread.safeTakeOffGetMatch(groundLocations, flightFormation, formationYaw, masterID);
+		// Then, we get the match between ground and air locations
+		MatchCalculusThread calculus = new MatchCalculusThread(groundLocations, flightFormation, formationYaw, masterID);
+		calculus.start();
+		// It waits the end of the calculus discarding received messages from slaves
+		while (calculus.isAlive()) {
+			commLink.receiveMessage(50);
+		}
+		Quartet<Integer, Long, Location2DUTM, Double>[] match = calculus.getResult();
 		
-		// 3. Get the target location of the UAV that should be in the center of the formation
+		// 3. Get the target location and ID of the UAV that should be in the center of the formation
 		int centerUAVAirPos = flightFormation.getCenterUAVPosition();
-		Triplet<Integer, Long, Location2DUTM> centerMatch = null;
-		for (int i = 0; i < numUAVs; i++) {
+		Quartet<Integer, Long, Location2DUTM, Double> centerMatch = null;
+		for (int i = 0; i < numUAVs && centerMatch == null; i++) {
 			if (match[i].getValue0() == centerUAVAirPos) {
 				centerMatch = match[i];
 			}
@@ -145,7 +152,6 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		// 4. Build the messages to send with the Talker Thread
 		byte[] outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		Output output = new Output(outBuffer);
-		Pair<Integer, Long>[] sequence = TakeOffMasterDataListenerThread.getTakeoffSequence(groundLocations, match);
 		Map<Long, byte[]> messages = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		long curID, prevID, nextID;
 		// i represents the position in the takeoff sequence
@@ -156,20 +162,20 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		Location2DGeo targetLocation = null;
 		SafeTakeOffContext data = null;
 		for (int i = 0; i < numUAVs; i++) {
-			curID = sequence[i].getValue1();
+			curID = match[i].getValue1();
 			if (i == 0) {
 				prevID = SafeTakeOffContext.BROADCAST_MAC_ID;
 			} else {
-				prevID = sequence[i - 1].getValue1();
+				prevID = match[i - 1].getValue1();
 			}
 			if (i == numUAVs - 1) {
 				nextID = SafeTakeOffContext.BROADCAST_MAC_ID;
 			} else {
-				nextID = sequence[i + 1].getValue1();
+				nextID = match[i + 1].getValue1();
 			}
 			
 			// Master UAV
-			formationPos = sequence[i].getValue0();
+			formationPos = match[i].getValue0();
 			if (curID == selfID) {
 				pID = prevID;
 				nID = nextID;
@@ -209,9 +215,6 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		if (targetLocation == null) {
 			gui.exit(MSText.MASTER_ID_NOT_FOUND);
 		}
-		
-		
-		
 		
 		// 5. Get the data to be returned by this Thread and start the thread talker
 		this.result.set(data);
@@ -257,12 +260,19 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		}
 		int numUAVs = groundLocations.size();
 		FlightFormation flightFormation = API.getFlightFormationTools().getFlyingFormation(numUAVs);
-		Triplet<Integer, Long, Location2DUTM>[] match = TakeOffMasterDataListenerThread.safeTakeOffGetMatch(groundLocations, flightFormation, formationYaw, masterID);
+		MatchCalculusThread calculus = new MatchCalculusThread(groundLocations, flightFormation, formationYaw, masterID);
+		calculus.start();
+		try {
+			calculus.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Quartet<Integer, Long, Location2DUTM, Double>[] match = calculus.getResult();
 		
 		// 2. Get the target location of the UAV that should be in the center of the formation
 		int centerUAVAirPos = flightFormation.getCenterUAVPosition();
-		Triplet<Integer, Long, Location2DUTM> centerMatch = null;
-		for (int i = 0; i < numUAVs; i++) {
+		Quartet<Integer, Long, Location2DUTM, Double> centerMatch = null;
+		for (int i = 0; i < numUAVs && centerMatch == null; i++) {
 			if (match[i].getValue0() == centerUAVAirPos) {
 				centerMatch = match[i];
 			}
@@ -274,188 +284,4 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		return Pair.with(centerMatch.getValue1(), centerMatch.getValue2());
 	}
 	
-	/**
-	 * This is used in the master UAV only. Get the best match between the current UAVs location on the ground and the target formation in the air. This solution minimizes the risk of collision while the UAVs perform the take off.
-	 * @param groundLocations Location and ID of each of all the UAVs, including the UAV that could be in the center of the flight formation.
-	 * @param flightFormation Flight formation to use while flying.
-	 * @param formationYaw (rad) Yaw that will be set for the flight formation.
-	 * @param masterID The ID of the master UAV if it must be in the middle of the formation, null otherwise. The default implementation of this method searches which UAV should be in the middle of the formation to minimize the take off time. Setting the master UAV as the center UAV builds the flight formation around the current location of the master UAV.
-	 * @return An array containing the match for each of that UAVs included in the takeoff process, it is the position in the provided <i>flightFormation</i> array, the ID, and target flying coordinates. Return null if any error happens.
-	 */
-	private static Triplet<Integer, Long, Location2DUTM>[] safeTakeOffGetMatch(Map<Long, Location2DUTM> groundLocations,
-			FlightFormation flightFormation, double formationYaw, Long masterID) {
-		
-		if (groundLocations == null || groundLocations.size() == 0
-				|| flightFormation == null || groundLocations.size() != flightFormation.getNumUAVs()) {
-			return null;
-		}
-		
-		int numUAVs = groundLocations.size();
-		
-		Long[] ids;
-		Map<Long, Location2DUTM> ground = new HashMap<Long, Location2DUTM>(groundLocations);
-		Location2DUTM groundCenterLocation;
-		Map<Integer, Location2DUTM> airLocations = new HashMap<Integer, Location2DUTM>((int)Math.ceil(numUAVs / 0.75) + 1);
-		if (masterID != null) {
-			// The center of the flying formation will be on the center UAV of the ground formation
-			// We arrange all the UAVs but the center UAV (not included in ground nor airLocations for the calculus)
-			numUAVs--;
-			ground.remove(masterID);
-			groundCenterLocation = groundLocations.get(masterID);
-			int flyingCenterPosition = flightFormation.getCenterUAVPosition();
-			for (int j = 0; j < flightFormation.getNumUAVs(); j++) {
-				if (j != flyingCenterPosition) {
-					airLocations.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
-				}
-			}
-			// Now we include again the center UAV in the center of the flight formation
-			Pair<Double, Triplet<Integer, Long, Location2DUTM>[]> bestFit = TakeOffMasterDataListenerThread.getOptimalMatch(ground, airLocations);
-			Triplet<Integer, Long, Location2DUTM>[] newFit = Arrays.copyOf(bestFit.getValue1(), bestFit.getValue1().length + 1);
-			newFit[newFit.length - 1] = Triplet.with(flyingCenterPosition, masterID, groundCenterLocation);
-			
-			return newFit;
-		} else {
-			boolean useOptimal = true;//TODO modificar para comparar soluciones
-			
-			// First we store the IDs to iterate looking for the best fit
-			ids = ground.keySet().toArray(new Long[numUAVs]);
-			
-			if (useOptimal) {
-				// The center of the flying formation will be one of the coordinates of the UAVs
-				// 1. Search looking the better center UAV for the flying formation
-				double errorBestFit = Double.MAX_VALUE;
-				Triplet<Integer, Long, Location2DUTM>[] bestFit = null;
-				Pair<Double, Triplet<Integer, Long, Location2DUTM>[]> currentFit;
-				
-				for (int i = 0; i < numUAVs; i++) {
-					groundCenterLocation = ground.get(ids[i]);
-					// 2. For the selected center UAV, get the formation in the air
-					for (int j = 0; j < numUAVs; j++) {
-						airLocations.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
-					}
-					
-					// 3. We check all possible permutations of the UAVs IDs looking for the combination that better fits
-					//   with the current UAVs location
-					currentFit = TakeOffMasterDataListenerThread.getOptimalMatch(ground, airLocations);
-					
-					// 6. If the minimum error with this center is lower, update the best solution
-					if (bestFit == null || currentFit.getValue0() < errorBestFit) {
-						bestFit = Arrays.copyOf(currentFit.getValue1(), currentFit.getValue1().length);
-						errorBestFit = currentFit.getValue0();
-					}
-				}
-				
-				return bestFit;
-			} else {
-				// The center of the flying formation will be on  the mean coordinates of all the UAVs on the ground
-				double x = 0;
-				double y = 0;
-				Location2DUTM location;
-				for (int i = 0; i < numUAVs; i++) {
-					location = ground.get(ids[i]);
-					x = x + location.x;
-					y = y + location.y;
-				}
-				groundCenterLocation = new Location2DUTM(x / numUAVs, y / numUAVs);
-				for (int j = 0; j < numUAVs; j++) {
-					airLocations.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
-				}
-				
-				Pair<Double, Triplet<Integer, Long, Location2DUTM>[]> bestFit = TakeOffMasterDataListenerThread.getOptimalMatch(ground, airLocations);
-				return bestFit.getValue1();
-			}
-		}
-	}
-	
-	/**
-	 * Get the optimal match between the current UAVs location and the target formation in the air.
-	 * @param groundLocations ID and location of all the UAVs that will take part in the takeoff.
-	 * @param airLocations Location of all the UAVs that will take part in the takeoff in the flying formation.
-	 * @return Two values: First, the minimized value <i>sum(distance^2)</i> of the distance between the current (ground) and target (air) location of all the UAVs that will take part in the takeoff.
-	 * Second, an array containing the match for each of that UAVs, it is the position in the provided <i>airFormation</i> array, the ID, and target flying coordinates. Return null if any error happens.
-	 */
-	private static Pair<Double, Triplet<Integer, Long, Location2DUTM>[]> getOptimalMatch(Map<Long, Location2DUTM> groundLocations, Map<Integer, Location2DUTM> airLocations) {
-		if (groundLocations == null || groundLocations.size() == 0 || airLocations == null
-				|| groundLocations.size() != airLocations.size()) {
-			return null;
-		}
-		int numUAVs = groundLocations.size();
-		Long[] ids = groundLocations.keySet().toArray(new Long[groundLocations.size()]);
-		
-		Permutation<Long> p = new Permutation<Long>(ids);
-		Triplet<Integer, Long, Location2DUTM>[] bestFitCurrentCenter = null;
-		double errorBestFitCurrentCenter = Double.MAX_VALUE;
-		Long[] permutation;
-		@SuppressWarnings("unchecked")
-		Triplet<Integer, Long, Location2DUTM>[] match = new Triplet[numUAVs];
-		double errorTot;
-		Location2DUTM groundLocation, airLocation;
-		long id;
-		Iterator<Entry<Integer, Location2DUTM>> air;
-		Entry<Integer, Location2DUTM> airPosition;
-		permutation = p.next();
-		while (permutation != null) {
-			errorTot = 0;
-			// 4. Sum of the distance^2 of all UAVs on the ground, relative to the location in the air
-			air = airLocations.entrySet().iterator();
-			for (int j = 0; j < numUAVs; j++) {
-				id = permutation[j];
-				airPosition = air.next();
-				groundLocation = groundLocations.get(id);
-				airLocation = airPosition.getValue();
-				match[j] = Triplet.with(airPosition.getKey(), id, airLocation);
-				errorTot = errorTot + Math.pow(groundLocation.distance(airLocation), 2);
-			}
-			
-			// 5. If the error of this permutation is lower, store the permutation, and the error
-			if (bestFitCurrentCenter == null || errorTot < errorBestFitCurrentCenter) {
-				bestFitCurrentCenter = Arrays.copyOf(match, match.length);
-				errorBestFitCurrentCenter = errorTot;
-			}
-			permutation = p.next();
-		}
-		return Pair.with(errorBestFitCurrentCenter, bestFitCurrentCenter);
-	}
-	
-	/**
-	 * Get the best takeoff sequence to reduce the collision probability.
-	 * @param groundLocations ID and location of all the UAVs that will take part in the takeoff.
-	 * @param airMatch Position in the flying formation, ID, and flying location for all the UAVs that will take part in the takeoff.
-	 * @return An array with the position of the UAVs in the air formation sorted in descending distance from the ground location to the target flying location, and the ID.
-	 */
-	private static Pair<Integer, Long>[] getTakeoffSequence(Map< Long, Location2DUTM> groundLocations,
-			Triplet<Integer, Long, Location2DUTM>[] airMatch) {
-		if (groundLocations == null || groundLocations.size() == 0 ||
-				airMatch == null || airMatch.length != groundLocations.size()) {
-			return null;
-		}
-		
-		// Calculus of the distance between the current location of the UAV and the target location in the flying formation
-		@SuppressWarnings("unchecked")
-		Triplet<Integer, Long, Double>[] distance = new Triplet[airMatch.length];
-		Triplet<Integer, Long, Location2DUTM> match;
-		for (int i = 0; i < airMatch.length; i++) {
-			match = airMatch[i];
-			distance[i] = Triplet.with(match.getValue0(),
-					match.getValue1(),
-					groundLocations.get(match.getValue1()).distance(match.getValue2()));
-		}
-		// Sorting by the distance, in descending order
-		Arrays.sort(distance, new Comparator<Triplet<Integer, Long, Double>>() {
-
-			@Override
-			public int compare(Triplet<Integer, Long, Double> o1, Triplet<Integer, Long, Double> o2) {
-				return o2.getValue2().compareTo(o1.getValue2());	// Descending order
-			}
-		});
-		// Remove the distance from the resulting array
-		@SuppressWarnings("unchecked")
-		Pair<Integer, Long>[] sequence = new Pair[distance.length];
-		for (int i = 0; i < sequence.length; i++) {
-			sequence[i] = Pair.with(distance[i].getValue0(), distance[i].getValue1()) ;
-		}
-		
-		return sequence;
-	}
-
 }

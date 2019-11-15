@@ -29,6 +29,7 @@ import main.Text;
 import main.api.FlightFormationTools;
 import main.api.GUI;
 import main.api.MissionHelper;
+import main.api.SafeTakeOffHelper;
 import main.api.ValidationTools;
 import muscop.logic.MUSCOPText;
 
@@ -41,11 +42,13 @@ public class MUSCOPConfigDialog extends JDialog {
 	private GUI gui;
 	private ValidationTools validationTools;
 	private FlightFormationTools formationTools;
+	private SafeTakeOffHelper takeOffHelper;
 
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
 	private JTextField missionsTextField;
 	private JComboBox<String> groundComboBox;
+	private JComboBox<String> takeOffStrategyComboBox;
 	private JComboBox<String> airComboBox;
 	private JTextField groundTextField;
 	private JTextField flyingTextField;
@@ -57,6 +60,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		this.gui = API.getGUI(0);
 		this.validationTools = API.getValidationTools();
 		this.formationTools = API.getFlightFormationTools();
+		this.takeOffHelper = API.getCopter(0).getSafeTakeOffHelper();
 		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{355, 0};
@@ -73,9 +77,9 @@ public class MUSCOPConfigDialog extends JDialog {
 		getContentPane().add(contentPanel, gbc_contentPanel);
 		GridBagLayout gbl_contentPanel = new GridBagLayout();
 		gbl_contentPanel.columnWidths = new int[]{114, 114, 0, 0};
-		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_contentPanel.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
-		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		contentPanel.setLayout(gbl_contentPanel);
 		{
 			JLabel lblMapaMisin = new JLabel(MUSCOPText.MISSION_SELECT);
@@ -204,12 +208,41 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(lblNewLabel, gbc_lblNewLabel);
 		}
 		{
+			JLabel lblDfg = new JLabel(MUSCOPText.TAKEOFF_STRATEGY);
+			lblDfg.setFont(new Font("Dialog", Font.PLAIN, 12));
+			GridBagConstraints gbc_lblDfg = new GridBagConstraints();
+			gbc_lblDfg.anchor = GridBagConstraints.EAST;
+			gbc_lblDfg.insets = new Insets(0, 0, 5, 5);
+			gbc_lblDfg.gridx = 0;
+			gbc_lblDfg.gridy = 5;
+			contentPanel.add(lblDfg, gbc_lblDfg);
+		}
+		{
+			takeOffStrategyComboBox = new JComboBox<String>();
+			GridBagConstraints gbc_takeOffStrategyComboBox = new GridBagConstraints();
+			gbc_takeOffStrategyComboBox.insets = new Insets(0, 0, 5, 5);
+			gbc_takeOffStrategyComboBox.fill = GridBagConstraints.HORIZONTAL;
+			gbc_takeOffStrategyComboBox.gridx = 1;
+			gbc_takeOffStrategyComboBox.gridy = 5;
+			String[] algorithms = takeOffHelper.getAvailableTakeOffAlgorithms();
+			String selected = takeOffHelper.getTakeOffAlgorithm();
+			int selectedPos = 0;
+			for (int i = 0; i < algorithms.length; i++) {
+				takeOffStrategyComboBox.addItem(algorithms[i]);
+				if (algorithms[i].equalsIgnoreCase(selected)) {
+					selectedPos = i;
+				}
+			}
+			takeOffStrategyComboBox.setSelectedIndex(selectedPos);
+			contentPanel.add(takeOffStrategyComboBox, gbc_takeOffStrategyComboBox);
+		}
+		{
 			JLabel airFormationLabel = new JLabel(MUSCOPText.AIR_TEXT);
 			GridBagConstraints gbc_airFormationLabel = new GridBagConstraints();
 			gbc_airFormationLabel.anchor = GridBagConstraints.WEST;
 			gbc_airFormationLabel.insets = new Insets(0, 0, 5, 5);
 			gbc_airFormationLabel.gridx = 0;
-			gbc_airFormationLabel.gridy = 6;
+			gbc_airFormationLabel.gridy = 7;
 			contentPanel.add(airFormationLabel, gbc_airFormationLabel);
 		}
 		{
@@ -219,7 +252,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_airFormationFormationLabel.anchor = GridBagConstraints.EAST;
 			gbc_airFormationFormationLabel.insets = new Insets(0, 0, 5, 5);
 			gbc_airFormationFormationLabel.gridx = 0;
-			gbc_airFormationFormationLabel.gridy = 7;
+			gbc_airFormationFormationLabel.gridy = 8;
 			contentPanel.add(airFormationFormationLabel, gbc_airFormationFormationLabel);
 		}
 		{
@@ -228,7 +261,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_airComboBox.insets = new Insets(0, 0, 5, 5);
 			gbc_airComboBox.fill = GridBagConstraints.HORIZONTAL;
 			gbc_airComboBox.gridx = 1;
-			gbc_airComboBox.gridy = 7;
+			gbc_airComboBox.gridy = 8;
 			if (formations.length > 0) {
 				int pos = -1;
 				String formationString = formationTools.getFlyingFormationName();
@@ -249,7 +282,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_lblFlightDistance.anchor = GridBagConstraints.EAST;
 			gbc_lblFlightDistance.insets = new Insets(0, 0, 5, 5);
 			gbc_lblFlightDistance.gridx = 0;
-			gbc_lblFlightDistance.gridy = 8;
+			gbc_lblFlightDistance.gridy = 9;
 			contentPanel.add(lblFlightDistance, gbc_lblFlightDistance);
 		}
 		{
@@ -259,7 +292,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_flyingTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_flyingTextField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_flyingTextField.gridx = 1;
-			gbc_flyingTextField.gridy = 8;
+			gbc_flyingTextField.gridy = 9;
 			contentPanel.add(flyingTextField, gbc_flyingTextField);
 			flyingTextField.setColumns(10);
 		}
@@ -270,7 +303,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_lblNewLabel_1.anchor = GridBagConstraints.WEST;
 			gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
 			gbc_lblNewLabel_1.gridx = 2;
-			gbc_lblNewLabel_1.gridy = 8;
+			gbc_lblNewLabel_1.gridy = 9;
 			contentPanel.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		}
 		{
@@ -279,7 +312,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_lblNewLabel_2.anchor = GridBagConstraints.WEST;
 			gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
 			gbc_lblNewLabel_2.gridx = 0;
-			gbc_lblNewLabel_2.gridy = 10;
+			gbc_lblNewLabel_2.gridy = 11;
 			contentPanel.add(lblNewLabel_2, gbc_lblNewLabel_2);
 		}
 		{
@@ -289,7 +322,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_lblLandDistance.anchor = GridBagConstraints.EAST;
 			gbc_lblLandDistance.insets = new Insets(0, 0, 5, 5);
 			gbc_lblLandDistance.gridx = 0;
-			gbc_lblLandDistance.gridy = 11;
+			gbc_lblLandDistance.gridy = 12;
 			contentPanel.add(lblLandDistance, gbc_lblLandDistance);
 		}
 		{
@@ -299,7 +332,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_landingTextField.insets = new Insets(0, 0, 5, 5);
 			gbc_landingTextField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_landingTextField.gridx = 1;
-			gbc_landingTextField.gridy = 11;
+			gbc_landingTextField.gridy = 12;
 			contentPanel.add(landingTextField, gbc_landingTextField);
 			landingTextField.setColumns(10);
 		}
@@ -310,7 +343,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_lblNewLabel_3.anchor = GridBagConstraints.WEST;
 			gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
 			gbc_lblNewLabel_3.gridx = 2;
-			gbc_lblNewLabel_3.gridy = 11;
+			gbc_lblNewLabel_3.gridy = 12;
 			contentPanel.add(lblNewLabel_3, gbc_lblNewLabel_3);
 		}
 		{
@@ -320,7 +353,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_separator.gridwidth = 4;
 			gbc_separator.insets = new Insets(0, 0, 5, 0);
 			gbc_separator.gridx = 0;
-			gbc_separator.gridy = 12;
+			gbc_separator.gridy = 13;
 			contentPanel.add(separator, gbc_separator);
 		}
 		JButton okButton = new JButton("OK");
@@ -328,7 +361,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		GridBagConstraints gbc_okButton = new GridBagConstraints();
 		gbc_okButton.insets = new Insets(0, 0, 0, 5);
 		gbc_okButton.gridx = 2;
-		gbc_okButton.gridy = 13;
+		gbc_okButton.gridy = 14;
 		contentPanel.add(okButton, gbc_okButton);
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -387,6 +420,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		double flying = Double.parseDouble(flyingTextField.getText());
 		double landing = Double.parseDouble(landingTextField.getText());
 		formationTools.setGroundFormation((String)groundComboBox.getSelectedItem(), ground);
+		takeOffHelper.setTakeOffAlgorithm((String)takeOffStrategyComboBox.getSelectedItem());
 		formationTools.setFlyingFormation((String)airComboBox.getSelectedItem(), flying);
 		formationTools.setLandingFormationMinimumDistance(landing);
 	}

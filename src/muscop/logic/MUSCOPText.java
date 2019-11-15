@@ -11,8 +11,9 @@ public class MUSCOPText {
 	public static final String BUTTON_SELECT = "...";
 	public static final String GROUND_TEXT = "Ground formation:";
 	public static final String FORMATION_TEXT = "Formation";
-	public static final String DISTANCE_TEXT = "Min. distance between UAVs";
+	public static final String DISTANCE_TEXT = "Min. distance between UAVs:";
 	public static final String DISTANCE_TEXT_ERROR = "The min. distance between UAVs must be a positive double";
+	public static final String TAKEOFF_STRATEGY = "Take off strategy";
 	public static final String AIR_TEXT = "Flying formation:";
 	public static final String LANDING_TEXT = "Landing:";
 	public static final String PROTOCOL_TEXT = "MUSCOP";

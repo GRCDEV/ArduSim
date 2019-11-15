@@ -10,6 +10,7 @@ import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListenerThread;
+import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import main.api.masterslavepattern.safeTakeOff.TakeOffSlaveDataListenerThread;
 
@@ -26,6 +27,14 @@ public class SafeTakeOffHelper {
 	
 	public SafeTakeOffHelper(int numUAV) {
 		this.numUAV = numUAV;
+	}
+	
+	/**
+	 * Get the name of all the available take-off algorithms. This method can be used in the protocol configuration dialog.
+	 * @return An array with the name of the available algorithms.
+	 */
+	public String[] getAvailableTakeOffAlgorithms() {
+		return TakeOffAlgorithm.getAvailableAlgorithms();
 	}
 	
 	/**
@@ -71,6 +80,22 @@ public class SafeTakeOffHelper {
 			e.printStackTrace();
 		}
 		return result.get();
+	}
+	
+	/**
+	 * Get the take-off algorithm to be used. This method can be used in the protocol configuration dialog.
+	 * @return Name of the take-off algorithm strategy to be used.
+	 */
+	public String getTakeOffAlgorithm() {
+		return TakeOffMasterDataListenerThread.selectedAlgorithm.getName();
+	}
+	
+	/**
+	 * Set the take-off algorithm to be used. This method can be used in the protocol configuration dialog.
+	 * @param name Name of the take-off algorithm strategy to be used.
+	 */
+	public void setTakeOffAlgorithm(String name) {
+		TakeOffMasterDataListenerThread.selectedAlgorithm = TakeOffAlgorithm.getAlgorithm(name);
 	}
 
 	/**
