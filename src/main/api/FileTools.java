@@ -5,10 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,29 +23,18 @@ public class FileTools {
 	 * @return The folder where ArduSim is running (.jar folder, or project root if running in Eclipse IDE).
 	 */
 	public File getCurrentFolder() {
-		Class<Main> c = main.Main.class;
-		CodeSource codeSource = c.getProtectionDomain().getCodeSource();
-	
-		File jarFile = null;
-	
-		if (codeSource != null && codeSource.getLocation() != null) {
-			try {
-				jarFile = new File(codeSource.getLocation().toURI());
-			} catch (URISyntaxException e) {
-				e.printStackTrace();
-			}
+		String filePath = Main.class.getResource("/" + Main.class.getName().replace('.', '/') + ".class").toString();
+    	boolean isRunningFromJarFile = false;
+		if (filePath.startsWith("jar:") || filePath.startsWith("rsrc:")) {
+			isRunningFromJarFile = true;
 		}
-		else {
-			String path = c.getResource(c.getSimpleName() + ".class").getPath();
-			String jarFilePath = path.substring(path.indexOf(":") + 1, path.indexOf("!"));
-			try {
-				jarFilePath = URLDecoder.decode(jarFilePath, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-			jarFile = new File(jarFilePath);
-		}
-		return jarFile.getParentFile();
+    	
+    	File jarDir = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath());
+    	if (!isRunningFromJarFile) {
+    		jarDir = jarDir.getParentFile();
+    	}
+    	
+    	return jarDir;
 	}
 	
 	/**

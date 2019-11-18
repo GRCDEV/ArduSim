@@ -1357,12 +1357,8 @@ public class ArduSimTools {
 	
 	/** Checks if the application is stand alone (.jar) or it is running inside an IDE. */
 	public static boolean isRunningFromJar() {
-		String file = ArduSimTools.class.getResource("/" + ArduSimTools.class.getName().replace('.', '/') + ".class").toString();
-		if (file.startsWith("jar:")) {
-			return true;
-		} else {
-			return false;
-		}
+		String filePath = ArduSimTools.class.getResource("/" + ArduSimTools.class.getName().replace('.', '/') + ".class").toString();
+		return (filePath.startsWith("jar:") || filePath.startsWith("rsrc:"));
 	}
 	
 	/** Gets an object of the available implementation for the selected protocol.

@@ -233,6 +233,7 @@ public class Main {
 			while (!ProgressDialog.progressShowing || ProgressDialog.progressDialog == null) {
 				ardusim.sleep(SimParam.SHORT_WAITING_TIME);
 			}
+			MainWindow.window.mainWindowFrame.toFront();
 
 			// 6. Load needed resources
 			SimTools.loadUAVImage();
