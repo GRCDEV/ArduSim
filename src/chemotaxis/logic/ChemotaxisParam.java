@@ -1,12 +1,14 @@
 package chemotaxis.logic;
 
-import java.util.ArrayList;
+import java.awt.BasicStroke;
+import java.awt.Stroke;
 
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
 import smile.data.SparseDataset;
 
 public class ChemotaxisParam {
-	public static api.pojo.location.Location2DGeo startLocation;
+	public static Location2DGeo startLocation;
 	public static double altitude;
 	public static int width;
 	public static int length;
@@ -18,6 +20,7 @@ public class ChemotaxisParam {
 	public static volatile boolean ready;
 	public static SparseDataset measurements;
 	public static final double pThreshold = 5.0;
-	public static ArrayList<chemotaxis.pojo.Value> measurements_temp;
 	public static chemotaxis.pojo.ValueSet measurements_set;
+	
+	public static final Stroke STROKE_POINT = new BasicStroke(1f);
 }

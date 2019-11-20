@@ -1,14 +1,11 @@
 package api;
 
-import java.awt.Graphics2D;
-
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import org.javatuples.Pair;
 
-import api.pojo.location.Location2DGeo;
-import main.sim.board.BoardPanel;
+import es.upv.grc.mapper.Location2DGeo;
 
 /** 
  * The developer must extend this class to implement a new protocol.
@@ -49,30 +46,8 @@ public abstract class ProtocolHelper {
 	public abstract String setInitialState();
 	
 	/**
-	 * Optional: Re-scale specific data structures of the protocol when the visualization scale changes.
-	 * <p>It is used when the protocol shows additional elements in the main panel.</p> */
-	public abstract void rescaleDataStructures();
-	
-	/**
-	 * Optional: Load resources to be shown on screen.
-	 * <p>It is used when the protocol shows additional elements in the main panel.</p> */
-	public abstract void loadResources();
-	
-	/**
-	 * Optional: Re-scale loaded resources when the visualization scale changes.
-	 * <p>It is used when the protocol shows additional elements in the main panel.</p> */
-	public abstract void rescaleShownResources();
-	
-	/**
-	 * Optional: Periodically draws the resources used in the protocol in the Graphics2D element of the specified BoardPanel.
-	 * @param graphics Element of the panel where any element of the protocol can be drawn.
-	 * @param panel Panel where the <i>graphics</i> element belongs to.
-	 */
-	public abstract void drawResources(Graphics2D graphics, BoardPanel panel);
-	
-	/**
 	 * Set the initial location where all the running UAVs will appear (only for simulation).
-	 * @return The calculated Geographic coordinates (latitude and longitude), and the heading (degrees).
+	 * @return The calculated Geographic coordinates (latitude and longitude), and the heading (radians).
 	 */
 	public abstract Pair<Location2DGeo, Double>[] setStartingLocation();
 	

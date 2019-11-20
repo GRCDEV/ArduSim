@@ -6,10 +6,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.esotericsoftware.kryo.io.Input;
 
 import api.API;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
 import main.Text;
-import main.api.ArduSimNotReadyException;
 import main.api.GUI;
 import main.api.communications.CommLink;
 import main.api.formations.FlightFormation;
@@ -101,7 +101,7 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 		Location2DGeo target = null;
 		try {
 			target = flightFormation.getLocation(formationPos, centerUAVLocation, formationYaw).getGeo();
-		} catch (ArduSimNotReadyException e) {
+		} catch (LocationNotReadyException e) {
 			e.printStackTrace();
 			gui.exit(e.getMessage());
 		}

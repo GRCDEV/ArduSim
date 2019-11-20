@@ -1,7 +1,7 @@
 package main.api.masterslavepattern.safeTakeOff;
 
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
 import main.api.formations.FlightFormation;
 
 /**

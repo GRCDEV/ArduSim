@@ -4,8 +4,8 @@ import org.mavlink.messages.MAV_CMD;
 
 import api.API;
 import api.pojo.FlightMode;
-import api.pojo.location.Location2DUTM;
 import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.Location2DUTM;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;

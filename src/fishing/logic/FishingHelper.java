@@ -1,6 +1,5 @@
 package fishing.logic;
 
-import java.awt.Graphics2D;
 import java.util.List;
 
 import javax.swing.JDialog;
@@ -10,13 +9,12 @@ import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
 import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
 import fishing.gui.FishingConfigDialog;
 import fishing.pojo.VectorMath;
 import main.api.GUI;
-import main.sim.board.BoardPanel;
 
 public class FishingHelper extends ProtocolHelper {
 
@@ -48,26 +46,6 @@ public class FishingHelper extends ProtocolHelper {
 	public String setInitialState() {
 		// TODO 
 		return null;
-	}
-
-	@Override
-	public void rescaleDataStructures() {
-		// TODO 
-	}
-
-	@Override
-	public void loadResources() {
-		// TODO 
-	}
-	
-	@Override
-	public void rescaleShownResources() {
-		// TODO 
-	}
-
-	@Override
-	public void drawResources(Graphics2D g2, BoardPanel p) {
-		// TODO 
 	}
 
 	@Override
@@ -136,9 +114,9 @@ public class FishingHelper extends ProtocolHelper {
 		
 		FishingParam.startLocationBoat= new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude());
 		FishingParam.startLocationUAV = new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude());
-		startCoordinatesArray[0] = new Pair<Location2DGeo, Double>(FishingParam.startLocationBoat,heading);
+		startCoordinatesArray[0] = new Pair<Location2DGeo, Double>(FishingParam.startLocationBoat,heading * Math.PI / 180);
 		if (numUAVs>1) {
-		startCoordinatesArray[1] = new Pair<Location2DGeo, Double>(FishingParam.startLocationUAV,heading);
+		startCoordinatesArray[1] = new Pair<Location2DGeo, Double>(FishingParam.startLocationUAV,heading * Math.PI / 180);
 		
 		FishingParam.vOrigin = VectorMath.getUnitaryVector(FishingParam.vOrigin);
 		FishingParam.vOrigin[0] *= FishingParam.radius;

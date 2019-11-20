@@ -20,8 +20,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import api.API;
-import api.pojo.location.Location2DGeo;
 import chemotaxis.logic.ChemotaxisParam;
+import es.upv.grc.mapper.Location2DGeo;
 
 public class PollutionConfigDialog extends JDialog {
 

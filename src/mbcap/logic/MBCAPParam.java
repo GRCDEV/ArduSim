@@ -2,15 +2,16 @@ package mbcap.logic;
 
 import java.awt.BasicStroke;
 import java.awt.Stroke;
-import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import api.pojo.location.Location3DUTM;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.DrawableImageGeo;
+import es.upv.grc.mapper.DrawableSymbolGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.MBCAPState;
 import mbcap.pojo.ProgressState;
@@ -32,7 +33,6 @@ public class MBCAPParam {
 	
 	// Collision risk detection parameters
 	public static double collisionRiskDistance = 20; 				// (m) Distance between points to assert collision risk (UTM coordinates)
-	public static double collisionRiskScreenDistance;				// (px) The previous distance, but in screen coordinates
 	public static double collisionRiskAltitudeDifference = 50;		// (m) Altitude difference to assert collision risk
 	public static long collisionRiskTime = 1 * hopTimeNS;			// (ns) Half of the time range to assert collision risk
 	public static long riskCheckPeriod = 1 * 1000000000l;			// (ns) Time between risk collision checks
@@ -90,10 +90,10 @@ public class MBCAPParam {
 	public static Map<Long, Beacon>[] beacons;					// Beacons received from other UAVs
 	public static List<Beacon>[] beaconsStored;					// Used to log the sent beacons
 	public static List<ProgressState>[] progress;				// Used to register when the state of the protocol is modified
-	public static Map<Long, Location3DUTM>[] impactLocationUTM;	// Detected risk location in UTM coordinates
-	public static Map<Long, Point2D.Double>[] impactLocationPX;	// Detected risk location shown on screen
+	public static Map<Long, Location3DUTM>[] impactLocationUTM;			// Detected risk location in UTM coordinates
+	public static Map<Long, DrawableImageGeo>[] impactLocationScreen;	// Detected risk location shown on screen
 	public static AtomicReference<Location2DUTM>[] targetLocationUTM;	// Safety location to move towards (UTM coordinates)
-	public static AtomicReference<Point2D.Double>[] targetLocationPX;	// Safety location to move towards (screen coordinates)
+	public static AtomicReference<DrawableSymbolGeo>[] targetLocationScreen;	// Safety location to move towards (screen coordinates)
 	
 	/** Current protocol state for each UAV. */
 	public static AtomicReference<MBCAPState>[] state;

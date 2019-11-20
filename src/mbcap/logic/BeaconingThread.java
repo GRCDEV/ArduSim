@@ -1,5 +1,6 @@
 package mbcap.logic;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,9 +14,15 @@ import org.javatuples.Quintet;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3DUTM;
 import api.pojo.location.WaypointSimplified;
+import es.upv.grc.mapper.DrawableCirclesGeo;
+import es.upv.grc.mapper.GUIMapPanelNotReadyException;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
+import es.upv.grc.mapper.Mapper;
+import main.Param;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
@@ -30,7 +37,7 @@ import mbcap.pojo.MBCAPState;
 
 public class BeaconingThread extends Thread {
 	
-	private AtomicReference<List<Location3DUTM>> predictedLocations;
+	private AtomicReference<DrawableCirclesGeo> predictedLocations;
 	private AtomicInteger event;
 	private AtomicReference<MBCAPState> currentState;
 	private AtomicLong idAvoiding;
@@ -53,7 +60,9 @@ public class BeaconingThread extends Thread {
 	private BeaconingThread() {}
 
 	public BeaconingThread(int numUAV) {
-		this.predictedLocations = MBCAPGUIParam.predictedLocation[numUAV];
+		if (Param.role == ArduSim.SIMULATOR) {
+			this.predictedLocations = MBCAPGUIParam.predictedLocation[numUAV];
+		}
 		this.event = MBCAPParam.event[numUAV];
 		this.currentState = MBCAPParam.state[numUAV];
 		this.idAvoiding = MBCAPParam.idAvoiding[numUAV];
@@ -130,7 +139,16 @@ public class BeaconingThread extends Thread {
 		}
 		
 		// Stop sending and drawing future positions when the UAV lands
-		predictedLocations.set(null);
+		if (Param.role == ArduSim.SIMULATOR) {
+			DrawableCirclesGeo current = predictedLocations.getAndSet(null);
+			if (current != null) {
+				try {
+					Mapper.Drawables.removeDrawable(current);
+				} catch (GUIMapPanelNotReadyException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	/** Creates a beacon to send data. Don't use to receive data.
@@ -145,7 +163,27 @@ public class BeaconingThread extends Thread {
 		double speed = uavcurrentData.getValue3();
 		double acceleration = uavcurrentData.getValue4();
 		List<Location3DUTM> points = this.getPredictedPath(speed, acceleration, currentLocation, currentZ);
-		predictedLocations.set(points);
+		List<Location2DGeo> circles = new ArrayList<Location2DGeo>();
+		for (Location3DUTM loc : points) {
+			try {
+				circles.add(loc.getGeo());
+			} catch (LocationNotReadyException e) {
+				e.printStackTrace();
+			}
+		}
+		if (Param.role == ArduSim.SIMULATOR) {
+			DrawableCirclesGeo current = predictedLocations.get();
+			if (current == null) {
+				try {
+					predictedLocations.set(Mapper.Drawables.addCirclesGeo(3, circles, MBCAPParam.collisionRiskDistance,
+							Color.BLACK, MBCAPParam.STROKE_POINT));
+				} catch (GUIMapPanelNotReadyException e) {
+					e.printStackTrace();
+				}
+			} else {
+				current.updateLocations(circles);
+			}
+		}
 
 		// 2. Beacon building
 		Beacon res = new Beacon();

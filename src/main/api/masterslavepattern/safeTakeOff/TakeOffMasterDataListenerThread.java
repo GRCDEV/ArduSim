@@ -12,11 +12,11 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
 import main.ArduSimTools;
 import main.Text;
-import main.api.ArduSimNotReadyException;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.communications.CommLink;
@@ -181,7 +181,7 @@ public class TakeOffMasterDataListenerThread extends Thread {
 				nID = nextID;
 				try {
 					targetLocation = flightFormation.getLocation(formationPos, centerUAVLocationUTM, formationYaw).getGeo();
-				} catch (ArduSimNotReadyException e) {
+				} catch (LocationNotReadyException e) {
 					e.printStackTrace();
 					gui.exit(e.getMessage());
 				}

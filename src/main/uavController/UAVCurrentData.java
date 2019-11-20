@@ -2,9 +2,9 @@ package main.uavController;
 
 import org.javatuples.Quintet;
 
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2D;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2D;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
 
 /**
  * This class generates and object that contains the most recent information received from the UAV.

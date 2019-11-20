@@ -1,19 +1,13 @@
 package mbcap.logic;
 
-import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.imageio.ImageIO;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
@@ -21,21 +15,21 @@ import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.Location2DGeo;
 import api.pojo.location.LogPoint;
-import api.pojo.location.Location3DUTM;
-import api.pojo.location.Location2DUTM;
 import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.DrawableCirclesGeo;
+import es.upv.grc.mapper.DrawableImageGeo;
+import es.upv.grc.mapper.DrawableSymbolGeo;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 import main.Param.SimulatorState;
 import main.api.ArduSim;
 import main.api.FileTools;
-import main.api.GUI;
 import main.api.ValidationTools;
-import main.sim.board.BoardPanel;
 import main.uavController.UAVParam;
 import mbcap.gui.MBCAPConfigDialog;
 import mbcap.gui.MBCAPGUIParam;
-import mbcap.gui.MBCAPGUITools;
 import mbcap.gui.MBCAPPCCompanionDialog;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.ErrorPoint;
@@ -64,8 +58,12 @@ public class MBCAPHelper extends ProtocolHelper {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void initializeDataStructures() {
-		int numUAVs = API.getArduSim().getNumUAVs();
-		MBCAPGUIParam.predictedLocation = new AtomicReference[numUAVs];
+		ArduSim ardusim = API.getArduSim();
+		int numUAVs = ardusim.getNumUAVs();
+		boolean isRealUAV = ardusim.getArduSimRole() == ArduSim.MULTICOPTER;
+		if (!isRealUAV) {
+			MBCAPGUIParam.predictedLocation = new AtomicReference[numUAVs];
+		}
 
 		MBCAPParam.event = new AtomicInteger[numUAVs];
 		MBCAPParam.deadlockSolved = new AtomicInteger[numUAVs];
@@ -77,14 +75,18 @@ public class MBCAPHelper extends ProtocolHelper {
 		MBCAPParam.selfBeacon = new AtomicReference[numUAVs];
 		MBCAPParam.beacons = new ConcurrentHashMap[numUAVs];
 		MBCAPParam.impactLocationUTM = new ConcurrentHashMap[numUAVs];
-		MBCAPParam.impactLocationPX = new ConcurrentHashMap[numUAVs];
-
+		
 		MBCAPParam.targetLocationUTM = new AtomicReference[numUAVs];
-		MBCAPParam.targetLocationPX = new AtomicReference[numUAVs];
+		if (!isRealUAV) {
+			MBCAPParam.impactLocationScreen = new ConcurrentHashMap[numUAVs];
+			MBCAPParam.targetLocationScreen = new AtomicReference[numUAVs];
+		}
 		MBCAPParam.beaconsStored = new ArrayList[numUAVs];
 
 		for (int i = 0; i < numUAVs; i++) {
-			MBCAPGUIParam.predictedLocation[i] = new AtomicReference<List<Location3DUTM>>();
+			if (!isRealUAV) {
+				MBCAPGUIParam.predictedLocation[i] = new AtomicReference<DrawableCirclesGeo>();
+			}
 			MBCAPParam.event[i] = new AtomicInteger();
 			MBCAPParam.deadlockSolved[i] = new AtomicInteger();
 			MBCAPParam.deadlockFailed[i] = new AtomicInteger();
@@ -94,9 +96,12 @@ public class MBCAPHelper extends ProtocolHelper {
 			MBCAPParam.selfBeacon[i] = new AtomicReference<Beacon>();
 			MBCAPParam.beacons[i] = new ConcurrentHashMap<Long, Beacon>();
 			MBCAPParam.impactLocationUTM[i] = new ConcurrentHashMap<Long, Location3DUTM>();
-			MBCAPParam.impactLocationPX[i] = new ConcurrentHashMap<Long, Point2D.Double>();
+			
 			MBCAPParam.targetLocationUTM[i] = new AtomicReference<Location2DUTM>();
-			MBCAPParam.targetLocationPX[i] = new AtomicReference<Point2D.Double>();
+			if (!isRealUAV) {
+				MBCAPParam.impactLocationScreen[i] = new ConcurrentHashMap<Long, DrawableImageGeo>();
+				MBCAPParam.targetLocationScreen[i] = new AtomicReference<DrawableSymbolGeo>();
+			}
 			MBCAPParam.beaconsStored[i] =  new ArrayList<Beacon>();
 		}
 
@@ -110,78 +115,6 @@ public class MBCAPHelper extends ProtocolHelper {
 	@Override
 	public String setInitialState() {
 		return MBCAPState.NORMAL.getName();
-	}
-
-	@Override
-	public void rescaleDataStructures() {
-		// Rescale the safety circles diameter
-		Location2DUTM locationUTM = null;
-		boolean found = false;
-		int numUAVs = API.getArduSim().getNumUAVs();
-		for (int i=0; i<numUAVs && !found; i++) {
-			locationUTM = API.getCopter(i).getLocationUTM();
-			if (locationUTM != null) {
-				found = true;
-			}
-		}
-		GUI gui = API.getGUI(0);
-		Point2D.Double a = gui.locatePoint(locationUTM.x, locationUTM.y);
-		Point2D.Double b = gui.locatePoint(locationUTM.x + MBCAPParam.collisionRiskDistance, locationUTM.y);
-		MBCAPParam.collisionRiskScreenDistance =b.x - a.x;
-	}
-
-	@Override
-	public void loadResources() {
-		// Load the image used to show the risk location
-		URL url = MBCAPHelper.class.getResource(MBCAPGUIParam.EXCLAMATION_IMAGE_PATH);
-		try {
-			MBCAPGUIParam.exclamationImage = ImageIO.read(url);
-			MBCAPGUIParam.exclamationDrawScale = MBCAPGUIParam.EXCLAMATION_PX_SIZE
-					/ MBCAPGUIParam.exclamationImage.getWidth();
-		} catch (IOException e) {
-			API.getGUI(0).exit(MBCAPText.WARN_IMAGE_LOAD_ERROR);
-		}
-	}
-	
-	@Override
-	public void rescaleShownResources() {
-		Iterator<Map.Entry<Long, Location3DUTM>> entries;
-		Map.Entry<Long, Location3DUTM> entry;
-		Location3DUTM riskLocationUTM;
-		Location2DUTM targetLocationUTM;
-		Point2D.Double riskLocationPX, targetLocationPX;
-		int numUAVs = API.getArduSim().getNumUAVs();
-		for (int i = 0; i < numUAVs; i++) {
-			// Collision risk locations
-			entries = MBCAPParam.impactLocationUTM[i].entrySet().iterator();
-			MBCAPParam.impactLocationPX[i].clear();
-			GUI gui = API.getGUI(i);
-			while (entries.hasNext()) {
-				entry = entries.next();
-				riskLocationUTM = entry.getValue();
-				riskLocationPX = gui.locatePoint(riskLocationUTM.x, riskLocationUTM.y);
-				MBCAPParam.impactLocationPX[i].put(entry.getKey(), riskLocationPX);
-			}
-			
-			// Target locations
-			targetLocationUTM = MBCAPParam.targetLocationUTM[i].get();
-			if (targetLocationUTM == null) {
-				MBCAPParam.targetLocationPX[i].set(null);
-			} else {
-				targetLocationPX = gui.locatePoint(targetLocationUTM.x, targetLocationUTM.y);
-				MBCAPParam.targetLocationPX[i].set(targetLocationPX);
-			}
-		}
-	}
-
-	@Override
-	public void drawResources(Graphics2D g2, BoardPanel p) {
-		if (!API.getArduSim().collisionIsDetected()) {
-			g2.setStroke(MBCAPParam.STROKE_POINT);
-			MBCAPGUITools.drawPredictedLocations(g2);
-			MBCAPGUITools.drawImpactRiskMarks(g2, p);
-			MBCAPGUITools.drawSafetyLocation(g2);
-		}
 	}
 
 	@Override
@@ -244,7 +177,7 @@ public class MBCAPHelper extends ProtocolHelper {
 				// Assuming that all UAVs have a mission loaded
 				API.getGUI(0).exit(MBCAPText.APP_NAME + ": " + MBCAPText.UAVS_START_ERROR_1 + " " + API.getCopter(i).getID() + ".");
 			}
-			startingLocations[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
+			startingLocations[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), heading * Math.PI / 180);
 		}
 		return startingLocations;
 	}

@@ -2,7 +2,6 @@ package muscop.logic;
 
 import static muscop.pojo.State.SETUP_FINISHED;
 
-import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,16 +13,15 @@ import javax.swing.JFrame;
 import org.javatuples.Pair;
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
 import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
 import main.api.ArduSim;
-import main.api.ArduSimNotReadyException;
 import main.api.FlightFormationTools;
 import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.formations.FlightFormation;
-import main.sim.board.BoardPanel;
 import muscop.gui.MUSCOPConfigDialog;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
@@ -61,18 +59,6 @@ public class MUSCOPHelper extends ProtocolHelper {
 	public String setInitialState() {
 		return MUSCOPText.START;
 	}
-
-	@Override
-	public void rescaleDataStructures() {}
-
-	@Override
-	public void loadResources() {}
-
-	@Override
-	public void rescaleShownResources() {}
-
-	@Override
-	public void drawResources(Graphics2D g2, BoardPanel p) {}
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
@@ -178,16 +164,15 @@ public class MUSCOPHelper extends ProtocolHelper {
 			// 5. Using the ground center UAV location as reference, get the starting location of all the UAVs
 			@SuppressWarnings("unchecked")
 			Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
-			double heading = MUSCOPParam.formationYaw * 180 / Math.PI;
 			for (int i = 0; i < numUAVs; i++) {
 				if (i == groundCenterUAVPosition) {
-					startingLocation[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), heading);
+					startingLocation[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), MUSCOPParam.formationYaw);
 				} else {
-					startingLocation[i] = Pair.with(groundLocations.get((long)i).getGeo(), heading);
+					startingLocation[i] = Pair.with(groundLocations.get((long)i).getGeo(), MUSCOPParam.formationYaw);
 				}
 			}
 			return startingLocation;
-		} catch (ArduSimNotReadyException e) {
+		} catch (LocationNotReadyException e) {
 			e.printStackTrace();
 			gui.exit(e.getMessage());
 		}

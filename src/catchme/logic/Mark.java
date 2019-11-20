@@ -1,8 +1,6 @@
 package catchme.logic;
 
-import api.API;
-import api.pojo.location.Location2D;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 
 public class Mark {
 

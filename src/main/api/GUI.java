@@ -1,7 +1,6 @@
 package main.api;
 
 import java.awt.Color;
-import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +12,10 @@ import org.javatuples.Pair;
 
 import api.API;
 import api.pojo.StatusPacket;
-import api.pojo.location.Location2D;
-import api.pojo.location.Location2DUTM;
 import api.pojo.location.Waypoint;
 import main.ArduSimTools;
 import main.Text;
 import main.pccompanion.logic.PCCompanionParam;
-import main.sim.board.BoardHelper;
 import main.sim.gui.MissionKmlDialog;
 import main.sim.gui.MissionWaypointsDialog;
 import main.sim.gui.ProgressDialog;
@@ -256,34 +252,6 @@ public class GUI {
 		}
 
 		return null;
-	}
-	
-	/**
-	 * Locate a UTM coordinates point on the screen, using the current screen scale.
-	 * @param utmX (meters)
-	 * @param utmY (meters)
-	 * @return Screen coordinates of the point.
-	 */
-	public Point2D.Double locatePoint(double utmX, double utmY) {
-		return BoardHelper.locatePoint(utmX, utmY);
-	}
-	
-	/**
-	 * Locates a UTM coordinates point on the screen, using the current screen scale.
-	 * @param location UTM coordinates
-	 * @return Screen coordinates of the point.
-	 */
-	public Point2D.Double locatePoint(Location2DUTM location) {
-		return BoardHelper.locatePoint(location.x, location.y);
-	}
-	
-	/**
-	 * Locates a coordinates point on the screen, using the current screen scale.
-	 * @param location coordinates
-	 * @return Screen coordinates of the point.
-	 */
-	public Point2D.Double locatePoint(Location2D location) {
-		return BoardHelper.locatePoint(location.getUTMLocation().x, location.getUTMLocation().y);
 	}
 	
 	/**

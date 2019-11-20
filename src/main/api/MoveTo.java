@@ -1,7 +1,7 @@
 package main.api;
 
 import api.API;
-import api.pojo.location.Location3D;
+import es.upv.grc.mapper.Location3D;
 import main.Text;
 import main.uavController.UAVParam;
 

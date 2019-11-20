@@ -1,6 +1,6 @@
 package main.api.formations;
 
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.Text;
 import main.api.formations.helpers.FormationPoint;
 

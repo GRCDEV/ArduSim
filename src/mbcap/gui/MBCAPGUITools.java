@@ -1,22 +1,12 @@
 package mbcap.gui;
 
-import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Point2D;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import javax.swing.SwingUtilities;
 
 import api.API;
-import api.pojo.location.Location3DUTM;
 import main.Text;
 import main.api.ArduSim;
 import main.api.GUI;
 import main.api.ValidationTools;
-import main.sim.board.BoardPanel;
 import mbcap.logic.MBCAPParam;
 import mbcap.logic.MBCAPText;
 
@@ -200,78 +190,6 @@ public class MBCAPGUITools {
 				panel.deadlockTimeoutTextField.setText("" + (int) (MBCAPParam.globalDeadlockTimeout / 1000000000l));
 			}
 		});
-	}
-
-	/** Draws the circles that represent the future locations of the UAV. */
-	public static void drawPredictedLocations(Graphics2D g) {
-		Location3DUTM predictedUTMLocation;
-		List<Location3DUTM> locationsUTM;
-		Point2D.Double predictedPXLocation;
-		Ellipse2D.Double ellipse;
-		int numUAVs = API.getArduSim().getNumUAVs();
-		GUI gui;
-		for (int i = 0; i < numUAVs; i++) {
-			locationsUTM = MBCAPGUIParam.predictedLocation[i].get();
-			gui = API.getGUI(i);
-			if (locationsUTM != null && locationsUTM.size() > 0) {
-				g.setColor(gui.getColor());
-				for (int j = 0; j < locationsUTM.size(); j++) {
-					predictedUTMLocation = locationsUTM.get(j);
-					predictedPXLocation = gui.locatePoint(predictedUTMLocation.x, predictedUTMLocation.y);
-					ellipse = new Ellipse2D.Double(predictedPXLocation.x - MBCAPParam.collisionRiskScreenDistance,
-							predictedPXLocation.y - MBCAPParam.collisionRiskScreenDistance, 2 * MBCAPParam.collisionRiskScreenDistance,
-							2 * MBCAPParam.collisionRiskScreenDistance);
-					g.draw(ellipse);
-				}
-			}
-		}
-	}
-
-	/** Removes all the collision risk locations used for drawing. */
-	public static void removeImpactRiskMarks() {
-		int numUAVs = API.getArduSim().getNumUAVs();
-		for (int i=0; i<numUAVs; i++) {
-			MBCAPParam.impactLocationUTM[i].clear();
-			MBCAPParam.impactLocationPX[i].clear();
-		}
-	}
-
-	/** Draws the image that represents a collision risk, when needed. */
-	public static void drawImpactRiskMarks(Graphics2D g2, BoardPanel p) {
-		Iterator<Map.Entry<Long, Point2D.Double>> entries;
-		Map.Entry<Long, Point2D.Double> entry;
-		Point2D.Double riskLocationPX;
-		int numUAVs = API.getArduSim().getNumUAVs();
-		for (int i = 0; i < numUAVs; i++) {
-			entries = MBCAPParam.impactLocationPX[i].entrySet().iterator();
-			while (entries.hasNext()) {
-				entry = entries.next();
-				riskLocationPX = entry.getValue();
-				// AffineTransform is applied in reverse order
-				AffineTransform trans = new AffineTransform();
-				trans.translate(riskLocationPX.x, riskLocationPX.y);
-				trans.scale(MBCAPGUIParam.exclamationDrawScale, MBCAPGUIParam.exclamationDrawScale);
-				trans.translate(-MBCAPGUIParam.exclamationImage.getWidth() / 2,
-						-MBCAPGUIParam.exclamationImage.getHeight() / 2);
-				g2.drawImage(MBCAPGUIParam.exclamationImage, trans, p);
-			}
-		}
-	}
-	
-	/** Draws the target location when moving aside. */
-	public static void drawSafetyLocation(Graphics2D g) {
-		int numUAVs = API.getArduSim().getNumUAVs();
-		Point2D.Double location;
-		for (int i = 0; i < numUAVs; i++) {
-			location = MBCAPParam.targetLocationPX[i].get();
-			if (location != null) {
-				int x = (int)location.x;
-				int y = (int)location.y;
-				g.setColor(API.getGUI(i).getColor());
-				g.drawLine(x - 10, y - 10, x + 10, y + 10);
-				g.drawLine(x + 10, y - 10, x - 10, y + 10);
-			}
-		}
 	}
 
 }

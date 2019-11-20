@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import api.API;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;

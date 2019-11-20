@@ -2,6 +2,8 @@ package api.pojo.location;
 
 import java.util.List;
 
+import es.upv.grc.mapper.Location3DUTM;
+
 /** This class generates simplified waypoints, including only UTM coordinates and the sequence number in the mission.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 

@@ -2,12 +2,9 @@ package catchme.logic;
 
 import java.awt.BasicStroke;
 import java.awt.Stroke;
-import java.awt.geom.Point2D;
 import java.util.concurrent.atomic.AtomicReference;
 
-import api.pojo.location.Location2D;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 
 public class CatchMeParams {
 	
@@ -21,6 +18,4 @@ public class CatchMeParams {
 	public static enum status {LAND, DESCEND, MOVE, ROTATE, LOITER};
 	
 	public static final Stroke STROKE_POINT = new BasicStroke(1f);
-//	public static Location2D startingLocation;
-	public static AtomicReference<Point2D.Double> targetLocationPX;
 }

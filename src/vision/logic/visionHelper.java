@@ -1,6 +1,5 @@
 package vision.logic;
 
-import java.awt.Graphics2D;
 import java.io.File;
 import java.util.Map;
 
@@ -10,8 +9,8 @@ import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location3D;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location3D;
 import main.api.Copter;
 import main.api.FileTools;
 import main.api.GUI;
@@ -19,7 +18,6 @@ import main.api.MoveToListener;
 import main.api.MoveTo;
 import main.api.TakeOffListener;
 import main.api.TakeOff;
-import main.sim.board.BoardPanel;
 
 /** Developed by: Jamie Wubben, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 public class visionHelper extends ProtocolHelper {
@@ -41,18 +39,6 @@ public class visionHelper extends ProtocolHelper {
 
 	@Override
 	public String setInitialState() {return null;}
-
-	@Override
-	public void rescaleDataStructures() {}
-
-	@Override
-	public void loadResources() {}
-
-	@Override
-	public void rescaleShownResources() {}
-
-	@Override
-	public void drawResources(Graphics2D graphics, BoardPanel panel) {}
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation(){

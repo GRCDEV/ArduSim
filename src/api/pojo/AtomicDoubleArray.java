@@ -158,7 +158,7 @@ public class AtomicDoubleArray implements java.io.Serializable {
    * @return true if successful
    */
   public final boolean weakCompareAndSet(int i, double expect, double update) {
-    return longs.weakCompareAndSet(i, doubleToRawLongBits(expect), doubleToRawLongBits(update));
+    return longs.weakCompareAndSetPlain(i, doubleToRawLongBits(expect), doubleToRawLongBits(update));
   }
 
   /**

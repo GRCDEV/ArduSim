@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import api.API;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.api.Copter;
 import smile.interpolation.KrigingInterpolation;
 import smile.interpolation.variogram.GaussianVariogram;

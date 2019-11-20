@@ -8,11 +8,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.esotericsoftware.minlog.Log;
-
 import api.API;
 import api.pojo.FlightMode;
-import api.pojo.location.Location2DGeo;
+import es.upv.grc.mapper.Location2DGeo;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
@@ -22,7 +20,7 @@ public class uavNavigator extends Thread {
 	private static uavNavigator instance; 
 	
 	private int numUAV;
-	private long id;
+//	private long id;
 	private ArduSim ardusim;
 	private ClientSocket commandSocket;
 	private Copter copter;
@@ -66,7 +64,7 @@ public class uavNavigator extends Thread {
 		this.ardusim = API.getArduSim();
 		this.copter = API.getCopter(numUAV);
 		this.gui = API.getGUI(numUAV);
-		this.id = copter.getID();
+//		this.id = copter.getID();
 		//TCP ports already in use: 5760 + n10
 		//TODO check portnumbers
 		gui.log("setting up serversocket");

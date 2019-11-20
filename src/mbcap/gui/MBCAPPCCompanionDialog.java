@@ -20,7 +20,7 @@ import javax.swing.table.TableColumnModel;
 
 import api.API;
 import api.pojo.StatusPacket;
-import api.pojo.location.Location3DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 import main.Param.SimulatorState;
 import main.api.ValidationTools;
 import main.sim.gui.VerticalFlowLayout;

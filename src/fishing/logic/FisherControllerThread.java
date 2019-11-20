@@ -2,15 +2,14 @@ package fishing.logic;
 
 
 import api.API;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3D;
-import api.pojo.location.Location3DGeo;
-import api.pojo.location.Location3DUTM;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3D;
+import es.upv.grc.mapper.Location3DGeo;
+import es.upv.grc.mapper.Location3DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
 import fishing.pojo.VectorMath;
 import main.Param;
 import main.api.ArduSim;
-import main.api.ArduSimNotReadyException;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.MoveToListener;
@@ -98,7 +97,7 @@ public class FisherControllerThread extends Thread{
 					try {
 						GeoBoatPoint = Location3DUTM.getGeo3D(FisherReceiverThread.posBoat[0],FisherReceiverThread.posBoat[1], FisherReceiverThread.boatAltitude);
 						copter.moveTo(GeoBoatPoint);
-					} catch (ArduSimNotReadyException e) {
+					} catch (LocationNotReadyException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
@@ -132,7 +131,7 @@ public class FisherControllerThread extends Thread{
 						moveTo.join();
 					} catch (InterruptedException e) {}
 					copter.land();						// TODO esto solo se tiene que hacer una vez ¿es así?
-				} catch (ArduSimNotReadyException e) {
+				} catch (LocationNotReadyException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -152,7 +151,7 @@ public class FisherControllerThread extends Thread{
 					copter.moveTo(GeoNextPoint);
 					waypointReached = false;
 					while(!waypointReached && !fligthTimeReached && !batteryAlarm && !FisherReceiverThread.landSignal) {
-						ardusim.sleep(100);
+						ardusim.sleep(1000);
 						gui.log("#####################################################################################################");
 						
 						
@@ -198,7 +197,7 @@ public class FisherControllerThread extends Thread{
 					//Rotates the direction vector $rotationAngle degrees
 					vDirection = VectorMath.rotateVector(vDirection, FishingParam.rotationAngle, FishingParam.clockwise);
 					gui.log("\n-------------------------------------------------------------------------------------------------------------\n");
-				} catch (ArduSimNotReadyException e) {
+				} catch (LocationNotReadyException e) {
 					e.printStackTrace();
 					API.getGUI(0).log(e.getMessage());
 					//TODO quizá convendría enviar orden de volver al barco

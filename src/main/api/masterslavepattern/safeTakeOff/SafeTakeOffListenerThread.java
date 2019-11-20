@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.esotericsoftware.kryo.io.Input;
 
 import api.API;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location3D;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location3D;
 import main.Text;
 import main.api.ArduSim;
 import main.api.Copter;

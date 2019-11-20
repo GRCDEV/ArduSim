@@ -1,28 +1,36 @@
 package main.sim.gui;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.Insets;
-import java.awt.Toolkit;
+import java.awt.Point;
+import java.awt.Transparency;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
+import es.upv.grc.mapper.DrawableScreenAnchor;
+import es.upv.grc.mapper.GUIMapPanel;
+import es.upv.grc.mapper.GUIMapPanelNotReadyException;
+import es.upv.grc.mapper.Mapper;
 import main.ArduSimTools;
+import main.Main;
 import main.Param;
 import main.Param.SimulatorState;
-import main.sim.board.BoardPanel;
 import main.sim.logic.SimParam;
 import main.Text;
 
@@ -32,7 +40,7 @@ import main.Text;
 public class MainWindow {
 
 	public static MainWindow window;
-	public static BoardPanel boardPanel;
+	public static GUIMapPanel boardPanel;
 	public static MainWindowButtonsPanel buttonsPanel;
 	
 	public JFrame mainWindowFrame;
@@ -56,34 +64,27 @@ public class MainWindow {
 		MainWindowButtonsPanel buttonsPanel = new MainWindowButtonsPanel(mainWindowFrame);
 		buttonsPanel.setName(Text.CONFIGURATION_PANEL);
 		buttonsPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
-
-		// Draws a panel to show the simulated UAVs
-		BoardPanel boardPanel = new BoardPanel();
-		boardPanel.setName(Text.DRAWING_PANEL);
-
+		
 		BoxLayout boxlayout = new BoxLayout(mainWindowFrame.getContentPane(), BoxLayout.Y_AXIS);
 		mainWindowFrame.getContentPane().setLayout(boxlayout);
+
+		// Draws a panel to show the simulated UAVs
+		int initialMap = Mapper.BING_AERIAL;
+		if (SimParam.bingKey == null) {
+			initialMap = Mapper.OPEN_STREET_MAPS;
+		}
+		GUIMapPanel boardPanel = Mapper.getMapPanel(Main.class, (JPanel)mainWindowFrame.getContentPane(),
+				SimParam.failedMapDownloadCheckPeriod, initialMap, SimParam.bingKey,
+				SimParam.screenUpdatePeriod, SimParam.minScaleUpdatePeriod);
+		boardPanel.setName(Text.DRAWING_PANEL);
 
 		mainWindowFrame.getContentPane().add(buttonsPanel);
 		mainWindowFrame.getContentPane().add(boardPanel);
 
-		if (Param.runningOperatingSystem != Param.OS_WINDOWS) {
-			mainWindowFrame.setUndecorated(true);
-		}
 		mainWindowFrame.pack();
-
-		//  Adapting the window to the screen size
-		Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
-		int left = insets.left;
-		int right = insets.right;
-		int top = insets.top;
-		int bottom = insets.bottom;
 		
-		int width = config.getBounds().width - left - right;
-		int height = config.getBounds().height - top - bottom;
-		mainWindowFrame.setSize(width, height);
-//		mainWindowFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		mainWindowFrame.setResizable(false);
+		mainWindowFrame.setSize(mainWindowFrame.getWidth(), buttonsPanel.getHeight() + 500);
+		mainWindowFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
 		mainWindowFrame.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		mainWindowFrame.addWindowListener(new WindowAdapter() {
@@ -107,9 +108,6 @@ public class MainWindow {
 		mainWindowFrame.setVisible(true);
 		MainWindow.buttonsPanel = buttonsPanel;
 		MainWindow.boardPanel = boardPanel;
-		// Store drawing panel dimensions
-		SimParam.boardPXHeight = MainWindow.boardPanel.getHeight();
-		SimParam.boardPXWidth = MainWindow.boardPanel.getWidth();
 	}
 	
 	/** Request to close ArduSim simulator. */
@@ -125,6 +123,28 @@ public class MainWindow {
 				}
 			}
 		})).start();
+	}
+	
+	/** Builds the wind image (arrow) shown in the drawing panel. */
+	public void buildWindImage() {
+		int width = SimParam.arrowImage.getWidth();
+		int height = SimParam.arrowImage.getHeight();
+		BufferedImage arrowImageRotated = GraphicsEnvironment.getLocalGraphicsEnvironment().
+				getDefaultScreenDevice().getDefaultConfiguration().
+				createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+		Graphics2D g2 = arrowImageRotated.createGraphics();
+		AffineTransform trans = new AffineTransform();
+		trans.translate(width * 0.5, height * 0.5);
+		trans.rotate(Param.windDirection * Math.PI/180.0 + Math.PI/2.0);
+		trans.translate(-width * 0.5, - height * 0.5);
+		g2.drawImage(SimParam.arrowImage, trans, null);
+		g2.dispose();
+		try {
+			Mapper.Drawables.addImageScreen(SimParam.WIND_LEVEL, DrawableScreenAnchor.UP_RIGHT_CORNER,
+					new Point(-width / 2, height /2), 0, arrowImageRotated, Math.max(width, height));
+		} catch (GUIMapPanelNotReadyException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

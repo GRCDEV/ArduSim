@@ -4,19 +4,17 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3DUTM;
 import catchme.logic.CatchMeParams;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 import main.api.Copter;
 import main.api.GUI;
-import muscop.pojo.Message;
 
 public class ListenerThread extends Thread{
 
@@ -34,7 +32,6 @@ public class ListenerThread extends Thread{
 	private Copter copter;
 	
 	private volatile boolean running = false;
-	private CatchMeParams.status status = CatchMeParams.status.LOITER;
 	
 	public ListenerThread() {
 		gui = API.getGUI(0);
@@ -108,15 +105,12 @@ public class ListenerThread extends Thread{
 				short type = input.readShort();
 				switch(type) {
 				case 1:
-					status = CatchMeParams.status.LAND;
 					running = false;
 					break;
 				case 2:
-					status = CatchMeParams.status.LAND;
 					running = false;
 					break;
 				case 3:
-					status = CatchMeParams.status.LOITER;
 					break;
 				case 4:
 					double x = input.readDouble();
@@ -135,15 +129,12 @@ public class ListenerThread extends Thread{
 					targetUTM.y = targetUTM.y + moveY;
 					
 					copter.moveTo(new Location3DUTM(targetUTM, copter.getAltitudeRelative()).getGeo3D());
-					status = CatchMeParams.status.MOVE;
 					break;
 				case 5:
 					System.out.println(message);
-					status = CatchMeParams.status.LAND;
 					running = false;
 					break;
 				default:
-					status = CatchMeParams.status.LAND;
 					running = false;
 					break;
 				}

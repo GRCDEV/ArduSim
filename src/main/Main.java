@@ -18,8 +18,8 @@ import javax.swing.SwingUtilities;
 import org.javatuples.Pair;
 
 import api.API;
-import api.pojo.location.Location2DGeo;
 import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.Location2DGeo;
 import main.Param.SimulatorState;
 import main.api.ArduSim;
 import main.api.ValidationTools;
@@ -27,8 +27,6 @@ import main.api.communications.CommLinkObject;
 import main.api.communications.RangeCalculusThread;
 import main.cpuHelper.CPUUsageThread;
 import main.pccompanion.gui.PCCompanionGUI;
-import main.sim.board.BoardHelper;
-import main.sim.board.BoardParam;
 import main.sim.gui.ConfigDialog;
 import main.sim.gui.MainWindow;
 import main.sim.gui.ProgressDialog;
@@ -237,7 +235,6 @@ public class Main {
 
 			// 6. Load needed resources
 			SimTools.loadUAVImage();
-			ArduSimTools.selectedProtocolInstance.loadResources();
 		}
 		// Configuration feedback
 		ArduSimTools.logGlobal(Text.PROTOCOL_IN_USE + " " + ArduSimTools.selectedProtocol);
@@ -271,18 +268,26 @@ public class Main {
 			}
 		}
 
-		// 7. Automatic screen update activation (position logging when in a real UAV)
-		SimTools.update();
+		// 7. Automatic progress dialog update activation
+		if (Param.role == ArduSim.SIMULATOR) {
+			SimTools.update();
+		}
 
 		// 8. Startup of the virtual UAVs
 		if (Param.role == ArduSim.SIMULATOR) {
-			BoardHelper.buildWindImage(MainWindow.boardPanel);
+			if (Param.windSpeed > 0.0) {
+				MainWindow.window.buildWindImage();
+			}
 			Pair<Location2DGeo, Double>[] start = ArduSimTools.selectedProtocolInstance.setStartingLocation();
 			SimParam.tempFolderBasePath = ArduSimTools.defineTemporaryFolder();
 			if (SimParam.tempFolderBasePath == null) {
 				ArduSimTools.closeAll(Text.TEMP_PATH_ERROR);
 			}
-			BoardParam.panelText.set(Text.WAITING_MAVLINK);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_MAVLINK);
+				}
+			});
 			ArduSimTools.startVirtualUAVs(start);
 		}
 
@@ -290,13 +295,21 @@ public class Main {
 		ArduSimTools.startUAVControllers();
 		ArduSimTools.waitMAVLink();
 		if (Param.role == ArduSim.SIMULATOR) {
-			BoardParam.panelText.set(Text.WAITING_CONFIGURATION_UPLOAD);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_CONFIGURATION_UPLOAD);
+				}
+			});
 			ArduSimTools.forceGPS();
 		}
 		ArduSimTools.sendBasicConfiguration1();
 		
 		if (Param.role == ArduSim.SIMULATOR) {
-			BoardParam.panelText.set(Text.WAITING_GPS);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_GPS);
+				}
+			});
 		}
 		ArduSimTools.getGPSFix();
 		
@@ -326,6 +339,10 @@ public class Main {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
+			// This only can happen during simulations
+			if (InitialConfiguration2Thread.UAVS_CONFIGURED.get() == Param.numUAVs) {
+				Param.simStatus = SimulatorState.UAVS_CONFIGURED;
+			}
 			ardusim.sleep(SimParam.SHORT_WAITING_TIME);
 		}
 		if (Param.simStatus != SimulatorState.UAVS_CONFIGURED) {
@@ -339,12 +356,6 @@ public class Main {
 		//    The background map cannot be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
 		if (Param.role == ArduSim.SIMULATOR) {
-			if (BoardParam.downloadBackground) {
-				BoardParam.panelText.set(Text.COPYRIGHT);
-				BoardHelper.downloadBackground();
-			} else {
-				BoardParam.panelText.set(null);
-			}
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.setupButton.setEnabled(true);

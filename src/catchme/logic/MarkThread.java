@@ -1,5 +1,6 @@
 package catchme.logic;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -11,12 +12,19 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.DrawableSymbol;
+import es.upv.grc.mapper.DrawableSymbolGeo;
+import es.upv.grc.mapper.GUIMapPanelNotReadyException;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
+import es.upv.grc.mapper.Mapper;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 
 public class MarkThread extends Thread {
+	
+	private DrawableSymbolGeo target;
 	
 	private Mark mark;
 	private DatagramSocket socketUDP;
@@ -30,6 +38,7 @@ public class MarkThread extends Thread {
 	private byte[] message;
 	
 	private GUI gui;
+	private boolean isRealUAV;
 	
 	private volatile boolean running = false;
 	
@@ -38,6 +47,18 @@ public class MarkThread extends Thread {
 	
 	public MarkThread(Mark mark) {
 		this.mark = mark;
+		
+		this.isRealUAV = API.getArduSim().getArduSimRole() == ArduSim.MULTICOPTER;
+		
+		if (!this.isRealUAV) {
+			try {
+				this.target = Mapper.Drawables.addSymbolGeo(1, CatchMeParams.startingLocation.get().getGeo(),
+						DrawableSymbol.CROSS, 10, Color.BLACK, CatchMeParams.STROKE_POINT);
+			} catch (GUIMapPanelNotReadyException | LocationNotReadyException e1) {
+				e1.printStackTrace();
+			}
+		}
+		
 		gui = API.getGUI(0);
 		try {
 			hostServidor = InetAddress.getByName(CatchMeParams.PTYHON_SERVER_IP);
@@ -86,7 +107,7 @@ public class MarkThread extends Thread {
 		Copter copter = API.getCopter(0);
 		double diferenceX;
 		double diferenceY;
-		double distance;
+//		double distance;
 		DatagramPacket respons = new DatagramPacket(buffer, buffer.length);
 		System.out.println("Waiting message");
 		
@@ -102,6 +123,13 @@ public class MarkThread extends Thread {
 				System.out.println(message);
 			} catch (SocketTimeoutException e) {
 				mark.move();
+				if (!this.isRealUAV) {
+					try {
+						this.target.updateLocation(CatchMeParams.startingLocation.get().getGeo());
+					} catch (LocationNotReadyException e1) {
+						e1.printStackTrace();
+					}
+				}
 			} catch(Exception e) {
 				System.err.println("cannot read DatagramPacket");
 				e.printStackTrace();
@@ -111,6 +139,14 @@ public class MarkThread extends Thread {
 				Location2DUTM currentUAV, currentMark;
 				while(true) {
 					mark.move();
+					if (!this.isRealUAV) {
+						try {
+							this.target.updateLocation(CatchMeParams.startingLocation.get().getGeo());
+						} catch (LocationNotReadyException e1) {
+							e1.printStackTrace();
+						}
+					}
+					
 					currentUAV = copter.getLocationUTM();
 					currentMark = CatchMeParams.startingLocation.get();
 					diferenceY = currentMark.y - currentUAV.y;

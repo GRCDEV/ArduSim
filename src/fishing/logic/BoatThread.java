@@ -5,7 +5,7 @@ package fishing.logic;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;

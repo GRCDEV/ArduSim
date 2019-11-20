@@ -1,12 +1,8 @@
 package catchme.logic;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.geom.Point2D;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -17,16 +13,14 @@ import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.TakeOff;
 import main.api.TakeOffListener;
 import main.sim.gui.MainWindow;
-import mbcap.logic.MBCAPParam;
-import vision.logic.visionParam;
 
 public class CatchMeHelper extends ProtocolHelper {
 
@@ -46,53 +40,17 @@ public class CatchMeHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void initializeDataStructures() {
-		CatchMeParams.targetLocationPX = new AtomicReference();
-		
-	}
+	public void initializeDataStructures() {}
 
 	@Override
 	public String setInitialState() {
 		return "Starting";
 	}
 
-	@Override
-	public void rescaleDataStructures() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void loadResources() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void rescaleShownResources() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void drawResources(Graphics2D graphics, main.sim.board.BoardPanel panel) {
-		graphics.setStroke(CatchMeParams.STROKE_POINT);
-		int numUAVs = 1;
-		Location2DUTM position = CatchMeParams.startingLocation.get();
-		if(position != null) {
-			Point2D.Double screen = API.getGUI(0).locatePoint(position);
-			
-			int x = (int)screen.x;
-			int y = (int)screen.y;
-			graphics.setColor(new Color(255,0,0));
-			graphics.drawLine(x - 10, y - 10, x + 10, y + 10);
-			graphics.drawLine(x + 10, y - 10, x - 10, y + 10);
-		}
-	}
-
+	@SuppressWarnings("unchecked")
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		return new Pair[] {Pair.with(new Location2DGeo(39.480221, -0.350269), 0)};
+		return new Pair[] {Pair.with(new Location2DGeo(39.480221, -0.350269), 0.0)};
 	}
 
 	@Override

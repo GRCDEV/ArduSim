@@ -6,6 +6,9 @@ import java.util.Objects;
 import org.mavlink.messages.MAV_FRAME;
 import org.mavlink.messages.ardupilotmega.msg_mission_item;
 
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+
 /** This class generates waypoints used in missions.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 

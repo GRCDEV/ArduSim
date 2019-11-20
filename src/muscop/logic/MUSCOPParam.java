@@ -2,7 +2,8 @@ package muscop.logic;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import api.pojo.location.Location3DUTM;
+
+import es.upv.grc.mapper.Location3DUTM;
 
 /** 
  * Parameters needed by the protocol.

@@ -1,6 +1,5 @@
 package main.uavController;
 
-import java.awt.Shape;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -11,14 +10,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import api.pojo.AtomicDoubleArray;
-import api.pojo.FlightMode;
 import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.CopterParam;
+import api.pojo.FlightMode;
 import api.pojo.RCValues;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3DGeo;
 import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DGeo;
 import main.api.CopterParamLoaded;
 import main.api.formations.FlightFormation;
 
@@ -59,7 +58,6 @@ public class UAVParam {
 	public static long appliedCollisionCheckPeriod;					// (ms) The same parameter but in milliseconds
 	public static volatile double collisionDistance = 5;			// (m) Distance to assert that a collision has happened (UTM coordinates)
 	public static volatile double collisionAltitudeDifference = 20;	// (m) Altitude difference to assert that a collision has happened
-	public static volatile double collisionScreenDistance;					// (px) The previous distance, but in screen coordinates
 	public static volatile boolean collisionDetected = false; 		// Can be used to stop protocols when a collision happens
 	
 	// Parameters used to detect when a UAV reaches the last waypoint
@@ -238,7 +236,6 @@ public class UAVParam {
 	public static Waypoint[] lastWP;					// Last waypoint of the retrieved mission
 	public static Location2DUTM[] lastWPUTM;			// Coordinates of the last waypoint of the retrieved mission
 	public static AtomicReferenceArray<List<WaypointSimplified>> missionUTMSimplified; // Missions simplified from the previous one for drawing, in UTM coordinates
-	public static List<Shape>[] MissionPx;				// Missions to be drawn on screen, in pixel coordinates
 	public static final int MAV_STATUS_REQUEST_WP_LIST = 28;
 	public static final int MAV_STATUS_REQUEST_WP0 = 29;
 	public static final int MAV_STATUS_REQUEST_WPS = 30;

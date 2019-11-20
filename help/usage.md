@@ -228,3 +228,5 @@ The list of parameters is:
     * *BAUDRATE*. Baud rate of the serial link.
     * *BATTERYCELLS*. Number of cells of the LiPo battery.
     * *BATTERYCAPACITY*. Battery capacity (mAh).
+* Optional simulation parameters:
+	* *BINGKEY*. Bing key used to show aerial, hybrid, or street maps from Microsoft Bing. You can get a free key using your Microsoft account.

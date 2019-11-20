@@ -10,13 +10,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.esotericsoftware.kryo.io.Input;
 import api.API;
-import api.pojo.location.Location3DUTM;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3D;
-import api.pojo.location.Location3DGeo;
 import api.pojo.location.WaypointSimplified;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3D;
+import es.upv.grc.mapper.Location3DGeo;
+import es.upv.grc.mapper.Location3DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
 import main.api.ArduSim;
-import main.api.ArduSimNotReadyException;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.MoveToListener;
@@ -157,7 +157,7 @@ public class MUSCOPListenerThread extends Thread {
 				centerLocation = centerMission[i];
 				try {
 					selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), centerLocation, takeOff.getInitialYaw()).getGeo(), centerLocation.z);
-				} catch (ArduSimNotReadyException e) {
+				} catch (LocationNotReadyException e) {
 					e.printStackTrace();
 					gui.exit(e.getMessage());
 				}
@@ -208,7 +208,7 @@ public class MUSCOPListenerThread extends Thread {
 								centerLocation.z = input.readDouble();
 								try {
 									selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), centerLocation, takeOff.getInitialYaw()).getGeo(), centerLocation.z);
-								} catch (ArduSimNotReadyException e) {
+								} catch (LocationNotReadyException e) {
 									e.printStackTrace();
 									gui.exit(e.getMessage());
 								}
@@ -372,7 +372,7 @@ public class MUSCOPListenerThread extends Thread {
 					moveTo.join();
 				} catch (InterruptedException e) {}
 				currentState.set(LANDING);
-			} catch (ArduSimNotReadyException e) {
+			} catch (LocationNotReadyException e) {
 				gui.log(e.getMessage());
 				e.printStackTrace();
 				currentState.set(LANDING);

@@ -1,16 +1,24 @@
 package chemotaxis.logic;
 
+import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import api.*;
 import api.pojo.FlightMode;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3D;
-import api.pojo.location.Location3DUTM;
 import chemotaxis.pojo.Point;
 import chemotaxis.pojo.PointSet;
 import chemotaxis.pojo.Value;
-import main.api.ArduSimNotReadyException;
+import es.upv.grc.mapper.DrawableSymbol;
+import es.upv.grc.mapper.DrawableSymbolGeo;
+import es.upv.grc.mapper.GUIMapPanelNotReadyException;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3D;
+import es.upv.grc.mapper.LocationNotReadyException;
+import es.upv.grc.mapper.Mapper;
+import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.MoveToListener;
@@ -31,10 +39,10 @@ public class ChemotaxisThread extends Thread {
 		this.gui = API.getGUI(0);
 	}
 	// Move to a point within the grid
-	void move(Point p) throws ArduSimNotReadyException {
+	void move(Point p) throws LocationNotReadyException {
 		move(p.getX(), p.getY());
 	}
-	void move(int x, int y) throws ArduSimNotReadyException {
+	void move(int x, int y) throws LocationNotReadyException {
 		Double xTarget = ChemotaxisParam.origin.x + (x * ChemotaxisParam.density);
 		Double yTarget = ChemotaxisParam.origin.y + (y * ChemotaxisParam.density);
 		
@@ -57,18 +65,35 @@ public class ChemotaxisThread extends Thread {
 		
 	}
 	
-	double moveAndRead(Point p) throws ArduSimNotReadyException {
+	double moveAndRead(Point p) throws LocationNotReadyException {
 		double m;
 		move(p);
 		m = ChemotaxisParam.sensor.read();
 		synchronized(ChemotaxisParam.measurements_set) {
 			ChemotaxisParam.measurements.set(p.getX(), p.getY(), m);
-			ChemotaxisParam.measurements_temp.add(new Value(p.getX(), p.getY(), m));
+			
+			ChemotaxisParam.measurements_set.add(new Value(p.getX(), p.getY(), m));
+			if (API.getArduSim().getArduSimRole() != ArduSim.MULTICOPTER) {
+				this.drawPoint(p, m, ChemotaxisParam.measurements_set.getMin(), ChemotaxisParam.measurements_set.getMax());
+			}
 		}
 		visited[p.getX()][p.getY()] = true;
 		gui.log("Read: [" + p.getX() + ", " + p.getY() + "] = " + m);
 		return m;
 	}
+	
+	private void drawPoint(Point p, double measure, double min, double max) {
+		Color color = new Color((int) ((measure - min) / (max - min) * 255), 0, 0);
+		try {
+			DrawableSymbolGeo point = Mapper.Drawables.addSymbolGeo(1, Location2DUTM.getGeo(p.getX(), p.getY()),
+					DrawableSymbol.CIRCLE, 5, color, ChemotaxisParam.STROKE_POINT);
+			point.updateUpRightText(String.format("%.2f", measure));
+		} catch (GUIMapPanelNotReadyException | LocationNotReadyException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	
 
 	@Override
@@ -99,6 +124,20 @@ public class ChemotaxisThread extends Thread {
 			e.printStackTrace();
 		}
 		
+		try {
+			Location2DGeo ini = ChemotaxisParam.origin.getGeo();
+			Location2DGeo fin = Location2DUTM.getGeo(ChemotaxisParam.origin.x + (ChemotaxisParam.width * ChemotaxisParam.density), ChemotaxisParam.origin.y + (ChemotaxisParam.density * ChemotaxisParam.density));
+			List<Location2DGeo> vertex = new ArrayList<Location2DGeo>();
+			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
+			vertex.add(new Location2DGeo(ini.latitude, fin.longitude));
+			vertex.add(new Location2DGeo(fin.latitude, fin.longitude));
+			vertex.add(new Location2DGeo(fin.latitude, ini.longitude));
+			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
+			Mapper.Drawables.addLinesGeo(2, vertex, Color.BLACK, ChemotaxisParam.STROKE_POINT);
+		} catch (LocationNotReadyException | GUIMapPanelNotReadyException e1) {
+			e1.printStackTrace();
+		}
+		
 		ChemotaxisParam.measurements = new SparseDataset();
 		//data = new HashMap<Double, HashMap<Double, Double>>();
 		
@@ -111,7 +150,7 @@ public class ChemotaxisThread extends Thread {
 		// Initial p1 measurement
 		try {
 			m1 = moveAndRead(p1);
-		} catch (ArduSimNotReadyException e) {
+		} catch (LocationNotReadyException e) {
 			this.exit(e);
 			return;
 		}
@@ -121,13 +160,13 @@ public class ChemotaxisThread extends Thread {
 		p2.addY(1);	
 		try {
 			m2 = moveAndRead(p2);
-		} catch (ArduSimNotReadyException e) {
+		} catch (LocationNotReadyException e) {
 			this.exit(e);
 			return;
 		}
 		
 		boolean isMax = false;
-		boolean found;
+//		boolean found;
 		//boolean finished = false;
 
 		
@@ -148,7 +187,7 @@ public class ChemotaxisThread extends Thread {
 						// Measure next step
 						try {
 							m2 = moveAndRead(p2);
-						} catch (ArduSimNotReadyException e) {
+						} catch (LocationNotReadyException e) {
 							this.exit(e);
 							return;
 						}
@@ -162,7 +201,7 @@ public class ChemotaxisThread extends Thread {
 				} else {
 					// Tumble
 					gui.log("Chemotaxis: Tumble");
-					found = false;
+//					found = false;
 					
 					points = new PointSet();
 					for(i = -1; i < 2; i++)
@@ -196,7 +235,7 @@ public class ChemotaxisThread extends Thread {
 						p2 = minPt;
 						try {
 							m2 = moveAndRead(p2);
-						} catch (ArduSimNotReadyException e) {
+						} catch (LocationNotReadyException e) {
 							this.exit(e);
 							return;
 						}
@@ -291,7 +330,7 @@ public class ChemotaxisThread extends Thread {
 					p2 = minPt;
 					try {
 						m2 = moveAndRead(p2);
-					} catch (ArduSimNotReadyException e) {
+					} catch (LocationNotReadyException e) {
 						this.exit(e);
 						return;
 					}
@@ -320,7 +359,7 @@ public class ChemotaxisThread extends Thread {
 	}
 	
 	//Private method to return to land and exit from ArduSim
-	private void exit(ArduSimNotReadyException e) {
+	private void exit(LocationNotReadyException e) {
 		e.printStackTrace();
 		if (copter.setFlightMode(FlightMode.RTL)) {//TODO gui.exit ya pasa a RTL si el dron es real (no hace falta esto)
 			gui.log("Landing for being unable to calculate the target coordinates.");

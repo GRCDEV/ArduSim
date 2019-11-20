@@ -3,7 +3,7 @@ package main.api.masterslavepattern.discovery;
 import java.util.concurrent.ConcurrentHashMap;
 import com.esotericsoftware.kryo.io.Input;
 
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.Text;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.InternalCommLink;

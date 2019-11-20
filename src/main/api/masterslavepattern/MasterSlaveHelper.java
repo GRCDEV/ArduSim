@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import api.API;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.Param;
 import main.api.ArduSim;
 import main.api.masterslavepattern.discovery.DiscoverMasterListener;

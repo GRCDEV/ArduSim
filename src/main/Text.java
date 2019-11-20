@@ -1,7 +1,7 @@
 package main;
 
 import main.api.communications.CommLink;
-import main.sim.board.BoardParam;
+import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 
 /** This class contains text descriptions used on the application and on the simulator GUI.
@@ -37,6 +37,7 @@ public class Text {
 	public static final String SPEED_ERROR = "The UAV speed must be a valid positive number.";
 	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_1 = "param not found. Using default value:";
 	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_2 = "param not found. Unable to continue.";
+	public static final String INI_FILE_PARAM_NOT_FOUND_ERROR_3 = "param not found. Bing background map not available.";
 	public static final String INI_FILE_PARAM_NOT_VALID_ERROR = "param not valid value:";
 	public static final String INI_FILE_PARAM_USING_DEFAULT = "param not valid. Using default value:";
 	public static final String INI_FILE_PARAM_PORT_IN_USE = "param not valid. Por in use by the internal ArduSim communications.";
@@ -82,12 +83,6 @@ public class Text {
 	public static final String BATTERY_SIZE = "Battery capacity:";
 	public static final String BATTERY_THRESHOLD = "Low level battery threshold:";
 	public static final String CPU_MEASUREMENT_ENABLED = "Measure CPU use:";
-	public static final String MAP_ENABLED = "Enable background map:";
-	public static final String RENDER = "Rendering quality:";
-	public static final String RENDER_QUALITY1 = "Maximum performance";
-	public static final String RENDER_QUALITY2 = "Text smoothed";
-	public static final String RENDER_QUALITY3 = "Text and lines smoothed";
-	public static final String RENDER_QUALITY4 = "Maximum quality";
 	public static final String VERBOSE_LOGGING_ENABLE = "Enable verbose logging:";
 	public static final String VERBOSE_STORAGE_ENABLE = "Enable verbose storage:";
 	public static final String UAV_PROTOCOL_USED = "UAV synchronization protocol:";
@@ -154,11 +149,11 @@ public class Text {
 	public static final String VALIDATION_WARNING = "Validation warning";
 	public static final String UAVS_NUMBER_ERROR = "A valid number of UAVs to use must be selected.";
 	public static final String SCREEN_DELAY_ERROR_1 = "The time between screen refresh must be a valid positive integer.";
-	public static final String SCREEN_DELAY_ERROR_2 = "The time between screen refresh must be between " + BoardParam.MIN_SCREEN_DELAY
-			+ " and " + BoardParam.MAX_SCREEN_DELAY + " ms.";
+	public static final String SCREEN_DELAY_ERROR_2 = "The time between screen refresh must be between " + SimParam.MIN_SCREEN_UPDATE_PERIOD
+			+ " and " + SimParam.MAX_SCREEN_UPDATE_PERIOD + " ms.";
 	public static final String MIN_SCREEN_MOVEMENT_ERROR_1 = "The minimal screen movement of a UAV must be a valid positive number.";
 	public static final String MIN_SCREEN_MOVEMENT_ERROR_2 = "The minimal screen movement of a UAV must be less than "
-			+ BoardParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD + " pixels.";
+			+ SimParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD + " pixels.";
 	public static final String BATTERY_ERROR_1 = "The battery capacity must be a valid positive integer.";
 	public static final String BATTERY_ERROR_2 = "The battery capacity can be a maximum of " + UAVParam.VIRT_BATTERY_MAX_CAPACITY + " " + Text.BATTERY_CAPACITY;
 	public static final String WIRELESS_MODEL_ERROR_1 = "The wireless range must be a valid positive number.";

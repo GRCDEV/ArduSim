@@ -1,7 +1,5 @@
 package main;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileDescriptor;
@@ -41,7 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -84,15 +81,15 @@ import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.CopterParam;
 import api.pojo.FlightMode;
 import api.pojo.RCValues;
-import api.pojo.location.Location2DGeo;
 import api.pojo.location.LogPoint;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3DGeo;
 import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DGeo;
+import es.upv.grc.mapper.LocationNotReadyException;
 import main.Param.SimulatorState;
 import main.api.ArduSim;
-import main.api.ArduSimNotReadyException;
 import main.api.CopterParamLoaded;
 import main.api.FileTools;
 import main.api.ValidationTools;
@@ -104,8 +101,6 @@ import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import main.cpuHelper.CPUData;
 import main.pccompanion.logic.PCCompanionParam;
-import main.sim.board.BoardHelper;
-import main.sim.board.BoardParam;
 import main.sim.gui.MainWindow;
 import main.sim.gui.MissionKmlDialog;
 import main.sim.logic.GPSEnableThread;
@@ -568,6 +563,13 @@ public class ArduSimTools {
 				}
 			}
 		}
+		
+		param = parameters.get(Param.BING_KEY);
+		if (param == null) {
+			ArduSimTools.logGlobal(Param.BING_KEY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_3);
+		} else {
+			SimParam.bingKey = param;
+		}
 	}
 	
 	/** Auxiliary method to load parameters from the ArduSim ini configuration file. */
@@ -694,7 +696,6 @@ public class ArduSimTools {
 		UAVParam.loadedParams = new Map[Param.numUAVs];
 		UAVParam.lastParamReceivedTime = new AtomicLong[Param.numUAVs];
 		
-		SimParam.uavUTMPathReceiving = new ArrayBlockingQueue[Param.numUAVs];
 		SimParam.uavUTMPath = new ArrayList[Param.numUAVs];	// Useful for logging purposes
 		
 		SimParam.prefix = new String[Param.numUAVs];
@@ -702,18 +703,6 @@ public class ArduSimTools {
 		Param.testEndTime = new long[Param.numUAVs];
 		
 		if (Param.role == ArduSim.SIMULATOR) {
-			// Prepare matrix to brighten the background map image
-			for (int i=0; i<256; i++) {
-				BoardParam.brightness[i] = (short)(128+i/2);
-			}
-			
-			UAVParam.MissionPx = new ArrayList[Param.numUAVs];
-			BoardParam.uavPXPathLines = new ArrayList[Param.numUAVs];
-			BoardParam.uavPrevUTMLocation = new LogPoint[Param.numUAVs];
-			BoardParam.uavPrevPXLocation = new LogPoint[Param.numUAVs];
-			BoardParam.uavCurrentUTMLocation = new LogPoint[Param.numUAVs];
-			BoardParam.uavCurrentPXLocation = new LogPoint[Param.numUAVs];
-			
 			SimParam.xUTM = new double[Param.numUAVs];
 			SimParam.yUTM = new double[Param.numUAVs];
 			SimParam.z = new double[Param.numUAVs];
@@ -745,13 +734,9 @@ public class ArduSimTools {
 			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, CopterParamLoaded>(1250));
 			UAVParam.lastParamReceivedTime[i] = new AtomicLong();
 			
-			SimParam.uavUTMPathReceiving[i] = new ArrayBlockingQueue<LogPoint>(SimParam.UAV_POS_QUEUE_INITIAL_SIZE);
 			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
 			
 			if (Param.role == ArduSim.SIMULATOR) {
-				UAVParam.MissionPx[i] = new ArrayList<Shape>();
-				BoardParam.uavPXPathLines[i] = new ArrayList<Shape>(SimParam.PATH_INITIAL_SIZE);
-				
 				// On the simulator, the UAV identifier is i
 				if (Param.id[i] == 0) {	// Could be initialized by a protocol
 					Param.id[i] = i;
@@ -773,23 +758,6 @@ public class ArduSimTools {
 			}
 		}
 		
-	}
-	
-	/** Rescales data structures when the screen scale is modified. */
-	public static void rescaleDataStructures() {
-		// Rescale the collision circles diameter
-		Location2DUTM locationUTM = null;
-		boolean found = false;
-		int numUAVs = Param.numUAVs;
-		for (int i=0; i<numUAVs && !found; i++) {
-			locationUTM = UAVParam.uavCurrentData[i].getUTMLocation();
-			if (locationUTM != null) {
-				found = true;
-			}
-		}
-		Point2D.Double a = BoardHelper.locatePoint(locationUTM.x, locationUTM.y);
-		Point2D.Double b = BoardHelper.locatePoint(locationUTM.x + UAVParam.collisionDistance, locationUTM.y);
-		UAVParam.collisionScreenDistance = b.x - a.x;
 	}
 	
 	/** Auxiliary method to check the available TCP and UDP ports needed by SITL instances and calculate the number of possible instances. */
@@ -1687,7 +1655,7 @@ public class ArduSimTools {
 								+ " --sim-port-in " + udp1Port + " --sim-port-out " + udp2Port + " --rc-in-port " + udp3Port
 								+ " --irlock-port " + irLockPort + " --disable-fgview --home "
 								+ location[i].getValue0().latitude + "," + location[i].getValue0().longitude
-								+ "," + UAVParam.initialAltitude + "," + location[i].getValue1() + " --model + --speedup 1 --defaults "
+								+ "," + UAVParam.initialAltitude + "," + (location[i].getValue1() / Math.PI * 180) + " --model + --speedup 1 --defaults "
 								+ "/cygdrive/" + file2.replace("\\", "/").replace(":", ""));
 					} else {
 						commandLine.add("cd /cygdrive/" + tempFolder.replace("\\", "/").replace(":", "")
@@ -1695,7 +1663,7 @@ public class ArduSimTools {
 								+ " --sim-port-in " + udp1Port + " --sim-port-out " + udp2Port + " --rc-in-port " + udp3Port
 								+ " --irlock-port " + irLockPort + " --disable-fgview --home "
 								+ location[i].getValue0().latitude + "," + location[i].getValue0().longitude
-								+ "," + UAVParam.initialAltitude + "," + location[i].getValue1() + " --model + --speedup 1 --defaults "
+								+ "," + UAVParam.initialAltitude + "," + (location[i].getValue1() / Math.PI * 180) + " --model + --speedup 1 --defaults "
 								+ "/cygdrive/" + SimParam.paramPath.replace("\\", "/").replace(":", ""));
 					}
 				}
@@ -1720,7 +1688,7 @@ public class ArduSimTools {
 					commandLine.add("" + irLockPort);
 					commandLine.add("--disable-fgview");	// Flight Gear View disabled for performance
 					commandLine.add("--home");
-					commandLine.add(location[i].getValue0().latitude + "," + location[i].getValue0().longitude + "," + UAVParam.initialAltitude + "," + location[i].getValue1());
+					commandLine.add(location[i].getValue0().latitude + "," + location[i].getValue0().longitude + "," + UAVParam.initialAltitude + "," + (location[i].getValue1() / Math.PI * 180));
 					commandLine.add("--model");
 					commandLine.add("+");
 					commandLine.add("--speedup");
@@ -2845,8 +2813,8 @@ public class ArduSimTools {
 				}
 			}
 			sb.append("\n").append(Text.PERFORMANCE_PARAMETERS);
-			sb.append("\n\t").append(Text.SCREEN_REFRESH_RATE).append(" ").append(BoardParam.screenDelay).append(" ").append(Text.MILLISECONDS);
-			sb.append("\n\t").append(Text.REDRAW_DISTANCE).append(" ").append(BoardParam.minScreenMovement).append(" ").append(Text.PIXELS);
+			sb.append("\n\t").append(Text.SCREEN_REFRESH_RATE).append(" ").append(SimParam.screenUpdatePeriod).append(" ").append(Text.MILLISECONDS);
+			sb.append("\n\t").append(Text.REDRAW_DISTANCE).append(" ").append(SimParam.minScreenMovement).append(" ").append(Text.PIXELS);
 			sb.append("\n\t").append(Text.LOGGING).append(" ");
 			if (SimParam.arducopterLoggingEnabled) {
 				sb.append(Text.OPTION_ENABLED);
@@ -2891,7 +2859,6 @@ public class ArduSimTools {
 			} else {
 				sb.append(Text.OPTION_DISABLED);
 			}
-			sb.append("\n\t").append(Text.RENDER).append(" ").append(SimParam.renderQuality.getName());
 			sb.append("\n").append(Text.GENERAL_PARAMETERS);
 			sb.append("\n\t").append(Text.VERBOSE_LOGGING_ENABLE).append(" ");
 			if (Param.verboseLogging) {
@@ -3114,7 +3081,7 @@ public class ArduSimTools {
 							geo = sp.getGeo();
 							sbSetup.append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
 							uavSetupDataPresent = true;
-						} catch (ArduSimNotReadyException e) {
+						} catch (LocationNotReadyException e) {
 							if (!coordinateError) {
 								e.printStackTrace();
 								coordinateError = true;
@@ -3129,7 +3096,7 @@ public class ArduSimTools {
 								geo = sp.getGeo();
 								sbSetup.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
 								uavSetupDataPresent = true;
-							} catch (ArduSimNotReadyException e) {
+							} catch (LocationNotReadyException e) {
 								if (!coordinateError) {
 									e.printStackTrace();
 									coordinateError = true;
@@ -3175,7 +3142,7 @@ public class ArduSimTools {
 							geo = sp.getGeo();
 							sbExperiment.append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
 							uavExperimentDataPresent = true;
-						} catch (ArduSimNotReadyException e) {
+						} catch (LocationNotReadyException e) {
 							if (!coordinateError) {
 								e.printStackTrace();
 								coordinateError = true;
@@ -3213,7 +3180,7 @@ public class ArduSimTools {
 							geo = sp.getGeo();
 							sbExperiment.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(z);
 							uavExperimentDataPresent = true;
-						} catch (ArduSimNotReadyException e) {
+						} catch (LocationNotReadyException e) {
 							if (!coordinateError) {
 								e.printStackTrace();
 								coordinateError = true;
@@ -3500,7 +3467,7 @@ public class ArduSimTools {
 							sb2.append(" ").append(geo.longitude).append(",").append(geo.latitude).append(",").append(validationTools.roundDouble(current.z, 3));
 							prev = current;
 						}
-					} catch (ArduSimNotReadyException e) {
+					} catch (LocationNotReadyException e) {
 						e.printStackTrace();
 						coordinateError = true;
 					}

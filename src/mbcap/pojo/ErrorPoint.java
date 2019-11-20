@@ -1,6 +1,6 @@
 package mbcap.pojo;
 
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 
 /** This class generates objects with UAV location and the instant when the data was retrieved.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */

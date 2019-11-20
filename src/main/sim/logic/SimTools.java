@@ -19,22 +19,18 @@ import javax.swing.Timer;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.LogPoint;
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.ArduSimTools;
 import main.Param;
-import main.api.ArduSim;
 import main.api.ValidationTools;
 import main.api.communications.CommLink;
 import main.api.communications.CommLinkObject;
 import main.api.communications.WirelessModel;
 import main.Text;
 import main.cpuHelper.CPUUsageThread;
-import main.sim.board.BoardParam;
 import main.sim.gui.ConfigDialogPanel;
 import main.sim.gui.MainWindow;
 import main.sim.gui.ProgressDialog;
-import main.sim.logic.SimParam.RenderQuality;
 import main.uavController.UAVParam;
 
 /** This class contains method used internally by the application for its own profit.
@@ -151,7 +147,7 @@ public class SimTools {
 			return false;
 		}
 		int intValue = Integer.parseInt(validating);
-		if (intValue < BoardParam.MIN_SCREEN_DELAY || intValue > BoardParam.MAX_SCREEN_DELAY) {
+		if (intValue < SimParam.MIN_SCREEN_UPDATE_PERIOD || intValue > SimParam.MAX_SCREEN_UPDATE_PERIOD) {
 			ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.SCREEN_DELAY_ERROR_2);
 			return false;
 		}
@@ -161,7 +157,7 @@ public class SimTools {
 			return false;
 		}
 		double doubleValue = Double.parseDouble(validating);
-		if (doubleValue >= BoardParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD) {
+		if (doubleValue >= SimParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD) {
 			ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.MIN_SCREEN_MOVEMENT_ERROR_2);
 			return false;
 		}
@@ -257,8 +253,8 @@ public class SimTools {
 		Param.numUAVsTemp.set(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
 
 		//  Performance parameters
-		BoardParam.screenDelay = Integer.parseInt(panel.screenDelayTextField.getText());
-		BoardParam.minScreenMovement = Double.parseDouble(panel.minScreenMovementTextField.getText());
+		SimParam.screenUpdatePeriod = Integer.parseInt(panel.screenDelayTextField.getText());
+		SimParam.minScreenMovement = Double.parseDouble(panel.minScreenMovementTextField.getText());
 		SimParam.arducopterLoggingEnabled = panel.loggingEnabledCheckBox.isSelected();
 		if (panel.batteryCheckBox.isSelected()) {
 			UAVParam.batteryCapacity = Integer.parseInt(panel.batteryTextField.getText());
@@ -275,7 +271,6 @@ public class SimTools {
 		} else {
 			Param.measureCPUEnabled = false;
 		}
-		BoardParam.downloadBackground = panel.mapCheckBox.isSelected();
 		
 		// General parameters
 		Param.verboseLogging = panel.chckbxLogging.isSelected();
@@ -327,12 +322,9 @@ public class SimTools {
 				panel.iniAltitudeTextField.setText("" + UAVParam.initialAltitude);
 				
 				//  Performance parameters
-				panel.screenDelayTextField.setText("" + BoardParam.screenDelay);
-				panel.minScreenMovementTextField.setText("" + BoardParam.minScreenMovement);
+				panel.screenDelayTextField.setText("" + SimParam.screenUpdatePeriod);
+				panel.minScreenMovementTextField.setText("" + SimParam.minScreenMovement);
 				panel.loggingEnabledCheckBox.setSelected(SimParam.arducopterLoggingEnabled);
-				panel.mapCheckBox.setSelected(BoardParam.downloadBackground);
-				SimParam.renderQuality = RenderQuality.Q3;
-				panel.renderQualityComboBox.setSelectedIndex(RenderQuality.Q3.getId());
 				
 				panel.batteryCheckBox.setSelected(false);
 				panel.batteryTextField.setText("" + UAVParam.lipoBatteryCapacity);
@@ -374,75 +366,40 @@ public class SimTools {
 		URL url = MainWindow.class.getResource(SimParam.UAV_IMAGE_PATH);
 		try {
 			SimParam.uavImage = ImageIO.read(url);
-			SimParam.uavImageScale = SimParam.UAV_PX_SIZE / SimParam.uavImage.getWidth();
 		} catch (IOException e) {
 			ArduSimTools.closeAll(Text.LOADING_UAV_IMAGE_ERROR);
 		}
 	}
 
-	/** Draws the panel content periodically, or stores information for logging purposes when using a real UAV. */
+	/** Updates the progress dialog periodically. */
 	public static void update() {
-		// Clean the saturated queue if needed
-		SimTools.cleanQueue();
 		ActionListener taskPerformer = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				if (Param.role == ArduSim.MULTICOPTER) {
-					SimTools.storePath();
-				} else if (Param.role == ArduSim.SIMULATOR) {
-					MainWindow.boardPanel.repaint();
-					SimTools.updateUAVInfo();
+				if (ProgressDialog.progressDialog != null) {
+					Location2DUTM locationUTM;
+					for (int i=0; i<Param.numUAVs; i++) {
+						locationUTM = UAVParam.uavCurrentData[i].getUTMLocation();
+						if (locationUTM!=null) {
+							SimParam.xUTM[i] = locationUTM.x;
+							SimParam.yUTM[i] = locationUTM.y;
+							SimParam.z[i] = UAVParam.uavCurrentData[i].getZ();
+							SimParam.speed[i] = UAVParam.uavCurrentData[i].getSpeed();
+						}
+					}
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							for (int i=0; i<Param.numUAVs; i++) {
+								ProgressDialog.progressDialog.panels[i].xLabel.setText(String.format("%.2f", SimParam.xUTM[i]));
+								ProgressDialog.progressDialog.panels[i].yLabel.setText(String.format("%.2f", SimParam.yUTM[i]));
+								ProgressDialog.progressDialog.panels[i].zLabel.setText(String.format("%.2f", SimParam.z[i]));
+								ProgressDialog.progressDialog.panels[i].speedLabel.setText(String.format("%.2f", SimParam.speed[i]));
+							}
+						}
+					});
 				}
 			}
 		};
-		new Timer(BoardParam.screenDelay, taskPerformer).start();
-	}
-	
-	/** Auxiliary method to clean periodically the received position of the UAV. */
-	private static void cleanQueue() {
-		for (int i=0; i<Param.numUAVs; i++) {
-			while (SimParam.uavUTMPathReceiving[i].remainingCapacity() < SimParam.UAV_POS_QUEUE_FULL_THRESHOLD) {
-				SimParam.uavUTMPathReceiving[i].poll();
-			}
-		}
-	}
-	
-	/** Stores the UAV path for logging when using a real UAV. */
-	private static void storePath() {
-		LogPoint currentUTMLocation;
-		for (int i=0; i<Param.numUAVs; i++) {
-			while(!SimParam.uavUTMPathReceiving[i].isEmpty()) {
-				currentUTMLocation = SimParam.uavUTMPathReceiving[i].poll();
-				if (currentUTMLocation != null) {
-					SimParam.uavUTMPath[i].add(currentUTMLocation);
-				}
-			}
-		}
-	}
-	
-	/** Updates UAV position and speed on the progress dialog. */
-	public static void updateUAVInfo() {
-		if (ProgressDialog.progressDialog != null) {
-			Location2DUTM locationUTM;
-			for (int i=0; i<Param.numUAVs; i++) {
-				locationUTM = UAVParam.uavCurrentData[i].getUTMLocation();
-				if (locationUTM!=null) {
-					SimParam.xUTM[i] = locationUTM.x;
-					SimParam.yUTM[i] = locationUTM.y;
-					SimParam.z[i] = UAVParam.uavCurrentData[i].getZ();
-					SimParam.speed[i] = UAVParam.uavCurrentData[i].getSpeed();
-				}
-			}
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					for (int i=0; i<Param.numUAVs; i++) {
-						ProgressDialog.progressDialog.panels[i].xLabel.setText(String.format("%.2f", SimParam.xUTM[i]));
-						ProgressDialog.progressDialog.panels[i].yLabel.setText(String.format("%.2f", SimParam.yUTM[i]));
-						ProgressDialog.progressDialog.panels[i].zLabel.setText(String.format("%.2f", SimParam.z[i]));
-						ProgressDialog.progressDialog.panels[i].speedLabel.setText(String.format("%.2f", SimParam.speed[i]));
-					}
-				}
-			});
-		}
+		new Timer(SimParam.screenUpdatePeriod, taskPerformer).start();
 	}
 	
 	/** Checks if the data packet must arrive to the destination depending on distance and the wireless model used (only used on simulation). */

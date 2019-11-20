@@ -62,7 +62,7 @@ public class AtomicFloat extends Number {
     }
 
     public final boolean weakCompareAndSet(float expect, float update) {
-        return value.weakCompareAndSet(i(expect), i(update));
+        return value.weakCompareAndSetPlain(i(expect), i(update));
     }
 
     public final float getAndIncrement() {

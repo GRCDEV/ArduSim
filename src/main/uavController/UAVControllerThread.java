@@ -1,11 +1,16 @@
 package main.uavController;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Stroke;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.mavlink.IMAVLinkMessage;
 import org.mavlink.MAVLinkReader;
@@ -44,18 +49,27 @@ import org.mavlink.messages.ardupilotmega.msg_sys_status;
 
 import com.fazecast.jSerialComm.SerialPort;
 
+import api.API;
 import api.pojo.FlightMode;
 import api.pojo.RCValues;
-import api.pojo.location.Location2D;
 import api.pojo.location.LogPoint;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3DGeo;
 import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.DrawableCircleGeo;
+import es.upv.grc.mapper.DrawableImageGeo;
+import es.upv.grc.mapper.DrawableLinesGeo;
+import es.upv.grc.mapper.DrawablePathGeo;
+import es.upv.grc.mapper.GUIMapPanelNotReadyException;
+import es.upv.grc.mapper.Location2D;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DGeo;
+import es.upv.grc.mapper.Mapper;
 import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
 import main.api.ArduSim;
 import main.api.CopterParamLoaded;
+import main.api.ValidationTools;
 import main.sim.logic.SimParam;
 import main.sim.logic.SimTools;
 import main.Text;
@@ -66,6 +80,14 @@ import main.Text;
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class UAVControllerThread extends Thread {
+	
+	// Lines format
+	private static final Stroke STROKE_LINE = new BasicStroke(1f);
+	private static final Stroke STROKE_TRACK = new BasicStroke(3f);
+	private static final float[] DASHING_PATTERN = { 2f, 2f };
+	private static final Stroke STROKE_WP_LIST = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f,
+			DASHING_PATTERN, 2.0f);
+	private Color color;
 	
 	private int numUAV;			// Id of the UAV
 	private boolean isStarting; // Used to wait until the first valid coordinates set is received
@@ -88,6 +110,13 @@ public class UAVControllerThread extends Thread {
 	private int receivedGPSOnline = 0;
 	private boolean locationReceived = false;
 	
+	private DrawableLinesGeo mission = null;
+	private DrawablePathGeo path = null;
+	private DrawableCircleGeo collisionRadius = null;
+	private DrawableImageGeo uav = null;
+	
+	private ValidationTools round = null;
+	
 	@SuppressWarnings("unused")
 	private UAVControllerThread() {}
 
@@ -95,14 +124,11 @@ public class UAVControllerThread extends Thread {
 		this.numUAV = numUAV;
 		this.isStarting = true;
 		this.numTests = 0;
+		this.color = SimParam.COLOR[numUAV % SimParam.COLOR.length];
 
 		// Connection through serial port on a real UAV
 		if (Param.role == ArduSim.MULTICOPTER) {
 			serialPort = SerialPort.getCommPort(UAVParam.serialPort);
-//			comPort.setBaudRate(57600);
-//			comPort.setNumDataBits(8);
-//			comPort.setNumStopBits(1);
-//			comPort.setParity(SerialPort.NO_PARITY);
 			serialPort.setComPortParameters(UAVParam.baudRate, 8, 1, SerialPort.NO_PARITY);
 			serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
 			if (serialPort.openPort()) {
@@ -138,91 +164,11 @@ public class UAVControllerThread extends Thread {
 		long prevTime = System.nanoTime();
 		long posTime;
 		
-//		long ini = System.currentTimeMillis();
-		
 		while (true) {
 			inMsg = null;
 			try {
 				inMsg = reader.getNextMessage();
 				if (inMsg != null) {
-					
-//					switch (inMsg.messageType) {
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS2:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_AHRS3:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_ATTITUDE:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_RC_CHANNELS_RAW:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_VIBRATION:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_EKF_STATUS_REPORT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYSTEM_TIME:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_HWSTATUS:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_VFR_HUD:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_FENCE_STATUS:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_GPS_RAW_INT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_CURRENT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MEMINFO:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_POWER_STATUS:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_PRESSURE:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SCALED_IMU2:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_RAW_IMU:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SYS_STATUS:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_HEARTBEAT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_SENSOR_OFFSETS:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_PARAM_VALUE:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_COMMAND_ACK:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ACK:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_LOCAL_POSITION_NED:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REPORT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_TERRAIN_REQUEST:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_HOME_POSITION:
-////						System.out.println(inMsg.toString());
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_REQUEST:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_COUNT:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM:
-//						break;
-//					case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
-//						break;
-//					default:
-//						System.out.println(inMsg.toString());
-//					}
 					
 					// Identify and process the received message
 					identifyMessage();
@@ -312,8 +258,11 @@ public class UAVControllerThread extends Thread {
 			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
 			double[] speed = new double[] {message.vx * 0.01, message.vy * 0.01, message.vz * 0.01};
 			// Update the UAV data, including the acceleration calculus
-			double z = message.alt * 0.001;
-			double zRel = message.relative_alt * 0.001;
+			if (this.round == null) {
+				this.round = API.getValidationTools();
+			}
+			double z = this.round.roundDouble(message.alt * 0.001, 2);
+			double zRel = this.round.roundDouble(message.relative_alt * 0.001, 2);
 			double heading = (message.hdg * 0.01) * Math.PI / 180;
 			UAVParam.uavCurrentData[numUAV].update(time, location, z, zRel, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
@@ -323,8 +272,39 @@ public class UAVControllerThread extends Thread {
 			if (currentState == SimulatorState.TEST_IN_PROGRESS	&& Param.testEndTime[numUAV] != 0) {
 				state = SimulatorState.TEST_FINISHED.getStateId();
 			}
-			SimParam.uavUTMPathReceiving[numUAV].offer(new LogPoint(time, locationUTM.x, locationUTM.y, z, zRel, heading, hSpeed,
-					state)); // UAV under test
+			// Log data
+			SimParam.uavUTMPath[numUAV].add(new LogPoint(time, locationUTM.x, locationUTM.y, z, zRel, heading, hSpeed,
+					state));
+			
+			// Draw the movement on screen
+			
+			if (Param.role == ArduSim.SIMULATOR) {
+				Location2DGeo locGeo = location.getGeoLocation();
+				if (this.path == null) {
+					try {
+						this.path = Mapper.Drawables.addPathGeo(SimParam.PATH_LEVEL, locGeo,
+								SimParam.minScreenMovement, this.color, UAVControllerThread.STROKE_TRACK);
+						if (UAVParam.collisionCheckEnabled) {
+							this.collisionRadius = Mapper.Drawables.addCircleGeo(SimParam.COLLISION_LEVEL, locGeo,
+									UAVParam.collisionDistance, Color.RED, UAVControllerThread.STROKE_LINE);
+						}
+						this.uav = Mapper.Drawables.addImageGeo(SimParam.UAV_LEVEL, locGeo, heading,
+								SimParam.uavImage, SimParam.UAV_PX_SIZE);
+						this.uav.updateBottomLeftText("UAV " + numUAV);
+					} catch (GUIMapPanelNotReadyException e) {
+						e.printStackTrace();
+					}
+					
+				} else {
+					this.path.updateLocation(locGeo);
+					if (UAVParam.collisionCheckEnabled) {
+						this.collisionRadius.updateLocation(locGeo);
+					}
+					this.uav.updateLocation(locGeo);
+					this.uav.updateHeading(heading);
+				}
+				this.uav.updateUpRightText("" + z);
+			}
 		}
 	}
 
@@ -496,6 +476,26 @@ public class UAVControllerThread extends Thread {
 						UAVParam.currentGeoMission[numUAV].clear();
 						UAVParam.currentGeoMission[numUAV].addAll(Arrays.asList(UAVParam.newGeoMission[numUAV]));
 						UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+						
+						if (Param.role == ArduSim.SIMULATOR) {
+							if (this.mission != null) {
+								try {
+									Mapper.Drawables.removeDrawable(this.mission);
+								} catch (GUIMapPanelNotReadyException e) {
+									e.printStackTrace();
+								}
+							}
+							List<Location2DGeo> m = new ArrayList<Location2DGeo>(UAVParam.newGeoMission[numUAV].length);
+							for (int j = 0; j < UAVParam.newGeoMission[numUAV].length; j++) {
+								m.add(new Location2DGeo(UAVParam.newGeoMission[numUAV][j].getLatitude(), UAVParam.newGeoMission[numUAV][j].getLongitude()));
+							}
+							try {
+								this.mission = Mapper.Drawables.addLinesGeo(SimParam.MISSION_LEVEL, m,
+										this.color, UAVControllerThread.STROKE_WP_LIST);
+							} catch (GUIMapPanelNotReadyException e) {
+								e.printStackTrace();
+							}
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 						UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_REQUEST_WP_LIST);

@@ -7,7 +7,7 @@ import java.util.Map;
 import com.esotericsoftware.kryo.io.Input;
 
 import api.API;
-import api.pojo.location.Location3DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.communications.CommLink;

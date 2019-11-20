@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.javatuples.Pair;
 
-import api.pojo.location.Location2DGeo;
 import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.Location2DGeo;
 
 public class FishingParam {
 

@@ -1,15 +1,10 @@
 package main.sim.logic;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-
 import api.pojo.location.LogPoint;
-import main.Text;
 
 /** This class contains parameters related to the simulation platform.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -21,56 +16,6 @@ public class SimParam {
 	
 	// Performance parameters
 	public static volatile boolean arducopterLoggingEnabled = false;
-	// Rendering quality levels
-	public static volatile RenderQuality renderQuality = RenderQuality.Q3;
-	public enum RenderQuality {
-		Q1(0, Text.RENDER_QUALITY1),
-		Q2(1, Text.RENDER_QUALITY2),
-		Q3(2, Text.RENDER_QUALITY3),
-		Q4(3, Text.RENDER_QUALITY4);
-		
-		private final int id;
-		private final String name;
-		private RenderQuality(int id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-		public int getId() {
-			return this.id;
-		}
-		public String getName() {
-			return this.name;
-		}
-		public static RenderQuality getHighestIdRenderQuality() {
-			RenderQuality res = null;
-			for (RenderQuality rq : RenderQuality.values()) {
-				if (res == null) {
-					res = rq;
-				} else {
-					if (rq.id >= res.id) {
-						res = rq;
-					}
-				}
-			}
-			return res;
-		}
-		public static String getRenderQualityNameById(int id) {
-			for (RenderQuality rq : RenderQuality.values()) {
-				if (rq.getId() == id) {
-					return rq.getName();
-				}
-			}
-			return "";
-		}
-		public static RenderQuality getRenderQualityByName(String name) {
-			for (RenderQuality rq : RenderQuality.values()) {
-				if (rq.name.equals(name)) {
-					return rq;
-				}
-			}
-			return null;
-		}
-	}
 
 	// Wind parameters
 	public static final String ARROW_IMAGE_PATH = "/resources/ardusim/wind.png"; // arrow image path
@@ -117,10 +62,6 @@ public class SimParam {
 	public static final long SITL_STARTING_TIMEOUT = 20 * 1000000000l; // (ns)
 	
 	// Parameters needed to draw and store the log of the UAVs path
-	// Received UTM positions, time and speed, and whether they are received during the experiment
-	public static BlockingQueue<LogPoint>[] uavUTMPathReceiving;
-	public static final int UAV_POS_QUEUE_INITIAL_SIZE = 5000; // Initial size of the queue
-	public static final int UAV_POS_QUEUE_FULL_THRESHOLD = 500; // Minimum queue free space
 	// Persistent storage for the UTM coordinates drawn. Used to rescale drawing and to store log
 	public static List<LogPoint>[] uavUTMPath;
 	public static final int PATH_INITIAL_SIZE = 1000; // Initial size of the lists
@@ -128,14 +69,30 @@ public class SimParam {
 	// UAV drawing parameters
 	public static final String UAV_IMAGE_PATH = "/resources/ardusim/UAV.png"; // UAV image path
 	public static BufferedImage uavImage; // UAV image
-	public static final double UAV_PX_SIZE = 25.0; // (px) UAV screen size
-	public static double uavImageScale; // Scale to be applied to the UAV (original size-screen size)
+	public static final int UAV_PX_SIZE = 25; // (px) UAV screen size
 
-	// Lines format
-	public static final Stroke STROKE_POINT = new BasicStroke(1f);
+	// Drawing parameters:
+	public static int screenUpdatePeriod = 500;					// (ms) Time between screen updates
+	public static final int MIN_SCREEN_UPDATE_PERIOD = 100;		// (ms)   minimum value
+	public static final int MAX_SCREEN_UPDATE_PERIOD = 2000;	// (ms)   maximum value
+	public static int minScaleUpdatePeriod = 1000;				// (ms) Minimum time between two consecutive map scale updates
+	public static String bingKey = null;						// Bing key loaded from ardusim.ini to use Bing images as background
+	public static int failedMapDownloadCheckPeriod = -1;		// (days) Number of days before checking again if a missing map image is available. A negative value means never check again if it is available. 0 means always check if it is available.
+	public static double minScreenMovement = 5.0;							// (px) Minimum traveled distance to add a new segment to the path of the UAV
+	public static final double MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD = 100.0;	// (px)   maximum value
+	
 	// Array with the available colors to identify each UAV. Used for missions or other protocol elements
 	public static final Color[] COLOR = { Color.BLACK, Color.BLUE, Color.RED, Color.GREEN, Color.CYAN, Color.MAGENTA,
 			Color.ORANGE, Color.PINK, Color.YELLOW };
+	
+	// Screen level where elements are drawn
+	public static final int WIND_LEVEL = Integer.MAX_VALUE;
+	public static final int PROGRESS_LEVEL = Integer.MAX_VALUE - 1;
+	public static final int UAV_LEVEL = Integer.MAX_VALUE - 2;
+	public static final int COLLISION_LEVEL = Integer.MAX_VALUE - 3;
+	
+	public static final int MISSION_LEVEL = -5;
+	public static final int PATH_LEVEL = -4;
 
 	// Information shown in the progress dialog
 	public static double[] xUTM, yUTM, z;

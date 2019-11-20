@@ -83,6 +83,7 @@ Other protocols are being implemented, and therefore they are not ready to be de
 * **Chemotaxis**. Almost completed. Single multicopter. It enables a multicopter to dynamically move around an area looking for a hotspot using a sensor (e.g. heat on wildfires, pollution peaks,...).
 * **Vision**. In progress. Single multicopter. A multicopter is guided with the Raspberry Pi camera to land with high accuracy over a mark.
 * **Fishing**. In progress. Single multicopter. A multicopter follows a fishing boat drawing circles over it.
+* **Catch me**. In progress. Single multicopter. A multicopter follows a target object that is moved manually.
 
 Please, feel free to reuse code from this protocols while developing a new one. "Mission" is the better starting point for developing a protocol where all the multicopters must follow a planned mission, while "Follow Me" and "MUSCOP" are more adequate when developing a protocol for a swarm.
 
@@ -258,9 +259,6 @@ A few functions have been implemented in the object provided by *API.getGUI(int)
 * `Pair<String, List<Waypoint>[]> loadMissions()`. In a real multicopter, the mission is automatically loaded in the function `loadMission` of the protocol implementation, but in simulations this method, or the following two methods, can be used to open a dialog to select a *.kml* file or several *.waypoints* files, and it returns the missions loaded, and the path of the *.kml* file or the folder where the *.waypoints* files were located. After this function, the method `API.getCopter(0).getMissionHelper().setMissionsLoaded(List<Waypoint>[])` must be called to provide to ArduSim the missions loaded. The array provided must have at least the same length as the number of UAVs running in the current machine (check `API.getArduSim().getNumUAVs()`).
 * `Pair<String, List<Waypoint>[]> loadMissionsKML()`. In this case, the behavior is the same as the previous function, but only a single *.kml* file can be selected.
 * `Pair<String, List<Waypoint>[]> loadMissionsQGC()`. Similar to the previous case, but only one or more *.waypoints* files can be selected.
-* `Point2D.Double locatePoint(double, double)`. It provides the screen coordinates of a point given its UTM coordinates. This and the next two functions are useful to draw new elements in the main panel using the methods `loadResources()`,  `drawResources(Graphics2D, BoardPanel)`, `rescaleDataStructures()`, and `rescaleShownResources()` in the protocol implementation, as explained in section "[4 Protocol implementation](#markdown-header-4-protocol-implementation)".
-* `Point2D.Double locatePoint(Location2DUTM)`. This method is equivalent to the former.
-* `Point2D.Double locatePoint(Location2D)`. This method is equivalent to the former.
 * `void log(String)`. This method shows a message in console. Furthermore, if ArduSim runs as a simulator, the same message is shown in the log in the upper left corner of the main window.
 * `void logUAV(String)`. In this case, the shown text is prepended with the identifier of the multicopter the message is related to.
 * `void logVerbose(String)`. In this case, the message is only shown if verbose logging mode is enabled.
@@ -269,6 +267,8 @@ A few functions have been implemented in the object provided by *API.getGUI(int)
 * `void updateProtocolState(String)`. The *progress dialog* shows general information for each running virtual UAV. This function is used to show there the current state of the protocol to compare the behavior when different UAVs are in a different state.
 * `void warn(String, String)`. On a real UAV, it writes a message to console, while in simulation it opens a dialog to warn the user.
 * `void warnUAV(String, String)`. Like the previous function, it warns the user, but prepending the ID of this UAV.
+
+ArduSim automatically draws missions, UAVs, and the path they follow. Additional elements can be shown using the functions provided in `Mapper.Drawables.class`. Examples can be observed in `MBCAP`, `Chemotaxis`, and `Catch me`protocols.
 
 ### 5.4 ArduSim integration
 

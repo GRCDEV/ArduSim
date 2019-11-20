@@ -1,9 +1,5 @@
 package chemotaxis.logic;
 
-import java.awt.Graphics2D;
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
@@ -11,14 +7,13 @@ import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.Location2DGeo;
 import chemotaxis.gui.PollutionConfigDialog;
 import chemotaxis.pojo.*;
+import es.upv.grc.mapper.Location2DGeo;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.TakeOff;
 import main.api.TakeOffListener;
-import main.sim.board.BoardPanel;
 
 public class ChemotaxisHelper extends ProtocolHelper {
 
@@ -57,7 +52,6 @@ public class ChemotaxisHelper extends ProtocolHelper {
 		ChemotaxisParam.origin.y -= ChemotaxisParam.length/2.0;
 		
 		// Measurement structure
-		ChemotaxisParam.measurements_temp = new ArrayList<Value>();
 		ChemotaxisParam.measurements_set = new ValueSet();
 		
 		ChemotaxisParam.ready = false;
@@ -67,35 +61,6 @@ public class ChemotaxisHelper extends ProtocolHelper {
 	public String setInitialState() {
 		// TODO 
 		return null;
-	}
-
-	@Override
-	public void rescaleDataStructures() {
-		// TODO 
-	}
-
-	@Override
-	public void loadResources() {
-		// TODO 
-	}
-	
-	@Override
-	public void rescaleShownResources() {
-		// TODO 
-	}
-
-	@Override
-	public void drawResources(Graphics2D g2, BoardPanel p) {
-		// TODO 
-		if (ChemotaxisParam.ready) {
-			synchronized(ChemotaxisParam.measurements_temp) {
-				Iterator<Value> itr = ChemotaxisParam.measurements_temp.iterator();
-				while(itr.hasNext()) ChemotaxisParam.measurements_set.add(itr.next());
-				ChemotaxisParam.measurements_temp.clear();
-			}
-			chemotaxis.gui.DrawTool.drawValueSet(g2, ChemotaxisParam.measurements_set);
-			chemotaxis.gui.DrawTool.drawBounds(g2);
-		}
 	}
 
 	@Override

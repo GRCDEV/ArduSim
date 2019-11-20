@@ -1,6 +1,7 @@
 package api.pojo.location;
 
 import api.API;
+import es.upv.grc.mapper.Location3DUTM;
 
 /** This class generates points for each of the UAV locations during its movement, including time, heading, etc. We use it to log the flight path to file.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */

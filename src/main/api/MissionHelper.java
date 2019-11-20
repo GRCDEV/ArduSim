@@ -7,15 +7,14 @@ import org.mavlink.messages.MAV_CMD;
 
 import api.API;
 import api.pojo.FlightMode;
-import api.pojo.location.Location2DGeo;
-import api.pojo.location.Location2DUTM;
 import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
 import main.api.hiddenFunctions.HiddenFunctions;
-import main.sim.board.BoardParam;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 
@@ -393,9 +392,6 @@ public class MissionHelper {
 				&& this.retrieve()
 				&& this.setCurrentWaypoint(0)) {
 			Param.numMissionUAVs.incrementAndGet();
-			if (Param.role == ArduSim.SIMULATOR) {
-				BoardParam.rescaleQueries.incrementAndGet();
-			}
 			success = true;
 		}
 		return success;

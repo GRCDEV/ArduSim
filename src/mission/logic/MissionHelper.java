@@ -1,7 +1,5 @@
 package mission.logic;
 
-import java.awt.Graphics2D;
-
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
@@ -9,9 +7,8 @@ import org.javatuples.Pair;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.location.Location2DGeo;
+import es.upv.grc.mapper.Location2DGeo;
 import main.Text;
-import main.sim.board.BoardPanel;
 import mbcap.logic.MBCAPHelper;
 import mission.gui.MissionConfigDialog;
 import mission.gui.MissionConfigDialogPanel;
@@ -49,18 +46,6 @@ public class MissionHelper extends ProtocolHelper {
 	public String setInitialState() {
 		return null;
 	}
-
-	@Override
-	public void rescaleDataStructures() {}
-
-	@Override
-	public void loadResources() {}
-
-	@Override
-	public void rescaleShownResources() {}
-
-	@Override
-	public void drawResources(Graphics2D g2, BoardPanel p) {}
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {

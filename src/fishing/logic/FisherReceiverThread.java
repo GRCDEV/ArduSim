@@ -31,7 +31,7 @@ public class FisherReceiverThread  extends Thread{
 		this.gui = API.getGUI(uavID);
 		this.ardusim = API.getArduSim();
 		this.messagetxt = "";
-		this.posBoat = new double [2];
+		posBoat = new double [2];
 	}
 	
 	@Override
@@ -44,13 +44,12 @@ public class FisherReceiverThread  extends Thread{
 		}
 		
 		gui.log("Hilo de escucha escuchando");
-		int i=0;
 		while(ardusim.isExperimentInProgress()) {
 			
 			message = link.receiveMessage(uavID);
-			input.setBuffer(message);
+			
 			if ( message != null) {
-				
+				input.setBuffer(message);
 				input.setPosition(0);
 				posBoat[0]=input.readDouble();
 				posBoat[1]=input.readDouble();

@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.javatuples.Pair;
 
-import api.pojo.location.Location2DUTM;
+import es.upv.grc.mapper.Location2DUTM;
 import main.ArduSimTools;
 import main.Text;
 import main.api.formations.FlightFormation;

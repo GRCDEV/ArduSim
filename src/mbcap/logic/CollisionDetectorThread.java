@@ -1,6 +1,9 @@
 package mbcap.logic;
 
+import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -10,20 +13,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.imageio.ImageIO;
+
 import api.API;
 import api.pojo.FlightMode;
-import api.pojo.location.Location3DUTM;
-import api.pojo.location.Location2DUTM;
-import api.pojo.location.Location3D;
+import es.upv.grc.mapper.DrawableImageGeo;
+import es.upv.grc.mapper.DrawableSymbol;
+import es.upv.grc.mapper.DrawableSymbolGeo;
+import es.upv.grc.mapper.GUIMapPanelNotReadyException;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3D;
+import es.upv.grc.mapper.Location3DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
+import es.upv.grc.mapper.Mapper;
 import main.api.ArduSim;
-import main.api.ArduSimNotReadyException;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.MoveToListener;
 import main.api.WaypointReachedListener;
 import main.api.MoveTo;
-import mbcap.gui.MBCAPGUITools;
+import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.MBCAPState;
 import mbcap.pojo.ProgressState;
 import mbcap.pojo.Beacon;
@@ -41,17 +52,19 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 	private AtomicInteger projectPath;
 	private AtomicReference<Beacon> beacon;
 	private AtomicReference<Location2DUTM> targetLocationUTM;
-	private AtomicReference<Point2D.Double> targetLocationPX;
+	private AtomicReference<DrawableSymbolGeo> targetLocationPX;
 	private Map<Long, Location3DUTM> impactLocationUTM;
-	private Map<Long, Point2D.Double> impactLocationPX;
+	private Map<Long, DrawableImageGeo> impactLocationPX;
 	private Map<Long, Beacon> beacons;
 	private List<ProgressState> progress;
 	private int numUAV;
 	
+	private boolean isRealUAV;
 	private Copter copter;
 	private MissionHelper missionHelper;
 	private GUI gui;
 	private ArduSim ardusim;
+	private int numUAVs;
 	
 	private long cicleTime;
 	private PriorityQueue<Beacon> sortingQueue;
@@ -69,9 +82,13 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 		this.projectPath = MBCAPParam.projectPath[numUAV];
 		this.beacon = MBCAPParam.selfBeacon[numUAV];
 		this.targetLocationUTM = MBCAPParam.targetLocationUTM[numUAV];
-		this.targetLocationPX = MBCAPParam.targetLocationPX[numUAV];
 		this.impactLocationUTM = MBCAPParam.impactLocationUTM[numUAV];
-		this.impactLocationPX = MBCAPParam.impactLocationPX[numUAV];
+		this.ardusim = API.getArduSim();
+		this.isRealUAV = ardusim.getArduSimRole() == ArduSim.MULTICOPTER;
+		if (!this.isRealUAV) {
+			this.targetLocationPX = MBCAPParam.targetLocationScreen[numUAV];
+			this.impactLocationPX = MBCAPParam.impactLocationScreen[numUAV];
+		}
 		this.beacons = MBCAPParam.beacons[numUAV];
 		this.progress = MBCAPParam.progress[numUAV];
 		this.numUAV = numUAV;
@@ -79,7 +96,7 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 		this.copter = API.getCopter(numUAV);
 		this.missionHelper = this.copter.getMissionHelper();
 		this.gui = API.getGUI(numUAV);
-		this.ardusim = API.getArduSim();
+		this.numUAVs = this.ardusim.getNumUAVs();
 		
 		this.cicleTime = 0;
 		this.sortingQueue = new PriorityQueue<Beacon>(this.ardusim.getNumUAVs(), Collections.reverseOrder());
@@ -97,6 +114,14 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 		
 		Long prevRiskId = null;				// Used to avoid checking collision risk with the previously solved situation UAV ID
 		long prevSolvedTimeout = 0;
+		
+		// Load the image used to show the risk location
+		URL url = MBCAPHelper.class.getResource(MBCAPGUIParam.EXCLAMATION_IMAGE_PATH);
+		try {
+			MBCAPGUIParam.exclamationImage = ImageIO.read(url);
+		} catch (IOException e) {
+			API.getGUI(0).exit(MBCAPText.WARN_IMAGE_LOAD_ERROR);
+		}
 
 		// Do nothing until the experiment begins
 		while (!ardusim.isExperimentInProgress()) {
@@ -104,9 +129,7 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 		}
 
 		long waitingTime;
-		boolean isRealUAV = ardusim.getArduSimRole() == ArduSim.MULTICOPTER;
 		// If two UAVs collide, then the protocol stops. Also, it stops when the experiment finishes
-		ArduSim ardusim = API.getArduSim();
 		while (!ardusim.collisionIsDetected() && ardusim.isExperimentInProgress()) {
 			// While flying, analyze received information, and control the UAV
 			if (copter.isFlying()) {
@@ -129,7 +152,18 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 							
 							// Clean all risk marks as we don't know which UAV has failed
 							if (!isRealUAV) {
-								MBCAPGUITools.removeImpactRiskMarks();
+								for (int i=0; i<this.numUAVs; i++) {
+									MBCAPParam.impactLocationUTM[i].clear();
+									
+									for (Map.Entry<Long, DrawableImageGeo> entry : MBCAPParam.impactLocationScreen[i].entrySet()) {
+										try {
+											Mapper.Drawables.removeDrawable(entry.getValue());
+										} catch (GUIMapPanelNotReadyException e) {
+											e.printStackTrace();
+										}
+									}
+									MBCAPParam.impactLocationScreen[i].clear();
+								}
 							}
 							
 							// Status update
@@ -240,7 +274,7 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 							}
 
 							// Selecting and ordering the UAVs that suppose a collision risk
-							PriorityQueue<Beacon> riskyUAVs = new PriorityQueue<Beacon>(ardusim.getNumUAVs(), Collections.reverseOrder());
+							PriorityQueue<Beacon> riskyUAVs = new PriorityQueue<Beacon>(this.numUAVs, Collections.reverseOrder());
 							boolean check;
 							Location3DUTM riskyLocation;
 							while (sortingQueue.size()>0) {
@@ -472,7 +506,7 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 												} else {
 													gui.logUAV(MBCAPText.MOVED);
 												}
-											} catch (ArduSimNotReadyException e) {
+											} catch (LocationNotReadyException e) {
 												e.printStackTrace();
 												if (copter.land()) {
 													gui.warnUAV(MBCAPText.PROT_ERROR, e.getMessage());
@@ -543,7 +577,17 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 							this.updateState(MBCAPState.GO_ON_PLEASE);
 							projectPath.set(0);	// Avoid projecting the predicted path over the theoretical one
 							targetLocationUTM.set(null);
-							targetLocationPX.set(null);
+							if (!this.isRealUAV) {
+								DrawableSymbolGeo symbol = targetLocationPX.getAndSet(null);
+								if (symbol != null) {
+									try {
+										Mapper.Drawables.removeDrawable(symbol);
+									} catch (GUIMapPanelNotReadyException e) {
+										e.printStackTrace();
+									}
+								}
+							}
+							
 						}
 						
 						// 3.5 In go on, please state. Change to normal state when the risk collision is solved
@@ -737,7 +781,14 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 		// If new coordinates have been found, it means that the UAV must move to a safer position
 		if (newLocation != null) {
 			targetLocationUTM.set(newLocation);
-			targetLocationPX.set(gui.locatePoint(newLocation.x, newLocation.y));
+			if (!this.isRealUAV) {
+				try {
+					targetLocationPX.set(Mapper.Drawables.addSymbolGeo(2, newLocation.getGeo(),
+							DrawableSymbol.CROSS, 10, Color.BLACK, MBCAPParam.STROKE_POINT));
+				} catch (GUIMapPanelNotReadyException | LocationNotReadyException e) {
+					e.printStackTrace();
+				}
+			}
 			return true;
 		}
 		return false;
@@ -1028,12 +1079,31 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 	
 	/** Stores (or removes when riskUTMLocation==null) the collision risk location that is drawn. */
 	public void locateImpactRiskMark(Location3DUTM riskUTMLocation, long beaconId) {
-		if (API.getArduSim().getArduSimRole() == ArduSim.SIMULATOR) {
+		if (!this.isRealUAV) {
 			if (riskUTMLocation == null) {
-				impactLocationPX.remove(beaconId);
+				DrawableImageGeo current = impactLocationPX.remove(beaconId);
+				if (current != null) {
+					try {
+						Mapper.Drawables.removeDrawable(current);
+					} catch (GUIMapPanelNotReadyException e) {
+						e.printStackTrace();
+					}
+				}
 			} else {
-				Point2D.Double riskPXLocation = gui.locatePoint(riskUTMLocation.x, riskUTMLocation.y);
-				impactLocationPX.put(beaconId, riskPXLocation);
+				DrawableImageGeo current = impactLocationPX.get(beaconId);
+				try {
+					Location2DGeo target = riskUTMLocation.getGeo();
+					
+					if (current == null) {
+						impactLocationPX.put(beaconId, Mapper.Drawables.addImageGeo(1, target, 0, MBCAPGUIParam.exclamationImage, MBCAPGUIParam.EXCLAMATION_PX_SIZE));
+					} else {
+						current.updateLocation(target);
+					}
+				} catch (LocationNotReadyException e) {
+					e.printStackTrace();
+				} catch (GUIMapPanelNotReadyException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
