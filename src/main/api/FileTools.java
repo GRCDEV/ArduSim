@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,21 +21,15 @@ public class FileTools {
 	
 	/**
 	 * Get the folder where ArduSim is running.
-	 * @return The folder where ArduSim is running (.jar folder, or project root if running in Eclipse IDE).
+	 * @return The folder where ArduSim is running (.jar folder, or project root if running in Eclipse IDE), or null if any error happens.
 	 */
 	public File getCurrentFolder() {
-		String filePath = Main.class.getResource("/" + Main.class.getName().replace('.', '/') + ".class").toString();
-    	boolean isRunningFromJarFile = false;
-		if (filePath.startsWith("jar:") || filePath.startsWith("rsrc:")) {
-			isRunningFromJarFile = true;
+    	try {
+			return new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			return null;
 		}
-    	
-    	File jarDir = new File(ClassLoader.getSystemClassLoader().getResource(".").getPath());
-    	if (!isRunningFromJarFile) {
-    		jarDir = jarDir.getParentFile();
-    	}
-    	
-    	return jarDir;
 	}
 	
 	/**
