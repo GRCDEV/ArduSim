@@ -42,13 +42,13 @@ public class SafeTakeOffTalkerThread extends Thread {
 		super(Text.SAFE_TAKE_OFF_TAKER + numUAV);
 		this.nextID = safeTakeOffInstance.nextID;
 		this.excluded = safeTakeOffInstance.excluded;
-		this.isCenter = safeTakeOffInstance.isCenter;
 		this.gui = API.getGUI(numUAV);
 		this.commLink = InternalCommLink.getCommLink(numUAV);
 		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		this.copter = API.getCopter(numUAV);
 		this.selfID = this.copter.getID();
+		this.isCenter = safeTakeOffInstance.masterOrder[0] == this.selfID;
 		this.ardusim = API.getArduSim();
 		this.state = state;
 	}

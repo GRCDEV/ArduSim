@@ -134,7 +134,7 @@ public class MUSCOPListenerThread extends Thread {
 		AtomicBoolean missionReceived = new AtomicBoolean();
 		AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
 		final AtomicInteger moveSemaphore = new AtomicInteger(1);	// We start in waypoint 0 and move to waypoint 1
-		(new MUSCOPTalkerThread(numUAV, isMaster, takeOff.isCenter(), missionReceived, wpReachedSemaphore, moveSemaphore)).start();
+		(new MUSCOPTalkerThread(numUAV, isMaster, takeOff.getMasterOrder()[0] == this.selfId, missionReceived, wpReachedSemaphore, moveSemaphore)).start();
 		gui.logUAV(MUSCOPText.SEND_MISSION);
 		gui.updateProtocolState(MUSCOPText.SEND_MISSION);
 		Map<Long, Long> acks = null;
@@ -256,7 +256,7 @@ public class MUSCOPListenerThread extends Thread {
 		
 		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		Map<Long, Long> reached = null;
-		boolean iAmCenter = takeOff.isCenter();
+		boolean iAmCenter = takeOff.getMasterOrder()[0] == this.selfId;
 		if (iAmCenter) {
 			reached = new HashMap<Long, Long>((int)Math.ceil(numSlaves / 0.75) + 1);
 		}

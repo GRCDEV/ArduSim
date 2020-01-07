@@ -17,7 +17,7 @@ public class SafeTakeOffContext {
 	protected Location2DGeo targetLocation;
 	protected double altitudeStep1, altitudeStep2;
 	protected boolean excluded;
-	protected boolean isCenter;
+	protected long[] masterOrder;
 	
 	private Location2DUTM centerLocation;
 	protected int numUAVs;
@@ -29,7 +29,7 @@ public class SafeTakeOffContext {
 	private SafeTakeOffContext() {}
 	
 	public SafeTakeOffContext(long prevID, long nextID, Location2DGeo targetLocation, double altitudeStep1, double altitudeStep2,
-			boolean excluded, boolean isCenter, Location2DUTM centerLocation, int numUAVs,
+			boolean excluded, long[] masterOrder, Location2DUTM centerLocation, int numUAVs,
 			FlightFormation flightFormation, FlightFormation landFormation, int formationPosition, double initialYaw) {
 		this.prevID = prevID;
 		this.nextID = nextID;
@@ -37,7 +37,7 @@ public class SafeTakeOffContext {
 		this.altitudeStep1 = altitudeStep1;
 		this.altitudeStep2 = altitudeStep2;
 		this.excluded = excluded;
-		this.isCenter = isCenter;
+		this.masterOrder = masterOrder;
 		this.centerLocation = centerLocation;
 		this.numUAVs = numUAVs;
 		this.flightFormation = flightFormation;
@@ -111,11 +111,11 @@ public class SafeTakeOffContext {
 	}
 	
 	/**
-	 * Whether this UAV will be in the center of the flight formation or not.
-	 * @return true if this UAV will be in the center of the flight formation.
+	 * Get the ID of the UAVs in the optimal order to assign any of the as master for master-slave pattern protocols.
+	 * #return list of IDs of the UAVs.
 	 */
-	public boolean isCenter() {
-		return isCenter;
+	public long[] getMasterOrder() {
+		return this.masterOrder;
 	}
 	
 }

@@ -56,7 +56,7 @@ public class SafeTakeOffListenerThread extends Thread {
 		this.altitudeStep1 = safeTakeOffInstance.altitudeStep1;
 		this.altitudeStep2 = safeTakeOffInstance.altitudeStep2;
 		this.excluded = safeTakeOffInstance.excluded;
-		this.isCenter = safeTakeOffInstance.isCenter;
+		
 		this.numUAVs = safeTakeOffInstance.numUAVs;
 		this.listener = listener;
 		this.gui = API.getGUI(numUAV);
@@ -65,6 +65,7 @@ public class SafeTakeOffListenerThread extends Thread {
 		this.input = new Input(inBuffer);
 		this.copter = API.getCopter(numUAV);
 		this.selfID = this.copter.getID();
+		this.isCenter = safeTakeOffInstance.masterOrder[0] == this.selfID;
 		this.ardusim = API.getArduSim();
 	}
 	

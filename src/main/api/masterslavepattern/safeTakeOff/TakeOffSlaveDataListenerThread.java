@@ -27,7 +27,6 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 
 	private int numUAV;
 	private long selfID;
-	private boolean iAmCenter = false;
 	private Location2DUTM centerUAVLocation = null;
 	private int numUAVs;
 	private Formation formation;
@@ -35,6 +34,7 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 	private int formationPos;
 	private double formationYaw, altitudeStep1, altitudeStep2;
 	private boolean exclude;
+	private long[] masterOrder;
 	private AtomicReference<SafeTakeOffContext> result;
 	
 	private long prevID, nextID;
@@ -67,6 +67,14 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 		
 		gui.logVerboseUAV(MSText.SLAVE_LISTENER_WAITING_DATA);
 		long lastReceivedData = 0;
+		boolean takeOffDataReceived = false;
+		long[][] auxMasterOrder = null;
+		int max = CommLink.DATAGRAM_MAX_LENGTH;
+		int maxSize = 0;
+		int numFrags = 0;
+		int fragsReceived = 0;
+		short frag;
+		
 		while (state.get() == MSParam.STATE_EXCLUDE) {
 			inBuffer = commLink.receiveMessage();
 			if (inBuffer != null) {
@@ -76,14 +84,12 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 				if (type == MSMessageID.TAKE_OFF_DATA) {
 					if (input.readLong() == selfID) {
 						lastReceivedData = System.currentTimeMillis();
-						long id = input.readLong();
-						if (selfID == id) {
-							iAmCenter = true;
-						}
+						input.readLong();	// The center UAV ID is no longer used
 						centerUAVLocation = new Location2DUTM(input.readDouble(), input.readDouble());
 						prevID = input.readLong();
 						nextID = input.readLong();
 						numUAVs = input.readInt();
+						this.masterOrder = new long[numUAVs];
 						formation = Formation.getFormation(input.readShort());
 						flightFormation = FlightFormation.getFormation(formation, numUAVs, input.readDouble());
 						landFormation = FlightFormation.getFormation(formation, numUAVs, input.readDouble());
@@ -91,6 +97,43 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 						formationYaw = input.readDouble();
 						altitudeStep1 = input.readDouble();
 						altitudeStep2 = input.readDouble();
+						
+						takeOffDataReceived = true;
+					}
+				}
+				
+				if (takeOffDataReceived && type == MSMessageID.LIDER_ORDER) {
+					for (int i = 0; i < numUAVs; i++) {
+						this.masterOrder[i] = input.readLong();
+					}
+					
+					state.set(MSParam.STATE_SENDING_DATA);
+				}
+				
+				if (takeOffDataReceived && type == MSMessageID.LIDER_ORDER_FRAG) {
+					if (auxMasterOrder == null) {
+						maxSize = Math.floorDiv(max - 2 - 2, 8);
+						numFrags = (int) Math.ceil(numUAVs / (maxSize * 1.0));
+						auxMasterOrder = new long[numFrags][];
+					}
+					frag = input.readShort();
+					if (auxMasterOrder[frag] == null) {
+						int subSize = Math.min(maxSize, numUAVs - frag * maxSize);
+						auxMasterOrder[frag] = new long[subSize];
+						for (int i = 0; i < subSize; i++) {
+							auxMasterOrder[frag][i] = input.readLong();
+						}
+						fragsReceived++;
+					}
+					
+					if (fragsReceived == numFrags) {
+						int k = 0;
+						for (int i = 0; i < auxMasterOrder.length; i++) {
+							for (int j = 0; j < auxMasterOrder[i].length; j++) {
+								this.masterOrder[k] = auxMasterOrder[i][j];
+								k++;
+							}
+						}
 						
 						state.set(MSParam.STATE_SENDING_DATA);
 					}
@@ -106,7 +149,7 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 			gui.exit(e.getMessage());
 		}
 		SafeTakeOffContext data = new SafeTakeOffContext(prevID, nextID, target, altitudeStep1, altitudeStep2, exclude,
-				iAmCenter, centerUAVLocation, numUAVs, flightFormation, landFormation, formationPos, formationYaw);
+				this.masterOrder, centerUAVLocation, numUAVs, flightFormation, landFormation, formationPos, formationYaw);
 		this.result.set(data);
 		
 		gui.logVerboseUAV(MSText.SLAVE_LISTENER_WAITING_DATA_TIMEOUT);

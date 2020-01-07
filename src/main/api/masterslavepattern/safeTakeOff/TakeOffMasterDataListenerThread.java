@@ -149,14 +149,19 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		long centerUAVID = centerMatch.getValue1();
 		Location2DUTM centerUAVLocationUTM = centerMatch.getValue2();
 		
-		// 4. Build the messages to send with the Talker Thread
+		// 4. Get the master assignment order from the match (fault tolerance)
+		long[] ids = new long[numUAVs];
+		for (int i = 0, j = numUAVs-1; i < numUAVs; i++, j--) {
+			ids[i] = match[j].getValue1();
+		}
+		
+		// 5. Build the messages to send with the Talker Thread
 		byte[] outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		Output output = new Output(outBuffer);
 		Map<Long, byte[]> messages = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		long curID, prevID, nextID;
 		// i represents the position in the takeoff sequence
 		int formationPos = 0;
-		boolean isReallyTheCenterUAV = false;
 		long pID = 0;
 		long nID = 0;
 		Location2DGeo targetLocation = null;
@@ -185,10 +190,9 @@ public class TakeOffMasterDataListenerThread extends Thread {
 					e.printStackTrace();
 					gui.exit(e.getMessage());
 				}
-				isReallyTheCenterUAV = selfID == centerUAVID;
 				FlightFormation landFormation = FlightFormation.getFormation(Formation.getFormation(flightFormation.getFormationId()),
 						numUAVs, UAVParam.landDistanceBetweenUAV);
-				data = new SafeTakeOffContext(pID, nID, targetLocation, takeOffAltitudeStep1, targetAltitude, exclude, isReallyTheCenterUAV, centerUAVLocationUTM,
+				data = new SafeTakeOffContext(pID, nID, targetLocation, takeOffAltitudeStep1, targetAltitude, exclude, ids, centerUAVLocationUTM,
 						numUAVs, flightFormation, landFormation, formationPos, formationYaw);
 			} else {
 				output.clear();
@@ -211,17 +215,51 @@ public class TakeOffMasterDataListenerThread extends Thread {
 				messages.put(curID, Arrays.copyOf(outBuffer, output.position()));
 			}
 		}
-		output.close();
 		if (targetLocation == null) {
 			gui.exit(MSText.MASTER_ID_NOT_FOUND);
 		}
 		
-		// 5. Get the data to be returned by this Thread and start the thread talker
+		int max = CommLink.DATAGRAM_MAX_LENGTH;
+		boolean fragment = numUAVs > Math.floorDiv(max - 2, 8);
+		
+		byte[][] ms;
+		if (fragment) {
+			int maxSize = Math.floorDiv(max - 2 - 2, 8);	//183 UAVs
+			int frags = (int) Math.ceil(numUAVs / (maxSize * 1.0));
+			ms = messages.values().toArray(new byte[messages.size() + frags][]);
+			
+			int frag = 0;
+			int idsPos = 0;
+			for (int i = messages.size();i < messages.size() + frags; i++) {
+				int subSize = Math.min(maxSize, numUAVs - frag * maxSize);
+				output.clear();
+				output.writeShort(MSMessageID.LIDER_ORDER_FRAG);
+				output.writeShort(frag);
+				while(idsPos < frag * maxSize + subSize) {
+					output.writeLong(ids[idsPos]);
+					idsPos++;
+				}
+				output.flush();
+				ms[i] = Arrays.copyOf(outBuffer, output.position());
+				frag++;
+			}
+		} else {
+			ms = messages.values().toArray(new byte[messages.size() + 1][]);
+			output.clear();
+			output.writeShort(MSMessageID.LIDER_ORDER);
+			for (int i = 0; i < ids.length; i++) {
+				output.writeLong(ids[i]);
+			}
+			output.flush();
+			ms[ms.length - 1] = Arrays.copyOf(outBuffer, output.position());
+		}
+		output.close();
+		
+		// 6. Get the data to be returned by this Thread and start the thread talker
 		this.result.set(data);
+		new TakeOffMasterDataTalkerThread(numUAV, ms, state).start();
 		
-		new TakeOffMasterDataTalkerThread(numUAV, messages.values().toArray(new byte[messages.size()][]), state).start();
-		
-		// 6. Wait slaves for ack
+		// 7. Wait slaves for ack
 		gui.logVerboseUAV(MSText.MASTER_LISTENER_WAITING_DATA_ACK);
 		excluded.clear();
 		while (state.get() == MSParam.STATE_SENDING_DATA) {
