@@ -24,11 +24,13 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * RAM 6 GB
 
-* Microsoft Windows 7, Linux or MacOS
+* Microsoft Windows 7, Linux or MacOS (low performance expected on Windows)
 
 * Eclipse IDE for Java Developers: Oxygen or later, with package EGit
 
-* Java SE Runtime Environment 7 32 bits
+* Java SE Development Kit (JDK) 13 32 bits
+
+* Cygwin and ImDisk Virtual Disk Driver (Windows only)
 
 ###### Recommended:
 
@@ -40,9 +42,9 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * Eclipse IDE for Java Developers: Oxygen or later, with packages EGit and WindowBuilder
 
-* Java SE Runtime Environment 8 64 bits (compatibility not tested for newer versions)
+* Java SE Development Kit (JDK) 13 64 bits
 
-* ImDisk Virtual Disk Driver (Windows only)
+* Cygwin and ImDisk Virtual Disk Driver (Windows only)
 
 ## 2 Eclipse IDE integration
 
@@ -63,8 +65,6 @@ Now copy the following URI in the configuration window and enter your user name 
 Then, select the master branch, also "Import all existing Eclipse projects after clone finishes", and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
 
 Finally, change to the default perspective: *Window --> Perspective -->Open Perspective --> Java*.
-
-ArduSim was developed with Java 1.8 and Eclipse Oxygen, and with Java 1.7 as the target compliance level, but many new versions of both Java and Eclipse have been released since then. If you are using newer versions, some compilation errors may appear, but the code is right, the problem is that Eclipse mess up with the project, and it has to be cleaned and rebuild. To this aim, right click over the project name and open the project properties, select *Java Compiler*, and under *JDK Compliance* deselet the option *Use compliance from execution environment'JavaSE-1.7' on the Java Build Path* to be able to change the *Java Compliance level* to 1.8 and apply changes and close the dialog. The errors must disappear. Then, open again the project properties and revert the changes to keep the initial configuration (not mandatory but recommended).
 
 We recommend to show packages in hierarchical order in *Package explorer* tab. Open the dropdown menu and select *Package Presentation --> Hierarchical*.
 
