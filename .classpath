@@ -40,6 +40,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/ArduSim/libs/ardusim/gson/gson-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/ardusim/mapper/mapper_v1.jar"/>
+	<classpathentry kind="lib" path="libs/ardusim/mapper/mapper_v2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
