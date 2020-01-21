@@ -489,10 +489,10 @@ public class Copter {
 	}
 	
 	/**
-	 * Take off until the target relative altitude: it changes the flight mode to guided, arms engines, and then performs the guided take off. Before, it changes the flight mode to loiter and overrides the controls of the remote control to avoid a crash that happens with real multicopters.
-	 * <p>You must start the thread provided and start a loop in order to wait the take off process to finish.
+	 * Take off until the target relative altitude: it changes the flight mode to guided, arms engines, and then performs the guided take off. Before that, it changes the flight mode to loiter and overrides the controls of the remote control to avoid a crash that happens with real multicopters.
+	 * <p>Please, start the thread returned by this function. Then, you can use <i>Thread.join()</i> to wait until the take off ends, or you can wait in a loop until the listener <i>onCompleteActionPerformed()</i> method updates some shared variable when the take off finishes.
 	 * @param altitude (m) Relative altitude to go to.
-	 * @param listener Please, create an anonymous inner element to implement the provided methods.
+	 * @param listener Please, create an anonymous inner element to implement the provided methods. If <i>null</i>, you should wait with <i>Thread.join()</i> for the take off process to complete, as <i>onCompleteActionPerformed()</i> method will not be available, and applying actions to the multicopter before finishing the take off is a bad practice, from the safety point of view.
 	 * @return TakeOff A thread that starts the take off, and continuously checks if it has finished.
 	 */
 	public TakeOff takeOff(double altitude, TakeOffListener listener) {

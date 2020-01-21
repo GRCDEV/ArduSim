@@ -369,7 +369,7 @@ public class Text {
 	public static final String STORE_QUESTION = "Do you want to overwrite the file?";
 	public static final String STORE_PATH_ERROR = "UAV path not found. Unable to store in file.";
 	public static final String LAST_WAYPOINT_REACHED = "Last waypoint reached.";
-	public static final String TAKE_OFF_ERROR = "Unable to take off.";
+	public static final String TAKE_OFF_ERROR = "Unable to take off UAV";
 	public static final String MOVE_TO_ERROR = "Unable to move to target location.";
 	
 	// System properties

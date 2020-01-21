@@ -2,6 +2,7 @@ package main.api;
 
 import api.API;
 import api.pojo.FlightMode;
+import main.ArduSimTools;
 import main.Param;
 import main.Text;
 import main.api.hiddenFunctions.HiddenFunctions;
@@ -20,7 +21,7 @@ public class TakeOff extends Thread {
 	private int numUAV;
 	private double relAltitude;
 	private double minAltitude;
-	private TakeOffListener listener;
+	private TakeOffListener listener = null;
 	
 	@SuppressWarnings("unused")
 	private TakeOff() {}
@@ -38,13 +39,14 @@ public class TakeOff extends Thread {
 		
 		ArduSim ardusim = API.getArduSim();
 		Copter copter = API.getCopter(numUAV);
-		GUI gui = API.getGUI(numUAV);
 		
 		if (UAVParam.flightMode.get(numUAV).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
 				|| !copter.setFlightMode(FlightMode.LOITER)
 				|| !HiddenFunctions.stabilize(numUAV)) {
-			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			listener.onFailure();
+			ArduSimTools.logGlobal(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
+			if (listener != null) {
+				listener.onFailure();
+			}
 			return;
 		}
 		
@@ -52,20 +54,26 @@ public class TakeOff extends Thread {
 		ardusim.sleep(TakeOff.HOVERING_TIMEOUT);
 		
 		if (!copter.setFlightMode(FlightMode.GUIDED)) {
-			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			listener.onFailure();
+			ArduSimTools.logGlobal(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
+			if (listener != null) {
+				listener.onFailure();
+			}
 			return;
 		}
 		
 		if (!HiddenFunctions.armEngines(numUAV)) {
-			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			listener.onFailure();
+			ArduSimTools.logGlobal(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
+			if (listener != null) {
+				listener.onFailure();
+			}
 			return;
 		}
 		
 		if (!HiddenFunctions.takeOffGuided(numUAV, relAltitude)) {
-			gui.logUAV(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
-			listener.onFailure();
+			ArduSimTools.logGlobal(Text.TAKE_OFF_ERROR + " " + Param.id[numUAV]);
+			if (listener != null) {
+				listener.onFailure();
+			}
 			return;
 		}
 		
@@ -78,7 +86,7 @@ public class TakeOff extends Thread {
 				goOn = false;
 			} else {
 				if (System.currentTimeMillis() - logTime > TakeOff.LOG_PERIOD) {
-					gui.logVerboseUAV(Text.ALTITUDE_TEXT
+					ArduSimTools.logVerboseGlobal("UAV " + Param.id[numUAV] + " " +  Text.ALTITUDE_TEXT
 							+ " = " + String.format("%.2f", UAVParam.uavCurrentData[numUAV].getZ())
 							+ " " + Text.METERS);
 					logTime = logTime + TakeOff.LOG_PERIOD;
@@ -92,7 +100,9 @@ public class TakeOff extends Thread {
 			}
 		}
 		
-		listener.onCompleteActionPerformed();
+		if (listener != null) {
+			listener.onCompleteActionPerformed();
+		}
 		
 	}
 }
