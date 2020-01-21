@@ -180,6 +180,15 @@ public class Copter {
 //	}
 	
 	/**
+	 * Get the current battery level.
+	 * @return (%) the battery remaining level or -1 if unknown.
+	 * <p>100% is the level when started, even if the battery was not fully charged!.</p>
+	 */
+	public int getBattery() {
+		return UAVParam.uavCurrentStatus[numUAV].getRemainingBattery();
+	}
+	
+	/**
 	 * Get the latest received data from the flight controller.
 	 * @return A set of 5 values: time (ns) when the data was received from the flight controller, UTM coordinates,
 	 * absolute altitude (meters), speed (m/s), and acceleration (m/s&sup2;).

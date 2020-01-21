@@ -195,6 +195,7 @@ General functions:
 * `Location2DGeo getLocationGeo()`. In this case, it provides the current geographic coordinates (latitude and longitude).
 * `Location2DUTM getLocationUTM()`. It provides only the current UTM coordinates.
 * `Location2DUTM[] getLocationUTMLastKnown()`. This function gives the last known UTM locations of the UAV, starting with the older.
+* `int getBattery()`. You can retrieve the current battery level, but be aware that, in a real multicopter, it shows 100% when the flight controller is started, even if it flew before and the battery is depleted!!!
 * `Double getParameter(CopterParam)`. Parameter values can be retrieved from the flight controller at any time, but the most appropriate place is the method `sendInitialConfiguration(int)`.
 * `double getPlannedSpeed()`. This method provides the maximum flying speed used by the flight controller. In a mission, it is the constant speed it will follow through a straight line, and in GUIDED flight mode it is the maximum speed adopted by the flight controller while executing commands.
 * `double getSpeed()`. This method gives the current flight speed.
