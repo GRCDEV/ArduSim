@@ -114,7 +114,7 @@ public class Copter {
 		
 		channelPos = UAVParam.RCmapThrottle[numUAV]-1;
 		minValue = UAVParam.RCminValue[numUAV][channelPos];
-		int mode = UAVParam.flightMode.get(numUAV).getCustomMode();
+		int mode = (int)UAVParam.flightMode.get(numUAV).getCustomMode();
 		if (mode == FlightMode.ALT_HOLD.getCustomMode()
 				|| mode == FlightMode.LOITER.getCustomMode()
 				|| mode == FlightMode.POSHOLD.getCustomMode()) {

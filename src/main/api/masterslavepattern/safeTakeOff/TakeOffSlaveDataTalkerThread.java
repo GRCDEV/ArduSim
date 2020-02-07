@@ -49,7 +49,7 @@ public class TakeOffSlaveDataTalkerThread extends Thread {
 	public void run() {
 		
 		gui.logVerboseUAV(MSText.SLAVE_TALKER_SENDING_EXCLUDE);
-		output.clear();
+		output.reset();
 		output.writeShort(MSMessageID.EXCLUDE);
 		output.writeLong(selfID);
 		output.writeBoolean(exclude);
@@ -68,7 +68,7 @@ public class TakeOffSlaveDataTalkerThread extends Thread {
 		}
 		
 		gui.logVerboseUAV(MSText.SLAVE_TALKER_SENDING_TAKE_OFF_DATA_ACK);
-		output.clear();
+		output.reset();
 		output.writeShort(MSMessageID.TAKE_OFF_DATA_ACK);
 		output.writeLong(selfID);
 		output.flush();

@@ -195,7 +195,7 @@ public class TakeOffMasterDataListenerThread extends Thread {
 				data = new SafeTakeOffContext(pID, nID, targetLocation, takeOffAltitudeStep1, targetAltitude, exclude, ids, centerUAVLocationUTM,
 						numUAVs, flightFormation, landFormation, formationPos, formationYaw);
 			} else {
-				output.clear();
+				output.reset();
 				output.writeShort(MSMessageID.TAKE_OFF_DATA);
 				output.writeLong(curID);
 				output.writeLong(centerUAVID);
@@ -232,7 +232,7 @@ public class TakeOffMasterDataListenerThread extends Thread {
 			int idsPos = 0;
 			for (int i = messages.size();i < messages.size() + frags; i++) {
 				int subSize = Math.min(maxSize, numUAVs - frag * maxSize);
-				output.clear();
+				output.reset();
 				output.writeShort(MSMessageID.LIDER_ORDER_FRAG);
 				output.writeShort(frag);
 				while(idsPos < frag * maxSize + subSize) {
@@ -245,7 +245,7 @@ public class TakeOffMasterDataListenerThread extends Thread {
 			}
 		} else {
 			ms = messages.values().toArray(new byte[messages.size() + 1][]);
-			output.clear();
+			output.reset();
 			output.writeShort(MSMessageID.LIDER_ORDER);
 			for (int i = 0; i < ids.length; i++) {
 				output.writeLong(ids[i]);

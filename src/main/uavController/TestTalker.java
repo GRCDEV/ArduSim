@@ -73,7 +73,7 @@ public class TestTalker extends Thread {
 			}
 			
 			try {
-				output.clear();
+				output.reset();
 				output.writeLong(Param.id[0]);
 				output.writeInt(Param.simStatus.getStateId());
 				sentPacket.setData(sendBuffer, 0, output.position());

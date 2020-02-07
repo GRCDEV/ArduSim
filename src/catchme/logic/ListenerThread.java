@@ -85,7 +85,7 @@ public class ListenerThread extends Thread{
 	private void startListening() {
 		try {
 			System.out.println("Sending message...");
-			output.clear();
+			output.reset();
 			output.writeShort(1);
 			message = Arrays.copyOf(buffer, output.position());
 			DatagramPacket respons = new DatagramPacket(buffer, buffer.length);

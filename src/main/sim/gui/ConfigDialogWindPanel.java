@@ -6,12 +6,9 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.URL;
-
-import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import api.API;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
@@ -31,9 +28,10 @@ public class ConfigDialogWindPanel extends JPanel {
 		setPreferredSize(new Dimension(SimParam.ARROW_PANEL_SIZE, SimParam.ARROW_PANEL_SIZE));
 
 		// Load and scale the image to be drawn
-		URL url = MainWindow.class.getResource(SimParam.ARROW_IMAGE_PATH);
-		try {
-			BufferedImage dummyImage = ImageIO.read(url);
+		BufferedImage dummyImage = API.getFileTools().loadImage(SimParam.ARROW_IMAGE_PATH);
+		if (dummyImage == null) {
+			ArduSimTools.closeAll(Text.ARROW_IMAGE_LOAD_ERROR);
+		} else {
 			SimParam.arrowImage = new BufferedImage(SimParam.ARROW_PANEL_SIZE,
 					SimParam.ARROW_PANEL_SIZE, dummyImage.getType());
 			Graphics2D g = SimParam.arrowImage.createGraphics();
@@ -42,8 +40,6 @@ public class ConfigDialogWindPanel extends JPanel {
 					0, 0, dummyImage.getWidth(), dummyImage.getHeight(), null);
 			g.dispose();
 			this.repaint();
-		} catch (IOException e) {
-			ArduSimTools.closeAll(Text.ARROW_IMAGE_LOAD_ERROR);
 		}
 	}
 

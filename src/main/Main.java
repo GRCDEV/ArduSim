@@ -234,7 +234,10 @@ public class Main {
 			MainWindow.window.mainWindowFrame.toFront();
 
 			// 6. Load needed resources
-			SimTools.loadUAVImage();
+			SimParam.uavImage = API.getFileTools().loadImage(SimParam.UAV_IMAGE_PATH);
+			if (SimParam.uavImage == null) {
+				ArduSimTools.closeAll(Text.LOADING_UAV_IMAGE_ERROR);
+			}
 		}
 		// Configuration feedback
 		ArduSimTools.logGlobal(Text.PROTOCOL_IN_USE + " " + ArduSimTools.selectedProtocol);

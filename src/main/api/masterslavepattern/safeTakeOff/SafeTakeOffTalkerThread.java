@@ -82,7 +82,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 				}
 			} else {
 				gui.logVerboseUAV(MSText.TALKER_TAKING_OFF_2);
-				output.clear();
+				output.reset();
 				output.writeShort(MSMessageID.TAKE_OFF_NOW);
 				output.writeLong(selfID);
 				output.flush();
@@ -107,7 +107,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 		/** TARGET REACHED PHASE */
 		if (!isCenter || (excluded && nextID != SafeTakeOffContext.BROADCAST_MAC_ID)) {
 			gui.logVerboseUAV(MSText.TALKER_TARGET_REACHED);
-			output.clear();
+			output.reset();
 			output.writeShort(MSMessageID.REACHED_ACK);
 			output.writeLong(selfID);
 			output.flush();
@@ -136,7 +136,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 		/** TAKE OFF CHECK PHASE */
 		if (isCenter) {
 			gui.logVerboseUAV(MSText.TALKER_CENTER_WAITING_END);
-			output.clear();
+			output.reset();
 			output.writeShort(MSMessageID.TAKE_OFF_END);
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
@@ -153,7 +153,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 			}
 		} else {
 			gui.logVerboseUAV(MSText.TALKER_NO_CENTER_WAITING_END);
-			output.clear();
+			output.reset();
 			output.writeShort(MSMessageID.TAKE_OFF_END_ACK);
 			output.writeLong(selfID);
 			output.flush();

@@ -1,11 +1,11 @@
 package main.sim.logic;
 
-import org.mavlink.messages.MAV_CMD;
-
 import api.API;
 import api.pojo.FlightMode;
 import api.pojo.location.Waypoint;
 import es.upv.grc.mapper.Location2DUTM;
+import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.util.EnumValue;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
@@ -17,6 +17,9 @@ import main.uavController.UAVParam;
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class CollisionDetector extends Thread {
+	
+	private static final int NAV_LAND_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LAND).value();
+	private static final int NAV_RETURN_TO_LAUNCH_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_RETURN_TO_LAUNCH).value();
 
 	@Override
 	public void run() {
@@ -52,12 +55,12 @@ public class CollisionDetector extends Thread {
 							lastWPUTM = UAVParam.lastWPUTM[i];
 							lastWP = selfLastWP.getNumSeq();
 							currentWP = UAVParam.currentWaypoint.get(i);
-							if (selfLastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND) {
+							if (selfLastWP.getCommand().value() == NAV_LAND_COMMAND) {
 								// Landing when reaching the end of the mission (lastWaypoint - 1)
 								if (currentWP >= lastWP - 1) {
 									check = false;
 								}
-							} else if (selfLastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+							} else if (selfLastWP.getCommand().value() == NAV_RETURN_TO_LAUNCH_COMMAND) {
 								// Landing after returning to home
 								if (currentWP >= lastWP - 1 && UAVParam.uavCurrentData[i].getUTMLocation().distance(lastWPUTM) < UAVParam.LAST_WP_THRESHOLD) {
 									check = false;
@@ -80,12 +83,12 @@ public class CollisionDetector extends Thread {
 											lastWPUTM = UAVParam.lastWPUTM[j];
 											lastWP = otherLastWP.getNumSeq();
 											currentWP = UAVParam.currentWaypoint.get(j);
-											if (otherLastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND) {
+											if (otherLastWP.getCommand().value() == NAV_LAND_COMMAND) {
 												// Landing when reaching the end of the mission (lastWaypoint - 1)
 												if (currentWP >= lastWP - 1) {
 													check = false;
 												}
-											} else if (otherLastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+											} else if (otherLastWP.getCommand().value() == NAV_RETURN_TO_LAUNCH_COMMAND) {
 												// Landing after returning to home
 												if (currentWP >= lastWP - 1 && UAVParam.uavCurrentData[j].getUTMLocation().distance(lastWPUTM) < UAVParam.LAST_WP_THRESHOLD) {
 													check = false;

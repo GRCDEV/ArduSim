@@ -1,17 +1,23 @@
 package main.api;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
+import main.ArduSimTools;
 import main.Main;
+import main.sim.gui.MainWindow;
 
 /**
  * API to read and write files.
@@ -114,6 +120,25 @@ public class FileTools {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
+		}
+	}
+	
+	/**
+	 * Load image from file.
+	 * @param absolutePath Absolute path to the file, inside the <i>src</i> folder (it must start with the corresponding File.separator).
+	 * @return	The BufferedImage loaded from the file, or null if any error happens.
+	 */
+	public BufferedImage loadImage(String absolutePath) {
+		URL url = null;
+		if (ArduSimTools.isRunningFromJar()) {
+			url = MainWindow.class.getResource(File.separator + "src" + absolutePath);
+		} else {
+			url = MainWindow.class.getResource(absolutePath);
+		}
+		try {
+			return ImageIO.read(url);
+		} catch (Exception e) {
+			return null;
 		}
 	}
 	

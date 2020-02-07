@@ -156,7 +156,7 @@ public class MarkThread extends Thread {
 					
 //					distance = Math.sqrt(Math.pow(diferenceY, 2) + Math.pow(copter.getAltitude(), 2));
 					try {
-						output.clear();
+						output.reset();
 						output.writeShort(4);
 						output.writeDouble(diferenceX);
 						output.writeDouble(diferenceY);

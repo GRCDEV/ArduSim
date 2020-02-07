@@ -82,8 +82,12 @@ Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
         KERNEL!="eth*[0-9]|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", \
 
     Then, unplug the external adapter and restart the device, and when it has fully booted plug in the  external adapter. /etc/udev/rules.d/70-persistent-net.rules should be created with definitions for persistent rules for wlan0 and wlan1. Now check that the configuration already set in this chapter is applied to the correct wlanX adapter.
+    
+### 2.3 Java
 
-### 2.3 ArduSim autostart
+By default, the latest version of Raspbian comes with OpenJDK 11 o greater, so ArduSim should work out of the box. Otherwise, you should install Java 11 o greater.
+
+### 2.4 ArduSim autostart
 
 You can start ArduSim with a remote SSH connection from a computer once the multicopter and the Raspberry Pi 3 B+ are turned on, but it is more practical to start ArduSim automatically on the Raspberry startup. To do so, we wrote a simple service (*ardusim.service*) with the following content:
 
@@ -95,7 +99,7 @@ You can start ArduSim with a remote SSH connection from a computer once the mult
     [Service]
     Type=oneshot
     RemainAfterExit=true
-    ExecStart=/usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/bin/java -jar /home/pi/Desktop/ArduSim.jar multicopter
+    ExecStart=/usr/lib/jvm/java-11-openjdk-armhf/bin/java -jar /home/pi/Desktop/ArduSim.jar multicopter
     WorkingDirectory=/home/pi/Desktop/
     StandardOutput=syslog
     StandardError=syslog

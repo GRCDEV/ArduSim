@@ -2,8 +2,6 @@ package mbcap.logic;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -12,8 +10,6 @@ import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-
-import javax.imageio.ImageIO;
 
 import api.API;
 import api.pojo.FlightMode;
@@ -116,11 +112,11 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 		long prevSolvedTimeout = 0;
 		
 		// Load the image used to show the risk location
-		URL url = MBCAPHelper.class.getResource(MBCAPGUIParam.EXCLAMATION_IMAGE_PATH);
-		try {
-			MBCAPGUIParam.exclamationImage = ImageIO.read(url);
-		} catch (IOException e) {
-			API.getGUI(0).exit(MBCAPText.WARN_IMAGE_LOAD_ERROR);
+		if (!this.isRealUAV) {
+			MBCAPGUIParam.exclamationImage = API.getFileTools().loadImage(MBCAPGUIParam.EXCLAMATION_IMAGE_PATH);
+			if (MBCAPGUIParam.exclamationImage == null) {
+				API.getGUI(0).exit(MBCAPText.WARN_IMAGE_LOAD_ERROR);
+			}
 		}
 
 		// Do nothing until the experiment begins

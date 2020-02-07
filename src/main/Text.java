@@ -275,7 +275,7 @@ public class Text {
 	public static final String TARGET_ALTITUDE_ERROR_1 = "The altitude of the waypoints must be a positive number.";
 	public static final String TARGET_ALTITUDE_ERROR_2 = "The target altitude must be greater than or equal to:";
 	public static final String WAYPOINT_YAW_TITLE = "Override waypoint yaw behavior:";
-	
+	public static final String WAYPOINT_PRINT_ERROR = "Unable to read the waypoint frame value. Using default value MAV_FRAME_GLOBAL_RELATIVE_ALT";
 	
 	// Parsing speed(s) file(s)
 	public static final String SPEEDS_PARSING_ERROR_1 = "Speeds file: No speed values found.";

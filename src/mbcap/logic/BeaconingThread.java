@@ -196,7 +196,7 @@ public class BeaconingThread extends Thread {
 		res.points = points;
 
 		// 3. Buffer building
-		output.clear();
+		output.reset();
 		output.writeLong(res.uavId);
 		output.writeShort(res.event);
 		res.statePos = output.position();

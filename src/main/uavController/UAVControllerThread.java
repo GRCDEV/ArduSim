@@ -3,8 +3,7 @@ package main.uavController;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Stroke;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
@@ -12,42 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.mavlink.IMAVLinkMessage;
-import org.mavlink.MAVLinkReader;
-import org.mavlink.messages.IMAVLinkMessageID;
-import org.mavlink.messages.MAVLinkMessage;
-import org.mavlink.messages.MAV_AUTOPILOT;
-import org.mavlink.messages.MAV_CMD;
-import org.mavlink.messages.MAV_COMPONENT;
-import org.mavlink.messages.MAV_FRAME;
-import org.mavlink.messages.MAV_MISSION_RESULT;
-import org.mavlink.messages.MAV_RESULT;
-import org.mavlink.messages.MAV_STATE;
-import org.mavlink.messages.MAV_TYPE;
-import org.mavlink.messages.ardupilotmega.msg_command_ack;
-import org.mavlink.messages.ardupilotmega.msg_command_long;
-import org.mavlink.messages.ardupilotmega.msg_global_position_int;
-import org.mavlink.messages.ardupilotmega.msg_heartbeat;
-import org.mavlink.messages.ardupilotmega.msg_mission_ack;
-import org.mavlink.messages.ardupilotmega.msg_mission_clear_all;
-import org.mavlink.messages.ardupilotmega.msg_mission_count;
-import org.mavlink.messages.ardupilotmega.msg_mission_current;
-import org.mavlink.messages.ardupilotmega.msg_mission_item;
-import org.mavlink.messages.ardupilotmega.msg_mission_item_reached;
-import org.mavlink.messages.ardupilotmega.msg_mission_request;
-import org.mavlink.messages.ardupilotmega.msg_mission_request_list;
-import org.mavlink.messages.ardupilotmega.msg_mission_set_current;
-import org.mavlink.messages.ardupilotmega.msg_param_request_list;
-import org.mavlink.messages.ardupilotmega.msg_param_request_read;
-import org.mavlink.messages.ardupilotmega.msg_param_set;
-import org.mavlink.messages.ardupilotmega.msg_param_value;
-import org.mavlink.messages.ardupilotmega.msg_rc_channels_override;
-import org.mavlink.messages.ardupilotmega.msg_set_mode;
-import org.mavlink.messages.ardupilotmega.msg_set_position_target_global_int;
-import org.mavlink.messages.ardupilotmega.msg_statustext;
-import org.mavlink.messages.ardupilotmega.msg_sys_status;
-
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortInvalidPortException;
 
 import api.API;
 import api.pojo.FlightMode;
@@ -64,6 +29,42 @@ import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DGeo;
 import es.upv.grc.mapper.Mapper;
+import io.dronefleet.mavlink.Mavlink2Message;
+import io.dronefleet.mavlink.MavlinkConnection;
+import io.dronefleet.mavlink.MavlinkMessage;
+import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
+import io.dronefleet.mavlink.common.CommandAck;
+import io.dronefleet.mavlink.common.CommandLong;
+import io.dronefleet.mavlink.common.GlobalPositionInt;
+import io.dronefleet.mavlink.common.Heartbeat;
+import io.dronefleet.mavlink.common.MavAutopilot;
+import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.common.MavFrame;
+import io.dronefleet.mavlink.common.MavMissionResult;
+import io.dronefleet.mavlink.common.MavMode;
+import io.dronefleet.mavlink.common.MavResult;
+import io.dronefleet.mavlink.common.MavState;
+import io.dronefleet.mavlink.common.MavType;
+import io.dronefleet.mavlink.common.MissionAck;
+import io.dronefleet.mavlink.common.MissionClearAll;
+import io.dronefleet.mavlink.common.MissionCount;
+import io.dronefleet.mavlink.common.MissionCurrent;
+import io.dronefleet.mavlink.common.MissionItem;
+import io.dronefleet.mavlink.common.MissionItemReached;
+import io.dronefleet.mavlink.common.MissionRequest;
+import io.dronefleet.mavlink.common.MissionRequestList;
+import io.dronefleet.mavlink.common.MissionSetCurrent;
+import io.dronefleet.mavlink.common.ParamRequestList;
+import io.dronefleet.mavlink.common.ParamRequestRead;
+import io.dronefleet.mavlink.common.ParamSet;
+import io.dronefleet.mavlink.common.ParamValue;
+import io.dronefleet.mavlink.common.PositionTargetTypemask;
+import io.dronefleet.mavlink.common.RcChannelsOverride;
+import io.dronefleet.mavlink.common.SetMode;
+import io.dronefleet.mavlink.common.SetPositionTargetGlobalInt;
+import io.dronefleet.mavlink.common.Statustext;
+import io.dronefleet.mavlink.common.SysStatus;
+import io.dronefleet.mavlink.util.EnumValue;
 import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
@@ -95,13 +96,10 @@ public class UAVControllerThread extends Thread {
 								// Several updates of the previous waypoint can be received after the current one
 
 	/** Connection parameters */
-	private Socket socket;
+	private Socket socket = null;
 	private int port;
-	private SerialPort serialPort;
-	private DataInputStream din;
-	private DataOutputStream dout;
-	private MAVLinkReader reader = null;
-	private MAVLinkMessage inMsg;
+	private SerialPort serialPort = null;
+	private MavlinkConnection connection;
 	
 	/** Indicates when the UAV connects with the application (MAVLink ready). */
 	private boolean uavConnected = false;
@@ -117,6 +115,10 @@ public class UAVControllerThread extends Thread {
 	
 	private ValidationTools round = null;
 	
+	private static final int SET_MODE_COMMAND = SetMode.class.getAnnotation(MavlinkMessageInfo.class).id();
+	private static final int NAV_LAND_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LAND).value();
+	private static final int NAV_RETURN_TO_LAUNCH_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_RETURN_TO_LAUNCH).value();
+	
 	@SuppressWarnings("unused")
 	private UAVControllerThread() {}
 
@@ -128,15 +130,19 @@ public class UAVControllerThread extends Thread {
 
 		// Connection through serial port on a real UAV
 		if (Param.role == ArduSim.MULTICOPTER) {
-			serialPort = SerialPort.getCommPort(UAVParam.serialPort);
-			serialPort.setComPortParameters(UAVParam.baudRate, 8, 1, SerialPort.NO_PARITY);
-			serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-			if (serialPort.openPort()) {
-				din = new DataInputStream(serialPort.getInputStream());
-				dout = new DataOutputStream(serialPort.getOutputStream());
-				reader = new MAVLinkReader(din, IMAVLinkMessage.MAVPROT_PACKET_START_V10);
-			}
-			if (reader == null) {
+			try {
+				serialPort = SerialPort.getCommPort(UAVParam.serialPort);
+				serialPort.setComPortParameters(UAVParam.baudRate, 8, 1, SerialPort.NO_PARITY);
+				serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
+				if (serialPort.openPort()) {
+					connection = MavlinkConnection.create(serialPort.getInputStream(), serialPort.getOutputStream());
+				} else {
+					serialPort.closePort();
+					serialPort = null;
+				}
+			} catch (SerialPortInvalidPortException e) {}
+			
+			if (serialPort == null) {
 				ArduSimTools.logGlobal(Text.SERIAL_ERROR);
 				System.exit(1);
 			}
@@ -146,102 +152,172 @@ public class UAVControllerThread extends Thread {
 			try {
 				socket = new Socket(UAVParam.MAV_NETWORK_IP, this.port);
 				socket.setTcpNoDelay(true);
-				din = new DataInputStream(socket.getInputStream());
-				dout = new DataOutputStream(socket.getOutputStream());
-				reader = new MAVLinkReader(din, IMAVLinkMessage.MAVPROT_PACKET_START_V10);
+				connection = MavlinkConnection.create(socket.getInputStream(), socket.getOutputStream());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			if (reader == null) {
+			if (socket == null) {
 				ArduSimTools.closeAll(Text.TCP_ERROR);
 			}
 		}
+		
+		this.round = API.getValidationTools();
 	}
 
 	@Override
 	public void run() {
+		MavlinkMessage<?> inMsg;
 		// Periodically sending a heartbeat to keep control over the UAV, while reading received MAVLink messages
 		long prevTime = System.nanoTime();
 		long posTime;
 		
-		while (true) {
-			inMsg = null;
-			try {
-				inMsg = reader.getNextMessage();
-				if (inMsg != null) {
-					
-					// Identify and process the received message
-					identifyMessage();
-					
-					// When all UAVs are connected, start to process commands and sending heartbeat
-					if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
-						posTime = System.nanoTime();
-						if (posTime - prevTime > UAVParam.HEARTBEAT_PERIOD) {
-							msgHeartBeat();
-							prevTime = posTime;
+		
+		try {
+			while ((inMsg = this.connection.next()) != null) {
+				try {
+					if (inMsg != null) {
+						
+						// Identify and process the received message
+						identifyMessage(inMsg);
+						
+						// When all UAVs are connected, start to process commands and sending heartbeat
+						if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
+							posTime = System.nanoTime();
+							if (posTime - prevTime > UAVParam.HEARTBEAT_PERIOD) {
+								this.connection.send1(UAVParam.gcsId.get(numUAV),
+										0,	// MavComponent.MAV_COMP_ID_ALL
+										Heartbeat.builder()
+											.type(MavType.MAV_TYPE_GCS)
+											.autopilot(MavAutopilot.MAV_AUTOPILOT_INVALID)
+											.systemStatus(MavState.MAV_STATE_UNINIT)
+											.mavlinkVersion(3)
+											.build());
+								prevTime = posTime;
+							}
+							processCommand();
 						}
-						processCommand();
 					}
+				} catch (IOException e) {
 				}
+			}
+		} catch(EOFException e) {
+		} catch(IOException e) {
+		}
+		if (Param.role == ArduSim.MULTICOPTER) {
+			serialPort.closePort();
+		} else if (Param.role == ArduSim.SIMULATOR) {
+			try {
+				socket.close();
 			} catch (IOException e) {
 			}
 		}
 	}
 
 	/** Message identification to process it. */
-	private void identifyMessage() {
-		switch (inMsg.messageType) {
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
-			processGlobalLocation();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_HEARTBEAT:
-			processMode();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_STATUSTEXT:
+	private void identifyMessage(MavlinkMessage<?> inMsg) {
+		if (inMsg instanceof Mavlink2Message) {
+			// Mavlink v2 message
+			Mavlink2Message<?> msg = (Mavlink2Message<?>) inMsg;
+			if (msg.isSigned()) {
+//				if (msg.validateSignature(secretKey)) {
+//					// TODO implement v2 signed messages
+//					
+//				} else {
+//					// ignore suspicious message
+//				}
+				
+			} else {
+				// TODO implement v2 messages
+				
+				
+			}
+		} else {
+			// mavlink v1 message
+			
+			
+			
+		}
+		
+		Object payload = inMsg.getPayload();
+		if (payload instanceof Heartbeat) {
+			// Detect when the UAV has connected (first heartbeat received)
+			if (!this.uavConnected) {
+				UAVParam.mavId.set(numUAV, inMsg.getOriginSystemId());
+				UAVParam.numMAVLinksOnline.incrementAndGet();
+				this.uavConnected = true;
+			}
+			processMode((Heartbeat) payload);
+		} else if (payload instanceof GlobalPositionInt) {
+			processGlobalLocation((GlobalPositionInt) payload);
+		} else if (payload instanceof CommandAck) {
+			processCommandAck((CommandAck) payload);
+		} else if (payload instanceof ParamValue) {
+			processParam((ParamValue) payload);
+		} else if (payload instanceof SysStatus) {
+			processStatus((SysStatus) payload);
+		} else if (payload instanceof Statustext) {
 			if (numUAV == 0) {
-				processVersion();
+				processVersion((Statustext) payload);
 			}
 			if (!this.locationReceived) {
-				processGPSFix();
+				processGPSFix((Statustext) payload);
 			}
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_PARAM_VALUE:
-			processParam();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_CURRENT:
-			processCurrentWaypointACK();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
-			processWaypointReached();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_COUNT:
-			processWaypointCount();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ITEM:
-			processWaypointReceived();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_REQUEST:
-			processWaypointRequest();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_MISSION_ACK:
-			processMissionAck();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_COMMAND_ACK:
-			processCommandAck();
-			break;
-		case IMAVLinkMessageID.MAVLINK_MSG_ID_SYS_STATUS:
-			processStatus();
-			break;
-		default:
-			break;
+		}else if (payload instanceof MissionItemReached) {
+			processWaypointReached((MissionItemReached) payload);
+		} else if (payload instanceof MissionCurrent) {
+			processCurrentWaypointACK((MissionCurrent) payload);
+		} else if (payload instanceof MissionCount) {
+			processWaypointCount((MissionCount) payload);
+		} else if (payload instanceof MissionItem) {
+			processWaypointReceived((MissionItem) payload);
+		} else if (payload instanceof MissionRequest) {
+			processWaypointRequest((MissionRequest) payload);
+		} else if (payload instanceof MissionAck) {
+			processMissionAck((MissionAck) payload);
+		}
+//		else if (payload instanceof LocalPositionNed
+//				|| payload instanceof GpsRawInt
+//				|| payload instanceof NavControllerOutput
+//				|| payload instanceof PowerStatus
+//				|| payload instanceof Meminfo
+//				|| payload instanceof HomePosition
+//				|| payload instanceof GpsGlobalOrigin) {
+//			
+//		} else {
+//			System.out.println(payload.toString());
+//		}
+	}
+	
+	/** Process a received flight mode and assert that the MAVLink link has been established. */
+	private void processMode(Heartbeat msg) {
+		FlightMode prevMode = UAVParam.flightMode.get(numUAV);
+		// Only process valid mode
+		int baseMode = msg.baseMode().value();
+		long customMode = msg.customMode();
+		if (baseMode != 0 || customMode != 0) {
+			// Only process when mode changes
+			if (prevMode == null || prevMode.getBaseMode() != baseMode || prevMode.getCustomMode() != customMode) {
+				FlightMode mode = FlightMode.getMode(baseMode, customMode);
+				if (mode != null) {
+					UAVParam.flightMode.set(numUAV, mode);
+					SimTools.updateUAVMAVMode(numUAV, mode.getMode());	// Update the progress dialog
+					if (mode.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
+						UAVParam.flightStarted.set(numUAV, 1);
+					}
+				} else {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + baseMode + "," + customMode + ")");
+				}
+			}
 		}
 	}
 
 	/** Process the received current location, speed and UAV orientation (heading). */
-	private void processGlobalLocation() {
-		msg_global_position_int message = (msg_global_position_int) inMsg;
+	private void processGlobalLocation(GlobalPositionInt msg) {
+		int lat = msg.lat();
+		int lon = msg.lon();
+		int vx, vy;
 		// Only process position when the GPS sends valid Mercator coordinates (non zero latitude and longitude)
-		if (!this.isStarting || (message.lat != 0 && message.lon != 0)) {
+		if (!this.isStarting || (lat != 0 && lon != 0)) {
 			isStarting = false;
 			if (!this.locationReceived && this.receivedGPSOnline == 2) {
 				UAVParam.numGPSFixed.incrementAndGet();
@@ -249,21 +325,20 @@ public class UAVControllerThread extends Thread {
 			}
 
 			long time = System.nanoTime();
-			Location2D location = new Location2D(message.lat * 0.0000001, message.lon * 0.0000001);
+			Location2D location = new Location2D(lat * 0.0000001, lon * 0.0000001);
 			Location2DUTM locationUTM = location.getUTMLocation();
 			
 			// The last few UAV positions are stored for later use in protocols
 			UAVParam.lastUTMLocations[numUAV].add(locationUTM);
 			// Global horizontal speed estimation
-			double hSpeed = Math.sqrt(Math.pow(message.vx * 0.01, 2) + Math.pow(message.vy * 0.01, 2));
-			double[] speed = new double[] {message.vx * 0.01, message.vy * 0.01, message.vz * 0.01};
+			vx = msg.vx();
+			vy = msg.vy();
+			double hSpeed = Math.sqrt(Math.pow(vx * 0.01, 2) + Math.pow(vy * 0.01, 2));
+			double[] speed = new double[] {vx * 0.01, vy * 0.01, msg.vz() * 0.01};
 			// Update the UAV data, including the acceleration calculus
-			if (this.round == null) {
-				this.round = API.getValidationTools();
-			}
-			double z = this.round.roundDouble(message.alt * 0.001, 2);
-			double zRel = this.round.roundDouble(message.relative_alt * 0.001, 2);
-			double heading = (message.hdg * 0.01) * Math.PI / 180;
+			double z = this.round.roundDouble(msg.alt() * 0.001, 2);
+			double zRel = this.round.roundDouble(msg.relativeAlt() * 0.001, 2);
+			double heading = (msg.hdg() * 0.01) * Math.PI / 180;
 			UAVParam.uavCurrentData[numUAV].update(time, location, z, zRel, speed, hSpeed, heading);
 			// Send location to GUI to draw the UAV path and to log data
 			SimulatorState currentState = Param.simStatus;
@@ -277,7 +352,6 @@ public class UAVControllerThread extends Thread {
 					state));
 			
 			// Draw the movement on screen
-			
 			if (Param.role == ArduSim.SIMULATOR) {
 				Location2DGeo locGeo = location.getGeoLocation();
 				if (this.path == null) {
@@ -308,50 +382,105 @@ public class UAVControllerThread extends Thread {
 		}
 	}
 
-	/** Process a received flight mode and assert that the MAVLink link has been established. */
-	private void processMode() {
-		msg_heartbeat message = (msg_heartbeat) inMsg;
-		FlightMode prevMode = UAVParam.flightMode.get(numUAV);
-		// Only process valid mode
-		if (message.base_mode != 0 || message.custom_mode != 0) {
-			// Only process when mode changes
-			if (prevMode == null || prevMode.getBaseMode() != message.base_mode || prevMode.getCustomMode() != message.custom_mode) {
-				FlightMode mode = FlightMode.getMode(message.base_mode, message.custom_mode);
-				if (mode != null) {
-					UAVParam.flightMode.set(numUAV, mode);
-					SimTools.updateUAVMAVMode(numUAV, mode.getMode());	// Update the progress dialog
-					if (mode.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
-						UAVParam.flightStarted.set(numUAV, 1);
-					}
+	/** Process a received command ACK. */
+	private void processCommandAck(CommandAck msg) {
+		MavResult result = msg.result().entry();
+		int status = UAVParam.MAVStatus.get(numUAV);
+		
+		// ACK received when changing the flight mode
+		// Special case. TODO it is deprecated, move to the new function if using Mavlink v2
+		if (status == UAVParam.MAV_STATUS_ACK_MODE) {
+			if (msg.command().value() == UAVControllerThread.SET_MODE_COMMAND) {
+				if (result == MavResult.MAV_RESULT_ACCEPTED) {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 				} else {
-					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.FLIGHT_MODE_ERROR_2 + "(" + message.base_mode + "," + message.custom_mode + ")");
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_MODE);
 				}
 			}
-			
-			// Detect when the UAV has connected (first heartbeat received)
-			if (!this.uavConnected) {
-				UAVParam.mavId.set(numUAV, message.sysId);
-				UAVParam.numMAVLinksOnline.incrementAndGet();
-				this.uavConnected = true;
+			return;
+		}
+		
+		MavCmd command = msg.command().entry();
+		switch (status) {
+		// ACK received when arming motors
+		case UAVParam.MAV_STATUS_ACK_ARM:
+			if (command == MavCmd.MAV_CMD_COMPONENT_ARM_DISARM) {
+				if (result == MavResult.MAV_RESULT_ACCEPTED) {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+				} else {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_ARM);
+				}
 			}
+			break;
+		// ACK received when taking off
+		case UAVParam.MAV_STATUS_ACK_TAKE_OFF:
+			if (command == MavCmd.MAV_CMD_NAV_TAKEOFF) {
+				if (result == MavResult.MAV_RESULT_ACCEPTED) {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+				} else {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_TAKE_OFF);
+				}
+			}
+			break;
+		// ACK received when changing the horizontal flight speed
+		case UAVParam.MAV_STATUS_ACK_SET_SPEED:
+			if (command == MavCmd.MAV_CMD_DO_CHANGE_SPEED) {
+				if (result == MavResult.MAV_RESULT_ACCEPTED) {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+				} else {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_SET_SPEED);
+				}
+			}
+			break;
+		default:
+			ArduSimTools.logGlobal(Text.NOT_REQUESTED_ACK_ERROR
+					+ " (command=" + command.name() + ", result=" + result.name() + ")");
 		}
 	}
 	
+	/** Process a received param value. */
+	private void processParam(ParamValue msg) {
+		String paramId = msg.paramId();
+		float value = msg.paramValue();
+		// General storage of parameters
+		UAVParam.loadedParams[numUAV].put(paramId, new CopterParamLoaded(paramId, value, msg.paramType().value()));
+		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
+		
+		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_PARAM
+				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
+			// A parameter has been modified
+			if (value == UAVParam.newParamValue.get(numUAV)) {
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+			} else {
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_1_PARAM);
+			}
+		} else if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_WAIT_FOR_PARAM
+				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
+			// A single param has been read
+			UAVParam.newParamValue.set(numUAV, value);
+			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+		}
+	}
+	
+	/** Process battery information received. */
+	private void processStatus(SysStatus msg) {
+		UAVParam.uavCurrentStatus[numUAV].update(msg.voltageBattery(), msg.currentBattery(),
+				msg.batteryRemaining(), msg.load());
+	}
+	
 	/** Process the detection of the ArduCopter version. */
-	private void processVersion() {
-		msg_statustext message = (msg_statustext) inMsg;
-		String text = message.getText();
+	private void processVersion(Statustext msg) {
+		String text = msg.text();
 		if (text.toUpperCase().startsWith("APM:COPTER")) {
 			UAVParam.arducopterVersion.set(text.split(" ")[1].substring(1));
 		}
 	}
 
 	/** Process the detection of the GPS fix. */
-	private void processGPSFix() {
+	private void processGPSFix(Statustext msg) {
 		// Both IMU0 and IMU1 must confirm that they are using GPS, and valid coordinates must be received
 		if (this.receivedGPSOnline < 2) {
-			msg_statustext message = (msg_statustext) inMsg;
-			String text = message.getText();
+			String text = msg.text();
 			if (text.contains("EKF") && text.contains("IMU")
 					&& text.contains("using GPS")) {
 				this.receivedGPSOnline++;
@@ -363,35 +492,36 @@ public class UAVControllerThread extends Thread {
 		}
 	}
 
-	/** Process a received param value. */
-	private void processParam() {
-		msg_param_value message = (msg_param_value) inMsg;
-		String paramId = message.getParam_id();
-		// General storage of parameters
-		UAVParam.loadedParams[numUAV].put(paramId, new CopterParamLoaded(paramId, message.param_value, message.param_type));
-		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
+	/** Detect when the UAV reaches the next waypoint. */
+	private void processWaypointReached(MissionItemReached msg) {
+		int seq = msg.seq();
+		// The received value begins in 0
+		UAVParam.currentWaypoint.set(numUAV, seq);
+		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + seq);
 		
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_PARAM
-				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
-			// A parameter has been modified
-			if (message.param_value == UAVParam.newParamValue.get(numUAV)) {
-				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+		Waypoint lastWP = UAVParam.lastWP[numUAV];
+		if (seq > 0) {
+			if (lastWP.getCommand().value() == UAVControllerThread.NAV_LAND_COMMAND
+					|| lastWP.getCommand().value() == UAVControllerThread.NAV_RETURN_TO_LAUNCH_COMMAND) {
+				if (seq == lastWP.getNumSeq() - 1) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
+					UAVParam.lastWaypointReached[numUAV].set(true);
+				}
 			} else {
-				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_1_PARAM);
+				if (seq == lastWP.getNumSeq()) {
+					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
+					UAVParam.lastWaypointReached[numUAV].set(true);
+				}
 			}
-		} else if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_WAIT_FOR_PARAM
-				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
-			// A single param has been read
-			UAVParam.newParamValue.set(numUAV, message.param_value);
-			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 		}
+		
+		ArduSimTools.triggerWaypointReached(numUAV, seq);
 	}
-
+	
 	/** Process the ACK when changing the current target waypoint. */
-	private void processCurrentWaypointACK() {
+	private void processCurrentWaypointACK(MissionCurrent msg) {
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_CURRENT_WP) {
-			msg_mission_current message = (msg_mission_current) inMsg;
-			if (message.seq == UAVParam.newCurrentWaypoint[numUAV]) {
+			if (msg.seq() == UAVParam.newCurrentWaypoint[numUAV]) {
 				UAVParam.currentWaypoint.set(numUAV, UAVParam.newCurrentWaypoint[numUAV]);
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 				numTests = 0;
@@ -406,38 +536,12 @@ public class UAVControllerThread extends Thread {
 		}
 	}
 
-	/** Detect when the UAV reaches the next waypoint. */
-	private void processWaypointReached() {
-		msg_mission_item_reached message = (msg_mission_item_reached) inMsg;
-		// The received value begins in 0
-		UAVParam.currentWaypoint.set(numUAV, message.seq);
-		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.WAYPOINT_REACHED + " = " + message.seq);
-		
-		Waypoint lastWP = UAVParam.lastWP[numUAV];
-		if (message.seq > 0) {
-			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
-					|| lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
-				if (message.seq == lastWP.getNumSeq() - 1) {
-					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
-					UAVParam.lastWaypointReached[numUAV].set(true);
-				}
-			} else {
-				if (message.seq == lastWP.getNumSeq()) {
-					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.LAST_WAYPOINT_REACHED);
-					UAVParam.lastWaypointReached[numUAV].set(true);
-				}
-			}
-		}
-		
-		ArduSimTools.triggerWaypointReached(numUAV, message.seq);
-	}
-
 	/** Process the received message that gets the number of waypoints included in the UAV mission. */
-	private void processWaypointCount() {
+	private void processWaypointCount(MissionCount msg) {
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_REQUEST_WP0) {
-			msg_mission_count message = (msg_mission_count) inMsg;
-			UAVParam.newGeoMission[numUAV] = new Waypoint[message.count];
-			if (message.count == 0) {
+			int count = msg.count();
+			UAVParam.newGeoMission[numUAV] = new Waypoint[count];
+			if (count == 0) {
 				UAVParam.currentGeoMission[numUAV].clear();
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
@@ -453,14 +557,14 @@ public class UAVControllerThread extends Thread {
 	}
 
 	/** Process the received message that contains a waypoint. */ 
-	private void processWaypointReceived() {
+	private void processWaypointReceived(MissionItem msg) {
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_REQUEST_WPS) {
-			msg_mission_item message = (msg_mission_item) inMsg;
-			if (message.seq >= 0 && message.seq < UAVParam.newGeoMission[numUAV].length) {
-				Waypoint wp = new Waypoint(message.seq, message.current != 0, message.frame,
-						message.command, message.param1, message.param2, message.param3,
-						message.param4, message.x, message.y, message.z, message.autocontinue);
-				UAVParam.newGeoMission[numUAV][message.seq] = wp;
+			int seq = msg.seq();
+			if (seq >= 0 && seq < UAVParam.newGeoMission[numUAV].length) {
+				Waypoint wp = new Waypoint(seq, msg.current() != 0, msg.frame().entry(),
+						msg.command(), msg.param1(), msg.param2(), msg.param3(),
+						msg.param4(), msg.x(), msg.y(), msg.z(), msg.autocontinue());
+				UAVParam.newGeoMission[numUAV][seq] = wp;
 				boolean allReceived = true;
 				int i = 0;
 				while (i < UAVParam.newGeoMission[numUAV].length && allReceived) {
@@ -472,7 +576,13 @@ public class UAVControllerThread extends Thread {
 				}
 				if (allReceived) {
 					try {
-						msgSendMissionAck();
+						connection.send1(UAVParam.gcsId.get(numUAV),
+								0,	// MavComponent.MAV_COMP_ID_ALL,
+								MissionAck.builder()
+									.targetSystem(UAVParam.mavId.get(numUAV))
+									.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+									.type(MavMissionResult.MAV_MISSION_ACCEPTED)
+									.build());
 						UAVParam.currentGeoMission[numUAV].clear();
 						UAVParam.currentGeoMission[numUAV].addAll(Arrays.asList(UAVParam.newGeoMission[numUAV]));
 						UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
@@ -516,12 +626,17 @@ public class UAVControllerThread extends Thread {
 	}
 
 	/** Process the request for a waypoint (sending waypoints to the flight controller). */
-	private void processWaypointRequest() {
-		msg_mission_request message = (msg_mission_request) inMsg;
-		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_SENDING_WPS && message.seq >= 0
-				&& message.seq < UAVParam.currentGeoMission[numUAV].size()) {
+	private void processWaypointRequest(MissionRequest msg) {
+		int seq = msg.seq();
+		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_SENDING_WPS && seq >= 0
+				&& seq < UAVParam.currentGeoMission[numUAV].size()) {
 			try {
-				msgSendWaypoint(UAVParam.currentGeoMission[numUAV].get(message.seq));
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						UAVParam.currentGeoMission[numUAV].get(seq).getMessage()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.build());
 			} catch (IOException e) {
 				// If the dispatch fails, it is expected that the flight controller will request it again
 			}
@@ -529,12 +644,12 @@ public class UAVControllerThread extends Thread {
 	}
 
 	/** Process a mission ACK. */
-	private void processMissionAck() {
-		msg_mission_ack message = (msg_mission_ack) inMsg;
+	private void processMissionAck(MissionAck msg) {
+		int type = msg.type().value();
 		switch (UAVParam.MAVStatus.get(numUAV)) {
 		// ACK received when removing the current mission
 		case UAVParam.MAV_STATUS_ACK_CLEAR_WP_LIST:
-			if (message.type == 0) {
+			if (type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_CLEAR_WP_LIST);
@@ -542,7 +657,7 @@ public class UAVControllerThread extends Thread {
 			break;
 		// ACK received when sending a waypoint
 		case UAVParam.MAV_STATUS_SENDING_WPS:
-			if (message.type == 0) {
+			if (type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_SENDING_WPS);
@@ -550,7 +665,7 @@ public class UAVControllerThread extends Thread {
 			break;
 		// ACK received when moving a UAV to another location
 		case UAVParam.MAV_STATUS_ACK_MOVE_UAV:
-			if (message.type == 0) {
+			if (type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_MOVE_UAV_ERROR);
@@ -565,10 +680,40 @@ public class UAVControllerThread extends Thread {
 	/** Process a new command. */
 	private void processCommand() {
 		
-		RCValues values = UAVParam.rcs[numUAV].getAndSet(null);
-		if (values != null) {
+		// First, override channel values, if available
+		RCValues rcValues = UAVParam.rcs[numUAV].getAndSet(null);
+		if (rcValues != null) {
 			try {
-				msgrcChannelsOverride(values.roll, values.pitch, values.throttle, values.yaw);
+				// Value 0 returns control to the RC. UINT16_MAX avoids changing that channel.
+				// Initially, we only use trim values
+				int[] values = new int[] {UAVParam.RCtrimValue[numUAV][0], UAVParam.RCtrimValue[numUAV][1],
+						UAVParam.RCtrimValue[numUAV][2], UAVParam.RCtrimValue[numUAV][3],
+						UAVParam.RCtrimValue[numUAV][4], UAVParam.RCtrimValue[numUAV][5],
+						UAVParam.RCtrimValue[numUAV][6], UAVParam.RCtrimValue[numUAV][7]};
+				// Now we set roll, pitch, throttle, and yaw values
+				values[UAVParam.RCmapRoll[numUAV]-1] = rcValues.roll;
+				values[UAVParam.RCmapPitch[numUAV]-1] = rcValues.pitch;
+				values[UAVParam.RCmapThrottle[numUAV]-1] = rcValues.throttle;
+				values[UAVParam.RCmapYaw[numUAV]-1] = rcValues.yaw;
+				// Finally, the flight mode
+				int fltmode = UAVParam.customModeToFlightModeMap[numUAV][(int)UAVParam.flightMode.get(numUAV).getCustomMode()];
+				if (fltmode != -1) {
+					values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
+				}
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						RcChannelsOverride.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.chan1Raw(values[0])
+							.chan2Raw(values[1])
+							.chan3Raw(values[2])
+							.chan4Raw(values[3])
+							.chan5Raw(values[4])
+							.chan6Raw(values[5])
+							.chan7Raw(values[6])
+							.chan8Raw(values[7])
+							.build());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -577,7 +722,32 @@ public class UAVControllerThread extends Thread {
 		Location3DGeo target = UAVParam.target[numUAV].getAndSet(null);
 		if (target != null) {
 			try {
-				msgMoveToTarget(target.longitude, target.latitude, target.altitude);
+				// A possible alternative to this message is moveUAVNonBlocking
+				// Never mix location and speed mask fields
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						SetPositionTargetGlobalInt.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.timeBootMs(System.currentTimeMillis())
+							.coordinateFrame(MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT)
+							.typeMask(
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_X_IGNORE,	// bit 0, value 1
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Y_IGNORE,
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Z_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VX_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VY_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VZ_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AX_IGNORE,	// Acceleration not supported in ArduPilot
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AY_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AZ_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_FORCE_SET,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE)
+							.latInt((int)Math.round(10000000l * target.latitude))	// Degrees * 10^7
+							.lonInt((int)Math.round(10000000l * target.longitude))
+							.alt(Double.valueOf(target.altitude).floatValue())
+							.build());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -587,7 +757,32 @@ public class UAVControllerThread extends Thread {
 		// Command to take control of the UAV using (half throttle)
 		case UAVParam.MAV_STATUS_THROTTLE_ON:
 			try {
-				msgSetThrottle(UAVParam.stabilizationThrottle[numUAV]);
+				// Initially, we only use trim values
+				int[] values = new int[] {UAVParam.RCtrimValue[numUAV][0], UAVParam.RCtrimValue[numUAV][1],
+						UAVParam.RCtrimValue[numUAV][2], UAVParam.RCtrimValue[numUAV][3],
+						UAVParam.RCtrimValue[numUAV][4], UAVParam.RCtrimValue[numUAV][5],
+						UAVParam.RCtrimValue[numUAV][6], UAVParam.RCtrimValue[numUAV][7]};
+				// Now we set the throttle value
+				values[UAVParam.RCmapThrottle[numUAV]-1] = UAVParam.stabilizationThrottle[numUAV];
+				// Finally, the flight mode
+				int fltmode = UAVParam.customModeToFlightModeMap[numUAV][(int)UAVParam.flightMode.get(numUAV).getCustomMode()];
+				if (fltmode != -1) {
+					values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
+				}
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						RcChannelsOverride.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.chan1Raw(values[0])
+							.chan2Raw(values[1])
+							.chan3Raw(values[2])
+							.chan4Raw(values[3])
+							.chan5Raw(values[4])
+							.chan6Raw(values[5])
+							.chan7Raw(values[6])
+							.chan8Raw(values[7])
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} catch (IOException e1) {
 				e1.printStackTrace();
@@ -596,8 +791,21 @@ public class UAVControllerThread extends Thread {
 			break;
 		case UAVParam.MAV_STATUS_RECOVER_CONTROL:
 			try {
-				msgReturnRCControl();
-				// Now the RC channels will not be overriden by ArduSim
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						RcChannelsOverride.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.chan1Raw(0)
+							.chan2Raw(0)
+							.chan3Raw(0)
+							.chan4Raw(0)
+							.chan5Raw(0)
+							.chan6Raw(0)
+							.chan7Raw(0)
+							.chan8Raw(0)
+							.build());
+				// From now, the RC channels will not be overriden by ArduSim
 				UAVParam.overrideOn.set(numUAV, 0);
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 			} catch (IOException e1) {
@@ -608,7 +816,23 @@ public class UAVControllerThread extends Thread {
 		// Command to move the UAV to a safe position stored in the variable UAVParam.newLocation[numUAV]
 		case UAVParam.MAV_STATUS_MOVE_UAV:
 			try {
-				msgMoveUAV();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						MissionItem.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.frame(MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT)
+							.command(MavCmd.MAV_CMD_NAV_WAYPOINT)
+							.current(2)	// Means that the command is issued in guided mode
+							.autocontinue(0)
+							.param1(0)	// Delay in decimal seconds before going to next waypoint
+							.param2(0)	// Ignored
+							.param3(0)	// Ignored
+							.param4(0)	// Ignored
+							.x(UAVParam.newLocation[numUAV][0])
+							.y(UAVParam.newLocation[numUAV][1])
+							.z(UAVParam.newLocation[numUAV][2])
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_MOVE_UAV);
 			} catch (IOException e1) {
 				e1.printStackTrace();
@@ -622,7 +846,17 @@ public class UAVControllerThread extends Thread {
 			|| mode.getCustomMode() != UAVParam.newFlightMode[numUAV]
 					.getCustomMode()) {
 				try {
-					msgSetMode();
+					// Actualy, it should be better to use a msg_command_long, but SITL does not support it on MAVLink v1 and this solution depends on the compilation (ardupilot, PX4,...)
+					connection.send1(UAVParam.gcsId.get(numUAV),
+							0,	// MavComponent.MAV_COMP_ID_ALL
+							SetMode.builder()
+								.targetSystem(UAVParam.mavId.get(numUAV))
+								.baseMode(EnumValue.create(MavMode.class, UAVParam.newFlightMode[numUAV].getBaseMode()))
+								.customMode(UAVParam.newFlightMode[numUAV].getCustomMode())
+								.build());
+					// ALERT The base mode EnumValue gets null as entry because the custom flight modes are not
+					//  included in MavMode enumerator, but it works because the library only uses the value
+					//  provided to send the adequate command to the flight controller
 					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_MODE);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -635,7 +869,15 @@ public class UAVControllerThread extends Thread {
 		// Command to arm the UAV engines
 		case UAVParam.MAV_STATUS_REQUEST_ARM:
 			try {
-				msgArmEngines();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL
+						CommandLong.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.command(MavCmd.MAV_CMD_COMPONENT_ARM_DISARM)
+							.confirmation(0)
+							.param1(1)
+							.build());	// .param2(21196) ONLY to disarm the vehicle in flight
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_ARM);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -646,7 +888,16 @@ public class UAVControllerThread extends Thread {
 		case UAVParam.MAV_STATUS_REQUEST_TAKE_OFF:
 			
 			try {
-				msgDoTakeOff();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL
+						CommandLong.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.command(MavCmd.MAV_CMD_NAV_TAKEOFF)
+							.confirmation(0)
+							//.param1(0)	Ignored: climb angle on planes
+							.param7((float)UAVParam.takeOffAltitude.get(numUAV))
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_TAKE_OFF);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -656,7 +907,17 @@ public class UAVControllerThread extends Thread {
 		// Command to set the flight speed stored in the variable UAVParam.newSpeed[numUAV]
 		case UAVParam.MAV_STATUS_SET_SPEED:
 			try {
-				msgSetSpeed();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL
+						CommandLong.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.command(MavCmd.MAV_CMD_DO_CHANGE_SPEED)
+							.confirmation(0)
+							//.param1(1)	Ignored: 1 Means ground speed, 0 air speed
+							.param2((float)UAVParam.newSpeed[numUAV])
+							//.param3(-1)	Ignored: Throttle (0-100%). -1 means ignore
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_SET_SPEED);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -666,7 +927,15 @@ public class UAVControllerThread extends Thread {
 		// Command to change the value UAVParam.newParamValue[numUAV] of the parameter UAVParam.newParam[numUAV]
 		case UAVParam.MAV_STATUS_SET_PARAM:
 			try {
-				msgSetParam();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						ParamSet.builder()
+						.targetSystem(UAVParam.mavId.get(numUAV))
+						.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+						.paramId(UAVParam.newParam[numUAV].getId())
+						.paramValue((float)UAVParam.newParamValue.get(numUAV))
+						.paramType(UAVParam.newParam[numUAV].getType())
+						.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_PARAM);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -676,7 +945,14 @@ public class UAVControllerThread extends Thread {
 		// Command to store the value of the parameterUAVParam.newParam[numUAV] on the variable UAVParam.newParamValue[numUAV]
 		case UAVParam.MAV_STATUS_GET_PARAM:
 			try {
-				msgGetParam();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						ParamRequestRead.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.paramIndex(-1)		// Needs to be -1 to use the param id field
+							.paramId(UAVParam.newParam[numUAV].getId())
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_WAIT_FOR_PARAM);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -685,9 +961,16 @@ public class UAVControllerThread extends Thread {
 			
 			break;
 		// Command to change the current waypoint to the one stored in the variable UAVParam.newCurrentWaypoint[numUAV]
+		// Waypoints start in 0
 		case UAVParam.MAV_STATUS_SET_CURRENT_WP:
 			try {
-				msgSetCurrentWaypoint();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						MissionSetCurrent.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.seq(UAVParam.newCurrentWaypoint[numUAV])
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_CURRENT_WP);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -697,7 +980,12 @@ public class UAVControllerThread extends Thread {
 		// Command to clear the mission stored in the UAV
 		case UAVParam.MAV_STATUS_CLEAR_WP_LIST:
 			try {
-				msgClearMission();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						MissionClearAll.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)
+							.build());	// MavComponent.MAV_COMP_ID_ALL
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_CLEAR_WP_LIST);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -707,7 +995,13 @@ public class UAVControllerThread extends Thread {
 		// Command to send the number of waypoints of a new mission stored in UAVParam.currentGeoMission[numUAV]
 		case UAVParam.MAV_STATUS_SEND_WPS:
 			try {
-				msgSendMissionSize();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						MissionCount.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.count(UAVParam.currentGeoMission[numUAV].size())
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SENDING_WPS);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -717,7 +1011,13 @@ public class UAVControllerThread extends Thread {
 		// Command to request the number of waypoints of the mission stored in the UAV
 		case UAVParam.MAV_STATUS_REQUEST_WP_LIST:
 			try {
-				msgGetMission();
+				// The mission type must be set if using Mavlink v2
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						MissionRequestList.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.build());
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_WP0);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -726,7 +1026,12 @@ public class UAVControllerThread extends Thread {
 			break;
 		case UAVParam.MAV_STATUS_REQUEST_ALL_PARAM:
 			try {
-				msgRequestAllParam();
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						ParamRequestList.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)
+							.build());	// MavComponent.MAV_COMP_ID_ALL
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_TIMEOUT_ALL_PARAM);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -736,450 +1041,58 @@ public class UAVControllerThread extends Thread {
 		}
 		
 	}
-
-	/** Process a received command ACK. */
-	private void processCommandAck() {
-		msg_command_ack message = (msg_command_ack) inMsg;
-		switch (UAVParam.MAVStatus.get(numUAV)) {
-		// ACK received when changing the flight mode
-		case UAVParam.MAV_STATUS_ACK_MODE:
-			if (message.command == msg_set_mode.MAVLINK_MSG_ID_SET_MODE) {
-				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
-				} else {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_MODE);
-				}
-			}
-			break;
-		// ACK received when arming motors
-		case UAVParam.MAV_STATUS_ACK_ARM:
-			if (message.command == MAV_CMD.MAV_CMD_COMPONENT_ARM_DISARM) {
-				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
-				} else {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_ARM);
-				}
-			}
-			break;
-		// ACK received when taking off
-		case UAVParam.MAV_STATUS_ACK_TAKE_OFF:
-			if (message.command == MAV_CMD.MAV_CMD_NAV_TAKEOFF) {
-				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
-				} else {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_TAKE_OFF);
-				}
-			}
-			break;
-		// ACK received when changing the horizontal flight speed
-		case UAVParam.MAV_STATUS_ACK_SET_SPEED:
-			if (message.command == MAV_CMD.MAV_CMD_DO_CHANGE_SPEED) {
-				if (message.result == MAV_RESULT.MAV_RESULT_ACCEPTED) {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
-				} else {
-					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_SET_SPEED);
-				}
-			}
-			break;
-		default:
-			ArduSimTools.logGlobal(Text.NOT_REQUESTED_ACK_ERROR
-					+ " (command=" + message.command + ", result=" + message.result + ")");
-		}
-	}
-	
-	/** Process battery information received. */
-	private void processStatus() {
-		msg_sys_status message = (msg_sys_status) inMsg;
-		UAVParam.uavCurrentStatus[numUAV].update(message.voltage_battery, message.current_battery,
-				message.battery_remaining, message.load);
-	}
-
-	/** Sending heartbeat message. */
-	private void msgHeartBeat() throws IOException {
-		msg_heartbeat message = new msg_heartbeat();
-		message.type = MAV_TYPE.MAV_TYPE_GCS;
-		message.autopilot = MAV_AUTOPILOT.MAV_AUTOPILOT_INVALID;
-		message.system_status = MAV_STATE.MAV_STATE_UNINIT;
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-	
-	/** Sending new flight mode message. */
-	private void msgSetMode() throws IOException {
-		// Currently, it should be better to use a msg_command_long, but SITL does not support it on MAVLink v1 and this solution depends on the compilation (ardupilot, PX4,...)
-//		msg_command_long message = new msg_command_long();
-//		message.command = MAV_CMD.MAV_CMD_DO_SET_MODE;
-//		message.sysId = 255;
-//		message.componentId = MAV_COMPONENT.MAV_COMP_ID_MISSIONPLANNER;
-//		message.target_system = 1;
-//		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-//		
-//		message.param1 = MAV_MODE.MAV_MODE_AUTO_ARMED;
-//		message.param2 = UAVParam.newFlightMode[numUAV].getBaseMode();
-//		message.param3 = UAVParam.newFlightMode[numUAV].getCustomMode();
-		msg_set_mode message = new msg_set_mode();
-		message.base_mode = UAVParam.newFlightMode[numUAV].getBaseMode();
-		message.custom_mode = UAVParam.newFlightMode[numUAV].getCustomMode();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending arm engines message. */
-	private void msgArmEngines() throws IOException {
-		msg_command_long message = new msg_command_long();
-		message.command = MAV_CMD.MAV_CMD_COMPONENT_ARM_DISARM;
-		message.confirmation = 0;
-		message.param1 = 1;
-		//message.param2 = 21196; //Use ONLY to disarm the vehicle in flight
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending take off message. */
-	private void msgDoTakeOff() throws IOException {
-		msg_command_long message = new msg_command_long();
-		message.command = MAV_CMD.MAV_CMD_NAV_TAKEOFF;
-		message.confirmation = 0;
-		//message.param1 = 0; // Ignored: climb angle on planes
-		message.param7 = (float)UAVParam.takeOffAltitude.get(numUAV);
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending new speed message. */
-	private void msgSetSpeed() throws IOException {
-		msg_command_long message = new msg_command_long();
-		message.command = MAV_CMD.MAV_CMD_DO_CHANGE_SPEED;
-		message.confirmation = 0;
-		//message.param1 = 1; // Ignored: 1 Means ground speed, 0 air speed
-		message.param2 = (float)UAVParam.newSpeed[numUAV];
-		//message.param3 = -1; // Ignored: Throttle (0-100%). -1 means ignore
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
 	
 	/** Use yaw in degrees (0-360). */
 	private void msgYaw(float yaw) throws IOException {
-		msg_command_long message = new msg_command_long();
-		message.command = MAV_CMD.MAV_CMD_CONDITION_YAW;// TODO probando, borrar el método
-		message.confirmation = 0;
-		message.param1 = yaw;	// [0-360] Angle in degress
-		//message.param2 = ;	//
-		//message.param3 = ;
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
+		connection.send1(UAVParam.gcsId.get(numUAV),
+				0,	// MavComponent.MAV_COMP_ID_ALL
+				CommandLong.builder()
+					.targetSystem(UAVParam.mavId.get(numUAV))
+					.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+					.command(MavCmd.MAV_CMD_CONDITION_YAW)
+					.confirmation(0)
+					.param1(yaw)	// [0-360] Angle in degress
+					.build());
 	}
 	
 	/** Sends the UAV at a specific speed (m/s).
 	 * <p>speed. x=North, y=East, z=Down.</p> */
 	private void msgMoveSpeed(Double speedX, Double speedY, Double speedZ) throws IOException {
-		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
-		message.time_boot_ms = System.currentTimeMillis();
-		message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;// TODO method to be adapted in Copter Class
-//		int bX = 1;// bit 0// they would be concatenated with logic or: bX | bY | bZ
-//		int bY = 2;
-//		int bZ = 4;
-//		int bVx = 8;// bit 3
-//		int bVy = 16;
-//		int bVz = 32;
-//		int bAx = 64;// bit 6	// Not supported in ArduPilot
-//		int bAy = 128;
-//		int bAz = 256;
-//		int bForceA = 512;// bit 9
-//		int bYaw = 1024;
-//		int bYawRate = 2048;
-		message.type_mask = 56;
-		message.type_mask = ~message.type_mask & 0xFFFF; // 0=use, 1=ignore, so we need to flip bits
-		message.vx= speedX.floatValue();
-		message.vy= speedY.floatValue();
-		message.vz= speedZ.floatValue();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
-		this.sendMessage(message.encode());
-	}
-	
-	/** Sends the UAV to a specific location.
-	 * <p>You can set the three coordinates or the three speeds, but you can not combine them or leave them incomplete.</p> */
-	private void msgMoveToTarget(double longitude, double latitude, Double altitude) throws IOException {
-		// A possible alternative to this function is moveUAVNonBlocking
-		msg_set_position_target_global_int message = new msg_set_position_target_global_int();
-		message.time_boot_ms = System.currentTimeMillis();
-		message.coordinate_frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT;
-//		int bX = 1;// bit 0// they would be concatenated with logic or: bX | bY | bZ
-//		int bY = 2;
-//		int bZ = 4;
-//		int bVx = 8;// bit 3
-//		int bVy = 16;
-//		int bVz = 32;
-//		int bAx = 64;// bit 6	// Not supported in ArduPilot
-//		int bAy = 128;
-//		int bAz = 256;
-//		int bForceA = 512;// bit 9
-//		int bYaw = 1024;
-//		int bYawRate = 2048;
-		message.type_mask = 7;
-		message.type_mask = ~message.type_mask & 0xFFFF; // 0=use, 1=ignore, so we need to flip bits (~ flips bits)
-		message.lat_int = Math.round(10000000l * latitude);	// Degrees
-		message.lon_int = Math.round(10000000l * longitude);
-		message.alt = altitude.floatValue();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;//se transmite *10^7
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending new parameter value message. */
-	private void msgSetParam() throws IOException {
-		msg_param_set message = new msg_param_set();
-		message.setParam_id(UAVParam.newParam[numUAV].getId());
-		message.param_value = (float)UAVParam.newParamValue.get(numUAV);
-		message.param_type = UAVParam.newParam[numUAV].getType();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-	
-	/** Sending a query message for a parameter. */
-	private void msgGetParam() throws IOException {
-		msg_param_request_read  message = new msg_param_request_read();
-		message.param_index = -1;	// Needs to be -1 to use the param id field
-		message.setParam_id(UAVParam.newParam[numUAV].getId());
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending new current waypoint message.
-	 * <p>Starts with 0.</p> */
-	private void msgSetCurrentWaypoint() throws IOException {
-		msg_mission_set_current message = new msg_mission_set_current();
-		message.seq = UAVParam.newCurrentWaypoint[numUAV];
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending clear mission message. */
-	private void msgClearMission() throws IOException {
-		msg_mission_clear_all message = new msg_mission_clear_all();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending a message with the number of waypoints of the new mission. */
-	private void msgSendMissionSize() throws IOException {
-		msg_mission_count message = new msg_mission_count();
-		message.count = UAVParam.currentGeoMission[numUAV].size();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending a message with a mission waypoint to the UAV. */
-	private void msgSendWaypoint(Waypoint wp) throws IOException {
-		msg_mission_item message = wp.getMessage();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending a request message for the number of waypoints of the mission stored in the UAV. */
-	private void msgGetMission() throws IOException {
-		msg_mission_request_list message = new msg_mission_request_list();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
+		// TODO method to be adapted in Copter Class
+		connection.send1(UAVParam.gcsId.get(numUAV),
+				0,	// MavComponent.MAV_COMP_ID_ALL,
+				SetPositionTargetGlobalInt.builder()
+					.targetSystem(UAVParam.mavId.get(numUAV))
+					.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+					.timeBootMs(System.currentTimeMillis())
+					.coordinateFrame(MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT)
+					.typeMask(PositionTargetTypemask.POSITION_TARGET_TYPEMASK_X_IGNORE,	// bit 0, value 1
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Y_IGNORE,
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Z_IGNORE,
+							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VX_IGNORE,
+							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VY_IGNORE,
+							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VZ_IGNORE,
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AX_IGNORE,	// Acceleration not supported in ArduPilot
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AY_IGNORE,
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AZ_IGNORE,
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_FORCE_SET,
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_IGNORE,
+							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE)
+					.vx(speedX.floatValue())
+					.vy(speedY.floatValue())
+					.vz(speedZ.floatValue())
+					.build());
 	}
 
 	/** Sending a query message for a waypoint stored in the UAV. */
 	private void msgGetWaypoint(int numWP) throws IOException {
-		msg_mission_request message = new msg_mission_request();
-		message.seq = numWP;
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending the final ACK when all the waypoints of a mission are received. */
-	private void msgSendMissionAck() throws IOException {
-		msg_mission_ack message = new msg_mission_ack();
-		message.type = MAV_MISSION_RESULT.MAV_MISSION_ACCEPTED;
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending a throttle value message. */
-	private void msgSetThrottle(int throttle) throws IOException {
-		msg_rc_channels_override message = new msg_rc_channels_override();
-		// Initially, only trim values
-		int[] values = new int[] {UAVParam.RCtrimValue[numUAV][0], UAVParam.RCtrimValue[numUAV][1],
-				UAVParam.RCtrimValue[numUAV][2], UAVParam.RCtrimValue[numUAV][3],
-				UAVParam.RCtrimValue[numUAV][4], UAVParam.RCtrimValue[numUAV][5],
-				UAVParam.RCtrimValue[numUAV][6], UAVParam.RCtrimValue[numUAV][7]};
-		// New throttle value
-		values[UAVParam.RCmapThrottle[numUAV]-1] = throttle;
-		// Flight mode
-		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
-		if (fltmode != -1) {
-			values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
-		}
-		message.chan1_raw = values[0];
-		message.chan2_raw = values[1];
-		message.chan3_raw = values[2];
-		message.chan4_raw = values[3];
-		message.chan5_raw = values[4];
-		message.chan6_raw = values[5];
-		message.chan7_raw = values[6];
-		message.chan8_raw = values[7];
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-	
-	/** Sending 0 to all RCs returns control to the remote controler. */
-	private void msgReturnRCControl() throws IOException {
-		msg_rc_channels_override message = new msg_rc_channels_override();
-		message.chan1_raw = 0;
-		message.chan2_raw = 0;
-		message.chan3_raw = 0;
-		message.chan4_raw = 0;
-		message.chan5_raw = 0;
-		message.chan6_raw = 0;
-		message.chan7_raw = 0;
-		message.chan8_raw = 0;
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-	
-	/** Restricted method for API usage. Please, don't use it.
-	 * <p>Value 0 returns control to the RC. UINT16_MAX avoids changing that channel.</p> */
-	private void msgrcChannelsOverride(int roll, int pitch, int throttle, int yaw) throws IOException {
-		msg_rc_channels_override message = new msg_rc_channels_override();
-		// Initially, only trim values
-		int[] values = new int[] {UAVParam.RCtrimValue[numUAV][0], UAVParam.RCtrimValue[numUAV][1],
-				UAVParam.RCtrimValue[numUAV][2], UAVParam.RCtrimValue[numUAV][3],
-				UAVParam.RCtrimValue[numUAV][4], UAVParam.RCtrimValue[numUAV][5],
-				UAVParam.RCtrimValue[numUAV][6], UAVParam.RCtrimValue[numUAV][7]};
-		// New roll, pitch, throttle, and yaw values
-		values[UAVParam.RCmapRoll[numUAV]-1] = roll;
-		values[UAVParam.RCmapPitch[numUAV]-1] = pitch;
-		values[UAVParam.RCmapThrottle[numUAV]-1] = throttle;
-		values[UAVParam.RCmapYaw[numUAV]-1] = yaw;
-		// Flight mode
-		int fltmode = UAVParam.customModeToFlightModeMap[numUAV][UAVParam.flightMode.get(numUAV).getCustomMode()];
-		if (fltmode != -1) {
-			values[4] = UAVParam.RC5_MODE_LEVEL[fltmode - 1][1];
-		}
-		message.chan1_raw = values[0];
-		message.chan2_raw = values[1];
-		message.chan3_raw = values[2];
-		message.chan4_raw = values[3];
-		message.chan5_raw = values[4];
-		message.chan6_raw = values[5];
-		message.chan7_raw = values[6];
-		message.chan8_raw = values[7];
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Sending a message to move the UAV to a safe position in guided flight mode. */
-	private void msgMoveUAV() throws IOException {
-		msg_mission_item message = new msg_mission_item();
-		message.frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT;
-		message.command = MAV_CMD.MAV_CMD_NAV_WAYPOINT;
-		message.current = 2; // Means that the command is issued in guided mode
-		message.autocontinue = 0;
-		message.param1 = 0; // Delay in decimal seconds before going to next waypoint
-		message.param2 = 0; // Ignored
-		message.param3 = 0; // Ignored
-		message.param4 = 0; // Ignored
-		message.x = UAVParam.newLocation[numUAV][0];
-		message.y = UAVParam.newLocation[numUAV][1];
-		message.z = UAVParam.newLocation[numUAV][2];
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-	
-	/** Sending a message to request all the ArduCopter parameters, and the compilation version. */
-	private void msgRequestAllParam() throws IOException {
-		msg_param_request_list message = new msg_param_request_list();
-		
-		message.sysId = UAVParam.gcsId.get(numUAV);
-		message.componentId = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		message.target_system = UAVParam.mavId.get(numUAV);
-		message.target_component = MAV_COMPONENT.MAV_COMP_ID_ALL;
-		this.sendMessage(message.encode());
-	}
-
-	/** Auxiliary method to send to the UAV any of the previous messages. */
-	private void sendMessage(byte[] b) throws IOException {
-		dout.write(b);
-		dout.flush();
+		connection.send1(UAVParam.gcsId.get(numUAV),
+				0,	// MavComponent.MAV_COMP_ID_ALL,
+				MissionRequest.builder()
+					.targetSystem(UAVParam.mavId.get(numUAV))
+					.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+					.seq(numWP)
+					.build());
 	}
 	
 }

@@ -54,7 +54,7 @@ public class BoatThread extends Thread {
 		altitude = copter.getAltitude();
 		heading = copter.getHeading();
 		
-		output.clear();
+		output.reset();
 		output.writeDouble(location.x);
 		output.writeDouble(location.y);
 		output.writeDouble(altitude);

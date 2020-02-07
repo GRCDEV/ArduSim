@@ -3,14 +3,14 @@ package main.api;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mavlink.messages.MAV_CMD;
-
 import api.API;
 import api.pojo.FlightMode;
 import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
+import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.util.EnumValue;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
@@ -27,6 +27,16 @@ public class MissionHelper {
 	private int numUAV;
 	private ArduSim ardusim;
 	private Copter copter;
+	private static final int NAV_WAYPOINT_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_WAYPOINT).value();
+	private static final int NAV_LOITER_UNLIM_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LOITER_UNLIM).value();
+	private static final int NAV_LOITER_TURNS_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LOITER_TURNS).value();
+	private static final int NAV_LOITER_TIME_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LOITER_TIME).value();
+	private static final int NAV_SPLINE_WAYPOINT_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_SPLINE_WAYPOINT).value();
+	private static final int PAYLOAD_PREPARE_DEPLOY_COMMAND = EnumValue.of(MavCmd.MAV_CMD_PAYLOAD_PREPARE_DEPLOY).value();
+	private static final int NAV_LOITER_TO_ALT_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LOITER_TO_ALT).value();
+	private static final int NAV_LAND_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LAND).value();
+	private static final int NAV_RETURN_TO_LAUNCH_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_RETURN_TO_LAUNCH).value();
+	private static final int NAV_TAKEOFF_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_TAKEOFF).value();
 	
 	@SuppressWarnings("unused")
 	private MissionHelper() {}
@@ -94,8 +104,8 @@ public class MissionHelper {
 			if (current.getCustomMode() == 9) {
 				return;
 			}
-			if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND
-					|| (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
+			if (lastWP.getCommand().value() == MissionHelper.NAV_LAND_COMMAND
+					|| (lastWP.getCommand().value() == MissionHelper.NAV_RETURN_TO_LAUNCH_COMMAND && UAVParam.RTLAltitudeFinal[numUAV] == 0)) {
 				return;
 			}
 			
@@ -206,22 +216,17 @@ public class MissionHelper {
 		Location2DUTM utm;
 		for (int i=1; i<UAVParam.currentGeoMission[numUAV].size(); i++) {
 			wp = UAVParam.currentGeoMission[numUAV].get(i);
-			switch (wp.getCommand()) {
-			case MAV_CMD.MAV_CMD_NAV_WAYPOINT:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_UNLIM:// Currently, only WAYPOINT, SPLINE_WAYPOINT, TAKEOFF, LAND, and RETURN_TO_LAUNCH waypoints are accepted when loading
-			case MAV_CMD.MAV_CMD_NAV_LOITER_TURNS:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_TIME:
-			case MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT:
-			case MAV_CMD.MAV_CMD_PAYLOAD_PREPARE_DEPLOY:
-			case MAV_CMD.MAV_CMD_NAV_LOITER_TO_ALT:
-			case MAV_CMD.MAV_CMD_NAV_LAND:
+			int command = wp.getCommand().value();
+			if (command == MissionHelper.NAV_WAYPOINT_COMMAND || command == MissionHelper.NAV_LOITER_UNLIM_COMMAND
+					|| command == MissionHelper.NAV_LOITER_TURNS_COMMAND || command == MissionHelper.NAV_LOITER_TIME_COMMAND
+					|| command == MissionHelper.NAV_SPLINE_WAYPOINT_COMMAND || command == MissionHelper.PAYLOAD_PREPARE_DEPLOY_COMMAND
+					|| command == MissionHelper.NAV_LOITER_TO_ALT_COMMAND || command == MissionHelper.NAV_LAND_COMMAND) {
 				if (wp.getLatitude() != 0.0 || wp.getLongitude() != 0.0) {
 					utm = wp.getUTM();
 					WaypointSimplified swp = new WaypointSimplified(wp.getNumSeq(), utm.x, utm.y, wp.getAltitude());
 					missionUTMSimplified.add(swp);
 				}
-				break;
-			case MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH:
+			} else if (command == MissionHelper.NAV_RETURN_TO_LAUNCH_COMMAND) {
 				if (!foundFirst) {
 					ArduSimTools.logGlobal(Text.SIMPLIFYING_WAYPOINT_LIST_ERROR + Param.id[numUAV]);
 				} else {
@@ -229,8 +234,7 @@ public class MissionHelper {
 							first.x, first.y, UAVParam.RTLAltitude[numUAV]);
 					missionUTMSimplified.add(s);
 				}
-				break;
-			case MAV_CMD.MAV_CMD_NAV_TAKEOFF:
+			} else if (command == MissionHelper.NAV_TAKEOFF_COMMAND) {
 				// The geographic coordinates have been set by the flight controller
 				utm = wp.getUTM();
 				WaypointSimplified twp = new WaypointSimplified(wp.getNumSeq(), utm.x, utm.y, wp.getAltitude());
@@ -240,16 +244,15 @@ public class MissionHelper {
 					first = new WaypointSimplified(wp.getNumSeq(), utm.x, utm.y, wp.getAltitude());
 					foundFirst = true;
 				}
-				break;
 			}
 		}
 		UAVParam.missionUTMSimplified.set(numUAV, missionUTMSimplified);
 		Waypoint lastWP = UAVParam.currentGeoMission[numUAV].get(UAVParam.currentGeoMission[numUAV].size() - 1);
 		UAVParam.lastWP[numUAV] = lastWP;
-		if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+		if (lastWP.getCommand().value() == MissionHelper.NAV_RETURN_TO_LAUNCH_COMMAND) {
 			Waypoint home = UAVParam.currentGeoMission[numUAV].get(0);
 			UAVParam.lastWPUTM[numUAV] = home.getUTM();
-		} else if (lastWP.getCommand() == MAV_CMD.MAV_CMD_NAV_LAND) {
+		} else if (lastWP.getCommand().value() == MissionHelper.NAV_LAND_COMMAND) {
 			if (lastWP.getLatitude() == 0 && lastWP.getLongitude() == 0) {
 				Waypoint prevLastWP = UAVParam.currentGeoMission[numUAV].get(UAVParam.currentGeoMission[numUAV].size() - 2);
 				UAVParam.lastWPUTM[numUAV] = prevLastWP.getUTM();

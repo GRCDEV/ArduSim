@@ -6,11 +6,9 @@ import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.KeyStroke;
@@ -29,7 +27,6 @@ import main.api.communications.WirelessModel;
 import main.Text;
 import main.cpuHelper.CPUUsageThread;
 import main.sim.gui.ConfigDialogPanel;
-import main.sim.gui.MainWindow;
 import main.sim.gui.ProgressDialog;
 import main.uavController.UAVParam;
 
@@ -359,16 +356,6 @@ public class SimTools {
 				panel.windCheckBox.setSelected(false);
 			}
 		});
-	}
-	
-	/** Loads the UAV image */
-	public static void loadUAVImage() {
-		URL url = MainWindow.class.getResource(SimParam.UAV_IMAGE_PATH);
-		try {
-			SimParam.uavImage = ImageIO.read(url);
-		} catch (IOException e) {
-			ArduSimTools.closeAll(Text.LOADING_UAV_IMAGE_ERROR);
-		}
 	}
 
 	/** Updates the progress dialog periodically. */

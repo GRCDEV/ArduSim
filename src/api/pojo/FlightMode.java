@@ -1,6 +1,8 @@
 package api.pojo;
 
-import org.mavlink.messages.MAV_MODE_FLAG;
+import io.dronefleet.mavlink.common.MavMode;
+import io.dronefleet.mavlink.common.MavModeFlag;
+import io.dronefleet.mavlink.util.EnumValue;
 
 import main.Text;
 
@@ -9,168 +11,117 @@ import main.Text;
 
 public enum FlightMode {
 	/** Self-levels the roll and pitch axis. */
-	STABILIZE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	STABILIZE(EnumValue.of(MavMode.MAV_MODE_STABILIZE_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			0, Text.STABILIZE),
 	/** Self-levels the roll and pitch axis. Engines are spinning. */
-	STABILIZE_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, // only 209, not as the rest (217)
+	STABILIZE_ARMED(EnumValue.of(MavMode.MAV_MODE_STABILIZE_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(), // only 209, not as the rest (217)
 			0, Text.STABILIZE_ARMED),
 	/** Navigates to single points commanded by GCS. */
-	GUIDED(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	GUIDED(EnumValue.of(MavMode.MAV_MODE_GUIDED_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			4, Text.GUIDED),
 	/** Navigates to single points commanded by GCS. Engines are spinning. */
-	GUIDED_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	GUIDED_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			4, Text.GUIDED_ARMED),
 	/** Executes pre-defined mission. */
-	AUTO(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	AUTO(EnumValue.of(MavMode.MAV_MODE_AUTO_DISARMED).value() -
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_AUTO_ENABLED).value() +	// Not valid with Custom enabled
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			3, Text.AUTO),
 	/** Executes pre-defined mission. Engines are spinning. */
-	AUTO_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	AUTO_ARMED(EnumValue.of(MavMode.MAV_MODE_AUTO_ARMED).value() -
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_AUTO_ENABLED).value() +	// Not valid with Custom enabled
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			3, Text.AUTO_ARMED),
 	/** Holds altitude and position, uses GPS for movements. */
-	LOITER(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	LOITER(EnumValue.of(MavMode.MAV_MODE_GUIDED_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			5, Text.LOITER),
 	/** Holds altitude and position, uses GPS for movements. Engines are spinning. */
-	LOITER_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	LOITER_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			5, Text.LOITER_ARMED),
 	/** Returns above takeoff location, may also include landing. */
-	RTL(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	RTL(EnumValue.of(MavMode.MAV_MODE_GUIDED_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			6, Text.RTL),
 	/** Returns above takeoff location, may also include landing. Engines are spinning. */
-	RTL_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	RTL_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			6, Text.RTL_ARMED),
 	/** Automatically circles a point in front of the vehicle. */
-	CIRCLE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	CIRCLE(EnumValue.of(MavMode.MAV_MODE_GUIDED_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			7, Text.CIRCLE),
 	/** Automatically circles a point in front of the vehicle. Engines are spinning. */
-	CIRCLE_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	CIRCLE_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			7, Text.CIRCLE_ARMED),
 	/** Like loiter, but manual roll and pitch when sticks not centered. */
-	POSHOLD(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	POSHOLD(EnumValue.of(MavMode.MAV_MODE_GUIDED_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			16, Text.POSHOLD),
 	/** Like loiter, but manual roll and pitch when sticks not centered. Engines are spinning. */
-	POSHOLD_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	POSHOLD_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			16, Text.POSHOLD_ARMED),
 	/** Brings copter to an immediate stop. */
-	BRAKE(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	BRAKE(EnumValue.of(MavMode.MAV_MODE_GUIDED_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			17, Text.BRAKE),
 	/** Brings copter to an immediate stop. Engines are spinning. */
-	BRAKE_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	BRAKE_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			17, Text.BRAKE_ARMED),
 	/** Avoid collisions using ADS-B sensor, if properly configured. */
-	AVOID_ADSB(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	AVOID_ADSB(EnumValue.of(MavMode.MAV_MODE_GUIDED_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			19, Text.AVOID_ADSB),
 	/** Avoid collisions using ADS-B sensor, if properly configured. Engines are spinning. */
-	AVOID_ADSB_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_GUIDED_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	AVOID_ADSB_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			19, Text.AVOID_ADSB_ARMED),
 	/** Reduces altitude to ground level, attempts to go straight down. */
-	LAND(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	LAND(EnumValue.of(MavMode.MAV_MODE_STABILIZE_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			9, Text.LAND),
 	/** Reduces altitude to ground level, attempts to go straight down. Engines are spinning. */
-	LAND_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	LAND_ARMED(EnumValue.of(MavMode.MAV_MODE_STABILIZE_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			9, Text.LAND_ARMED),
 	/** Holds position after a throwing takeoff. */
-	THROW(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	THROW(EnumValue.of(MavMode.MAV_MODE_STABILIZE_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			18, Text.THROW),
 	/** Like stabilize, but coordinates yaw with roll like a plane. */
-	DRIFT(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	DRIFT(EnumValue.of(MavMode.MAV_MODE_STABILIZE_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			11, Text.DRIFT),
 	/** Holds altitude and self-levels the roll & pitch. */
-	ALT_HOLD(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	ALT_HOLD(EnumValue.of(MavMode.MAV_MODE_STABILIZE_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			2, Text.ALT_HOLD),
 	/** Holds altitude and self-levels the roll & pitch. Engines are spinning. */
-	ALT_HOLD_ARMED(MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	ALT_HOLD_ARMED(EnumValue.of(MavMode.MAV_MODE_STABILIZE_ARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			2, Text.ALT_HOLD),
 	/** Alt-hold, but holds pitch & roll when sticks centered. */
-	SPORT(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	SPORT(EnumValue.of(MavMode.MAV_MODE_STABILIZE_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			13, Text.SPORT),
 	/** Holds attitude, no self-level. */
-	ACRO(MAV_MODE_FLAG.MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_STABILIZE_ENABLED
-			+ MAV_MODE_FLAG.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+	ACRO(EnumValue.of(MavMode.MAV_MODE_STABILIZE_DISARMED).value() + 
+			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			1, Text.ACRO);
 
 	private final int baseMode;
-	private final int customMode;
+	private final long customMode;
 	private final String modeName;
 
-	private FlightMode(int baseMode, int customMode, String modeName) {
+	private FlightMode(int baseMode, long customMode, String modeName) {
 		this.baseMode = baseMode;
 		this.customMode = customMode;
 		this.modeName = modeName;
@@ -180,7 +131,7 @@ public enum FlightMode {
 		return baseMode;
 	}
 
-	public int getCustomMode() {
+	public long getCustomMode() {
 		return customMode;
 	}
 	

@@ -256,7 +256,6 @@ A few functions have been implemented in the object provided by *API.getGUI(int)
 
 * `void exit(String)`. On a real UAV, it writes a message to console, it warns the user with a dialog, and it closes ArduSim with an error code. If ArduSim runs as a simulator and before exiting, all SITL instances are closed and temporary files are removed.
 * `StatusPacket[] getDetectedUAVs()`. It returns an array of objects with the ID of the detected UAVs, and with their number as size. This can be used in the protocol PC Companion dialog. It is useful to build the GUI before launching a thread to update it depending on the present UAVs. A usage example can be found in the PC Companion dialog implemented for the *MBCAP* protocol.
-* `Color getColor()`. It provides the Color assigned to a UAV to be used to draw linear elements on the screen, like the path followed by the UAV, which is  automatically drawn. Please, notice that each multicopter has a different color asigned.
 * `Pair<String, List<Waypoint>[]> loadMissions()`. In a real multicopter, the mission is automatically loaded in the function `loadMission` of the protocol implementation, but in simulations this method, or the following two methods, can be used to open a dialog to select a *.kml* file or several *.waypoints* files, and it returns the missions loaded, and the path of the *.kml* file or the folder where the *.waypoints* files were located. After this function, the method `API.getCopter(0).getMissionHelper().setMissionsLoaded(List<Waypoint>[])` must be called to provide to ArduSim the missions loaded. The array provided must have at least the same length as the number of UAVs running in the current machine (check `API.getArduSim().getNumUAVs()`).
 * `Pair<String, List<Waypoint>[]> loadMissionsKML()`. In this case, the behavior is the same as the previous function, but only a single *.kml* file can be selected.
 * `Pair<String, List<Waypoint>[]> loadMissionsQGC()`. Similar to the previous case, but only one or more *.waypoints* files can be selected.
@@ -325,6 +324,7 @@ The function `API.getFileTools()` provides a context object to load and write fi
 * `File getHomeFolder()`. It provides the home folder of the current user.
 * `Map<String,String> parseINIFile(File)`. It reads a text file with the same format as ardusim.ini, and provides a map with the parameters found and their values.
 * `void storeFile( File, String)`. It stores a *String* in a *File*.
+* `BufferedImage loadImage(String)`. It loads an image from a file stored inside the *src* folder.
 
 The function `API.getValidationTools()` provides a context object to validate and format values introduced by the user, or gathered for logging purposes:
 

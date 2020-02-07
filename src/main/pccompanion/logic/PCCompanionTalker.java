@@ -70,7 +70,7 @@ public class PCCompanionTalker extends Thread {
 				if (send) {
 					try {
 						state = Param.simStatus;
-						output.clear();
+						output.reset();
 						output.writeInt(PCCompanionParam.CHANGE_STATE_COMMAND);
 						output.writeInt(state.getStateId());
 						if (state == SimulatorState.SETUP_IN_PROGRESS) {
@@ -97,7 +97,7 @@ public class PCCompanionTalker extends Thread {
 			if ((Param.simStatus == SimulatorState.SETUP_IN_PROGRESS || Param.simStatus == SimulatorState.TEST_IN_PROGRESS)
 					&& PCCompanionParam.action.get() != PCCompanionParam.ACTION_NONE) {
 				try {
-					output.clear();
+					output.reset();
 					output.writeInt(PCCompanionParam.EMERGENCY_COMMAND);
 					output.writeInt(PCCompanionParam.action.get());
 					sentPacket.setData(sendBuffer, 0, output.position());

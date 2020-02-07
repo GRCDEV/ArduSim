@@ -66,8 +66,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.javatuples.Pair;
-import org.mavlink.messages.MAV_CMD;
-import org.mavlink.messages.MAV_FRAME;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -88,6 +86,9 @@ import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DGeo;
 import es.upv.grc.mapper.LocationNotReadyException;
+import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.common.MavFrame;
+import io.dronefleet.mavlink.util.EnumValue;
 import main.Param.SimulatorState;
 import main.api.ArduSim;
 import main.api.CopterParamLoaded;
@@ -119,9 +120,9 @@ import mission.logic.MissionHelper;
 public class ArduSimTools {
 	
 	// Used to avoid the exit dialog to be opened more than once at the same time.
-	private static AtomicBoolean exiting = new AtomicBoolean();
+	private static final AtomicBoolean exiting = new AtomicBoolean();
 	
-	public static Queue<WaypointReachedListener> listeners = new ConcurrentLinkedQueue<WaypointReachedListener>();
+	public static final Queue<WaypointReachedListener> listeners = new ConcurrentLinkedQueue<WaypointReachedListener>();
 	
 	private static volatile boolean storingResults = false;
 	
@@ -133,6 +134,12 @@ public class ArduSimTools {
 	// Selected protocol (Internal use by ArduSim)
 	public static volatile String selectedProtocol;
 	public static volatile ProtocolHelper selectedProtocolInstance;
+	
+	private static final EnumValue<MavCmd> NAV_WAYPOINT_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_WAYPOINT);
+	private static final EnumValue<MavCmd> NAV_TAKEOFF_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_TAKEOFF);
+	private static final EnumValue<MavCmd> NAV_LAND_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LAND);
+	private static final EnumValue<MavCmd> NAV_RETURN_TO_LAUNCH_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_RETURN_TO_LAUNCH);
+	private static final EnumValue<MavCmd> NAV_SPLINE_WAYPOINT_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_SPLINE_WAYPOINT);
 	
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
@@ -564,11 +571,13 @@ public class ArduSimTools {
 			}
 		}
 		
-		param = parameters.get(Param.BING_KEY);
-		if (param == null) {
-			ArduSimTools.logGlobal(Param.BING_KEY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_3);
-		} else {
-			SimParam.bingKey = param;
+		if (Param.role == ArduSim.SIMULATOR) {
+			param = parameters.get(Param.BING_KEY);
+			if (param == null) {
+				ArduSimTools.logGlobal(Param.BING_KEY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_3);
+			} else {
+				SimParam.bingKey = param;
+			}
 		}
 	}
 	
@@ -577,7 +586,6 @@ public class ArduSimTools {
 		FileTools fileTools = API.getFileTools();
 		Map<String, String> parameters = new HashMap<>();
 		File folder = fileTools.getCurrentFolder();
-		
 		File [] files = folder.listFiles(new FilenameFilter() {
 		    @Override
 		    public boolean accept(final File dir, String name) {
@@ -1428,7 +1436,7 @@ public class ArduSimTools {
 			}
 		} else {
 			// Explore .class file tree for class files when running on Eclipse
-			File projectFolder = new File(API.getFileTools().getCurrentFolder(), "bin");
+			File projectFolder = new File(API.getFileTools().getCurrentFolder(), "classes");
 			existingClasses = new ArrayList<>();
 			String projectFolderPath;
 			try {
@@ -1961,7 +1969,8 @@ public class ArduSimTools {
 		if (!exiting) {
 			if (Param.role == ArduSim.MULTICOPTER) {
 				System.out.println(Text.FATAL_ERROR + ": " + message);
-				if (UAVParam.flightMode.get(0).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
+				if (UAVParam.flightMode != null
+						&& UAVParam.flightMode.get(0).getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING) {
 					if (!API.getCopter(0).setFlightMode(FlightMode.RTL)) {
 						System.out.println(Text.FATAL_ERROR + ": " + Text.FLIGHT_MODE_ERROR_3);
 						System.out.flush();
@@ -2304,7 +2313,7 @@ public class ArduSimTools {
 					}
 					missions[i] = new ArrayList<>(lines[i].length+2); // Adding fake home, and substitute first real waypoint with take off
 					// Add a fake waypoint for the home position (essential but ignored by the flight controller)
-					wp = new Waypoint(0, true, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 0, 1);
+					wp = new Waypoint(0, true, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT, ArduSimTools.NAV_WAYPOINT_COMMAND, 0, 0, 0, 0, 0, 0, 0, 1);
 					missions[i].add(wp);
 					int delay = MissionKmlDialog.waypointDelay;
 					// Check the coordinate triplet format
@@ -2337,27 +2346,27 @@ public class ArduSimTools {
 							// Waypoint 1 is take off
 							if (j==0) {
 								if (Param.role == ArduSim.MULTICOPTER) {
-									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, z, 1);
+									wp = new Waypoint(1, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											ArduSimTools.NAV_TAKEOFF_COMMAND, 0, 0, 0, 0, 0, 0, z, 1);
 									missions[i].add(wp);
-									wp = new Waypoint(2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
+									wp = new Waypoint(2, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											ArduSimTools.NAV_WAYPOINT_COMMAND, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
 								} else if (Param.role == ArduSim.SIMULATOR) {
-									wp = new Waypoint(1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, lat, lon, z, 1);
+									wp = new Waypoint(1, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											ArduSimTools.NAV_TAKEOFF_COMMAND, 0, 0, 0, 0, lat, lon, z, 1);
 									missions[i].add(wp);
 								}
 							} else {
 								if (Param.role == ArduSim.MULTICOPTER) {
-									wp = new Waypoint(j+2, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
+									wp = new Waypoint(j+2, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											ArduSimTools.NAV_WAYPOINT_COMMAND, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
 								} else if (Param.role == ArduSim.SIMULATOR) {
-									wp = new Waypoint(j+1, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-											MAV_CMD.MAV_CMD_NAV_WAYPOINT, delay, 0, 0, 0, 
+									wp = new Waypoint(j+1, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+											ArduSimTools.NAV_WAYPOINT_COMMAND, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
 								}
@@ -2371,8 +2380,8 @@ public class ArduSimTools {
 				// Add a last waypoint to land or RTL depending on the input option
 				int numSeq = missions[i].get(missions[i].size() - 1).getNumSeq() + 1;
 				if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_LAND)) {
-					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-							MAV_CMD.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, 0, 0);
+					wp = new Waypoint(numSeq, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+							ArduSimTools.NAV_LAND_COMMAND, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
 					if (Param.role == ArduSim.MULTICOPTER) {
 						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + Param.id[i]);
@@ -2382,8 +2391,8 @@ public class ArduSimTools {
 					}
 				}
 				if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
-					wp = new Waypoint(numSeq, false, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-							MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH, 0, 0, 0, 0, 0, 0, 0, 0);
+					wp = new Waypoint(numSeq, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+							ArduSimTools.NAV_RETURN_TO_LAUNCH_COMMAND, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
 					if (Param.role == ArduSim.MULTICOPTER) {
 						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + Param.id[i]);
@@ -2434,7 +2443,7 @@ public class ArduSimTools {
 		String[] line;
 		// One line per waypoint
 		// The first waypoint is supposed to be a fake point that will be ignored by the flight controller, but it is needed
-		wp = new Waypoint(0, true, MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 0, 1);
+		wp = new Waypoint(0, true, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT, ArduSimTools.NAV_WAYPOINT_COMMAND, 0, 0, 0, 0, 0, 0, 0, 1);
 		mission.add(wp);
 		for (int i=2; i<list.size(); i++) { // After header and fake home lines
 			// Tabular delimited line
@@ -2443,12 +2452,13 @@ public class ArduSimTools {
 				ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_3 + " " + i);
 				return null;
 			}
-			int numSeq, frame, command;
+			int numSeq, command;
+			MavFrame frame;
 			double param1, param2, param3, param4, param5, param6, param7;
 			int autoContinue;
 			try {
 				numSeq = Integer.parseInt(line[0].trim());
-				frame = Integer.parseInt(line[2].trim());
+				frame = EnumValue.create(MavFrame.class, Integer.parseInt(line[2].trim())).entry();
 				command = Integer.parseInt(line[3].trim());
 				param1 = Double.parseDouble(line[4].trim());
 				param2 = Double.parseDouble(line[5].trim());
@@ -2464,18 +2474,19 @@ public class ArduSimTools {
 					return null;
 				}
 				
+				EnumValue<MavCmd> c = EnumValue.create(MavCmd.class, command);
 				if (numSeq == 1) {
-					if ((frame != MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT
-							|| command != MAV_CMD.MAV_CMD_NAV_TAKEOFF
+					if ((frame != MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT
+							|| command != ArduSimTools.NAV_TAKEOFF_COMMAND.value()
 							|| (Param.role == ArduSim.MULTICOPTER && param7 <= 0))) {
 						ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_5);
 						return null;
 					}
-					wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+					wp = new Waypoint(numSeq, false, frame, c, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 					mission.add(wp);
 				} else {
 					if (Param.role == ArduSim.MULTICOPTER) {
-						wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+						wp = new Waypoint(numSeq, false, frame, c, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 						mission.add(wp);
 					} else if (Param.role == ArduSim.SIMULATOR) {
 						if (numSeq == 2) {
@@ -2486,7 +2497,7 @@ public class ArduSimTools {
 							wp.setAltitude(param7);
 						} else {
 							numSeq = numSeq - 1;
-							wp = new Waypoint(numSeq, false, frame, command, param1, param2, param3, param4, param5, param6, param7, autoContinue);
+							wp = new Waypoint(numSeq, false, frame, c, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 							mission.add(wp);
 						}
 					}
@@ -2501,18 +2512,18 @@ public class ArduSimTools {
 		// Currently only TAKEOFF (wp 1), WAYPOINT, SPLINE_WAYPOINT, LAND (wp last) and RETURN_TO_LAUNCH (wp last) are accepted.
 		int command;
 		for (int i = 2; i < mission.size() - 1; i++) {
-			command = mission.get(i).getCommand();
-			if (command != MAV_CMD.MAV_CMD_NAV_WAYPOINT
-					&& command != MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT) {
+			command = mission.get(i).getCommand().value();
+			if (command != ArduSimTools.NAV_WAYPOINT_COMMAND.value()
+					&& command != ArduSimTools.NAV_SPLINE_WAYPOINT_COMMAND.value()) {
 				ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_7);
 				return null;
 			}
 		}
-		command = mission.get(mission.size() - 1).getCommand();
-		if (command != MAV_CMD.MAV_CMD_NAV_WAYPOINT
-					&& command != MAV_CMD.MAV_CMD_NAV_SPLINE_WAYPOINT
-					&& command != MAV_CMD.MAV_CMD_NAV_LAND
-					&& command != MAV_CMD.MAV_CMD_NAV_RETURN_TO_LAUNCH) {
+		command = mission.get(mission.size() - 1).getCommand().value();
+		if (command != ArduSimTools.NAV_WAYPOINT_COMMAND.value()
+					&& command != ArduSimTools.NAV_SPLINE_WAYPOINT_COMMAND.value()
+					&& command != ArduSimTools.NAV_LAND_COMMAND.value()
+					&& command != ArduSimTools.NAV_RETURN_TO_LAUNCH_COMMAND.value()) {
 			ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_7);
 			return null;
 		}

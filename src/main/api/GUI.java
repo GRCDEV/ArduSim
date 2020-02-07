@@ -1,6 +1,5 @@
 package main.api;
 
-import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,14 +51,6 @@ public class GUI {
 	 */
 	public StatusPacket[] getDetectedUAVs() {
 		return PCCompanionParam.connectedUAVs.get();
-	}
-	
-	/**
-	 * Get the Color associated to this UAV, and that should be used to draw protocol elements.
-	 * @return Color used to draw elements of the UAV.
-	 */
-	public Color getColor() {
-		return SimParam.COLOR[numUAV % SimParam.COLOR.length];
 	}
 	
 	/**

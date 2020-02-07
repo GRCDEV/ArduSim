@@ -74,7 +74,7 @@ public class MUSCOPTalkerThread extends Thread {
 			while ((mission = MUSCOPParam.missionSent.get()) == null) {
 				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 			}
-			output.clear();
+			output.reset();
 			output.writeShort(Message.DATA);
 			output.writeShort(mission.length);
 			Location3DUTM waypoint;
@@ -100,7 +100,7 @@ public class MUSCOPTalkerThread extends Thread {
 			}
 		} else {
 			gui.logVerboseUAV(MUSCOPText.SLAVE_WAIT_LIST_TALKER);
-			output.clear();
+			output.reset();
 			output.writeShort(Message.DATA_ACK);
 			output.writeLong(selfId);
 			output.flush();
@@ -142,7 +142,7 @@ public class MUSCOPTalkerThread extends Thread {
 				}
 			} else {
 				gui.logVerboseUAV(MUSCOPText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
-				output.clear();
+				output.reset();
 				output.writeShort(Message.WAYPOINT_REACHED_ACK);
 				output.writeLong(selfId);
 				output.writeInt(currentWP);
@@ -167,7 +167,7 @@ public class MUSCOPTalkerThread extends Thread {
 				currentWP++;
 				if (isCenter) {
 					gui.logVerboseUAV(MUSCOPText.CENTER_SEND_MOVE);
-					output.clear();
+					output.reset();
 					output.writeShort(Message.MOVE_TO_WAYPOINT);
 					output.writeInt(currentWP);
 					output.flush();
@@ -186,7 +186,7 @@ public class MUSCOPTalkerThread extends Thread {
 					}
 				} else {
 					gui.logVerboseUAV(MUSCOPText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
-					output.clear();
+					output.reset();
 					output.writeShort(Message.WAYPOINT_REACHED_ACK);
 					output.writeLong(selfId);
 					output.writeInt(currentWP - 1);
@@ -219,7 +219,7 @@ public class MUSCOPTalkerThread extends Thread {
 		/** LANDING PHASE */
 		// Only the center UAV gets here
 		gui.logVerboseUAV(MUSCOPText.CENTER_SEND_LAND);
-		output.clear();
+		output.reset();
 		output.writeShort(Message.LAND);
 		Location2DUTM currentLocation = copter.getLocationUTM();
 		output.writeDouble(currentLocation.x);

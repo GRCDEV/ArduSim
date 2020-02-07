@@ -66,7 +66,7 @@ public class FollowMeTalkerThread extends Thread {
 			here = copter.getLocationUTM();
 			z = copter.getAltitudeRelative();
 			yaw = copter.getHeading();
-			output.clear();
+			output.reset();
 			output.writeShort(Message.I_AM_HERE);
 //			output.writeLong(selfId);
 			output.writeDouble(here.x);
@@ -90,7 +90,7 @@ public class FollowMeTalkerThread extends Thread {
 		
 		/** LANDING PHASE */
 		gui.logVerboseUAV(FollowMeText.MASTER_SEND_LAND);
-		output.clear();
+		output.reset();
 		output.writeShort(Message.LAND);
 		here = copter.getLocationUTM();
 		output.writeDouble(here.x);

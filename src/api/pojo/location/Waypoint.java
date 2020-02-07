@@ -3,11 +3,15 @@ package api.pojo.location;
 import java.util.List;
 import java.util.Objects;
 
-import org.mavlink.messages.MAV_FRAME;
-import org.mavlink.messages.ardupilotmega.msg_mission_item;
-
+import api.API;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
+import io.dronefleet.mavlink.annotations.MavlinkEntryInfo;
+import io.dronefleet.mavlink.common.MavCmd;
+import io.dronefleet.mavlink.common.MavFrame;
+import io.dronefleet.mavlink.common.MissionItem;
+import io.dronefleet.mavlink.util.EnumValue;
+import main.Text;
 
 /** This class generates waypoints used in missions.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -18,10 +22,10 @@ public class Waypoint {
 	public static final int MAX_WAYPOINTS = 718;
 	
 	private int numSeq; // Waypoint sequence number
-	private int frame = MAV_FRAME.MAV_FRAME_GLOBAL_RELATIVE_ALT; // Coordinate frame used
+	private MavFrame frame;	// Coordinate frame used
 	private int isCurrent; // 1 When this is the current waypoint
 	private int autoContinue; // 1 If the UAV must go on to the next when arriving to this waypoint
-	private int command; // What to do when arriving to this waypoint as specified in MAV_CMD enumerator
+	private EnumValue<MavCmd> command; // What to do when arriving to this waypoint as specified in MAV_CMD enumerator
 	private double param1;
 	private double param2;
 	private double param3;
@@ -36,7 +40,7 @@ public class Waypoint {
 	}
 
 	/** Waypoint constructor using all of its attributes. */
-	public Waypoint(int numSeq, boolean isCurrent, int frame, int command, double param1, double param2, double param3,
+	public Waypoint(int numSeq, boolean isCurrent, MavFrame frame, EnumValue<MavCmd> command, double param1, double param2, double param3,
 			double param4, double param5, double param6, double param7, int autoContinue) {
 		this.numSeq = numSeq;
 		if (isCurrent) {
@@ -81,7 +85,7 @@ public class Waypoint {
 	}
 
 	/** Returns this waypoint command. */
-	public int getCommand() {
+	public EnumValue<MavCmd> getCommand() {
 		return this.command;
 	}
 
@@ -130,31 +134,38 @@ public class Waypoint {
 	}
 
 	/** Generates a MAVLink message with this waypoint data. */
-	public msg_mission_item getMessage() {
-		msg_mission_item res = new msg_mission_item();
-		res.seq = this.numSeq;
-		res.frame = this.frame;
-		res.current = this.isCurrent;
-		res.autocontinue = this.autoContinue;
-		res.command = this.command;
-		res.param1 = (float)this.param1;
-		res.param2 = (float)this.param2;
-		res.param3 = (float)this.param3;
-		res.param4 = (float)this.param4;
-		res.x = (float)this.param5;
-		res.y = (float)this.param6;
-		res.z = (float)this.param7;
-		return res;
+	public MissionItem.Builder getMessage() {
+		return MissionItem.builder()
+			.seq(this.numSeq)
+			.frame(this.frame)
+			.current(this.isCurrent)
+			.autocontinue(this.autoContinue)
+			.command(this.command)
+			.param1((float)this.param1)
+			.param2((float)this.param2)
+			.param3((float)this.param3)
+			.param4((float)this.param4)
+			.x((float)this.param5)
+			.y((float)this.param6)
+			.z((float)this.param7);
 	}
 
 	@Override
 	/** String representation of a waypoint. */
 	public String toString() {
-		return this.numSeq + "\t" + this.isCurrent + "\t" + this.frame + "\t" + this.command + "\t" + this.param1 + "\t"
+		String res = this.numSeq + "\t" + this.isCurrent + "\t";
+		try {
+			res += MavFrame.class.getField(this.frame.name()).getAnnotation(MavlinkEntryInfo.class).value();
+		} catch (NoSuchFieldException | SecurityException e) {
+			res += 3;	// MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT
+			API.getGUI(0).logVerbose(Text.WAYPOINT_PRINT_ERROR);
+		}
+		res += "\t" + this.command + "\t" + this.param1 + "\t"
 				+ this.param2 + "\t" + this.param3 + "\t" + this.param4 + "\t" + this.param5 + "\t" + this.param6 + "\t"
 				+ this.param7 + "\t" + this.autoContinue;
+		return res;
 	}
-
+	
 	/** String representation of a mission stored in an array in QGroundControl format. */
 	public static String arrayToString(Waypoint[] wp) {
 		StringBuilder result = new StringBuilder();
