@@ -150,7 +150,7 @@ public class UAVParam {
 
 	// MAVLink waiting parameters
 	public static AtomicInteger numMAVLinksOnline = new AtomicInteger();	// Number of MAVLink links stablished
-	public static final long MAVLINK_ONLINE_TIMEOUT = 30 * 1000000000l;		// (ns) Global timeout
+	public static final long MAVLINK_ONLINE_TIMEOUT = 60 * 1000000000l;		// (ns) Global timeout
 	public static final long MAVLINK_WAIT = 500;							// (ms) Passive waiting timeout
 
 	// GPS fix waiting parameters

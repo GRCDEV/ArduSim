@@ -2,7 +2,8 @@ package main.api;
 
 import java.util.Objects;
 
-import api.pojo.AtomicFloat;
+import io.dronefleet.mavlink.common.MavParamType;
+import io.dronefleet.mavlink.util.EnumValue;
 
 /** 
  * Parameters loaded from the flight controller.
@@ -11,16 +12,16 @@ import api.pojo.AtomicFloat;
 public class CopterParamLoaded implements Comparable<CopterParamLoaded> {
 	
 	private String name;
-	private AtomicFloat value;
-	private int type;
+	private float value;
+	private EnumValue<MavParamType> type;
 	
 	@SuppressWarnings("unused")
 	private CopterParamLoaded() {}
 	
 	/** Creates a new ArduCopter parameter given its name, value, and type of parameter (see MAV_PARAM_TYPE enumerator). */
-	public CopterParamLoaded(String name, float value, int type) {
+	public CopterParamLoaded(String name, float value, EnumValue<MavParamType> type) {
 		this.name = name;
-		this.value = new AtomicFloat(value);
+		this.value = value;
 		this.type = type;
 	}
 
@@ -29,14 +30,14 @@ public class CopterParamLoaded implements Comparable<CopterParamLoaded> {
 	}
 
 	public float getValue() {
-		return value.get();
+		return value;
 	}
 	
 	public void setValue(float value) {
-		this.value.set(value);
+		this.value = value;
 	}
 
-	public int getType() {
+	public EnumValue<MavParamType> getType() {
 		return type;
 	}
 

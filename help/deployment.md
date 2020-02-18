@@ -28,7 +28,28 @@ On a previous work ([On the impact of inter-UAV communications interference in t
 
 ## 2 Software setup
 
-### 2.1 Raspberry - Pixhawk serial link
+### 2.1 ArduCopter firmware configuration
+
+The default configuration of the multicopter firmware is not ready to work with ArduSim, so you need to change some parameters using *Mission Planner* or "APM Planner*. The link to communicate with the Raspberry Pi is the Serial 2 (telem2). Now follows the list of parameters to be modified, and the recommended values. The first group, SR2_EXT_STAT, and SR2_POSITION must be set to the indicated values, while the remaining parameters are optional. The second group values represent the number of messages per second that the Raspberry Pi will receive.
+
+	Parameter | value
+	--- | ---
+	SERIAL2_BAUD | 57 (equivalent to 57600 bits per second)
+	SERIAL2_OPTIONS | 0
+	SERIAL2_PROTOCOL | 1 (Mavlink v1. In future releases it will be set to 2 to use Mavlink v2)
+	--- | ---
+	SR2_ADSB | 5
+	SR2_EXT_STAT | 2 (required to receive battery statistics)
+	SR2_EXTRA1 | 5
+	SR2_EXTRA2 | 2
+	SR2_EXTRA3 | 3
+	SR2_PARAMS | 0
+	SR2_POSITION | 2 (required to locate the multicopter)
+	SR2_RAW_CTRL | 0
+	SR2_RAW_SENS | 2
+	SR2_RC_CHAN | 5
+
+### 2.2 Raspberry Pi - Pixhawk serial link
 
 Raspbian, the Raspberry Pi operating system, may be using the serial port by default for the standard output, so it would send a lot of useless data to the flight controller. To avoid this, we have to keep the serial port enabled while disabling the output. Open the GUI tool in "Preferences-->Raspberry pi configuration", and enable "Serial Port" and disable "Serial Console" in the "Interfaces" tab. Alternatively, you can use the console utility with the following commands, go to *"Interfacing Options" - "Serial"* and enable it, but then you must check the file */boot/cmdline.txt* after reboot and remove the text *"console=serial0,115200"* if found.
 
@@ -50,7 +71,7 @@ Next, restart the device and check that the *ttyAMA0* port is available again wi
 
 Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
 
-### 2.2 Wireless ad-hoc network
+### 2.3 Wireless ad-hoc network
 
 1. Check the regulatory region used for the WiFi adapter and allowed frequencies:
 
@@ -83,11 +104,11 @@ Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
 
     Then, unplug the external adapter and restart the device, and when it has fully booted plug in the  external adapter. /etc/udev/rules.d/70-persistent-net.rules should be created with definitions for persistent rules for wlan0 and wlan1. Now check that the configuration already set in this chapter is applied to the correct wlanX adapter.
     
-### 2.3 Java
+### 2.4 Java
 
 By default, the latest version of Raspbian comes with OpenJDK 11 o greater, so ArduSim should work out of the box. Otherwise, you should install Java 11 o greater.
 
-### 2.4 ArduSim autostart
+### 2.5 ArduSim autostart
 
 You can start ArduSim with a remote SSH connection from a computer once the multicopter and the Raspberry Pi 3 B+ are turned on, but it is more practical to start ArduSim automatically on the Raspberry startup. To do so, we wrote a simple service (*ardusim.service*) with the following content:
 

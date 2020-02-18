@@ -78,7 +78,7 @@ Several temporary files are generated when using ArduSim for simulations. Please
 
 Remember that ArduSim is a highly asynchronous application, and running in Eclipse in debugging mode could lead to an unexpected behavior of the application.
 
-Finally, go to *Run --> Run configurations...* and create a new "Java Application" configuration with the following argument to be able to run a simulation, but not a PC Companion or a real multicopter, roles that are explained in other sections. The Main class is: Main - main.
+Finally, right-click over *src/main/Main.java* class on the *Package Explorer* and select *Run as...*, and *1 Java Application*. The first time, it will fail to run because you need to add the following argument to the command line to be able to run a simulation, but not a PC Companion or a real multicopter, roles that are explained in other sections. To this aim, edit the run configuration automatically created.
 
     simulator
 

@@ -383,7 +383,8 @@ public class Text {
 	public static final String WAYPOINT_REACHED = "Reached waypoint";
 	
 	// MAVLink errors
-	public static final String MAVLINK_ERROR = "Unable to stablish MAVLink connection with all UAVs.";
+	public static final String MAVLINK_ERROR1 = "Unable to stablish MAVLink connection with the UAV.";
+	public static final String MAVLINK_ERROR2 = "Unable to stablish MAVLink connection with all UAVs.";
 	public static final String GPS_FIX_ERROR_1 = "Unable to get GPS fix from all UAVs.";
 	public static final String GPS_FIX_ERROR_2 = "Unable to get GPS fix.";
 	public static final String PARAMETER_1 = "New parameter value:";

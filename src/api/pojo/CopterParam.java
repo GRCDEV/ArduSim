@@ -10,7 +10,7 @@ public enum CopterParam {
 	/** Mask of logs enabled */
 	LOGGING("LOG_BITMASK", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT32)),
 	
-	// Information automatically requested to the flight controller
+	// Information automatically requested to the flight controller for simulations (telem2 is in SR2 in real multicopters)
 	/** Times per second to receive the current location from the flight controller. */
 	POSITION_FREQUENCY("SR0_POSITION", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT16)),
 	/** Times per second to receive statistics (CPU load, battery remaining,...) from the flight controller. */
@@ -19,7 +19,7 @@ public enum CopterParam {
 	// Battery configuration
 	/** (mAh) Battery capacity. */
 	BATTERY_CAPACITY("BATT_CAPACITY", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT32)),
-	/** Battery monitoring: 0 (disabled), 3 (only voltage), 4 (voltage and current, or 5, 6, 7 (others). */
+	/** Battery monitoring: 0 (disabled), 3 (only voltage), 4 (voltage and current), or 5, 6, 7 (others). */
 	BATTERY_MONITOR("BATT_MONITOR", EnumValue.of(MavParamType.MAV_PARAM_TYPE_REAL32)),
 	/** (mAh) Second battery capacity. */
 	BATTERY_CAPACITY2("BATT2_CAPACITY", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT32)),

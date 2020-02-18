@@ -133,7 +133,7 @@ public class UAVControllerThread extends Thread {
 			try {
 				serialPort = SerialPort.getCommPort(UAVParam.serialPort);
 				serialPort.setComPortParameters(UAVParam.baudRate, 8, 1, SerialPort.NO_PARITY);
-				serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
+				serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 0, 0);//100, 0); It must never timeout (0 better than 100ms)
 				if (serialPort.openPort()) {
 					connection = MavlinkConnection.create(serialPort.getInputStream(), serialPort.getOutputStream());
 				} else {
@@ -171,19 +171,18 @@ public class UAVControllerThread extends Thread {
 		long prevTime = System.nanoTime();
 		long posTime;
 		
-		
-		try {
-			while ((inMsg = this.connection.next()) != null) {
-				try {
-					if (inMsg != null) {
-						
-						// Identify and process the received message
-						identifyMessage(inMsg);
-						
-						// When all UAVs are connected, start to process commands and sending heartbeat
-						if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
-							posTime = System.nanoTime();
-							if (posTime - prevTime > UAVParam.HEARTBEAT_PERIOD) {
+		while (true) {
+			try {
+				inMsg = this.connection.next();
+				if (inMsg != null) {
+					// Identify and process the received message
+					identifyMessage(inMsg);
+					
+					// When all UAVs are connected, start to process commands and sending heartbeat
+					if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
+						posTime = System.nanoTime();
+						if (posTime - prevTime > UAVParam.HEARTBEAT_PERIOD) {
+							try {
 								this.connection.send1(UAVParam.gcsId.get(numUAV),
 										0,	// MavComponent.MAV_COMP_ID_ALL
 										Heartbeat.builder()
@@ -193,15 +192,14 @@ public class UAVControllerThread extends Thread {
 											.mavlinkVersion(3)
 											.build());
 								prevTime = posTime;
-							}
-							processCommand();
+							} catch (IOException e) {}
 						}
+						processCommand();
 					}
-				} catch (IOException e) {
 				}
-			}
-		} catch(EOFException e) {
-		} catch(IOException e) {
+			} catch(EOFException e) {
+				break;
+			} catch(IOException e) {}
 		}
 		if (Param.role == ArduSim.MULTICOPTER) {
 			serialPort.closePort();
@@ -443,7 +441,7 @@ public class UAVControllerThread extends Thread {
 		String paramId = msg.paramId();
 		float value = msg.paramValue();
 		// General storage of parameters
-		UAVParam.loadedParams[numUAV].put(paramId, new CopterParamLoaded(paramId, value, msg.paramType().value()));
+		UAVParam.loadedParams[numUAV].put(paramId, new CopterParamLoaded(paramId, value, msg.paramType()));
 		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
 		
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_PARAM
@@ -470,8 +468,8 @@ public class UAVControllerThread extends Thread {
 	
 	/** Process the detection of the ArduCopter version. */
 	private void processVersion(Statustext msg) {
-		String text = msg.text();
-		if (text.toUpperCase().startsWith("APM:COPTER")) {
+		String text = msg.text().toUpperCase();
+		if (text.startsWith("APM:COPTER") || text.startsWith("ARDUCOPTER")) {
 			UAVParam.arducopterVersion.set(text.split(" ")[1].substring(1));
 		}
 	}

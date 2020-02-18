@@ -2153,7 +2153,7 @@ public class ArduSimTools {
 			if (System.nanoTime() - time > UAVParam.MAVLINK_ONLINE_TIMEOUT) {
 				if (Param.role == ArduSim.MULTICOPTER) {
 					if (!error) {
-						ArduSimTools.logGlobal(Text.MAVLINK_ERROR);
+						ArduSimTools.logGlobal(Text.MAVLINK_ERROR1);
 						error = true;
 					}
 				} else {
@@ -2165,7 +2165,7 @@ public class ArduSimTools {
 			}
 		}
 		if (!allReady) {
-			ArduSimTools.closeAll(Text.MAVLINK_ERROR);
+			ArduSimTools.closeAll(Text.MAVLINK_ERROR2);
 		}
 	}
 

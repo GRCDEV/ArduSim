@@ -56,12 +56,11 @@ public class InitialConfiguration1Thread extends Thread {
 		}
 		UAVParam.gcsId.set(numUAV, (int)Math.rint(paramValue));
 		
-		// Ask the flight controller for information about battery usage (1Hz)
-		if (!copter.setParameter(CopterParam.STATISTICS, 1)) {
-			return;
-		}
-		
 		if (Param.role == ArduSim.SIMULATOR) {
+			// Ask the flight controller for information about battery usage (1Hz)
+			if (!copter.setParameter(CopterParam.STATISTICS, 1)) {
+				return;
+			}
 			// Disable logging to speed up simulation
 			if (!SimParam.arducopterLoggingEnabled && !copter.setParameter(CopterParam.LOGGING, 0)) {
 				return;
