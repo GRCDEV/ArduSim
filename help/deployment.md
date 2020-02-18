@@ -32,27 +32,21 @@ On a previous work ([On the impact of inter-UAV communications interference in t
 
 The default configuration of the multicopter firmware is not ready to work with ArduSim, so you need to change some parameters using *[Mission Planner](https://ardupilot.org/planner/)* or *[APM Planner](https://ardupilot.org/planner2/)*. The link to communicate with the Raspberry Pi is the Serial 2 (telem2). Now follows the list of parameters to be modified, and the recommended values. The first group, SR2_EXT_STAT, and SR2_POSITION must be set to the indicated values, while the remaining parameters are optional. The second group values represent the number of messages per second that the Raspberry Pi will receive.
 
-        | Hola | Veos |
-        |------|------|
-        | Cosa | SILE |
-
-
-
-        Parameter | value
-        -----------------|-------------------------------------------------------------------------
-        SERIAL2_BAUD | 57 (equivalent to 57600 bits per second)
-        SERIAL2_OPTIONS | 0
-        SERIAL2_PROTOCOL | 1 (Mavlink v1. In future releases it will be set to 2 to use Mavlink v2)
-        SR2_ADSB | 5
-        SR2_EXT_STAT | 2 (required to receive battery statistics)
-        SR2_EXTRA1 | 5
-        SR2_EXTRA2 | 2
-        SR2_EXTRA3 | 3
-        SR2_PARAMS | 0
-        SR2_POSITION | 2 (required to locate the multicopter)
-        SR2_RAW_CTRL | 0
-        SR2_RAW_SENS | 2
-        SR2_RC_CHAN | 5
+Parameter | value
+-----------------|-------------------------------------------------------------------------
+SERIAL2_BAUD | 57 (equivalent to 57600 bits per second)
+SERIAL2_OPTIONS | 0
+SERIAL2_PROTOCOL | 1 (Mavlink v1. In future releases it will be set to 2 to use Mavlink v2)
+SR2_ADSB | 5
+SR2_EXT_STAT | 2 (required to receive battery statistics)
+SR2_EXTRA1 | 5
+SR2_EXTRA2 | 2
+SR2_EXTRA3 | 3
+SR2_PARAMS | 0
+SR2_POSITION | 2 (required to locate the multicopter)
+SR2_RAW_CTRL | 0
+SR2_RAW_SENS | 2
+SR2_RC_CHAN | 5
 
 ### 2.2 Raspberry Pi - Pixhawk serial link
 
