@@ -32,6 +32,12 @@ On a previous work ([On the impact of inter-UAV communications interference in t
 
 The default configuration of the multicopter firmware is not ready to work with ArduSim, so you need to change some parameters using *[Mission Planner](https://ardupilot.org/planner/)* or *[APM Planner](https://ardupilot.org/planner2/)*. The link to communicate with the Raspberry Pi is the Serial 2 (telem2). Now follows the list of parameters to be modified, and the recommended values. The first group, SR2_EXT_STAT, and SR2_POSITION must be set to the indicated values, while the remaining parameters are optional. The second group values represent the number of messages per second that the Raspberry Pi will receive.
 
+        | Hola | Veos |
+        |------|------|
+        | Cosa | SILE |
+
+
+
         Parameter | value
         -----------------|-------------------------------------------------------------------------
         SERIAL2_BAUD | 57 (equivalent to 57600 bits per second)
