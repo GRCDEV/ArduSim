@@ -37,6 +37,7 @@ Parameter | value
 SERIAL2_BAUD | 57 (equivalent to 57600 bits per second)
 SERIAL2_OPTIONS | 0
 SERIAL2_PROTOCOL | 1 (Mavlink v1. In future releases it will be set to 2 to use Mavlink v2)
+-----------------|-------------------------------------------------------------------------
 SR2_ADSB | 5
 SR2_EXT_STAT | 2 (required to receive battery statistics)
 SR2_EXTRA1 | 5
