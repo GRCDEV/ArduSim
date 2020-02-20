@@ -40,7 +40,7 @@ public class HiddenFunctions {
 	
 	/**
 	 * Center the joysticks of the virtual remote control to stabilize the UAV.
-	 * <p>Useful to stabilize altitude when the take off process finishes, or for starting AUTO flight while being on the ground.</p>
+	 * <p>Useful to stabilize altitude before taking off, or for starting AUTO flight while being on the ground.</p>
 	 * @return true if the command was successful.
 	 */
 	public static  boolean stabilize(int numUAV) {
