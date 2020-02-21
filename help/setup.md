@@ -161,12 +161,11 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 
 The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal. The process is explained for Debian based sistems (Ubuntu, Mint...). For RPM based systems (CentOS, Fedora...) use *yum* installer and install manually the dependencies included in the script mentioned later on.
 
-1. Install Java JDK 11 or 13 if not present.
+1. Install Java JDK 11 or 13 if not present. The procedure for Java JDK 13 follows:
 
         sudo add-apt-repository ppa:linuxuprising/java
         sudo apt update
-        sudo apt install oracle-java11-installer
-        sudo apt install oracle-java11-set-default
+        sudo apt install oracle-java13-installer
         java -version
 
 2. Install git if not present:
