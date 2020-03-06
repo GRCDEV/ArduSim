@@ -443,6 +443,13 @@ public class UAVControllerThread extends Thread {
 		// General storage of parameters
 		UAVParam.loadedParams[numUAV].put(paramId, new CopterParamLoaded(paramId, value, msg.paramType()));
 		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
+		if (UAVParam.totParams[numUAV] == 0) {
+			UAVParam.totParams[numUAV] = msg.paramCount();	// It starts counting from 0
+			UAVParam.paramLoaded[numUAV] = new boolean[UAVParam.totParams[numUAV]];
+		}
+		if (msg.paramIndex() != -1 && msg.paramIndex() != 65535) {
+			UAVParam.paramLoaded[numUAV][msg.paramIndex()] = true;
+		}
 		
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_PARAM
 				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
@@ -452,11 +459,20 @@ public class UAVControllerThread extends Thread {
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_1_PARAM);
 			}
-		} else if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_WAIT_FOR_PARAM
-				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
-			// A single param has been read
-			UAVParam.newParamValue.set(numUAV, value);
-			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+		} else if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_WAIT_FOR_PARAM) {
+			int index = UAVParam.newParamIndex.get(numUAV);
+			if (index == -1) {
+				if (paramId.equals(UAVParam.newParam[numUAV].getId())) {
+					// A single param has been read
+					UAVParam.newParamValue.set(numUAV, value);
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+				}
+			} else if (msg.paramIndex() == index) {
+				// A single param has been read
+				UAVParam.newParamValue.set(numUAV, value);
+				UAVParam.newParamIndex.set(numUAV, -1);
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+			}
 		}
 	}
 	
@@ -976,15 +992,28 @@ public class UAVControllerThread extends Thread {
 			break;
 		// Command to store the value of the parameterUAVParam.newParam[numUAV] on the variable UAVParam.newParamValue[numUAV]
 		case UAVParam.MAV_STATUS_GET_PARAM:
+			int index = UAVParam.newParamIndex.get(numUAV);
 			try {
-				connection.send1(UAVParam.gcsId.get(numUAV),
-						0,	// MavComponent.MAV_COMP_ID_ALL,
-						ParamRequestRead.builder()
-							.targetSystem(UAVParam.mavId.get(numUAV))
-							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
-							.paramIndex(-1)		// Needs to be -1 to use the param id field
-							.paramId(UAVParam.newParam[numUAV].getId())
-							.build());
+				if (index >= 0 && index < UAVParam.totParams[numUAV]) {
+					connection.send1(UAVParam.gcsId.get(numUAV),
+							0,	// MavComponent.MAV_COMP_ID_ALL,
+							ParamRequestRead.builder()
+								.targetSystem(UAVParam.mavId.get(numUAV))
+								.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+								.paramIndex(index)		// Needs to be -1 to use the param id field
+								//.paramId(UAVParam.newParam[numUAV].getId())cambiar a usar index
+								.build());
+				} else {
+					connection.send1(UAVParam.gcsId.get(numUAV),
+							0,	// MavComponent.MAV_COMP_ID_ALL,
+							ParamRequestRead.builder()
+								.targetSystem(UAVParam.mavId.get(numUAV))
+								.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+								.paramIndex(-1)		// Needs to be -1 to use the param id field
+								.paramId(UAVParam.newParam[numUAV].getId())
+								.build());
+				}
+				
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_WAIT_FOR_PARAM);
 			} catch (IOException e) {
 				e.printStackTrace();
