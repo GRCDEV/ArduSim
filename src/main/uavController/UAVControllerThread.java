@@ -720,7 +720,7 @@ public class UAVControllerThread extends Thread {
 		Location3DGeo target = UAVParam.target[numUAV].getAndSet(null);
 		if (target != null) {
 			try {
-				// A possible alternative to this message is moveUAVNonBlocking
+				// A possible alternative to this message is MissionItem using ACK, but without waiting to reach destination
 				// Never mix location and speed mask fields
 				connection.send1(UAVParam.gcsId.get(numUAV),
 						0,	// MavComponent.MAV_COMP_ID_ALL,
@@ -745,6 +745,40 @@ public class UAVControllerThread extends Thread {
 							.latInt((int)Math.round(10000000l * target.latitude))	// Degrees * 10^7
 							.lonInt((int)Math.round(10000000l * target.longitude))
 							.alt(Double.valueOf(target.altitude).floatValue())
+							.build());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		float[] targetSpeed = UAVParam.targetSpeed[numUAV].getAndSet(null);
+		if (targetSpeed != null) {
+			try {
+				// A possible alternative to this message is MissionItem using ACK, but without waiting to reach destination
+				// Never mix location and speed mask fields
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						SetPositionTargetGlobalInt.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.timeBootMs(System.currentTimeMillis())
+							.coordinateFrame(MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT)
+							.typeMask(
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_X_IGNORE,	// bit 0, value 1
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Y_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Z_IGNORE,
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VX_IGNORE,
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VY_IGNORE,
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VZ_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AX_IGNORE,	// Acceleration not supported in ArduPilot
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AY_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AZ_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_FORCE_SET,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE)
+							.vx(targetSpeed[0])
+							.vy(targetSpeed[1])
+							.vz(targetSpeed[2])
 							.build());
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -1050,35 +1084,6 @@ public class UAVControllerThread extends Thread {
 					.command(MavCmd.MAV_CMD_CONDITION_YAW)
 					.confirmation(0)
 					.param1(yaw)	// [0-360] Angle in degress
-					.build());
-	}
-	
-	/** Sends the UAV at a specific speed (m/s).
-	 * <p>speed. x=North, y=East, z=Down.</p> */
-	private void msgMoveSpeed(Double speedX, Double speedY, Double speedZ) throws IOException {
-		// TODO method to be adapted in Copter Class
-		connection.send1(UAVParam.gcsId.get(numUAV),
-				0,	// MavComponent.MAV_COMP_ID_ALL,
-				SetPositionTargetGlobalInt.builder()
-					.targetSystem(UAVParam.mavId.get(numUAV))
-					.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
-					.timeBootMs(System.currentTimeMillis())
-					.coordinateFrame(MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT)
-					.typeMask(PositionTargetTypemask.POSITION_TARGET_TYPEMASK_X_IGNORE,	// bit 0, value 1
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Y_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Z_IGNORE,
-							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VX_IGNORE,
-							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VY_IGNORE,
-							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VZ_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AX_IGNORE,	// Acceleration not supported in ArduPilot
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AY_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AZ_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_FORCE_SET,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE)
-					.vx(speedX.floatValue())
-					.vy(speedY.floatValue())
-					.vz(speedZ.floatValue())
 					.build());
 	}
 

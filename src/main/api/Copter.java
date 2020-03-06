@@ -400,6 +400,20 @@ public class Copter {
 	}
 	
 	/**
+	 * Move the UAV in an specific direction, given a speed vector.
+	 * <p>Method designed to update continuously the target location of the UAV.</p>
+	 * <p>The UAV must be in GUIDED flight mode.</p>
+	 * <p>This method uses the message SET_POSITION_TARGET_GLOBAL_INT, and doesn't wait response from the flight controller.
+	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
+	 * @param vx (m/s) target speed pointing north.
+	 * @param vy (m/s) target speed pointing east.
+	 * @param vz (m/s) target speed pointing down.
+	 */
+	public void moveTo(double vx, double vy, double vz) {
+		UAVParam.targetSpeed[numUAV].set(new float[]{(float)vx, (float)vy, (float)vz});
+	}
+	
+	/**
 	 * Change the UAV flight mode.
 	 * @param mode Flight mode to set.
 	 * @return true if the command was successful.

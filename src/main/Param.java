@@ -53,6 +53,9 @@ public class Param {
 	public static final String GROUND_FORMATION = "GROUNDFORMATION";
 	public static final String GROUND_DISTANCE = "GROUNDDISTANCE";
 	
+	// Name of the protocol that does not need virtual UAVs during simulations
+	public static final String REPLAY_PROTOCOL_NAME = "Replay";
+	
 	// Number of UAVs to be simulated
 	public static int numUAVs;
 	public static AtomicInteger numUAVsTemp = new AtomicInteger();	// Used as semaphore to modify numUAVs in configuration dialogs

@@ -700,6 +700,7 @@ public class ArduSimTools {
 		UAVParam.overrideOn = new AtomicIntegerArray(Param.numUAVs);
 		
 		UAVParam.target = new AtomicReference[Param.numUAVs];
+		UAVParam.targetSpeed = new AtomicReference[Param.numUAVs];
 		
 		UAVParam.loadedParams = new Map[Param.numUAVs];
 		UAVParam.lastParamReceivedTime = new AtomicLong[Param.numUAVs];
@@ -738,6 +739,7 @@ public class ArduSimTools {
 			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
 			
 			UAVParam.target[i] = new AtomicReference<Location3DGeo>();
+			UAVParam.targetSpeed[i] = new AtomicReference<float[]>();
 			
 			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, CopterParamLoaded>(1250));
 			UAVParam.lastParamReceivedTime[i] = new AtomicLong();

@@ -188,6 +188,7 @@ public class UAVParam {
 	
 	// Target location for continuous movement
 	public static AtomicReference<Location3DGeo>[] target;
+	public static AtomicReference<float[]>[] targetSpeed;
 
 	// Communications finite state machine. States of the MAVLink protocol
 	public static AtomicIntegerArray MAVStatus;

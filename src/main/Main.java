@@ -198,7 +198,6 @@ public class Main {
 				}
 				if (Param.numUAVs != Param.numUAVsTemp.get()) {
 					Param.numUAVs = Param.numUAVsTemp.get();
-					API.getGUI(0);
 				}
 			}
 
@@ -239,6 +238,7 @@ public class Main {
 				ArduSimTools.closeAll(Text.LOADING_UAV_IMAGE_ERROR);
 			}
 		}
+		boolean usingReplayProtocol = ArduSimTools.selectedProtocol.equalsIgnoreCase(Param.REPLAY_PROTOCOL_NAME);
 		// Configuration feedback
 		ArduSimTools.logGlobal(Text.PROTOCOL_IN_USE + " " + ArduSimTools.selectedProtocol);
 		if (Param.role == ArduSim.SIMULATOR) {
@@ -278,26 +278,31 @@ public class Main {
 
 		// 8. Startup of the virtual UAVs
 		if (Param.role == ArduSim.SIMULATOR) {
-			if (Param.windSpeed > 0.0) {
-				MainWindow.window.buildWindImage();
-			}
 			Pair<Location2DGeo, Double>[] start = ArduSimTools.selectedProtocolInstance.setStartingLocation();
-			SimParam.tempFolderBasePath = ArduSimTools.defineTemporaryFolder();
-			if (SimParam.tempFolderBasePath == null) {
-				ArduSimTools.closeAll(Text.TEMP_PATH_ERROR);
-			}
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_MAVLINK);
+			if (!usingReplayProtocol) {
+				if (Param.windSpeed > 0.0) {
+					MainWindow.window.buildWindImage();
 				}
-			});
-			ArduSimTools.startVirtualUAVs(start);
+				
+				SimParam.tempFolderBasePath = ArduSimTools.defineTemporaryFolder();
+				if (SimParam.tempFolderBasePath == null) {
+					ArduSimTools.closeAll(Text.TEMP_PATH_ERROR);
+				}
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_MAVLINK);
+					}
+				});
+				ArduSimTools.startVirtualUAVs(start);
+			}
 		}
 
 		// 9. Start UAV controllers, wait for MAVLink link, send basic configuration, and wait for GPS fix
-		ArduSimTools.startUAVControllers();
-		ArduSimTools.waitMAVLink();
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (!usingReplayProtocol) {
+			ArduSimTools.startUAVControllers();
+			ArduSimTools.waitMAVLink();
+		}
+		if (Param.role == ArduSim.SIMULATOR && !usingReplayProtocol) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_CONFIGURATION_UPLOAD);
@@ -305,21 +310,22 @@ public class Main {
 			});
 			ArduSimTools.forceGPS();
 		}
-		ArduSimTools.sendBasicConfiguration1();
+		if (!usingReplayProtocol) ArduSimTools.sendBasicConfiguration1();
 		
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR && !usingReplayProtocol) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_GPS);
 				}
 			});
 		}
-		ArduSimTools.getGPSFix();
-		
-		ArduSimTools.sendBasicConfiguration2();	// It requires GPS fix to set the current location for takeoff
+		if (!usingReplayProtocol) {
+			ArduSimTools.getGPSFix();
+			ArduSimTools.sendBasicConfiguration2();	// It requires GPS fix to set the current location for takeoff
+		}
 		
 		// 10. Set communications online, and start collision detection if needed
-		if (Param.role == ArduSim.SIMULATOR && Param.numUAVs > 1) {
+		if (Param.role == ArduSim.SIMULATOR && Param.numUAVs > 1 && !usingReplayProtocol) {
 			// Calculus of the distance between UAVs
 			new DistanceCalculusThread().start();
 			// Communications range calculation enable
@@ -338,11 +344,11 @@ public class Main {
 		
 		// 11. Launch the threads of the protocol under test and wait the GUI to be built
 		ArduSimTools.selectedProtocolInstance.startThreads();
-		if (Param.role == ArduSim.MULTICOPTER) {
+		if (Param.role == ArduSim.MULTICOPTER || usingReplayProtocol) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
-			// This only can happen during simulations
+			// This can only happen during simulations
 			if (InitialConfiguration2Thread.UAVS_CONFIGURED.get() == Param.numUAVs) {
 				Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 			}
@@ -442,25 +448,30 @@ public class Main {
 		int check = 0;
 		boolean allStarted = false;
 		while (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-			// Detect if all the UAVs have started the experiment
-			if (!allStarted) {
-				if (ArduSimTools.isTestStarted()) {
-					allStarted = true;
+			if (usingReplayProtocol) {
+				// Manually set Param.simStatus = SimulatorState.TEST_FINISHED on the protocol
+			} else {
+				// Detect if all the UAVs have started the experiment
+				if (!allStarted) {
+					if (ArduSimTools.isTestStarted()) {
+						allStarted = true;
+					}
+				}
+				// Check the battery level periodically
+				if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
+					ArduSimTools.checkBatteryLevel();
+				}
+				check++;
+				// Force the UAVs to land if needed
+				ArduSimTools.selectedProtocolInstance.forceExperimentEnd();
+				// Detects if all UAVs are on the ground in order to finish the experiment
+				if (allStarted) {
+					if (ArduSimTools.isTestFinished()) {
+						Param.simStatus = SimulatorState.TEST_FINISHED;
+					}
 				}
 			}
-			// Check the battery level periodically
-			if (check % UAVParam.BATTERY_PRINT_PERIOD == 0) {
-				ArduSimTools.checkBatteryLevel();
-			}
-			check++;
-			// Force the UAVs to land if needed
-			ArduSimTools.selectedProtocolInstance.forceExperimentEnd();
-			// Detects if all UAVs are on the ground in order to finish the experiment
-			if (allStarted) {
-				if (ArduSimTools.isTestFinished()) {
-					Param.simStatus = SimulatorState.TEST_FINISHED;
-				}
-			}
+			
 			if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 				ardusim.sleep(SimParam.LONG_WAITING_TIME);
 			}
@@ -468,7 +479,10 @@ public class Main {
 		if (Param.role == ArduSim.MULTICOPTER) {
 			API.getCopter(0).cancelRCOverride();
 		}
-		if (Param.simStatus != SimulatorState.TEST_FINISHED) {
+		if (usingReplayProtocol) {
+			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
+		}
+		if (Param.simStatus != SimulatorState.TEST_FINISHED || usingReplayProtocol) {
 			return;
 		}
 
