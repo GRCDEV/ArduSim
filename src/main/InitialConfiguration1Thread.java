@@ -364,7 +364,6 @@ public class InitialConfiguration1Thread extends Thread {
 				return;
 			}
 		}
-		
 		// Configuration successful
 		InitialConfiguration1Thread.UAVS_CONFIGURED.incrementAndGet();
 	}

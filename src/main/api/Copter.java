@@ -13,6 +13,7 @@ import es.upv.grc.mapper.Location3DGeo;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
+import main.api.hiddenFunctions.HiddenFunctions;
 import main.api.masterslavepattern.MasterSlaveHelper;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
@@ -462,6 +463,15 @@ public class Copter {
 			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.PARAMETER_1 + " " + parameter.getId() + " = " + value);
 			return true;
 		}
+	}
+	
+	/**
+	 * Send a command to the flightcontroller to ask for a specific (continuous) message e.g Global_position_int
+	 * @param messageId: the message Id defined by Mavlink https://mavlink.io/en/messages/common.html
+	 * @return boolean if procedure went correctly or not
+	 */
+	public boolean requestForMessage(int messageId) {
+		return HiddenFunctions.requestForMessage(messageId,numUAV,false);
 	}
 	
 	/**

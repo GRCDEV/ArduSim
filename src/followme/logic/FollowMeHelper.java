@@ -20,6 +20,7 @@ import followme.gui.FollowMeConfigDialog;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.formations.FlightFormation;
+import main.uavController.UAVParam;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -87,11 +88,25 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-		// The following code is valid for ArduCopter version 3.5.7 or lower
+		// The following code is valid for ArduCopter version 3.6.12 or lower
 		Copter copter = API.getCopter(numUAV);
 		if (copter.getMasterSlaveHelper().isMaster()) {
-			if (!copter.setParameter(CopterParam.LOITER_SPEED_357, FollowMeParam.masterSpeed)) {
-				return false;
+			String version = UAVParam.arducopterVersion.get();
+			if(version.contains("3.5")) {
+				if (!copter.setParameter(CopterParam.LOITER_SPEED_357,FollowMeParam.masterSpeed)) {
+					return false;
+				}
+			}else if(version.contains("3.6")){
+				if (!copter.setParameter(CopterParam.LOITER_SPEED_36X, FollowMeParam.masterSpeed)) {	
+					return false;
+				}
+			}else {
+				System.out.println("this version is not checked yet,"
+						+ " if ardusim does not run as expected please check"
+						+ " src:followme:followmeHelper.java:sendInitialConfiguration");
+				if (!copter.setParameter(CopterParam.LOITER_SPEED_36X, FollowMeParam.masterSpeed)) {	
+					return false;
+				}
 			}
 		}
 		return true;

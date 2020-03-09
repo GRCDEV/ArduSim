@@ -430,6 +430,16 @@ public class UAVControllerThread extends Thread {
 				}
 			}
 			break;
+		// ACK received when asking for message
+		case UAVParam.MAV_STATUS_ACK_REQUEST_MESSAGE:
+			if (command == MavCmd.MAV_CMD_SET_MESSAGE_INTERVAL) {
+				if(result == MavResult.MAV_RESULT_ACCEPTED) {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+				}else {
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_REQUEST_MESSAGE);
+				}
+			}
+			break;
 		default:
 			ArduSimTools.logGlobal(Text.NOT_REQUESTED_ACK_ERROR
 					+ " (command=" + command.name() + ", result=" + result.name() + ")");
@@ -1034,6 +1044,26 @@ public class UAVControllerThread extends Thread {
 			} catch (IOException e) {
 				e.printStackTrace();
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_ALL_PARAM);
+			}
+			break;
+		case UAVParam.MAV_STATUS_REQUEST_MESSAGE:
+			try {
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,
+						CommandLong.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0) // MavComponent.MAV_COMP_ID_ALL
+							.command(MavCmd.MAV_CMD_SET_MESSAGE_INTERVAL) 
+							.confirmation(0)
+							.param1(UAVParam.messageId.get()) 	//messageId 
+							.param2(250000) // interval 4 time per second 
+							.param7(0) 		// respond target 0 = default
+							.build()
+						);
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ACK_REQUEST_MESSAGE);
+			}catch(IOException e) {
+				e.printStackTrace();
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_REQUEST_MESSAGE);
 			}
 			break;
 		}

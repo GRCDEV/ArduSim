@@ -371,10 +371,13 @@ public class MissionHelper {
 	 */
 	public boolean start() {
 		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
+		// Since ardupilot v4.0.0 this doesn`t work anymore. however everything works if we first give some throttle and than go to auto mode 
+		
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
 		if (HiddenFunctions.armEngines(numUAV)
+				&& HiddenFunctions.stabilize(numUAV)
 				&& this.copter.setFlightMode(FlightMode.AUTO)
-				&& HiddenFunctions.stabilize(numUAV)) {
+				) {
 			return true;
 		}
 		return false;

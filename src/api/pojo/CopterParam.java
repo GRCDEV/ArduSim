@@ -153,7 +153,9 @@ public enum CopterParam {
 	/** Yaw behavior while following a mission: 0 (Fixed), 1 (Face next waypoint), 2 (Face next waypoint except RTL), 3 (Face along GPS course). */
 	WP_YAW_BEHAVIOR("WP_YAW_BEHAVIOR", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT8)),
 	/** (cm/s) Maximum ground speed while in Loiter mode (valid for ArduCopter 3.5.7 or lower). */
-	LOITER_SPEED_357("WPNAV_LOIT_SPEED", EnumValue.of(MavParamType.MAV_PARAM_TYPE_REAL32));
+	LOITER_SPEED_357("WPNAV_LOIT_SPEED", EnumValue.of(MavParamType.MAV_PARAM_TYPE_REAL32)),
+	/** (cm/s) Maximum ground speed while in Loiter mode (valid for ArduCopter 3.6.0 or higher). */
+	LOITER_SPEED_36X("LOIT_SPEED",EnumValue.of(MavParamType.MAV_PARAM_TYPE_REAL32));
 
 	private final String id;
 	private final EnumValue<MavParamType> type;

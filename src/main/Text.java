@@ -400,6 +400,8 @@ public class Text {
 	public static final String TAKE_OFF_ERROR_2 = "Error taking off.";
 	public static final String SPEED_2 = "New speed";
 	public static final String SPEED_2_ERROR = "Error changing flight speed.";
+	public static final String REQUEST_MESSAGE_ERROR = "Discard message if running Ardusim version lower than v4.0.0. Error requesting message with message Id: ";
+	public static final String REQUEST_MESSAGE = "Succesfully requested message with message Id: ";
 	public static final String CURRENT_WAYPOINT = "New current waypoint";
 	public static final String CURRENT_WAYPOINT_ERROR = "Error setting the new current waypoint.";
 	public static final String STOP = "UAV stationary.";

@@ -37,13 +37,31 @@ public class HiddenFunctions {
 			return true;
 		}
 	}
+	/**
+	 * Starting from ArduPilot version 3.5.8 and higher ArduCopter expects
+	 * continuous RC override or no override at all. However RC overriding is necessary once,
+	 * in order to set the remote control values in the middle.
+	 * Therefore in the function stabilize we cancel RCOverride. 
+	 * @param numUAV
+	 * @return
+	 */
+	public static boolean stabilize(int numUAV) {
+		Boolean answer = stabilize_intern(numUAV);
+		if (answer) {
+			API.getCopter(numUAV).cancelRCOverride();
+			UAVParam.overrideOn.set(numUAV, 1);
+			return true;
+		}
+		return false;
+	}
+
 	
 	/**
 	 * Center the joysticks of the virtual remote control to stabilize the UAV.
 	 * <p>Useful to stabilize altitude before taking off, or for starting AUTO flight while being on the ground.</p>
 	 * @return true if the command was successful.
 	 */
-	public static  boolean stabilize(int numUAV) {
+	public static  boolean stabilize_intern(int numUAV) {
 		if (UAVParam.overrideOn.get(numUAV) == 1) {
 			ArduSim ardusim = API.getArduSim();
 			while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
@@ -64,6 +82,47 @@ public class HiddenFunctions {
 		}
 		ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.RC_CHANNELS_OVERRIDE_FORBIDEN_ERROR);
 		return false;
+	}
+	
+	public static boolean requestForMessage(int messageId, int numUAV, boolean ignoreError) {
+		ArduSim ardusim = API.getArduSim();
+		//mavlink2 messageId are max 3 bytes
+		if(messageId < 0 || messageId > 16777215) {
+			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + "Requesting for unvalid messageId");
+			return false;
+		}
+		// Wait until finite state machine is ready
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
+		// Set finite state machine
+		if(UAVParam.messageId == null) {
+			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + "UAVParam.messageId is not definied");
+			return false;
+		}
+		UAVParam.messageId.set(messageId);
+		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_REQUEST_MESSAGE);
+		// Wait until finite state machine is done executing (or until it gives an error)
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
+				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_REQUEST_MESSAGE) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
+		// Check if everything went correctly
+		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_REQUEST_MESSAGE) {
+			if(ignoreError) {
+				UAVParam.MAVStatus.set(numUAV,UAVParam.MAV_STATUS_OK);
+				while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+					ardusim.sleep(UAVParam.COMMAND_WAIT);
+				}
+				return true;
+			}else {
+				ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.REQUEST_MESSAGE_ERROR +  Integer.toString(messageId));
+				return false;
+			}
+		} else {
+			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.REQUEST_MESSAGE + Integer.toString(messageId));
+			return true;
+		}
 	}
 	
 	/**
@@ -91,8 +150,5 @@ public class HiddenFunctions {
 			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.TAKE_OFF);
 			return true;
 		}
-	}
-	
-	
-	
+	}	
 }

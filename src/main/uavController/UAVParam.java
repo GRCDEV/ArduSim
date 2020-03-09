@@ -18,6 +18,10 @@ import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DGeo;
+import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
+import io.dronefleet.mavlink.common.GlobalPositionInt;
+import io.dronefleet.mavlink.common.MissionCurrent;
+import io.dronefleet.mavlink.common.SysStatus;
 import main.api.CopterParamLoaded;
 import main.api.formations.FlightFormation;
 
@@ -249,9 +253,14 @@ public class UAVParam {
 	public static final int MAV_STATUS_ACK_MOVE_UAV = 37;
 	public static final int MAV_STATUS_MOVE_UAV_ERROR = 38;
 	public static float[][] newLocation;	// [latitude, longitude, relative altitude] where to move the UAV
+	public static AtomicInteger messageId = new AtomicInteger(-1);
+	public static final int globalPositionIntId = GlobalPositionInt.class.getAnnotation(MavlinkMessageInfo.class).id();
 	public static final int MAV_STATUS_REQUEST_ALL_PARAM = 39;
 	public static final int MAV_STATUS_TIMEOUT_ALL_PARAM = 40;
 	public static final int MAV_STATUS_ERROR_ALL_PARAM = 41;
+	public static final int MAV_STATUS_REQUEST_MESSAGE = 42;
+	public static final int MAV_STATUS_ERROR_REQUEST_MESSAGE = 43;
+	public static final int MAV_STATUS_ACK_REQUEST_MESSAGE = 44;
 	public static AtomicLong[] lastParamReceivedTime;	// (ms) When the last param was received when loading all parameters
 	public static final long ALL_PARAM_TIMEOUT = 3000;	// (ms) Timeout waiting all parameters to be loaded
 	public static final long VERSION_TIMEOUT = 5000; 	// (ms) Timeout waiting ArduCopter version to be read
