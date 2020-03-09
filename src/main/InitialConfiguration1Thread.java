@@ -7,6 +7,7 @@ import api.pojo.CopterParam;
 import api.pojo.FlightMode;
 import main.api.ArduSim;
 import main.api.Copter;
+import main.api.hiddenFunctions.HiddenFunctions;
 import main.sim.gui.MissionKmlDialog;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
@@ -39,8 +40,26 @@ public class InitialConfiguration1Thread extends Thread {
 		// Load all parameters and get the ArduCopter compilation version
 		ArduSimTools.getArduCopterParameters(numUAV);
 		
-		Double paramValue;
+		if (UAVParam.totParams[numUAV] != UAVParam.loadedParams[numUAV].size()) {
+			for (int i = 0; i < UAVParam.totParams[numUAV]; i++) {
+				if (!UAVParam.paramLoaded[numUAV][i]) {
+					if (HiddenFunctions.getParameter(numUAV, i) == null) return;
+				}
+			}
+		}
+		// Follows a redundant check
+		if (UAVParam.totParams[numUAV] != UAVParam.loadedParams[numUAV].size()) {
+			return;
+		}
+		
+//		CopterParamLoaded[] values = UAVParam.loadedParams[numUAV].values().toArray(new CopterParamLoaded[0]);
+//		Arrays.sort(values);
+//		for (int i = 0; i < values.length; i++) {
+//			System.out.println(values[i]);
+//		}
+		
 		// Determining the GCS identifier that must be used
+		Double paramValue;
 		paramValue = copter.getParameter(CopterParam.SINGLE_GCS);
 		if (paramValue == null) {
 			return;

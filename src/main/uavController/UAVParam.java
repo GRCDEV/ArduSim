@@ -192,6 +192,7 @@ public class UAVParam {
 	
 	// Target location for continuous movement
 	public static AtomicReference<Location3DGeo>[] target;
+	public static AtomicReference<float[]>[] targetSpeed;
 
 	// Communications finite state machine. States of the MAVLink protocol
 	public static AtomicIntegerArray MAVStatus;
@@ -218,6 +219,7 @@ public class UAVParam {
 	public static final int MAV_STATUS_ERROR_1_PARAM = 15;
 	public static CopterParam[] newParam;
 	public static AtomicDoubleArray newParamValue;		// Parameter value to send or received from the UAV controller
+	public static AtomicIntegerArray newParamIndex;
 	public static final int MAV_STATUS_GET_PARAM = 16;
 	public static final int MAV_STATUS_WAIT_FOR_PARAM = 17;
 	public static final int MAV_STATUS_ERROR_2_PARAM = 18;
@@ -271,5 +273,7 @@ public class UAVParam {
 		{1361, 1425, 1490}, {1491, 1555, 1620}, {1621, 1685, 1749}, {1750, 1875, 2000}};
 	
 	public static Map<String, CopterParamLoaded>[] loadedParams;
+	public static int totParams[];
+	public static boolean paramLoaded[][];
 
 }

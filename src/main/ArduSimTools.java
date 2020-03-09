@@ -687,6 +687,7 @@ public class ArduSimTools {
 		UAVParam.newSpeed = new double[Param.numUAVs];
 		UAVParam.newParam = new CopterParam[Param.numUAVs];
 		UAVParam.newParamValue = new AtomicDoubleArray(Param.numUAVs);
+		UAVParam.newParamIndex = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.newCurrentWaypoint = new int[Param.numUAVs];
 		UAVParam.newGeoMission = new Waypoint[Param.numUAVs][];
 		UAVParam.stabilizationThrottle = new int[Param.numUAVs];
@@ -700,8 +701,11 @@ public class ArduSimTools {
 		UAVParam.overrideOn = new AtomicIntegerArray(Param.numUAVs);
 		
 		UAVParam.target = new AtomicReference[Param.numUAVs];
+		UAVParam.targetSpeed = new AtomicReference[Param.numUAVs];
 		
 		UAVParam.loadedParams = new Map[Param.numUAVs];
+		UAVParam.totParams = new int[Param.numUAVs];
+		UAVParam.paramLoaded =new boolean[Param.numUAVs][];
 		UAVParam.lastParamReceivedTime = new AtomicLong[Param.numUAVs];
 		
 		SimParam.uavUTMPath = new ArrayList[Param.numUAVs];	// Useful for logging purposes
@@ -732,12 +736,15 @@ public class ArduSimTools {
 				UAVParam.customModeToFlightModeMap[i][j] = -1;
 			}
 			
+			UAVParam.newParamIndex.set(i, -1);
+			
 			UAVParam.lastWaypointReached[i] = new AtomicBoolean();
 			
 			UAVParam.rcs[i] = new AtomicReference<RCValues>();
 			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
 			
 			UAVParam.target[i] = new AtomicReference<Location3DGeo>();
+			UAVParam.targetSpeed[i] = new AtomicReference<float[]>();
 			
 			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, CopterParamLoaded>(1250));
 			UAVParam.lastParamReceivedTime[i] = new AtomicLong();
@@ -2226,15 +2233,6 @@ public class ArduSimTools {
 				}
 				ArduSimTools.logGlobal(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
 				ArduSimTools.logGlobal(Text.ARDUCOPTER_VERSION + " " + UAVParam.arducopterVersion.get());
-				
-				
-//				CopterParamLoaded[] values = UAVParam.loadedParams[numUAV].values().toArray(new CopterParamLoaded[0]);
-//				Arrays.sort(values);
-//				for (int i = 0; i < values.length; i++) {
-//					System.out.println(values[i]);
-////					System.out.println(values[i].getName() + ": " + values[i].getValue());
-//				}
-				
 			} else {
 				ArduSimTools.logVerboseGlobal(Text.ARDUCOPTER_PARAMS + " " + UAVParam.loadedParams[numUAV].size());
 			}

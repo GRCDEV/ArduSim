@@ -17,6 +17,7 @@ public class HiddenFunctions {
 	 * Arm the engines.
 	 * <p>Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
 	 * The UAV must be in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
+	 * @param numUAV Position of the UAV in the stored arrays.
 	 * @return true if the command was successful.
 	 */
 	public static boolean armEngines(int numUAV) {
@@ -59,9 +60,10 @@ public class HiddenFunctions {
 	/**
 	 * Center the joysticks of the virtual remote control to stabilize the UAV.
 	 * <p>Useful to stabilize altitude before taking off, or for starting AUTO flight while being on the ground.</p>
+	 * @param numUAV Position of the UAV in the stored arrays.
 	 * @return true if the command was successful.
 	 */
-	public static  boolean stabilize_intern(int numUAV) {
+	private static  boolean stabilize_intern(int numUAV) {
 		if (UAVParam.overrideOn.get(numUAV) == 1) {
 			ArduSim ardusim = API.getArduSim();
 			while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
@@ -129,6 +131,7 @@ public class HiddenFunctions {
 	 * Take off a previously armed UAV.
 	 * <p>The UAV must be in GUIDED mode and armed.
 	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.</p>
+	 * @param numUAV Position of the UAV in the stored arrays.
 	 * @param altitude Target altitude over the home location.
 	 * @return true if the command was successful.
 	 */
@@ -151,4 +154,30 @@ public class HiddenFunctions {
 			return true;
 		}
 	}	
+
+	/**
+	 * Get the value of a flight controller parameter.
+	 * @param numUAV Position of the UAV in the stored arrays.
+	 * @param index Parameter index in the flight controller memory, starting in 0.
+	 * @return The parameter value if the command was successful, or null in an error happens.
+	 */
+	public static Double getParameter(int numUAV, int index) {
+		ArduSim ardusim = API.getArduSim();
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
+		UAVParam.newParamIndex.set(numUAV, index);
+		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_GET_PARAM);
+		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
+				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_2_PARAM) {
+			ardusim.sleep(UAVParam.COMMAND_WAIT);
+		}
+		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ERROR_2_PARAM) {
+			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.PARAMETER_ERROR_2 + " " + index + ".");
+			return null;
+		} else {
+			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.PARAMETER_2 + " " + index + " = " + UAVParam.newParamValue.get(numUAV));
+			return UAVParam.newParamValue.get(numUAV);
+		}
+	}
 }

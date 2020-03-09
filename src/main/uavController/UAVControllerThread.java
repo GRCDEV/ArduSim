@@ -453,6 +453,13 @@ public class UAVControllerThread extends Thread {
 		// General storage of parameters
 		UAVParam.loadedParams[numUAV].put(paramId, new CopterParamLoaded(paramId, value, msg.paramType()));
 		UAVParam.lastParamReceivedTime[numUAV].set(System.currentTimeMillis());
+		if (UAVParam.totParams[numUAV] == 0) {
+			UAVParam.totParams[numUAV] = msg.paramCount();	// It starts counting from 0
+			UAVParam.paramLoaded[numUAV] = new boolean[UAVParam.totParams[numUAV]];
+		}
+		if (msg.paramIndex() != -1 && msg.paramIndex() != 65535) {
+			UAVParam.paramLoaded[numUAV][msg.paramIndex()] = true;
+		}
 		
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_ACK_PARAM
 				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
@@ -462,11 +469,20 @@ public class UAVControllerThread extends Thread {
 			} else {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_1_PARAM);
 			}
-		} else if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_WAIT_FOR_PARAM
-				&& paramId.equals(UAVParam.newParam[numUAV].getId())) {
-			// A single param has been read
-			UAVParam.newParamValue.set(numUAV, value);
-			UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+		} else if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_WAIT_FOR_PARAM) {
+			int index = UAVParam.newParamIndex.get(numUAV);
+			if (index == -1) {
+				if (paramId.equals(UAVParam.newParam[numUAV].getId())) {
+					// A single param has been read
+					UAVParam.newParamValue.set(numUAV, value);
+					UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+				}
+			} else if (msg.paramIndex() == index) {
+				// A single param has been read
+				UAVParam.newParamValue.set(numUAV, value);
+				UAVParam.newParamIndex.set(numUAV, -1);
+				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
+			}
 		}
 	}
 	
@@ -730,7 +746,7 @@ public class UAVControllerThread extends Thread {
 		Location3DGeo target = UAVParam.target[numUAV].getAndSet(null);
 		if (target != null) {
 			try {
-				// A possible alternative to this message is moveUAVNonBlocking
+				// A possible alternative to this message is MissionItem using ACK, but without waiting to reach destination
 				// Never mix location and speed mask fields
 				connection.send1(UAVParam.gcsId.get(numUAV),
 						0,	// MavComponent.MAV_COMP_ID_ALL,
@@ -755,6 +771,40 @@ public class UAVControllerThread extends Thread {
 							.latInt((int)Math.round(10000000l * target.latitude))	// Degrees * 10^7
 							.lonInt((int)Math.round(10000000l * target.longitude))
 							.alt(Double.valueOf(target.altitude).floatValue())
+							.build());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		float[] targetSpeed = UAVParam.targetSpeed[numUAV].getAndSet(null);
+		if (targetSpeed != null) {
+			try {
+				// A possible alternative to this message is MissionItem using ACK, but without waiting to reach destination
+				// Never mix location and speed mask fields
+				connection.send1(UAVParam.gcsId.get(numUAV),
+						0,	// MavComponent.MAV_COMP_ID_ALL,
+						SetPositionTargetGlobalInt.builder()
+							.targetSystem(UAVParam.mavId.get(numUAV))
+							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+							.timeBootMs(System.currentTimeMillis())
+							.coordinateFrame(MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT)
+							.typeMask(
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_X_IGNORE,	// bit 0, value 1
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Y_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Z_IGNORE,
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VX_IGNORE,
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VY_IGNORE,
+									//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VZ_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AX_IGNORE,	// Acceleration not supported in ArduPilot
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AY_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AZ_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_FORCE_SET,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_IGNORE,
+									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE)
+							.vx(targetSpeed[0])
+							.vy(targetSpeed[1])
+							.vz(targetSpeed[2])
 							.build());
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -952,15 +1002,28 @@ public class UAVControllerThread extends Thread {
 			break;
 		// Command to store the value of the parameterUAVParam.newParam[numUAV] on the variable UAVParam.newParamValue[numUAV]
 		case UAVParam.MAV_STATUS_GET_PARAM:
+			int index = UAVParam.newParamIndex.get(numUAV);
 			try {
-				connection.send1(UAVParam.gcsId.get(numUAV),
-						0,	// MavComponent.MAV_COMP_ID_ALL,
-						ParamRequestRead.builder()
-							.targetSystem(UAVParam.mavId.get(numUAV))
-							.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
-							.paramIndex(-1)		// Needs to be -1 to use the param id field
-							.paramId(UAVParam.newParam[numUAV].getId())
-							.build());
+				if (index >= 0 && index < UAVParam.totParams[numUAV]) {
+					connection.send1(UAVParam.gcsId.get(numUAV),
+							0,	// MavComponent.MAV_COMP_ID_ALL,
+							ParamRequestRead.builder()
+								.targetSystem(UAVParam.mavId.get(numUAV))
+								.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+								.paramIndex(index)		// Needs to be -1 to use the param id field
+								//.paramId(UAVParam.newParam[numUAV].getId())cambiar a usar index
+								.build());
+				} else {
+					connection.send1(UAVParam.gcsId.get(numUAV),
+							0,	// MavComponent.MAV_COMP_ID_ALL,
+							ParamRequestRead.builder()
+								.targetSystem(UAVParam.mavId.get(numUAV))
+								.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
+								.paramIndex(-1)		// Needs to be -1 to use the param id field
+								.paramId(UAVParam.newParam[numUAV].getId())
+								.build());
+				}
+				
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_WAIT_FOR_PARAM);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -1080,35 +1143,6 @@ public class UAVControllerThread extends Thread {
 					.command(MavCmd.MAV_CMD_CONDITION_YAW)
 					.confirmation(0)
 					.param1(yaw)	// [0-360] Angle in degress
-					.build());
-	}
-	
-	/** Sends the UAV at a specific speed (m/s).
-	 * <p>speed. x=North, y=East, z=Down.</p> */
-	private void msgMoveSpeed(Double speedX, Double speedY, Double speedZ) throws IOException {
-		// TODO method to be adapted in Copter Class
-		connection.send1(UAVParam.gcsId.get(numUAV),
-				0,	// MavComponent.MAV_COMP_ID_ALL,
-				SetPositionTargetGlobalInt.builder()
-					.targetSystem(UAVParam.mavId.get(numUAV))
-					.targetComponent(0)	// MavComponent.MAV_COMP_ID_ALL
-					.timeBootMs(System.currentTimeMillis())
-					.coordinateFrame(MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT)
-					.typeMask(PositionTargetTypemask.POSITION_TARGET_TYPEMASK_X_IGNORE,	// bit 0, value 1
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Y_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_Z_IGNORE,
-							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VX_IGNORE,
-							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VY_IGNORE,
-							//PositionTargetTypemask.POSITION_TARGET_TYPEMASK_VZ_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AX_IGNORE,	// Acceleration not supported in ArduPilot
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AY_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_AZ_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_FORCE_SET,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_IGNORE,
-							PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE)
-					.vx(speedX.floatValue())
-					.vy(speedY.floatValue())
-					.vz(speedZ.floatValue())
 					.build());
 	}
 
