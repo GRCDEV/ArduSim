@@ -12,9 +12,6 @@ public class Text {
 	// Application name
 	public static final String APP_NAME = "ArduSim";
 	
-	// Default protocol
-	public static final String PROTOCOL_NONE = "none";
-	
 	// Flight formations
 	public static final String LINEAR_FORMATION = "Linear";
 	public static final String MATRIX_REGULAR_FORMATION = "Regular matrix";
