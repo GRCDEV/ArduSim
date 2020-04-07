@@ -62,7 +62,7 @@ Use the button of the picture to start clonning the repository:
 
 Now copy the following URI in the configuration window and enter your user name and password:
 
-    https://frafabco@bitbucket.org/frafabco/ardusim.git
+    https://jamieWubben@bitbucket.org/frafabco/ardusim.git
 
 Then, select the master branch, also "Import all existing Eclipse projects after clone finishes", and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
 
