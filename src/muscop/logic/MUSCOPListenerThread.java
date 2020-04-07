@@ -2,14 +2,19 @@ package muscop.logic;
 
 import static muscop.pojo.State.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.esotericsoftware.kryo.io.Input;
 import api.API;
+import api.pojo.FlightMode;
 import api.pojo.location.WaypointSimplified;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3D;
@@ -27,7 +32,9 @@ import main.api.masterslavepattern.MasterSlaveHelper;
 import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
+import main.uavController.UAVParam;
 import muscop.pojo.Message;
+import muscop.logic.MUSCOPTalkerThread;
 
 /** 
  * Thread used to listen for messages sent by other UAVs.
@@ -37,7 +44,7 @@ public class MUSCOPListenerThread extends Thread {
 	
 	private AtomicInteger currentState;
 
-	private int numUAV;
+	private int numUAV;		//number of the uav
 	private long selfId;
 	private boolean isMaster;
 	private Copter copter;
@@ -48,6 +55,18 @@ public class MUSCOPListenerThread extends Thread {
 	private ArduSim ardusim;
 	private MasterSlaveHelper msHelper;
 	private SafeTakeOffHelper takeOffHelper;
+	private MUSCOPTalkerThread talker;
+	private Map<Long, Long> lastTimeUAV;
+	private List<Long> masterOrder;
+	private Set<Long> popIds;
+	private int numUAVs;
+	private boolean iAmCenter;
+	private Map<Long, Long> reached;
+	private SafeTakeOffContext takeOff;
+	private List<WaypointSimplified> screenMission = null;
+	private AtomicBoolean missionReceived = new AtomicBoolean();
+	private AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
+	private final AtomicInteger moveSemaphore = new AtomicInteger(1);	// We start in waypoint 0 and move to waypoint 1
 
 	@SuppressWarnings("unused")
 	private MUSCOPListenerThread() {}
@@ -69,12 +88,33 @@ public class MUSCOPListenerThread extends Thread {
 
 	@Override
 	public void run() {
-		
-		while (!ardusim.isAvailable()) {
-			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
-		}
-		
+		while (!ardusim.isAvailable()) {ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);}
+		Location3DGeo[] selfMission = setup();
+		Location2DUTM centerUAVFinalLocation = fly(selfMission);
+		landProcedure(centerUAVFinalLocation);
+	}
+
+	
+	/** SETUP PHASE */
+	private Location3DGeo[] setup() {
 		/** START PHASE */
+		Map<Long, Location2DUTM> UAVsDetected = startPhase();
+		
+		/** SHARE TAKE OFF DATA PHASE */
+		shareTakeOffDataPhase(UAVsDetected);
+		
+		/** SHARE MISSION PHASE */
+		Location3DGeo[] selfMission = shareMission();
+		
+		/** TAKING OFF PHASE */
+		takingOff(takeOff);
+		
+		/** SETUP FINISHED PHASE */
+		setupFinishedPhase();
+		return selfMission;
+	}
+	
+	private Map<Long, Location2DUTM> startPhase() {
 		gui.logUAV(MUSCOPText.START);
 		Map<Long, Location2DUTM> UAVsDetected = null;
 		if (this.isMaster) {
@@ -101,13 +141,13 @@ public class MUSCOPListenerThread extends Thread {
 			gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
 			msHelper.DiscoverMaster();
 		}
-		
-		/** SHARE TAKE OFF DATA PHASE */
+		return UAVsDetected;
+	}
+	
+	private void shareTakeOffDataPhase(Map<Long, Location2DUTM> UAVsDetected) {
 		currentState.set(SHARE_TAKE_OFF_DATA);
 		gui.logUAV(MUSCOPText.SETUP);
 		gui.updateProtocolState(MUSCOPText.SETUP);
-		SafeTakeOffContext takeOff;
-		List<WaypointSimplified> screenMission = null;
 		if (this.isMaster) {
 			double formationYaw;
 			if (ardusim.getArduSimRole() == ArduSim.MULTICOPTER) {
@@ -127,18 +167,28 @@ public class MUSCOPListenerThread extends Thread {
 			takeOff = takeOffHelper.getSlaveContext(false);
 		}
 		
-		/** SHARE MISSION PHASE */
+		this.numUAVs = takeOff.getNumUAVs();
+		// set expected size of data structures for performance
+		lastTimeUAV = new HashMap<>(numUAVs);
+		masterOrder = new ArrayList<Long>(numUAVs);
+		popIds = new HashSet<Long>(numUAVs);
+		
+		// set masterOrder
+		long[] masterArray = takeOff.getMasterOrder();
+		for(int i=0;i<masterArray.length;i++) {
+			this.masterOrder.add(masterArray[i]);
+		}
+	}
+	
+	private Location3DGeo[] shareMission() {
 		// The mission could be sent when  they are in the air, but it is better to do it now
 		//   because the are closer and messages are less prone to be lost.
 		currentState.set(SHARE_MISSION);
-		AtomicBoolean missionReceived = new AtomicBoolean();
-		AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
-		final AtomicInteger moveSemaphore = new AtomicInteger(1);	// We start in waypoint 0 and move to waypoint 1
-		(new MUSCOPTalkerThread(numUAV, isMaster, takeOff.getMasterOrder()[0] == this.selfId, missionReceived, wpReachedSemaphore, moveSemaphore)).start();
+		talker = new MUSCOPTalkerThread(numUAV, isMaster, masterOrder.get(0) == this.selfId, missionReceived, wpReachedSemaphore, moveSemaphore);
+		talker.start();
 		gui.logUAV(MUSCOPText.SEND_MISSION);
 		gui.updateProtocolState(MUSCOPText.SEND_MISSION);
 		Map<Long, Long> acks = null;
-		int numSlaves = takeOff.getNumUAVs() - 1;
 		Location3DGeo[] selfMission = null;
 		
 		if (this.isMaster) {
@@ -169,7 +219,7 @@ public class MUSCOPListenerThread extends Thread {
 			
 			// 3. Wait for data ack from all the slaves
 			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_ACK_LISTENER);
-			acks = new HashMap<Long, Long>((int)Math.ceil(numSlaves / 0.75) + 1);
+			acks = new HashMap<Long, Long>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
 			while (currentState.get() == SHARE_MISSION) {
 				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
@@ -179,7 +229,7 @@ public class MUSCOPListenerThread extends Thread {
 					if (type == Message.DATA_ACK) {
 						long idSlave = input.readLong();
 						acks.put(idSlave, idSlave);
-						if (acks.size() == numSlaves) {
+						if (acks.size() == numUAVs-1) {
 							currentState.set(TAKING_OFF);
 						}
 					}
@@ -224,8 +274,10 @@ public class MUSCOPListenerThread extends Thread {
 				}
 			}
 		}
-		
-		/** TAKING OFF PHASE */
+		return selfMission;
+	}
+
+	private void takingOff(SafeTakeOffContext takeOff) {
 		gui.logUAV(MUSCOPText.TAKING_OFF);
 		gui.updateProtocolState(MUSCOPText.TAKING_OFF);
 		gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
@@ -240,8 +292,9 @@ public class MUSCOPListenerThread extends Thread {
 			// Discard message
 			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
 		}
-		
-		/** SETUP FINISHED PHASE */
+	}
+	
+	private void setupFinishedPhase() {
 		gui.logUAV(MUSCOPText.SETUP_FINISHED);
 		gui.updateProtocolState(MUSCOPText.SETUP_FINISHED);
 		gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
@@ -253,106 +306,219 @@ public class MUSCOPListenerThread extends Thread {
 				currentState.set(FOLLOWING_MISSION);
 			}
 		}
-		
+	}
+	
+	
+	/** FLY PHASE */
+	
+	private Location2DUTM fly(Location3DGeo[] selfMission) {
 		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
-		Map<Long, Long> reached = null;
-		boolean iAmCenter = takeOff.getMasterOrder()[0] == this.selfId;
+		iAmCenter = (masterOrder.get(0) == this.selfId);
 		if (iAmCenter) {
-			reached = new HashMap<Long, Long>((int)Math.ceil(numSlaves / 0.75) + 1);
+			String text = "Master order: ";
+			for(int i=0;i<masterOrder.size();i++) {
+				text += " " + masterOrder.get(i).toString();
+			}
+			gui.log(text);
+			reached = new HashMap<Long, Long>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
 		}
 		int currentWP = 0;
 		Location2DUTM centerUAVFinalLocation = null;
-		Location3D destinationGeo;
+		
+		// Important step: all the UAVs must have this list initialized otherwise things like splitup wont work
+		for(long id=0;id<numUAVs;id++) {
+			if(id != selfId) {
+				lastTimeUAV.put(id, System.currentTimeMillis());
+			}
+		}
+		
 		while (currentState.get() == FOLLOWING_MISSION) {
-			
 			/** WP_REACHED PHASE */
-			gui.logUAV(MUSCOPText.WP_REACHED);
-			gui.updateProtocolState(MUSCOPText.WP_REACHED);
-			if (iAmCenter) {
-				gui.logVerboseUAV(MUSCOPText.CENTER_WP_REACHED_ACK_LISTENER);
-				reached.clear();
-				
-				while (wpReachedSemaphore.get() == currentWP) {
-					inBuffer = link.receiveMessage();
-					if (inBuffer != null) {
-						input.setBuffer(inBuffer);
-						short type = input.readShort();
+			centerUAVFinalLocation = wpReached(selfMission, currentWP, centerUAVFinalLocation);
+			
+			/** MOVE_TO_WP PHASE */
+			currentWP = moveToWP(selfMission, currentWP);
+		}
+		return centerUAVFinalLocation;
+	}
 
-						if (type == Message.WAYPOINT_REACHED_ACK) {
-							long id = input.readLong();
-							int wp = input.readInt();
-							if (wp == currentWP) {
-								reached.put(id, id);
-								if (reached.size() == numSlaves) {
-									if (currentWP == selfMission.length - 1) {
-										currentState.set(LANDING);
-									}
-									wpReachedSemaphore.incrementAndGet();
-								}
-							}
-						}
-					}
-				}
-			} else {
-				gui.logVerboseUAV(MUSCOPText.NO_CENTER_WAIT_ORDER_LISTENER);
-				while (wpReachedSemaphore.get() == currentWP) {
-					inBuffer = link.receiveMessage();
-					if (inBuffer != null) {
-						input.setBuffer(inBuffer);
-						short type = input.readShort();
-						
-						if (type == Message.MOVE_TO_WAYPOINT){
-							int wp = input.readInt();
-							if (wp > currentWP) {
+	private Location2DUTM wpReached(Location3DGeo[] selfMission, int currentWP, Location2DUTM centerUAVFinalLocation) {
+		gui.logUAV(MUSCOPText.WP_REACHED);
+		gui.updateProtocolState(MUSCOPText.WP_REACHED);
+		reached = new HashMap<Long, Long>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
+		
+		// just for testing purposes
+		/*
+		if(selfId==2 && currentWP == 1) {
+			gui.logUAV("i am killed");
+			copter.setFlightMode(FlightMode.LAND);
+			this.talker.setRunning(false);
+			currentState.set(FAILED);
+			return centerUAVFinalLocation;
+		}
+		if(selfId==0 && currentWP == 1) {
+			gui.logUAV("i am killed");
+			copter.setFlightMode(FlightMode.LAND);
+			this.talker.setRunning(false);
+			currentState.set(FAILED);
+			return centerUAVFinalLocation;
+		}*/
+		
+		// As long as the UAVs are at the waypoint
+		while(wpReachedSemaphore.get() == currentWP) {
+			// update the swarm to see if some uav died
+			updateSwarm();
+			// if there is only one UAV let him fly until the end
+			if(numUAVs == 1) {
+				wpReachedSemaphore.incrementAndGet();
+				if (currentWP == selfMission.length - 1) {currentState.set(LANDING);}
+			}
+			// check if a message is received
+			inBuffer = link.receiveMessage(MUSCOPParam.RECEIVETIMEOUT);
+			if (inBuffer != null) {
+				// read the type there are 3: waypoint_reached_ack, move_to_waypoint and land
+				// in each case: get all the information from the message, update lastTimeUAV , and do additional case bounded stuff
+				input.setBuffer(inBuffer);
+				short type = input.readShort();
+				
+				switch(type) {
+					case Message.WAYPOINT_REACHED_ACK:
+						long id = input.readLong();
+						lastTimeUAV.put(id, System.currentTimeMillis());
+						if (input.readInt() == currentWP && iAmCenter) {
+							reached.put(id, id);
+							// check if all the UAVs are at the waypoint and only then start flying
+							if (reached.size() == numUAVs-1) {
+								if (currentWP == selfMission.length - 1) {currentState.set(LANDING);}
 								wpReachedSemaphore.incrementAndGet();
 							}
 						}
-						
-						if (type == Message.LAND) {
+						break;
+					case Message.MOVE_TO_WAYPOINT:
+						lastTimeUAV.put(input.readLong(), System.currentTimeMillis());
+						if (input.readInt() > currentWP && !iAmCenter) {
+							wpReachedSemaphore.incrementAndGet();
+						}
+						break;
+					case Message.LAND:
+						if (!iAmCenter) {
 							centerUAVFinalLocation = new Location2DUTM(input.readDouble(), input.readDouble());
 							currentState.set(MOVE_TO_LAND);
 							wpReachedSemaphore.incrementAndGet();
 						}
-					}
-				}
-			}
-			
-			/** MOVE_TO_WP PHASE */
-			if (currentState.get() == FOLLOWING_MISSION) {
-				currentWP++;
-				gui.logUAV(MUSCOPText.MOVE_TO_WP + " " + currentWP);
-				gui.updateProtocolState(MUSCOPText.MOVE_TO_WP + " " + currentWP);
-				gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
-				
-				destinationGeo = new Location3D(selfMission[currentWP]);
-				copter.moveTo(destinationGeo, new MoveToListener() {
-					
-					@Override
-					public void onFailure() {
-						gui.exit(MUSCOPText.MOVE_ERROR_1 + " " + selfId);
-					}
-					
-					@Override
-					public void onCompleteActionPerformed() {
-						moveSemaphore.incrementAndGet();
-					}
-				}).start();
-				while (moveSemaphore.get() == currentWP) {
-					// Discard message
-					link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
+						break;
 				}
 			}
 		}
+		return centerUAVFinalLocation;
+	}
+
+	private int moveToWP(Location3DGeo[] selfMission, int currentWP) {
+		if (currentState.get() == FOLLOWING_MISSION) {
+			currentWP++;
+			gui.logUAV(MUSCOPText.MOVE_TO_WP + " " + currentWP);
+			gui.updateProtocolState(MUSCOPText.MOVE_TO_WP + " " + currentWP);
+			gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
+			
+			Location3D destinationGeo = new Location3D(selfMission[currentWP]);
+			copter.moveTo(destinationGeo, new MoveToListener() {
+				
+				@Override
+				public void onFailure() {
+					gui.exit(MUSCOPText.MOVE_ERROR_1 + " " + selfId);
+				}
+				
+				@Override
+				public void onCompleteActionPerformed() {
+					moveSemaphore.incrementAndGet();
+				}
+			}).start();
+			while (moveSemaphore.get() == currentWP) {	
+				// This loop is executed as long as the UAVs are moving towards a waypoint
+				// All the UAVs are broadcasting the messages with in interval of 200 ms
+				// Design decision is to use this message to check if the UAVs are still alive and not send additional messages like heartbeat 
+				inBuffer = link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
+				if (inBuffer != null) {
+					input.setBuffer(inBuffer);
+					short type = input.readShort();
+					
+					// Slaves send WAYPOINT_REACHED_ACK and master sends MOVE_TO_WAYPOINT
+					if (type == Message.WAYPOINT_REACHED_ACK || type == Message.MOVE_TO_WAYPOINT){
+						Long id = input.readLong();
+						// now that we have the id of the UAV 
+						// put id in the map if it exist it overrides the old value, if it doesnt exist it adds a new one
+						lastTimeUAV.put(id, System.currentTimeMillis());
+					}
+				}
+				// just for testing purposes
+				
+				if(selfId==2 && currentWP == 1 && (destinationGeo.distance(copter.getLocationUTM()) < 100)) {
+					System.out.println("kill UAV with ID " + selfId);
+					copter.setFlightMode(FlightMode.LAND);
+					this.talker.setRunning(false);
+					currentState.set(FAILED);
+					return -1;
+				}
+			}
+		}
+		return currentWP;
+	}
+
+	private void updateSwarm() {
+		// check if some uavs has died
+		for (Entry<Long, Long> uav : lastTimeUAV.entrySet()) {
+			Long id = uav.getKey();
+			Long time = uav.getValue();
+			if((System.currentTimeMillis() - time > MUSCOPParam.TTL)) {
+				gui.logUAV("UAV with id: " + id + " died");
+				numUAVs--;
+				popIds.add(id);
+				int index = masterOrder.indexOf(id);
+				if(index != -1) { masterOrder.remove(index);}
+			}
+		}
 		
+		//since removing entry while iterating is dangerous so do it now
+		popIds.forEach(id -> lastTimeUAV.remove(id));
+		popIds.clear();
+		//setting new master
+		if(selfId == masterOrder.get(0) && !iAmCenter) {
+			gui.logUAV("I am the new master");
+			iAmCenter = true;
+			talker.setCenter(true);
+		}
+	}
+	
+	
+	/** LAND PHASE */
+	
+	private void landProcedure(Location2DUTM centerUAVFinalLocation) {
 		/** MOVE TO LAND PHASE */
-		long waitingTime;
+		moveToLand(takeOff, centerUAVFinalLocation);
+		
+		/** LANDING PHASE */
+		land();
+		
+		/** FINISH PHASE */
+		gui.logUAV(MUSCOPText.FINISH);
+		gui.updateProtocolState(MUSCOPText.FINISH);
+		gui.logVerboseUAV(MUSCOPText.LISTENER_FINISHED);
+	}
+
+	private void moveToLand(SafeTakeOffContext takeOff, Location2DUTM centerUAVFinalLocation) {
+		Location3D destinationGeo;
 		// This only happens for UAVs not located in the center of the formation
 		if (currentState.get() == MOVE_TO_LAND) {
 			gui.logUAV(MUSCOPText.MOVE_TO_LAND);
 			gui.updateProtocolState(MUSCOPText.MOVE_TO_LAND);
 			gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
+			/*
 			Location2DUTM landingLocation = takeOff.getFormationLanding().getLocation(takeOff.getFormationPosition(),
 					centerUAVFinalLocation, takeOff.getInitialYaw());
+					*/
+			//TODO never run this in real experiment
+			Location2DUTM landingLocation = centerUAVFinalLocation;
+			
 			try {
 				destinationGeo = new Location3D(landingLocation, copter.getAltitudeRelative());
 				MoveTo moveTo = copter.moveTo(destinationGeo, new MoveToListener() {
@@ -378,8 +544,10 @@ public class MUSCOPListenerThread extends Thread {
 				currentState.set(LANDING);
 			}
 		}
-		
-		/** LANDING PHASE */
+	}
+	
+	private void land() {
+		long waitingTime;
 		if (!copter.land()) {
 			gui.exit(MUSCOPText.LAND_ERROR + " " + selfId);
 		}
@@ -398,11 +566,7 @@ public class MUSCOPListenerThread extends Thread {
 				}
 			}
 		}
-		
-		/** FINISH PHASE */
-		gui.logUAV(MUSCOPText.FINISH);
-		gui.updateProtocolState(MUSCOPText.FINISH);
-		gui.logVerboseUAV(MUSCOPText.LISTENER_FINISHED);
 	}
 
+	
 }

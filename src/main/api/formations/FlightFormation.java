@@ -38,9 +38,14 @@ public abstract class FlightFormation {
 		 * Convenient formation for virtual UAVs deployment in simulations (<i>setStartingLocation</i> method of the protocol implementation).
 		 * The UAVs are deployed surrounding a central UAV, and in random locations.
 		 * The formation numbering starts in 0, in the center UAV, approximately located at the center of the formation. The remaining UAVs are located around it, keeping the minimum distance, and trying to maintain a circular distribution around the center UAV. */
-		RANDOM((short)5, Text.RANDOM);
+		RANDOM((short)5, Text.RANDOM),
+		/**
+		 * Split up is a formation where the drones are linear but the spacing between them is not equal.
+		 * They are seperated like this:  0 1 2               3               4 5 6
+		 * This formation is created to check if the uav swars are able to split up when the master uav (3) fails
+		 */
+		SPLITUP((short)6, Text.SPLITUP);
 		// Add here new formations
-		
 		private final short formationId;
 		private final String name;
 		
@@ -106,6 +111,9 @@ public abstract class FlightFormation {
 		}
 		if (formation == Formation.RANDOM) {
 			return new FormationRandom(numUAVs, minDistance, formation);
+		}
+		if (formation == Formation.SPLITUP) {
+			return new FormationSplitUp(numUAVs, minDistance, formation);
 		}
 		// Add here new formations
 		return null;

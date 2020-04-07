@@ -23,8 +23,10 @@ import muscop.pojo.Message;
 
 public class MUSCOPTalkerThread extends Thread {
 	
+	private boolean running = true;
+	
 	private AtomicInteger currentState;
-
+	
 	private long selfId;
 	private boolean isMaster;
 	private boolean isCenter;
@@ -47,6 +49,8 @@ public class MUSCOPTalkerThread extends Thread {
 
 	public MUSCOPTalkerThread(int numUAV, boolean isMaster, boolean isCenter,
 			AtomicBoolean missionReceived, AtomicInteger wpReachedSemaphore, AtomicInteger moveSemaphore) {
+		this.running = true;
+		
 		this.currentState = MUSCOPParam.state[numUAV];
 		this.selfId = API.getCopter(numUAV).getID();
 		this.isMaster = isMaster;
@@ -66,29 +70,83 @@ public class MUSCOPTalkerThread extends Thread {
 
 	@Override
 	public void run() {
+		if(!running) {return;}
+		shareMission();
+		takingOff();
+		fly();
+		land();
+		/** FINISH PHASE */
+		gui.logVerboseUAV(MUSCOPText.TALKER_FINISHED);
+	}
+
+	private void fly() {
+		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
+		int currentWP = 0;
+		while (currentState.get() == FOLLOWING_MISSION && running) {
+			wpReachedPhase(currentWP);
+			currentWP = moveToWP(currentWP);
+		}
 		
-		/** SHARE MISSION PHASE */
-		if (this.isMaster) {
-			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_TALKER);
-			Location3DUTM[] mission;
-			while ((mission = MUSCOPParam.missionSent.get()) == null) {
-				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
-			}
+		while (currentState.get() < MOVE_TO_LAND) {ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);}
+		
+		if (!isCenter) {
+			gui.logVerboseUAV(MUSCOPText.TALKER_FINISHED);
+			return;
+		}
+	}
+
+	private int moveToWP(int currentWP) {
+		/** MOVE_TO_WP PHASE */
+		if (currentState.get() == FOLLOWING_MISSION) {
+			currentWP++;
+			
 			output.reset();
-			output.writeShort(Message.DATA);
-			output.writeShort(mission.length);
-			Location3DUTM waypoint;
-			for (int i = 0; i < mission.length; i++) {
-				waypoint = mission[i];
-				output.writeDouble(waypoint.x);
-				output.writeDouble(waypoint.y);
-				output.writeDouble(waypoint.z);
+			if(isCenter) {
+				gui.logVerboseUAV(MUSCOPText.CENTER_SEND_MOVE);
+				output.writeShort(Message.MOVE_TO_WAYPOINT);
+				output.writeLong(selfId);
+				output.writeInt(currentWP);
+			}else {
+				gui.logVerboseUAV(MUSCOPText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
+				output.writeShort(Message.WAYPOINT_REACHED_ACK);
+				output.writeLong(selfId);
+				output.writeInt(currentWP - 1);
 			}
 			output.flush();
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (currentState.get() == SHARE_MISSION) {
+			while (moveSemaphore.get() == currentWP && running) {
+				link.sendBroadcastMessage(message);
+				// Timer
+				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+				waitingTime = cicleTime - System.currentTimeMillis();
+				if (waitingTime > 0) {
+					ardusim.sleep(waitingTime);
+				}
+			}
+		}
+		return currentWP;
+	}
+
+	private void wpReachedPhase(int currentWP) {
+		/** WP_REACHED PHASE */
+		if (isCenter) {
+			gui.logVerboseUAV(MUSCOPText.TALKER_WAITING);
+			while (wpReachedSemaphore.get() == currentWP && running) {
+				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+			}
+		} else {
+			gui.logVerboseUAV(MUSCOPText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
+			output.reset();
+			output.writeShort(Message.WAYPOINT_REACHED_ACK);
+			output.writeLong(selfId);
+			output.writeInt(currentWP);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (wpReachedSemaphore.get() == currentWP && running) {
 				link.sendBroadcastMessage(message);
 				
 				// Timer
@@ -98,124 +156,10 @@ public class MUSCOPTalkerThread extends Thread {
 					ardusim.sleep(waitingTime);
 				}
 			}
-		} else {
-			gui.logVerboseUAV(MUSCOPText.SLAVE_WAIT_LIST_TALKER);
-			output.reset();
-			output.writeShort(Message.DATA_ACK);
-			output.writeLong(selfId);
-			output.flush();
-			message = Arrays.copyOf(outBuffer, output.position());
-			
-			cicleTime = System.currentTimeMillis();
-			while (currentState.get() == SHARE_MISSION) {
-				if (missionReceived.get()) {
-					link.sendBroadcastMessage(message);
-				}
-				
-				// Timer
-				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
-				waitingTime = cicleTime - System.currentTimeMillis();
-				if (waitingTime > 0) {
-					ardusim.sleep(waitingTime);
-				}
-			}
 		}
-		while (currentState.get() < TAKING_OFF) {
-			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
-		}
-		
-		/** TAKING OFF and SETUP FINISHED PHASES */
-		gui.logVerboseUAV(MUSCOPText.TALKER_WAITING);
-		while (currentState.get() < FOLLOWING_MISSION) {
-			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
-		}
-		
-		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
-		int currentWP = 0;
-		while (currentState.get() == FOLLOWING_MISSION) {
-			
-			/** WP_REACHED PHASE */
-			if (isCenter) {
-				gui.logVerboseUAV(MUSCOPText.TALKER_WAITING);
-				while (wpReachedSemaphore.get() == currentWP) {
-					ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
-				}
-			} else {
-				gui.logVerboseUAV(MUSCOPText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
-				output.reset();
-				output.writeShort(Message.WAYPOINT_REACHED_ACK);
-				output.writeLong(selfId);
-				output.writeInt(currentWP);
-				output.flush();
-				message = Arrays.copyOf(outBuffer, output.position());
-				
-				cicleTime = System.currentTimeMillis();
-				while (wpReachedSemaphore.get() == currentWP) {
-					link.sendBroadcastMessage(message);
-					
-					// Timer
-					cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
-					waitingTime = cicleTime - System.currentTimeMillis();
-					if (waitingTime > 0) {
-						ardusim.sleep(waitingTime);
-					}
-				}
-			}
-			
-			/** MOVE_TO_WP PHASE */
-			if (currentState.get() == FOLLOWING_MISSION) {
-				currentWP++;
-				if (isCenter) {
-					gui.logVerboseUAV(MUSCOPText.CENTER_SEND_MOVE);
-					output.reset();
-					output.writeShort(Message.MOVE_TO_WAYPOINT);
-					output.writeInt(currentWP);
-					output.flush();
-					message = Arrays.copyOf(outBuffer, output.position());
-					
-					cicleTime = System.currentTimeMillis();
-					while (moveSemaphore.get() == currentWP) {
-						link.sendBroadcastMessage(message);
-						
-						// Timer
-						cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
-						waitingTime = cicleTime - System.currentTimeMillis();
-						if (waitingTime > 0) {
-							ardusim.sleep(waitingTime);
-						}
-					}
-				} else {
-					gui.logVerboseUAV(MUSCOPText.NO_CENTER_WAYPOINT_REACHED_ACK_TALKER);
-					output.reset();
-					output.writeShort(Message.WAYPOINT_REACHED_ACK);
-					output.writeLong(selfId);
-					output.writeInt(currentWP - 1);
-					output.flush();
-					message = Arrays.copyOf(outBuffer, output.position());
-					
-					cicleTime = System.currentTimeMillis();
-					while (moveSemaphore.get() == currentWP) {
-						link.sendBroadcastMessage(message);
-						
-						// Timer
-						cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
-						waitingTime = cicleTime - System.currentTimeMillis();
-						if (waitingTime > 0) {
-							ardusim.sleep(waitingTime);
-						}
-					}
-				}
-			}
-		}
-		while (currentState.get() < MOVE_TO_LAND) {
-			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
-		}
-		
-		if (!isCenter) {
-			gui.logVerboseUAV(MUSCOPText.TALKER_FINISHED);
-			return;
-		}
-		
+	}
+
+	private void land() {
 		/** LANDING PHASE */
 		// Only the center UAV gets here
 		gui.logVerboseUAV(MUSCOPText.CENTER_SEND_LAND);
@@ -241,8 +185,88 @@ public class MUSCOPTalkerThread extends Thread {
 		while (currentState.get() < FINISH) {
 			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 		}
-		
-		/** FINISH PHASE */
-		gui.logVerboseUAV(MUSCOPText.TALKER_FINISHED);
+	}
+
+	private void takingOff() {
+		/** TAKING OFF and SETUP FINISHED PHASES */
+		gui.logVerboseUAV(MUSCOPText.TALKER_WAITING);
+		while (currentState.get() < FOLLOWING_MISSION && running) {
+			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+		}
+	}
+
+	private void shareMission() {
+		/** SHARE MISSION PHASE */
+		if (this.isMaster) {
+			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_TALKER);
+			Location3DUTM[] mission;
+			while ((mission = MUSCOPParam.missionSent.get()) == null && running) {
+				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+			}
+			output.reset();
+			output.writeShort(Message.DATA);
+			output.writeShort(mission.length);
+			Location3DUTM waypoint;
+			for (int i = 0; i < mission.length; i++) {
+				waypoint = mission[i];
+				output.writeDouble(waypoint.x);
+				output.writeDouble(waypoint.y);
+				output.writeDouble(waypoint.z);
+			}
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (currentState.get() == SHARE_MISSION && running) {
+				link.sendBroadcastMessage(message);
+				
+				// Timer
+				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+				waitingTime = cicleTime - System.currentTimeMillis();
+				if (waitingTime > 0) {
+					ardusim.sleep(waitingTime);
+				}
+			}
+		} else {
+			gui.logVerboseUAV(MUSCOPText.SLAVE_WAIT_LIST_TALKER);
+			output.reset();
+			output.writeShort(Message.DATA_ACK);
+			output.writeLong(selfId);
+			output.flush();
+			message = Arrays.copyOf(outBuffer, output.position());
+			
+			cicleTime = System.currentTimeMillis();
+			while (currentState.get() == SHARE_MISSION && running) {
+				if (missionReceived.get()) {
+					link.sendBroadcastMessage(message);
+				}
+				
+				// Timer
+				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+				waitingTime = cicleTime - System.currentTimeMillis();
+				if (waitingTime > 0) {
+					ardusim.sleep(waitingTime);
+				}
+			}
+		}
+		while (currentState.get() < TAKING_OFF && running) {
+			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+		}
+	}
+	
+	public boolean isRunning() {
+		return running;
+	}
+
+	public void setRunning(boolean running) {
+		this.running = running;
+	}
+
+	public boolean isCenter() {
+		return isCenter;
+	}
+
+	public void setCenter(boolean isCenter) {
+		this.isCenter = isCenter;
 	}
 }

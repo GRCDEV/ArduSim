@@ -12,6 +12,9 @@ public class Text {
 	// Application name
 	public static final String APP_NAME = "ArduSim";
 	
+	// Default protocol
+	public static final String PROTOCOL_NONE = "none";
+	
 	// Flight formations
 	public static final String LINEAR_FORMATION = "Linear";
 	public static final String MATRIX_REGULAR_FORMATION = "Regular matrix";
@@ -19,6 +22,7 @@ public class Text {
 	public static final String CIRCLE_FORMATION = "Circle";
 	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
 	public static final String RANDOM = "Random";
+	public static final String SPLITUP = "Split-up";
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";

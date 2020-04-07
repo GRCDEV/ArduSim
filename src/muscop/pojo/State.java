@@ -13,4 +13,5 @@ public final class State {
 	public static final short MOVE_TO_LAND = 6;
 	public static final short LANDING = 7;
 	public static final short FINISH = 8;
+	public static final short FAILED = 9;
 }

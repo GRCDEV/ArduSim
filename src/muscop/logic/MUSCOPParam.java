@@ -29,5 +29,6 @@ public class MUSCOPParam {
 	public static final long LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
 	public static final long STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
 	public static final long MISSION_TIMEOUT = 2000;		// (ms) Timeout to wait after the mission is received and the master UAV changes its state
-	
+	public static final long TTL = 5000;					// (ms) Time to life for a UAV.
+	public static final int RECEIVETIMEOUT = 200;			// (ms) Timeout for link.receiveMessage()
 }
