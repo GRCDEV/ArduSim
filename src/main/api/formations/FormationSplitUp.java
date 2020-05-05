@@ -16,19 +16,9 @@ public class FormationSplitUp extends FlightFormation{
 		this.centerUAVPosition = this.numUAVs / 2;
 		
 		double x;
-		double offset = 200;
+		double offset = 600;
 		ValidationTools validationTools = API.getValidationTools();
-		
-		/*
-		x = validationTools.roundDouble((0 - this.centerUAVPosition) * this.minDistance - offset, 6);
-		this.point[0] = new FormationPoint(0, x, 0);
-		
-		for (int i = 1; i < this.numUAVs; i++) {
-			x = validationTools.roundDouble((i - this.centerUAVPosition) * this.minDistance, 6);
-			this.point[i] = new FormationPoint(i, x, 0);
-		}
-		
-		*/
+
 		//left part
 		for (int i = 0; i < this.centerUAVPosition; i++) {
 			x = validationTools.roundDouble((i - this.centerUAVPosition) * this.minDistance - offset, 6);

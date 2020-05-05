@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.esotericsoftware.kryo.io.Output;
 
 import api.API;
+import api.pojo.FlightMode;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DUTM;
 import main.api.ArduSim;
@@ -23,7 +24,6 @@ import muscop.pojo.Message;
 
 public class MUSCOPTalkerThread extends Thread {
 	
-	private boolean running = true;
 	
 	private AtomicInteger currentState;
 	
@@ -39,6 +39,7 @@ public class MUSCOPTalkerThread extends Thread {
 	private CommLink link;
 	// Concurrency variables:
 	private AtomicBoolean missionReceived;
+	private AtomicBoolean running;
 	private AtomicInteger wpReachedSemaphore, moveSemaphore;
 	
 	private long cicleTime;		// Cicle time used for sending messages
@@ -49,8 +50,8 @@ public class MUSCOPTalkerThread extends Thread {
 
 	public MUSCOPTalkerThread(int numUAV, boolean isMaster, boolean isCenter,
 			AtomicBoolean missionReceived, AtomicInteger wpReachedSemaphore, AtomicInteger moveSemaphore) {
-		this.running = true;
 		
+		this.running = new AtomicBoolean(true);
 		this.currentState = MUSCOPParam.state[numUAV];
 		this.selfId = API.getCopter(numUAV).getID();
 		this.isMaster = isMaster;
@@ -70,7 +71,7 @@ public class MUSCOPTalkerThread extends Thread {
 
 	@Override
 	public void run() {
-		if(!running) {return;}
+		if(!running.get()) {return;}
 		shareMission();
 		takingOff();
 		fly();
@@ -82,7 +83,7 @@ public class MUSCOPTalkerThread extends Thread {
 	private void fly() {
 		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		int currentWP = 0;
-		while (currentState.get() == FOLLOWING_MISSION && running) {
+		while (currentState.get() == FOLLOWING_MISSION && running.get()) {
 			wpReachedPhase(currentWP);
 			currentWP = moveToWP(currentWP);
 		}
@@ -116,7 +117,7 @@ public class MUSCOPTalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (moveSemaphore.get() == currentWP && running) {
+			while (moveSemaphore.get() == currentWP && running.get()) {
 				link.sendBroadcastMessage(message);
 				// Timer
 				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
@@ -130,10 +131,29 @@ public class MUSCOPTalkerThread extends Thread {
 	}
 
 	private void wpReachedPhase(int currentWP) {
+		output.reset();
+		output.writeShort(Message.WAYPOINT_REACHED_ACK);
+		output.writeLong(selfId);
+		output.writeInt(currentWP);
+		output.flush();
+		message = Arrays.copyOf(outBuffer, output.position());
+		
+		cicleTime = System.currentTimeMillis();
+		while (wpReachedSemaphore.get() == currentWP && running.get()) {
+			link.sendBroadcastMessage(message);
+			
+			// Timer
+			cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+			waitingTime = cicleTime - System.currentTimeMillis();
+			if (waitingTime > 0) {
+				ardusim.sleep(waitingTime);
+			}
+		}
 		/** WP_REACHED PHASE */
+		/*
 		if (isCenter) {
 			gui.logVerboseUAV(MUSCOPText.TALKER_WAITING);
-			while (wpReachedSemaphore.get() == currentWP && running) {
+			while (wpReachedSemaphore.get() == currentWP && running.get()) {
 				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 			}
 		} else {
@@ -146,7 +166,7 @@ public class MUSCOPTalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (wpReachedSemaphore.get() == currentWP && running) {
+			while (wpReachedSemaphore.get() == currentWP && running.get()) {
 				link.sendBroadcastMessage(message);
 				
 				// Timer
@@ -157,6 +177,7 @@ public class MUSCOPTalkerThread extends Thread {
 				}
 			}
 		}
+		*/
 	}
 
 	private void land() {
@@ -190,7 +211,7 @@ public class MUSCOPTalkerThread extends Thread {
 	private void takingOff() {
 		/** TAKING OFF and SETUP FINISHED PHASES */
 		gui.logVerboseUAV(MUSCOPText.TALKER_WAITING);
-		while (currentState.get() < FOLLOWING_MISSION && running) {
+		while (currentState.get() < FOLLOWING_MISSION && running.get()) {
 			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 		}
 	}
@@ -200,7 +221,7 @@ public class MUSCOPTalkerThread extends Thread {
 		if (this.isMaster) {
 			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_TALKER);
 			Location3DUTM[] mission;
-			while ((mission = MUSCOPParam.missionSent.get()) == null && running) {
+			while ((mission = MUSCOPParam.missionSent.get()) == null && running.get()) {
 				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 			}
 			output.reset();
@@ -217,7 +238,7 @@ public class MUSCOPTalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (currentState.get() == SHARE_MISSION && running) {
+			while (currentState.get() == SHARE_MISSION && running.get()) {
 				link.sendBroadcastMessage(message);
 				
 				// Timer
@@ -236,7 +257,7 @@ public class MUSCOPTalkerThread extends Thread {
 			message = Arrays.copyOf(outBuffer, output.position());
 			
 			cicleTime = System.currentTimeMillis();
-			while (currentState.get() == SHARE_MISSION && running) {
+			while (currentState.get() == SHARE_MISSION && running.get()) {
 				if (missionReceived.get()) {
 					link.sendBroadcastMessage(message);
 				}
@@ -249,17 +270,17 @@ public class MUSCOPTalkerThread extends Thread {
 				}
 			}
 		}
-		while (currentState.get() < TAKING_OFF && running) {
+		while (currentState.get() < TAKING_OFF && running.get()) {
 			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 		}
 	}
 	
 	public boolean isRunning() {
-		return running;
+		return running.get();
 	}
 
 	public void setRunning(boolean running) {
-		this.running = running;
+		this.running.set(running);
 	}
 
 	public boolean isCenter() {

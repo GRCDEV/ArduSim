@@ -34,7 +34,6 @@ public class visionHelper extends ProtocolHelper {
 
 	@Override
 	public void initializeDataStructures() {		
-		//TODO set param here
 	}
 
 	@Override
@@ -72,7 +71,6 @@ public class visionHelper extends ProtocolHelper {
 		try {
 			serverSocket = new ServerSocket(5764);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//socket to talk with python
@@ -89,7 +87,6 @@ public class visionHelper extends ProtocolHelper {
 				markerSocket = serverSocket.accept();
 				reader = new BufferedReader(new InputStreamReader(markerSocket.getInputStream()));
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				
 			}
@@ -107,7 +104,6 @@ public class visionHelper extends ProtocolHelper {
 						GUI.log(respons);
 					}
 				}catch(Exception e) {
-					//TODO fix this error
 					System.err.println("cannot read reader");
 					//e.printStackTrace();
 				}

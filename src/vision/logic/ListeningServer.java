@@ -29,7 +29,6 @@ public class ListeningServer implements Runnable{
 		this.gui = API.getGUI(0);
 		
 		try {
-			//TODO port number serverSocket
 			serverSocket = new ServerSocket(5764);
 			running = true;
 		} catch (Exception e) {
@@ -50,7 +49,6 @@ public class ListeningServer implements Runnable{
 	 * @return false is error occurred
 	 */
 	public boolean exit() {
-		//TODO some sockets are not closing
 		running = false;
 		try {
 			if(reader != null)
@@ -88,7 +86,6 @@ public class ListeningServer implements Runnable{
 				try {
 					respons = reader.readLine();
 				}catch(Exception e) {
-					//TODO fix this error
 					System.err.println("cannot read reader");
 					//e.printStackTrace();
 				}

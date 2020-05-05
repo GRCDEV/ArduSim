@@ -66,7 +66,6 @@ public class uavNavigator extends Thread {
 		this.gui = API.getGUI(numUAV);
 //		this.id = copter.getID();
 		//TCP ports already in use: 5760 + n10
-		//TODO check portnumbers
 		gui.log("setting up serversocket");
 		boolean succesClient;
 		try {

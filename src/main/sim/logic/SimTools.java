@@ -401,11 +401,7 @@ public class SimTools {
 				return false;
 			}
 		case DISTANCE_5GHZ:
-			if (Math.random() <= 5.335*Math.pow(10, -7)*distance*distance + 3.395*Math.pow(10, -5)*distance) {
-				return false;
-			} else {
-				return true;
-			}
+			return Math.random() >= (5.335*Math.pow(10, -7)*distance*distance + 3.395*Math.pow(10, -5)*distance);
 		}
 		
 		// Point never reached if the selection structure is enlarged when adding new wireless models
