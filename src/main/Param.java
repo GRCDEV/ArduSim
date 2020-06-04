@@ -108,6 +108,7 @@ public class Param {
 	
 	// Simulator state
 	public static volatile SimulatorState simStatus;
+
 	
 	// Simulator finite state machine states enumerator
 	public enum SimulatorState {

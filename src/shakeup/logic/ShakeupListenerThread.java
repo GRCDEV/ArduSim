@@ -1,0 +1,141 @@
+package shakeup.logic;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.esotericsoftware.kryo.io.Input;
+
+import api.API;
+import es.upv.grc.mapper.Location2DUTM;
+import main.api.ArduSim;
+import main.api.Copter;
+import main.api.GUI;
+import main.api.SafeTakeOffHelper;
+import main.api.communications.CommLink;
+import main.api.masterslavepattern.MasterSlaveHelper;
+import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
+import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
+import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
+import shakeup.logic.state.*;
+import shakeup.pojo.*;
+
+public class ShakeupListenerThread extends Thread{
+
+	private ArduSim ardusim;
+	private GUI gui;
+	private Copter copter;
+	private int numUAV;
+	private boolean isMaster;
+	
+	private static int formationIndex = 0;
+
+	public ShakeupListenerThread(int numUAV) {
+		this.ardusim = API.getArduSim();
+		this.gui = API.getGUI(numUAV);
+		this.copter = API.getCopter(numUAV);
+		this.numUAV = numUAV;
+	}
+	
+	@Override
+	public void run() {
+		while (!ardusim.isAvailable()) {ardusim.sleep(Param.TIMEOUT);}
+		
+		// discover and take of the UAVS
+		Map<Long, Location2DUTM> UAVsDetected = setup();
+		while(!ardusim.isExperimentInProgress()) {ardusim.sleep(Param.TIMEOUT);}
+		takeOff(UAVsDetected);
+		
+		// create some necessary variables
+		ShakeupTalkerThread talker = new ShakeupTalkerThread(numUAV);
+		shakeup.logic.state.State currentState = new DataState(numUAV,isMaster, UAVsDetected);
+		talker.setState(currentState);
+		talker.start();
+		byte[] inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		Input input = new Input(inBuffer);
+		CommLink link = API.getCommLink(numUAV);
+		
+		// go through all the states
+		while(copter.isFlying()) {
+			// Check for a message
+			inBuffer = link.receiveMessage(200);
+			if(inBuffer != null) {
+				input.setBuffer(inBuffer);
+				currentState.processMessage(input);
+			}
+			
+			currentState = currentState.handle();
+			talker.setState(currentState);
+		}
+		
+	}
+
+	private Map<Long, Location2DUTM> setup() {
+		// DISCOVER MASTER AND SLAVES
+		gui.logUAV(Text.START);
+		// Let the master detect slaves until the setup button is pressed
+		Map<Long, Location2DUTM> UAVsDetected = null;
+		MasterSlaveHelper msHelper = copter.getMasterSlaveHelper();
+		isMaster = msHelper.isMaster();
+		if(isMaster) {
+			final AtomicInteger totalDetected = new AtomicInteger();
+			UAVsDetected = msHelper.DiscoverSlaves(new DiscoveryProgressListener() {
+
+				@Override
+				public boolean onProgressCheckActionPerformed(int numUAVs) {
+					// Just for logging purposes
+					if(numUAVs > totalDetected.get()) {
+						totalDetected.set(numUAVs);
+						gui.log(Text.MASTER_DETECTED_UAVS + numUAVs);						
+					}
+					//We decide to continue when the setup button is pressed
+					if(ardusim.isSetupInProgress() || ardusim.isSetupFinished()) {
+						return true;
+					}
+					return false;
+				}
+			});
+		}else {
+			msHelper.DiscoverMaster();
+		}
+		return UAVsDetected;
+	}
+	
+	private void takeOff(Map<Long, Location2DUTM> UAVsDetected) {
+		// TAKE OFF PHASE
+		gui.logUAV(Text.START_TAKE_OFF);
+		gui.updateProtocolState(Text.TAKE_OFF);
+		// 1. Synchronize master with slaves to get the takeoff sequence in the take off context object
+		SafeTakeOffContext takeOff;
+		SafeTakeOffHelper takeOffHelper = copter.getSafeTakeOffHelper();
+		if(isMaster) {
+			double formationYaw;
+			if(ardusim.getArduSimRole() == ArduSim.MULTICOPTER) {
+				formationYaw = copter.getHeading();				
+			}else {
+				formationYaw = Param.masterInitialYaw;
+			}
+
+			takeOff = takeOffHelper.getMasterContext(UAVsDetected,
+					API.getFlightFormationTools().getFlyingFormation(UAVsDetected.size() + 1),
+					formationYaw, Param.altitude, true, false);
+		}else {
+			takeOff = takeOffHelper.getSlaveContext(false);
+		}
+		// 2. Take off all the UAVs
+		AtomicBoolean isTakeOffFinished = new AtomicBoolean(false);
+		takeOffHelper.start(takeOff, new SafeTakeOffListener() {
+			@Override
+			public void onCompleteActionPerformed() {isTakeOffFinished.set(true);}
+		});
+		while (!isTakeOffFinished.get()) {ardusim.sleep(Param.TIMEOUT);}
+	}
+	
+	public static int getFormationIndex() {
+		return formationIndex;
+	}
+
+	public static void setFormationIndex(int formationIndex) {
+		ShakeupListenerThread.formationIndex = formationIndex;
+	}
+}

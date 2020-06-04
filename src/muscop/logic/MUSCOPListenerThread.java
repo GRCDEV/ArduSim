@@ -34,7 +34,6 @@ import main.api.masterslavepattern.MasterSlaveHelper;
 import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
-import main.uavController.UAVParam;
 import muscop.pojo.Message;
 import muscop.logic.MUSCOPTalkerThread;
 
@@ -69,9 +68,6 @@ public class MUSCOPListenerThread extends Thread {
 	private AtomicBoolean missionReceived = new AtomicBoolean();
 	private AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
 	private final AtomicInteger moveSemaphore = new AtomicInteger(1);	// We start in waypoint 0 and move to waypoint 1
-	
-	public FileWriter myWriter;
-	public Long start;
 
 	@SuppressWarnings("unused")
 	private MUSCOPListenerThread() {}
@@ -89,8 +85,6 @@ public class MUSCOPListenerThread extends Thread {
 		this.msHelper = this.copter.getMasterSlaveHelper();
 		this.isMaster = this.msHelper.isMaster();
 		this.takeOffHelper = this.copter.getSafeTakeOffHelper();
-		
-	    try {myWriter = new FileWriter("times.txt",true);} catch (IOException e) {e.printStackTrace();}
 	}
 
 	@Override
@@ -99,11 +93,6 @@ public class MUSCOPListenerThread extends Thread {
 		Location3DGeo[] selfMission = setup();
 		Location2DUTM centerUAVFinalLocation = fly(selfMission);
 		landProcedure(centerUAVFinalLocation);
-		try {
-			this.myWriter.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	
@@ -355,12 +344,12 @@ public class MUSCOPListenerThread extends Thread {
 	}
 
 	private Location2DUTM wpReached(Location3DGeo[] selfMission, int currentWP, Location2DUTM centerUAVFinalLocation) {
-		start = System.currentTimeMillis();
 		gui.logUAV(MUSCOPText.WP_REACHED);
 		gui.updateProtocolState(MUSCOPText.WP_REACHED);
 		reached = new HashSet<Long>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
 		reached.add(selfId);
 		
+		Long start = System.currentTimeMillis();
 		// As long as the UAVs are at the waypoint
 		while(wpReachedSemaphore.get() == currentWP) {
 			// update the swarm to see if some uav died
@@ -408,17 +397,12 @@ public class MUSCOPListenerThread extends Thread {
 				}
 			}
 		}
-		if(selfId == 0) {
-			try {
-				this.myWriter.write("waypoint " + currentWP + " left " + (System.currentTimeMillis() - start) + "\n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		System.out.println(API.getFlightFormationTools().getFlyingFormationMinimumDistance()+ "\t" +  (System.currentTimeMillis()-start) );
 		return centerUAVFinalLocation;
 	}
 
 	private int moveToWP(Location3DGeo[] selfMission, int currentWP) {
+		
 		if (currentState.get() == FOLLOWING_MISSION) {
 			currentWP++;
 			gui.logUAV(MUSCOPText.MOVE_TO_WP + " " + currentWP);
@@ -438,6 +422,8 @@ public class MUSCOPListenerThread extends Thread {
 					moveSemaphore.incrementAndGet();
 				}
 			}).start();
+			
+			Long start = System.currentTimeMillis();
 			while (moveSemaphore.get() == currentWP) {	
 				// This loop is executed as long as the UAVs are moving towards a waypoint
 				// All the UAVs are broadcasting the messages with in interval of 200 ms
@@ -456,16 +442,14 @@ public class MUSCOPListenerThread extends Thread {
 					}
 				}
 				
-				// just for testing purposes let UAV die before waypoint.
-				
-				if( (selfId == 2) && currentWP == 2 && (destinationGeo.distance(copter.getLocationUTM()) < 200)) {
-					System.out.println("kill UAV with ID " + selfId);
+				// just in case the master would be some other uav not included in the above
+				if(iAmCenter && currentWP == 1 && (destinationGeo.distance(copter.getLocationUTM()) < 15) ) {
+					System.out.println("kill master UAV with ID " + selfId);
 					copter.setFlightMode(FlightMode.LAND);
 					this.talker.setRunning(false);
 					currentState.set(FAILED);
 					return -1;
 				}
-						
 			}
 		}
 		return currentWP;

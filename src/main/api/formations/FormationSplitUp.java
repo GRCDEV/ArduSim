@@ -1,8 +1,11 @@
 package main.api.formations;
 
 import api.API;
+import main.Param;
 import main.api.ValidationTools;
 import main.api.formations.helpers.FormationPoint;
+import muscop.logic.MUSCOPParam;
+import smile.math.Math;
 
 public class FormationSplitUp extends FlightFormation{
 
@@ -11,30 +14,48 @@ public class FormationSplitUp extends FlightFormation{
 	}
 	@Override
 	protected void initializeFormation() {
-		//linear
-		
-		this.centerUAVPosition = this.numUAVs / 2;
-		
-		double x;
-		double offset = 600;
-		ValidationTools validationTools = API.getValidationTools();
 
-		//left part
-		for (int i = 0; i < this.centerUAVPosition; i++) {
-			x = validationTools.roundDouble((i - this.centerUAVPosition) * this.minDistance - offset, 6);
-			this.point[i] = new FormationPoint(i, x, 0);
-		}
+		ValidationTools validationTools = API.getValidationTools();
+		
+		int clusters = MUSCOPParam.CLUSTERS;
+		double x,y;
+		double offset = 600;
+		this.centerUAVPosition = 0;
+		int placedCounter = 0;
+		
 		//center UAV
-		x = validationTools.roundDouble(0, 6);
-		this.point[this.centerUAVPosition] = new FormationPoint(this.centerUAVPosition, x, 0);
+		this.point[placedCounter] = new FormationPoint(placedCounter, 0, 0);
+		placedCounter++;
 		
-		//right part
-		for(int i = this.centerUAVPosition+1;i<this.numUAVs;i++) {
-			x = validationTools.roundDouble((i - this.centerUAVPosition) * this.minDistance + offset, 6);
-			this.point[i] = new FormationPoint(i, x, 0);
+		int slavesPerCluster = (numUAVs-1)/clusters;
+		for(double alfa = 0; alfa < 2*Math.PI; alfa += 2*Math.PI/clusters) {
+			double cosA = validationTools.roundDouble(Math.cos(alfa),6);
+			double sinA = validationTools.roundDouble(Math.sin(alfa),6);
+			for(int i=0;i<slavesPerCluster;i++) {
+				if(cosA == 0.0) {
+					x = 0;
+					y = Math.signum(sinA)*(offset + i*minDistance);
+				}else if(sinA == 0.0) {
+					x = Math.signum(cosA)*(offset + i*minDistance);
+					y = 0;
+				}else {
+					x = cosA*offset + Math.signum(cosA)*i*minDistance;
+					y = sinA*offset + Math.signum(sinA)*i*minDistance;
+				}
+				this.point[placedCounter] = new FormationPoint(placedCounter, x, y);
+				placedCounter++;
+			}
 		}
 		
+		// set the rest of the UAVs in the last cluster
+		// TODO completed
+		/*
+		for(int i= 0;i<numUAVs-placedCounter;i++) {
+			x = validationTools.roundDouble(Math.cos(2*Math.PI/clusters)*offset + (slavesPerCluster + i)*minDistance,6);
+			y = validationTools.roundDouble(Math.sin(2*Math.PI/clusters)*offset + (slavesPerCluster + i)*minDistance,6);
+			this.point[placedCounter] = new FormationPoint(placedCounter, x, y);
+			placedCounter++;
+		}*/
 		
 	}
-
 }

@@ -22,6 +22,9 @@ public class MUSCOPParam {
 	
 	/** Current protocol state for each UAV. */
 	public static AtomicInteger[] state;
+	
+	// number of clusters used in case of split-up formation
+	public static int CLUSTERS;  // can be set with use of GUI
 
 	// Timeouts
 	public static final int RECEIVING_TIMEOUT = 50;			// (ms) The port is unlocked after this time when receiving messages
