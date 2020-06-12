@@ -59,14 +59,11 @@ public abstract class State {
 		}else {
 			if(type == stateNr) {
 				inspect(message);
-				send_ack = true;
 			}else if(type == stateNr+1) {
-				send_ack = false;
+				send_ack = false; //TODO check if necessary
 				transit = true;
 			}
-		}
-		
-		
+		}	
 	}
 
 	public State handle() {
@@ -75,9 +72,6 @@ public abstract class State {
 			executeOnce();
 		}
 		executeContinously();
-		
-		// The flag transit does not mean that the state will always changes
-		// some additional conditions must be met as well and those are implemented in the transit method
 		State currentState = transit(transit);
 		return currentState;	
 	};
@@ -97,6 +91,7 @@ public abstract class State {
 			message[0] = Arrays.copyOf(outBuffer, output.position());
 			return message;
 		}else {
+			// send_ack is set to true inside of the state when some condition is met 
 			if(send_ack) {
 				// The slaves reply with an ack if they have received the state of the master
 				output.reset();

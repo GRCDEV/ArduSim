@@ -1,6 +1,9 @@
 package shakeup.logic;
 
 
+import java.io.File;
+import java.util.Map;
+
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
@@ -12,11 +15,13 @@ import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
+import main.api.FileTools;
 import main.api.FlightFormationTools;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import shakeup.pojo.Param;
 import shakeup.pojo.Text;
+import vision.logic.visionParam;
 import shakeup.pojo.TargetFormation;
 
 public class ShakeupHelper extends ProtocolHelper {
@@ -37,15 +42,15 @@ public class ShakeupHelper extends ProtocolHelper {
 		FlightFormationTools formationTools = API.getFlightFormationTools();
 		
 		//set formation: groundformation random, airformation linear
-		formationTools.setGroundFormation(FlightFormation.Formation.RANDOM.getName(), 5);
+		formationTools.setGroundFormation(FlightFormation.Formation.RANDOM.getName(), 10);
 		API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(TakeOffAlgorithm.SIMPLIFIED.getName());
-		formationTools.setFlyingFormation(FlightFormation.Formation.LINEAR.getName(), 20);
+		formationTools.setFlyingFormation(FlightFormation.Formation.LINEAR.getName(), 10);
 		
 		//set target formations
 		int numUAVs = API.getArduSim().getNumUAVs();
 		TargetFormation[] formations = new TargetFormation[Param.formations.length];
 		for(int i = 0;i < Param.formations.length;i++) {
-			formations[i] = new TargetFormation(Param.formations[i], numUAVs, 15, 0);
+			formations[i] = new TargetFormation(Param.formations[i], numUAVs, 10, 0);
 		}
 		Param.flightFormations = formations;
 	}
@@ -83,7 +88,9 @@ public class ShakeupHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public boolean sendInitialConfiguration(int numUAV) {return true;}
+	public boolean sendInitialConfiguration(int numUAV) {
+		readIniFile("Shakeup_settings.ini");
+		return true;}
 
 	@Override
 	public void startThreads() {
@@ -119,4 +126,19 @@ public class ShakeupHelper extends ProtocolHelper {
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {}
 
+	public static void readIniFile(String filename) {
+		FileTools fileTools = API.getFileTools();
+		File iniFile = new File(fileTools.getCurrentFolder() + "/" + filename);
+		
+		if(iniFile.exists()) {
+			Map<String, String> params = fileTools.parseINIFile(iniFile);
+			Param.ALTITUDE_DIFF_SECTORS = Integer.parseInt(params.get("ALTITUDE_DIFF_SECTORS"));
+			Param.NUMBER_OF_SECTORS = Integer.parseInt(params.get("NUMBER_OF_SECTORS"));
+			String algo = params.get("TAKE_OFF_ALGORITHM");
+			if(algo == "RANDOM") {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.RANDOM;}
+			else if(algo == "SIMPLIFIED") {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.SIMPLIFIED;}
+			
+			API.getGUI(0).log("landing location set from location.ini");
+		}
+	}
 }

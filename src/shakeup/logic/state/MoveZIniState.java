@@ -36,9 +36,10 @@ public class MoveZIniState extends State{
 
 	@Override
 	public State transit(Boolean transit) {
-		if(transit) {
-			// check if altitude is reached
-			if(Math.abs(copter.getAltitude() - Param.altitude) < Param.ALTITUDE_MARGIN) {
+		// check if altitude is reached
+		if(Math.abs(copter.getAltitude() - Param.altitude) < Param.ALTITUDE_MARGIN) {
+			super.send_ack = true;
+			if(transit) {
 				// if all the formations are done land otherwise start from begining
 				int formationIndex = ShakeupListenerThread.getFormationIndex();
 				if(formationIndex == (Param.formations.length-1)) {

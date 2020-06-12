@@ -40,11 +40,10 @@ public class MoveXYState extends State{
 
 	@Override
 	public State transit(Boolean transit) {
+		// check is location is reached
+		if(Math.abs(copter.getLocationUTM().distance(targetLocation)) < Param.ALTITUDE_MARGIN) {super.send_ack = true;}
 		if(transit) {
-			// check is location is reached
-			if(Math.abs(copter.getLocationUTM().distance(targetLocation)) < Param.ALTITUDE_MARGIN) {
-				return new MoveZIniState(selfId, isMaster, numUAVs);
-			}
+			return new MoveZIniState(selfId, isMaster, numUAVs);
 		}
 		return this;
 	}

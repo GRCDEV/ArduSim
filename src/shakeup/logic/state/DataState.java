@@ -11,6 +11,8 @@ import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DUTM;
 import main.api.masterslavepattern.safeTakeOff.MatchCalculusThread;
+import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import shakeup.logic.ShakeupListenerThread;
 import shakeup.pojo.Param;
 import shakeup.pojo.TargetFormation;
@@ -42,10 +44,13 @@ public class DataState extends State{
 			gui.log("new flight formation: " + targetFormation.getFlightFormation().getFormationName());
 			
 			// calculate the next position of all the UAVs with the use of the safeTakeOff algorithm
+			// set to takeoff algorithm to RANDOM or to SIMPLIFIED
+			TakeOffMasterDataListenerThread.selectedAlgorithm = Param.TAKE_OFF_ALGORITHM;
 			MatchCalculusThread mCT = new MatchCalculusThread(UAVLocations2D, targetFormation.getFlightFormation(),targetFormation.getHeading(), (long)selfId);	
 			mCT.start();
 			while (mCT.isAlive()) {ardusim.sleep(Param.WAITING_TIME);}
 			Quartet<Integer, Long, Location2DUTM, Double>[] calculateData = mCT.getResult();
+			
 			
 			for (int i = 0; i < calculateData.length; i++) {
 				long id = calculateData[i].getValue1();
@@ -69,7 +74,7 @@ public class DataState extends State{
 						break;
 					}
 				}
-				
+				System.out.println("angle: " + Math.toDegrees(angle) + " Sector " + sector);
 				// select the flying altitude of the UAV
 				// an array is made with all the flying distances
 				// to ensure that the gap between to adjacent sectors is as big as possible* the distance is alternated
@@ -96,9 +101,10 @@ public class DataState extends State{
 
 	@Override
 	public State transit(Boolean transit) {
+		if(!isMaster && targetLocation != null) {super.send_ack = true;}
 		if(transit) {
 			if(isMaster) {return new MoveZState(selfId, isMaster, targetLocation, numUAVs);}
-			else if(!isMaster && (targetLocation != null)) {return new MoveZState(selfId,isMaster, targetLocation, numUAVs);}
+			else if(!isMaster && super.send_ack == true) {return new MoveZState(selfId,isMaster, targetLocation, numUAVs);}
 		}
 		return this;
 	}

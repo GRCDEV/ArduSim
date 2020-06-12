@@ -37,9 +37,10 @@ public class MoveZState extends State{
 
 	@Override
 	public State transit(Boolean transit) {
-		if(transit) {
-			// check if altitude is reached
-			if(Math.abs(copter.getAltitude() - (Param.altitude + targetLocation.z)) < Param.ALTITUDE_MARGIN) {
+		// check if altitude is reached
+		if(Math.abs(copter.getAltitude() - (Param.altitude + targetLocation.z)) < Param.ALTITUDE_MARGIN) {
+			super.send_ack = true;
+			if(transit) {
 				// for the master check if all the slaves have acknowledged your message and then move to next state
 				if(isMaster && (acknowledged.size() == numUAVs -1)) {return new MoveXYState(selfId, isMaster, targetLocation, numUAVs);}
 				// slaves can go to next slave whenever the altitude is reached

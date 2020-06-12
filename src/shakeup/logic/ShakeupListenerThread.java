@@ -1,6 +1,12 @@
 package shakeup.logic;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -8,15 +14,18 @@ import com.esotericsoftware.kryo.io.Input;
 
 import api.API;
 import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.SafeTakeOffHelper;
 import main.api.communications.CommLink;
+import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.MasterSlaveHelper;
 import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
+import main.uavController.UAVParam;
 import shakeup.logic.state.*;
 import shakeup.pojo.*;
 
@@ -29,12 +38,21 @@ public class ShakeupListenerThread extends Thread{
 	private boolean isMaster;
 	
 	private static int formationIndex = 0;
-
+	
+	private FileWriter times;
+	private Set<java.util.Map.Entry<Integer,Integer>> collisionList= new HashSet<>();
 	public ShakeupListenerThread(int numUAV) {
 		this.ardusim = API.getArduSim();
 		this.gui = API.getGUI(numUAV);
 		this.copter = API.getCopter(numUAV);
 		this.numUAV = numUAV;
+		
+		try {
+			times = new FileWriter("timesState.csv",true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -55,6 +73,10 @@ public class ShakeupListenerThread extends Thread{
 		Input input = new Input(inBuffer);
 		CommLink link = API.getCommLink(numUAV);
 		
+		long time = System.currentTimeMillis();
+		long distanceTimer = System.currentTimeMillis();
+		double minDist = Double.MAX_VALUE;
+		
 		// go through all the states
 		while(copter.isFlying()) {
 			// Check for a message
@@ -64,10 +86,40 @@ public class ShakeupListenerThread extends Thread{
 				currentState.processMessage(input);
 			}
 			
+			// for measuring the time past each waypoint
+			int previousState = currentState.getStateNr();
+			
 			currentState = currentState.handle();
 			talker.setState(currentState);
+			
+			if(previousState != currentState.getStateNr()) {
+				try {
+					times.write(numUAV + ";" + previousState + ";" + (System.currentTimeMillis()- time) + "\n");
+					times.flush();
+					time = System.currentTimeMillis();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if(currentState.getStateNr() == 3 && (System.currentTimeMillis() - distanceTimer) > 500) {
+				distanceTimer = System.currentTimeMillis();
+				for (int i = 0; i < main.Param.numUAVs - 1; i++) {
+					for (int j = i + 1; j < main.Param.numUAVs; j++) {
+						Location3DUTM loc1 = new Location3DUTM(UAVParam.uavCurrentData[i].getUTMLocation(), UAVParam.uavCurrentData[i].getZ());
+						Location3DUTM loc2 = new Location3DUTM(UAVParam.uavCurrentData[j].getUTMLocation(), UAVParam.uavCurrentData[j].getZ());
+						double distance = loc1.distance3D(loc2);
+						if(distance < minDist) {minDist = distance;}
+						if(distance < 4.9) {
+							java.util.Map.Entry<Integer,Integer> pair=new java.util.AbstractMap.SimpleEntry<>(i,j);
+							collisionList.add(pair);
+						}
+					}
+				}
+			}
 		}
-		
+		collisionList.forEach(e -> System.out.print(e.getKey() + ":" + e.getValue() + " ; "));
+		System.out.println("minimal distance = " + minDist);
 	}
 
 	private Map<Long, Location2DUTM> setup() {
@@ -115,8 +167,7 @@ public class ShakeupListenerThread extends Thread{
 			}else {
 				formationYaw = Param.masterInitialYaw;
 			}
-
-			takeOff = takeOffHelper.getMasterContext(UAVsDetected,
+			takeOff = takeOffHelper.getMasterContext(UAVsDetected, 
 					API.getFlightFormationTools().getFlyingFormation(UAVsDetected.size() + 1),
 					formationYaw, Param.altitude, true, false);
 		}else {

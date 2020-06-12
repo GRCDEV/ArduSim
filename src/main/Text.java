@@ -23,6 +23,8 @@ public class Text {
 	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
 	public static final String RANDOM = "Random";
 	public static final String SPLITUP = "Split-up";
+	// TODO remove after shake up experiments are done
+	public static final String RANDOM2 = "Random2";
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
