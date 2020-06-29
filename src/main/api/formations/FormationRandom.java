@@ -1,6 +1,7 @@
 package main.api.formations;
 
 import java.awt.geom.Point2D.Double;
+import java.util.Random;
 import java.util.TreeMap;
 
 import main.api.formations.helpers.FormationPoint;

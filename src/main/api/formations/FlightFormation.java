@@ -45,6 +45,7 @@ public abstract class FlightFormation {
 		 * This formation is created to check if the uav swars are able to split up when the master uav (3) fails
 		 */
 		SPLITUP((short)6, Text.SPLITUP);
+		
 		// Add here new formations
 		private final short formationId;
 		private final String name;

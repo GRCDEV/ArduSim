@@ -56,7 +56,7 @@ public class DataState extends State{
 				long id = calculateData[i].getValue1();
 				Location2DUTM startLoc = UAVLocations2D.get(id);
 				Location2DUTM targetLoc = calculateData[i].getValue2();
-				
+				//TODO check because there is something wrong witht he calculation of the angles
 				// calculate the angle between start and target location
 				double diffx = targetLoc.x - startLoc.x;
 				double diffy = targetLoc.y - startLoc.y;
@@ -66,6 +66,7 @@ public class DataState extends State{
 				// check in which sector the UAV belongs
 				double sectorWidth = 2*Math.PI /Param.NUMBER_OF_SECTORS;
 				int sector = 0;
+				sector = i%Param.NUMBER_OF_SECTORS;
 				for(int j =0 ; j< Param.NUMBER_OF_SECTORS;j++) {
 					double min = 0 + j*sectorWidth;
 					double max = sectorWidth + j*sectorWidth;

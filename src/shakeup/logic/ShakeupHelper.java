@@ -17,7 +17,9 @@ import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import main.api.FileTools;
 import main.api.FlightFormationTools;
+import main.api.GUI;
 import main.api.formations.FlightFormation;
+import main.api.formations.FlightFormation.Formation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import shakeup.pojo.Param;
 import shakeup.pojo.Text;
@@ -39,18 +41,20 @@ public class ShakeupHelper extends ProtocolHelper {
 
 	@Override
 	public void initializeDataStructures() {
+		readIniFile("Shakeup_settings.ini");
 		FlightFormationTools formationTools = API.getFlightFormationTools();
 		
 		//set formation: groundformation random, airformation linear
-		formationTools.setGroundFormation(FlightFormation.Formation.RANDOM.getName(), 10);
+		formationTools.setGroundFormation(FlightFormation.Formation.COMPACT_MESH.getName(), 10);
 		API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(TakeOffAlgorithm.SIMPLIFIED.getName());
-		formationTools.setFlyingFormation(FlightFormation.Formation.LINEAR.getName(), 10);
+		formationTools.setFlyingFormation(Param.startFormation.getName(), 10);
 		
 		//set target formations
 		int numUAVs = API.getArduSim().getNumUAVs();
 		TargetFormation[] formations = new TargetFormation[Param.formations.length];
+		//TODO change so that it works for multiple formations
 		for(int i = 0;i < Param.formations.length;i++) {
-			formations[i] = new TargetFormation(Param.formations[i], numUAVs, 10, 0);
+			formations[i] = new TargetFormation(Param.endFormation.getName(), numUAVs, 10, 0);
 		}
 		Param.flightFormations = formations;
 	}
@@ -89,7 +93,6 @@ public class ShakeupHelper extends ProtocolHelper {
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-		readIniFile("Shakeup_settings.ini");
 		return true;}
 
 	@Override
@@ -134,11 +137,35 @@ public class ShakeupHelper extends ProtocolHelper {
 			Map<String, String> params = fileTools.parseINIFile(iniFile);
 			Param.ALTITUDE_DIFF_SECTORS = Integer.parseInt(params.get("ALTITUDE_DIFF_SECTORS"));
 			Param.NUMBER_OF_SECTORS = Integer.parseInt(params.get("NUMBER_OF_SECTORS"));
-			String algo = params.get("TAKE_OFF_ALGORITHM");
-			if(algo == "RANDOM") {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.RANDOM;}
-			else if(algo == "SIMPLIFIED") {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.SIMPLIFIED;}
 			
-			API.getGUI(0).log("landing location set from location.ini");
+			String algo = params.get("TAKE_OFF_ALGORITHM");
+			if(algo.equalsIgnoreCase("RANDOM")) {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.RANDOM;}
+			else if(algo.equalsIgnoreCase("SIMPLIFIED")) {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.SIMPLIFIED;}
+			
+			String startFormation = params.get("START_FORMATION");
+			Param.startFormation = stringToFormation(startFormation);
+			String endFormation = params.get("END_FORMATION");
+			Param.endFormation = stringToFormation(endFormation);
+			
+			Param.ALTITUDE_MARGIN = Double.parseDouble(params.get("ALTITUDE_MARGIN"));
+			
+			API.getGUI(0).log("settings set from shakeupsettings.ini");
 		}
+	}
+	
+	private static Formation stringToFormation(String formation) {
+		Formation f;
+		if(formation.equalsIgnoreCase("LINEAR")) {
+			f = Formation.LINEAR;
+		}else if(formation.equalsIgnoreCase("CIRCLE")) {
+			f = Formation.CIRCLE;
+		}else if(formation.equalsIgnoreCase("MATRIX")) {
+			f = Formation.REGULAR_MATRIX;
+		}else if(formation.equalsIgnoreCase("COMPACT_MESH")) {
+			f = Formation.COMPACT_MESH;
+		}else {
+			f = null;
+		}
+		return f;
 	}
 }

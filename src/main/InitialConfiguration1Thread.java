@@ -1,5 +1,6 @@
 package main;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import api.API;
@@ -7,6 +8,7 @@ import api.pojo.CopterParam;
 import api.pojo.FlightMode;
 import main.api.ArduSim;
 import main.api.Copter;
+import main.api.CopterParamLoaded;
 import main.api.hiddenFunctions.HiddenFunctions;
 import main.sim.gui.MissionKmlDialog;
 import main.sim.logic.SimParam;
@@ -52,11 +54,13 @@ public class InitialConfiguration1Thread extends Thread {
 			return;
 		}
 		
-//		CopterParamLoaded[] values = UAVParam.loadedParams[numUAV].values().toArray(new CopterParamLoaded[0]);
-//		Arrays.sort(values);
-//		for (int i = 0; i < values.length; i++) {
-//			System.out.println(values[i]);
-//		}
+		/*
+		CopterParamLoaded[] values = UAVParam.loadedParams[numUAV].values().toArray(new CopterParamLoaded[0]);
+		Arrays.sort(values);
+		for (int i = 0; i < values.length; i++) {
+			System.out.println(values[i]);
+		}
+		*/
 		
 		// Determining the GCS identifier that must be used
 		Double paramValue;
