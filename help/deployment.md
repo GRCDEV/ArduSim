@@ -98,11 +98,12 @@ Finally, restart the Raspberry pi 3 B+ for the changes to take effect.
 
     Finally restart the Raspberry Pi. This way we leave the loopback interface untouched, and ethernet connection under DHCP control. We use a static address for the network named *NETWORK_NAME*. You also have to change the network address for each multicopter used in the group/swarm. We have found that the network manager makes a mess and thinks that the regulatory domain (WiFi country) is unset when using Raspbian in desktop mode. Don't care about it, as you can check, the Ad-hoc network is up and functioning once you restart the device (network manager becomes useless).
 
-    May be you are using other wireless adapters. If this is the case, we found that Raspbian changes randomly the wireless adapter identifier when using more than one at the same time. This issue could prevent ArduSim from working adequately sometimes. To solve it, you have to fix the adapters identifier editing the file */lib/udev/rules.d/75-persistent-net-generator.rules* and replace the corresponding line with:
+    Maybe you are using other wireless adapters. If this is the case, we found that Raspbian changes randomly the wireless adapter identifier when using more than one at the same time. This issue could prevent ArduSim from working adequately sometimes. To solve it, you have to fix the adapters identifier editing the file */lib/udev/rules.d/75-persistent-net-generator.rules* and replace the corresponding line with:
 
         KERNEL!="eth*[0-9]|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", \
 
     Then, unplug the external adapter and restart the device, and when it has fully booted plug in the  external adapter. /etc/udev/rules.d/70-persistent-net.rules should be created with definitions for persistent rules for wlan0 and wlan1. Now check that the configuration already set in this chapter is applied to the correct wlanX adapter.
+    Test the ad-hoc network by pinging to another device in the network. We have found that sometimes the wireless-channel is not accepted, if the devices are unable to communicate with each other this is most likely the problem. It can be easly fixed by changing the channel to another one. Use iwconfig to get more information and to change the channel rapidly. If the channel is not accepted it will return a invalid parameter error, once a channel is found that works on all devices make the necessary changes in the file */etc/network/interfaces.d/wlan0* and reboot the system.  
     
 ### 2.4 Java
 
