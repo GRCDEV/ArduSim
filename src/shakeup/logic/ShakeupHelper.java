@@ -17,19 +17,17 @@ import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import main.api.FileTools;
 import main.api.FlightFormationTools;
-import main.api.GUI;
 import main.api.formations.FlightFormation;
 import main.api.formations.FlightFormation.Formation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import shakeup.pojo.Param;
 import shakeup.pojo.Text;
-import vision.logic.visionParam;
 import shakeup.pojo.TargetFormation;
 
+import static main.api.formations.FlightFormation.Formation.REGULAR_MATRIX;
+
 public class ShakeupHelper extends ProtocolHelper {
-	
-	private ShakeupListenerThread listner;
-	
+
 	@Override
 	public void setProtocol() {this.protocolString = Text.PROTOCOL_TEXT;}
 
@@ -48,7 +46,6 @@ public class ShakeupHelper extends ProtocolHelper {
 		formationTools.setGroundFormation(FlightFormation.Formation.COMPACT_MESH.getName(), 10);
 		API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(TakeOffAlgorithm.SIMPLIFIED.getName());
 		formationTools.setFlyingFormation(Param.startFormation.getName(), 10);
-		
 		//set target formations
 		int numUAVs = API.getArduSim().getNumUAVs();
 		TargetFormation[] formations = new TargetFormation[Param.formations.length];
@@ -98,7 +95,7 @@ public class ShakeupHelper extends ProtocolHelper {
 	@Override
 	public void startThreads() {
 		for (int i = 0; i < API.getArduSim().getNumUAVs(); i++) {
-			listner = new ShakeupListenerThread(i);
+			ShakeupListenerThread listner = new ShakeupListenerThread(i);
 			listner.start();
 		}
 	}
@@ -132,7 +129,7 @@ public class ShakeupHelper extends ProtocolHelper {
 	public static void readIniFile(String filename) {
 		FileTools fileTools = API.getFileTools();
 		File iniFile = new File(fileTools.getCurrentFolder() + "/" + filename);
-		
+
 		if(iniFile.exists()) {
 			Map<String, String> params = fileTools.parseINIFile(iniFile);
 			Param.ALTITUDE_DIFF_SECTORS = Integer.parseInt(params.get("ALTITUDE_DIFF_SECTORS"));
@@ -160,7 +157,7 @@ public class ShakeupHelper extends ProtocolHelper {
 		}else if(formation.equalsIgnoreCase("CIRCLE")) {
 			f = Formation.CIRCLE;
 		}else if(formation.equalsIgnoreCase("MATRIX")) {
-			f = Formation.REGULAR_MATRIX;
+			f = REGULAR_MATRIX;
 		}else if(formation.equalsIgnoreCase("COMPACT_MESH")) {
 			f = Formation.COMPACT_MESH;
 		}else {

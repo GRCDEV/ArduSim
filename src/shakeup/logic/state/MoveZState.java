@@ -51,9 +51,6 @@ public class MoveZState extends State{
 	}
 
 	@Override
-	public void inspect(Input message) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void inspect(Input message) {}
 
 }

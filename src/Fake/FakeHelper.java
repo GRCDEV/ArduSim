@@ -106,31 +106,26 @@ public class FakeHelper extends ProtocolHelper{
 
 	@Override
 	public void forceExperimentEnd() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public String getExperimentResults() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getExperimentConfiguration() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public void logData(String folder, String baseFileName, long baseNanoTime) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
-		// TODO Auto-generated method stub
 		
 	}
 

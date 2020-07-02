@@ -443,7 +443,7 @@ public class MUSCOPListenerThread extends Thread {
 				}
 				
 				// just in case the master would be some other uav not included in the above
-				if(iAmCenter && currentWP == 1 && (destinationGeo.distance(copter.getLocationUTM()) < 15) ) {
+				if( iAmCenter && currentWP == 1 && (destinationGeo.distance(copter.getLocationUTM()) < 15) ) {
 					System.out.println("kill master UAV with ID " + selfId);
 					copter.setFlightMode(FlightMode.LAND);
 					this.talker.setRunning(false);
