@@ -8,7 +8,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 [1 System requirements](#markdown-header-1-system-requirements)
 
-[2 Eclipse IDE integration](#markdown-header-2-eclipse-ide-integration)
+[2 IDE integration](#markdown-header-2-ide-integration)
 
 [3 SITL setup in Windows](#markdown-header-3-sitl-setup-in-windows)
 
@@ -26,8 +26,6 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * Microsoft Windows 7, Linux or MacOS
 
-* Eclipse IDE for Java Developers: Oxygen or later, with package EGit
-
 * Java SE Development Kit (JDK) 11 32 bits (version 9 would be enough but it is now deprecated)
 
 * Cygwin and ImDisk Virtual Disk Driver (Windows only)
@@ -38,9 +36,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * RAM 16 GB
 
-* Linux (i.e. Ubuntu 16.04)
-
-* Eclipse IDE for Java Developers: Oxygen or later, with packages EGit and WindowBuilder
+* Linux (i.e. Ubuntu 16.04 or Ubuntu 18.04)
 
 * Java SE Development Kit (JDK) 11 64 bits (version 9 would be enough but it is now deprecated)
 
@@ -48,11 +44,14 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 It is highly recommended to run ArduSim on Linux, as performance is significantly reduced on Windows, and may be on MacOS.
 
-## 2 Eclipse IDE integration
+## 2.1 IDE integration
+
+While not mandatory a IDE will aid any developer, therefore we give a guide on how to correctly import ArduSim into an IDE. We have chosen for Eclipse and IntelliJ because of their popularity and personal preferences. 
+If your favorite IDE is not included, the guides can still help you since importing source from git is similar in the various IDEs. 
+
+### 2.1.1 Eclipse IDE integration
 
 ArduSim and the included protocols have been developed with Eclipse IDE. This section explains how to prepare the developing environment, once Eclipse and Java JDK are correctly installed.
-
-### 2.1 Clone the repository
 
 Open Git perspective: *Window --> Perspective --> Open Perspective --> Other... --> Git*.
 
@@ -72,21 +71,34 @@ We recommend to show packages in hierarchical order in *Package explorer* tab. O
 
 *Git Staging* and *Git Repositories* tabs can also be shown to check periodically if a new version of ArduSim has been released.
 
-### 2.2 Copy necessary files
+### 2.1.2 IntelliJ IDE integration
 
-ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.parm*. These files must be put in a place easy to find in order to execute simulations when running ArduSim. If you put them in the target folder of the Eclipse project (in Linux, by default: */home/user_name/git/ardusim/target*), ArduSim will automatically find them when running from Eclipse IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder. This repository provides binaries for Windows (arducopter.exe) and Ubuntu (arducopter) 64bits, so you only need to compile them (see below) if you plan to use other systems.
+In IntelliJ go to File --> New --> Project from Version Control.
+
+Now copy the following URI in the configuration window.
+
+    https://jamieWubben@bitbucket.org/frafabco/ardusim.git
+
+IntelliJ will find two project configurations (Eclipse project and Maven project), select Maven project. Give IntelliJ some time to import everything continue with this guide before running Main.java
+
+
+## 2.2 Copy necessary files
+
+ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.parm*. These files must be put in a place easy to find in order to execute simulations when running ArduSim. If you put them in the target folder (ardusim/target*), ArduSim will automatically find them when running from the IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder. This repository provides binaries for Windows (arducopter.exe) and Ubuntu (arducopter) 64bits, so you only need to compile them (see below) if you plan to use other systems.
 
 Several temporary files are generated when using ArduSim for simulations. Please, close ArduSim with the application button and not from the *Console* tab of Eclipse to force ArduSim to remove the temporary files before exiting.
 
 Remember that ArduSim is a highly asynchronous application, and running in Eclipse in debugging mode could lead to an unexpected behavior of the application.
 
-Finally, right-click over *src/main/Main.java* class on the *Package Explorer* and select *Run as...*, and *1 Java Application*. The first time, it will fail to run because you need to add the following argument to the command line to be able to run a simulation, but not a PC Companion or a real multicopter, roles that are explained in other sections. To this aim, edit the run configuration automatically created.
+Finally, In Eclipse IDE right-click over *src/main/Main.java* class on the *Package Explorer* and select *Run as...*, and *1 Java Application*. In IntelliJ right-click over *src/main/Main.java* class on the *Project Files* and select *Run Main.main()*
+
+The first time, it will fail to run because you need to add the following argument to the command line to be able to run a simulation, but not a PC Companion or a real multicopter, roles that are explained in other sections. To this aim, edit the run configuration automatically created.
 
     simulator
 
 You can create a csv file with target speed for the multicopters (one row per speed m/s), and a mission file in *Google Earth* and test the simulator with the protocol *Mission* or *MBCAP* to be sure that the setup is correct.
 
-A protocol can be tested directly in Eclipse or from a executable *.jar* file. In the second case, with the proper configuration (see next sections), we suggest to execute the *.jar* file as Administrator/root. This way, temporary files will be stored in a RAM drive, which will increase ArduSim scalability, on the number of virtual multicopters, when using a slow hard drive.
+A protocol can be tested directly in the IDE or from a executable *.jar* file. In the second case, with the proper configuration (see next sections), we suggest to execute the *.jar* file as Administrator/root. This way, temporary files will be stored in a RAM drive, which will increase ArduSim scalability, on the number of virtual multicopters, when using a slow hard drive.
 
 ### 2.2 Compilation
 
@@ -160,12 +172,12 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 ## 4 SITL setup in Linux
 
 The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal. The process is explained for Debian based sistems (Ubuntu, Mint...). For RPM based systems (CentOS, Fedora...) use *yum* installer and install manually the dependencies included in the script mentioned later on.
+The following steps are tested on Ubuntu 16.04 or Ubuntu 18.04. There are some (yet unsolved) bugs for Ubuntu 20.04, while we are working on sloving them we suggest to just use the binary files given in the repository (ArduCopter 3.5.7) and skip the following steps.  
 
-1. Install Java JDK 11 or 13 if not present. The procedure for Java JDK 13 follows:
+1. Install Java JDK 11 or higher if not present. Both Oracle and openJDK can be used, Oracle is prefered because it can improve performance. However, Oracle has made installation a bit cumbersome (creating an account, etc.). Therefore, we provide the openJDK installation. 
 
-        sudo add-apt-repository ppa:linuxuprising/java
-        sudo apt update
-        sudo apt install oracle-java13-installer
+        sudo apt install openjdk-14-jre-headless
+        sudo apt install openjdk-14-jdk-headless
         java -version
 
 2. Install git if not present:
