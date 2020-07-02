@@ -16,9 +16,10 @@ You are supposed to previously own a Pixhawk controlled multicopter, and a Raspb
 
 ArduSim communicates with the flight controller through a serial port, so we need to stablish a connection between them.
 
-A Pixhawk controller has two telemetry ports, one tipically used for a telemetry wireless transmitter and another available for other purposes. On the other hand, a Raspberry Pi 3 B+ has a 40 pins GPIO where we can connect the telemetry port as a serial 3.3V link, with a cable similar to the one shown on the next image, which would need modifications following the instructions in this [link](http://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html).
+A Pixhawk controller has two telemetry ports, one tipically used for a telemetry wireless transmitter and another available for other purposes. On the other hand, a Raspberry Pi 3 B+ has a 40 pins GPIO where we can connect the telemetry port as a serial 3.3V link, with a cable similar to the one shown on the next image, which would need modifications following the instructions in this [link](http://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html). Use that guide as a reference and connect the cable as shown in the image below.
 
 ![cable](DF13cable.jpg)
+![connection](telemetryConnection.png)
 
 ### 1.2 Wireless ad-hoc network
 
