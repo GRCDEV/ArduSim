@@ -495,5 +495,8 @@ public class Text {
 	public static final String SAFE_TAKE_OFF_SLAVE_CONTEXT_TALKER = "Safe take off slave context retrieval talker";
 	public static final String SAFE_TAKE_OFF_LISTENER = "Safe take off listener: ";
 	public static final String SAFE_TAKE_OFF_TAKER = "Safe take off talker: ";
-	
+
+	// New GUI
+	public static final String LOADING_ERROR = "Loading error";
+	public static final String FILE_NOT_FOUND = "File is not found or in wrong format. Creating default properties file";
 }

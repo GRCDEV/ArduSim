@@ -15,7 +15,7 @@ public enum WirelessModel {
 	
 	private final int id;
 	private final String name;
-	private WirelessModel(int id, String name) {
+	WirelessModel(int id, String name) {
 		this.id = id;
 		this.name = name;
 	}
@@ -53,6 +53,10 @@ public enum WirelessModel {
 			}
 		}
 		return null;
+	}
+
+	public static String[] getAllModels(){
+		return new String[]{NONE.name, FIXED_RANGE.name,DISTANCE_5GHZ.name};
 	}
 	
 }

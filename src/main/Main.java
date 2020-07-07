@@ -1,5 +1,27 @@
 package main;
 
+import api.API;
+import api.pojo.location.Waypoint;
+import es.upv.grc.mapper.Location2DGeo;
+import javafx.application.Application;
+import main.Param.SimulatorState;
+import main.api.ArduSim;
+import main.api.ValidationTools;
+import main.api.communications.CommLinkObject;
+import main.api.communications.RangeCalculusThread;
+import main.cpuHelper.CPUUsageThread;
+import main.pccompanion.gui.PCCompanionGUI;
+import main.sim.gui.*;
+import main.sim.logic.CollisionDetector;
+import main.sim.logic.DistanceCalculusThread;
+import main.sim.logic.SimParam;
+import main.sim.logic.SimTools;
+import main.uavController.TestListener;
+import main.uavController.TestTalker;
+import main.uavController.UAVParam;
+import org.javatuples.Pair;
+
+import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -11,33 +33,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.JDialog;
-import javax.swing.SwingUtilities;
-
-import org.javatuples.Pair;
-
-import api.API;
-import api.pojo.location.Waypoint;
-import es.upv.grc.mapper.Location2DGeo;
-import main.Param.SimulatorState;
-import main.api.ArduSim;
-import main.api.ValidationTools;
-import main.api.communications.CommLinkObject;
-import main.api.communications.RangeCalculusThread;
-import main.cpuHelper.CPUUsageThread;
-import main.pccompanion.gui.PCCompanionGUI;
-import main.sim.gui.ConfigDialog;
-import main.sim.gui.MainWindow;
-import main.sim.gui.ProgressDialog;
-import main.sim.gui.ResultsDialog;
-import main.sim.logic.CollisionDetector;
-import main.sim.logic.DistanceCalculusThread;
-import main.sim.logic.SimParam;
-import main.sim.logic.SimTools;
-import main.uavController.TestListener;
-import main.uavController.TestTalker;
-import main.uavController.UAVParam;
 
 /** This class contains the main method and the chronological logic followed by the whole application.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -70,11 +65,7 @@ public class Main {
 		// Open the PC Companion GUI en finish this thread
 		if (Param.role == ArduSim.PCCOMPANION) {
 			Param.numUAVs = 1;
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					PCCompanionGUI.companion = new PCCompanionGUI();
-				}
-			});
+			SwingUtilities.invokeLater(() -> PCCompanionGUI.companion = new PCCompanionGUI());
 			return;	// In the PC Companion, the control is released to the GUI
 		}
 		
@@ -135,15 +126,10 @@ public class Main {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				ArduSimTools.checkImdiskInstalled();
 			}
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					new ConfigDialog();
-				}
-			});
-			// Waiting the configuration to be finished
-			while (Param.simStatus == SimulatorState.CONFIGURING) {
-				ardusim.sleep(SimParam.SHORT_WAITING_TIME);
-			}
+
+			// Start the javafxml GUI configDialogApp
+			Application.launch(ConfigDialogApp.class,args);
+
 			if (Param.numUAVs != Param.numUAVsTemp.get()) {
 				Param.numUAVs = Param.numUAVsTemp.get();
 			}
@@ -152,36 +138,34 @@ public class Main {
 			if (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
 				final AtomicBoolean configurationOpened = new AtomicBoolean();
 				try {
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							final JDialog configurationDialog = ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
-							if (configurationDialog ==null) {
-								Param.simStatus = SimulatorState.STARTING_UAVS;
-							} else {
-								configurationDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-								configurationDialog.addWindowListener(new WindowAdapter() {
-									@Override
-									public void windowClosing(WindowEvent we) {
-										configurationDialog.dispose();
-										System.gc();
-										System.exit(0);
-									}
-									
-									@Override
-								    public void windowClosed(WindowEvent e) {
-								        configurationOpened.set(false);
-								    }
-								});
-								
-								SimTools.addEscListener(configurationDialog, true);
-								
-								configurationDialog.pack();
-								configurationDialog.setResizable(false);
-								configurationDialog.setLocationRelativeTo(null);
-								configurationDialog.setModal(true);
-								configurationDialog.setVisible(true);
-								configurationOpened.set(true);
-							}
+					SwingUtilities.invokeAndWait(() -> {
+						final JDialog configurationDialog = ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
+						if (configurationDialog ==null) {
+							Param.simStatus = SimulatorState.STARTING_UAVS;
+						} else {
+							configurationDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+							configurationDialog.addWindowListener(new WindowAdapter() {
+								@Override
+								public void windowClosing(WindowEvent we) {
+									configurationDialog.dispose();
+									System.gc();
+									System.exit(0);
+								}
+
+								@Override
+								public void windowClosed(WindowEvent e) {
+									configurationOpened.set(false);
+								}
+							});
+
+							SimTools.addEscListener(configurationDialog, true);
+
+							configurationDialog.pack();
+							configurationDialog.setResizable(false);
+							configurationDialog.setLocationRelativeTo(null);
+							configurationDialog.setModal(true);
+							configurationDialog.setVisible(true);
+							configurationOpened.set(true);
 						}
 					});
 				} catch (InvocationTargetException | InterruptedException e) {
@@ -202,11 +186,7 @@ public class Main {
 			}
 
 			// 3. Launch the main window
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.window = new MainWindow();
-				}
-			});
+			SwingUtilities.invokeLater(() -> MainWindow.window = new MainWindow());
 		}
 		
 		// 4. Data structures initializing
@@ -219,12 +199,10 @@ public class Main {
 			}
 
 			// 5. Initial GUI configuration and launch the progress dialog
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.logArea.setText(Text.STARTING_ENVIRONMENT + "\n");
-					MainWindow.buttonsPanel.statusLabel.setText(Text.STARTING_ENVIRONMENT);
-					new ProgressDialog(MainWindow.window.mainWindowFrame).toggleProgressShown();
-				}
+			SwingUtilities.invokeLater(() -> {
+				MainWindow.buttonsPanel.logArea.setText(Text.STARTING_ENVIRONMENT + "\n");
+				MainWindow.buttonsPanel.statusLabel.setText(Text.STARTING_ENVIRONMENT);
+				new ProgressDialog(MainWindow.window.mainWindowFrame).toggleProgressShown();
 			});
 			// Waiting the progress dialog to be built
 			while (!ProgressDialog.progressShowing || ProgressDialog.progressDialog == null) {
@@ -286,11 +264,7 @@ public class Main {
 			if (SimParam.tempFolderBasePath == null) {
 				ArduSimTools.closeAll(Text.TEMP_PATH_ERROR);
 			}
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_MAVLINK);
-				}
-			});
+			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_MAVLINK));
 			ArduSimTools.startVirtualUAVs(start);
 		}
 
@@ -299,21 +273,13 @@ public class Main {
 		ArduSimTools.waitMAVLink();
 
 		if (Param.role == ArduSim.SIMULATOR) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_CONFIGURATION_UPLOAD);
-				}
-			});
+			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_CONFIGURATION_UPLOAD));
 			ArduSimTools.forceGPS();
 		}
 		ArduSimTools.sendBasicConfiguration1();
 		
 		if (Param.role == ArduSim.SIMULATOR) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_GPS);
-				}
-			});
+			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_GPS));
 		}
 		ArduSimTools.getGPSFix();
 		ArduSimTools.sendBasicConfiguration2();	// It requires GPS fix to set the current location for takeoff
@@ -359,11 +325,9 @@ public class Main {
 		//    The background map cannot be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
 		if (Param.role == ArduSim.SIMULATOR) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.setupButton.setEnabled(true);
-					MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_FLY);
-				}
+			SwingUtilities.invokeLater(() -> {
+				MainWindow.buttonsPanel.setupButton.setEnabled(true);
+				MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_FLY);
 			});
 			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
 		}
@@ -385,24 +349,12 @@ public class Main {
 				public void run() {
 					if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
 						final String timeString = validationTools.timeToString(Param.setupTime, System.currentTimeMillis());
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE_2 + " " + timeString);
-							}
-						});
+						SwingUtilities.invokeLater(() -> ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE_2 + " " + timeString));
 					} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 						final String timeString = validationTools.timeToString(Param.startTime, System.currentTimeMillis());
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString);
-							}
-						});
+						SwingUtilities.invokeLater(() -> ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE + " " + timeString));
 					} else {
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE);
-							}
-						});
+						SwingUtilities.invokeLater(() -> ProgressDialog.progressDialog.setTitle(Text.PROGRESS_DIALOG_TITLE));
 						if (Param.simStatus != SimulatorState.READY_FOR_TEST) {
 							timer.cancel();
 						}
@@ -416,11 +368,9 @@ public class Main {
 
 		// 14. Waiting for the user to start the experiment
 		if (Param.role == ArduSim.SIMULATOR) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
-					MainWindow.buttonsPanel.startTestButton.setEnabled(true);
-				}
+			SwingUtilities.invokeLater(() -> {
+				MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
+				MainWindow.buttonsPanel.startTestButton.setEnabled(true);
 			});
 			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
 		}
@@ -489,16 +439,11 @@ public class Main {
 				}
 			}
 			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED);
-				}
-			});
+			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED));
 		}
 
 		// 18. Gather information to show the results dialog
-		String res = null;
-		res = ArduSimTools.getTestResults();
+		String res = ArduSimTools.getTestResults();
 		String s = ArduSimTools.selectedProtocolInstance.getExperimentResults();
 		if (s != null && s.length() > 0) {
 			res += "\n" + ArduSimTools.selectedProtocol + ":\n\n";
@@ -520,11 +465,7 @@ public class Main {
 			ArduSimTools.shutdown();	// Closes the simulator
 		} else if (Param.role == ArduSim.SIMULATOR) {
 			final String res2 = res;
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true);
-				}
-			});
+			SwingUtilities.invokeLater(() -> new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true));
 		}
 
 		// Now, the user must close the application, even to do a new experiment
