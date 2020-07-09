@@ -1,18 +1,16 @@
 package main;
 
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import api.API;
 import api.pojo.CopterParam;
 import api.pojo.FlightMode;
 import main.api.ArduSim;
 import main.api.Copter;
-import main.api.CopterParamLoaded;
 import main.api.hiddenFunctions.HiddenFunctions;
 import main.sim.gui.MissionKmlDialog;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** This class sends the initial configuration to all UAVs, asynchronously.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -79,7 +77,7 @@ public class InitialConfiguration1Thread extends Thread {
 		}
 		UAVParam.gcsId.set(numUAV, (int)Math.rint(paramValue));
 		
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			// Ask the flight controller for information about battery usage (1Hz)
 			if (!copter.setParameter(CopterParam.STATISTICS, 1)) {
 				return;

@@ -30,7 +30,7 @@
                   <Insets right="10.0" />
                </HBox.margin>
             </Label>
-            <TextField fx:id="arducopterPath" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="385.0" text="%arduCopterPath" HBox.hgrow="ALWAYS">
+            <TextField fx:id="arducopterFile" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="385.0" text="%arducopterFile" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets right="10.0" />
                </HBox.margin>
@@ -52,7 +52,7 @@
                   <Insets right="10.0" />
                </HBox.margin>
             </Label>
-            <TextField fx:id="speedfileTextfield" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="385.0" text="%speedFile" HBox.hgrow="ALWAYS">
+            <TextField fx:id="speedFile" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="385.0" text="%speedFile" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets right="10.0" />
                </HBox.margin>
@@ -90,7 +90,7 @@
             </Label>
             <Label alignment="BOTTOM_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefWidth="55.0">
                <graphic>
-                  <ChoiceBox fx:id="numUAVsChoiceBox" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="487.0" />
+                  <ChoiceBox fx:id="numUAVs" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="487.0" />
                </graphic>
             </Label>
          </children>
@@ -160,8 +160,8 @@
          <children>
             <CheckBox fx:id="arduCopterLogging" mnemonicParsing="false" prefHeight="35.0" prefWidth="216.0" text="ArduCopter Logging" />
             <CheckBox fx:id="measureCPU" mnemonicParsing="false" prefHeight="26.0" prefWidth="191.0" text="Measure CPU use" />
-            <CheckBox fx:id="restrictbattery" layoutX="226.0" layoutY="10.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="214.0" text="Restrict battery capacity:" />
-            <TextField fx:id="batteryCapacity" alignment="TOP_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="26.0" prefWidth="100.0" text="%batterycapacity" HBox.hgrow="ALWAYS">
+            <CheckBox fx:id="restrictBattery" layoutX="226.0" layoutY="10.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="214.0" text="Restrict battery capacity:" />
+            <TextField fx:id="batteryCapacity" alignment="TOP_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="26.0" prefWidth="100.0" text="%batteryCapacity" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets right="10.0" />
                </HBox.margin>
@@ -183,7 +183,7 @@
       <HBox layoutX="30.0" layoutY="282.0" prefHeight="20.0" prefWidth="420.0">
          <children>
             <CheckBox fx:id="verboseLogging" mnemonicParsing="false" prefHeight="20.0" prefWidth="216.0" text="Verbose Logging" />
-            <CheckBox fx:id="verboseStorage" mnemonicParsing="false" prefHeight="0.0" prefWidth="187.0" selected="true" text="Verbose storage" />
+            <CheckBox fx:id="storeData" mnemonicParsing="false" prefHeight="19.0" prefWidth="118.0" selected="true" text="Store Data" />
          </children>
          <VBox.margin>
             <Insets bottom="5.0" left="20.0" right="20.0" top="10.0" />

@@ -23,8 +23,6 @@ public class Text {
 	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
 	public static final String RANDOM = "Random";
 	public static final String SPLITUP = "Split-up";
-	// TODO remove after shake up experiments are done
-	public static final String RANDOM2 = "Random2";
 	
 	// Simulator parameters parsing errors
 	public static final String COMPANION_ERROR = "When running as a PC companion no other parameters are needed.";
@@ -82,24 +80,29 @@ public class Text {
 	public static final String SCREEN_REFRESH_RATE = "Screen refresh rate:";
 	public static final String REDRAW_DISTANCE = "Minimum screen redraw distance:";
 	public static final String LOGGING = "Enable arducopter logging:";
+	public static final String ARDUCOPTER_LOGGING_INVALID = "ArduCopter logging invalid boolean";
 	public static final String BATTERY = "Restrict battery capacity:";
 	public static final String BATTERY_SIZE = "Battery capacity:";
 	public static final String BATTERY_THRESHOLD = "Low level battery threshold:";
 	public static final String CPU_MEASUREMENT_ENABLED = "Measure CPU use:";
+	public static final String CPU_MEASUREMENT_INVALID = "CPU meaurement invalid boolean";
 	public static final String VERBOSE_LOGGING_ENABLE = "Enable verbose logging:";
+	public static final String VERBOSE_LOGGING_INVALID = "Verbose logging invalid boolean";
 	public static final String VERBOSE_STORAGE_ENABLE = "Enable verbose storage:";
+	public static final String VERBOSE_STORAGE_INVALID = "Verbose storage invalid boolean";
 	public static final String UAV_PROTOCOL_USED = "UAV synchronization protocol:";
 	public static final String COMMUNICATIONS = "UAV to UAV communications parameters:";
 	public static final String BROADCAST_IP = "Broadcast IP address:";
 	public static final String BROADCAST_PORT = "Broadcast address port:";
-	public static final String CARRIER_SENSING = "Enable carrier sensing:";
+	public static final String CARRIER_SENSING_INVALID = "Carrie sensing invalid boolean";
 	public static final String CARRIER_SENSING_ENABLED = "Carrier sensing enabled:";
-	public static final String PACKET_COLLISION_DETECTION = "Enable packet collision detection:";
+	public static final String PACKET_COLLISION_DETECTION_INVALID = "Packet collision detection invalid boolean";
 	public static final String PACKET_COLLISION_DETECTION_ENABLED = "Packet Collision detection enabled:";
 	public static final String BUFFER_SIZE = "Receiving buffer size:";
 	public static final String BUFFER_SIZE_ERROR_1 = "The receiving buffer must be a positive number of bytes.";
 	public static final String BUFFER_SIZE_ERROR_2 = "The receiving buffer must be big enough to store at least one frame (" + CommLink.DATAGRAM_MAX_LENGTH + ")";
 	public static final String WIFI_MODEL = "Wireless communications model:";
+	public static final String COMMUNICATION_MODEL_INVALID = "Communication model invalid input";
 	public static final String FIXED_RANGE_DISTANCE = "Fixed range distance:";
 	public static final String TOT_SENT_PACKETS = "Total sent packets:";
 	public static final String TOT_WAITED_PREV_SENDING = "Waiting for the previous packet to be sent:";
@@ -116,6 +119,7 @@ public class Text {
 	public static final String TOT_PROCESSED = "Processed in virtual buffers:";
 	public static final String TOT_DISCARDED_FOR_COLLISION = "Discarded due to collisions:";
 	public static final String TOT_USED_OK = "Used:";
+	public static final String COLLISION_ENABLE_INVALID = "Collision invalid boolean";
 	public static final String COLLISION_PARAMETERS = "UAV Collision detection parameters:";
 	public static final String COLLISION_ENABLE = "Enable collision detection:";
 	public static final String COLLISION_PERIOD = "Check period:";
@@ -131,6 +135,7 @@ public class Text {
 	public static final String WIND = "Wind:";
 	public static final String WIND_PARAMETERS = "Wind parameters:";
 	public static final String WIND_ENABLE = "Enable wind:";
+	public static final String WIND_INVALID = "Wind invalid boolean";
 	public static final String WIND_DIRECTION = "Direction:";
 	public static final String WIND_SPEED = "Speed:";
 	// Error messages:
@@ -147,7 +152,7 @@ public class Text {
 	public static final String MISSIONS_ERROR_8 = "Mission parameters must be accepted.";
 	public static final String SPEEDS_SELECTION_ERROR = "Speeds selection warning";
 	public static final String SPEEDS_ERROR_1 = "The csv file is not valid.\nOne value by row and without header.";
-	public static final String SPEEDS_ERROR_2 = "The file with the UAV(s) speed must be selected.";
+	public static final String SPEEDS_ERROR_2 = "The file with the UAV(s) speed does not exist or extension (.csv) is invalid";
 	public static final String INITIAL_ALTITUDE_ERROR = "The initial altitude for virtual UAVs must be a valid double number.";
 	public static final String VALIDATION_WARNING = "Validation warning";
 	public static final String UAVS_NUMBER_ERROR = "A valid number of UAVs to use must be selected.";
@@ -157,6 +162,7 @@ public class Text {
 	public static final String MIN_SCREEN_MOVEMENT_ERROR_1 = "The minimal screen movement of a UAV must be a valid positive number.";
 	public static final String MIN_SCREEN_MOVEMENT_ERROR_2 = "The minimal screen movement of a UAV must be less than "
 			+ SimParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD + " pixels.";
+	public static final String BATTERY_RESTRICTION_INVALID = "Batter restriction invalid boolean";
 	public static final String BATTERY_ERROR_1 = "The battery capacity must be a valid positive integer.";
 	public static final String BATTERY_ERROR_2 = "The battery capacity can be a maximum of " + UAVParam.VIRT_BATTERY_MAX_CAPACITY + " " + Text.BATTERY_CAPACITY;
 	public static final String WIRELESS_MODEL_ERROR_1 = "The wireless range must be a valid positive number.";
@@ -173,7 +179,11 @@ public class Text {
 	public static final String CPU_ERROR_3 = "Unable to retrieve ArduSim process Id. CPU analysis disabled.";
 	public static final String CPU_ERROR_4 = "Unable to retrieve CPU usage data. CPU analysis disabled.";
 	public static final String SHUTDOWN_ERROR = "Operating system not supported.";
-	
+	public static final String SAVE_ERROR = "Error while saving";
+	public static final String GUI_NOT_COMPLETE = "Not all the fields are set correctly in the GUI";
+	public static final String ERROR_LOADING_FXML = "A resource was not found inside the property Resource bundle.";
+	public static final String PARAMETERS_FILE_NOT_FOUND = "Parameter file not found, make sure " + SimParam.resourcesFile.getAbsolutePath() + " exists";
+	public static final String ERROR_STORE_PARAMETERS = "Error in SimProperties:storeParameters type is not recognized ";
 	// Progress dialog window:
 	public static final String PROGRESS_DIALOG_TITLE = "Test progress";
 	public static final String PROGRESS_DIALOG_TITLE_2 = "Setup progress";
@@ -225,6 +235,7 @@ public class Text {
 	public static final String GPS_OK = "GPS fix acquired...";
 	public static final String COMMUNICATIONS_ONLINE = "Simulated communications online...";
 	public static final String COLLISION_DETECTION_ONLINE = "Collision detection online...";
+	public static final String LAUNCHING_PROTOCOL_THREADS = "Launching protocol threads...";
 	public static final String MISSIONS_LOADED = "Missions loaded from";
 	public static final String SEND_BASIC_CONFIGURATION_1 = "Preparing UAVs internal configuration (phase 1)...";
 	public static final String SEND_BASIC_CONFIGURATION_2 = "Preparing UAVs internal configuration (phase 2)...";

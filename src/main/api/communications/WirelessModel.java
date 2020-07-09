@@ -58,5 +58,9 @@ public enum WirelessModel {
 	public static String[] getAllModels(){
 		return new String[]{NONE.name, FIXED_RANGE.name,DISTANCE_5GHZ.name};
 	}
-	
+
+	@Override
+	public String toString() {
+		return name;
+	}
 }

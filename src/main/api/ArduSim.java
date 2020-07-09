@@ -1,12 +1,12 @@
 package main.api;
 
-import java.util.List;
-
 import api.pojo.location.LogPoint;
 import main.ArduSimTools;
 import main.Param;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
+
+import java.util.List;
 
 /**
  * API to interact with ArduSim.
@@ -16,10 +16,12 @@ public class ArduSim {
 
 	/** ArduSim runs in a real multicopter. */
 	public static final int MULTICOPTER = 0;
-	/** ArduSim runs a simulation. */
-	public static final int SIMULATOR = 1;
+	/** ArduSim runs a simulation with a gui interface. */
+	public static final int SIMULATOR_GUI = 1;
 	/** ArduSim runs as a PC Companion to control real multicopters. */
 	public static final int PCCOMPANION = 2;
+	/** ArduSim runs a simulation without a gui interface. */
+	public static final int SIMULATOR_CLI = 3;
 	
 	/**
 	 * Get the security distance used to assert that a collision between UAVs has happened.
@@ -162,8 +164,8 @@ public class ArduSim {
 	 * <p>If set to true, the developer can store additional file(s) for non relevant information.</p>
 	 * @return true if verbose store feature is enabled.
 	 */
-	public boolean isVerboseStorageEnabled() {
-		return Param.verboseStore;
+	public boolean isStoreDataEnabled() {
+		return Param.storeData;
 	}
 	
 	/**
@@ -182,7 +184,7 @@ public class ArduSim {
 	public void sleep(long ms) {
 		try {
 			Thread.sleep(ms);
-		} catch (InterruptedException e) {}
+		} catch (InterruptedException ignored) {}
 	}
 	
 }

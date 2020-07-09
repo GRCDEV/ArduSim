@@ -1,16 +1,17 @@
 package followme.logic;
 
-import static followme.pojo.State.LANDING;
+import api.API;
+import api.pojo.FlightMode;
+import followme.pojo.RemoteInput;
+import main.Param;
+import main.api.ArduSim;
+import main.api.Copter;
+import main.api.GUI;
 
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import api.API;
-import api.pojo.FlightMode;
-import followme.pojo.RemoteInput;
-import main.api.ArduSim;
-import main.api.Copter;
-import main.api.GUI;
+import static followme.pojo.State.LANDING;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -52,8 +53,7 @@ public class RemoteThread extends Thread {
 			currentState.set(LANDING);
 		}
 		
-		if (role == ArduSim.SIMULATOR) {
-			
+		if (role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			if (!copter.setFlightMode(FlightMode.LOITER)) {
 				gui.logUAV(FollowMeText.MASTER_LOITER_ERROR);
 				return;
@@ -69,7 +69,7 @@ public class RemoteThread extends Thread {
 			do {
 				data = path.poll();
 				if (data != null) {
-					wait = (data.time - (System.nanoTime() - start)) / 1000000l;
+					wait = (data.time - (System.nanoTime() - start)) / 1000000L;
 					if (wait > 0) {
 						ardusim.sleep(wait);
 					}

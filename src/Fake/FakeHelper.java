@@ -1,20 +1,17 @@
 package Fake;
 
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.FlightMode;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location3DGeo;
+import main.ArduSimTools;
 import main.api.Copter;
-import main.api.GUI;
 import main.api.TakeOff;
 import main.api.TakeOffListener;
-import vision.logic.visionParam;
+import org.javatuples.Pair;
+
+import javax.swing.*;
 
 public class FakeHelper extends ProtocolHelper{
 
@@ -63,6 +60,7 @@ public class FakeHelper extends ProtocolHelper{
 
 	@Override
 	public void setupActionPerformed() {
+		ArduSimTools.logGlobal("starting setup");
 		Copter copter = API.getCopter(0);
 		TakeOff takeOff = copter.takeOff(5, new TakeOffListener() {
 			
@@ -79,18 +77,18 @@ public class FakeHelper extends ProtocolHelper{
 		takeOff.start();
 		try {
 			takeOff.join();
-		} catch (InterruptedException e1) {}
+		} catch (InterruptedException ignored) {}
 	}
 
 	@Override
 	public void startExperimentActionPerformed() {
-		double diff = 40;
-		
+		ArduSimTools.logGlobal("start experiment");
+		double diff = 2;
 		Copter copter = API.getCopter(0);
 		copter.setFlightMode(FlightMode.GUIDED);
 		double alt = copter.getAltitude();
 		Location3DGeo loc = new Location3DGeo(copter.getLocationGeo(), alt + diff);
-		Long time = System.currentTimeMillis();
+		ArduSimTools.logGlobal("UAV changing altitude with " + diff + " meters");
 		copter.moveTo(loc);
 		boolean reached = false;
 		do {
@@ -99,8 +97,9 @@ public class FakeHelper extends ProtocolHelper{
 			}
 			API.getArduSim().sleep(100);
 		}while(!reached);
-		System.out.println("time = " + (System.currentTimeMillis() - time)*2 );
+		ArduSimTools.logGlobal("New altitude reached");
 		copter.setFlightMode(FlightMode.LAND);
+		ArduSimTools.logGlobal("Landing UAV");
 		copter.land();
 	}
 

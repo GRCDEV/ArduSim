@@ -4,6 +4,7 @@ import es.upv.grc.mapper.Location2DUTM;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
+import main.api.ArduSim;
 import main.sim.gui.ProgressDialog;
 import main.uavController.UAVParam;
 
@@ -103,14 +104,16 @@ public class SimTools {
 						SimParam.speed[i] = UAVParam.uavCurrentData[i].getSpeed();
 					}
 				}
-				SwingUtilities.invokeLater(() -> {
-					for (int i=0; i<Param.numUAVs; i++) {
-						ProgressDialog.progressDialog.panels[i].xLabel.setText(String.format("%.2f", SimParam.xUTM[i]));
-						ProgressDialog.progressDialog.panels[i].yLabel.setText(String.format("%.2f", SimParam.yUTM[i]));
-						ProgressDialog.progressDialog.panels[i].zLabel.setText(String.format("%.2f", SimParam.z[i]));
-						ProgressDialog.progressDialog.panels[i].speedLabel.setText(String.format("%.2f", SimParam.speed[i]));
-					}
-				});
+				if(Param.role == ArduSim.SIMULATOR_GUI) {
+					SwingUtilities.invokeLater(() -> {
+						for (int i = 0; i < Param.numUAVs; i++) {
+							ProgressDialog.progressDialog.panels[i].xLabel.setText(String.format("%.2f", SimParam.xUTM[i]));
+							ProgressDialog.progressDialog.panels[i].yLabel.setText(String.format("%.2f", SimParam.yUTM[i]));
+							ProgressDialog.progressDialog.panels[i].zLabel.setText(String.format("%.2f", SimParam.z[i]));
+							ProgressDialog.progressDialog.panels[i].speedLabel.setText(String.format("%.2f", SimParam.speed[i]));
+						}
+					});
+				}
 			}
 		};
 		new Timer(SimParam.screenUpdatePeriod, taskPerformer).start();
@@ -130,5 +133,6 @@ public class SimTools {
 		ArduSimTools.logGlobal(Text.WIRELESS_ERROR);
 		return false;
 	}
+
 
 }

@@ -1,28 +1,27 @@
 package shakeup.logic;
 
 
-import java.io.File;
-import java.util.Map;
-
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.ProtocolHelper;
 import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
+import main.ArduSimTools;
+import main.api.ArduSim;
 import main.api.FileTools;
 import main.api.FlightFormationTools;
 import main.api.formations.FlightFormation;
 import main.api.formations.FlightFormation.Formation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import org.javatuples.Pair;
 import shakeup.pojo.Param;
-import shakeup.pojo.Text;
 import shakeup.pojo.TargetFormation;
+import shakeup.pojo.Text;
+
+import javax.swing.*;
+import java.io.File;
+import java.util.Map;
 
 import static main.api.formations.FlightFormation.Formation.REGULAR_MATRIX;
 
@@ -102,8 +101,16 @@ public class ShakeupHelper extends ProtocolHelper {
 
 	@Override
 	public void setupActionPerformed() {
-		while(API.getArduSim().isSetupFinished()) {
-			API.getArduSim().sleep(200);
+		// in case of CLI just wait 5 seconds and than continue
+		// in all other cases wait until the user presses the setup button
+		if(main.Param.role == ArduSim.SIMULATOR_CLI){
+			ArduSimTools.logGlobal("start sleeping");
+			API.getArduSim().sleep(5000);
+			ArduSimTools.logGlobal("stop sleeping");
+		}else{
+			while (API.getArduSim().isSetupFinished()) {
+				API.getArduSim().sleep(200);
+			}
 		}
 	}
 
@@ -145,8 +152,7 @@ public class ShakeupHelper extends ProtocolHelper {
 			Param.endFormation = stringToFormation(endFormation);
 			
 			Param.ALTITUDE_MARGIN = Double.parseDouble(params.get("ALTITUDE_MARGIN"));
-			
-			API.getGUI(0).log("settings set from shakeupsettings.ini");
+			ArduSimTools.logGlobal("settings set from shakeupsettings.ini");
 		}
 	}
 	

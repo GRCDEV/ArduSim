@@ -1,40 +1,19 @@
 package muscop.gui;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.pojo.location.Waypoint;
-import main.Param;
 import main.Text;
-import main.api.FlightFormationTools;
-import main.api.GUI;
-import main.api.MissionHelper;
-import main.api.SafeTakeOffHelper;
-import main.api.ValidationTools;
+import main.api.*;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import muscop.logic.MUSCOPParam;
 import muscop.logic.MUSCOPText;
+import org.javatuples.Pair;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /** 
  * This dialog shows the configuration needed for the MUSCOP protocol during simulations.
@@ -109,31 +88,20 @@ public class MUSCOPConfigDialog extends JDialog {
 		}
 		{
 			JButton btnMap = new JButton(MUSCOPText.BUTTON_SELECT);
-			btnMap.addActionListener(new ActionListener() {
-				@SuppressWarnings("unchecked")
-				public void actionPerformed(ActionEvent e) {
-					final Pair<String, List<Waypoint>[]> missions = gui.loadMissions();
-					MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
-					if (missions == null) {
-						missionHelper.setMissionsLoaded(null);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								missionsTextField.setText("");
-							}
-						});
-					} else {
-						int numUAVs = API.getArduSim().getNumUAVs();
-						/** The master is assigned the first mission in the list */
-						List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
-						// The master UAV is always in the position 0 of arrays
-						missionsFinal[0] = missions.getValue1()[0];
-						missionHelper.setMissionsLoaded(missionsFinal);
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								missionsTextField.setText(missions.getValue0());
-							}
-						});
-					}
+			btnMap.addActionListener(e -> {
+				final Pair<String, List<Waypoint>[]> missions = gui.loadMissions();
+				MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
+				if (missions == null) {
+					missionHelper.setMissionsLoaded(null);
+					SwingUtilities.invokeLater(() -> missionsTextField.setText(""));
+				} else {
+					int numUAVs = API.getArduSim().getNumUAVs();
+					/* The master is assigned the first mission in the list */
+					List<Waypoint>[] missionsFinal = new ArrayList[numUAVs];
+					// The master UAV is always in the position 0 of arrays
+					missionsFinal[0] = missions.getValue1()[0];
+					missionHelper.setMissionsLoaded(missionsFinal);
+					SwingUtilities.invokeLater(() -> missionsTextField.setText(missions.getValue0()));
 				}
 			});
 			GridBagConstraints gbc_btnMap = new GridBagConstraints();
@@ -165,7 +133,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		}
 		String[] formations = formationTools.getAvailableFormations();
 		{
-			groundComboBox = new JComboBox<String>();
+			groundComboBox = new JComboBox<>();
 			GridBagConstraints gbc_groundComboBox = new GridBagConstraints();
 			gbc_groundComboBox.insets = new Insets(0, 0, 5, 5);
 			gbc_groundComboBox.fill = GridBagConstraints.HORIZONTAL;
@@ -229,7 +197,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			contentPanel.add(clusters, gbc_clusters);
 		}
 		{
-			nrOfClustersComboBox = new JComboBox<Integer>();
+			nrOfClustersComboBox = new JComboBox<>();
 			GridBagConstraints gbc_nrOfClustersComboBox = new GridBagConstraints();
 			gbc_nrOfClustersComboBox.insets = new Insets(0, 0, 5, 5);
 			gbc_nrOfClustersComboBox.fill = GridBagConstraints.HORIZONTAL;
@@ -255,7 +223,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		}
 		{
 			// take off strategy input
-			takeOffStrategyComboBox = new JComboBox<String>();
+			takeOffStrategyComboBox = new JComboBox<>();
 			GridBagConstraints gbc_takeOffStrategyComboBox = new GridBagConstraints();
 			gbc_takeOffStrategyComboBox.insets = new Insets(0, 0, 5, 5);
 			gbc_takeOffStrategyComboBox.fill = GridBagConstraints.HORIZONTAL;
@@ -273,7 +241,7 @@ public class MUSCOPConfigDialog extends JDialog {
 			takeOffStrategyComboBox.setSelectedIndex(selectedPos);
 			
 			for(int i = 0; i<= algorithms.length; i++) {
-				if(algorithms[i] == TakeOffAlgorithm.SIMPLIFIED.getName()) {
+				if(algorithms[i].equals(TakeOffAlgorithm.SIMPLIFIED.getName())) {
 					takeOffStrategyComboBox.setSelectedIndex(i);
 					break;
 				}
@@ -305,7 +273,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		}
 		{
 			// flyFormation input
-			airComboBox = new JComboBox<String>();
+			airComboBox = new JComboBox<>();
 			GridBagConstraints gbc_airComboBox = new GridBagConstraints();
 			gbc_airComboBox.insets = new Insets(0, 0, 5, 5);
 			gbc_airComboBox.fill = GridBagConstraints.HORIZONTAL;
@@ -427,22 +395,15 @@ public class MUSCOPConfigDialog extends JDialog {
 			gbc_okButton.gridx = 2;
 			gbc_okButton.gridy = gridy;
 			contentPanel.add(okButton, gbc_okButton);
-			okButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					
-					if(isValidConfiguration()) {
-						// In this protocol, the number of UAVs running on this machine (n) is not affected by the number of missions loaded (1)
-						//   , so the function Tools.setNumUAVs() is not used
-						storeConfiguration();
-						SwingUtilities.invokeLater(new Runnable() {
-							@Override
-							public void run() {
-								dispose();
-							}
-						});
-					} else {
-						gui.warn(Text.VALIDATION_WARNING, MUSCOPText.BAD_INPUT);
-					}
+			okButton.addActionListener(e -> {
+
+				if(isValidConfiguration()) {
+					// In this protocol, the number of UAVs running on this machine (n) is not affected by the number of missions loaded (1)
+					//   , so the function Tools.setNumUAVs() is not used
+					storeConfiguration();
+					SwingUtilities.invokeLater(this::dispose);
+				} else {
+					gui.warn(Text.VALIDATION_WARNING, MUSCOPText.BAD_INPUT);
 				}
 			});
 			okButton.setActionCommand(Text.OK);

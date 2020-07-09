@@ -1,25 +1,23 @@
 package main.pccompanion.logic;
 
+import api.API;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Output;
+import main.ArduSimTools;
+import main.Param;
+import main.Param.SimulatorState;
+import main.Text;
+import main.api.ArduSim;
+import main.api.communications.CommLink;
+import main.pccompanion.gui.PCCompanionGUI;
+import main.uavController.UAVParam;
+
+import javax.swing.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-
-import javax.swing.SwingUtilities;
-
-import com.esotericsoftware.kryo.KryoException;
-import com.esotericsoftware.kryo.io.Output;
-
-import api.API;
-import main.ArduSimTools;
-import main.Param;
-import main.Param.SimulatorState;
-import main.api.ArduSim;
-import main.api.communications.CommLink;
-import main.pccompanion.gui.PCCompanionGUI;
-import main.uavController.UAVParam;
-import main.Text;
 
 /** 
  * Thread used to send commands to real UAVs.
@@ -35,7 +33,7 @@ public class PCCompanionTalker extends Thread {
 		DatagramSocket sendSocket = null;
 		byte[] sendBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			broadcastAddress = UAVParam.MAV_NETWORK_IP;
 		} else {
 			broadcastAddress = UAVParam.broadcastIP;
@@ -61,12 +59,8 @@ public class PCCompanionTalker extends Thread {
 				&& Param.simStatus != SimulatorState.SHUTTING_DOWN) {
 			if (listener.isAlive()) {
 				// Send simulation states
-				if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS
-						|| Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-					send = true;
-				} else {
-					send = false;
-				}
+				send = Param.simStatus == SimulatorState.SETUP_IN_PROGRESS
+						|| Param.simStatus == SimulatorState.TEST_IN_PROGRESS;
 				if (send) {
 					try {
 						state = Param.simStatus;
@@ -78,7 +72,7 @@ public class PCCompanionTalker extends Thread {
 						}
 						sentPacket.setData(sendBuffer, 0, output.position());
 						sendSocket.send(sentPacket);
-					} catch (KryoException e) {} catch (IOException e) {}
+					} catch (KryoException | IOException ignored) {}
 				}
 			} else {
 				if (!dialogAlreadyOpened) {
@@ -102,7 +96,7 @@ public class PCCompanionTalker extends Thread {
 					output.writeInt(PCCompanionParam.action.get());
 					sentPacket.setData(sendBuffer, 0, output.position());
 					sendSocket.send(sentPacket);
-				} catch (KryoException e) {} catch (IOException e) {}
+				} catch (KryoException | IOException ignored) {}
 			}
 			
 			sleep = PCCompanionParam.COMMAND_SEND_TIMEOUT - (System.currentTimeMillis() - time);
@@ -113,8 +107,6 @@ public class PCCompanionTalker extends Thread {
 		}
 		output.close();// Code execution will never get here
 		sendSocket.close();
-		
-		
 	}
 
 }

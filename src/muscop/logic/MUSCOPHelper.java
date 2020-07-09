@@ -1,16 +1,5 @@
 package muscop.logic;
 
-import static muscop.pojo.State.SETUP_FINISHED;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import org.javatuples.Pair;
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.location.Waypoint;
@@ -23,6 +12,16 @@ import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.formations.FlightFormation;
 import muscop.gui.MUSCOPConfigDialog;
+import org.javatuples.Pair;
+
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static muscop.pojo.State.SETUP_FINISHED;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -262,7 +261,6 @@ public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {
-		//TODO
 	}
 
 }

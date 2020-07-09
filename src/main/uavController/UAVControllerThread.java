@@ -1,79 +1,36 @@
 package main.uavController;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Stroke;
-import java.io.EOFException;
-import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortInvalidPortException;
-
 import api.API;
 import api.pojo.FlightMode;
 import api.pojo.RCValues;
 import api.pojo.location.LogPoint;
 import api.pojo.location.Waypoint;
-import es.upv.grc.mapper.DrawableCircleGeo;
-import es.upv.grc.mapper.DrawableImageGeo;
-import es.upv.grc.mapper.DrawableLinesGeo;
-import es.upv.grc.mapper.DrawablePathGeo;
-import es.upv.grc.mapper.GUIMapPanelNotReadyException;
-import es.upv.grc.mapper.Location2D;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3DGeo;
-import es.upv.grc.mapper.Mapper;
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortInvalidPortException;
+import es.upv.grc.mapper.*;
 import io.dronefleet.mavlink.Mavlink2Message;
 import io.dronefleet.mavlink.MavlinkConnection;
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
-import io.dronefleet.mavlink.common.CommandAck;
-import io.dronefleet.mavlink.common.CommandLong;
-import io.dronefleet.mavlink.common.GlobalPositionInt;
-import io.dronefleet.mavlink.common.Heartbeat;
-import io.dronefleet.mavlink.common.MavAutopilot;
-import io.dronefleet.mavlink.common.MavCmd;
-import io.dronefleet.mavlink.common.MavFrame;
-import io.dronefleet.mavlink.common.MavMissionResult;
-import io.dronefleet.mavlink.common.MavMode;
-import io.dronefleet.mavlink.common.MavResult;
-import io.dronefleet.mavlink.common.MavState;
-import io.dronefleet.mavlink.common.MavType;
-import io.dronefleet.mavlink.common.MissionAck;
-import io.dronefleet.mavlink.common.MissionClearAll;
-import io.dronefleet.mavlink.common.MissionCount;
-import io.dronefleet.mavlink.common.MissionCurrent;
-import io.dronefleet.mavlink.common.MissionItem;
-import io.dronefleet.mavlink.common.MissionItemReached;
-import io.dronefleet.mavlink.common.MissionRequest;
-import io.dronefleet.mavlink.common.MissionRequestList;
-import io.dronefleet.mavlink.common.MissionSetCurrent;
-import io.dronefleet.mavlink.common.ParamRequestList;
-import io.dronefleet.mavlink.common.ParamRequestRead;
-import io.dronefleet.mavlink.common.ParamSet;
-import io.dronefleet.mavlink.common.ParamValue;
-import io.dronefleet.mavlink.common.PositionTargetTypemask;
-import io.dronefleet.mavlink.common.RcChannelsOverride;
-import io.dronefleet.mavlink.common.SetMode;
-import io.dronefleet.mavlink.common.SetPositionTargetGlobalInt;
-import io.dronefleet.mavlink.common.Statustext;
-import io.dronefleet.mavlink.common.SysStatus;
+import io.dronefleet.mavlink.common.*;
 import io.dronefleet.mavlink.util.EnumValue;
 import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
+import main.Text;
 import main.api.ArduSim;
 import main.api.CopterParamLoaded;
 import main.api.ValidationTools;
 import main.sim.logic.SimParam;
 import main.sim.logic.SimTools;
-import main.Text;
+
+import java.awt.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /** This class implements the communication with the UAV, whether it is real or simulated.
  * <p>The thread applies the communications finite state machine needed to support the MAVLink protocol.
@@ -122,7 +79,7 @@ public class UAVControllerThread extends Thread {
 	@SuppressWarnings("unused")
 	private UAVControllerThread() {}
 
-	public UAVControllerThread(int numUAV) throws SocketException {
+	public UAVControllerThread(int numUAV) {
 		this.numUAV = numUAV;
 		this.isStarting = true;
 		this.numTests = 0;
@@ -140,13 +97,13 @@ public class UAVControllerThread extends Thread {
 					serialPort.closePort();
 					serialPort = null;
 				}
-			} catch (SerialPortInvalidPortException e) {}
+			} catch (SerialPortInvalidPortException ignored) {}
 			
 			if (serialPort == null) {
 				ArduSimTools.logGlobal(Text.SERIAL_ERROR);
 				System.exit(1);
 			}
-		} else if (Param.role == ArduSim.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			// Connection through TCP in the simulator
 			this.port = UAVParam.mavPort[numUAV];
 			try {
@@ -192,21 +149,21 @@ public class UAVControllerThread extends Thread {
 											.mavlinkVersion(3)
 											.build());
 								prevTime = posTime;
-							} catch (IOException e) {}
+							} catch (IOException ignored) {}
 						}
 						processCommand();
 					}
 				}
 			} catch(EOFException e) {
 				break;
-			} catch(IOException e) {}
+			} catch(IOException ignored) {}
 		}
 		if (Param.role == ArduSim.MULTICOPTER) {
 			serialPort.closePort();
-		} else if (Param.role == ArduSim.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			try {
 				socket.close();
-			} catch (IOException e) {
+			} catch (IOException ignored) {
 			}
 		}
 	}
@@ -350,7 +307,7 @@ public class UAVControllerThread extends Thread {
 					state));
 			
 			// Draw the movement on screen
-			if (Param.role == ArduSim.SIMULATOR) {
+			if (Param.role == ArduSim.SIMULATOR_GUI) {
 				Location2DGeo locGeo = location.getGeoLocation();
 				if (this.path == null) {
 					try {
@@ -611,7 +568,7 @@ public class UAVControllerThread extends Thread {
 						UAVParam.currentGeoMission[numUAV].addAll(Arrays.asList(UAVParam.newGeoMission[numUAV]));
 						UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
 						
-						if (Param.role == ArduSim.SIMULATOR) {
+						if (Param.role == ArduSim.SIMULATOR_GUI) {
 							if (this.mission != null) {
 								try {
 									Mapper.Drawables.removeDrawable(this.mission);
@@ -619,7 +576,7 @@ public class UAVControllerThread extends Thread {
 									e.printStackTrace();
 								}
 							}
-							List<Location2DGeo> m = new ArrayList<Location2DGeo>(UAVParam.newGeoMission[numUAV].length);
+							List<Location2DGeo> m = new ArrayList<>(UAVParam.newGeoMission[numUAV].length);
 							for (int j = 0; j < UAVParam.newGeoMission[numUAV].length; j++) {
 								m.add(new Location2DGeo(UAVParam.newGeoMission[numUAV][j].getLatitude(), UAVParam.newGeoMission[numUAV][j].getLongitude()));
 							}
@@ -768,8 +725,8 @@ public class UAVControllerThread extends Thread {
 									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_FORCE_SET,
 									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_IGNORE,
 									PositionTargetTypemask.POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE)
-							.latInt((int)Math.round(10000000l * target.latitude))	// Degrees * 10^7
-							.lonInt((int)Math.round(10000000l * target.longitude))
+							.latInt((int)Math.round(10000000L * target.latitude))	// Degrees * 10^7
+							.lonInt((int)Math.round(10000000L * target.longitude))
 							.alt(Double.valueOf(target.altitude).floatValue())
 							.build());
 			} catch (IOException e) {

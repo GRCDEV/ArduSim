@@ -1,17 +1,14 @@
 package main.api.masterslavepattern;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import api.API;
 import es.upv.grc.mapper.Location2DUTM;
 import main.Param;
 import main.api.ArduSim;
-import main.api.masterslavepattern.discovery.DiscoverMasterListener;
-import main.api.masterslavepattern.discovery.DiscoverMasterTalker;
-import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
-import main.api.masterslavepattern.discovery.DiscoverSlaveListener;
-import main.api.masterslavepattern.discovery.DiscoverSlaveTalker;
+import main.api.masterslavepattern.discovery.*;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Object used to coordinate UAVs with the master-slave pattern.
@@ -38,14 +35,14 @@ public class MasterSlaveHelper {
 		boolean b = false;
 		int role = Param.role;
 		if (role == ArduSim.MULTICOPTER) {
-			/** You get the id = f(MAC addresses) for real drone */
+			/* You get the id = f(MAC addresses) for real drone */
 			long thisUAVID = Param.id[0];
 			for (int i = 0; i < MSParam.macIDs.length; i++) {
 				if (thisUAVID == MSParam.macIDs[i]) {
 					return true;
 				}
 			}
-		} else if (role == ArduSim.SIMULATOR) {
+		} else if (role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			if (numUAV == MSParam.MASTER_POSITION) {
 				return true;
 			}
@@ -80,7 +77,7 @@ public class MasterSlaveHelper {
 	public Map<Long, Location2DUTM> DiscoverSlaves(DiscoveryProgressListener progressListener) {
 		
 		AtomicBoolean finished = new AtomicBoolean();
-		ConcurrentHashMap<Long, Location2DUTM> discovered = new ConcurrentHashMap<Long, Location2DUTM>();//TODO cambiar a atomicreference de hashmap
+		ConcurrentHashMap<Long, Location2DUTM> discovered = new ConcurrentHashMap<>();//TODO cambiar a atomicreference de hashmap
 		
 		DiscoverMasterListener listener = new DiscoverMasterListener(numUAV, discovered, progressListener);
 		listener.start();

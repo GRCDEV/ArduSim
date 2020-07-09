@@ -1,22 +1,21 @@
 package main.uavController;
 
+import api.API;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Output;
+import main.ArduSimTools;
+import main.Param;
+import main.Param.SimulatorState;
+import main.Text;
+import main.api.ArduSim;
+import main.api.communications.CommLink;
+import main.pccompanion.logic.PCCompanionParam;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-
-import com.esotericsoftware.kryo.KryoException;
-import com.esotericsoftware.kryo.io.Output;
-
-import api.API;
-import main.ArduSimTools;
-import main.Param;
-import main.Text;
-import main.Param.SimulatorState;
-import main.api.ArduSim;
-import main.api.communications.CommLink;
-import main.pccompanion.logic.PCCompanionParam;
 
 /** 
  * Thread used to send status information to the PC Companion to enable it to start the experiment.
@@ -29,7 +28,7 @@ public class TestTalker extends Thread {
 		DatagramSocket sendSocket = null;
 		byte[] sendBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			broadcastAddress = UAVParam.MAV_NETWORK_IP;
 		} else {
 			broadcastAddress = UAVParam.broadcastIP;
@@ -59,12 +58,8 @@ public class TestTalker extends Thread {
 				finish = false;
 			} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 				// Inform that the experiment has started for some time before stopping the thread
-				if (PCCompanionParam.lastStartCommandTime != null
-						&& (System.currentTimeMillis() - PCCompanionParam.lastStartCommandTime.get() > PCCompanionParam.MAX_TIME_SINCE_LAST_START_COMMAND)) {
-					finish = true;
-				} else {
-					finish = false;
-				}
+				finish = PCCompanionParam.lastStartCommandTime != null
+						&& (System.currentTimeMillis() - PCCompanionParam.lastStartCommandTime.get() > PCCompanionParam.MAX_TIME_SINCE_LAST_START_COMMAND);
 			} else {
 				finish = true;
 			}
@@ -78,8 +73,8 @@ public class TestTalker extends Thread {
 				output.writeInt(Param.simStatus.getStateId());
 				sentPacket.setData(sendBuffer, 0, output.position());
 				sendSocket.send(sentPacket);
-			} catch (KryoException e) {} catch (IOException e) {}
-			
+			} catch (KryoException | IOException ignored) {}
+
 			sleep = PCCompanionParam.STATUS_SEND_TIMEOUT - (System.currentTimeMillis() - time);
 			if (sleep > 0) {
 				ardusim.sleep(sleep);

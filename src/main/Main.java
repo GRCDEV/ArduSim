@@ -11,11 +11,11 @@ import main.api.communications.CommLinkObject;
 import main.api.communications.RangeCalculusThread;
 import main.cpuHelper.CPUUsageThread;
 import main.pccompanion.gui.PCCompanionGUI;
-import main.sim.gui.*;
-import main.sim.logic.CollisionDetector;
-import main.sim.logic.DistanceCalculusThread;
-import main.sim.logic.SimParam;
-import main.sim.logic.SimTools;
+import main.sim.gui.ConfigDialogApp;
+import main.sim.gui.MainWindow;
+import main.sim.gui.ProgressDialog;
+import main.sim.gui.ResultsDialog;
+import main.sim.logic.*;
 import main.uavController.TestListener;
 import main.uavController.TestTalker;
 import main.uavController.UAVParam;
@@ -27,10 +27,8 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketException;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -108,7 +106,7 @@ public class Main {
 			if (Param.measureCPUEnabled) {
 				new CPUUsageThread().start();
 			}
-		} else if (Param.role == ArduSim.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			// 1. Opening the general configuration dialog
 			Param.simStatus = SimulatorState.CONFIGURING;
 			Param.numUAVs = -1;
@@ -127,9 +125,17 @@ public class Main {
 				ArduSimTools.checkImdiskInstalled();
 			}
 
-			// Start the javafxml GUI configDialogApp
-			Application.launch(ConfigDialogApp.class,args);
-
+			if(Param.role == ArduSim.SIMULATOR_GUI) {
+				// Start the javafxml GUI configDialogApp
+				Application.launch(ConfigDialogApp.class, args);
+			}else{
+				// read .properties file
+				SimProperties simProperties = new SimProperties();
+				Properties resources = simProperties.readResourceCLI();
+				if(resources == null){System.exit(0);}
+				simProperties.storeParameters(resources);
+				Param.simStatus = SimulatorState.CONFIGURING_PROTOCOL;
+			}
 			if (Param.numUAVs != Param.numUAVsTemp.get()) {
 				Param.numUAVs = Param.numUAVsTemp.get();
 			}
@@ -137,63 +143,73 @@ public class Main {
 			// 2. Opening the configuration dialog of the protocol under test
 			if (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
 				final AtomicBoolean configurationOpened = new AtomicBoolean();
-				try {
-					SwingUtilities.invokeAndWait(() -> {
-						final JDialog configurationDialog = ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
-						if (configurationDialog ==null) {
-							Param.simStatus = SimulatorState.STARTING_UAVS;
-						} else {
-							configurationDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-							configurationDialog.addWindowListener(new WindowAdapter() {
-								@Override
-								public void windowClosing(WindowEvent we) {
-									configurationDialog.dispose();
-									System.gc();
-									System.exit(0);
-								}
+				if(Param.role == ArduSim.SIMULATOR_GUI) {
+					try {
+						SwingUtilities.invokeAndWait(() -> {
+							final JDialog configurationDialog = ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
+							if (configurationDialog == null) {
+								Param.simStatus = SimulatorState.STARTING_UAVS;
+							} else {
+								configurationDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+								configurationDialog.addWindowListener(new WindowAdapter() {
+									@Override
+									public void windowClosing(WindowEvent we) {
+										configurationDialog.dispose();
+										System.gc();
+										System.exit(0);
+									}
 
-								@Override
-								public void windowClosed(WindowEvent e) {
-									configurationOpened.set(false);
-								}
-							});
+									@Override
+									public void windowClosed(WindowEvent e) {
+										configurationOpened.set(false);
+									}
+								});
 
-							SimTools.addEscListener(configurationDialog, true);
+								SimTools.addEscListener(configurationDialog, true);
 
-							configurationDialog.pack();
-							configurationDialog.setResizable(false);
-							configurationDialog.setLocationRelativeTo(null);
-							configurationDialog.setModal(true);
-							configurationDialog.setVisible(true);
-							configurationOpened.set(true);
-						}
-					});
-				} catch (InvocationTargetException | InterruptedException e) {
-					ArduSimTools.closeAll(Text.CONFIGURATION_ERROR);
-				}
-				
-				// Waiting the protocol configuration to be finished
-				while (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
-					ardusim.sleep(SimParam.SHORT_WAITING_TIME);
-					
-					if (!configurationOpened.get()) {
-						Param.simStatus = SimulatorState.STARTING_UAVS;
+								configurationDialog.pack();
+								configurationDialog.setResizable(false);
+								configurationDialog.setLocationRelativeTo(null);
+								configurationDialog.setModal(true);
+								configurationDialog.setVisible(true);
+								configurationOpened.set(true);
+							}
+						});
+					} catch (InvocationTargetException | InterruptedException e) {
+						ArduSimTools.closeAll(Text.CONFIGURATION_ERROR);
 					}
-				}
-				if (Param.numUAVs != Param.numUAVsTemp.get()) {
-					Param.numUAVs = Param.numUAVsTemp.get();
+
+					// Waiting the protocol configuration to be finished
+					while (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
+						ardusim.sleep(SimParam.SHORT_WAITING_TIME);
+
+						if (!configurationOpened.get()) {
+							Param.simStatus = SimulatorState.STARTING_UAVS;
+						}
+					}
+					if (Param.numUAVs != Param.numUAVsTemp.get()) {
+						Param.numUAVs = Param.numUAVsTemp.get();
+					}
+				}else if(Param.role == ArduSim.SIMULATOR_CLI){
+					// TODO load the specific parameters for the protocol
+					Param.simStatus = SimulatorState.STARTING_UAVS;
 				}
 			}
 
 			// 3. Launch the main window
-			SwingUtilities.invokeLater(() -> MainWindow.window = new MainWindow());
+			if(Param.role == ArduSim.SIMULATOR_GUI){
+				SwingUtilities.invokeLater(() -> MainWindow.window = new MainWindow());
+			}else if(Param.role == ArduSim.SIMULATOR_CLI){
+				Param.setupTime = System.currentTimeMillis();
+			}
 		}
 		
 		// 4. Data structures initializing
 		ArduSimTools.initializeDataStructures();
+
 		ArduSimTools.selectedProtocolInstance.initializeDataStructures();
 		// Waiting the main window to be built
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			while (MainWindow.boardPanel == null || MainWindow.buttonsPanel == null) {
 				ardusim.sleep(SimParam.SHORT_WAITING_TIME);
 			}
@@ -218,7 +234,7 @@ public class Main {
 		}
 		// Configuration feedback
 		ArduSimTools.logGlobal(Text.PROTOCOL_IN_USE + " " + ArduSimTools.selectedProtocol);
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			if (SimParam.userIsAdmin
 					&& ((Param.runningOperatingSystem == Param.OS_WINDOWS && SimParam.imdiskIsInstalled)
 							|| Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC)) {
@@ -249,22 +265,25 @@ public class Main {
 		}
 
 		// 7. Automatic progress dialog update activation
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			SimTools.update();
 		}
 
 		// 8. Startup of the virtual UAVs
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			Pair<Location2DGeo, Double>[] start = ArduSimTools.selectedProtocolInstance.setStartingLocation();
-			if (Param.windSpeed > 0.0) {
-				MainWindow.window.buildWindImage();
+			if(Param.role == ArduSim.SIMULATOR_GUI) {
+				if (Param.windSpeed > 0.0) {
+					MainWindow.window.buildWindImage();
+				}
 			}
-
 			SimParam.tempFolderBasePath = ArduSimTools.defineTemporaryFolder();
 			if (SimParam.tempFolderBasePath == null) {
 				ArduSimTools.closeAll(Text.TEMP_PATH_ERROR);
 			}
-			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_MAVLINK));
+			if(Param.role == ArduSim.SIMULATOR_GUI) {
+				SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_MAVLINK));
+			}
 			ArduSimTools.startVirtualUAVs(start);
 		}
 
@@ -272,25 +291,27 @@ public class Main {
 		ArduSimTools.startUAVControllers();
 		ArduSimTools.waitMAVLink();
 
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_CONFIGURATION_UPLOAD));
+		}
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI){
 			ArduSimTools.forceGPS();
 		}
 		ArduSimTools.sendBasicConfiguration1();
 		
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.WAITING_GPS));
 		}
 		ArduSimTools.getGPSFix();
 		ArduSimTools.sendBasicConfiguration2();	// It requires GPS fix to set the current location for takeoff
-		
+
 		// 10. Set communications online, and start collision detection if needed
-		if (Param.role == ArduSim.SIMULATOR && Param.numUAVs > 1) {
+		if ((Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) && Param.numUAVs > 1) {
 			// Calculus of the distance between UAVs
 			new DistanceCalculusThread().start();
 			// Communications range calculation enable
 			new RangeCalculusThread().start();
-			ArduSimTools.logGlobal(Text.COMMUNICATIONS_ONLINE);
+
 			// Collision check enable
 			if (UAVParam.collisionCheckEnabled) {
 				(new CollisionDetector()).start();
@@ -300,12 +321,18 @@ public class Main {
 			while (!SimParam.communicationsOnline) {
 				ardusim.sleep(SimParam.SHORT_WAITING_TIME);
 			}
+			ArduSimTools.logGlobal(Text.COMMUNICATIONS_ONLINE);
 		}
 		
 		// 11. Launch the threads of the protocol under test and wait the GUI to be built
+		ArduSimTools.logGlobal(Text.LAUNCHING_PROTOCOL_THREADS);
 		ArduSimTools.selectedProtocolInstance.startThreads();
 		if (Param.role == ArduSim.MULTICOPTER) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
+		}else if(Param.role == ArduSim.SIMULATOR_CLI){
+			// TODO remove this easy fix
+			API.getArduSim().sleep(5000);
+			Param.simStatus = SimulatorState.STARTING_UAVS;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
 			// This can only happen during simulations
@@ -324,13 +351,16 @@ public class Main {
 		// 12. Build auxiliary elements to be drawn and prepare the user interaction
 		//    The background map cannot be downloaded until the GUI detects that all the missions are loaded
 		//      AND the drawing scale is calculated
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			SwingUtilities.invokeLater(() -> {
 				MainWindow.buttonsPanel.setupButton.setEnabled(true);
 				MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_FLY);
 			});
 			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
+		}else if(Param.role == ArduSim.SIMULATOR_CLI){
+			Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
 		}
+
 		while (Param.simStatus == SimulatorState.UAVS_CONFIGURED) {
 			ardusim.sleep(SimParam.SHORT_WAITING_TIME);
 		}
@@ -343,7 +373,7 @@ public class Main {
 
 		// 13. Apply the setup step
 		final ValidationTools validationTools = API.getValidationTools();
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			timer = new Timer();
 			timer.scheduleAtFixedRate(new TimerTask() {
 				public void run() {
@@ -361,18 +391,22 @@ public class Main {
 					}
 				}
 			}, 0, 1000);	// Once each second, without initial waiting time
+		}else if(Param.role == ArduSim.SIMULATOR_CLI){
+			Param.startTime = System.currentTimeMillis();
 		}
 		ArduSimTools.logGlobal(Text.SETUP_START);
 		ArduSimTools.selectedProtocolInstance.setupActionPerformed();
 		Param.simStatus = SimulatorState.READY_FOR_TEST;
 
 		// 14. Waiting for the user to start the experiment
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			SwingUtilities.invokeLater(() -> {
 				MainWindow.buttonsPanel.statusLabel.setText(Text.READY_TO_START);
 				MainWindow.buttonsPanel.startTestButton.setEnabled(true);
 			});
 			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
+		}else if(Param.role == ArduSim.SIMULATOR_CLI){
+			Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
 		}
 		while (Param.simStatus == SimulatorState.READY_FOR_TEST) {
 			ardusim.sleep(SimParam.SHORT_WAITING_TIME);
@@ -418,56 +452,63 @@ public class Main {
 		}
 		if (Param.role == ArduSim.MULTICOPTER) {
 			API.getCopter(0).cancelRCOverride();
+		}else if(Param.role == ArduSim.SIMULATOR_GUI) {
+			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
 		}
-		ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
 		if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 			return;
 		}
 
 		// 17. Inform that the experiment has finished, and wait virtual communications to be closed
 		ArduSimTools.logGlobal(validationTools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			if (Param.numUAVs > 1) {
 				ArduSimTools.logGlobal(Text.SHUTTING_DOWN_COMM);
 				int numThreads = 2 * Param.numUAVs;
 				long now = System.currentTimeMillis();
-				// May be the communications were not used at all
+				// Maybe the communications were not used at all
 				while(CommLinkObject.communicationsClosed != null
 						&& CommLinkObject.communicationsClosed.size() < numThreads
 						&& System.currentTimeMillis() - now < CommLinkObject.CLOSSING_WAITING_TIME) {
 					ardusim.sleep(SimParam.SHORT_WAITING_TIME);
 				}
 			}
-			ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
-			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED));
+			if(Param.role == ArduSim.SIMULATOR_GUI) {
+				ArduSimTools.logGlobal(Text.WAITING_FOR_USER);
+				SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_FINISHED));
+			}
 		}
 
 		// 18. Gather information to show the results dialog
-		String res = ArduSimTools.getTestResults();
-		String s = ArduSimTools.selectedProtocolInstance.getExperimentResults();
-		if (s != null && s.length() > 0) {
-			res += "\n" + ArduSimTools.selectedProtocol + ":\n\n";
-			res += s;
+		if(Param.storeData) {
+			String res = ArduSimTools.getTestResults();
+			String s = ArduSimTools.selectedProtocolInstance.getExperimentResults();
+			if (s != null && s.length() > 0) {
+				res += "\n" + ArduSimTools.selectedProtocol + ":\n\n";
+				res += s;
+			}
+			res += ArduSimTools.getTestGlobalConfiguration();
+			s = ArduSimTools.selectedProtocolInstance.getExperimentConfiguration();
+			if (s != null && s.length() > 0) {
+				res += "\n\n" + ArduSimTools.selectedProtocol + " " + Text.CONFIGURATION + ":\n";
+				res += s;
+			}
+			if (Param.role == ArduSim.MULTICOPTER || Param.role == ArduSim.SIMULATOR_CLI) {
+				Calendar cal = Calendar.getInstance();
+				cal.setTimeInMillis(cal.getTimeInMillis() + Param.timeOffset);
+				String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1)
+						+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
+						+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
+				ArduSimTools.storeResults(res, new File(parentFolder, fileName));
+			} else if (Param.role == ArduSim.SIMULATOR_GUI) {
+				final String res2 = res;
+				SwingUtilities.invokeLater(() -> new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true));
+			}
 		}
-		res += ArduSimTools.getTestGlobalConfiguration();
-		s = ArduSimTools.selectedProtocolInstance.getExperimentConfiguration();
-		if (s != null && s.length() > 0) {
-			res += "\n\n" + ArduSimTools.selectedProtocol + " " + Text.CONFIGURATION + ":\n";
-			res += s;
+		if(Param.role != ArduSim.SIMULATOR_GUI){
+			// shutdown ardusim
+			ArduSimTools.shutdown();
 		}
-		if (Param.role == ArduSim.MULTICOPTER) {
-			Calendar cal = Calendar.getInstance();
-			cal.setTimeInMillis(cal.getTimeInMillis() + Param.timeOffset);
-			String fileName = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH)+1)
-					+ "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR_OF_DAY)
-					+ "-" + cal.get(Calendar.MINUTE) + "-" + cal.get(Calendar.SECOND) + " " + Text.DEFAULT_BASE_NAME;
-			ArduSimTools.storeResults(res, new File(parentFolder, fileName));
-			ArduSimTools.shutdown();	// Closes the simulator
-		} else if (Param.role == ArduSim.SIMULATOR) {
-			final String res2 = res;
-			SwingUtilities.invokeLater(() -> new ResultsDialog(res2, MainWindow.window.mainWindowFrame, true));
-		}
-
 		// Now, the user must close the application, even to do a new experiment
 	}
 }

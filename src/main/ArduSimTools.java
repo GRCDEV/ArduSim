@@ -1,100 +1,22 @@
 package main;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.SyncFailedException;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.SocketException;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.CodeSource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileSystemView;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.javatuples.Pair;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.AtomicDoubleArray;
 import api.pojo.ConcurrentBoundedQueue;
 import api.pojo.CopterParam;
 import api.pojo.FlightMode;
-import api.pojo.RCValues;
 import api.pojo.location.LogPoint;
 import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3DGeo;
 import es.upv.grc.mapper.LocationNotReadyException;
 import io.dronefleet.mavlink.common.MavCmd;
 import io.dronefleet.mavlink.common.MavFrame;
 import io.dronefleet.mavlink.util.EnumValue;
 import main.Param.SimulatorState;
-import main.api.ArduSim;
-import main.api.CopterParamLoaded;
-import main.api.FileTools;
-import main.api.ValidationTools;
-import main.api.WaypointReachedListener;
+import main.api.*;
 import main.api.communications.CommLinkObject;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.MSParam;
@@ -112,7 +34,35 @@ import main.uavController.UAVControllerThread;
 import main.uavController.UAVCurrentData;
 import main.uavController.UAVCurrentStatus;
 import main.uavController.UAVParam;
-import mission.logic.MissionHelper;
+import org.javatuples.Pair;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.CodeSource;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /** This class contains general tools used by the simulator.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -122,7 +72,7 @@ public class ArduSimTools {
 	// Used to avoid the exit dialog to be opened more than once at the same time.
 	private static final AtomicBoolean exiting = new AtomicBoolean();
 	
-	public static final Queue<WaypointReachedListener> listeners = new ConcurrentLinkedQueue<WaypointReachedListener>();
+	public static final Queue<WaypointReachedListener> listeners = new ConcurrentLinkedQueue<>();
 	
 	private static volatile boolean storingResults = false;
 	
@@ -144,34 +94,32 @@ public class ArduSimTools {
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
 	public static boolean parseArgs(String[] args) {
-		String commandLine = "Command line:\n    java -jar ArduSim.jar <option>\nChoose option:\n    multicopter\n    simulator\n    pccompanion";
+		String commandLine = "Command line:\n    java -jar ArduSim.jar <option>\nChoose option:\n" +
+				"    multicopter\n    simulator-gui\n    simulator-cli\n    pccompanion";
 		if (args.length != 1) {
 			System.out.println(commandLine);
 			System.out.flush();
 			return false;
 		}
-		
-		if (!args[0].equalsIgnoreCase("multicopter") && !args[0].equalsIgnoreCase("simulator") && !args[0].equalsIgnoreCase("pccompanion")) {
+		if (args[0].equalsIgnoreCase("multicopter")) {
+			Param.role = ArduSim.MULTICOPTER;
+		}else if (args[0].equalsIgnoreCase("simulator-gui")) {
+			Param.role = ArduSim.SIMULATOR_GUI;
+		}else if (args[0].equalsIgnoreCase("pccompanion")) {
+			Param.role = ArduSim.PCCOMPANION;
+		}else if(args[0].equalsIgnoreCase("simulator-cli")){
+			Param.role = ArduSim.SIMULATOR_CLI;
+		}else{
 			System.out.println(commandLine);
 			System.out.flush();
 			return false;
-		}
-		
-		if (args[0].equalsIgnoreCase("multicopter")) {
-			Param.role = ArduSim.MULTICOPTER;
-		}
-		if (args[0].equalsIgnoreCase("simulator")) {
-			Param.role = ArduSim.SIMULATOR;
-		}
-		if (args[0].equalsIgnoreCase("pccompanion")) {
-			Param.role = ArduSim.PCCOMPANION;
 		}
 		return true;
 	}
 	
 	/** Parses the ini file located beside the ArduSim executable file (Project folder in simulations). */
 	public static void parseIniFile() {
-		Map<String, String> parameters = null;
+		Map<String, String> parameters;
 		String param;
 		// Load INI file
 		parameters = ArduSimTools.loadIniFile();
@@ -243,9 +191,10 @@ public class ArduSimTools {
 				System.exit(1);
 			} else {
 				boolean found = false;
-				for (int i = 0; i < ArduSimTools.ProtocolNames.length && !found; i++) {
+				for (int i = 0; i < ArduSimTools.ProtocolNames.length; i++) {
 					if (ArduSimTools.ProtocolNames[i].equalsIgnoreCase(param)) {
 						found = true;
+						break;
 					}
 				}
 				if (!found) {
@@ -420,7 +369,7 @@ public class ArduSimTools {
 				ArduSimTools.logGlobal(Param.MEASURE_CPU + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
-			Param.measureCPUEnabled = Boolean.valueOf(param);
+			Param.measureCPUEnabled = Boolean.parseBoolean(param);
 		}
 		param = parameters.get(Param.VERBOSE_LOGGING);
 		if (param == null) {
@@ -430,17 +379,17 @@ public class ArduSimTools {
 				ArduSimTools.logGlobal(Param.VERBOSE_LOGGING + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
-			Param.verboseLogging = Boolean.valueOf(param);
+			Param.verboseLogging = Boolean.parseBoolean(param);
 		}
 		param = parameters.get(Param.VERBOSE_STORE);
 		if (param == null) {
-			ArduSimTools.logGlobal(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + Param.verboseStore);
+			ArduSimTools.logGlobal(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + Param.storeData);
 		} else {
 			if (!validationTools.isValidBoolean(param)) {
 				ArduSimTools.logGlobal(Param.VERBOSE_STORE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
-			Param.verboseStore = Boolean.valueOf(param);
+			Param.storeData = Boolean.parseBoolean(param);
 		}
 		param = parameters.get(Param.WAYPOINT_YAW_OVERRIDE);
 		if (param == null) {
@@ -450,7 +399,7 @@ public class ArduSimTools {
 				ArduSimTools.logGlobal(Param.WAYPOINT_YAW_OVERRIDE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
-			UAVParam.overrideYaw = Boolean.valueOf(param);
+			UAVParam.overrideYaw = Boolean.parseBoolean(param);
 		}
 		if (UAVParam.overrideYaw) {
 			param = parameters.get(Param.WAYPOINT_YAW_VALUE);
@@ -571,7 +520,7 @@ public class ArduSimTools {
 			}
 		}
 		
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			param = parameters.get(Param.BING_KEY);
 			if (param == null) {
 				ArduSimTools.logGlobal(Param.BING_KEY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_3);
@@ -586,16 +535,13 @@ public class ArduSimTools {
 		FileTools fileTools = API.getFileTools();
 		Map<String, String> parameters = new HashMap<>();
 		File folder = fileTools.getCurrentFolder();
-		File [] files = folder.listFiles(new FilenameFilter() {
-		    @Override
-		    public boolean accept(final File dir, String name) {
-		    	boolean extensionIsIni = false;
-		    	if(name.lastIndexOf(".") > 0) {
-		    		final String extension = name.substring(name.lastIndexOf(".")+1);
-		    		extensionIsIni = extension.equalsIgnoreCase("ini");
-				}
-		    	return extensionIsIni;
-		    }
+		File [] files = folder.listFiles((dir, name) -> {
+			boolean extensionIsIni = false;
+			if(name.lastIndexOf(".") > 0) {
+				final String extension = name.substring(name.lastIndexOf(".")+1);
+				extensionIsIni = extension.equalsIgnoreCase("ini");
+			}
+			return extensionIsIni;
 		});
 		if (files == null || files.length == 0) {
 			ArduSimTools.logGlobal(Text.INI_FILE_NOT_FOUND);
@@ -621,9 +567,10 @@ public class ArduSimTools {
 			// Check waste parameters
 			for (final String key : parameters.keySet()) {
 				found = false;
-				for (int i = 0; i < Param.PARAMETERS.length && !found; i++) {
+				for (int i = 0; i < Param.PARAMETERS.length; i++) {
 					if (key.equalsIgnoreCase(Param.PARAMETERS[i])) {
 						found = true;
+						break;
 					}
 				}
 				if (!found) {
@@ -660,7 +607,7 @@ public class ArduSimTools {
 		UAVParam.uavCurrentData = new UAVCurrentData[Param.numUAVs];
 		UAVParam.uavCurrentStatus = new UAVCurrentStatus[Param.numUAVs];
 		UAVParam.lastUTMLocations = new ConcurrentBoundedQueue[Param.numUAVs];
-		UAVParam.flightMode = new AtomicReferenceArray<FlightMode>(Param.numUAVs);
+		UAVParam.flightMode = new AtomicReferenceArray<>(Param.numUAVs);
 		UAVParam.flightStarted = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.MAVStatus = new AtomicIntegerArray(Param.numUAVs);
 		UAVParam.currentWaypoint = new AtomicIntegerArray(Param.numUAVs);
@@ -694,7 +641,7 @@ public class ArduSimTools {
 		UAVParam.throttleDZ = new int[Param.numUAVs];
 		UAVParam.newLocation = new float[Param.numUAVs][3];
 
-		UAVParam.missionUTMSimplified = new AtomicReferenceArray<List<WaypointSimplified>>(Param.numUAVs);
+		UAVParam.missionUTMSimplified = new AtomicReferenceArray<>(Param.numUAVs);
 		UAVParam.lastWaypointReached = new AtomicBoolean[Param.numUAVs];
 		
 		UAVParam.rcs = new AtomicReference[Param.numUAVs];
@@ -714,7 +661,7 @@ public class ArduSimTools {
 
 		Param.testEndTime = new long[Param.numUAVs];
 		
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			SimParam.xUTM = new double[Param.numUAVs];
 			SimParam.yUTM = new double[Param.numUAVs];
 			SimParam.z = new double[Param.numUAVs];
@@ -730,28 +677,26 @@ public class ArduSimTools {
 		for (int i = 0; i < Param.numUAVs; i++) {
 			UAVParam.uavCurrentData[i] = new UAVCurrentData();
 			UAVParam.uavCurrentStatus[i] = new UAVCurrentStatus();
-			UAVParam.lastUTMLocations[i] = new ConcurrentBoundedQueue<Location2DUTM>(Location2DUTM.class, UAVParam.LOCATIONS_SIZE);
-			UAVParam.currentGeoMission[i] = new ArrayList<Waypoint>(UAVParam.WP_LIST_SIZE);
-			for (int j = 0; j < UAVParam.customModeToFlightModeMap[i].length; j++) {
-				UAVParam.customModeToFlightModeMap[i][j] = -1;
-			}
+			UAVParam.lastUTMLocations[i] = new ConcurrentBoundedQueue<>(Location2DUTM.class, UAVParam.LOCATIONS_SIZE);
+			UAVParam.currentGeoMission[i] = new ArrayList<>(UAVParam.WP_LIST_SIZE);
+			Arrays.fill(UAVParam.customModeToFlightModeMap[i], -1);
 			
 			UAVParam.newParamIndex.set(i, -1);
 			
 			UAVParam.lastWaypointReached[i] = new AtomicBoolean();
 			
-			UAVParam.rcs[i] = new AtomicReference<RCValues>();
+			UAVParam.rcs[i] = new AtomicReference<>();
 			UAVParam.overrideOn.set(i, 1);	// Initially RC values can be overridden
 			
-			UAVParam.target[i] = new AtomicReference<Location3DGeo>();
-			UAVParam.targetSpeed[i] = new AtomicReference<float[]>();
+			UAVParam.target[i] = new AtomicReference<>();
+			UAVParam.targetSpeed[i] = new AtomicReference<>();
 			
-			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<String, CopterParamLoaded>(1250));
+			UAVParam.loadedParams[i] = Collections.synchronizedMap(new HashMap<>(1250));
 			UAVParam.lastParamReceivedTime[i] = new AtomicLong();
 			
-			SimParam.uavUTMPath[i] = new ArrayList<LogPoint>(SimParam.PATH_INITIAL_SIZE);
+			SimParam.uavUTMPath[i] = new ArrayList<>(SimParam.PATH_INITIAL_SIZE);
 			
-			if (Param.role == ArduSim.SIMULATOR) {
+			if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 				// On the simulator, the UAV identifier is i
 				if (Param.id[i] == 0) {	// Could be initialized by a protocol
 					Param.id[i] = i;
@@ -762,12 +707,12 @@ public class ArduSimTools {
 		}
 		
 		// Collision and communication range parameters
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			UAVParam.distances = new AtomicReference[Param.numUAVs][Param.numUAVs];
 			CommLinkObject.isInRange = new AtomicBoolean[Param.numUAVs][Param.numUAVs];
 			for (int i = 0; i < Param.numUAVs; i++) {
 				for (int j = 0; j < Param.numUAVs; j++) {
-					UAVParam.distances[i][j] = new AtomicReference<Double>();
+					UAVParam.distances[i][j] = new AtomicReference<>();
 					CommLinkObject.isInRange[i][j] = new AtomicBoolean();
 				}
 			}
@@ -784,12 +729,12 @@ public class ArduSimTools {
 		reservedPort.add(UAVParam.broadcastInternalPort);
 		reservedPort.add(PCCompanionParam.computerPort);
 		reservedPort.add(PCCompanionParam.uavPort);
-	    List<Future<PortScanResult>> tcpMain = new ArrayList<Future<PortScanResult>>();
-	    List<Future<PortScanResult>> udpAux1 = new ArrayList<Future<PortScanResult>>();
-	    List<Future<PortScanResult>> udpAux2 = new ArrayList<Future<PortScanResult>>();
-	    List<Future<PortScanResult>> udpAux3 = new ArrayList<Future<PortScanResult>>();
-	    List<Future<PortScanResult>> irLockAux = new ArrayList<Future<PortScanResult>>();
-	    List<Integer> ports = new ArrayList<Integer>(UAVParam.MAX_SITL_INSTANCES);
+	    List<Future<PortScanResult>> tcpMain = new ArrayList<>();
+	    List<Future<PortScanResult>> udpAux1 = new ArrayList<>();
+	    List<Future<PortScanResult>> udpAux2 = new ArrayList<>();
+	    List<Future<PortScanResult>> udpAux3 = new ArrayList<>();
+	    List<Future<PortScanResult>> irLockAux = new ArrayList<>();
+	    List<Integer> ports = new ArrayList<>(UAVParam.MAX_SITL_INSTANCES);
 	    int tcpPort = UAVParam.MAV_INITIAL_PORT;
 	    int udp1Port = UAVParam.MAV_INTERNAL_PORT[0];
 	    int udp2Port = UAVParam.MAV_INTERNAL_PORT[1];
@@ -821,7 +766,7 @@ public class ArduSimTools {
 			    	irLockPort = irLockPort + 10;
 	    		}
 	    	}
-	    	es.awaitTermination((long)UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
+	    	es.awaitTermination(UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
 	    	
 	    	for (int i = 0; i < tcpMain.size(); i++) {
 	    		tcp = tcpMain.get(i).get();
@@ -865,19 +810,13 @@ public class ArduSimTools {
 	/** Auxiliary method to detect asynchronously if a port is in use by the system or any other application. */
 	private static Future<PortScanResult> portIsAvailable(final ExecutorService es, final String ip, final int port,
 	        final int timeout) {
-	    return es.submit(new Callable<PortScanResult>() {
+	    return es.submit(new Callable<>() {
 	        @Override
 	        public PortScanResult call() {
 	            boolean isAvailable = true;
-	            DatagramSocket socketUDP = null;
-	            try {
-					socketUDP = new DatagramSocket(new InetSocketAddress(ip, port));
+				try (DatagramSocket socketUDP = new DatagramSocket(new InetSocketAddress(ip, port))) {
 				} catch (Exception ex) {
 					isAvailable = false;
-				} finally {
-					if (socketUDP != null) {
-						socketUDP.close();
-					}
 				}
 	            
 	            if (isAvailable) {
@@ -906,7 +845,7 @@ public class ArduSimTools {
 	
 	/** Gets the id when using a real UAV, based on the MAC address. */
 	public static long getRealId() {
-		List<Long> ids = new ArrayList<Long>();
+		List<Long> ids = new ArrayList<>();
 		if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 			Enumeration<NetworkInterface> interfaces;
 			Formatter formatter;
@@ -915,7 +854,7 @@ public class ArduSimTools {
 			try {
 				interfaces = NetworkInterface.getNetworkInterfaces();
 				while(interfaces.hasMoreElements()) {
-					mac = ((NetworkInterface)interfaces.nextElement()).getHardwareAddress();
+					mac = (interfaces.nextElement()).getHardwareAddress();
 					if (mac != null) {
 						formatter = new Formatter();
 						for (byte b : mac) {
@@ -926,18 +865,16 @@ public class ArduSimTools {
 						ids.add(Long.parseUnsignedLong(hexId, 16));
 					}
 				}
-			} catch (SocketException e1) {
-			} catch (NumberFormatException e1) {
-			}
+			} catch (SocketException | NumberFormatException ignored) { }
 		} else if (Param.runningOperatingSystem == Param.OS_LINUX) {
-			List<String> interfaces = new ArrayList<String>();
+			List<String> interfaces = new ArrayList<>();
 	        Pattern pattern = Pattern.compile("^ *(.*):");
 	        String hexId;
 	        BufferedReader in = null;
-	        BufferedReader in2 = null;
+	        BufferedReader in2;
 	        try (FileReader reader = new FileReader("/proc/net/dev")) {
 	            in = new BufferedReader(reader);
-	            String line = null;
+	            String line;
 	            while( (line = in.readLine()) != null) {
 	                Matcher m = pattern.matcher(line);
 	                if (m.find()) {
@@ -951,7 +888,7 @@ public class ArduSimTools {
 	    	                    if (state.equals("up")) {
 	    	                    	interfaces.add(nameFound);
 	    	                    }
-	                		} catch (IOException e) {
+	                		} catch (IOException ignored) {
 	    	                }
 	                	}
 	                }
@@ -963,16 +900,16 @@ public class ArduSimTools {
 	                    String addr = in.readLine();
 	                    hexId = addr.replaceAll("[^a-fA-F0-9]", "");
 	                    ids.add(Long.parseUnsignedLong(hexId, 16));
-	                } catch (IOException e) {
+	                } catch (IOException ignored) {
 	                }
 	            }
-	        } catch (IOException e) {
+	        } catch (IOException ignored) {
 	        } finally {
 	        	try {
 					if (in != null) {
 						in.close();
 					}
-				} catch (IOException e) {}
+				} catch (IOException ignored) {}
 	        }
 		} else if (Param.runningOperatingSystem == Param.OS_MAC) {
 			Formatter formatter;
@@ -997,8 +934,7 @@ public class ArduSimTools {
 				}
 				
 				
-			} catch (SocketException e1) {
-			} catch (NumberFormatException e1) {
+			} catch (SocketException | NumberFormatException ignored) {
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			}
@@ -1069,8 +1005,7 @@ public class ArduSimTools {
 		}
 		
 		// When it is not possible, use physical storage
-		if ((SimParam.userIsAdmin && Param.runningOperatingSystem == Param.OS_WINDOWS && !SimParam.imdiskIsInstalled)
-				|| !SimParam.userIsAdmin) {
+		if (!SimParam.userIsAdmin || (Param.runningOperatingSystem == Param.OS_WINDOWS && !SimParam.imdiskIsInstalled)) {
 			return API.getFileTools().getCurrentFolder().getAbsolutePath();
 		}
 		return null;
@@ -1080,10 +1015,10 @@ public class ArduSimTools {
 	private static File checkDriveMountedWindows() {
 		File[] roots = File.listRoots();
 		if (roots != null && roots.length > 0) {
-			for(int i = 0; i < roots.length ; i++) {
-				String name = FileSystemView.getFileSystemView().getSystemDisplayName(roots[i]);
+			for (File root : roots) {
+				String name = FileSystemView.getFileSystemView().getSystemDisplayName(root);
 				if (name.contains(SimParam.RAM_DRIVE_NAME.toUpperCase())) {
-					return roots[i];
+					return root;
 				}
 			}
 		}
@@ -1095,9 +1030,9 @@ public class ArduSimTools {
 		// 1. Find an available drive letter
 		File[] roots = File.listRoots();
 		if (roots != null && roots.length > 0) {
-			List<String> driveLetters = new ArrayList<>(); 
-			for(int i = 0; i < roots.length ; i++) {
-				driveLetters.add("" + roots[i].getAbsolutePath().charAt(0));
+			List<String> driveLetters = new ArrayList<>();
+			for (File root : roots) {
+				driveLetters.add("" + root.getAbsolutePath().charAt(0));
 			}
 			boolean found = true;
 			String freeDrive = null;
@@ -1113,7 +1048,7 @@ public class ArduSimTools {
 			}
 			
 			// 2. Mount the temporary filesystem
-			List<String> commandLine = new ArrayList<String>();
+			List<String> commandLine = new ArrayList<>();
 			BufferedReader input;
 			commandLine.add("imdisk");
 			commandLine.add("-a");
@@ -1135,7 +1070,7 @@ public class ArduSimTools {
 				Process p = pb.start();
 				input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				StringBuilder sb = new StringBuilder();
-				String line = null;
+				String line;
 			    while ((line = input.readLine()) != null) {
 			        sb.append(line).append("\n");
 			    }
@@ -1146,7 +1081,7 @@ public class ArduSimTools {
 				if (s.endsWith("Done.")) {
 					return ArduSimTools.checkDriveMountedWindows();
 				}
-			} catch (IOException e) {
+			} catch (IOException ignored) {
 			}
 		} else {
 			ArduSimTools.logGlobal(Text.MOUNT_DRIVE_ERROR_2);
@@ -1156,7 +1091,7 @@ public class ArduSimTools {
 
 	/** Dismounts a virtual RAM drive under Windows. Returns true if the command was successful. */
 	private static boolean dismountDriveWindows(String diskPath) {
-		List<String> commandLine = new ArrayList<String>();
+		List<String> commandLine = new ArrayList<>();
 		BufferedReader input;
 		commandLine.add("imdisk");
 		commandLine.add("-D");
@@ -1167,7 +1102,7 @@ public class ArduSimTools {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			StringBuilder sb = new StringBuilder();
-			String line = null;
+			String line;
 		    while ((line = input.readLine()) != null) {
 		        sb.append(line).append("\n");
 		    }
@@ -1178,14 +1113,14 @@ public class ArduSimTools {
 			if (s.endsWith("Done.")) {
 				return true;
 			}
-		} catch (IOException e) {
+		} catch (IOException ignored) {
 		}
 		return false;
 	}
 	
 	/** If an appropriate virtual RAM drive is already mounted under Linux and Mac, it returns true if mounted, or false in case of error. */
 	private static boolean checkDriveMountedLinuxMac(String diskPath) {
-		List<String> commandLine = new ArrayList<String>();
+		List<String> commandLine = new ArrayList<>();
 		BufferedReader input;
 		commandLine.add("df");
 		commandLine.add("-ah");
@@ -1194,19 +1129,19 @@ public class ArduSimTools {
 		try {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String line = null;
+			String line;
 		    while ((line = input.readLine()) != null && !found) {
 		    	found = line.endsWith(diskPath);
 		    }
 			return found;
-		} catch (IOException e) {
+		} catch (IOException ignored) {
 		}
 		return false;
 	}
 	
 	/** Mount a virtual RAM drive under Linux. Return true if the command was successful. */
 	private static boolean mountDriveLinux(String diskPath) {
-		List<String> commandLine = new ArrayList<String>();
+		List<String> commandLine = new ArrayList<>();
 		BufferedReader input;
 		commandLine.add("mount");
 		commandLine.add("-t");
@@ -1227,7 +1162,7 @@ public class ArduSimTools {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			StringBuilder sb = new StringBuilder();
-			String line = null;
+			String line;
 		    while ((line = input.readLine()) != null) {
 		        sb.append(line).append("\n");
 		    }
@@ -1238,14 +1173,14 @@ public class ArduSimTools {
 			if (s.length() == 0) {
 				return true;
 			}
-		} catch (IOException e) {
+		} catch (IOException ignored) {
 		}
 		return false;
 	}
 	
 	/** Mount a virtual RAM drive under Mac. Return true if the command was successful. */
 	private static boolean mountDriveMac(String diskPath) {		
-		List<String> commandLine = new ArrayList<String>();
+		List<String> commandLine = new ArrayList<>();
 		BufferedReader input;
 		commandLine.add("hdiutil");
 		commandLine.add("attach");
@@ -1262,7 +1197,7 @@ public class ArduSimTools {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			StringBuilder sb = new StringBuilder();
-			String line = null;
+			String line;
 		    while ((line = input.readLine()) != null) {
 		        sb.append(line);
 		    }
@@ -1289,14 +1224,14 @@ public class ArduSimTools {
 					if (p.waitFor() == 0) return true;
 				}
 			}
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException | InterruptedException ignored) {
 		}
 		return false;
 	}
 	
 	/** Dismounts a virtual RAM drive under Linux. Returns true if the command was successful. */
 	private static boolean dismountDriveLinux(String diskPath) {
-		List<String> commandLine = new ArrayList<String>();
+		List<String> commandLine = new ArrayList<>();
 		BufferedReader input;
 		commandLine.add("umount");
 		commandLine.add(diskPath);
@@ -1305,7 +1240,7 @@ public class ArduSimTools {
 			Process p = pb.start();
 			input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			StringBuilder sb = new StringBuilder();
-			String line = null;
+			String line;
 		    while ((line = input.readLine()) != null) {
 		        sb.append(line).append("\n");
 		    }
@@ -1316,14 +1251,14 @@ public class ArduSimTools {
 			if (s.length() == 0) {
 				return true;
 			}
-		} catch (IOException e) {
+		} catch (IOException ignored) {
 		}
 		return false;
 	}
 	
 	/** Dismounts a virtual RAM drive under Mac. Returns true if the command was successful. */
 	private static boolean dismountDriveMac(String diskPath) {
-		List<String> commandLine = new ArrayList<String>();
+		List<String> commandLine = new ArrayList<>();
 		commandLine.add("hdiutil");
 		commandLine.add("detach");
 		commandLine.add(diskPath);
@@ -1333,7 +1268,7 @@ public class ArduSimTools {
 			if (p.waitFor() == 0) {
 				return true;
 			}
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException | InterruptedException ignored) {
 		}
 		return false;
 	}
@@ -1371,21 +1306,23 @@ public class ArduSimTools {
 	 * <p>Protocol names are case-sensitive. Returns null if no valid implementations were found.</p> */
 	public static String[] loadProtocols() {
 		// First store the identifier of None protocol
-		MissionHelper noneInstance = new MissionHelper();
-		noneInstance.setProtocol();
-		ArduSimTools.noneProtocolName = noneInstance.protocolString;
+		// TODO check why an error is given, I suppose the missionHelper was from the protocol mission
+		//MissionHelper noneInstance = new MissionHelper();
+		//noneInstance.setProtocol();
+		//ArduSimTools.noneProtocolName = noneInstance.protocolString;
+		ArduSimTools.noneProtocolName = "Mission";
 		String[] names = null;
 		Class<?>[] validImplementations = ArduSimTools.getAnyProtocolImplementations();
-		if (validImplementations != null && validImplementations.length > 0) {
+		if (validImplementations.length > 0) {
 			ArduSimTools.ProtocolClasses = validImplementations;
 			// Avoiding more than one implementation of the same protocol and avoiding implementations without name
 			Map<String, String> imp = new HashMap<>();
 			ProtocolHelper protocol;
 			try {
 				int size;
-				for (int i = 0; i < validImplementations.length; i++) {
+				for (Class<?> validImplementation : validImplementations) {
 					try {
-						protocol = (ProtocolHelper)validImplementations[i].getDeclaredConstructor().newInstance();
+						protocol = (ProtocolHelper) validImplementation.getDeclaredConstructor().newInstance();
 						protocol.setProtocol();
 						if (protocol.protocolString != null) {
 							size = imp.size();
@@ -1398,7 +1335,7 @@ public class ArduSimTools {
 							| SecurityException e) {
 						e.printStackTrace();
 					}
-					
+
 				}
 				if (imp.size() > 0) {
 					names = imp.values().toArray(new String[imp.size()]);
@@ -1439,7 +1376,7 @@ public class ArduSimTools {
 			if (jar != null) {
 				try {
 					existingClasses = getClassNamesFromJar(jar);
-				} catch (Exception e) {}
+				} catch (Exception ignored) {}
 			}
 		} else {
 			// Explore .class file tree for class files when running on Eclipse
@@ -1450,7 +1387,7 @@ public class ArduSimTools {
 				projectFolderPath = projectFolder.getCanonicalPath() + File.separator;
 				int prefixLength = projectFolderPath.length();	// To remove from the classes path
 				getClassNamesFromIDE(existingClasses, projectFolder, prefixLength);
-			} catch (IOException e) {}
+			} catch (IOException ignored) {}
 		}
 		return existingClasses;
 	}
@@ -1470,11 +1407,7 @@ public class ArduSimTools {
 		} else {
 			String path = c.getResource(c.getSimpleName() + ".class").getPath();
 			String jarFilePath = path.substring(path.indexOf(":") + 1, path.indexOf("!"));
-			try {
-				jarFile = URLDecoder.decode(jarFilePath, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
+			jarFile = URLDecoder.decode(jarFilePath, StandardCharsets.UTF_8);
 		}
 		
 		return jarFile;
@@ -1503,10 +1436,8 @@ public class ArduSimTools {
 			}
 		}
 		try {
-			if (jarFileStream != null) {
-				jarFileStream.close();
-			}
-		} catch (IOException e) {}
+			jarFileStream.close();
+		} catch (IOException ignored) {}
 		return res;
 	}
 	
@@ -1527,8 +1458,8 @@ public class ArduSimTools {
 	        	}
 	        }
 	    }
-		for (int i = 0; i < dir.size(); i++) {
-			getClassNamesFromIDE(res, dir.get(i), prefixLength);
+		for (File file : dir) {
+			getClassNamesFromIDE(res, file, prefixLength);
 		}
 	}
 	
@@ -1538,25 +1469,25 @@ public class ArduSimTools {
 		String className;
 		Class<?> currentClass;
 		Map<String, Class<?>> classesMap = new HashMap<>();
-		for (int i = 0; i < existingClasses.size(); i++) {
+		for (String existingClass : existingClasses) {
 			try {
-				className = existingClasses.get(i);
+				className = existingClass;
 				// Ignore special case
 				if (!className.toUpperCase().endsWith("WINREGISTRY")
 						&& !className.equals("module-info")) {
 					currentClass = Class.forName(className);
 					if (ProtocolHelper.class.isAssignableFrom(currentClass) && !ProtocolHelper.class.equals(currentClass)) {
-						classesMap.put(existingClasses.get(i), currentClass);
+						classesMap.put(existingClass, currentClass);
 					}
 				}
-			} catch (ClassNotFoundException e) {}
+			} catch (ClassNotFoundException ignored) {
+			}
 		}
 		Class<?>[] res = new Class<?>[classesMap.size()];
 		if (classesMap.size() > 0) {
 			int i = 0;
-			Iterator<Class<?>> it = classesMap.values().iterator();
-			while (it.hasNext()) {
-				res[i] = it.next();
+			for (Class<?> aClass : classesMap.values()) {
+				res[i] = aClass;
 				i++;
 			}
 		}
@@ -1570,10 +1501,10 @@ public class ArduSimTools {
 		ProtocolHelper o;
 		ProtocolHelper[] res = null;
 		List<ProtocolHelper> imp = new ArrayList<>();
-		for (int i = 0; i < implementations.length; i++) {
-			c = implementations[i];
+		for (Class<?> implementation : implementations) {
+			c = implementation;
 			try {
-				o = (ProtocolHelper)c.getDeclaredConstructor().newInstance();
+				o = (ProtocolHelper) c.getDeclaredConstructor().newInstance();
 				o.setProtocol();
 				if (o.protocolString.equalsIgnoreCase(selectedProtocol)) {
 					imp.add(o);
@@ -1639,10 +1570,10 @@ public class ArduSimTools {
 			}
 
 			// 3. Execute each SITL instance
-			List<String> commandLine = new ArrayList<String>();
+			List<String> commandLine = new ArrayList<>();
 			BufferedReader input;
 			String s, file1, file2;
-			boolean success = false;
+			boolean success;
 			String tempFolder;
 			int tcpPort, udp1Port, udp2Port, udp3Port, irLockPort;
 			ArduSim ardusim = API.getArduSim();
@@ -1758,8 +1689,7 @@ public class ArduSimTools {
 
 	/** Removes a folder recursively. */
 	public static void deleteFolder (Path file) throws Exception {
-		DirectoryStream<Path> content = Files.newDirectoryStream(file);
-		try {
+		try (DirectoryStream<Path> content = Files.newDirectoryStream(file)) {
 			Iterator<Path> it = content.iterator();
 			Path child;
 			while (it.hasNext()) {
@@ -1770,8 +1700,6 @@ public class ArduSimTools {
 					Files.deleteIfExists(child);
 				}
 			}
-		} finally {
-			content.close();
 		}
 		Files.deleteIfExists(file);
 	}
@@ -1853,7 +1781,7 @@ public class ArduSimTools {
 				return;
 			}
 			// The user can be root but without root name
-			List<String> commandLine = new ArrayList<String>();
+			List<String> commandLine = new ArrayList<>();
 			BufferedReader input;
 			commandLine.add("getent");
 			commandLine.add("group");
@@ -1863,7 +1791,7 @@ public class ArduSimTools {
 				Process p = pb.start();
 				input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				StringBuilder sb = new StringBuilder();
-				String line = null;
+				String line;
 			    while ((line = input.readLine()) != null) {
 			        sb.append(line).append("\n");
 			    }
@@ -1892,7 +1820,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
 						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1901,7 +1829,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
 						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1910,7 +1838,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
 						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1919,7 +1847,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
 						SimParam.IMDISK_REGISTRY_PATH, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1930,7 +1858,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
 						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1939,7 +1867,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_LOCAL_MACHINE,
 						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1948,7 +1876,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
 						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_64KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1957,7 +1885,7 @@ public class ArduSimTools {
 			try {
 				result = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
 						SimParam.IMDISK_REGISTRY_PATH2, SimParam.IMDISK_REGISTRY_KEY, WinRegistry.KEY_WOW64_32KEY);
-			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
 			}
 			if (result != null && result.contains(SimParam.IMDISK_REGISTRY_VALUE2)) {
 				SimParam.imdiskIsInstalled = true;
@@ -1985,7 +1913,7 @@ public class ArduSimTools {
 				}
 			} else {
 				JOptionPane.showMessageDialog(null, message, Text.FATAL_ERROR, JOptionPane.ERROR_MESSAGE);
-				if (Param.role == ArduSim.SIMULATOR) {
+				if (Param.role == ArduSim.SIMULATOR_GUI) {
 					if (Param.simStatus != SimulatorState.CONFIGURING
 						&& Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL) {
 						ArduSimTools.closeSITL();
@@ -2004,7 +1932,7 @@ public class ArduSimTools {
 		}
 		
 		// 1. Ask for confirmation if the experiment has not started or finished
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			boolean reallyClose = true;
 			if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 				Object[] options = {Text.YES_OPTION, Text.NO_OPTION};
@@ -2026,14 +1954,13 @@ public class ArduSimTools {
 		// 2. Change the status and close SITL
 		ArduSimTools.logGlobal(Text.CLOSING);
 		Param.simStatus = SimulatorState.SHUTTING_DOWN;
-		if (Param.role == ArduSim.SIMULATOR) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.exitButton.setEnabled(false);
-					MainWindow.buttonsPanel.statusLabel.setText(Text.SHUTTING_DOWN);
-				}
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
+			SwingUtilities.invokeLater(() -> {
+				MainWindow.buttonsPanel.exitButton.setEnabled(false);
+				MainWindow.buttonsPanel.statusLabel.setText(Text.SHUTTING_DOWN);
 			});
-
+		}
+		if(Param.role == ArduSim.SIMULATOR_CLI || Param.role == ArduSim.SIMULATOR_GUI){
 			ArduSimTools.closeSITL();
 		}
 		
@@ -2041,21 +1968,21 @@ public class ArduSimTools {
 		ArduSimTools.logGlobal(Text.EXITING);
 		try {
 			FileDescriptor.out.sync();
-		} catch (SyncFailedException e1) {}
+		} catch (SyncFailedException ignored) {}
 		API.getArduSim().sleep(SimParam.LONG_WAITING_TIME);
 		if (Param.role == ArduSim.MULTICOPTER) {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				try {
 			    	Runtime.getRuntime().exec("shutdown.exe -s -t 0");
-			    } catch (IOException e) {}
+			    } catch (IOException ignored) {}
 			} else if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 				try {
 			    	Runtime.getRuntime().exec("sudo shutdown -h now");
-			    } catch (IOException e) {}
+			    } catch (IOException ignored) {}
 			} else {
 				ArduSimTools.logGlobal(Text.SHUTDOWN_ERROR);
 			}
-		} else if (Param.role == ArduSim.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR_GUI) {
 			MainWindow.window.mainWindowFrame.dispose();
 		}
 	    
@@ -2123,7 +2050,7 @@ public class ArduSimTools {
 					if (Files.exists(tempFolder)) {
 						try {
 							deleteFolder(tempFolder);
-						} catch (Exception e) {
+						} catch (Exception ignored) {
 						}
 					}
 				}
@@ -2134,15 +2061,11 @@ public class ArduSimTools {
 	/** Starts the UAVs controllers threads. */
 	public static void startUAVControllers() {
 		Param.controllers = new UAVControllerThread[Param.numUAVs];
-		try {
-			for (int i=0; i<Param.numUAVs; i++) {
-				Param.controllers[i] = new UAVControllerThread(i);
-				Param.controllers[i].start();
-			}
-			ArduSimTools.logGlobal(Param.numUAVs + " " + Text.CONTROLLERS_STARTED);
-		} catch (SocketException e) {
-			ArduSimTools.closeAll(Text.THREAD_START_ERROR);
+		for (int i=0; i<Param.numUAVs; i++) {
+			Param.controllers[i] = new UAVControllerThread(i);
+			Param.controllers[i].start();
 		}
+		ArduSimTools.logGlobal(Param.numUAVs + " " + Text.CONTROLLERS_STARTED);
 	}
 	
 	/** Waits until the MAVLink link is available in all executing UAVs. */
@@ -2194,7 +2117,7 @@ public class ArduSimTools {
 			for (int i=1; i<Param.numUAVs; i++) {
 				try {
 					threads[i-1].join();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException ignored) {
 				}
 			}
 		}
@@ -2268,7 +2191,7 @@ public class ArduSimTools {
 			ArduSimTools.closeAll(Text.GPS_FIX_ERROR_1);
 		}
 		ArduSimTools.logGlobal(Text.GPS_OK);
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					MainWindow.buttonsPanel.statusLabel.setText(Text.UAVS_ONLINE);
@@ -2351,7 +2274,7 @@ public class ArduSimTools {
 											ArduSimTools.NAV_WAYPOINT_COMMAND, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
-								} else if (Param.role == ArduSim.SIMULATOR) {
+								} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 									wp = new Waypoint(1, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											ArduSimTools.NAV_TAKEOFF_COMMAND, 0, 0, 0, 0, lat, lon, z, 1);
 									missions[i].add(wp);
@@ -2362,7 +2285,7 @@ public class ArduSimTools {
 											ArduSimTools.NAV_WAYPOINT_COMMAND, delay, 0, 0, 0, 
 											lat, lon, z, 1);
 									missions[i].add(wp);
-								} else if (Param.role == ArduSim.SIMULATOR) {
+								} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 									wp = new Waypoint(j+1, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 											ArduSimTools.NAV_WAYPOINT_COMMAND, delay, 0, 0, 0, 
 											lat, lon, z, 1);
@@ -2384,7 +2307,7 @@ public class ArduSimTools {
 					if (Param.role == ArduSim.MULTICOPTER) {
 						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + Param.id[i]);
 					}
-					if (Param.role == ArduSim.SIMULATOR) {
+					if (Param.role == ArduSim.SIMULATOR_GUI) {
 						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + i);
 					}
 				}
@@ -2395,16 +2318,14 @@ public class ArduSimTools {
 					if (Param.role == ArduSim.MULTICOPTER) {
 						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + Param.id[i]);
 					}
-					if (Param.role == ArduSim.SIMULATOR) {
+					if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 						ArduSimTools.logVerboseGlobal(Text.XML_RTL_ADDED + i);
 					}
 				}
 			}
 			
 			return missions;
-		} catch (ParserConfigurationException e) {
-		} catch (SAXException e) {
-		} catch (IOException e) {
+		} catch (ParserConfigurationException | SAXException | IOException ignored) {
 		}
 		return null;
 	}
@@ -2416,7 +2337,7 @@ public class ArduSimTools {
 		List<String> list = new ArrayList<>();
 		
 		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-			String line = null;
+			String line;
 			while ((line = br.readLine()) != null) {
 				list.add(line);
 		    }
@@ -2426,7 +2347,7 @@ public class ArduSimTools {
 		}
 		// Check if there are at least take off and a waypoint to define a mission (first line is header, and wp0 is home)
 		// During simulation an additional waypoint is needed in order to stablish the starting location
-		if (list==null || (Param.role == ArduSim.MULTICOPTER && list.size()<4) || (Param.role == ArduSim.SIMULATOR && list.size()<5)) {
+		if ((Param.role == ArduSim.MULTICOPTER && list.size()<4) || ((Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) && list.size()<5)) {
 			ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_1);
 			return null;
 		}
@@ -2436,7 +2357,7 @@ public class ArduSimTools {
 			return null;
 		}
 	
-		List<Waypoint> mission = new ArrayList<Waypoint>(list.size()-1);
+		List<Waypoint> mission = new ArrayList<>(list.size()-1);
 		Waypoint wp;
 		String[] line;
 		// One line per waypoint
@@ -2486,7 +2407,7 @@ public class ArduSimTools {
 					if (Param.role == ArduSim.MULTICOPTER) {
 						wp = new Waypoint(numSeq, false, frame, c, param1, param2, param3, param4, param5, param6, param7, autoContinue);
 						mission.add(wp);
-					} else if (Param.role == ArduSim.SIMULATOR) {
+					} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 						if (numSeq == 2) {
 							// Set takeoff coordinates from the first wapoint that has coordinates
 							wp = mission.get(mission.size()-1);
@@ -2534,12 +2455,7 @@ public class ArduSimTools {
 	 * Returns null if no valid mission was found.</p> */
 	public static List<Waypoint> loadMission(File parentFolder) {
 		// 1. kml file case
-		File[] files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_KML) && pathname.isFile();
-			}
-		});
+		File[] files = parentFolder.listFiles(pathname -> pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_KML) && pathname.isFile());
 		if (files != null && files.length>0) {
 			// Only one kml file must be on the current folder
 			if (files.length>1) {
@@ -2553,12 +2469,7 @@ public class ArduSimTools {
 		}
 		
 		// 2. kml file not found or not valid. waypoints file case
-		files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_WAYPOINTS) && pathname.isFile();
-			}
-		});
+		files = parentFolder.listFiles(pathname -> pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_WAYPOINTS) && pathname.isFile());
 		List<Waypoint> mission;
 		if (files != null && files.length>0) {
 			// Only one waypoints file must be on the current folder
@@ -2573,12 +2484,7 @@ public class ArduSimTools {
 		}
 		
 		// 3. waypoints file not found or not valid. txt file case
-		files = parentFolder.listFiles(new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_TXT) && pathname.isFile();
-			}
-		});
+		files = parentFolder.listFiles(pathname -> pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_TXT) && pathname.isFile());
 		if (files != null && files.length>0) {
 			// Not checking single txt file existence, as other file types can use the same extension
 			mission = ArduSimTools.loadMissionFile(files[0].getAbsolutePath());
@@ -2622,7 +2528,7 @@ public class ArduSimTools {
 			for (int i=1; i<Param.numUAVs; i++) {
 				try {
 					threads[i-1].join();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException ignored) {
 				}
 			}
 		}
@@ -2663,7 +2569,7 @@ public class ArduSimTools {
 			for (int i=1; i<Param.numUAVs; i++) {
 				try {
 					threads[i-1].join();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException ignored) {
 				}
 			}
 		}
@@ -2686,7 +2592,7 @@ public class ArduSimTools {
 		double alarmLevel = Double.MAX_VALUE;
 		if (Param.role == ArduSim.MULTICOPTER) {
 			alarmLevel = UAVParam.lipoBatteryAlarmVoltage;
-		} else if (Param.role == ArduSim.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			alarmLevel = UAVParam.VIRT_BATTERY_ALARM_VOLTAGE;
 		}
 		int percentage;
@@ -2695,41 +2601,38 @@ public class ArduSimTools {
 		for (int i=0; i<Param.numUAVs; i++) {
 			percentage = UAVParam.uavCurrentStatus[i].getRemainingBattery();
 			voltage = UAVParam.uavCurrentStatus[i].getVoltage();
-			isDepleted = false;
-			if (percentage != -1 && percentage < UAVParam.BATTERY_DEPLETED_THRESHOLD * 100) {
-				isDepleted = true;
-			}
+			isDepleted = percentage != -1 && percentage < UAVParam.BATTERY_DEPLETED_THRESHOLD * 100;
 			if (voltage != -1 && voltage <alarmLevel) {
 				isDepleted = true;
 			}
 			if (percentage != -1 && voltage != -1) {
 				if (Param.role == ArduSim.MULTICOPTER) {
 					ArduSimTools.logGlobal(Text.BATTERY_LEVEL + " " + percentage + " % - " + voltage + " V");
-				} else if (Param.role == ArduSim.SIMULATOR) {
+				} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 					ArduSimTools.logVerboseGlobal(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " % - " + voltage + " V");
 				}
 			} else if (percentage != -1) {
 				if (Param.role == ArduSim.MULTICOPTER) {
 					ArduSimTools.logGlobal(Text.BATTERY_LEVEL + " " + percentage + " %");
-				} else if (Param.role == ArduSim.SIMULATOR) {
+				} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 					ArduSimTools.logVerboseGlobal(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + percentage + " %");
 				}
 			} else if (voltage != -1) {
 				if (Param.role == ArduSim.MULTICOPTER) {
 					ArduSimTools.logGlobal(Text.BATTERY_LEVEL + " " + voltage + " V");
-				} else if (Param.role == ArduSim.SIMULATOR) {
+				} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 					ArduSimTools.logVerboseGlobal(Text.BATTERY_LEVEL2 + " " + Param.id[i] + ": " + voltage + " V");
 				}
 			}
 			if (isDepleted) {
 				if (Param.role == ArduSim.MULTICOPTER) {
 					ArduSimTools.logGlobal(Text.BATTERY_FAILING2);
-				} else if (Param.role == ArduSim.SIMULATOR) {
+				} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 					depleted++;
 				}
 			}
 		}
-		if (Param.role == ArduSim.SIMULATOR && depleted > 0) {
+		if ((Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) && depleted > 0) {
 			ArduSimTools.logGlobal(Text.BATTERY_FAILING + depleted + " " + Text.UAV_ID + "s");
 		}
 	}
@@ -2803,13 +2706,7 @@ public class ArduSimTools {
 			} else {
 				sb.append(Text.OPTION_DISABLED);
 			}
-			sb.append("\n\t").append(Text.VERBOSE_STORAGE_ENABLE).append(" ");
-			if (Param.verboseStore) {
-				sb.append(Text.OPTION_ENABLED);
-			} else {
-				sb.append(Text.OPTION_DISABLED);
-			}
-		} else if (Param.role == ArduSim.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			sb.append("\n").append(Text.SIMULATION_PARAMETERS);
 			sb.append("\n\t").append(Text.UAV_NUMBER).append(" ").append(Param.numUAVs);
 			sb.append("\n\t").append(Text.LOG_SPEED).append(" (").append(Text.METERS_PER_SECOND).append("):\n\t");
@@ -2875,18 +2772,12 @@ public class ArduSimTools {
 			} else {
 				sb.append(Text.OPTION_DISABLED);
 			}
-			sb.append("\n\t").append(Text.VERBOSE_STORAGE_ENABLE).append(" ");
-			if (Param.verboseStore) {
-				sb.append(Text.OPTION_ENABLED);
-			} else {
-				sb.append(Text.OPTION_DISABLED);
-			}
 		}
 		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ArduSimTools.selectedProtocol);
 		sb.append("\n").append(Text.COMMUNICATIONS);
 		sb.append(API.getCommLink(0).toString());
 		
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			sb.append("\n").append(Text.COLLISION_PARAMETERS);
 			boolean collisionCheck = UAVParam.collisionCheckEnabled;
 			sb.append("\n\t").append(Text.COLLISION_ENABLE).append(" ");
@@ -2938,7 +2829,7 @@ public class ArduSimTools {
 			sb.append("\n\t\t").append(Param.BATTERY_CAPACITY).append("=").append(UAVParam.lipoBatteryCapacity);
 		}
 		sb.append("\n\t").append(Text.FORMATION_PARAMETERS);
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			sb.append("\n\t\t").append(Param.GROUND_FORMATION).append("=").append(UAVParam.groundFormation.get().getName());
 			sb.append("\n\t\t").append(Param.GROUND_DISTANCE).append("=").append(UAVParam.groundDistanceBetweenUAV);
 		}
@@ -2986,12 +2877,12 @@ public class ArduSimTools {
 		
 		// 2. Storing UAV path during setup and experiment, and AutoCAD path files
 		File file1, file2, file3;
-		File file4 = null;
+		File file4;
 		StringBuilder sb1, sb3, sb2;
-		StringBuilder sb4 = null;
+		StringBuilder sb4;
 		LogPoint sp;
 		LogPoint spPrev;
-		Double x, y, z, zRel, a;
+		double x, y, z, zRel, a;
 		double time;
 		boolean firstSetupData, setupDataPresent, uavSetupDataPresent;
 		boolean firstExperimentData, experimentDataPresent, uavExperimentDataPresent;
@@ -3043,14 +2934,11 @@ public class ArduSimTools {
 			double dist = 0;	// Accumulated distance to origin
 			double d;
 			spPrev = null;
-			z = y = x = null;
-			
-			if (Param.verboseStore) {
-				file4 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
-				sb4 = new StringBuilder(2000);
-				sb4.append("._3DPOLY\n");
 
-			}
+			file4 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.PATH_3D_SUFIX);
+			sb4 = new StringBuilder(2000);
+			sb4.append("._3DPOLY\n");
+
 
 			firstSetupData = true;
 			uavSetupDataPresent = false;
@@ -3063,7 +2951,7 @@ public class ArduSimTools {
 					a = 0.0;
 				} else {
 					a = (sp.getSpeed() - SimParam.uavUTMPath[i].get(j-1).getSpeed())/
-							(sp.getNanoTime() - SimParam.uavUTMPath[i].get(j-1).getNanoTime())*1000000000l;
+							(sp.getNanoTime() - SimParam.uavUTMPath[i].get(j-1).getNanoTime())*1000000000L;
 				}
 				state = sp.getSimulatorState();
 				
@@ -3135,9 +3023,8 @@ public class ArduSimTools {
 							.append(validationTools.roundDouble(sp.getSpeed(), 3)).append(",").append(validationTools.roundDouble(a, 3))
 							.append(",0.000,0.000\n");
 						sb3.append(x).append(",").append(y).append("\n");
-						if (Param.verboseStore) {
-							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
-						}
+						sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
+
 						// At the beginning we may need to add a 0 time point
 						if (time != 0) {
 							sb1.append(x).append(",").append(y).append(",").append(z).append(",").append(zRel)
@@ -3167,9 +3054,8 @@ public class ArduSimTools {
 							.append(",").append(validationTools.roundDouble(d, 3)).append(",").append(validationTools.roundDouble(dist, 3))
 							.append("\n");
 						sb3.append(x).append(",").append(y).append("\n");
-						if (Param.verboseStore) {
-							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
-						}
+						sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
+
 						spPrev = sp;
 						newData = true;
 					} else if (sp.z!=spPrev.z) {
@@ -3178,9 +3064,9 @@ public class ArduSimTools {
 							.append(",").append(sp.getHeading()).append(",").append(time).append(",")
 							.append(validationTools.roundDouble(sp.getSpeed(), 3)).append(",").append(validationTools.roundDouble(a, 3))
 							.append(",0.0,").append(validationTools.roundDouble(dist, 3)).append("\n");
-						if (Param.verboseStore) {
-							sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
-						}
+
+						sb4.append(x).append(",").append(y).append(",").append(z).append("\n");
+
 						spPrev = sp;
 						newData = true;
 					}
@@ -3204,10 +3090,8 @@ public class ArduSimTools {
 			fileTools.storeFile(file2, sb2.toString());
 			sb3.append("\n");
 			fileTools.storeFile(file3, sb3.toString());
-			if (Param.verboseStore) {
-				sb4.append("\n");
-				fileTools.storeFile(file4, sb4.toString());
-			}
+			sb4.append("\n");
+			fileTools.storeFile(file4, sb4.toString());
 			if (uavSetupDataPresent && !coordinateError) {
 				sb5.append(sbSetup.toString()).append("</coordinates>\n\t\t\t</LineString>\n\t\t</Placemark>\n");
 				setupDataPresent = true;
@@ -3229,8 +3113,6 @@ public class ArduSimTools {
 				stream.closeEntry();
 				stream.close();
 				out.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -3389,7 +3271,7 @@ public class ArduSimTools {
 		}
 		
 		// 6. Store ArduCopter logs if needed
-		if (Param.role == ArduSim.SIMULATOR && SimParam.arducopterLoggingEnabled) {
+		if ((Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) && SimParam.arducopterLoggingEnabled) {
 			File logSource, logDestination;
 			File parentFolder = new File(SimParam.tempFolderBasePath);
 			for (int i=0; i<Param.numUAVs; i++) {
@@ -3399,7 +3281,7 @@ public class ArduSimTools {
 					logDestination = new File(folder, baseFileName + "_" + i + "_" + SimParam.LOG_DESTINATION_FILENAME + "." + SimParam.LOG_SOURCE_FILEEXTENSION);
 					try {
 						Files.copy(logSource.toPath(), logDestination.toPath());
-					} catch (IOException e1) {
+					} catch (IOException ignored) {
 					}
 				}
 			}
@@ -3423,8 +3305,6 @@ public class ArduSimTools {
 				file1 = new File(folder, baseFileName + "_" + Param.id[i] + "_" + Text.MISSION_SUFIX);
 				sb1 = new StringBuilder(2000);
 				sb1.append("._PLINE\n");
-				
-				j = 0;
 				WaypointSimplified prev = null;
 				WaypointSimplified current;
 				for (j = 0; j<missionUTMSimplified.size(); j++) {
@@ -3461,8 +3341,7 @@ public class ArduSimTools {
 				.append("</color>\n\t\t\t\t\t<colorMode>normal</colorMode>\n\t\t\t\t\t<width>1</width>\n\t\t\t\t</LineStyle>\n")
 				.append("\t\t\t</Style>\n\t\t\t<LineString>\n\t\t\t\t<extrude>0</extrude>\n")
 				.append("\t\t\t\t<altitudeMode>clampToGround</altitudeMode>\n\t\t\t\t<coordinates>");
-				
-				j = 0;
+
 				WaypointSimplified prev = null;
 				WaypointSimplified current;
 				for (j = 0; j<missionUTMSimplified.size() && !coordinateError; j++) {
@@ -3497,8 +3376,6 @@ public class ArduSimTools {
 				stream.closeEntry();
 				stream.close();
 				out.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -3542,13 +3419,11 @@ public class ArduSimTools {
 		System.out.println(res);
 		System.out.flush();
 		// Update GUI only when using simulator and the main window is already loaded
-		if (Param.role == ArduSim.SIMULATOR && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.logArea.append(res + "\n");
-					int pos = MainWindow.buttonsPanel.logArea.getText().length();
-					MainWindow.buttonsPanel.logArea.setCaretPosition( pos );
-				}
+		if (Param.role == ArduSim.SIMULATOR_GUI && MainWindow.buttonsPanel != null && MainWindow.buttonsPanel.logArea != null) {
+			SwingUtilities.invokeLater(() -> {
+				MainWindow.buttonsPanel.logArea.append(res + "\n");
+				int pos = MainWindow.buttonsPanel.logArea.getText().length();
+				MainWindow.buttonsPanel.logArea.setCaretPosition( pos );
 			});
 		}
 	}
@@ -3569,12 +3444,8 @@ public class ArduSimTools {
 	 */
 	public static void updateGlobalInformation(final String text) {
 		// Update GUI only when using simulator
-		if (Param.role == ArduSim.SIMULATOR) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					MainWindow.buttonsPanel.statusLabel.setText(text);
-				}
-			});
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
+			SwingUtilities.invokeLater(() -> MainWindow.buttonsPanel.statusLabel.setText(text));
 		}
 	}
 
@@ -3584,7 +3455,7 @@ public class ArduSimTools {
 	 * @param message Message to be shown.
 	 */
 	public static void warnGlobal(String title, String message) {
-		if (Param.role == ArduSim.MULTICOPTER) {
+		if (Param.role == ArduSim.MULTICOPTER || Param.role == ArduSim.SIMULATOR_CLI) {
 			System.out.println(title + ": " + message);
 			System.out.flush();
 		} else {

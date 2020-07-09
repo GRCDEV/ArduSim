@@ -1,28 +1,10 @@
 package mbcap.logic;
 
-import java.awt.geom.Point2D;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.location.LogPoint;
 import api.pojo.location.Waypoint;
-import es.upv.grc.mapper.DrawableCirclesGeo;
-import es.upv.grc.mapper.DrawableImageGeo;
-import es.upv.grc.mapper.DrawableSymbolGeo;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3DUTM;
+import es.upv.grc.mapper.*;
 import main.Param.SimulatorState;
 import main.api.ArduSim;
 import main.api.FileTools;
@@ -35,6 +17,17 @@ import mbcap.pojo.Beacon;
 import mbcap.pojo.ErrorPoint;
 import mbcap.pojo.MBCAPState;
 import mbcap.pojo.ProgressState;
+import org.javatuples.Pair;
+
+import javax.swing.*;
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -85,30 +78,30 @@ public class MBCAPHelper extends ProtocolHelper {
 
 		for (int i = 0; i < numUAVs; i++) {
 			if (!isRealUAV) {
-				MBCAPGUIParam.predictedLocation[i] = new AtomicReference<DrawableCirclesGeo>();
+				MBCAPGUIParam.predictedLocation[i] = new AtomicReference<>();
 			}
 			MBCAPParam.event[i] = new AtomicInteger();
 			MBCAPParam.deadlockSolved[i] = new AtomicInteger();
 			MBCAPParam.deadlockFailed[i] = new AtomicInteger();
-			MBCAPParam.state[i] = new AtomicReference<MBCAPState>(MBCAPState.NORMAL);
+			MBCAPParam.state[i] = new AtomicReference<>(MBCAPState.NORMAL);
 			MBCAPParam.idAvoiding[i] = new AtomicLong(MBCAPParam.ID_AVOIDING_DEFAULT);
 			MBCAPParam.projectPath[i] = new AtomicInteger(1);	// Begin projecting the predicted path over the theoretical mission
-			MBCAPParam.selfBeacon[i] = new AtomicReference<Beacon>();
-			MBCAPParam.beacons[i] = new ConcurrentHashMap<Long, Beacon>();
-			MBCAPParam.impactLocationUTM[i] = new ConcurrentHashMap<Long, Location3DUTM>();
+			MBCAPParam.selfBeacon[i] = new AtomicReference<>();
+			MBCAPParam.beacons[i] = new ConcurrentHashMap<>();
+			MBCAPParam.impactLocationUTM[i] = new ConcurrentHashMap<>();
 			
-			MBCAPParam.targetLocationUTM[i] = new AtomicReference<Location2DUTM>();
+			MBCAPParam.targetLocationUTM[i] = new AtomicReference<>();
 			if (!isRealUAV) {
-				MBCAPParam.impactLocationScreen[i] = new ConcurrentHashMap<Long, DrawableImageGeo>();
-				MBCAPParam.targetLocationScreen[i] = new AtomicReference<DrawableSymbolGeo>();
+				MBCAPParam.impactLocationScreen[i] = new ConcurrentHashMap<>();
+				MBCAPParam.targetLocationScreen[i] = new AtomicReference<>();
 			}
-			MBCAPParam.beaconsStored[i] =  new ArrayList<Beacon>();
+			MBCAPParam.beaconsStored[i] =  new ArrayList<>();
 		}
 
 		MBCAPParam.progress = new ArrayList[numUAVs];
 
 		for (int i=0; i < numUAVs; i++) {
-			MBCAPParam.progress[i] = new ArrayList<ProgressState>();
+			MBCAPParam.progress[i] = new ArrayList<>();
 		}
 	}
 
@@ -225,7 +218,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			for (int i=1; i<numUAVs; i++) {
 				try {
 					threads[i-1].join();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException ignored) {
 				}
 			}
 		}
@@ -274,28 +267,28 @@ public class MBCAPHelper extends ProtocolHelper {
 				long iniTime = startTime;
 				MBCAPState curState;
 				long curTime;
-				for (int j = 0; j < progress.length; j++) {
-					curState = progress[j].state;
-					curTime = progress[j].time;
+				for (ProgressState progressState : progress) {
+					curState = progressState.state;
+					curTime = progressState.time;
 					switch (iniState) {
-					case NORMAL:
-						uavNormalTime[i] = uavNormalTime[i] + curTime - iniTime;
-						break;
-					case STAND_STILL:
-						uavStandStillTime[i] = uavStandStillTime[i] + curTime - iniTime;
-						break;
-					case MOVING_ASIDE:
-						uavMovingTime[i] = uavMovingTime[i] + curTime - iniTime;
-						break;
-					case GO_ON_PLEASE:
-						uavGoOnPleaseTime[i] = uavGoOnPleaseTime[i] + curTime - iniTime;
-						break;
-					case OVERTAKING:
-						uavPassingTime[i] = uavPassingTime[i] + curTime - iniTime;
-						break;
-					case EMERGENCY_LAND:
-						uavEmergencyLandTime[i] = uavEmergencyLandTime[i] + curTime - iniTime;
-						break;
+						case NORMAL:
+							uavNormalTime[i] = uavNormalTime[i] + curTime - iniTime;
+							break;
+						case STAND_STILL:
+							uavStandStillTime[i] = uavStandStillTime[i] + curTime - iniTime;
+							break;
+						case MOVING_ASIDE:
+							uavMovingTime[i] = uavMovingTime[i] + curTime - iniTime;
+							break;
+						case GO_ON_PLEASE:
+							uavGoOnPleaseTime[i] = uavGoOnPleaseTime[i] + curTime - iniTime;
+							break;
+						case OVERTAKING:
+							uavPassingTime[i] = uavPassingTime[i] + curTime - iniTime;
+							break;
+						case EMERGENCY_LAND:
+							uavEmergencyLandTime[i] = uavEmergencyLandTime[i] + curTime - iniTime;
+							break;
 					}
 					iniState = curState;
 					iniTime = curTime;
@@ -344,26 +337,24 @@ public class MBCAPHelper extends ProtocolHelper {
 
 	@Override
 	public String getExperimentConfiguration() {
-		StringBuilder sb = new StringBuilder(2000);
-		sb.append(MBCAPText.BEACONING_PARAM);
-		sb.append("\n\t").append(MBCAPText.BEACON_INTERVAL).append(" ").append(MBCAPParam.beaconingPeriod).append(" ").append(MBCAPText.MILLISECONDS);
-		sb.append("\n\t").append(MBCAPText.BEACON_REFRESH).append(" ").append(MBCAPParam.numBeacons);
-		sb.append("\n\t").append(MBCAPText.INTERSAMPLE).append(" ").append(MBCAPParam.hopTime).append(" ").append(MBCAPText.MILLISECONDS);
-		sb.append("\n\t").append(MBCAPText.MIN_ADV_SPEED).append(" ").append(MBCAPParam.minSpeed).append(" ").append(MBCAPText.METERS_PER_SECOND);
-		sb.append("\n\t").append(MBCAPText.BEACON_EXPIRATION).append(" ").append(String.format( "%.2f", MBCAPParam.beaconExpirationTime*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n").append(MBCAPText.AVOID_PARAM);
-		sb.append("\n\t").append(MBCAPText.WARN_DISTANCE).append(" ").append(MBCAPParam.collisionRiskDistance).append(" ").append(MBCAPText.METERS);
-		sb.append("\n\t").append(MBCAPText.WARN_ALTITUDE).append(" ").append(MBCAPParam.collisionRiskAltitudeDifference).append(" ").append(MBCAPText.METERS);
-		sb.append("\n\t").append(MBCAPText.WARN_TIME).append(" ").append(String.format( "%.2f", MBCAPParam.collisionRiskTime*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.CHECK_PERIOD).append(" ").append(String.format( "%.2f", MBCAPParam.riskCheckPeriod*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.PACKET_LOSS_THRESHOLD).append(" ").append(MBCAPParam.packetLossThreshold);
-		sb.append("\n\t").append(MBCAPText.GPS_ERROR).append(" ").append(MBCAPParam.gpsError).append(" ").append(MBCAPText.METERS);
-		sb.append("\n\t").append(MBCAPText.HOVERING_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.standStillTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.OVERTAKE_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.passingTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.RESUME_MODE_DELAY).append(" ").append(String.format( "%.2f", MBCAPParam.resumeTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.RECHECK_DELAY).append(" ").append(String.format( "%.2f", MBCAPParam.recheckTimeout*0.001 )).append(" ").append(MBCAPText.SECONDS);
-		sb.append("\n\t").append(MBCAPText.DEADLOCK_TIMEOUT).append(" ").append(String.format( "%.2f", MBCAPParam.globalDeadlockTimeout*0.000000001 )).append(" ").append(MBCAPText.SECONDS);
-		return sb.toString();
+		return MBCAPText.BEACONING_PARAM +
+				"\n\t" + MBCAPText.BEACON_INTERVAL + " " + MBCAPParam.beaconingPeriod + " " + MBCAPText.MILLISECONDS +
+				"\n\t" + MBCAPText.BEACON_REFRESH + " " + MBCAPParam.numBeacons +
+				"\n\t" + MBCAPText.INTERSAMPLE + " " + MBCAPParam.hopTime + " " + MBCAPText.MILLISECONDS +
+				"\n\t" + MBCAPText.MIN_ADV_SPEED + " " + MBCAPParam.minSpeed + " " + MBCAPText.METERS_PER_SECOND +
+				"\n\t" + MBCAPText.BEACON_EXPIRATION + " " + String.format("%.2f", MBCAPParam.beaconExpirationTime * 0.000000001) + " " + MBCAPText.SECONDS +
+				"\n" + MBCAPText.AVOID_PARAM +
+				"\n\t" + MBCAPText.WARN_DISTANCE + " " + MBCAPParam.collisionRiskDistance + " " + MBCAPText.METERS +
+				"\n\t" + MBCAPText.WARN_ALTITUDE + " " + MBCAPParam.collisionRiskAltitudeDifference + " " + MBCAPText.METERS +
+				"\n\t" + MBCAPText.WARN_TIME + " " + String.format("%.2f", MBCAPParam.collisionRiskTime * 0.000000001) + " " + MBCAPText.SECONDS +
+				"\n\t" + MBCAPText.CHECK_PERIOD + " " + String.format("%.2f", MBCAPParam.riskCheckPeriod * 0.000000001) + " " + MBCAPText.SECONDS +
+				"\n\t" + MBCAPText.PACKET_LOSS_THRESHOLD + " " + MBCAPParam.packetLossThreshold +
+				"\n\t" + MBCAPText.GPS_ERROR + " " + MBCAPParam.gpsError + " " + MBCAPText.METERS +
+				"\n\t" + MBCAPText.HOVERING_TIMEOUT + " " + String.format("%.2f", MBCAPParam.standStillTimeout * 0.000000001) + " " + MBCAPText.SECONDS +
+				"\n\t" + MBCAPText.OVERTAKE_TIMEOUT + " " + String.format("%.2f", MBCAPParam.passingTimeout * 0.000000001) + " " + MBCAPText.SECONDS +
+				"\n\t" + MBCAPText.RESUME_MODE_DELAY + " " + String.format("%.2f", MBCAPParam.resumeTimeout * 0.000000001) + " " + MBCAPText.SECONDS +
+				"\n\t" + MBCAPText.RECHECK_DELAY + " " + String.format("%.2f", MBCAPParam.recheckTimeout * 0.001) + " " + MBCAPText.SECONDS +
+				"\n\t" + MBCAPText.DEADLOCK_TIMEOUT + " " + String.format("%.2f", MBCAPParam.globalDeadlockTimeout * 0.000000001) + " " + MBCAPText.SECONDS;
 	}
 
 	@Override
@@ -378,14 +369,14 @@ public class MBCAPHelper extends ProtocolHelper {
 		LogPoint realPostLocation, realPrevLocation;
 		double time;
 		int inTestState = SimulatorState.TEST_IN_PROGRESS.getStateId();
-		Double x, y;
+		double x, y;
 		for (int i=0; i<numUAVs; i++) {
 			realPrevLocation = null;
-			realUAVPaths[i] = new ArrayList<ErrorPoint>();
+			realUAVPaths[i] = new ArrayList<>();
 
 			List<LogPoint> fullPath = ardusim.getUTMPath()[i];
-			for (int j = 0; j < fullPath.size(); j++) {
-				realPostLocation = fullPath.get(j);
+			for (LogPoint logPoint : fullPath) {
+				realPostLocation = logPoint;
 
 				// Considers only not repeated locations and only generated during the experiment
 				if (realPostLocation.getSimulatorState() == inTestState) {
@@ -399,7 +390,7 @@ public class MBCAPHelper extends ProtocolHelper {
 							realUAVPaths[i].add(new ErrorPoint(time, x, y));
 						}
 						realPrevLocation = realPostLocation;
-					} else if (realPostLocation.x!=realPrevLocation.x || realPostLocation.y!=realPrevLocation.y || realPostLocation.z!=realPrevLocation.z) {
+					} else if (realPostLocation.x != realPrevLocation.x || realPostLocation.y != realPrevLocation.y || realPostLocation.z != realPrevLocation.z) {
 						// Moved
 						realUAVPaths[i].add(new ErrorPoint(realPostLocation.getTime(), x, y));
 						realPrevLocation = realPostLocation;
@@ -419,13 +410,13 @@ public class MBCAPHelper extends ProtocolHelper {
 		ErrorPoint predictedLocation;
 		@SuppressWarnings("unchecked")
 		List<List<ErrorPoint>>[] totalPredictedLocations = new ArrayList[numUAVs];
-		boolean verboseStore = ardusim.isVerboseStorageEnabled();
+		boolean verboseStore = ardusim.isStoreDataEnabled();
 		// For each UAV
 		FileTools fileTools = API.getFileTools();
 		ValidationTools validationTools = API.getValidationTools();
 		for (int i=0; i<numUAVs; i++) {
 			List<Beacon> beacons = MBCAPParam.beaconsStored[i];
-			totalPredictedLocations[i] = new ArrayList<List<ErrorPoint>>(beacons.size());
+			totalPredictedLocations[i] = new ArrayList<>(beacons.size());
 			
 			long id = API.getCopter(i).getID();
 			if (verboseStore) {
@@ -439,7 +430,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			Beacon beacon;
 			for (j=0; j<beacons.size(); j++) {
 				beacon = beacons.get(j);
-				time = validationTools.roundDouble(((double) (beacon.time - baseNanoTime)) / 1000000000l, 9);
+				time = validationTools.roundDouble(((double) (beacon.time - baseNanoTime)) / 1000000000L, 9);
 				if (time >= 0 && time <= realUAVPaths[i].get(realUAVPaths[i].size() - 1).time
 						&& beacon.points!=null && beacon.points.size()>0) {
 					if (verboseStore) {
@@ -447,7 +438,7 @@ public class MBCAPHelper extends ProtocolHelper {
 					}
 					
 					List<Location3DUTM> locations = beacon.points;
-					List<ErrorPoint> predictions = new ArrayList<ErrorPoint>(beacon.points.size());
+					List<ErrorPoint> predictions = new ArrayList<>(beacon.points.size());
 					// For each point in each beacon
 					for (int k=0; k<locations.size(); k++) {
 						if (verboseStore) {
@@ -476,7 +467,7 @@ public class MBCAPHelper extends ProtocolHelper {
 				List<List<ErrorPoint>> predictedLocations = totalPredictedLocations[i];
 				double[] maxBeaconDistance = new double[numBeacons]; // One per beacon
 				double[] meanBeaconDistance = new double[numBeacons];
-				if (ardusim.isVerboseStorageEnabled()) {
+				if (ardusim.isStoreDataEnabled()) {
 					// Log the line from the real to the predicted location, with maximum error
 					maxErrorFile = new File(folder + File.separator + baseFileName + "_" + id + "_" + MBCAPText.MAX_ERROR_LINES_SUFIX);
 					sb2 = new StringBuilder(2000);
@@ -486,7 +477,7 @@ public class MBCAPHelper extends ProtocolHelper {
 					Pair<Location2DUTM, Location2DUTM> pair =
 							beaconErrorCalculation(realUAVPath, predictedLocations, j,
 									maxBeaconDistance, j, meanBeaconDistance);
-					if (pair!=null && ardusim.isVerboseStorageEnabled()) {
+					if (pair!=null && ardusim.isStoreDataEnabled()) {
 						sb2.append("._LINE\n");
 						sb2.append(validationTools.roundDouble(pair.getValue0().x, 3)).append(",")
 							.append(validationTools.roundDouble(pair.getValue0().y, 3)).append("\n");
@@ -494,7 +485,7 @@ public class MBCAPHelper extends ProtocolHelper {
 							.append(validationTools.roundDouble(pair.getValue1().y, 3)).append("\n\n");
 					}
 				}
-				if (ardusim.isVerboseStorageEnabled()) {
+				if (ardusim.isStoreDataEnabled()) {
 					fileTools.storeFile(maxErrorFile, sb2.toString());
 				}
 				
@@ -513,9 +504,9 @@ public class MBCAPHelper extends ProtocolHelper {
 				// 5. Calculus and storage of the mean and maximum distance error on each position of each beacon
 				// First, get the maximum size of the beacons
 				int size = 0;
-				for (int m = 0; m<predictedLocations.size(); m++) {
-					if (predictedLocations.get(m).size()>size) {
-						size = predictedLocations.get(m).size();
+				for (List<ErrorPoint> location : predictedLocations) {
+					if (location.size() > size) {
+						size = location.size();
 					}
 				}
 				
@@ -551,22 +542,21 @@ public class MBCAPHelper extends ProtocolHelper {
 		Location2DUTM ini, fin = ini = null;
 		List<ErrorPoint> predictedLocs = predictedLocations.get(predictedPos);
 		ErrorPoint predictedLocation, realPrev, realPost;
-		predictedLocation = null;
 		Location2DUTM realIntersection;
 		int prev, post;
 
 		// Calculus for each one of the predicted locations
-		for (int i=0; i<predictedLocs.size(); i++) {
-			predictedLocation = predictedLocs.get(i);
+		for (ErrorPoint predictedLoc : predictedLocs) {
+			predictedLocation = predictedLoc;
 			// Ignores points too far on time or outside the real path
 			if (predictedLocation.time >= realUAVPath[0].time
-					&& predictedLocation.time <= realUAVPath[realUAVPath.length-1].time) {
+					&& predictedLocation.time <= realUAVPath[realUAVPath.length - 1].time) {
 				// Locating the real previous and next points
 				prev = -1;
 				post = -1;
 				boolean found = false;
-				for (int j=1; j<realUAVPath.length && !found; j++) {
-					if (predictedLocation.time >= realUAVPath[j-1].time && predictedLocation.time <= realUAVPath[j].time) {
+				for (int j = 1; j < realUAVPath.length && !found; j++) {
+					if (predictedLocation.time >= realUAVPath[j - 1].time && predictedLocation.time <= realUAVPath[j].time) {
 						found = true;
 						prev = j - 1;
 						post = j;
@@ -575,11 +565,11 @@ public class MBCAPHelper extends ProtocolHelper {
 				// Interpolating the point in the segment over the real path
 				realPrev = realUAVPath[prev];
 				realPost = realUAVPath[post];
-				double incT = Math.abs((predictedLocation.time-realPrev.time)/(realPost.time-realPrev.time));
-				double x = realPrev.x + (realPost.x-realPrev.x) * incT;
-				double y = realPrev.y + (realPost.y-realPrev.y) * incT;
+				double incT = Math.abs((predictedLocation.time - realPrev.time) / (realPost.time - realPrev.time));
+				double x = realPrev.x + (realPost.x - realPrev.x) * incT;
+				double y = realPrev.y + (realPost.y - realPrev.y) * incT;
 				realIntersection = new Location2DUTM(x, y);
-				
+
 				dist = predictedLocation.distance(realIntersection);
 				meanBeaconDistance[distancePos] = meanBeaconDistance[distancePos] + dist;
 				// Checking if the distance is greater than the previous
@@ -588,7 +578,7 @@ public class MBCAPHelper extends ProtocolHelper {
 					ini = predictedLocation;
 					fin = realIntersection;
 				}
-				
+
 				num++;
 			}
 		}
@@ -597,7 +587,7 @@ public class MBCAPHelper extends ProtocolHelper {
 			meanBeaconDistance[distancePos] = meanBeaconDistance[distancePos]/num;
 		}
 
-		if (ini!=null && fin!=null) {
+		if (ini != null) {
 			return Pair.with(ini, fin);
 		} else {
 			return null;
@@ -615,20 +605,20 @@ public class MBCAPHelper extends ProtocolHelper {
 		int prev, post;
 
 		// For each beacon
-		for (int i=0; i<predictedLocations.size(); i++) {
-			predictedLocs = predictedLocations.get(i);
+		for (List<ErrorPoint> location : predictedLocations) {
+			predictedLocs = location;
 			// For each position in the beacon
-			for (int j=0; j<predictedLocs.size(); j++) {
+			for (int j = 0; j < predictedLocs.size(); j++) {
 				predictedLocation = predictedLocs.get(j);
 				// Ignores points out of the real path
 				if (predictedLocation.time >= realUAVPath[0].time
-						&& predictedLocation.time <= realUAVPath[realUAVPath.length-1].time) {
+						&& predictedLocation.time <= realUAVPath[realUAVPath.length - 1].time) {
 					// Locating the real previous and next points
 					prev = -1;
 					post = -1;
 					boolean found = false;
-					for (int k=1; k<realUAVPath.length && !found; k++) {
-						if (predictedLocation.time >= realUAVPath[k-1].time && predictedLocation.time <= realUAVPath[k].time) {
+					for (int k = 1; k < realUAVPath.length && !found; k++) {
+						if (predictedLocation.time >= realUAVPath[k - 1].time && predictedLocation.time <= realUAVPath[k].time) {
 							found = true;
 							prev = k - 1;
 							post = k;
@@ -637,15 +627,15 @@ public class MBCAPHelper extends ProtocolHelper {
 					// Interpolating the point in the segment over the real path
 					realPrev = realUAVPath[prev];
 					realPost = realUAVPath[post];
-					double incT = Math.abs((predictedLocation.time-realPrev.time)/(realPost.time-realPrev.time));
-					double x = realPrev.x + (realPost.x-realPrev.x) * incT;
-					double y = realPrev.y + (realPost.y-realPrev.y) * incT;
+					double incT = Math.abs((predictedLocation.time - realPrev.time) / (realPost.time - realPrev.time));
+					double x = realPrev.x + (realPost.x - realPrev.x) * incT;
+					double y = realPrev.y + (realPost.y - realPrev.y) * incT;
 					realIntersection = new Location2DUTM(x, y);
-					
+
 					dist = predictedLocation.distance(realIntersection);
 					meanTimeDistance[j] = meanTimeDistance[j] + dist;
 					// Checking if the distance is greater than the previous
-					if (dist>maxTimeDistance[j]) {
+					if (dist > maxTimeDistance[j]) {
 						maxTimeDistance[j] = dist;
 					}
 					num[j]++;

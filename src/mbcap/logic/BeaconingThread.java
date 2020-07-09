@@ -1,27 +1,9 @@
 package mbcap.logic;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.javatuples.Pair;
-import org.javatuples.Quintet;
-import com.esotericsoftware.kryo.io.Output;
-
 import api.API;
 import api.pojo.location.WaypointSimplified;
-import es.upv.grc.mapper.DrawableCirclesGeo;
-import es.upv.grc.mapper.GUIMapPanelNotReadyException;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3DUTM;
-import es.upv.grc.mapper.LocationNotReadyException;
-import es.upv.grc.mapper.Mapper;
+import com.esotericsoftware.kryo.io.Output;
+import es.upv.grc.mapper.*;
 import main.Param;
 import main.api.ArduSim;
 import main.api.Copter;
@@ -31,6 +13,15 @@ import main.api.communications.CommLink;
 import mbcap.gui.MBCAPGUIParam;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.MBCAPState;
+import org.javatuples.Pair;
+import org.javatuples.Quintet;
+
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** This class sends data packets to other UAVs, by real or simulated broadcast, so others can detect risk of collision.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -60,7 +51,7 @@ public class BeaconingThread extends Thread {
 	private BeaconingThread() {}
 
 	public BeaconingThread(int numUAV) {
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			this.predictedLocations = MBCAPGUIParam.predictedLocation[numUAV];
 		}
 		this.event = MBCAPParam.event[numUAV];
@@ -104,7 +95,7 @@ public class BeaconingThread extends Thread {
 					prevState = selfBeacon.state;
 
 					// Beacon store for logging purposes, while the experiment is in progress
-					if (ardusim.isVerboseStorageEnabled()
+					if (ardusim.isStoreDataEnabled()
 							&& ardusim.getExperimentEndTime()[numUAV] == 0) {
 						beaconsStored.add(new Beacon(selfBeacon));
 					}
@@ -119,7 +110,7 @@ public class BeaconingThread extends Thread {
 						prevState = selfBeacon.state;
 
 						// Beacon store for logging purposes
-						if (ardusim.isVerboseStorageEnabled()
+						if (ardusim.isStoreDataEnabled()
 								&& ardusim.getExperimentEndTime()[numUAV] == 0) {
 							beaconsStored.add(new Beacon(selfBeacon));
 						}
@@ -139,7 +130,7 @@ public class BeaconingThread extends Thread {
 		}
 		
 		// Stop sending and drawing future positions when the UAV lands
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			DrawableCirclesGeo current = predictedLocations.getAndSet(null);
 			if (current != null) {
 				try {
@@ -163,7 +154,7 @@ public class BeaconingThread extends Thread {
 		double speed = uavcurrentData.getValue3();
 		double acceleration = uavcurrentData.getValue4();
 		List<Location3DUTM> points = this.getPredictedPath(speed, acceleration, currentLocation, currentZ);
-		List<Location2DGeo> circles = new ArrayList<Location2DGeo>();
+		List<Location2DGeo> circles = new ArrayList<>();
 		for (Location3DUTM loc : points) {
 			try {
 				circles.add(loc.getGeo());
@@ -171,7 +162,7 @@ public class BeaconingThread extends Thread {
 				e.printStackTrace();
 			}
 		}
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			DrawableCirclesGeo current = predictedLocations.get();
 			if (current == null) {
 				try {
@@ -237,15 +228,12 @@ public class BeaconingThread extends Thread {
 		if (copter.getFlightMode().getCustomMode() == 9) {	// Land flight mode
 			return true;
 		}
-		if (copter.getMissionHelper().isLastWaypointReached()) {
-			return true;
-		}
-		return false;
+		return copter.getMissionHelper().isLastWaypointReached();
 	}
 	
 	/** Predicts the future positions of the UAV. Returns empty list in case of problems. */
 	private List<Location3DUTM> getPredictedPath(double speed, double acceleration, Location2DUTM currentUTMLocation, double currentZ) {
-		List<Location3DUTM> predictedPath = new ArrayList<Location3DUTM>(MBCAPParam.POINTS_SIZE);
+		List<Location3DUTM> predictedPath = new ArrayList<>(MBCAPParam.POINTS_SIZE);
 		// Multiple cases to study:
 		
 		// 1. At the beginning, without GPS, the initial position can be null
@@ -258,11 +246,8 @@ public class BeaconingThread extends Thread {
 		if (state == MBCAPState.GO_ON_PLEASE) {
 			predictedPath.add(new Location3DUTM(currentUTMLocation.x, currentUTMLocation.y, currentZ));
 			Location3DUTM riskLocation = impactLocationUTM.get(beacon.get().idAvoiding);
-			if (riskLocation != null) {
-				predictedPath.add(riskLocation);
-			} else {
-				predictedPath.add(new Location3DUTM(0, 0, 0));	// If no risk point was detected, a fake point is sent
-			}
+			// If no risk point was detected, a fake point is sent
+			predictedPath.add(Objects.requireNonNullElseGet(riskLocation, () -> new Location3DUTM(0, 0, 0)));
 			return predictedPath;
 		}
 
@@ -364,7 +349,7 @@ public class BeaconingThread extends Thread {
 				d = 1.87 * speed - 2.26;
 			}
 			d = d + MBCAPParam.gpsError
-					+ MBCAPParam.riskCheckPeriod / 1000000000l * speed
+					+ MBCAPParam.riskCheckPeriod / 1000000000L * speed
 					+ (MBCAPParam.packetLossThreshold * MBCAPParam.beaconingPeriod) / 1000.0 * speed;
 		}
 		return d;
@@ -373,7 +358,7 @@ public class BeaconingThread extends Thread {
 	/** Calculates the first point of the predicted positions list.
 	 * <p>It also decides which is the next waypoint the UAV is moving towards.</p> */
 	private Pair<Location2DUTM, Integer> getCurrentLocation(List<WaypointSimplified> mission, Location2DUTM currentUTMLocation, int posNextWaypoint) {
-		Location2DUTM baseLocation = null;
+		Location2DUTM baseLocation;
 		int nextWaypointPosition = posNextWaypoint;
 		if (projectPath.get() == 0) {
 			// The next waypoint position has been already set
@@ -413,8 +398,8 @@ public class BeaconingThread extends Thread {
 			Location2DUTM currentUTMLocation, List<WaypointSimplified> mission, int posNextWaypoint, int currentWaypoint, double currentZ,
 			List<Location3DUTM> predictedPath) {
 		// 1. Calculus of the segments over which we have to obtain the points
-		List<Double> distances = new ArrayList<Double>(MBCAPParam.DISTANCES_SIZE);
-		double totalDistance = 0.0;
+		List<Double> distances = new ArrayList<>(MBCAPParam.DISTANCES_SIZE);
+		double totalDistance;
 		// MBCAP v1 or MBCAP v2 (no acceleration present)
 		int remainingLocations = (int)Math.ceil(this.getReactionDistance(speed) / (speed * MBCAPParam.hopTime));
 		double flyingTime = remainingLocations * MBCAPParam.hopTime;
@@ -428,14 +413,14 @@ public class BeaconingThread extends Thread {
 		}
 		
 		// 2. Calculus of the last waypoint included in the points calculus, and the total distance
-		double distanceAcum = 0.0;
+		double distanceAcum;
 		// Distance of the first segment
 		distanceAcum = currentUTMLocation.distance(mission.get(posNextWaypoint));
 		distances.add(distanceAcum);
 		int posLastWaypoint = posNextWaypoint;
 		// Distance of the rest of segments until the last waypoint
 		if (distanceAcum < totalDistance) {
-			double increment = 0;
+			double increment;
 			for (int i = posNextWaypoint + 1; i < mission.size() && distanceAcum <= totalDistance; i++) {
 				increment = mission.get(i - 1).distance(mission.get(i));
 				distances.add(increment);

@@ -1,16 +1,20 @@
 package main.sim.logic;
 
-import java.awt.Color;
+import api.API;
+import api.pojo.location.LogPoint;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
-import api.pojo.location.LogPoint;
 
 /** This class contains parameters related to the simulation platform.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class SimParam {
 
+	// path of top-level .properties
+	public static final File resourcesFile = new File(API.getFileTools().getCurrentFolder(),"SimulationParam.properties");
 	// Detects when the communications are online
 	public static volatile boolean communicationsOnline = false;
 	
@@ -59,7 +63,7 @@ public class SimParam {
 	public static final String TEMP_FOLDER_PREFIX = "virtual_uav_temp_";
 
 	public static final long CONSOLE_READ_RETRY_WAITING_TIME = 100; // (ms)
-	public static final long SITL_STARTING_TIMEOUT = 20 * 1000000000l; // (ns)
+	public static final long SITL_STARTING_TIMEOUT = 20 * 1000000000L; // (ns)
 	
 	// Parameters needed to draw and store the log of the UAVs path
 	// Persistent storage for the UTM coordinates drawn. Used to rescale drawing and to store log

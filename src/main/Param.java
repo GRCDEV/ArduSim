@@ -1,11 +1,11 @@
 package main;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import main.api.communications.WirelessModel;
 import main.cpuHelper.CPUData;
 import main.uavController.UAVControllerThread;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** This class contains general parameters of the application.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -70,7 +70,7 @@ public class Param {
 	public static volatile boolean verboseLogging = false;
 	
 	// Store additional information in files?
-	public static volatile boolean verboseStore = true;
+	public static volatile boolean storeData = true;
 	
 	// Array containing the UAV controllers. Useful to set a listener to detect when a waypoint is reached, if needed.
 	public static UAVControllerThread[] controllers;
@@ -123,7 +123,7 @@ public class Param {
 		SHUTTING_DOWN(8);
 		
 		private final int id;
-		private SimulatorState(int id) {
+		SimulatorState(int id) {
 			this.id = id;
 		}
 		public int getStateId() {

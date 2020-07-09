@@ -39,12 +39,6 @@ public class DistanceCalculusThread extends Thread {
 			}
 		}
 		UAVParam.distanceCalculusIsOnline = false;
-		
-		
-		
-		
-		
-		
 	}
 
 }

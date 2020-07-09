@@ -1,20 +1,5 @@
 package main.api.communications;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.locks.ReentrantLock;
-
 import api.API;
 import main.ArduSimTools;
 import main.Param;
@@ -23,6 +8,17 @@ import main.api.ArduSim;
 import main.api.ValidationTools;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
+
+import java.io.IOException;
+import java.net.*;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Communications link object.
@@ -79,9 +75,8 @@ public class CommLinkObject {
 		
 		this.port = port;
 		
-		if (Param.role == ArduSim.SIMULATOR) {
-			
-			prevSentMessage = new AtomicReferenceArray<IncomingMessage>(numUAVs);
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
+			prevSentMessage = new AtomicReferenceArray<>(numUAVs);
 			mBuffer = new IncomingMessageQueue[numUAVs];
 			for (int i = 0; i < Param.numUAVs; i++) {
 				mBuffer[i] = new IncomingMessageQueue();
@@ -138,7 +133,7 @@ public class CommLinkObject {
 	}
 
 	public void sendBroadcastMessage(int numUAV, byte[] message) {
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			if (Param.simStatus == Param.SimulatorState.TEST_FINISHED) {
 				if (this.port == UAVParam.broadcastPort) {
 					CommLinkObject.communicationsClosed.put("s" + numUAV, "s" + numUAV);
@@ -241,7 +236,7 @@ public class CommLinkObject {
 	}
 	
 	public byte[] receiveMessage(int numUAV, int socketTimeout) {
-		if (Param.role == ArduSim.SIMULATOR) {
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			if (Param.simStatus == Param.SimulatorState.TEST_FINISHED) {
 				if (this.port == UAVParam.broadcastPort) {
 					CommLinkObject.communicationsClosed.put("r" + numUAV, "r" + numUAV);
@@ -393,7 +388,7 @@ public class CommLinkObject {
 			sb.append("\n\t").append(Text.BROADCAST_PORT).append(" ").append(port);
 			sb.append("\n\t").append(Text.TOT_SENT_PACKETS).append(" ").append(sentPacketTot);
 			sb.append("\n\t").append(Text.TOT_PROCESSED).append(" ").append(receivedPacketTot);
-		} else if (Param.role == ArduSim.SIMULATOR) {
+		} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			sb.append("\n\t").append(Text.CARRIER_SENSING_ENABLED).append(" ").append(CommLinkObject.carrierSensingEnabled);
 			sb.append("\n\t").append(Text.PACKET_COLLISION_DETECTION_ENABLED).append(" ").append(CommLinkObject.pCollisionEnabled);
 			sb.append("\n\t").append(Text.BUFFER_SIZE).append(" ").append(CommLinkObject.receivingBufferSize).append(" ").append(Text.BYTES);

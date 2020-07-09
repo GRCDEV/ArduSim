@@ -1,41 +1,22 @@
 package muscop.logic;
 
-import static muscop.pojo.State.*;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.esotericsoftware.kryo.io.Input;
 import api.API;
 import api.pojo.FlightMode;
 import api.pojo.location.WaypointSimplified;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3D;
-import es.upv.grc.mapper.Location3DGeo;
-import es.upv.grc.mapper.Location3DUTM;
-import es.upv.grc.mapper.LocationNotReadyException;
-import main.api.ArduSim;
-import main.api.Copter;
-import main.api.GUI;
-import main.api.MoveToListener;
-import main.api.SafeTakeOffHelper;
-import main.api.MoveTo;
+import com.esotericsoftware.kryo.io.Input;
+import es.upv.grc.mapper.*;
+import main.api.*;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.MasterSlaveHelper;
-import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
-import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
 import muscop.pojo.Message;
-import muscop.logic.MUSCOPTalkerThread;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static muscop.pojo.State.*;
 
 /** 
  * Thread used to listen for messages sent by other UAVs.
@@ -98,19 +79,19 @@ public class MUSCOPListenerThread extends Thread {
 	
 	/** SETUP PHASE */
 	private Location3DGeo[] setup() {
-		/** START PHASE */
+		/* START PHASE */
 		Map<Long, Location2DUTM> UAVsDetected = startPhase();
 		
-		/** SHARE TAKE OFF DATA PHASE */
+		/* SHARE TAKE OFF DATA PHASE */
 		shareTakeOffDataPhase(UAVsDetected);
 		
-		/** SHARE MISSION PHASE */
+		/* SHARE MISSION PHASE */
 		Location3DGeo[] selfMission = shareMission();
 		
-		/** TAKING OFF PHASE */
+		/* TAKING OFF PHASE */
 		takingOff(takeOff);
 		
-		/** SETUP FINISHED PHASE */
+		/* SETUP FINISHED PHASE */
 		setupFinishedPhase();
 		return selfMission;
 	}
@@ -121,22 +102,14 @@ public class MUSCOPListenerThread extends Thread {
 		if (this.isMaster) {
 			gui.logVerboseUAV(MUSCOPText.MASTER_START_LISTENER);
 			final AtomicInteger totalDetected = new AtomicInteger();
-			UAVsDetected = msHelper.DiscoverSlaves(new DiscoveryProgressListener() {
-				
-				@Override
-				public boolean onProgressCheckActionPerformed(int numUAVs) {
-					// Just for logging purposes
-					if (numUAVs > totalDetected.get()) {
-						totalDetected.set(numUAVs);
-						gui.log(MUSCOPText.MASTER_DETECTED_UAVS + numUAVs);
-					}
-					// We decide to continue when the setup button is pressed
-					if (ardusim.isSetupInProgress() || ardusim.isSetupFinished()) {
-						return true;
-					}
-					
-					return false;
+			UAVsDetected = msHelper.DiscoverSlaves(numUAVs -> {
+				// Just for logging purposes
+				if (numUAVs > totalDetected.get()) {
+					totalDetected.set(numUAVs);
+					gui.log(MUSCOPText.MASTER_DETECTED_UAVS + numUAVs);
 				}
+				// We decide to continue when the setup button is pressed
+				return ardusim.isSetupInProgress() || ardusim.isSetupFinished();
 			});
 		} else {
 			gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
@@ -171,13 +144,13 @@ public class MUSCOPListenerThread extends Thread {
 		this.numUAVs = takeOff.getNumUAVs();
 		// set expected size of data structures for performance
 		lastTimeUAV = new HashMap<>(numUAVs);
-		masterOrder = new ArrayList<Long>(numUAVs);
-		popIds = new HashSet<Long>(numUAVs);
+		masterOrder = new ArrayList<>(numUAVs);
+		popIds = new HashSet<>(numUAVs);
 		
 		// set masterOrder
 		long[] masterArray = takeOff.getMasterOrder();
-		for(int i=0;i<masterArray.length;i++) {
-			this.masterOrder.add(masterArray[i]);
+		for (long l : masterArray) {
+			this.masterOrder.add(l);
 		}
 	}
 	
@@ -189,7 +162,7 @@ public class MUSCOPListenerThread extends Thread {
 		talker.start();
 		gui.logUAV(MUSCOPText.SEND_MISSION);
 		gui.updateProtocolState(MUSCOPText.SEND_MISSION);
-		Map<Long, Long> acks = null;
+		Map<Long, Long> acks;
 		Location3DGeo[] selfMission = null;
 		
 		if (this.isMaster) {
@@ -220,7 +193,7 @@ public class MUSCOPListenerThread extends Thread {
 			
 			// 3. Wait for data ack from all the slaves
 			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_ACK_LISTENER);
-			acks = new HashMap<Long, Long>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
+			acks = new HashMap<>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
 			while (currentState.get() == SHARE_MISSION) {
 				inBuffer = link.receiveMessage();
 				if (inBuffer != null) {
@@ -282,13 +255,7 @@ public class MUSCOPListenerThread extends Thread {
 		gui.logUAV(MUSCOPText.TAKING_OFF);
 		gui.updateProtocolState(MUSCOPText.TAKING_OFF);
 		gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
-		takeOffHelper.start(takeOff, new SafeTakeOffListener() {
-			
-			@Override
-			public void onCompleteActionPerformed() {
-				currentState.set(SETUP_FINISHED);
-			}
-		});
+		takeOffHelper.start(takeOff, () -> currentState.set(SETUP_FINISHED));
 		while (currentState.get() < SETUP_FINISHED) {
 			// Discard message
 			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
@@ -313,15 +280,15 @@ public class MUSCOPListenerThread extends Thread {
 	/** FLY PHASE */
 	
 	private Location2DUTM fly(Location3DGeo[] selfMission) {
-		/** COMBINED PHASE MOVE_TO_WP & WP_REACHED */
+		/* COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		iAmCenter = (masterOrder.get(0) == this.selfId);
 		if (iAmCenter) {
 			String text = "Master order: ";
-			for(int i=0;i<masterOrder.size();i++) {
-				text += " " + masterOrder.get(i).toString();
+			for (Long aLong : masterOrder) {
+				text += " " + aLong.toString();
 			}
 			gui.log(text);
-			reached = new HashSet<Long>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
+			reached = new HashSet<>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
 		}
 		int currentWP = 0;
 		Location2DUTM centerUAVFinalLocation = null;
@@ -334,10 +301,10 @@ public class MUSCOPListenerThread extends Thread {
 		}
 		
 		while (currentState.get() == FOLLOWING_MISSION) {
-			/** WP_REACHED PHASE */
+			/* WP_REACHED PHASE */
 			centerUAVFinalLocation = wpReached(selfMission, currentWP, centerUAVFinalLocation);
 			
-			/** MOVE_TO_WP PHASE */
+			/* MOVE_TO_WP PHASE */
 			currentWP = moveToWP(selfMission, currentWP);
 		}
 		return centerUAVFinalLocation;
@@ -346,10 +313,10 @@ public class MUSCOPListenerThread extends Thread {
 	private Location2DUTM wpReached(Location3DGeo[] selfMission, int currentWP, Location2DUTM centerUAVFinalLocation) {
 		gui.logUAV(MUSCOPText.WP_REACHED);
 		gui.updateProtocolState(MUSCOPText.WP_REACHED);
-		reached = new HashSet<Long>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
+		reached = new HashSet<>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
 		reached.add(selfId);
 		
-		Long start = System.currentTimeMillis();
+		long start = System.currentTimeMillis();
 		// As long as the UAVs are at the waypoint
 		while(wpReachedSemaphore.get() == currentWP) {
 			// update the swarm to see if some uav died
@@ -482,16 +449,16 @@ public class MUSCOPListenerThread extends Thread {
 	}
 	
 	
-	/** LAND PHASE */
+	/* LAND PHASE */
 	
 	private void landProcedure(Location2DUTM centerUAVFinalLocation) {
-		/** MOVE TO LAND PHASE */
+		/* MOVE TO LAND PHASE */
 		moveToLand(takeOff, centerUAVFinalLocation);
 		
-		/** LANDING PHASE */
+		/* LANDING PHASE */
 		land();
 		
-		/** FINISH PHASE */
+		/* FINISH PHASE */
 		gui.logUAV(MUSCOPText.FINISH);
 		gui.updateProtocolState(MUSCOPText.FINISH);
 		gui.logVerboseUAV(MUSCOPText.LISTENER_FINISHED);
@@ -510,7 +477,7 @@ public class MUSCOPListenerThread extends Thread {
 					*/
 			//TODO never run this in real experiment
 			Location2DUTM landingLocation = centerUAVFinalLocation;
-			
+
 			try {
 				destinationGeo = new Location3D(landingLocation, copter.getAltitudeRelative());
 				MoveTo moveTo = copter.moveTo(destinationGeo, new MoveToListener() {
@@ -528,7 +495,7 @@ public class MUSCOPListenerThread extends Thread {
 				moveTo.start();
 				try {
 					moveTo.join();
-				} catch (InterruptedException e) {}
+				} catch (InterruptedException ignored) {}
 				currentState.set(LANDING);
 			} catch (LocationNotReadyException e) {
 				gui.log(e.getMessage());
@@ -536,7 +503,7 @@ public class MUSCOPListenerThread extends Thread {
 				currentState.set(LANDING);
 			}
 		}else {
-			if(iAmCenter == true) {
+			if(iAmCenter) {
 				System.out.println(selfId + " not moving to land because I am master");
 			}else {
 				System.out.println(selfId + " not moving to land because onknown reason");
