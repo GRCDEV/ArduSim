@@ -1,15 +1,7 @@
 package muscop.logic;
 
-import static muscop.pojo.State.*;
-
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.esotericsoftware.kryo.io.Output;
-
 import api.API;
-import api.pojo.FlightMode;
+import com.esotericsoftware.kryo.io.Output;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DUTM;
 import main.api.ArduSim;
@@ -17,6 +9,12 @@ import main.api.Copter;
 import main.api.GUI;
 import main.api.communications.CommLink;
 import muscop.pojo.Message;
+
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static muscop.pojo.State.*;
 
 /** 
  * Thread used to send messages to other UAVs.
@@ -52,7 +50,7 @@ public class MUSCOPTalkerThread extends Thread {
 			AtomicBoolean missionReceived, AtomicInteger wpReachedSemaphore, AtomicInteger moveSemaphore) {
 		
 		this.running = new AtomicBoolean(true);
-		this.currentState = MUSCOPParam.state[numUAV];
+		this.currentState = MuscopSimProperties.state[numUAV];
 		this.selfId = API.getCopter(numUAV).getID();
 		this.isMaster = isMaster;
 		this.isCenter = isCenter;
@@ -88,7 +86,7 @@ public class MUSCOPTalkerThread extends Thread {
 			currentWP = moveToWP(currentWP);
 		}
 		
-		while (currentState.get() < MOVE_TO_LAND) {ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);}
+		while (currentState.get() < MOVE_TO_LAND) {ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);}
 		
 		if (!isCenter) {
 			gui.logVerboseUAV(MUSCOPText.TALKER_FINISHED);
@@ -120,7 +118,7 @@ public class MUSCOPTalkerThread extends Thread {
 			while (moveSemaphore.get() == currentWP && running.get()) {
 				link.sendBroadcastMessage(message);
 				// Timer
-				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + MuscopSimProperties.SENDING_TIMEOUT;
 				waitingTime = cicleTime - System.currentTimeMillis();
 				if (waitingTime > 0) {
 					ardusim.sleep(waitingTime);
@@ -143,7 +141,7 @@ public class MUSCOPTalkerThread extends Thread {
 			link.sendBroadcastMessage(message);
 			
 			// Timer
-			cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+			cicleTime = cicleTime + MuscopSimProperties.SENDING_TIMEOUT;
 			waitingTime = cicleTime - System.currentTimeMillis();
 			if (waitingTime > 0) {
 				ardusim.sleep(waitingTime);
@@ -197,14 +195,14 @@ public class MUSCOPTalkerThread extends Thread {
 			link.sendBroadcastMessage(message);
 			
 			// Timer
-			cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+			cicleTime = cicleTime + MuscopSimProperties.SENDING_TIMEOUT;
 			waitingTime = cicleTime - System.currentTimeMillis();
 			if (waitingTime > 0) {
 				ardusim.sleep(waitingTime);
 			}
 		}
 		while (currentState.get() < FINISH) {
-			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+			ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);
 		}
 	}
 
@@ -212,7 +210,7 @@ public class MUSCOPTalkerThread extends Thread {
 		/** TAKING OFF and SETUP FINISHED PHASES */
 		gui.logVerboseUAV(MUSCOPText.TALKER_WAITING);
 		while (currentState.get() < FOLLOWING_MISSION && running.get()) {
-			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+			ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);
 		}
 	}
 
@@ -221,8 +219,8 @@ public class MUSCOPTalkerThread extends Thread {
 		if (this.isMaster) {
 			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_TALKER);
 			Location3DUTM[] mission;
-			while ((mission = MUSCOPParam.missionSent.get()) == null && running.get()) {
-				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+			while ((mission = MuscopSimProperties.missionSent.get()) == null && running.get()) {
+				ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);
 			}
 			output.reset();
 			output.writeShort(Message.DATA);
@@ -242,7 +240,7 @@ public class MUSCOPTalkerThread extends Thread {
 				link.sendBroadcastMessage(message);
 				
 				// Timer
-				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + MuscopSimProperties.SENDING_TIMEOUT;
 				waitingTime = cicleTime - System.currentTimeMillis();
 				if (waitingTime > 0) {
 					ardusim.sleep(waitingTime);
@@ -263,7 +261,7 @@ public class MUSCOPTalkerThread extends Thread {
 				}
 				
 				// Timer
-				cicleTime = cicleTime + MUSCOPParam.SENDING_TIMEOUT;
+				cicleTime = cicleTime + MuscopSimProperties.SENDING_TIMEOUT;
 				waitingTime = cicleTime - System.currentTimeMillis();
 				if (waitingTime > 0) {
 					ardusim.sleep(waitingTime);
@@ -271,7 +269,7 @@ public class MUSCOPTalkerThread extends Thread {
 			}
 		}
 		while (currentState.get() < TAKING_OFF && running.get()) {
-			ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+			ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);
 		}
 	}
 	

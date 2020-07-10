@@ -89,7 +89,7 @@ public class MuscopConfigDialogController {
 
     private boolean ok(){
         Properties p = createProperties();
-        return properties.storeParameters(p);
+        return properties.storeParameters(p,resources);
     }
 
     private Properties createProperties(){

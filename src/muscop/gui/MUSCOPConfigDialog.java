@@ -5,8 +5,8 @@ import api.pojo.location.Waypoint;
 import main.Text;
 import main.api.*;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
-import muscop.logic.MUSCOPParam;
 import muscop.logic.MUSCOPText;
+import muscop.logic.MuscopSimProperties;
 import org.javatuples.Pair;
 
 import javax.swing.*;
@@ -448,7 +448,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		takeOffHelper.setTakeOffAlgorithm((String)takeOffStrategyComboBox.getSelectedItem());
 		formationTools.setFlyingFormation((String)airComboBox.getSelectedItem(), flying);
 		formationTools.setLandingFormationMinimumDistance(landing);
-		MUSCOPParam.CLUSTERS = (int)nrOfClustersComboBox.getSelectedItem();
+		MuscopSimProperties.numberOfClusters = (int)nrOfClustersComboBox.getSelectedItem();
 	}
 
 }

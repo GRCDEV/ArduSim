@@ -3,7 +3,7 @@ package main.api.formations;
 import api.API;
 import main.api.ValidationTools;
 import main.api.formations.helpers.FormationPoint;
-import muscop.logic.MUSCOPParam;
+import muscop.logic.MuscopSimProperties;
 
 public class FormationSplitUp extends FlightFormation{
 
@@ -14,7 +14,7 @@ public class FormationSplitUp extends FlightFormation{
 	protected void initializeFormation() {
 		ValidationTools validationTools = API.getValidationTools();
 		
-		int clusters = MUSCOPParam.CLUSTERS;
+		int clusters = MuscopSimProperties.numberOfClusters;
 		double x,y;
 		double offset = 600;
 		this.centerUAVPosition = 0;

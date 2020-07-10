@@ -25,9 +25,12 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
 public class MUSCOPHelper extends ProtocolHelper {
+
+	private List<MUSCOPListenerThread> threads = new ArrayList<>();
 
 	@Override
 	public void setProtocol() {
@@ -62,7 +65,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 			for(String key: resources.keySet()){
 				p.setProperty(key,resources.getString(key));
 			}
-			properties.storeParameters(p);
+			properties.storeParameters(p,resources);
 		} catch (IOException e) {
 			ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.PROTOCOL_PARAMETERS_FILE_NOT_FOUND );
 			System.exit(0);
@@ -77,8 +80,10 @@ public class MUSCOPHelper extends ProtocolHelper {
 		for (int i = 0; i < numUAVs; i++) {
 			state[i] = new AtomicInteger();	// Implicit value State.START, as it is equals to 0
 		}
-		
-		MUSCOPParam.state = state;
+		MuscopSimProperties.state = state;
+		for(int i =0;i<numUAVs;i++){
+			threads.add(new MUSCOPListenerThread(i));
+		}
 	}
 
 	@Override
@@ -131,9 +136,9 @@ public class MUSCOPHelper extends ProtocolHelper {
 				}
 				// Get the heading
 				if (waypointFound) {
-					MUSCOPParam.formationYaw = MUSCOPHelper.getYaw(waypoint1.getUTM(), waypoint2.getUTM());
+					MuscopSimProperties.formationYaw = MUSCOPHelper.getYaw(waypoint1.getUTM(), waypoint2.getUTM());
 				} else {
-					MUSCOPParam.formationYaw = 0.0;
+					MuscopSimProperties.formationYaw = 0.0;
 				}
 			} else {
 				gui.exit(MUSCOPText.UAVS_START_ERROR_2);
@@ -157,13 +162,13 @@ public class MUSCOPHelper extends ProtocolHelper {
 			if (i == groundCenterUAVPosition) {
 				groundLocations.put((long)i, groundCenterUTMLocation);
 			} else {
-				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, MUSCOPParam.formationYaw);
+				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, MuscopSimProperties.formationYaw);
 				groundLocations.put((long)i, locationUTM);
 			}
 		}
 		
 		// 3. Get the ID of the UAV that will be center in the flight formation
-		Pair<Long, Location2DUTM> flightCenterUAV = formationTools.getCenterUAV(groundLocations, MUSCOPParam.formationYaw, false);
+		Pair<Long, Location2DUTM> flightCenterUAV = formationTools.getCenterUAV(groundLocations, MuscopSimProperties.formationYaw, false);
 		
 		// 4. Copy the mission to the location where the UAV in the center of the flight formation will be
 		//   We do this to show the real path followed by the swarm as a mission for the flight center UAV, as it will follow this mission coordinating the remaining UAVs.
@@ -192,9 +197,9 @@ public class MUSCOPHelper extends ProtocolHelper {
 			Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
 			for (int i = 0; i < numUAVs; i++) {
 				if (i == groundCenterUAVPosition) {
-					startingLocation[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), MUSCOPParam.formationYaw);
+					startingLocation[i] = Pair.with(new Location2DGeo(waypoint1.getLatitude(), waypoint1.getLongitude()), MuscopSimProperties.formationYaw);
 				} else {
-					startingLocation[i] = Pair.with(groundLocations.get((long)i).getGeo(), MUSCOPParam.formationYaw);
+					startingLocation[i] = Pair.with(groundLocations.get((long)i).getGeo(), MuscopSimProperties.formationYaw);
 				}
 			}
 			return startingLocation;
@@ -242,16 +247,31 @@ public class MUSCOPHelper extends ProtocolHelper {
 	public void startThreads() {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
-			(new MUSCOPListenerThread(i)).start();
+			threads.get(i).start();
 		}
 		API.getGUI(0).log(MUSCOPText.ENABLING);
 	}
 
 	@Override
 	public void setupActionPerformed() {
+		int numUAVs = API.getArduSim().getNumUAVs();
+		for (int i = 0; i < numUAVs; i++) {
+			// start the setup in the tread
+			threads.get(i).startSetup = true;
+		}
+		boolean setupFinished = false;
+		while(!setupFinished){
+			API.getArduSim().sleep(200);
+			for (int i = 0; i < numUAVs; i++) {
+				// start the setup in the tread
+				setupFinished = threads.get(i).setupFinished;
+			}
+		}
+
+		/*
 		while (API.getArduSim().isSetupFinished()) {
 			API.getArduSim().sleep(200);
-		}
+		}*/
 		/*
 		ArduSim ardusim = API.getArduSim();
 		int numUAVs = ardusim.getNumUAVs();
@@ -259,12 +279,12 @@ public class MUSCOPHelper extends ProtocolHelper {
 		while (!allFinished) {
 			allFinished = true;
 			for (int i = 0; i < numUAVs && allFinished; i++) {
-				if (MUSCOPParam.state[i].get() < SETUP_FINISHED) {
+				if (MuscopSimProperties.state[i].get() < SETUP_FINISHED) {
 					allFinished = false;
 				}
 			}
 			if (!allFinished) {
-				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
+				ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);
 			}
 		}
 		*/

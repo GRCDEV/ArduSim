@@ -50,11 +50,14 @@ public class MUSCOPListenerThread extends Thread {
 	private final AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
 	private final AtomicInteger moveSemaphore = new AtomicInteger(1);	// We start in waypoint 0 and move to waypoint 1
 
+	public boolean startSetup = false;
+	public boolean setupFinished = false;
+
 	@SuppressWarnings("unused")
 	private MUSCOPListenerThread() {}
 	
 	public MUSCOPListenerThread(int numUAV) {
-		this.currentState = MUSCOPParam.state[numUAV];
+		this.currentState = MuscopSimProperties.state[numUAV];
 		this.numUAV = numUAV;
 		this.copter = API.getCopter(numUAV);
 		this.selfId = this.copter.getID();
@@ -70,9 +73,9 @@ public class MUSCOPListenerThread extends Thread {
 
 	@Override
 	public void run() {
-		while (!ardusim.isAvailable()) {ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);}
+		while (!ardusim.isAvailable()) {ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);}
+		while(!startSetup){ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);}
 		Location3DGeo[] selfMission = setup();
-		while(!ardusim.isExperimentInProgress()) { ardusim.sleep(1000); }
 		Location2DUTM centerUAVFinalLocation = fly(selfMission);
 		landProcedure(centerUAVFinalLocation);
 	}
@@ -88,7 +91,7 @@ public class MUSCOPListenerThread extends Thread {
 		
 		/* SHARE MISSION PHASE */
 		Location3DGeo[] selfMission = shareMission();
-		
+
 		/* TAKING OFF PHASE */
 		takingOff(takeOff);
 		
@@ -109,8 +112,8 @@ public class MUSCOPListenerThread extends Thread {
 					totalDetected.set(numUAVs);
 					gui.log(MUSCOPText.MASTER_DETECTED_UAVS + numUAVs);
 				}
-				// We decide to continue when the setup button is pressed or when the number of UAVs detected is equal to the total number of UAVs -1
-				return ardusim.isSetupInProgress() || ardusim.isSetupFinished() || (numUAVs == ardusim.getNumUAVs()-1);
+				// We decide to continue when the start button is pressed or when the number of UAVs detected is equal to the total number of UAVs -1
+				return numUAVs == ardusim.getNumUAVs()-1;
 			});
 		} else {
 			gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
@@ -128,11 +131,11 @@ public class MUSCOPListenerThread extends Thread {
 			if (ardusim.getArduSimRole() == ArduSim.MULTICOPTER) {
 				formationYaw = copter.getHeading();
 			} else {
-				formationYaw = MUSCOPParam.formationYaw;
+				formationYaw = MuscopSimProperties.formationYaw;
 			}
 			
 			screenMission = copter.getMissionHelper().getSimplified();
-			if (screenMission == null || screenMission.size() > MUSCOPParam.MAX_WAYPOINTS) {
+			if (screenMission == null || screenMission.size() > MuscopSimProperties.MAX_WAYPOINTS) {
 				gui.exit(MUSCOPText.MAX_WP_REACHED);
 			}
 			takeOff = takeOffHelper.getMasterContext(UAVsDetected,
@@ -190,7 +193,7 @@ public class MUSCOPListenerThread extends Thread {
 			// Share data with the talker thread
 			missionReceived.set(true);
 			// Store the mission of the center UAV to allow the talker thread to send it
-			MUSCOPParam.missionSent.set(centerMission);
+			MuscopSimProperties.missionSent.set(centerMission);
 			
 			// 3. Wait for data ack from all the slaves
 			gui.logVerboseUAV(MUSCOPText.MASTER_DATA_ACK_LISTENER);
@@ -210,12 +213,12 @@ public class MUSCOPListenerThread extends Thread {
 					}
 				}
 			}
-			ardusim.sleep(MUSCOPParam.MISSION_TIMEOUT);	// Wait to slaves timeout
+			ardusim.sleep(MuscopSimProperties.MISSION_TIMEOUT);	// Wait to slaves timeout
 		} else {
 			gui.logVerboseUAV(MUSCOPText.SLAVE_WAIT_DATA_LISTENER);
 			long lastReceivedData = 0;
 			while (currentState.get() == SHARE_MISSION) {
-				inBuffer = link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(MuscopSimProperties.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -244,7 +247,7 @@ public class MUSCOPListenerThread extends Thread {
 					}
 				}
 				
-				if (selfMission != null && System.currentTimeMillis() - lastReceivedData > MUSCOPParam.MISSION_TIMEOUT) {
+				if (selfMission != null && System.currentTimeMillis() - lastReceivedData > MuscopSimProperties.MISSION_TIMEOUT) {
 					currentState.set(TAKING_OFF);
 				}
 			}
@@ -259,17 +262,18 @@ public class MUSCOPListenerThread extends Thread {
 		takeOffHelper.start(takeOff, () -> currentState.set(SETUP_FINISHED));
 		while (currentState.get() < SETUP_FINISHED) {
 			// Discard message
-			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
+			link.receiveMessage(MuscopSimProperties.RECEIVING_TIMEOUT);
 		}
 	}
 	
 	private void setupFinishedPhase() {
+		setupFinished = true;
 		gui.logUAV(MUSCOPText.SETUP_FINISHED);
 		gui.updateProtocolState(MUSCOPText.SETUP_FINISHED);
 		gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
 		while (currentState.get() == SETUP_FINISHED) {
 			// Discard message
-			link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
+			link.receiveMessage(MuscopSimProperties.RECEIVING_TIMEOUT);
 			// Coordination with ArduSim
 			if (ardusim.isExperimentInProgress()) {
 				currentState.set(FOLLOWING_MISSION);
@@ -328,7 +332,7 @@ public class MUSCOPListenerThread extends Thread {
 				if (currentWP >= selfMission.length - 1) {currentState.set(LANDING);}
 			}
 			// check if a message is received
-			inBuffer = link.receiveMessage(MUSCOPParam.RECEIVETIMEOUT);
+			inBuffer = link.receiveMessage(MuscopSimProperties.RECEIVETIMEOUT);
 			if (inBuffer != null) {
 				// read the type there are 3: waypoint_reached_ack, move_to_waypoint and land
 				// in each case: get all the information from the message, update lastTimeUAV , and do additional case bounded stuff
@@ -395,7 +399,7 @@ public class MUSCOPListenerThread extends Thread {
 				// This loop is executed as long as the UAVs are moving towards a waypoint
 				// All the UAVs are broadcasting the messages with in interval of 200 ms
 				// Design decision is to use this message to check if the UAVs are still alive and not send additional messages like heartbeat 
-				inBuffer = link.receiveMessage(MUSCOPParam.RECEIVING_TIMEOUT);
+				inBuffer = link.receiveMessage(MuscopSimProperties.RECEIVING_TIMEOUT);
 				if (inBuffer != null) {
 					input.setBuffer(inBuffer);
 					short type = input.readShort();
@@ -428,7 +432,7 @@ public class MUSCOPListenerThread extends Thread {
 		for (Entry<Long, Long> uav : lastTimeUAV.entrySet()) {
 			Long id = uav.getKey();
 			Long time = uav.getValue();
-			if((System.currentTimeMillis() - time > MUSCOPParam.TTL)) {
+			if((System.currentTimeMillis() - time > MuscopSimProperties.TTL)) {
 				gui.logUAV("UAV with id: " + id + " died");
 				numUAVs--;
 				popIds.add(id);
@@ -524,7 +528,7 @@ public class MUSCOPListenerThread extends Thread {
 			if(!copter.isFlying()) {
 				currentState.set(FINISH);
 			} else {
-				cicleTime = cicleTime + MUSCOPParam.LAND_CHECK_TIMEOUT;
+				cicleTime = cicleTime + MuscopSimProperties.LAND_CHECK_TIMEOUT;
 				waitingTime = cicleTime - System.currentTimeMillis();
 				if (waitingTime > 0) {
 					ardusim.sleep(waitingTime);
