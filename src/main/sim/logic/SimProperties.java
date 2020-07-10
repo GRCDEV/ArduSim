@@ -28,6 +28,7 @@ public class SimProperties {
     private double startingAltitude;
     private int numUAVs;
     private String protocol;
+    private File protocolParameterFile;
     private int screenRefreshRate;
     private double minScreenRedrawDistance;
     private boolean arduCopterLogging;
@@ -136,6 +137,11 @@ public class SimProperties {
     }
     private boolean specificCheckVariables(){
         // this method checks for specific conditions for the variables e.g. positive integer
+        if(protocolParameterFile.exists()){
+            return protocolParameterFile.getAbsolutePath().endsWith(".properties");
+        }else{
+            System.out.println("protocolParameterFile does not exist");
+        }
         if(screenRefreshRate < SimParam.MIN_SCREEN_UPDATE_PERIOD ||
                 screenRefreshRate > SimParam.MAX_SCREEN_UPDATE_PERIOD){return false;}
         if(minScreenRedrawDistance < 0 || minScreenRedrawDistance >= SimParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD){return false;}
@@ -169,6 +175,7 @@ public class SimProperties {
         // set default parameters intern so that a default.properties can be created
         arducopterFile = new File(API.getFileTools().getCurrentFolder(),"arducopter");
         speedFile = new File(API.getFileTools().getCurrentFolder(), "speed.csv");
+        protocolParameterFile = new File(API.getFileTools().getCurrentFolder(),"protocolParameter.properties");
         startingAltitude = 0.0;
         numUAVs = 5;
         protocol = "shakeup";
@@ -215,6 +222,9 @@ public class SimProperties {
         UAVParam.initialAltitude = startingAltitude;
         Param.numUAVsTemp.set(numUAVs);
         ArduSimTools.selectedProtocol = protocol;
+        if(protocolParameterFile.exists()){
+            SimParam.protocolParamFile = protocolParameterFile;
+        }
         ArduSimTools.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
         SimParam.screenUpdatePeriod = screenRefreshRate;
         SimParam.minScreenMovement = minScreenRedrawDistance;
@@ -263,7 +273,6 @@ public class SimProperties {
             Param.windSpeed = Param.DEFAULT_WIND_SPEED;
         }
     }
-
     public boolean validateSpeedFile(File f){
         if(!f.exists() || !f.getAbsolutePath().endsWith(Text.FILE_EXTENSION_CSV)) {
             ArduSimTools.warnGlobal(Text.SPEEDS_SELECTION_ERROR, Text.SPEEDS_ERROR_2);
@@ -277,7 +286,6 @@ public class SimProperties {
 
         return true;
     }
-
     public boolean validateArduCopterPath(File sitlPath){
         if(sitlPath.exists()) {
             if (!sitlPath.canExecute()) {

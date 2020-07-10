@@ -1,19 +1,17 @@
 package chemotaxis.logic;
 
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.ProtocolHelper;
 import chemotaxis.gui.PollutionConfigDialog;
-import chemotaxis.pojo.*;
+import chemotaxis.pojo.ValueSet;
 import es.upv.grc.mapper.Location2DGeo;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.TakeOff;
 import main.api.TakeOffListener;
+import org.javatuples.Pair;
+
+import javax.swing.*;
 
 public class ChemotaxisHelper extends ProtocolHelper {
 
@@ -32,6 +30,16 @@ public class ChemotaxisHelper extends ProtocolHelper {
 		return new PollutionConfigDialog();
 		//sim.logic.SimTools.println(PollutionParam.startLocation.latitude + ", " + PollutionParam.startLocation.longitude);
 	}//TODO
+
+	@Override
+	public void openConfigurationDialogFX() {
+
+	}
+
+	@Override
+	public void configurationCLI() {
+
+	}
 
 	@Override
 	public void initializeDataStructures() {

@@ -54,7 +54,7 @@ public class ShakeupListenerThread extends Thread{
 		while (!ardusim.isAvailable()) {ardusim.sleep(Param.TIMEOUT);}
 		// discover and take of the UAVS
 		Map<Long, Location2DUTM> UAVsDetected = setup();
-		while(!ardusim.isExperimentInProgress()) {ardusim.sleep(Param.TIMEOUT);}
+		while(!ardusim.isExperimentInProgress()) { ardusim.sleep(1000); }
 		takeOff(UAVsDetected);
 		
 		// create some necessary variables
@@ -131,7 +131,7 @@ public class ShakeupListenerThread extends Thread{
 					gui.log(Text.MASTER_DETECTED_UAVS + numUAVs);
 				}
 				//We decide to continue when the setup button is pressed
-				return ardusim.isSetupInProgress() || ardusim.isSetupFinished();
+				return ardusim.isSetupInProgress() || ardusim.isSetupFinished() || numUAVs == ardusim.getNumUAVs()-1;
 			});
 		}else {
 			msHelper.DiscoverMaster();

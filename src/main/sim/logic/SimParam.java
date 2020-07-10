@@ -15,6 +15,8 @@ public class SimParam {
 
 	// path of top-level .properties
 	public static final File resourcesFile = new File(API.getFileTools().getCurrentFolder(),"SimulationParam.properties");
+	// path to protocol specific parameter file
+	public static File protocolParamFile;
 	// Detects when the communications are online
 	public static volatile boolean communicationsOnline = false;
 	

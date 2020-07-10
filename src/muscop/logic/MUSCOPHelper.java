@@ -6,22 +6,24 @@ import api.pojo.location.Waypoint;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
-import main.api.ArduSim;
+import javafx.application.Platform;
+import javafx.stage.Stage;
+import main.ArduSimTools;
+import main.Text;
 import main.api.FlightFormationTools;
 import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.formations.FlightFormation;
+import main.sim.logic.SimParam;
 import muscop.gui.MUSCOPConfigDialog;
+import muscop.gui.MuscopConfigDialogApp;
 import org.javatuples.Pair;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static muscop.pojo.State.SETUP_FINISHED;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -41,6 +43,31 @@ public class MUSCOPHelper extends ProtocolHelper {
 	@Override
 	public JDialog openConfigurationDialog() {
 		return new MUSCOPConfigDialog();
+	}
+
+	@Override
+	public void openConfigurationDialogFX() {
+		Platform.runLater(()->new MuscopConfigDialogApp().start(new Stage()));
+	}
+
+	@Override
+	public void configurationCLI() {
+		MuscopSimProperties properties = new MuscopSimProperties();
+		ResourceBundle resources =null;
+		try {
+			FileInputStream fis = new FileInputStream(SimParam.protocolParamFile);
+			resources = new PropertyResourceBundle(fis);
+			fis.close();
+			Properties p = new Properties();
+			for(String key: resources.keySet()){
+				p.setProperty(key,resources.getString(key));
+			}
+			properties.storeParameters(p);
+		} catch (IOException e) {
+			ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.PROTOCOL_PARAMETERS_FILE_NOT_FOUND );
+			System.exit(0);
+		}
+
 	}
 
 	@Override
@@ -222,6 +249,10 @@ public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public void setupActionPerformed() {
+		while (API.getArduSim().isSetupFinished()) {
+			API.getArduSim().sleep(200);
+		}
+		/*
 		ArduSim ardusim = API.getArduSim();
 		int numUAVs = ardusim.getNumUAVs();
 		boolean allFinished = false;
@@ -236,6 +267,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 				ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);
 			}
 		}
+		*/
 	}
 
 	@Override

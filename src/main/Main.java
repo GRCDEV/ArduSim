@@ -3,7 +3,8 @@ package main;
 import api.API;
 import api.pojo.location.Waypoint;
 import es.upv.grc.mapper.Location2DGeo;
-import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import main.Param.SimulatorState;
 import main.api.ArduSim;
 import main.api.ValidationTools;
@@ -22,13 +23,10 @@ import main.uavController.UAVParam;
 import org.javatuples.Pair;
 
 import javax.swing.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.net.SocketException;
-import java.util.*;
 import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -127,7 +125,10 @@ public class Main {
 
 			if(Param.role == ArduSim.SIMULATOR_GUI) {
 				// Start the javafxml GUI configDialogApp
-				Application.launch(ConfigDialogApp.class, args);
+				Platform.startup(() -> {new ConfigDialogApp().start(new Stage());});
+				while(Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL){
+					API.getArduSim().sleep(SimParam.SHORT_WAITING_TIME);
+				}
 			}else{
 				// read .properties file
 				SimProperties simProperties = new SimProperties();
@@ -144,54 +145,16 @@ public class Main {
 			if (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
 				final AtomicBoolean configurationOpened = new AtomicBoolean();
 				if(Param.role == ArduSim.SIMULATOR_GUI) {
-					try {
-						SwingUtilities.invokeAndWait(() -> {
-							final JDialog configurationDialog = ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
-							if (configurationDialog == null) {
-								Param.simStatus = SimulatorState.STARTING_UAVS;
-							} else {
-								configurationDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-								configurationDialog.addWindowListener(new WindowAdapter() {
-									@Override
-									public void windowClosing(WindowEvent we) {
-										configurationDialog.dispose();
-										System.gc();
-										System.exit(0);
-									}
-
-									@Override
-									public void windowClosed(WindowEvent e) {
-										configurationOpened.set(false);
-									}
-								});
-
-								SimTools.addEscListener(configurationDialog, true);
-
-								configurationDialog.pack();
-								configurationDialog.setResizable(false);
-								configurationDialog.setLocationRelativeTo(null);
-								configurationDialog.setModal(true);
-								configurationDialog.setVisible(true);
-								configurationOpened.set(true);
-							}
-						});
-					} catch (InvocationTargetException | InterruptedException e) {
-						ArduSimTools.closeAll(Text.CONFIGURATION_ERROR);
+					ArduSimTools.selectedProtocolInstance.openConfigurationDialogFX();
+					while(Param.simStatus != Param.SimulatorState.STARTING_UAVS){
+						API.getArduSim().sleep(SimParam.SHORT_WAITING_TIME);
 					}
 
-					// Waiting the protocol configuration to be finished
-					while (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
-						ardusim.sleep(SimParam.SHORT_WAITING_TIME);
-
-						if (!configurationOpened.get()) {
-							Param.simStatus = SimulatorState.STARTING_UAVS;
-						}
-					}
 					if (Param.numUAVs != Param.numUAVsTemp.get()) {
 						Param.numUAVs = Param.numUAVsTemp.get();
 					}
 				}else if(Param.role == ArduSim.SIMULATOR_CLI){
-					// TODO load the specific parameters for the protocol
+					ArduSimTools.selectedProtocolInstance.configurationCLI();
 					Param.simStatus = SimulatorState.STARTING_UAVS;
 				}
 			}
@@ -330,8 +293,6 @@ public class Main {
 		if (Param.role == ArduSim.MULTICOPTER) {
 			Param.simStatus = SimulatorState.UAVS_CONFIGURED;
 		}else if(Param.role == ArduSim.SIMULATOR_CLI){
-			// TODO remove this easy fix
-			API.getArduSim().sleep(5000);
 			Param.simStatus = SimulatorState.STARTING_UAVS;
 		}
 		while (Param.simStatus == SimulatorState.STARTING_UAVS) {
@@ -458,7 +419,6 @@ public class Main {
 		if (Param.simStatus != SimulatorState.TEST_FINISHED) {
 			return;
 		}
-
 		// 17. Inform that the experiment has finished, and wait virtual communications to be closed
 		ArduSimTools.logGlobal(validationTools.timeToString(Param.startTime, Param.latestEndTime) + " " + Text.TEST_FINISHED);
 		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {

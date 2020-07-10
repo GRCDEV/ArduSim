@@ -1,23 +1,15 @@
 package vision.logic;
 
-import java.io.File;
-import java.util.Map;
-
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import org.javatuples.Pair;
-
 import api.API;
 import api.ProtocolHelper;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location3D;
-import main.api.Copter;
-import main.api.FileTools;
-import main.api.GUI;
-import main.api.MoveToListener;
-import main.api.MoveTo;
-import main.api.TakeOffListener;
-import main.api.TakeOff;
+import main.api.*;
+import org.javatuples.Pair;
+
+import javax.swing.*;
+import java.io.File;
+import java.util.Map;
 
 /** Developed by: Jamie Wubben, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 public class visionHelper extends ProtocolHelper {
@@ -30,6 +22,14 @@ public class visionHelper extends ProtocolHelper {
 	@Override
 	public JDialog openConfigurationDialog() {
 		return null;
+	}
+
+	@Override
+	public void openConfigurationDialogFX() {}
+
+	@Override
+	public void configurationCLI() {
+
 	}
 
 	@Override

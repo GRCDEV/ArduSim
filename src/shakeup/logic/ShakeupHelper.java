@@ -8,7 +8,6 @@ import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import main.ArduSimTools;
-import main.api.ArduSim;
 import main.api.FileTools;
 import main.api.FlightFormationTools;
 import main.api.formations.FlightFormation;
@@ -35,6 +34,16 @@ public class ShakeupHelper extends ProtocolHelper {
 
 	@Override
 	public JDialog openConfigurationDialog() {return null;}
+
+	@Override
+	public void openConfigurationDialogFX() {
+		main.Param.simStatus = main.Param.SimulatorState.STARTING_UAVS;
+	}
+
+	@Override
+	public void configurationCLI() {
+
+	}
 
 	@Override
 	public void initializeDataStructures() {
@@ -101,17 +110,10 @@ public class ShakeupHelper extends ProtocolHelper {
 
 	@Override
 	public void setupActionPerformed() {
-		// in case of CLI just wait 5 seconds and than continue
-		// in all other cases wait until the user presses the setup button
-		if(main.Param.role == ArduSim.SIMULATOR_CLI){
-			ArduSimTools.logGlobal("start sleeping");
-			API.getArduSim().sleep(5000);
-			ArduSimTools.logGlobal("stop sleeping");
-		}else{
-			while (API.getArduSim().isSetupFinished()) {
-				API.getArduSim().sleep(200);
-			}
+		while (API.getArduSim().isSetupFinished()) {
+			API.getArduSim().sleep(200);
 		}
+
 	}
 
 	@Override

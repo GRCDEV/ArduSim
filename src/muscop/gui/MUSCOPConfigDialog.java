@@ -89,7 +89,7 @@ public class MUSCOPConfigDialog extends JDialog {
 		{
 			JButton btnMap = new JButton(MUSCOPText.BUTTON_SELECT);
 			btnMap.addActionListener(e -> {
-				final Pair<String, List<Waypoint>[]> missions = gui.loadMissions();
+				final Pair<String, List<Waypoint>[]> missions = gui.loadMissions(gui.searchMissionFiles());
 				MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
 				if (missions == null) {
 					missionHelper.setMissionsLoaded(null);

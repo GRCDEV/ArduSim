@@ -46,8 +46,8 @@ public class MUSCOPListenerThread extends Thread {
 	private Set<Long> reached;
 	private SafeTakeOffContext takeOff;
 	private List<WaypointSimplified> screenMission = null;
-	private AtomicBoolean missionReceived = new AtomicBoolean();
-	private AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
+	private final AtomicBoolean missionReceived = new AtomicBoolean();
+	private final AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
 	private final AtomicInteger moveSemaphore = new AtomicInteger(1);	// We start in waypoint 0 and move to waypoint 1
 
 	@SuppressWarnings("unused")
@@ -72,6 +72,7 @@ public class MUSCOPListenerThread extends Thread {
 	public void run() {
 		while (!ardusim.isAvailable()) {ardusim.sleep(MUSCOPParam.STATE_CHANGE_TIMEOUT);}
 		Location3DGeo[] selfMission = setup();
+		while(!ardusim.isExperimentInProgress()) { ardusim.sleep(1000); }
 		Location2DUTM centerUAVFinalLocation = fly(selfMission);
 		landProcedure(centerUAVFinalLocation);
 	}
@@ -108,8 +109,8 @@ public class MUSCOPListenerThread extends Thread {
 					totalDetected.set(numUAVs);
 					gui.log(MUSCOPText.MASTER_DETECTED_UAVS + numUAVs);
 				}
-				// We decide to continue when the setup button is pressed
-				return ardusim.isSetupInProgress() || ardusim.isSetupFinished();
+				// We decide to continue when the setup button is pressed or when the number of UAVs detected is equal to the total number of UAVs -1
+				return ardusim.isSetupInProgress() || ardusim.isSetupFinished() || (numUAVs == ardusim.getNumUAVs()-1);
 			});
 		} else {
 			gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
@@ -283,11 +284,11 @@ public class MUSCOPListenerThread extends Thread {
 		/* COMBINED PHASE MOVE_TO_WP & WP_REACHED */
 		iAmCenter = (masterOrder.get(0) == this.selfId);
 		if (iAmCenter) {
-			String text = "Master order: ";
+			StringBuilder text = new StringBuilder("Master order: ");
 			for (Long aLong : masterOrder) {
-				text += " " + aLong.toString();
+				text.append(" ").append(aLong.toString());
 			}
-			gui.log(text);
+			gui.log(text.toString());
 			reached = new HashSet<>((int)Math.ceil((numUAVs-1) / 0.75) + 1);
 		}
 		int currentWP = 0;
@@ -389,8 +390,7 @@ public class MUSCOPListenerThread extends Thread {
 					moveSemaphore.incrementAndGet();
 				}
 			}).start();
-			
-			Long start = System.currentTimeMillis();
+
 			while (moveSemaphore.get() == currentWP) {	
 				// This loop is executed as long as the UAVs are moving towards a waypoint
 				// All the UAVs are broadcasting the messages with in interval of 200 ms

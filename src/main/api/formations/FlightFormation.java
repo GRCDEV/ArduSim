@@ -4,6 +4,8 @@ import es.upv.grc.mapper.Location2DUTM;
 import main.Text;
 import main.api.formations.helpers.FormationPoint;
 
+import java.util.ArrayList;
+
 /** 
  * The base flight formation that must be extended by any new flight formation.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -62,7 +64,7 @@ public abstract class FlightFormation {
 		public String getName() {
 			return this.name;
 		}
-		
+
 		public static Formation getFormation(short formationId) {
 			Formation[] formations = Formation.values();
 			for (int i = 0; i < formations.length; i++) {
@@ -75,12 +77,20 @@ public abstract class FlightFormation {
 		
 		public static Formation getFormation(String name) {
 			Formation[] formations = Formation.values();
-			for (int i = 0; i < formations.length; i++) {
-				if (formations[i].getName().equals(name)) {
-					return formations[i];
+			for (Formation value : formations) {
+				if (value.getName().equals(name)) {
+					return value;
 				}
 			}
 			return null;
+		}
+
+		public static ArrayList<String> getAllFormations(){
+			ArrayList<String> formationString = new ArrayList<>();
+			for(Formation f: Formation.values()){
+				formationString.add(f.name);
+			}
+			return formationString;
 		}
 	}
 	

@@ -184,6 +184,11 @@ public class Text {
 	public static final String ERROR_LOADING_FXML = "A resource was not found inside the property Resource bundle.";
 	public static final String PARAMETERS_FILE_NOT_FOUND = "Parameter file not found, make sure " + SimParam.resourcesFile.getAbsolutePath() + " exists";
 	public static final String ERROR_STORE_PARAMETERS = "Error in SimProperties:storeParameters type is not recognized ";
+	public static final String PROTOCOL_PARAMETERS_FILE_NOT_FOUND = "Parameter File for protocol was given but not able to load it.";
+	public static final String PROTOCOL_DIALOG_TITLE = "Select the parameter file for the protocol";
+	public static final String PROTOCOL_DIALOG_SELECTION = "properties file";
+	public static final String PROPERITES_EXTENSTION = "properties";
+
 	// Progress dialog window:
 	public static final String PROGRESS_DIALOG_TITLE = "Test progress";
 	public static final String PROGRESS_DIALOG_TITLE_2 = "Setup progress";

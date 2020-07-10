@@ -1,10 +1,5 @@
 package mission.logic;
 
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.ProtocolHelper;
 import es.upv.grc.mapper.Location2DGeo;
@@ -12,6 +7,9 @@ import main.Text;
 import mbcap.logic.MBCAPHelper;
 import mission.gui.MissionConfigDialog;
 import mission.gui.MissionConfigDialogPanel;
+import org.javatuples.Pair;
+
+import javax.swing.*;
 
 /** Implementation of the protocol Mission to allow the user to simply follow missions. It is based on MBCAP implementation.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -37,6 +35,16 @@ public class MissionHelper extends ProtocolHelper {
 	@Override
 	public JDialog openConfigurationDialog() {
 		return new MissionConfigDialog();
+	}
+
+	@Override
+	public void openConfigurationDialogFX() {
+
+	}
+
+	@Override
+	public void configurationCLI() {
+
 	}
 
 	@Override

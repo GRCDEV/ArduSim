@@ -6,6 +6,7 @@ import api.pojo.FlightMode;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location3DGeo;
 import main.ArduSimTools;
+import main.Param;
 import main.api.Copter;
 import main.api.TakeOff;
 import main.api.TakeOffListener;
@@ -26,6 +27,16 @@ public class FakeHelper extends ProtocolHelper{
 	@Override
 	public JDialog openConfigurationDialog() {
 		return null;
+	}
+
+	@Override
+	public void openConfigurationDialogFX() {
+		Param.simStatus = Param.SimulatorState.STARTING_UAVS;
+	}
+
+	@Override
+	public void configurationCLI() {
+
 	}
 
 	@Override
@@ -78,6 +89,7 @@ public class FakeHelper extends ProtocolHelper{
 		try {
 			takeOff.join();
 		} catch (InterruptedException ignored) {}
+		ArduSimTools.logGlobal("Setup finished");
 	}
 
 	@Override

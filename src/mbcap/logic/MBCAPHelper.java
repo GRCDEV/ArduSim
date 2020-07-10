@@ -48,6 +48,16 @@ public class MBCAPHelper extends ProtocolHelper {
 		return new MBCAPConfigDialog();
 	}
 
+	@Override
+	public void openConfigurationDialogFX() {
+
+	}
+
+	@Override
+	public void configurationCLI() {
+
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void initializeDataStructures() {

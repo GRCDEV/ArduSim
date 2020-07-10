@@ -112,6 +112,28 @@
             <Insets bottom="5.0" left="20.0" right="20.0" top="5.0" />
          </VBox.margin>
       </HBox>
+      <HBox layoutX="30.0" layoutY="28.0" prefHeight="30.0" prefWidth="560.0">
+         <children>
+            <Label alignment="BOTTOM_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="0.0" prefWidth="205.0" text="Protocol Parameters path:">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="protocolParameterFile" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="385.0" text="%protocolParameterFile" HBox.hgrow="ALWAYS">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </TextField>
+            <Button fx:id="protocolParametersPathButton" alignment="TOP_CENTER" contentDisplay="TOP" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="8.0" mnemonicParsing="false" prefHeight="11.0" prefWidth="54.0" text="..." textFill="#0a0a0a">
+               <font>
+                  <Font size="11.0" />
+               </font>
+            </Button>
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="20.0" right="20.0" top="5.0" />
+         </VBox.margin>
+      </HBox>
       <Label prefHeight="20.0" text="Performance parameters:">
          <font>
             <Font name="System Bold Italic" size="13.0" />

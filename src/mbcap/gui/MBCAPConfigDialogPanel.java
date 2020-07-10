@@ -1,27 +1,17 @@
 package mbcap.gui;
 
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
-
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.pojo.location.Waypoint;
 import main.api.MissionHelper;
 import mbcap.logic.MBCAPText;
+import org.javatuples.Pair;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.List;
 
 /** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -90,7 +80,8 @@ public class MBCAPConfigDialogPanel extends JPanel {
 		JButton missionsButton = new JButton(MBCAPText.BUTTON_SELECT);
 		missionsButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				final Pair<String, List<Waypoint>[]> missions = API.getGUI(0).loadMissions();
+				File[] fileArray = API.getGUI(0).searchMissionFiles();
+				final Pair<String, List<Waypoint>[]> missions = API.getGUI(0).loadMissions(fileArray);
 				MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
 				if (missions == null) {
 					missionHelper.setMissionsLoaded(null);

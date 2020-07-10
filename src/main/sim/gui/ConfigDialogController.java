@@ -1,6 +1,7 @@
 package main.sim.gui;
 
 import api.API;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -38,6 +39,10 @@ public class ConfigDialogController {
     private ChoiceBox<String> numUAVs;
     @FXML
     private ChoiceBox<String> protocol;
+    @FXML
+    private TextField protocolParameterFile;
+    @FXML
+    private Button protocolParametersPathButton;
     @FXML
     private TextField screenRefreshRate;
     @FXML
@@ -148,11 +153,12 @@ public class ConfigDialogController {
         // add methods to the buttons
         arducopterPathButton.setOnAction(e->searchArduCopterPath());
         speedFileButton.setOnAction(e->searchSpeedFile());
+        protocolParametersPathButton.setOnAction(e->{searchProtocolParameterFile();});
         okButton.setOnAction(e->{
             if(ok()){
+                Platform.setImplicitExit(false); // so that the application does not close
                 Param.simStatus = Param.SimulatorState.CONFIGURING_PROTOCOL;
-                Stage stage = (Stage) okButton.getScene().getWindow();
-                stage.close();
+                okButton.getScene().getWindow().hide();
             }else{
                 ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_LOADING_FXML);
             }
@@ -257,6 +263,21 @@ public class ConfigDialogController {
         File speedPath = fileChooser.showOpenDialog(stage);
         updateSpeedFile(speedPath);
     }
+    public void searchProtocolParameterFile(){
+        // used when user presses button
+        // Create a filechooser with some restrictions and invote updateSpeedFile
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setInitialDirectory(API.getFileTools().getCurrentFolder());
+        fileChooser.setTitle(Text.PROTOCOL_DIALOG_TITLE);
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(Text.PROTOCOL_DIALOG_SELECTION , "*."+Text.PROPERITES_EXTENSTION);
+        fileChooser.getExtensionFilters().add(extFilter);
+        File parameterFile = fileChooser.showOpenDialog(stage);
+        if(parameterFile.exists()){
+            protocolParameterFile.setText(parameterFile.getAbsolutePath());
+        }else{
+            protocolParameterFile.setText("");
+        }
+    }
 
     private void updateSpeedFile(File speedPath){
         // Use properties.speedFile to do the logic
@@ -308,5 +329,4 @@ public class ConfigDialogController {
         }
         return p;
     }
-
 }

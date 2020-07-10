@@ -1,11 +1,9 @@
 package api;
 
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-
+import es.upv.grc.mapper.Location2DGeo;
 import org.javatuples.Pair;
 
-import es.upv.grc.mapper.Location2DGeo;
+import javax.swing.*;
 
 /** 
  * The developer must extend this class to implement a new protocol.
@@ -31,7 +29,17 @@ public abstract class ProtocolHelper {
 	 * Optional: Create a configuration dialog for protocol specific parameters. Otherwise, return null.
 	 * <p>Please, call <i>dispose</i> method to close the dialog when finishing, and never use JDialog methods like <i>setVisible, setModal, setResizable, setDefaultCloseOperation, setLocationRelativeTo, pack</i>, as they are automatically applied from inside ArduSim. The dialog will be constructed in the GUI thread (please, avoid heavy calculations).</p> */
 	public abstract JDialog openConfigurationDialog();
-	
+
+	/**
+	 * Optional: Create a configuration dialog (using javaFXML) for protocol specific parameters.
+	 * <p>The dialog will be constructed in the GUI thread (please, avoid heavy calculations</p>
+	 */
+	public abstract void openConfigurationDialogFX();
+	/**
+	 * Optional: when extra parameters are used.
+	 * In this method the step to load the protocol specific parameters must be called
+	 */
+	public abstract void configurationCLI();
 	/**
 	 * Initialize data structures used by the protocol. At this point, the number of multicopters running in the same machine is known:
 	 * <p>int numUAVs = API.getArduSim().getNumUAVs().</p>

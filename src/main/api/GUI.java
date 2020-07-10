@@ -1,14 +1,5 @@
 package main.api;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.pojo.StatusPacket;
 import api.pojo.location.Waypoint;
@@ -19,6 +10,13 @@ import main.sim.gui.MissionKmlDialog;
 import main.sim.gui.MissionWaypointsDialog;
 import main.sim.gui.ProgressDialog;
 import main.sim.logic.SimParam;
+import org.javatuples.Pair;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /** API to update the information shown on screen during simulations.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -52,12 +50,12 @@ public class GUI {
 	public StatusPacket[] getDetectedUAVs() {
 		return PCCompanionParam.connectedUAVs.get();
 	}
-	
+
 	/**
 	 * Open a dialog to load missions from a Google Earth <i>.kml</i> file, or from <i>.waypoints</i> files.
 	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
 	 */
-	public Pair<String, List<Waypoint>[]> loadMissions() {//TODO hacerlo con thread y callback listener para que no se ejecute en el hilo GUI
+	public File[] searchMissionFiles(){
 		File[] selection;
 		JFileChooser chooser = new JFileChooser();
 		chooser.setCurrentDirectory(API.getFileTools().getCurrentFolder());
@@ -72,8 +70,15 @@ public class GUI {
 		if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
 			return null;
 		}
-		
-		selection = chooser.getSelectedFiles();
+		return chooser.getSelectedFiles();
+	}
+
+	/**
+	 * Loads the mission files
+	 * @param selection
+	 * @return
+	 */
+	public Pair<String, List<Waypoint>[]> loadMissions(File[] selection) {//TODO hacerlo con thread y callback listener para que no se ejecute en el hilo GUI
 		Pair<String, List<Waypoint>[]> missions = this.loadAndParseMissions(selection);
 		if (missions != null) {
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
@@ -82,7 +87,7 @@ public class GUI {
 			}
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
 				ArduSimTools.logGlobal(Text.MISSIONS_LOADED + " " + selection[0].getName());
-				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
+				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
 			}
 		}
 		

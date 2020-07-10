@@ -1,11 +1,9 @@
 package main.api.formations;
 
 import api.API;
-import main.Param;
 import main.api.ValidationTools;
 import main.api.formations.helpers.FormationPoint;
 import muscop.logic.MUSCOPParam;
-import smile.math.Math;
 
 public class FormationSplitUp extends FlightFormation{
 
@@ -14,7 +12,6 @@ public class FormationSplitUp extends FlightFormation{
 	}
 	@Override
 	protected void initializeFormation() {
-
 		ValidationTools validationTools = API.getValidationTools();
 		
 		int clusters = MUSCOPParam.CLUSTERS;
@@ -46,7 +43,6 @@ public class FormationSplitUp extends FlightFormation{
 				placedCounter++;
 			}
 		}
-		
 		// set the rest of the UAVs in the last cluster
 		// TODO completed
 		/*
@@ -56,6 +52,6 @@ public class FormationSplitUp extends FlightFormation{
 			this.point[placedCounter] = new FormationPoint(placedCounter, x, y);
 			placedCounter++;
 		}*/
-		
+
 	}
 }

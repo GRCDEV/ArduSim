@@ -1,14 +1,5 @@
 package followme.logic;
 
-import static followme.pojo.State.SETUP_FINISHED;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-
-import org.javatuples.Pair;
-
 import api.API;
 import api.ProtocolHelper;
 import api.pojo.CopterParam;
@@ -21,6 +12,12 @@ import main.api.ArduSim;
 import main.api.Copter;
 import main.api.formations.FlightFormation;
 import main.uavController.UAVParam;
+import org.javatuples.Pair;
+
+import javax.swing.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static followme.pojo.State.SETUP_FINISHED;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -39,6 +36,16 @@ public class FollowMeHelper extends ProtocolHelper {
 	@Override
 	public JDialog openConfigurationDialog() {
 		return new FollowMeConfigDialog();
+	}
+
+	@Override
+	public void openConfigurationDialogFX() {
+
+	}
+
+	@Override
+	public void configurationCLI() {
+
 	}
 
 	@Override
