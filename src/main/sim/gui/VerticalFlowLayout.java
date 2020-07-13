@@ -90,66 +90,6 @@ public class VerticalFlowLayout implements LayoutManager, java.io.Serializable {
 
 
 	/**
-	 *  Sets the Hgap attribute of the VerticalFlowLayout object
-	 *
-	 *@param  hgap  The new Hgap value
-	 */
-	public void setHgap(int hgap) {
-		_hgap = hgap;
-	}
-
-
-	/**
-	 *  Sets the Vgap attribute of the VerticalFlowLayout object
-	 *
-	 *@param  vgap  The new Vgap value
-	 */
-	public void setVgap(int vgap) {
-		_vgap = vgap;
-	}
-
-
-	/**
-	 *  Gets the Halignment attribute of the VerticalFlowLayout object
-	 *
-	 *@return    The Halignment value
-	 */
-	public int getHalignment() {
-		return _halign;
-	}
-
-
-	/**
-	 *  Gets the Valignment attribute of the VerticalFlowLayout object
-	 *
-	 *@return    The Valignment value
-	 */
-	public int getValignment() {
-		return _valign;
-	}
-
-
-	/**
-	 *  Gets the Hgap attribute of the VerticalFlowLayout object
-	 *
-	 *@return    The Hgap value
-	 */
-	public int getHgap() {
-		return _hgap;
-	}
-
-
-	/**
-	 *  Gets the Vgap attribute of the VerticalFlowLayout object
-	 *
-	 *@return    The Vgap value
-	 */
-	public int getVgap() {
-		return _vgap;
-	}
-
-
-	/**
 	 *  Adds a feature to the LayoutComponent attribute of the VerticalFlowLayout
 	 *  object
 	 *

@@ -1,51 +1,25 @@
 package main.pccompanion.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
+import api.API;
+import api.pojo.FlightMode;
+import main.ArduSimTools;
+import main.Param;
+import main.Param.SimulatorState;
+import main.Text;
+import main.api.ArduSim;
+import main.pccompanion.logic.PCCompanionParam;
+import main.pccompanion.logic.PCCompanionTalker;
+import main.sim.gui.VerticalFlowLayout;
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.math.BigInteger;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-
-import api.API;
-import api.pojo.FlightMode;
-import main.ArduSimTools;
-import main.Param;
-import main.Param.SimulatorState;
-import main.api.ArduSim;
-import main.pccompanion.logic.PCCompanionParam;
-import main.pccompanion.logic.PCCompanionTalker;
-import main.sim.gui.VerticalFlowLayout;
-import main.Text;
 
 /** Main GUI for the PC Companion.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -62,22 +36,18 @@ public class PCCompanionGUI {
 	private DefaultTableModel tableModel;
 	public JLabel progressTextLabel;
 	public JLabel progressTimeLabel;
-	private JPanel panel_1;
-	private JPanel panel_2;
-	
-	private AtomicInteger rowCount = new AtomicInteger();
+
+	private final AtomicInteger rowCount = new AtomicInteger();
 	private JComboBox<String> protocolComboBox;
-	private JLabel lblProtocol;
-	
+
 	private volatile int connected = 0;
-	private JLabel lblEm;
 	private JButton buttonRecoverControl;
 	private JButton buttonRTL;
 	private JButton buttonLand;
 	
 	private Timer timer;
 	
-	public static Object semaphore = new Object();
+	public static final Object semaphore = new Object();
 	public static volatile boolean setupPressed = false;
 
 	public PCCompanionGUI() {
@@ -118,8 +88,8 @@ public class PCCompanionGUI {
 		gbc_textLabel.gridx = 1;
 		gbc_textLabel.gridy = 0;
 		upperPanel.add(textLabel, gbc_textLabel);
-		
-		lblProtocol = new JLabel(Text.PROTOCOL);
+
+		JLabel lblProtocol = new JLabel(Text.PROTOCOL);
 		lblProtocol.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblProtocol = new GridBagConstraints();
 		gbc_lblProtocol.insets = new Insets(0, 0, 5, 5);
@@ -128,7 +98,7 @@ public class PCCompanionGUI {
 		gbc_lblProtocol.gridy = 0;
 		upperPanel.add(lblProtocol, gbc_lblProtocol);
 		
-		protocolComboBox = new JComboBox<String>();
+		protocolComboBox = new JComboBox<>();
 		for (int i = 0; i < ArduSimTools.ProtocolNames.length; i++) {
 			protocolComboBox.addItem(ArduSimTools.ProtocolNames[i]);
 		}
@@ -140,33 +110,29 @@ public class PCCompanionGUI {
 		upperPanel.add(protocolComboBox, gbc_protocolComboBox);
 		
 		setupButton = new JButton(Text.SETUP_TEST);
-		setupButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				synchronized(semaphore) {
-					if (!setupPressed) {
-						int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
-								Text.SETUP_WARNING,
-								Text.DIALOG_TITLE,
-								JOptionPane.YES_NO_OPTION);
-						if (result == JOptionPane.YES_OPTION) {
-							Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-							ArduSimTools.selectedProtocol = (String)protocolComboBox.getSelectedItem();
-							ArduSimTools.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
-							if (ArduSimTools.selectedProtocolInstance == null) {
-								ArduSimTools.closeAll(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR);
-							}
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									setupButton.setEnabled(false);
-									protocolComboBox.setEnabled(false);
-									buttonRecoverControl.setEnabled(true);
-									buttonRTL.setEnabled(true);
-									buttonLand.setEnabled(true);
-								}
-							});
+		setupButton.addActionListener(e -> {
+			synchronized(semaphore) {
+				if (!setupPressed) {
+					int result = JOptionPane.showConfirmDialog(PCCompanionGUI.companion.assistantFrame,
+							Text.SETUP_WARNING,
+							Text.DIALOG_TITLE,
+							JOptionPane.YES_NO_OPTION);
+					if (result == JOptionPane.YES_OPTION) {
+						Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
+						ArduSimTools.selectedProtocol = (String)protocolComboBox.getSelectedItem();
+						ArduSimTools.selectedProtocolInstance = ArduSimTools.getSelectedProtocolInstance();
+						if (ArduSimTools.selectedProtocolInstance == null) {
+							ArduSimTools.closeAll(Text.PROTOCOL_IMPLEMENTATION_NOT_FOUND_ERROR);
 						}
-						setupPressed = true;
+						SwingUtilities.invokeLater(() -> {
+							setupButton.setEnabled(false);
+							protocolComboBox.setEnabled(false);
+							buttonRecoverControl.setEnabled(true);
+							buttonRTL.setEnabled(true);
+							buttonLand.setEnabled(true);
+						});
 					}
+					setupPressed = true;
 				}
 			}
 		});
@@ -177,32 +143,22 @@ public class PCCompanionGUI {
 		upperPanel.add(setupButton, gbc_setupButton);
 		
 		startButton = new JButton(Text.START_TEST);
-		startButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						startButton.setEnabled(false);
+		startButton.addActionListener(e -> {
+			Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
+			SwingUtilities.invokeLater(() -> startButton.setEnabled(false));
+			timer = new Timer();
+			timer.scheduleAtFixedRate(new TimerTask() {
+				long count = 0;
+				public void run() {
+					if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
+						final String timeString = API.getValidationTools().timeToString(0, count);
+						count = count + 1000;
+						SwingUtilities.invokeLater(() -> progressTimeLabel.setText(timeString));
+					} else {
+						timer.cancel();
 					}
-				});
-				timer = new Timer();
-				timer.scheduleAtFixedRate(new TimerTask() {
-		            long count = 0;
-		            public void run() {
-		            	if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
-							final String timeString = API.getValidationTools().timeToString(0, count);
-							count = count + 1000;
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									progressTimeLabel.setText(timeString);
-								}
-							});
-						} else {
-							timer.cancel();
-						}
-		            }
-		        }, 0, 1000);	// for each second, without initial delay
-			}
+				}
+			}, 0, 1000);	// for each second, without initial delay
 		});
 		GridBagConstraints gbc_startButton = new GridBagConstraints();
 		gbc_startButton.insets = new Insets(0, 0, 5, 0);
@@ -210,7 +166,7 @@ public class PCCompanionGUI {
 		gbc_startButton.gridy = 0;
 		upperPanel.add(startButton, gbc_startButton);
 		tableModel = new DefaultTableModel(0, 0);
-		String header[] = new String[] { Text.UAV_ID, Text.IDENTIFIER_HEADER, Text.MAC_HEADER, Text.IP_HEADER, Text.STATUS_HEADER };
+		String[] header = new String[] { Text.UAV_ID, Text.IDENTIFIER_HEADER, Text.MAC_HEADER, Text.IP_HEADER, Text.STATUS_HEADER };
 		tableModel.setColumnIdentifiers(header);
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment( SwingConstants.CENTER );
@@ -222,15 +178,15 @@ public class PCCompanionGUI {
 		table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		table.setEnabled(false);
-		
-		
-		panel_1 = new JPanel();
+
+
+		JPanel panel_1 = new JPanel();
 		panel_1.add(table.getTableHeader());
 		panel_1.setLayout(new VerticalFlowLayout(VerticalFlowLayout.CENTER, VerticalFlowLayout.TOP, 5, 0));
 		panel_1.add(table);
-		
-		
-		panel_2 = new JPanel();
+
+
+		JPanel panel_2 = new JPanel();
 		panel_2.setLayout(new BorderLayout(0, 0));
 		panel_2.add(panel_1);
 		
@@ -251,21 +207,16 @@ public class PCCompanionGUI {
 		
 		buttonRecoverControl = new JButton(Text.RECOVER_CONTROL);
 		buttonRecoverControl.setEnabled(false);
-		buttonRecoverControl.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				PCCompanionParam.action.set(PCCompanionParam.ACTION_RECOVER_CONTROL);
-				if (timer != null) {
-					timer.cancel();
-				}
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						buttonRecoverControl.setEnabled(false);
-						buttonRTL.setEnabled(false);
-						buttonLand.setEnabled(false);
-					}
-				});
+		buttonRecoverControl.addActionListener(e -> {
+			PCCompanionParam.action.set(PCCompanionParam.ACTION_RECOVER_CONTROL);
+			if (timer != null) {
+				timer.cancel();
 			}
+			SwingUtilities.invokeLater(() -> {
+				buttonRecoverControl.setEnabled(false);
+				buttonRTL.setEnabled(false);
+				buttonLand.setEnabled(false);
+			});
 		});
 		GridBagConstraints gbc_buttonRecoverControl = new GridBagConstraints();
 		gbc_buttonRecoverControl.insets = new Insets(0, 0, 0, 5);
@@ -275,21 +226,16 @@ public class PCCompanionGUI {
 		
 		buttonRTL = new JButton(FlightMode.RTL.getMode());
 		buttonRTL.setEnabled(false);
-		buttonRTL.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				PCCompanionParam.action.set(PCCompanionParam.ACTION_RTL);
-				if (timer != null) {
-					timer.cancel();
-				}
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						buttonRecoverControl.setEnabled(false);
-						buttonRTL.setEnabled(false);
-						buttonLand.setEnabled(false);
-					}
-				});
+		buttonRTL.addActionListener(e -> {
+			PCCompanionParam.action.set(PCCompanionParam.ACTION_RTL);
+			if (timer != null) {
+				timer.cancel();
 			}
+			SwingUtilities.invokeLater(() -> {
+				buttonRecoverControl.setEnabled(false);
+				buttonRTL.setEnabled(false);
+				buttonLand.setEnabled(false);
+			});
 		});
 		GridBagConstraints gbc_buttonRTL = new GridBagConstraints();
 		gbc_buttonRTL.fill = GridBagConstraints.HORIZONTAL;
@@ -300,21 +246,16 @@ public class PCCompanionGUI {
 		
 		buttonLand = new JButton(FlightMode.LAND.getMode());
 		buttonLand.setEnabled(false);
-		buttonLand.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				PCCompanionParam.action.set(PCCompanionParam.ACTION_LAND);
-				if (timer != null) {
-					timer.cancel();
-				}
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						buttonRecoverControl.setEnabled(false);
-						buttonRTL.setEnabled(false);
-						buttonLand.setEnabled(false);
-					}
-				});
+		buttonLand.addActionListener(e -> {
+			PCCompanionParam.action.set(PCCompanionParam.ACTION_LAND);
+			if (timer != null) {
+				timer.cancel();
 			}
+			SwingUtilities.invokeLater(() -> {
+				buttonRecoverControl.setEnabled(false);
+				buttonRTL.setEnabled(false);
+				buttonLand.setEnabled(false);
+			});
 		});
 		GridBagConstraints gbc_buttonLand = new GridBagConstraints();
 		gbc_buttonLand.insets = new Insets(0, 0, 0, 5);
@@ -322,8 +263,8 @@ public class PCCompanionGUI {
 		gbc_buttonLand.gridx = 3;
 		gbc_buttonLand.gridy = 1;
 		upperPanel.add(buttonLand, gbc_buttonLand);
-		
-		lblEm = new JLabel(Text.EMERGENCY_ACTIONS);
+
+		JLabel lblEm = new JLabel(Text.EMERGENCY_ACTIONS);
 		lblEm.setFont(new Font("Dialog", Font.PLAIN, 12));
 		GridBagConstraints gbc_lblEm = new GridBagConstraints();
 		gbc_lblEm.gridwidth = 5;
@@ -356,19 +297,10 @@ public class PCCompanionGUI {
 		
 		
 		assistantFrame.setTitle(Text.COMPANION_NAME);
-		ActionListener escListener = new ActionListener() {
-
-	        @Override
-	        public void actionPerformed(ActionEvent e) {
-	        	(new Thread(new Runnable() {
-	    			@Override
-	    			public void run() {
-	    				assistantFrame.dispose();
-	    				System.exit(0);
-	    			}
-	    		})).start();
-	        }
-	    };
+		ActionListener escListener = e -> (new Thread(() -> {
+			assistantFrame.dispose();
+			System.exit(0);
+		})).start();
 	    assistantFrame.getRootPane().registerKeyboardAction(escListener,
 	            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 	            JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -389,23 +321,21 @@ public class PCCompanionGUI {
 		if (Param.role == ArduSim.PCCOMPANION) {
 			BigInteger bi = new BigInteger(Long.toString(id & ~(1L << 63)));
 		    if (id < 0) bi = bi.setBit(64);
-		    String m = bi.toString(16);
+		    StringBuilder m = new StringBuilder(bi.toString(16));
 		    while (m.length() < 12) {
-		    	m = "0" + m;
+		    	m.insert(0, "0");
 		    }
-		    mac = m.replaceAll(".{2}(?=.)", "$0:");
+		    mac = m.toString().replaceAll(".{2}(?=.)", "$0:");
 		} else {
 			mac = "-";
 		}
 		final String status2 = status;
 		
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				connected++;
-				numUAVsLabel.setText("" + connected);
-				tableModel.addRow(new Object[] { "" + (numUAV+1), idString, mac, ip, status2 });
-				resizeColumnWidth();
-			}
+		SwingUtilities.invokeLater(() -> {
+			connected++;
+			numUAVsLabel.setText("" + connected);
+			tableModel.addRow(new Object[] { "" + (numUAV+1), idString, mac, ip, status2 });
+			resizeColumnWidth();
 		});
 		return numUAV;
 	}
@@ -414,11 +344,9 @@ public class PCCompanionGUI {
 	public void setState(int row, String state) {
 		final int row2 = row;
 		final String state2 = state;
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				tableModel.setValueAt(state2, row2, 4);
-				resizeColumnWidth();
-			}
+		SwingUtilities.invokeLater(() -> {
+			tableModel.setValueAt(state2, row2, 4);
+			resizeColumnWidth();
 		});
 	}
 	

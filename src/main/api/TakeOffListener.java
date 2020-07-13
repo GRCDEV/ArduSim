@@ -7,11 +7,11 @@ public interface TakeOffListener {
 	/**
 	 * Actions to perform when the take off finishes.
 	 */
-	abstract void onCompleteActionPerformed();
+	void onCompleteActionPerformed();
 	
 	/**
 	 * Actions to perform if some error happens during the take off.
 	 */
-	abstract void onFailure();
+	void onFailure();
 	
 }

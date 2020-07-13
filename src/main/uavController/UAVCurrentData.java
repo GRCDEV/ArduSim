@@ -29,7 +29,7 @@ public class UAVCurrentData {
 
 		double acceleration;
 		if (this.time != 0) {
-			acceleration = (groundSpeed - this.groundSpeed)/(time - this.time)*1000000000l;
+			acceleration = (groundSpeed - this.groundSpeed)/(time - this.time)*1000000000L;
 		} else {
 			acceleration = 0.0;
 		}
@@ -105,15 +105,7 @@ public class UAVCurrentData {
 	public synchronized double getSpeed() {
 		return this.groundSpeed;
 	}
-	
-	/** Returns the current speed in the three axes (m/s). */
-	public synchronized double[] getSpeeds() {
-		if (this.speed != null) {
-			return new double[] {this.speed[0], this.speed[1], this.speed[2]};
-		}
-		return null;
-	}
-	
+
 	/** Returns the current heading (rad). */
 	public synchronized double getHeading() {
 		return this.heading;

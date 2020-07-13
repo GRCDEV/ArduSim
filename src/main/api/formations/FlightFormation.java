@@ -52,7 +52,7 @@ public abstract class FlightFormation {
 		private final short formationId;
 		private final String name;
 		
-		private Formation(short formationId, String name) {
+		Formation(short formationId, String name) {
 			this.formationId = formationId;
 			this.name = name;
 		}
@@ -67,9 +67,9 @@ public abstract class FlightFormation {
 
 		public static Formation getFormation(short formationId) {
 			Formation[] formations = Formation.values();
-			for (int i = 0; i < formations.length; i++) {
-				if (formations[i].getFormationId() == formationId) {
-					return formations[i];
+			for (Formation value : formations) {
+				if (value.getFormationId() == formationId) {
+					return value;
 				}
 			}
 			return null;
@@ -96,8 +96,8 @@ public abstract class FlightFormation {
 	
 	/** Get a flight formation.
 	 * @param formation Flight formation type as detailed in enumerator api.pojo.formations.FlightFormation.Formation
-	 * @param numUAVs. Number of multicopters in the formation.
-	 * @param minDistance. Minimum distance between multicopters in meters.
+	 * @param numUAVs Number of multicopters in the formation.
+	 * @param minDistance Minimum distance between multicopters in meters.
 	 * @return A FlightFormation or null if the formation was not found, or <i>numUAVs</i> <= 0.
 	 */
 	public static FlightFormation getFormation(Formation formation, int numUAVs, double minDistance) {
@@ -138,11 +138,11 @@ public abstract class FlightFormation {
 	
 	
 	@SuppressWarnings("unused")
-	private FlightFormation() {};
-	
+	private FlightFormation() {}
+
 	/** Just leave the default implementation of the constructor.
-	 * @param numUAVs. The number of UAVs in the formation (at least one).
-	 * @param minDistance. Minimum distance between two contiguous UAVs.
+	 * @param numUAVs The number of UAVs in the formation (at least one).
+	 * @param minDistance Minimum distance between two contiguous UAVs.
 	 */
 	protected FlightFormation(int numUAVs, double minDistance, Formation formation) {
 		this.numUAVs = numUAVs;
@@ -195,7 +195,7 @@ public abstract class FlightFormation {
 		
 	}
 	
-	/** Get location of a UAV in UTM coordinates, given its position in the formation, and the center UAV location (UTM) and heading (rad). */
+	/* Get location of a UAV in UTM coordinates, given its position in the formation, and the center UAV location (UTM) and heading (rad). */
 	/**
 	 * Get the location of a UAV in the formation.
 	 * @param position Position of the UAV in the flight formation.

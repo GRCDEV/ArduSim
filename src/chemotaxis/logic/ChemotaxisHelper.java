@@ -73,7 +73,7 @@ public class ChemotaxisHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		Pair<Location2DGeo, Double> startCoordinates = new Pair<Location2DGeo, Double>(ChemotaxisParam.startLocation, 0.0);
+		Pair<Location2DGeo, Double> startCoordinates = new Pair<>(ChemotaxisParam.startLocation, 0.0);
 		@SuppressWarnings("unchecked")
 		Pair<Location2DGeo, Double>[] startCoordinatesArray = new Pair[1];
 		startCoordinatesArray[0] = startCoordinates;
@@ -114,7 +114,7 @@ public class ChemotaxisHelper extends ProtocolHelper {
 		takeOff.start();
 		try {
 			takeOff.join();
-		} catch (InterruptedException e) {}
+		} catch (InterruptedException ignored) {}
 		
 		ChemotaxisParam.ready = true;
 		

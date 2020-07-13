@@ -1,10 +1,9 @@
 package main.api.formations;
 
-import java.awt.geom.Point2D.Double;
-import java.util.Random;
-import java.util.TreeMap;
-
 import main.api.formations.helpers.FormationPoint;
+
+import java.awt.geom.Point2D.Double;
+import java.util.TreeMap;
 
 /** Convenient formation for virtual UAVs deployment in simulations (<i>setStartingLocation</i> method of the protocol implementation). The formation numbering starts in 0, in the center UAV, approximately located at the center of the formation. The remaining UAVs are located around it, keeping the minimum distance, and trying to maintain a circular distribution around the center UAV.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */

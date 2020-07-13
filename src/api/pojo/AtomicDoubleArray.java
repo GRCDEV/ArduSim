@@ -13,21 +13,20 @@
 
 package api.pojo;
 
-import static java.lang.Double.doubleToRawLongBits;
-import static java.lang.Double.longBitsToDouble;
+import main.api.atomicDoubleArrayHelpers.GwtIncompatible;
 
 import java.util.concurrent.atomic.AtomicLongArray;
 
-import main.api.atomicDoubleArrayHelpers.CanIgnoreReturnValue;
-import main.api.atomicDoubleArrayHelpers.GwtIncompatible;
+import static java.lang.Double.doubleToRawLongBits;
+import static java.lang.Double.longBitsToDouble;
 
 /**
  * A {@code double} array in which elements may be updated atomically. See the {@link
  * java.util.concurrent.atomic} package specification for description of the properties of atomic
  * variables.
  *
- * <p><a name="bitEquals"></a>This class compares primitive {@code double} values in methods such as
- * {@link #compareAndSet} by comparing their bitwise representation using {@link
+ * <p><a name="bitEquals"></a>This class compares primitive {@code double} values in methods
+ * y comparing their bitwise representation using {@link
  * Double#doubleToRawLongBits}, which differs from both the primitive double {@code ==} operator and
  * from {@link Double#equals}, as if implemented by:
  *
@@ -104,101 +103,6 @@ public class AtomicDoubleArray implements java.io.Serializable {
   public final void set(int i, double newValue) {
     long next = doubleToRawLongBits(newValue);
     longs.set(i, next);
-  }
-
-  /**
-   * Eventually sets the element at position {@code i} to the given value.
-   *
-   * @param i the index
-   * @param newValue the new value
-   */
-  public final void lazySet(int i, double newValue) {
-    long next = doubleToRawLongBits(newValue);
-    longs.lazySet(i, next);
-  }
-
-  /**
-   * Atomically sets the element at position {@code i} to the given value and returns the old value.
-   *
-   * @param i the index
-   * @param newValue the new value
-   * @return the previous value
-   */
-  public final double getAndSet(int i, double newValue) {
-    long next = doubleToRawLongBits(newValue);
-    return longBitsToDouble(longs.getAndSet(i, next));
-  }
-
-  /**
-   * Atomically sets the element at position {@code i} to the given updated value if the current
-   * value is <a href="#bitEquals">bitwise equal</a> to the expected value.
-   *
-   * @param i the index
-   * @param expect the expected value
-   * @param update the new value
-   * @return true if successful. False return indicates that the actual value was not equal to the
-   *     expected value.
-   */
-  public final boolean compareAndSet(int i, double expect, double update) {
-    return longs.compareAndSet(i, doubleToRawLongBits(expect), doubleToRawLongBits(update));
-  }
-
-  /**
-   * Atomically sets the element at position {@code i} to the given updated value if the current
-   * value is <a href="#bitEquals">bitwise equal</a> to the expected value.
-   *
-   * <p>May <a
-   * href="http://download.oracle.com/javase/7/docs/api/java/util/concurrent/atomic/package-summary.html#Spurious">
-   * fail spuriously</a> and does not provide ordering guarantees, so is only rarely an appropriate
-   * alternative to {@code compareAndSet}.
-   *
-   * @param i the index
-   * @param expect the expected value
-   * @param update the new value
-   * @return true if successful
-   */
-  public final boolean weakCompareAndSet(int i, double expect, double update) {
-    return longs.weakCompareAndSetPlain(i, doubleToRawLongBits(expect), doubleToRawLongBits(update));
-  }
-
-  /**
-   * Atomically adds the given value to the element at index {@code i}.
-   *
-   * @param i the index
-   * @param delta the value to add
-   * @return the previous value
-   */
-  @CanIgnoreReturnValue
-  public final double getAndAdd(int i, double delta) {
-    while (true) {
-      long current = longs.get(i);
-      double currentVal = longBitsToDouble(current);
-      double nextVal = currentVal + delta;
-      long next = doubleToRawLongBits(nextVal);
-      if (longs.compareAndSet(i, current, next)) {
-        return currentVal;
-      }
-    }
-  }
-
-  /**
-   * Atomically adds the given value to the element at index {@code i}.
-   *
-   * @param i the index
-   * @param delta the value to add
-   * @return the updated value
-   */
-  @CanIgnoreReturnValue
-  public double addAndGet(int i, double delta) {
-    while (true) {
-      long current = longs.get(i);
-      double currentVal = longBitsToDouble(current);
-      double nextVal = currentVal + delta;
-      long next = doubleToRawLongBits(nextVal);
-      if (longs.compareAndSet(i, current, next)) {
-        return nextVal;
-      }
-    }
   }
 
   /**

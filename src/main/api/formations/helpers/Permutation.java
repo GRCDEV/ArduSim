@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 public class Permutation <T> {
 	private T[] arr;
-	private int[] permSwappings;
+	private final int[] permSwappings;
 
 	/** Instantiate a Permutation over an array of objects. The objects must be Cloneable. */
 	public Permutation(T[] arr) {

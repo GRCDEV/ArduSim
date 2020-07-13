@@ -1,9 +1,9 @@
 package main.api;
 
+import main.uavController.UAVParam;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
-import main.uavController.UAVParam;
 
 /**
  * API used to validate parameters introduced by the user in the GUI, and to format strings and numbers.
@@ -17,11 +17,7 @@ public class ValidationTools {
 	 * @return true if the String is null or empty.
 	 */
 	public boolean isEmpty(String validating) {
-		if (validating == null || validating.length() == 0) {
-			return true;
-		} else {
-			return false;
-		}
+		return validating == null || validating.length() == 0;
 	}
 	
 	/**
@@ -33,10 +29,7 @@ public class ValidationTools {
 		if (validating == null) {
 			return false;
 		}
-		if (!validating.equalsIgnoreCase("true") && !validating.equalsIgnoreCase("false")) {
-			return false;
-		}
-		return true;
+		return validating.equalsIgnoreCase("true") || validating.equalsIgnoreCase("false");
 	}
 	
 	/**
@@ -136,27 +129,7 @@ public class ValidationTools {
 		}
 		return true;
 	}
-	
-	/**
-	 * Validate a positive long number.
-	 * @param validating String representation of a positive long.
-	 * @return true if the String represents a valid positive long.
-	 */
-	public boolean isValidPositiveLong(String validating) {
-		if (validating == null) {
-			return false;
-		}
-		try {
-			long x = Long.parseLong(validating);
-			if (x <= 0) {
-				return false;
-			}
-		} catch (NumberFormatException e) {
-			return false;
-		}
-		return true;
-	}
-	
+
 	/**
 	 * Validate a positive double number.
 	 * @param validating String representation of a positive double.

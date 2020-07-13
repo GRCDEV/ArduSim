@@ -1,8 +1,5 @@
 package api.pojo.location;
 
-import java.util.List;
-import java.util.Objects;
-
 import api.API;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
@@ -13,14 +10,13 @@ import io.dronefleet.mavlink.common.MissionItem;
 import io.dronefleet.mavlink.util.EnumValue;
 import main.Text;
 
+import java.util.Objects;
+
 /** This class generates waypoints used in missions.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class Waypoint {
-	
-	/** Maximum number of waypoints accepted by the flight controller (hard coded in the flight controller). */
-	public static final int MAX_WAYPOINTS = 718;
-	
+
 	private int numSeq; // Waypoint sequence number
 	private MavFrame frame;	// Coordinate frame used
 	private int isCurrent; // 1 When this is the current waypoint
@@ -129,8 +125,7 @@ public class Waypoint {
 
 	/** Returns whether this waypoint is the current one. */
 	public boolean isCurrent() {
-		if (this.isCurrent == 1) return true;
-		else return false;
+		return this.isCurrent == 1;
 	}
 
 	/** Generates a MAVLink message with this waypoint data. */
@@ -151,7 +146,7 @@ public class Waypoint {
 	}
 
 	@Override
-	/** String representation of a waypoint. */
+	/* String representation of a waypoint. */
 	public String toString() {
 		String res = this.numSeq + "\t" + this.isCurrent + "\t";
 		try {
@@ -165,28 +160,6 @@ public class Waypoint {
 				+ this.param7 + "\t" + this.autoContinue;
 		return res;
 	}
-	
-	/** String representation of a mission stored in an array in QGroundControl format. */
-	public static String arrayToString(Waypoint[] wp) {
-		StringBuilder result = new StringBuilder();
-		result.append("QGC WPL 110\n");
-		for (int i = 0; i < wp.length; i++) {
-			result.append(wp[i].toString());
-			result.append("\n");
-		}
-		return result.toString();
-	}
-
-	/** String representation of a mission stored in a list in QGroundControl format. */
-	public static String listToString(List<Waypoint> wp) {
-		StringBuilder result = new StringBuilder();
-		result.append("QGC WPL 110\n");
-		for (int i = 0; i < wp.size(); i++) {
-			result.append(wp.get(i).toString());
-			result.append("\n");
-		}
-		return result.toString();
-	}
 
 	/** Two waypoints are equals even when one of them is the current and the other not. */
 	@Override
@@ -195,19 +168,15 @@ public class Waypoint {
 			return true;
 		}
 		
-		if (obj == null || !(obj instanceof Waypoint)) {
+		if (!(obj instanceof Waypoint)) {
 			return false;
 		}
 		Waypoint b = (Waypoint) obj;
-		if (this.numSeq == b.numSeq && this.autoContinue == b.autoContinue
+		return this.numSeq == b.numSeq && this.autoContinue == b.autoContinue
 				&& this.command == b.command && Double.compare(this.param1, b.param1) == 0
-						&& Double.compare(this.param2, b.param2) == 0 && Double.compare(this.param3, b.param3) == 0
-						&& Double.compare(this.param4, b.param4) == 0 && Double.compare(this.param5, b.param5) == 0
-						&& Double.compare(this.param6, b.param6) == 0 && Double.compare(this.param7, b.param7) == 0) {
-			return true;
-		} else {
-			return false;
-		}
+				&& Double.compare(this.param2, b.param2) == 0 && Double.compare(this.param3, b.param3) == 0
+				&& Double.compare(this.param4, b.param4) == 0 && Double.compare(this.param5, b.param5) == 0
+				&& Double.compare(this.param6, b.param6) == 0 && Double.compare(this.param7, b.param7) == 0;
 	}
 
 	@Override

@@ -1,14 +1,14 @@
 package main.api.formations;
 
-import java.awt.geom.Point2D;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
-
 import api.API;
 import main.api.ValidationTools;
 import main.api.formations.helpers.FormationPoint;
 import main.api.formations.helpers.FormationPointHelper;
+
+import java.awt.geom.Point2D;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /** The formation numbering starts in 0 in the center of the formation and increases with the distance to the center of the formation.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -56,7 +56,6 @@ public class FormationMatrixCompact extends FlightFormation {
 		point[0] = new FormationPointHelper(0, 0, 0, 0, 0);	// The center UAV
 		// Process points on all layers
 		int layers = layer;
-		layer = 1;
 		int p = 1;
 		double distance, offsetX, offsetY;
 		Point2D.Double upRightCorner, bottomLeftCorner;
@@ -117,7 +116,7 @@ public class FormationMatrixCompact extends FlightFormation {
 		Queue<FormationPointHelper>[] ordered = new LinkedList[7];
 		FormationPointHelper extracted;
 		for (int k = 0; k < ordered.length; k++) {
-			ordered[k] = new LinkedList<FormationPointHelper>();
+			ordered[k] = new LinkedList<>();
 		}
 		// For each distance
 		while (i < n && p < this.numUAVs) {
@@ -128,8 +127,8 @@ public class FormationMatrixCompact extends FlightFormation {
 			while (j < set.length && p < this.numUAVs) {
 				FormationPointHelper[] subSet = this.getSubSet(set, j);
 				j = j + subSet.length;
-				for (int k = 0; k < subSet.length; k++) {
-					ordered[subSet[k].side].add(subSet[k]);
+				for (FormationPointHelper formationPointHelper : subSet) {
+					ordered[formationPointHelper.side].add(formationPointHelper);
 				}
 				// Store the result alternating between sides if possible
 				int k = 0;

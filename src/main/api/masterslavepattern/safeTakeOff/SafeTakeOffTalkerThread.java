@@ -1,11 +1,7 @@
 package main.api.masterslavepattern.safeTakeOff;
 
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.esotericsoftware.kryo.io.Output;
-
 import api.API;
+import com.esotericsoftware.kryo.io.Output;
 import main.Text;
 import main.api.ArduSim;
 import main.api.Copter;
@@ -15,6 +11,9 @@ import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.MSText;
+
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Thread used to perform a safe take off.
@@ -30,8 +29,6 @@ public class SafeTakeOffTalkerThread extends Thread {
 	private InternalCommLink commLink;
 	private byte[] outBuffer;
 	private Output output;
-	private byte[] message;
-	private Copter copter;
 	private ArduSim ardusim;
 	private AtomicInteger state;
 	
@@ -46,8 +43,8 @@ public class SafeTakeOffTalkerThread extends Thread {
 		this.commLink = InternalCommLink.getCommLink(numUAV);
 		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
-		this.copter = API.getCopter(numUAV);
-		this.selfID = this.copter.getID();
+		Copter copter = API.getCopter(numUAV);
+		this.selfID = copter.getID();
 		this.isCenter = safeTakeOffInstance.masterOrder[0] == this.selfID;
 		this.ardusim = API.getArduSim();
 		this.state = state;
@@ -56,7 +53,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 	@Override
 	public void run() {
 		
-		/** WAIT TAKE OFF PHASE */
+		// WAIT TAKE OFF PHASE
 		if (state.get() == MSParam.STATE_WAIT_TAKE_OFF) {
 			gui.logVerboseUAV(MSText.TALKER_WAITING);
 		}
@@ -64,7 +61,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 			ardusim.sleep(MSParam.SENDING_PERIOD);
 		}
 		
-		/** TAKE OFF STEP 1 PHASE */
+		// TAKE OFF STEP 1 PHASE */
 		if (state.get() == MSParam.STATE_TAKE_OFF_STEP_1) {
 			gui.logVerboseUAV(MSText.TALKER_TAKING_OFF_1);
 		}
@@ -72,8 +69,9 @@ public class SafeTakeOffTalkerThread extends Thread {
 			ardusim.sleep(MSParam.SENDING_PERIOD);
 		}
 		
-		/** TAKE OFF STEP 2 PHASE */
+		// TAKE OFF STEP 2 PHASE
 		long waitingTime, cicleTime;
+		byte[] message;
 		if (state.get() == MSParam.STATE_TAKE_OFF_STEP_2) {
 			if (nextID == SafeTakeOffContext.BROADCAST_MAC_ID) {
 				gui.logVerboseUAV(MSText.TALKER_WAITING_TAKING_OFF_2);
@@ -104,7 +102,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 			ardusim.sleep(MSParam.SENDING_PERIOD);
 		}
 		
-		/** TARGET REACHED PHASE */
+		// TARGET REACHED PHASE
 		if (!isCenter || (excluded && nextID != SafeTakeOffContext.BROADCAST_MAC_ID)) {
 			gui.logVerboseUAV(MSText.TALKER_TARGET_REACHED);
 			output.reset();
@@ -133,7 +131,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 			ardusim.sleep(MSParam.SENDING_PERIOD);
 		}
 		
-		/** TAKE OFF CHECK PHASE */
+		// TAKE OFF CHECK PHASE
 		if (isCenter) {
 			gui.logVerboseUAV(MSText.TALKER_CENTER_WAITING_END);
 			output.reset();

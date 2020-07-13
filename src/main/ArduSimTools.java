@@ -588,7 +588,7 @@ public class ArduSimTools {
 		// File copy to temporary folder
 	    InputStream in = Main.class.getResourceAsStream(name);
 	    byte[] buffer = new byte[1024];
-	    int read = -1;
+	    int read;
 	    File temp = new File(new File(System.getProperty("java.io.tmpdir")),name);
 	    FileOutputStream fos = new FileOutputStream(temp);
 	    while((read = in.read(buffer)) != -1) {
@@ -754,11 +754,11 @@ public class ArduSimTools {
 			    	irLockPort = irLockPort + 10;
 	    		}
 	    		if (irLockPort <= UAVParam.MAX_PORT) {
-	    			tcpMain.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, tcpPort, UAVParam.PORT_CHECK_TIMEOUT));
-			    	udpAux1.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, udp1Port, UAVParam.PORT_CHECK_TIMEOUT));
-			    	udpAux2.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, udp2Port, UAVParam.PORT_CHECK_TIMEOUT));
-			    	udpAux3.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, udp3Port, UAVParam.PORT_CHECK_TIMEOUT));
-			    	irLockAux.add(portIsAvailable(es, UAVParam.MAV_NETWORK_IP, irLockPort, UAVParam.PORT_CHECK_TIMEOUT));
+	    			tcpMain.add(portIsAvailable(es, tcpPort));
+			    	udpAux1.add(portIsAvailable(es, udp1Port));
+			    	udpAux2.add(portIsAvailable(es, udp2Port));
+			    	udpAux3.add(portIsAvailable(es, udp3Port));
+			    	irLockAux.add(portIsAvailable(es, irLockPort));
 			    	tcpPort = tcpPort + 10;
 			    	udp1Port = udp1Port + 10;
 			    	udp2Port = udp2Port + 10;
@@ -808,39 +808,35 @@ public class ArduSimTools {
 	}
 	
 	/** Auxiliary method to detect asynchronously if a port is in use by the system or any other application. */
-	private static Future<PortScanResult> portIsAvailable(final ExecutorService es, final String ip, final int port,
-	        final int timeout) {
-	    return es.submit(new Callable<>() {
-	        @Override
-	        public PortScanResult call() {
-	            boolean isAvailable = true;
-				try (DatagramSocket socketUDP = new DatagramSocket(new InetSocketAddress(ip, port))) {
+	private static Future<PortScanResult> portIsAvailable(final ExecutorService es, final int port) {
+	    return es.submit(() -> {
+			boolean isAvailable = true;
+			try (DatagramSocket ignored = new DatagramSocket(new InetSocketAddress(UAVParam.MAV_NETWORK_IP, port))) {
+			} catch (Exception ex) {
+				isAvailable = false;
+			}
+
+			if (isAvailable) {
+				ServerSocket socketTCP = null;
+				try {
+					socketTCP = new ServerSocket();
+					socketTCP.setReuseAddress(false);	// Needed for MacOS
+					socketTCP.bind(new InetSocketAddress(UAVParam.MAV_NETWORK_IP, port), 1);
 				} catch (Exception ex) {
 					isAvailable = false;
-				}
-	            
-	            if (isAvailable) {
-	            	ServerSocket socketTCP = null;
-					try {
-						socketTCP = new ServerSocket();
-						socketTCP.setReuseAddress(false);	// Needed for MacOS
-						socketTCP.bind(new InetSocketAddress(ip, port), 1);
-					} catch (Exception ex) {
-						isAvailable = false;
-					} finally {
-						if (socketTCP != null) {
-							try {
-								socketTCP.close();
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
+				} finally {
+					if (socketTCP != null) {
+						try {
+							socketTCP.close();
+						} catch (IOException e) {
+							e.printStackTrace();
 						}
 					}
-	            }
-	            
-	            return new PortScanResult(port, isAvailable);
-	        }
-	    });
+				}
+			}
+
+			return new PortScanResult(port, isAvailable);
+		});
 	}
 	
 	/** Gets the id when using a real UAV, based on the MAC address. */

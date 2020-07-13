@@ -1,14 +1,14 @@
 package main.api.masterslavepattern.discovery;
 
-import java.util.concurrent.ConcurrentHashMap;
 import com.esotericsoftware.kryo.io.Input;
-
 import es.upv.grc.mapper.Location2DUTM;
 import main.Text;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Thread used by the master UAV to detect slaves.
@@ -36,7 +36,7 @@ public class DiscoverMasterListener extends Thread {
 		
 		byte[] inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		Input input = new Input(inBuffer);
-		Long idSlave;
+		long idSlave;
 		Location2DUTM slaveLocation;
 		
 		while (!listener.onProgressCheckActionPerformed(UAVsDetected.size())) {

@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 public class ValueSet {
-	private HashMap<Integer, HashMap<Integer, Double>> pSet;
+	private final HashMap<Integer, HashMap<Integer, Double>> pSet;
 	private double min, max;
 	
 	public ValueSet() {
-		pSet = new HashMap<Integer, HashMap<Integer, Double>>();
+		pSet = new HashMap<>();
 		min = Double.MAX_VALUE;
 		max = Double.MIN_VALUE;
 	}
@@ -25,7 +24,7 @@ public class ValueSet {
 		add(p.getX(), p.getY(), c);
 	}
 	public void add(int a, int b, double c) {
-		if (!pSet.containsKey(a)) pSet.put(a, new HashMap<Integer, Double>());
+		if (!pSet.containsKey(a)) pSet.put(a, new HashMap<>());
 		pSet.get(a).put(b, c);
 		if (c < min) min = c;
 		if (c > max) max = c;
@@ -50,7 +49,7 @@ public class ValueSet {
 	}
 	
 	public Value[] toArray() {
-		ArrayList<Value> al = new ArrayList<Value>();
+		ArrayList<Value> al = new ArrayList<>();
 		
 		Iterator<Integer> i1 = pSet.keySet().iterator();
 		int e;
@@ -76,11 +75,7 @@ public class ValueSet {
 	public Iterator<Value> iterator() {
 		return new Itr();
 	}
-	
-	public boolean isEmpty() {
-		return pSet.isEmpty();
-	}
-	
+
 	public double getMin() {
 		return min;
 	}
@@ -100,17 +95,15 @@ public class ValueSet {
 			if(itA.hasNext()) {
 				a = itA.next();
 				itB = pSet.get(a).entrySet().iterator();
-			} else itB = new Iterator<Map.Entry<Integer,Double>>() {
+			} else itB = new Iterator<>() {
 
 				@Override
 				public boolean hasNext() {
-					// TODO Auto-generated method stub
 					return false;
 				}
 
 				@Override
 				public Entry<Integer, Double> next() {
-					// TODO Auto-generated method stub
 					return null;
 				}};
 		}

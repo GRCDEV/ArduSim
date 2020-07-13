@@ -1,8 +1,5 @@
 package main.api;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import api.API;
 import api.pojo.FlightMode;
 import api.pojo.location.Waypoint;
@@ -17,6 +14,9 @@ import main.Text;
 import main.api.hiddenFunctions.HiddenFunctions;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * API for mission based applications.
@@ -205,7 +205,7 @@ public class MissionHelper {
 	 * Create the simplified mission shown on screen, and forces view to re-scale.
 	 */
 	private void simplify() {
-		List<WaypointSimplified> missionUTMSimplified = new ArrayList<WaypointSimplified>();
+		List<WaypointSimplified> missionUTMSimplified = new ArrayList<>();
 	
 		// Hypothesis:
 		//   The first take off waypoint retrieved from the UAV is used as "home"
@@ -267,14 +267,13 @@ public class MissionHelper {
 	
 	/**
 	 * Modify the current waypoint of the mission stored on the UAV.
-	 * @param currentWP New value, starting from 0.
 	 * @return true if the command was successful.
 	 */
-	private boolean setCurrentWaypoint(int currentWP) {
+	private boolean setCurrentWaypoint() {
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK) {
 			ardusim.sleep(UAVParam.COMMAND_WAIT);
 		}
-		UAVParam.newCurrentWaypoint[numUAV] = currentWP;
+		UAVParam.newCurrentWaypoint[numUAV] = 0;
 		UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_SET_CURRENT_WP);
 		while (UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_OK
 				&& UAVParam.MAVStatus.get(numUAV) != UAVParam.MAV_STATUS_ERROR_CURRENT_WP) {
@@ -284,7 +283,7 @@ public class MissionHelper {
 			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT_ERROR);
 			return false;
 		} else {
-			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT + " = " + currentWP);
+			ArduSimTools.logVerboseGlobal(SimParam.prefix[numUAV] + Text.CURRENT_WAYPOINT + " = " + 0);
 			return true;
 		}
 	}
@@ -323,8 +322,8 @@ public class MissionHelper {
 		UAVParam.takeOffAltitude.set(numUAV, list.get(1).getAltitude());
 
 		UAVParam.currentGeoMission[numUAV].clear();
-		for (int i = 0; i < list.size(); i++) {
-			UAVParam.currentGeoMission[numUAV].add(new Waypoint(list.get(i)));
+		for (Waypoint waypoint : list) {
+			UAVParam.currentGeoMission[numUAV].add(new Waypoint(waypoint));
 		}
 		Location2DGeo geo = UAVParam.uavCurrentData[numUAV].getGeoLocation();
 		// The take off waypoint must be modified to include current coordinates
@@ -374,13 +373,9 @@ public class MissionHelper {
 		// Since ardupilot v4.0.0 this doesn`t work anymore. however everything works if we first give some throttle and than go to auto mode 
 		
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
-		if (HiddenFunctions.armEngines(numUAV)
+		return HiddenFunctions.armEngines(numUAV)
 				&& HiddenFunctions.stabilize(numUAV)
-				&& this.copter.setFlightMode(FlightMode.AUTO)
-				) {
-			return true;
-		}
-		return false;
+				&& this.copter.setFlightMode(FlightMode.AUTO);
 	}
 	
 	/**
@@ -396,7 +391,7 @@ public class MissionHelper {
 		if (this.remove()
 				&& this.set(mission)
 				&& this.retrieve()
-				&& this.setCurrentWaypoint(0)) {
+				&& this.setCurrentWaypoint()) {
 			Param.numMissionUAVs.incrementAndGet();
 			success = true;
 		}

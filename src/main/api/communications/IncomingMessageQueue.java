@@ -7,7 +7,7 @@ import java.util.ArrayDeque;
 
 public class IncomingMessageQueue {
 	
-	private ArrayDeque<IncomingMessage> queue;
+	private final ArrayDeque<IncomingMessage> queue;
 	private int byteSize;
 	
 	/** Inserts a new message in the queue.
@@ -36,7 +36,9 @@ public class IncomingMessageQueue {
 	 * <p>Remember to check if the queue is empty before removing the element.</p> */
 	public synchronized IncomingMessage pollFirst() {
 		IncomingMessage m = this.queue.pollFirst();
-		this.byteSize = this.byteSize - m.message.length;
+		if(m != null) {
+			this.byteSize = this.byteSize - m.message.length;
+		}
 		return m;
 	}
 	

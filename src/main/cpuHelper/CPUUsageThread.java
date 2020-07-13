@@ -1,25 +1,18 @@
 package main.cpuHelper;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
+import api.API;
+import main.ArduSimTools;
+import main.Param;
+import main.Text;
+import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
+
+import java.io.*;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import org.hyperic.sigar.Sigar;
-import org.hyperic.sigar.SigarException;
-
-import api.API;
-import main.ArduSimTools;
-import main.Param;
-import main.Text;
 
 /** 
  * Thread used to measure the CPU usage.
@@ -50,7 +43,7 @@ public class CPUUsageThread extends Thread {
 				PrintStream original = System.err;
 				PrintStream dummy = new PrintStream(new OutputStream() {
 					@Override
-					public void write(int b) throws IOException {
+					public void write(int b) {
 					}
 				});
 				System.setErr(dummy);
@@ -72,7 +65,7 @@ public class CPUUsageThread extends Thread {
 									sigar.getCpuPerc().getCombined()*100,
 									sigar.getProcCpu(pid).getPercent() * 100,
 									Param.simStatus));
-						} catch (SigarException se) {}
+						} catch (SigarException ignored) {}
 						delta = prevTime + interval - System.currentTimeMillis();
 						if (delta > 0) {
 							API.getArduSim().sleep(delta);
@@ -118,7 +111,7 @@ public class CPUUsageThread extends Thread {
 					p.destroy();
 					
 					// 3. Cyclic CPU usage retrieval
-					List<String> commandLine = new ArrayList<String>();
+					List<String> commandLine = new ArrayList<>();
 					commandLine.add("/bin/sh");
 					ProcessBuilder pb = new ProcessBuilder(commandLine);
 					try {
@@ -146,7 +139,7 @@ public class CPUUsageThread extends Thread {
 												try {
 													global = 100 - NumberFormat.getInstance(Locale.getDefault()).parse(s.split("\\s+")[7]).doubleValue();
 													state = CPUUsageThread.CPU_LINE_RECEIVED;
-												} catch (ParseException e) {}
+												} catch (ParseException ignored) {}
 											} else {
 												firstSkipped = true;
 											}
@@ -158,7 +151,7 @@ public class CPUUsageThread extends Thread {
 												try {
 													global =100 - NumberFormat.getInstance(Locale.getDefault()).parse(globalString).doubleValue();
 													state = CPUUsageThread.CPU_LINE_RECEIVED;
-												} catch (ParseException e) {}
+												} catch (ParseException ignored) {}
 											} else {
 												firstSkipped = true;
 											}
@@ -166,14 +159,14 @@ public class CPUUsageThread extends Thread {
 									}
 									
 									// global != null only if no ParseException error happened
-									if (state == CPUUsageThread.CPU_LINE_RECEIVED && global != null) {
+									if (state == CPUUsageThread.CPU_LINE_RECEIVED) {
 										if (Param.runningOperatingSystem == Param.OS_LINUX && s.startsWith("" + pid)) {
 											try {
 												process = NumberFormat.getInstance(Locale.getDefault()).parse(s.split("\\s+")[8]).doubleValue();
 												Param.cpu.add(new CPUData(System.nanoTime(), global, process, Param.simStatus));
 												global = null;
 												state = CPUUsageThread.FINISHED;
-											} catch (ParseException e) {}
+											} catch (ParseException ignored) {}
 										}
 										if (Param.runningOperatingSystem == Param.OS_MAC && s.startsWith("" + pid)) {
 											try {
@@ -181,16 +174,16 @@ public class CPUUsageThread extends Thread {
 												Param.cpu.add(new CPUData(System.nanoTime(), global, process, Param.simStatus));
 												global = null;
 												state = CPUUsageThread.FINISHED;
-											} catch (ParseException e) {}
+											} catch (ParseException ignored) {}
 										}
 									}
 								} else {
 									try {
 										Thread.sleep(Param.CPU_CONSOLE_TIMEOUT);
-									} catch (InterruptedException e) {}
+									} catch (InterruptedException ignored) {}
 								}
 							}
-						} catch (IOException e) {}
+						} catch (IOException ignored) {}
 					} catch (IOException e) {
 						ArduSimTools.logGlobal(Text.CPU_ERROR_4);
 					}

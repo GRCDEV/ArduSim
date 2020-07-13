@@ -9,7 +9,7 @@ public enum TakeOffAlgorithm {
 	private final int algorithmID;
 	private final String algorithmName;
 	
-	private TakeOffAlgorithm(int id, String name) {
+	TakeOffAlgorithm(int id, String name) {
 		this.algorithmID = id;
 		this.algorithmName = name;
 	}
@@ -24,9 +24,9 @@ public enum TakeOffAlgorithm {
 	
 	public static TakeOffAlgorithm getAlgorithm(String name) {
 		TakeOffAlgorithm[] algorithms = TakeOffAlgorithm.values();
-		for (int i = 0; i < algorithms.length; i++) {
-			if (algorithms[i].getName().equals(name)) {
-				return algorithms[i];
+		for (TakeOffAlgorithm algorithm : algorithms) {
+			if (algorithm.getName().equals(name)) {
+				return algorithm;
 			}
 		}
 		

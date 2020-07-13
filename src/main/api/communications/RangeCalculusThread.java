@@ -13,7 +13,7 @@ import main.uavController.UAVParam;
 
 public class RangeCalculusThread extends Thread {
 	
-	private ArduSim ardusim;
+	private final ArduSim ardusim;
 	
 	public RangeCalculusThread() {
 		this.ardusim = API.getArduSim();

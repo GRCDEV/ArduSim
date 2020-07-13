@@ -12,9 +12,7 @@ public class Point {
 		this.x = x;
 		this.y = y;
 	}
-	public Point() {
-	}
-	
+
 	/**
 	 * Make a deep copy of a Point
 	 * @param point Point to copy
@@ -31,15 +29,7 @@ public class Point {
 	public String toString() {
 		return "[" + x + ", " + y + "]";
 	}
-	
-	/**
-	 * Deep copy of another Point object onto this object.
-	 * @param p Object to copy from.
-	 */
-	public void copyFrom(Point p) {
-		x = p.x;
-		y = p.y;
-	}
+
 	
 	/**
 	 * Calculate the distance vector to this Point from another Point.
@@ -72,7 +62,7 @@ public class Point {
 	 * Adds to the x and y components of the Point.
 	 * @param x The x to add.
 	 * @param y The y to add.
-	 * @return
+	 * @return point
 	 */
 	public Point add(int x, int y) {
 		this.x += x;
@@ -87,8 +77,7 @@ public class Point {
 	 * @return True if the point is in the grid, false otherwise.
 	 */
 	public boolean isInside(int sizeX, int sizeY) {
-		if (x < 0 || x >= sizeX || y < 0 || y >= sizeY) return false;
-		return true;
+		return x >= 0 && x < sizeX && y >= 0 && y < sizeY;
 	}
 	
 	/**
@@ -115,22 +104,12 @@ public class Point {
 	public void setY(int y) {
 		this.y = y;
 	}
-	/**
-	 * Add to x
-	 * @param i Amount to add to x
-	 * @return Itself to allow chaining.
-	 */
-	public Point addX(int i) {
-		this.x += i;
-		return this;
-	}
+
 	/**
 	 * Add to y
 	 * @param i Amount to add to y
-	 * @return Itself to allow chaining.
 	 */
-	public Point addY(int i) {
+	public void addY(int i) {
 		this.y += i;
-		return this;
 	}
 }

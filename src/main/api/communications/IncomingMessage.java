@@ -37,7 +37,7 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 		this.message = message.message;	// Alert! It is not a deep copy, as the same message is used on all the UAVs
 		this.checked.set(message.checked.get());
 		this.overlapped.set(message.overlapped.get());
-		//this.alreadyOverlapped.set(message.alreadyOverlapped.get()); Not necessary
+		this.alreadyOverlapped.set(message.alreadyOverlapped.get()); //Not necessary
 	}
 	
 	/** Two incoming messages are equal if the came from the same UAV and started on the same instant. */
@@ -48,14 +48,11 @@ public class IncomingMessage implements Comparable<IncomingMessage> {
 			return true;
 		}
 		
-		if (obj == null || !(obj instanceof IncomingMessage)) {
+		if (!(obj instanceof IncomingMessage)) {
 			return false;
 		}
 		IncomingMessage m = (IncomingMessage)obj;
-		if (this.senderPos == m.senderPos && this.start == m.start) {
-			return true;
-		}
-		return false;
+		return this.senderPos == m.senderPos && this.start == m.start;
 	}
 	
 	@Override

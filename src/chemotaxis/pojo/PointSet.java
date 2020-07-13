@@ -7,16 +7,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 public class PointSet {
-	private HashMap<Integer, HashSet<Integer>> pSet;
+	private final HashMap<Integer, HashSet<Integer>> pSet;
 	public PointSet() {
-		pSet = new HashMap<Integer, HashSet<Integer>>();
+		pSet = new HashMap<>();
 	}
 	
 	public void add(Point p) {
 		add(p.getX(), p.getY());
 	}
 	public void add(int a, int b) {
-		if (!pSet.containsKey(a)) pSet.put(a, new HashSet<Integer>());
+		if (!pSet.containsKey(a)) pSet.put(a, new HashSet<>());
 		pSet.get(a).add(b);
 	}
 	
@@ -39,7 +39,7 @@ public class PointSet {
 	}
 	
 	public Point[] toArray() {
-		ArrayList<Point> al = new ArrayList<Point>();
+		ArrayList<Point> al = new ArrayList<>();
 		
 		Iterator<Integer> i1 = pSet.keySet().iterator();
 		int e;

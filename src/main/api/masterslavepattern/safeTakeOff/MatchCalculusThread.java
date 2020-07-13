@@ -1,22 +1,13 @@
 package main.api.masterslavepattern.safeTakeOff;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import es.upv.grc.mapper.Location2DUTM;
+import main.api.formations.FlightFormation;
+import main.api.formations.helpers.Permutation;
 import org.javatuples.Pair;
 import org.javatuples.Quartet;
 
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3DUTM;
-import main.api.formations.FlightFormation;
-import main.api.formations.helpers.Permutation;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class MatchCalculusThread extends Thread {
 	
@@ -67,8 +58,8 @@ public class MatchCalculusThread extends Thread {
 		
 		int numUAVs = groundLocations.size();
 		
-		Map<Long, Location2DUTM> ground = new HashMap<Long, Location2DUTM>(groundLocations);
-		Map<Integer, Location2DUTM> air = new HashMap<Integer, Location2DUTM>((int)Math.ceil(numUAVs / 0.75) + 1);
+		Map<Long, Location2DUTM> ground = new HashMap<>(groundLocations);
+		Map<Integer, Location2DUTM> air = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		
 		Location2DUTM groundCenterLocation;
 		if (masterID != null) {
@@ -95,8 +86,10 @@ public class MatchCalculusThread extends Thread {
 				fit = MatchCalculusThread.getRandomMatch(ground, air);
 			}
 			// Now we include again the center UAV in the center of the flight formation
-			match = Arrays.copyOf(fit, fit.length + 1);
-			match[match.length - 1] = Quartet.with(flyingCenterPosition, masterID, groundCenterLocation, 0.0);
+			if(fit != null) {
+				match = Arrays.copyOf(fit, fit.length + 1);
+				match[match.length - 1] = Quartet.with(flyingCenterPosition, masterID, groundCenterLocation, 0.0);
+			}
 			
 		} else {
 			// General case
@@ -180,9 +173,9 @@ public class MatchCalculusThread extends Thread {
 			return null;
 		}
 		int numUAVs = groundLocations.size();
-		Long[] ids = groundLocations.keySet().toArray(new Long[groundLocations.size()]);
+		Long[] ids = groundLocations.keySet().toArray(new Long[0]);
 		
-		Permutation<Long> p = new Permutation<Long>(ids);
+		Permutation<Long> p = new Permutation<>(ids);
 		Quartet<Integer, Long, Location2DUTM, Double>[] bestFitCurrentCenter = null;
 		double bestFitCurrentCenterError = Double.MAX_VALUE;
 		Long[] permutation;
@@ -219,13 +212,11 @@ public class MatchCalculusThread extends Thread {
 		}
 		
 		// 6. We sort the result given the distance in descending order to get the take-off sequence
-		Arrays.sort(bestFitCurrentCenter, new Comparator<Quartet<Integer, Long, Location2DUTM, Double>>() {
-
-			@Override
-			public int compare(Quartet<Integer, Long, Location2DUTM, Double> o1, Quartet<Integer, Long, Location2DUTM, Double> o2) {
-				return o2.getValue3().compareTo(o1.getValue3());	// Descending order
-			}
-		});
+		if(bestFitCurrentCenter != null) {
+			Arrays.sort(bestFitCurrentCenter, (o1, o2) -> {
+				return o2.getValue3().compareTo(o1.getValue3());    // Descending order
+			});
+		}
 		
 		return Pair.with(bestFitCurrentCenterError, bestFitCurrentCenter);
 	}
@@ -256,13 +247,8 @@ public class MatchCalculusThread extends Thread {
 		}
 		
 		// 2. We sort the flight locations in descending distance to the formation center
-		Arrays.sort(airSorted, new Comparator<Quartet<Integer, Long, Location2DUTM, Double>>() {
-
-			@Override
-			public int compare(Quartet<Integer, Long, Location2DUTM, Double> o1,
-					Quartet<Integer, Long, Location2DUTM, Double> o2) {
-				return o2.getValue3().compareTo(o1.getValue3());	// Descending order
-			}
+		Arrays.sort(airSorted, (o1, o2) -> {
+			return o2.getValue3().compareTo(o1.getValue3());	// Descending order
 		});
 		
 		//3. Assign ground location to each air location
@@ -299,14 +285,14 @@ public class MatchCalculusThread extends Thread {
 		// Copy ground and air locations to lists
 		Entry<Long, Location2DUTM> entry1;
 		Iterator<Entry<Long, Location2DUTM>> it1 = groundLocations.entrySet().iterator();
-		List<Pair<Long, Location2DUTM>> ground = new ArrayList<Pair<Long, Location2DUTM>>();
+		List<Pair<Long, Location2DUTM>> ground = new ArrayList<>();
 		while (it1.hasNext()) {
 			entry1 = it1.next();
 			ground.add(Pair.with(entry1.getKey(), entry1.getValue()));
 		}
 		Entry<Integer, Location2DUTM> entry2;
 		Iterator<Entry<Integer, Location2DUTM>> it2 = airLocations.entrySet().iterator();
-		List<Pair<Integer, Location2DUTM>> air = new ArrayList<Pair<Integer, Location2DUTM>>();
+		List<Pair<Integer, Location2DUTM>> air = new ArrayList<>();
 		while (it2.hasNext()) {
 			entry2 = it2.next();
 			air.add(Pair.with(entry2.getKey(), entry2.getValue()));

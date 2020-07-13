@@ -77,12 +77,7 @@ public class PCCompanionTalker extends Thread {
 			} else {
 				if (!dialogAlreadyOpened) {
 					// Launch the protocol dialog for PC Companion
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							ArduSimTools.selectedProtocolInstance.openPCCompanionDialog(PCCompanionGUI.companion.assistantFrame);
-						}
-					});
+					SwingUtilities.invokeLater(() -> ArduSimTools.selectedProtocolInstance.openPCCompanionDialog(PCCompanionGUI.companion.assistantFrame));
 					dialogAlreadyOpened = true;
 				}
 			}

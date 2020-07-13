@@ -1,25 +1,14 @@
 package main.sim.gui;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
 import main.Text;
 import main.sim.logic.SimTools;
 import main.uavController.UAVParam;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /** 
  * Dialog used to input options while loading missions.
@@ -29,7 +18,6 @@ public class MissionWaypointsDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private final JDialog thisDialog;
-	private final JPanel contentPanel = new JPanel();
 	private JCheckBox yawCheckBox;
 	private JComboBox<String> yawComboBox;
 	
@@ -42,6 +30,7 @@ public class MissionWaypointsDialog extends JDialog {
 
 	public MissionWaypointsDialog(String title) {
 		getContentPane().setLayout(new BorderLayout());
+		JPanel contentPanel = new JPanel();
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.WEST);
 		GridBagLayout gbl_contentPanel = new GridBagLayout();
@@ -62,15 +51,7 @@ public class MissionWaypointsDialog extends JDialog {
 		}
 		{
 			yawCheckBox = new JCheckBox();
-			yawCheckBox.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if (yawCheckBox.isSelected()) {
-						yawComboBox.setEnabled(true);
-					} else {
-						yawComboBox.setEnabled(false);
-					}
-				}
-			});
+			yawCheckBox.addActionListener(e -> yawComboBox.setEnabled(yawCheckBox.isSelected()));
 			yawCheckBox.setSelected(UAVParam.overrideYaw);
 			GridBagConstraints gbc_yawCheckBox = new GridBagConstraints();
 			gbc_yawCheckBox.anchor = GridBagConstraints.WEST;
@@ -90,7 +71,7 @@ public class MissionWaypointsDialog extends JDialog {
 			contentPanel.add(lblValue, gbc_lblValue);
 		}
 		{
-			yawComboBox = new JComboBox<String>();
+			yawComboBox = new JComboBox<>();
 			for (int i = 0; i < UAVParam.YAW_VALUES.length; i++) {
 				yawComboBox.addItem(UAVParam.YAW_VALUES[i]);
 			}

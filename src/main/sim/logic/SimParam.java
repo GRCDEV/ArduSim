@@ -23,10 +23,7 @@ public class SimParam {
 	// Performance parameters
 	public static volatile boolean arducopterLoggingEnabled = false;
 
-	// Wind parameters
-	public static final String ARROW_IMAGE_PATH = "/resources/ardusim/wind.png"; // arrow image path
 	public static BufferedImage arrowImage; // arrow image
-	public static final int ARROW_PANEL_SIZE = 36; // (px) arrow image size
 
 	// Administrator user check and ImDisk installation check and drive parameters
 	public static boolean userIsAdmin;			// Only initialized if using simulation, not in a real UAV
@@ -93,7 +90,6 @@ public class SimParam {
 	
 	// Screen level where elements are drawn
 	public static final int WIND_LEVEL = Integer.MAX_VALUE;
-	public static final int PROGRESS_LEVEL = Integer.MAX_VALUE - 1;
 	public static final int UAV_LEVEL = Integer.MAX_VALUE - 2;
 	public static final int COLLISION_LEVEL = Integer.MAX_VALUE - 3;
 	
@@ -104,12 +100,6 @@ public class SimParam {
 	public static double[] xUTM, yUTM, z;
 	public static double[] speed;
 
-	// Geographic zone and letter of the UTM projection. Gathered the first time a location is received from the UAV
-	public static int zone = -1;
-	public static char letter;
-
-	public static int boardPXWidth, boardPXHeight; // (px) Board panel size
-	
 	// Waiting timeout between threads
 	public static final long SHORT_WAITING_TIME = 200;	// (ms)
 	public static final long LONG_WAITING_TIME = 1000;	// (ms)

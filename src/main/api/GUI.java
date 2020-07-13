@@ -56,7 +56,6 @@ public class GUI {
 	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
 	 */
 	public File[] searchMissionFiles(){
-		File[] selection;
 		JFileChooser chooser = new JFileChooser();
 		chooser.setCurrentDirectory(API.getFileTools().getCurrentFolder());
 		chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE_1);
@@ -75,19 +74,19 @@ public class GUI {
 
 	/**
 	 * Loads the mission files
-	 * @param selection
-	 * @return
+	 * @param selection array of files
+	 * @return pair of string and waypoints
 	 */
 	public Pair<String, List<Waypoint>[]> loadMissions(File[] selection) {//TODO hacerlo con thread y callback listener para que no se ejecute en el hilo GUI
 		Pair<String, List<Waypoint>[]> missions = this.loadAndParseMissions(selection);
 		if (missions != null) {
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
 				ArduSimTools.logGlobal(Text.MISSIONS_LOADED + " " + selection[0].getName());
-				return new Pair<String, List<Waypoint>[]>(selection[0].getName(), missions.getValue1());
+				return new Pair<>(selection[0].getName(), missions.getValue1());
 			}
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
 				ArduSimTools.logGlobal(Text.MISSIONS_LOADED + " " + selection[0].getName());
-				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
+				return new Pair<>(selection[0].getAbsolutePath(), missions.getValue1());
 			}
 		}
 		
@@ -105,12 +104,14 @@ public class GUI {
 		FileTools fileTools = API.getFileTools();
 		String extension = fileTools.getFileExtension(files[0]);
 		// Only one "kml" file is accepted
-		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase()) && files.length > 1) {
+		boolean correctExtension = extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase());
+		if (correctExtension && files.length > 1) {
 			ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
 			return null;
 		}
 		// waypoints files can not be mixed with kml files
-		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+		boolean correctWaypointExtension = extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase());
+		if (correctWaypointExtension) {
 			for (int i = 1; i < files.length; i++) {
 				if (!fileTools.getFileExtension(files[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
 					ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
@@ -120,7 +121,7 @@ public class GUI {
 		}
 		
 		// kml file selected. All missions are loaded from one single file
-		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase())) {
+		if (correctExtension) {
 			// First, configure the missions
 			MissionKmlDialog.success = false;
 			new MissionKmlDialog(files[0].getName());
@@ -134,11 +135,11 @@ public class GUI {
 				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 				return null;
 			}
-			return new Pair<String, List<Waypoint>[]>(Text.FILE_EXTENSION_KML, missions);
+			return new Pair<>(Text.FILE_EXTENSION_KML, missions);
 		}
 		
 		// One or more .waypoints files selected
-		if (extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+		if (correctWaypointExtension) {
 			// First, configure the missions
 			MissionWaypointsDialog.success = false;
 			String name;
@@ -156,8 +157,8 @@ public class GUI {
 			List<Waypoint>[] missions = new ArrayList[files.length];
 			// Next, load each mission from one file
 			int j = 0;
-			for (int i = 0; i < files.length; i++) {
-				List<Waypoint> current = ArduSimTools.loadMissionFile(files[i].getAbsolutePath());
+			for (File file : files) {
+				List<Waypoint> current = ArduSimTools.loadMissionFile(file.getAbsolutePath());
 				if (current != null) {
 					missions[j] = current;
 					j++;
@@ -181,75 +182,11 @@ public class GUI {
 					}
 				}
 			}
-			return new Pair<String, List<Waypoint>[]>(Text.FILE_EXTENSION_WAYPOINTS, missions);
+			return new Pair<>(Text.FILE_EXTENSION_WAYPOINTS, missions);
 		}
 		return null;
 	}
-	
-	/**
-	 * Open a dialog to load missions from a Google Earth <i>.kml</i> file.
-	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
-	 */
-	public Pair<String, List<Waypoint>[]> loadMissionsKML() {//TODO hacerlo con thread y callback para que no se ejecute en el hilo GUI
-		File[] selection;
-		JFileChooser chooser = new JFileChooser();
-		chooser.setCurrentDirectory(API.getFileTools().getCurrentFolder());
-		chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE_2);
-		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, Text.FILE_EXTENSION_KML);
-		chooser.addChoosableFileFilter(filter1);
-		chooser.setAcceptAllFileFilterUsed(false);
-		chooser.setMultiSelectionEnabled(false);
-		if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
-			return null;
-		}
-		
-		selection = new File[] {chooser.getSelectedFile()};
-		Pair<String, List<Waypoint>[]> missions = this.loadAndParseMissions(selection);
-		if (missions != null) {
-			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
-				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
-			}
-			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
-				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
-			}
-		}
-		
-		return null;
-	}
-	
-	/**
-	 * Open a dialog to load missions from <i>.waypoints</i> files.
-	 * @return The path found, and an array of missions, or null if no file was selected or any error happens.
-	 */
-	public Pair<String, List<Waypoint>[]> loadMissionsQGC() {//TODO hacerlo con thread y callback para que no se ejecute en el hilo GUI
-		File[] selection;
-		JFileChooser chooser = new JFileChooser();
-		chooser.setCurrentDirectory(API.getFileTools().getCurrentFolder());
-		chooser.setDialogTitle(Text.MISSIONS_DIALOG_TITLE_1);
-		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		FileNameExtensionFilter filter1 = new FileNameExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, Text.FILE_EXTENSION_WAYPOINTS);
-		chooser.addChoosableFileFilter(filter1);
-		chooser.setAcceptAllFileFilterUsed(false);
-		chooser.setMultiSelectionEnabled(true);
-		if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
-			return null;
-		}
 
-		selection = chooser.getSelectedFiles();
-		Pair<String, List<Waypoint>[]> missions = this.loadAndParseMissions(selection);
-		if (missions != null) {
-			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
-				return new Pair<String, List<Waypoint>[]>(selection[0].getAbsolutePath(), missions.getValue1());
-			}
-			if (missions.getValue0().equals(Text.FILE_EXTENSION_WAYPOINTS)) {
-				return new Pair<String, List<Waypoint>[]>(chooser.getCurrentDirectory().getAbsolutePath(), missions.getValue1());
-			}
-		}
-
-		return null;
-	}
-	
 	/**
 	 * Send information to the main window log and console.
 	 * <p>The window log is only updated when performing simulations</p>.
@@ -313,11 +250,7 @@ public class GUI {
 	public void updateProtocolState(final String state) {
 		// Update GUI only when using simulator
 		if (ProgressDialog.progressDialog != null) {
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					ProgressDialog.progressDialog.panels[numUAV].protStateLabel.setText(state);
-				}
-			});
+			SwingUtilities.invokeLater(() -> ProgressDialog.progressDialog.panels[numUAV].protStateLabel.setText(state));
 		}
 	}
 

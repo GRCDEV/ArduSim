@@ -1,18 +1,13 @@
 package main.api;
 
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
 import api.API;
 import es.upv.grc.mapper.Location2DUTM;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.MSParam;
-import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
-import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
-import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListenerThread;
-import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
-import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
-import main.api.masterslavepattern.safeTakeOff.TakeOffSlaveDataListenerThread;
+import main.api.masterslavepattern.safeTakeOff.*;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Functions used to perform a coordinated and safe take off based on the master-slave strategy.
@@ -50,7 +45,7 @@ public class SafeTakeOffHelper {
 	public SafeTakeOffContext getMasterContext(Map<Long, Location2DUTM> groundLocations,
 			FlightFormation flightFormation, double formationYaw, double targetAltitude, boolean isCenterUAV, boolean exclude) {
 
-		AtomicReference<SafeTakeOffContext> result = new AtomicReference<SafeTakeOffContext>();
+		AtomicReference<SafeTakeOffContext> result = new AtomicReference<>();
 
 		TakeOffMasterDataListenerThread listener = new TakeOffMasterDataListenerThread(numUAV, groundLocations, flightFormation, formationYaw, targetAltitude, isCenterUAV, exclude, result);
 		listener.start();
@@ -70,7 +65,7 @@ public class SafeTakeOffHelper {
 	 */
 	public SafeTakeOffContext getSlaveContext(boolean exclude) {
 
-		AtomicReference<SafeTakeOffContext> result = new AtomicReference<SafeTakeOffContext>();
+		AtomicReference<SafeTakeOffContext> result = new AtomicReference<>();
 
 		TakeOffSlaveDataListenerThread listener = new TakeOffSlaveDataListenerThread(numUAV, exclude, result);
 		listener.start();

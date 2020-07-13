@@ -121,7 +121,7 @@ public enum FlightMode {
 	private final long customMode;
 	private final String modeName;
 
-	private FlightMode(int baseMode, long customMode, String modeName) {
+	FlightMode(int baseMode, long customMode, String modeName) {
 		this.baseMode = baseMode;
 		this.customMode = customMode;
 		this.modeName = modeName;

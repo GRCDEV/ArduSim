@@ -1,16 +1,11 @@
 package api;
 
-import java.util.concurrent.atomic.AtomicReferenceArray;
-
 import main.Param;
-import main.api.ArduSim;
-import main.api.Copter;
-import main.api.FileTools;
-import main.api.FlightFormationTools;
-import main.api.GUI;
-import main.api.ValidationTools;
+import main.api.*;
 import main.api.communications.CommLink;
 import main.uavController.UAVParam;
+
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * This class contains the API needed to implement a protocol.
@@ -18,7 +13,7 @@ import main.uavController.UAVParam;
 
 public class API {
 	
-	private static ArduSim ardusim = new ArduSim();
+	private static final ArduSim ardusim = new ArduSim();
 	
 	private static volatile AtomicReferenceArray<CommLink> publicCommLink = null;
 	private static final Object lockComm = new Object();
@@ -26,14 +21,14 @@ public class API {
 	private static volatile AtomicReferenceArray<Copter> copter = null;
 	private static final Object lockCopter = new Object();
 	
-	private static FileTools fileTools = new FileTools();
+	private static final FileTools fileTools = new FileTools();
 	
-	private static FlightFormationTools flightTools = new FlightFormationTools();
+	private static final FlightFormationTools flightTools = new FlightFormationTools();
 	
 	private static volatile AtomicReferenceArray<GUI> gui = null;
 	private static final Object lockGUI = new Object();
 	
-	private static volatile ValidationTools validationTools = new ValidationTools();
+	private static final ValidationTools validationTools = new ValidationTools();
 	
 	private API() {}
 	
@@ -56,7 +51,7 @@ public class API {
 		
 		synchronized (lockComm) {
 			if (API.publicCommLink == null) {
-				API.publicCommLink = new AtomicReferenceArray<CommLink>(Param.numUAVs);
+				API.publicCommLink = new AtomicReferenceArray<>(Param.numUAVs);
 				for (int i = 0; i < Param.numUAVs; i++) {
 					API.publicCommLink.set(i, new CommLink(i, Param.numUAVs, UAVParam.broadcastPort));
 				}
@@ -75,7 +70,7 @@ public class API {
 		
 		synchronized (lockCopter) {
 			if (API.copter == null) {
-				API.copter = new AtomicReferenceArray<Copter>(Param.numUAVs);
+				API.copter = new AtomicReferenceArray<>(Param.numUAVs);
 				for (int i = 0; i < Param.numUAVs; i++) {
 					API.copter.set(i, new Copter(i));
 				}
@@ -114,7 +109,7 @@ public class API {
 		
 		synchronized (lockGUI) {
 			if (API.gui == null) {
-				API.gui = new AtomicReferenceArray<GUI>(Param.numUAVs);
+				API.gui = new AtomicReferenceArray<>(Param.numUAVs);
 				for (int i = 0; i < Param.numUAVs; i++) {
 					API.gui.set(i, new GUI(i));
 				}
@@ -122,7 +117,7 @@ public class API {
 			// We have to resize because the GUI object could be used before closing the configuration dialog
 			int size = API.gui.length();
 			if (size != Param.numUAVs) {
-				AtomicReferenceArray<GUI> aux = new AtomicReferenceArray<GUI>(Param.numUAVs);
+				AtomicReferenceArray<GUI> aux = new AtomicReferenceArray<>(Param.numUAVs);
 				int i = 0;
 				while (i < size && i < aux.length()) {
 					aux.set(i, API.gui.get(i));

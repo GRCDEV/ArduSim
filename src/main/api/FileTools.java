@@ -1,23 +1,18 @@
 package main.api;
 
+import main.ArduSimTools;
+import main.Main;
+import main.sim.gui.MainWindow;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
-
-import main.ArduSimTools;
-import main.Main;
-import main.sim.gui.MainWindow;
 
 /**
  * API to read and write files.
@@ -51,15 +46,7 @@ public class FileTools {
 			return "";
 		}
 	}
-	
-	/**
-	 * Get the home folder of the current user.
-	 * @return The home folder of the current user.
-	 */
-	public File getHomeFolder() {
-		return new File(System.getProperty("user.home"));
-	}
-	
+
 	/**
 	 * Parse an ini file to retrieve parameters for a protocol.
 	 * @return Map with parameters and their respective value. Empty map if the file has no parameters or it is invalid.
@@ -68,7 +55,7 @@ public class FileTools {
 		Map<String, String> parameters = new HashMap<>();
 		List<String> lines = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader(iniFile))) {
-			String line = null;
+			String line;
 			while ((line = br.readLine()) != null) {
 		        lines.add(line);
 		    }
@@ -76,12 +63,12 @@ public class FileTools {
 			return parameters;
 		}
 		// Check file length
-		if (lines==null || lines.size()<1) {
+		if (lines.size() < 1) {
 			return parameters;
 		}
 		List<String> checkedLines = new ArrayList<>();
-		for (int i = 0; i < lines.size(); i++) {
-			String line = lines.get(i).trim();
+		for (String s : lines) {
+			String line = s.trim();
 			if (line.length() > 0 && !line.startsWith("#") && (line.length() - line.replace("=", "").length() == 1)) {
 				checkedLines.add(line);
 			}
@@ -89,8 +76,8 @@ public class FileTools {
 		if (checkedLines.size() > 0) {
 			String key, value;
 			String[] pair;
-			for (int i = 0; i < checkedLines.size(); i++) {
-				pair = checkedLines.get(i).split("=");
+			for (String checkedLine : checkedLines) {
+				pair = checkedLine.split("=");
 				key = pair[0].trim().toUpperCase();
 				value = pair[1].trim();
 				parameters.put(key, value);
@@ -129,7 +116,7 @@ public class FileTools {
 	 * @return	The BufferedImage loaded from the file, or null if any error happens.
 	 */
 	public BufferedImage loadImage(String absolutePath) {
-		URL url = null;
+		URL url;
 		if (ArduSimTools.isRunningFromJar()) {
 			url = MainWindow.class.getResource(File.separator + "src" + absolutePath);
 		} else {

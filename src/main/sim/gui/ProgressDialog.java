@@ -1,33 +1,14 @@
 package main.sim.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.KeyStroke;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
-
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
 import main.sim.logic.SimParam;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.*;
 
 /** This class generates the dialog that shows UAV information on real time, over the main window.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -39,8 +20,7 @@ public class ProgressDialog extends JDialog {
 	public static ProgressDialog progressDialog;
 	// Whether the progress dialog is showing or not
 	public static volatile boolean progressShowing = false;
-	
-	private final JPanel contentPanel = new JPanel();
+
 	public ProgressDialogPanel[] panels;
 	
 	private static volatile int x, y;
@@ -51,6 +31,7 @@ public class ProgressDialog extends JDialog {
 		panels = new ProgressDialogPanel[Param.numUAVs];
 
 		getContentPane().setLayout(new BorderLayout());
+		JPanel contentPanel = new JPanel();
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
 		contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
@@ -96,7 +77,7 @@ public class ProgressDialog extends JDialog {
 		// The width may need more room for the side bar
 		int dialogWidth = SimParam.DIALOG_WIDTH;
 		if (maxHeight < this.getHeight()) {
-			dialogWidth = dialogWidth + ((Integer)UIManager.get(Text.SCROLLBAR_WIDTH)).intValue();
+			dialogWidth = dialogWidth + (Integer) UIManager.get(Text.SCROLLBAR_WIDTH);
 		}
 		int dialogHeight = Math.min(this.getHeight(), maxHeight);
 		setSize(dialogWidth, dialogHeight);
@@ -116,13 +97,7 @@ public class ProgressDialog extends JDialog {
 
 		this.setTitle(Text.PROGRESS_DIALOG_TITLE);
 		
-		ActionListener escListener = new ActionListener() {
-
-	        @Override
-	        public void actionPerformed(ActionEvent e) {
-	        	ProgressDialog.progressDialog.toggleProgressShown();
-	        }
-	    };
+		ActionListener escListener = e -> ProgressDialog.progressDialog.toggleProgressShown();
 	    this.getRootPane().registerKeyboardAction(escListener,
 	            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 	            JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -135,20 +110,16 @@ public class ProgressDialog extends JDialog {
 		synchronized(SEMAPHORE) {
 			if (ProgressDialog.progressShowing) {
 				ProgressDialog.progressShowing = false;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						ProgressDialog.progressDialog.setVisible(false);
-						MainWindow.buttonsPanel.progressDialogButton.setText(Text.SHOW_PROGRESS);
-					}
+				SwingUtilities.invokeLater(() -> {
+					ProgressDialog.progressDialog.setVisible(false);
+					MainWindow.buttonsPanel.progressDialogButton.setText(Text.SHOW_PROGRESS);
 				});
 			} else {
 				ProgressDialog.progressShowing = true;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						ProgressDialog.progressDialog.setLocation(ProgressDialog.x, ProgressDialog.y);
-						ProgressDialog.progressDialog.setVisible(true);
-						MainWindow.buttonsPanel.progressDialogButton.setText(Text.HIDE_PROGRESS);
-					}
+				SwingUtilities.invokeLater(() -> {
+					ProgressDialog.progressDialog.setLocation(ProgressDialog.x, ProgressDialog.y);
+					ProgressDialog.progressDialog.setVisible(true);
+					MainWindow.buttonsPanel.progressDialogButton.setText(Text.HIDE_PROGRESS);
 				});
 			}
 		}

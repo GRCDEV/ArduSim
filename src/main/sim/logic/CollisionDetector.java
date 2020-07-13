@@ -123,7 +123,6 @@ public class CollisionDetector extends Thread {
 	
 	/**
 	 * Land all the UAVs that are flying.
-	 * @return true if all the commands were successful, or even when they are not needed because one or more UAVs were not flying.
 	 */
 	private void landAll() {
 		for (int i=0; i<Param.numUAVs; i++) {

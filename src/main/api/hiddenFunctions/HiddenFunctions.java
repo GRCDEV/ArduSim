@@ -1,7 +1,6 @@
 package main.api.hiddenFunctions;
 
 import api.API;
-import api.pojo.RCValues;
 import main.ArduSimTools;
 import main.Text;
 import main.api.ArduSim;
@@ -44,8 +43,8 @@ public class HiddenFunctions {
 	 * continuous RC override or no override at all. However RC overriding is necessary once,
 	 * in order to set the remote control values in the middle.
 	 * Therefore in the function stabilize we cancel RCOverride. 
-	 * @param numUAV
-	 * @return
+	 * @param numUAV number of UAVs
+	 * @return true if stabilized false if error occurred
 	 */
 	public static boolean stabilize(int numUAV) {
 		Boolean answer = stabilize_intern(numUAV);
@@ -119,11 +118,11 @@ public class HiddenFunctions {
 				}
 				return true;
 			}else {
-				ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.REQUEST_MESSAGE_ERROR +  Integer.toString(messageId));
+				ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.REQUEST_MESSAGE_ERROR + messageId);
 				return false;
 			}
 		} else {
-			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.REQUEST_MESSAGE + Integer.toString(messageId));
+			ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.REQUEST_MESSAGE + messageId);
 			return true;
 		}
 	}
@@ -181,27 +180,5 @@ public class HiddenFunctions {
 			return UAVParam.newParamValue.get(numUAV);
 		}
 	}
-	
-	/**
-	 * Override the remote control output.
-	 * <p>Input channel values in microseconds (standard modulation ranges from 1000 us (0%) to 2000 us (100%)).</p>
-	 * <p>Input value 0 means that the control of that channel must be returned to the RC radio.
-	 * Value UINT16_MAX means to ignore this field.</p>
-	 * <p>By default, channels can be overridden on any flight mode different from GUIDED, but this functionality can be disabled by the command <i>cancelRCOverride()</i>.
-	 * This method doesn't wait a response from the flight controller.
-	 * Values are not applied immediately, but each time a message is received from the flight controller.</p>
-	 * @param roll (us) Turn on horizontal axis that goes from front to rear of the UAV (tilt the UAV to the left or to the right).
-	 * @param pitch (us) Turn on horizontal axis that goes from left to right of the UAV (raise or turn down the front part of the UAV).
-	 * @param throttle (us) Engine power (raise or descend the UAV).
-	 * @param yaw (us) Turn on vertical axis (pointing north, east...).
-	 */
-	public static void channelsOverride(int numUAV, int roll, int pitch, int throttle, int yaw) {
-		if (UAVParam.overrideOn.get(numUAV) == 1) {
-			UAVParam.rcs[numUAV].set(new RCValues(roll, pitch, throttle, yaw));
-		}
-		//TODO analizar la frecuencia de recepción de mensajes
-		// y analizar si vale la pena hacer la lectura no bloqueante para enviar esto con más frecuencia y de otra forma
-		// ¿con qué frecuencia aceptaremos el channels override? Hay experimentos que indican que algunos valores se ignoran
-		// si se envian en intervalos menores a 0.393 segundos (quizá una cola fifo con timeout facilite resolver el problema)
-	}
+
 }

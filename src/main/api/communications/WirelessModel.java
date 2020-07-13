@@ -25,27 +25,7 @@ public enum WirelessModel {
 	public String getName() {
 		return this.name;
 	}
-	public static WirelessModel getHighestIdModel() {
-		WirelessModel res = null;
-		for (WirelessModel p : WirelessModel.values()) {
-			if (res == null) {
-				res = p;
-			} else {
-				if (p.getId() > res.getId()) {
-					res = p;
-				}
-			}
-		}
-		return res;
-	}
-	public static String getModelNameById(int id) {
-		for (WirelessModel p : WirelessModel.values()) {
-			if (p.getId() == id) {
-				return p.getName();
-			}
-		}
-		return "";
-	}
+
 	public static WirelessModel getModelByName(String name) {
 		for (WirelessModel p : WirelessModel.values()) {
 			if (p.getName().equals(name)) {

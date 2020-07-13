@@ -1,17 +1,8 @@
 package main.api.masterslavepattern.safeTakeOff;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.javatuples.Pair;
-import org.javatuples.Quartet;
+import api.API;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-
-import api.API;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
@@ -27,6 +18,14 @@ import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.MSText;
 import main.uavController.UAVParam;
+import org.javatuples.Pair;
+import org.javatuples.Quartet;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Thread used by the master UAV to coordinate the safe take off.
@@ -87,7 +86,7 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		AtomicInteger state = new AtomicInteger(MSParam.STATE_EXCLUDE);
 		
 		gui.logVerboseUAV(MSText.MASTER_LISTENER_WAITING_EXCLUDES);
-		Map<Long, Boolean> excluded = new HashMap<Long, Boolean>((int)Math.ceil(numSlaves / 0.75) + 1);
+		Map<Long, Boolean> excluded = new HashMap<>((int)Math.ceil(numSlaves / 0.75) + 1);
 		while (state.get() == MSParam.STATE_EXCLUDE) {
 			inBuffer = commLink.receiveMessage();
 			if (inBuffer != null) {
@@ -161,9 +160,9 @@ public class TakeOffMasterDataListenerThread extends Thread {
 		Map<Long, byte[]> messages = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		long curID, prevID, nextID;
 		// i represents the position in the takeoff sequence
-		int formationPos = 0;
-		long pID = 0;
-		long nID = 0;
+		int formationPos;
+		long pID;
+		long nID;
 		Location2DGeo targetLocation = null;
 		SafeTakeOffContext data = null;
 		for (int i = 0; i < numUAVs; i++) {
@@ -247,8 +246,8 @@ public class TakeOffMasterDataListenerThread extends Thread {
 			ms = messages.values().toArray(new byte[messages.size() + 1][]);
 			output.reset();
 			output.writeShort(MSMessageID.LIDER_ORDER);
-			for (int i = 0; i < ids.length; i++) {
-				output.writeLong(ids[i]);
+			for (long id : ids) {
+				output.writeLong(id);
 			}
 			output.flush();
 			ms[ms.length - 1] = Arrays.copyOf(outBuffer, output.position());

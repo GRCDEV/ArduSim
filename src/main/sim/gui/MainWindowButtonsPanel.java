@@ -1,28 +1,12 @@
 package main.sim.gui;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-
 import main.ArduSimTools;
 import main.Param;
 import main.Param.SimulatorState;
 import main.Text;
+
+import javax.swing.*;
+import java.awt.*;
 
 /** This class generates the panel used to interact with the application, which is inside the main window.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -37,7 +21,7 @@ public class MainWindowButtonsPanel extends JPanel {
 	public JTextArea logArea;
 	public JLabel statusLabel;
 
-	public MainWindowButtonsPanel(final JFrame frame) {
+	public MainWindowButtonsPanel() {
 		setMaximumSize(new Dimension(32767, 100));
 		setPreferredSize(new Dimension(800, 100));
 		GridBagLayout gridBagLayout = new GridBagLayout();
@@ -93,11 +77,7 @@ public class MainWindowButtonsPanel extends JPanel {
 		buttonsPanel.setLayout(gbl_buttonsPanel);
 		
 		progressDialogButton = new JButton(Text.SHOW_PROGRESS);
-		progressDialogButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				ProgressDialog.progressDialog.toggleProgressShown();
-			}
-		});
+		progressDialogButton.addActionListener(e -> ProgressDialog.progressDialog.toggleProgressShown());
 		GridBagConstraints gbc_progressDialogButton = new GridBagConstraints();
 		gbc_progressDialogButton.insets = new Insets(0, 0, 0, 5);
 		gbc_progressDialogButton.gridx = 0;
@@ -106,18 +86,12 @@ public class MainWindowButtonsPanel extends JPanel {
 		
 		setupButton = new JButton(Text.SETUP_TEST);
 		setupButton.setEnabled(false);
-		setupButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						MainWindow.buttonsPanel.setupButton.setEnabled(false);
-						MainWindow.buttonsPanel.statusLabel.setText(Text.CONFIGURATION_IN_PROGRESS);
-						Param.setupTime = System.currentTimeMillis();
-						Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
-					}
-				});
-			}
-		});
+		setupButton.addActionListener(e -> SwingUtilities.invokeLater(() -> {
+			MainWindow.buttonsPanel.setupButton.setEnabled(false);
+			MainWindow.buttonsPanel.statusLabel.setText(Text.CONFIGURATION_IN_PROGRESS);
+			Param.setupTime = System.currentTimeMillis();
+			Param.simStatus = SimulatorState.SETUP_IN_PROGRESS;
+		}));
 		GridBagConstraints gbc_setupButton = new GridBagConstraints();
 		gbc_setupButton.anchor = GridBagConstraints.NORTH;
 		gbc_setupButton.insets = new Insets(0, 0, 0, 5);
@@ -127,18 +101,12 @@ public class MainWindowButtonsPanel extends JPanel {
 
 		startTestButton = new JButton(Text.START_TEST);
 		startTestButton.setEnabled(false);
-		startTestButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_IN_PROGRESS);
-						MainWindow.buttonsPanel.startTestButton.setEnabled(false);
-						Param.startTime = System.currentTimeMillis();
-						Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
-					}
-				});
-			}
-		});
+		startTestButton.addActionListener(e -> SwingUtilities.invokeLater(() -> {
+			MainWindow.buttonsPanel.statusLabel.setText(Text.TEST_IN_PROGRESS);
+			MainWindow.buttonsPanel.startTestButton.setEnabled(false);
+			Param.startTime = System.currentTimeMillis();
+			Param.simStatus = SimulatorState.TEST_IN_PROGRESS;
+		}));
 		GridBagConstraints gbc_startTestButton = new GridBagConstraints();
 		gbc_startTestButton.anchor = GridBagConstraints.NORTHWEST;
 		gbc_startTestButton.insets = new Insets(0, 0, 0, 5);
@@ -147,19 +115,15 @@ public class MainWindowButtonsPanel extends JPanel {
 		buttonsPanel.add(startTestButton, gbc_startTestButton);
 
 		exitButton = new JButton(Text.EXIT);
-		exitButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				(new Thread(new Runnable() {
-					public void run() {
-						synchronized(MainWindow.CLOSE_SEMAPHORE) {
-							if (Param.simStatus != SimulatorState.SHUTTING_DOWN) {
-								ArduSimTools.shutdown();
-							}
-						}
+		exitButton.addActionListener(e -> (new Thread(new Runnable() {
+			public void run() {
+				synchronized(MainWindow.CLOSE_SEMAPHORE) {
+					if (Param.simStatus != SimulatorState.SHUTTING_DOWN) {
+						ArduSimTools.shutdown();
 					}
-				})).start();
+				}
 			}
-		});
+		})).start());
 		GridBagConstraints gbc_exitButton = new GridBagConstraints();
 		gbc_exitButton.anchor = GridBagConstraints.NORTHWEST;
 		gbc_exitButton.gridx = 3;

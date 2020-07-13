@@ -11,11 +11,8 @@ import main.uavController.UAVParam;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Objects;
 
 /** 
  * Dialog used to input options while loading missions.
@@ -44,7 +41,6 @@ public class MissionKmlDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	private final JDialog thisDialog;
-	private final JPanel contentPanel = new JPanel();
 	private JComboBox<String> missionEndComboBox;
 	private final JSpinner delaySpinner;
 	private JTextField distanceTextField;
@@ -71,6 +67,7 @@ public class MissionKmlDialog extends JDialog {
 			return;
 		}
 		getContentPane().setLayout(new BorderLayout());
+		JPanel contentPanel = new JPanel();
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.WEST);
 		GridBagLayout gbl_contentPanel = new GridBagLayout();
@@ -89,7 +86,7 @@ public class MissionKmlDialog extends JDialog {
 			contentPanel.add(lblNewLabel, gbc_lblNewLabel);
 		}
 		{
-			missionEndComboBox = new JComboBox<String>();
+			missionEndComboBox = new JComboBox<>();
 			missionEndComboBox.addItem(MissionKmlDialog.MISSION_END_UNMODIFIED);
 			missionEndComboBox.addItem(MissionKmlDialog.MISSION_END_LAND);
 			missionEndComboBox.addItem(MissionKmlDialog.MISSION_END_RTL);
@@ -134,15 +131,7 @@ public class MissionKmlDialog extends JDialog {
 				missionEndComboBox.setSelectedIndex(2);
 				rtlAltitudeTextField.setEnabled(true);
 			}
-			missionEndComboBox.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if(((String)missionEndComboBox.getSelectedItem()).equals(MissionKmlDialog.MISSION_END_RTL)) {
-						rtlAltitudeTextField.setEnabled(true);
-					} else {
-						rtlAltitudeTextField.setEnabled(false);
-					}
-				}
-			});
+			missionEndComboBox.addActionListener(e -> rtlAltitudeTextField.setEnabled(Objects.equals(missionEndComboBox.getSelectedItem(), MissionKmlDialog.MISSION_END_RTL)));
 		}
 		{
 			JLabel lblFdgfh = new JLabel(Text.METERS);
@@ -201,15 +190,7 @@ public class MissionKmlDialog extends JDialog {
 		{
 			SpinnerNumberModel sModel = new SpinnerNumberModel(MissionKmlDialog.waypointDelay, 0, 65535, 1);
 			delaySpinner = new JSpinner(sModel);
-			delaySpinner.addChangeListener(new ChangeListener() {
-				public void stateChanged(ChangeEvent e) {
-					if ((int)delaySpinner.getValue() == 0) {
-						distanceTextField.setEnabled(false);
-					} else {
-						distanceTextField.setEnabled(true);
-					}
-				}
-			});
+			delaySpinner.addChangeListener(e -> distanceTextField.setEnabled((int) delaySpinner.getValue() != 0));
 			GridBagConstraints gbc_delaySpinner = new GridBagConstraints();
 			gbc_delaySpinner.fill = GridBagConstraints.HORIZONTAL;
 			gbc_delaySpinner.anchor = GridBagConstraints.EAST;
@@ -278,15 +259,7 @@ public class MissionKmlDialog extends JDialog {
 		}
 		{
 			altitudeCheckBox = new JCheckBox();
-			altitudeCheckBox.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if (altitudeCheckBox.isSelected()) {
-						altitudeTextField.setEnabled(true);
-					} else {
-						altitudeTextField.setEnabled(false);
-					}
-				}
-			});
+			altitudeCheckBox.addActionListener(e -> altitudeTextField.setEnabled(altitudeCheckBox.isSelected()));
 			altitudeCheckBox.setSelected(UAVParam.overrideAltitude);
 			GridBagConstraints gbc_altitudeCheckBox = new GridBagConstraints();
 			gbc_altitudeCheckBox.anchor = GridBagConstraints.WEST;
@@ -343,15 +316,7 @@ public class MissionKmlDialog extends JDialog {
 		}
 		{
 			yawCheckBox = new JCheckBox();
-			yawCheckBox.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if (yawCheckBox.isSelected()) {
-						yawComboBox.setEnabled(true);
-					} else {
-						yawComboBox.setEnabled(false);
-					}
-				}
-			});
+			yawCheckBox.addActionListener(e -> yawComboBox.setEnabled(yawCheckBox.isSelected()));
 			yawCheckBox.setSelected(UAVParam.overrideYaw);
 			GridBagConstraints gbc_yawCheckBox = new GridBagConstraints();
 			gbc_yawCheckBox.anchor = GridBagConstraints.WEST;
@@ -371,7 +336,7 @@ public class MissionKmlDialog extends JDialog {
 			contentPanel.add(lblValue, gbc_lblValue);
 		}
 		{
-			yawComboBox = new JComboBox<String>();
+			yawComboBox = new JComboBox<>();
 			for (int i = 0; i < UAVParam.YAW_VALUES.length; i++) {
 				yawComboBox.addItem(UAVParam.YAW_VALUES[i]);
 			}
@@ -392,86 +357,84 @@ public class MissionKmlDialog extends JDialog {
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
 				JButton okButton = new JButton(Text.OK);
-				okButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						if(Param.role == ArduSim.SIMULATOR_GUI) {
-							ValidationTools validationTools = API.getValidationTools();
-							if (((String) missionEndComboBox.getSelectedItem()).equals(MissionKmlDialog.MISSION_END_RTL)) {
-								String rtlAltitude = rtlAltitudeTextField.getText();
-								if (!validationTools.isValidNonNegativeDouble(rtlAltitude)) {
-									ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.RTL_ALTITUDE_ERROR);
-									return;
-								}
-							}
-
-							String altitudeString = minAltitudeTextField.getText();
-							if (!validationTools.isValidPositiveDouble(altitudeString)) {
-								ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_MIN_ALTITUDE_ERROR);
+				okButton.addActionListener(e -> {
+					if(Param.role == ArduSim.SIMULATOR_GUI) {
+						ValidationTools validationTools = API.getValidationTools();
+						if (Objects.equals(missionEndComboBox.getSelectedItem(), MissionKmlDialog.MISSION_END_RTL)) {
+							String rtlAltitude = rtlAltitudeTextField.getText();
+							if (!validationTools.isValidNonNegativeDouble(rtlAltitude)) {
+								ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.RTL_ALTITUDE_ERROR);
 								return;
 							}
-							double minAltitude = Double.parseDouble(minAltitudeTextField.getText());
-
-							int delay;
-							int distance = MissionKmlDialog.waypointDistance;
-							double altitude;
-							delay = (Integer) delaySpinner.getValue();
-							if (delay != 0) {
-								String distanceString = distanceTextField.getText();
-								if (!validationTools.isValidPositiveInteger(distanceString)) {
-									ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_DISTANCE_ERROR_1);
-									return;
-								}
-								distance = Integer.parseInt(distanceString);
-								if (distance < 10 || distance > 1000) {
-									ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_DISTANCE_ERROR_2);
-									return;
-								}
-							}
-
-							if (altitudeCheckBox.isSelected()) {
-								altitudeString = altitudeTextField.getText();
-								if (!validationTools.isValidPositiveDouble(altitudeString)) {
-									ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_ALTITUDE_ERROR_1);
-									return;
-								}
-								altitude = Double.parseDouble(altitudeString);
-								if (altitude < minAltitude) {
-									ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_ALTITUDE_ERROR_2 + " " + minAltitude);
-									return;
-								}
-								UAVParam.overrideAltitude = true;
-								UAVParam.minFlyingAltitude = altitude;
-							} else {
-								UAVParam.overrideAltitude = false;
-							}
-
-							MissionKmlDialog.missionEnd = (String) missionEndComboBox.getSelectedItem();
-							if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
-								MissionKmlDialog.rtlFinalAltitude = Double.parseDouble(rtlAltitudeTextField.getText());
-							}
-
-							UAVParam.minAltitude = minAltitude;
-
-							MissionKmlDialog.waypointDelay = delay;
-							MissionKmlDialog.waypointDistance = distance;
-
-							if (yawCheckBox.isSelected()) {
-								UAVParam.overrideYaw = true;
-								UAVParam.yawBehavior = yawComboBox.getSelectedIndex();
-
-							} else {
-								UAVParam.overrideYaw = false;
-							}
-
-							MissionKmlDialog.success = true;
-
-							SwingUtilities.invokeLater(new Runnable() {
-								@Override
-								public void run() {
-									thisDialog.dispose();
-								}
-							});
 						}
+
+						String altitudeString = minAltitudeTextField.getText();
+						if (!validationTools.isValidPositiveDouble(altitudeString)) {
+							ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_MIN_ALTITUDE_ERROR);
+							return;
+						}
+						double minAltitude = Double.parseDouble(minAltitudeTextField.getText());
+
+						int delay;
+						int distance = MissionKmlDialog.waypointDistance;
+						double altitude;
+						delay = (Integer) delaySpinner.getValue();
+						if (delay != 0) {
+							String distanceString = distanceTextField.getText();
+							if (!validationTools.isValidPositiveInteger(distanceString)) {
+								ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_DISTANCE_ERROR_1);
+								return;
+							}
+							distance = Integer.parseInt(distanceString);
+							if (distance < 10 || distance > 1000) {
+								ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_DISTANCE_ERROR_2);
+								return;
+							}
+						}
+
+						if (altitudeCheckBox.isSelected()) {
+							altitudeString = altitudeTextField.getText();
+							if (!validationTools.isValidPositiveDouble(altitudeString)) {
+								ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_ALTITUDE_ERROR_1);
+								return;
+							}
+							altitude = Double.parseDouble(altitudeString);
+							if (altitude < minAltitude) {
+								ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.TARGET_ALTITUDE_ERROR_2 + " " + minAltitude);
+								return;
+							}
+							UAVParam.overrideAltitude = true;
+							UAVParam.minFlyingAltitude = altitude;
+						} else {
+							UAVParam.overrideAltitude = false;
+						}
+
+						MissionKmlDialog.missionEnd = (String) missionEndComboBox.getSelectedItem();
+						if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
+							MissionKmlDialog.rtlFinalAltitude = Double.parseDouble(rtlAltitudeTextField.getText());
+						}
+
+						UAVParam.minAltitude = minAltitude;
+
+						MissionKmlDialog.waypointDelay = delay;
+						MissionKmlDialog.waypointDistance = distance;
+
+						if (yawCheckBox.isSelected()) {
+							UAVParam.overrideYaw = true;
+							UAVParam.yawBehavior = yawComboBox.getSelectedIndex();
+
+						} else {
+							UAVParam.overrideYaw = false;
+						}
+
+						MissionKmlDialog.success = true;
+
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								thisDialog.dispose();
+							}
+						});
 					}
 				});
 				buttonPane.add(okButton);

@@ -1,29 +1,18 @@
 package chemotaxis.logic;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import api.*;
+import api.API;
 import api.pojo.FlightMode;
 import chemotaxis.pojo.Point;
 import chemotaxis.pojo.PointSet;
 import chemotaxis.pojo.Value;
-import es.upv.grc.mapper.DrawableSymbol;
-import es.upv.grc.mapper.DrawableSymbolGeo;
-import es.upv.grc.mapper.GUIMapPanelNotReadyException;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3D;
-import es.upv.grc.mapper.LocationNotReadyException;
-import es.upv.grc.mapper.Mapper;
-import main.api.ArduSim;
-import main.api.Copter;
-import main.api.GUI;
-import main.api.MoveToListener;
-import main.api.MoveTo;
+import es.upv.grc.mapper.*;
+import main.api.*;
 import smile.data.SparseDataset;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class ChemotaxisThread extends Thread {
 	
@@ -61,7 +50,7 @@ public class ChemotaxisThread extends Thread {
 		moveTo.start();
 		try {
 			moveTo.join();
-		} catch (InterruptedException e) {}
+		} catch (InterruptedException ignored) {}
 		
 	}
 	
@@ -127,7 +116,7 @@ public class ChemotaxisThread extends Thread {
 		try {
 			Location2DGeo ini = ChemotaxisParam.origin.getGeo();
 			Location2DGeo fin = Location2DUTM.getGeo(ChemotaxisParam.origin.x + (ChemotaxisParam.width * ChemotaxisParam.density), ChemotaxisParam.origin.y + (ChemotaxisParam.density * ChemotaxisParam.density));
-			List<Location2DGeo> vertex = new ArrayList<Location2DGeo>();
+			List<Location2DGeo> vertex = new ArrayList<>();
 			vertex.add(new Location2DGeo(ini.latitude, ini.longitude));
 			vertex.add(new Location2DGeo(ini.latitude, fin.longitude));
 			vertex.add(new Location2DGeo(fin.latitude, fin.longitude));

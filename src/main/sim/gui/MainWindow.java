@@ -1,28 +1,5 @@
 package main.sim.gui;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Point;
-import java.awt.Transparency;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.KeyStroke;
-
 import es.upv.grc.mapper.DrawableScreenAnchor;
 import es.upv.grc.mapper.GUIMapPanel;
 import es.upv.grc.mapper.GUIMapPanelNotReadyException;
@@ -31,8 +8,17 @@ import main.ArduSimTools;
 import main.Main;
 import main.Param;
 import main.Param.SimulatorState;
-import main.sim.logic.SimParam;
 import main.Text;
+import main.sim.logic.SimParam;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 
 /** This class generates the main windows of the application. It consists on three elements: A log panel, a panel with buttons to interact with, and a panel to show the UAVs moving over a satellite map.</p>
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -61,7 +47,7 @@ public class MainWindow {
 		mainWindowFrame = new JFrame(config);
 
 		// User interaction panel
-		MainWindowButtonsPanel buttonsPanel = new MainWindowButtonsPanel(mainWindowFrame);
+		MainWindowButtonsPanel buttonsPanel = new MainWindowButtonsPanel();
 		buttonsPanel.setName(Text.CONFIGURATION_PANEL);
 		buttonsPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
 		
@@ -93,13 +79,7 @@ public class MainWindow {
 			}
 		});
 		mainWindowFrame.setTitle(Text.APP_NAME);
-		ActionListener escListener = new ActionListener() {
-
-	        @Override
-	        public void actionPerformed(ActionEvent e) {
-	        	MainWindow.window.closeArduSim();
-	        }
-	    };
+		ActionListener escListener = e -> MainWindow.window.closeArduSim();
 	    mainWindowFrame.getRootPane().registerKeyboardAction(escListener,
 	            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
 	            JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -112,14 +92,11 @@ public class MainWindow {
 	
 	/** Request to close ArduSim simulator. */
 	public void closeArduSim() {
-		(new Thread(new Runnable() {
-			@Override
-			public void run() {
-				synchronized(MainWindow.CLOSE_SEMAPHORE) {
-					if (Param.simStatus != SimulatorState.SHUTTING_DOWN
-							&& MainWindow.buttonsPanel.exitButton.isEnabled()) {
-						ArduSimTools.shutdown();
-					}
+		(new Thread(() -> {
+			synchronized(MainWindow.CLOSE_SEMAPHORE) {
+				if (Param.simStatus != SimulatorState.SHUTTING_DOWN
+						&& MainWindow.buttonsPanel.exitButton.isEnabled()) {
+					ArduSimTools.shutdown();
 				}
 			}
 		})).start();

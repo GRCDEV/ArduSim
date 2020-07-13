@@ -1,11 +1,7 @@
 package main.api.masterslavepattern.safeTakeOff;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import com.esotericsoftware.kryo.io.Input;
-
 import api.API;
+import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
@@ -19,6 +15,9 @@ import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.MSText;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * Thread used by a slave to coordinate the safe take off.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -29,7 +28,6 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 	private long selfID;
 	private Location2DUTM centerUAVLocation = null;
 	private int numUAVs;
-	private Formation formation;
 	private FlightFormation flightFormation, landFormation;
 	private int formationPos;
 	private double formationYaw, altitudeStep1, altitudeStep2;
@@ -90,7 +88,7 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 						nextID = input.readLong();
 						numUAVs = input.readInt();
 						this.masterOrder = new long[numUAVs];
-						formation = Formation.getFormation(input.readShort());
+						Formation formation = Formation.getFormation(input.readShort());
 						flightFormation = FlightFormation.getFormation(formation, numUAVs, input.readDouble());
 						landFormation = FlightFormation.getFormation(formation, numUAVs, input.readDouble());
 						formationPos = input.readInt();
@@ -128,9 +126,9 @@ public class TakeOffSlaveDataListenerThread extends Thread {
 					
 					if (fragsReceived == numFrags) {
 						int k = 0;
-						for (int i = 0; i < auxMasterOrder.length; i++) {
-							for (int j = 0; j < auxMasterOrder[i].length; j++) {
-								this.masterOrder[k] = auxMasterOrder[i][j];
+						for (long[] longs : auxMasterOrder) {
+							for (long aLong : longs) {
+								this.masterOrder[k] = aLong;
 								k++;
 							}
 						}

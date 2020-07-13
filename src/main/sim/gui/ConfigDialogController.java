@@ -153,7 +153,7 @@ public class ConfigDialogController {
         // add methods to the buttons
         arducopterPathButton.setOnAction(e->searchArduCopterPath());
         speedFileButton.setOnAction(e->searchSpeedFile());
-        protocolParametersPathButton.setOnAction(e->{searchProtocolParameterFile();});
+        protocolParametersPathButton.setOnAction(e->searchProtocolParameterFile());
         okButton.setOnAction(e->{
             if(ok()){
                 Platform.setImplicitExit(false); // so that the application does not close

@@ -79,7 +79,7 @@ public class LogPoint extends Location3DUTM {
 	 */
 	public void setTime(long startingTime) {
 		this.nanoTime = this.nanoTime - startingTime;
-		this.elapsedTime = API.getValidationTools().roundDouble(((double) this.nanoTime) / 1000000000l, 9);
+		this.elapsedTime = API.getValidationTools().roundDouble(((double) this.nanoTime) / 1000000000L, 9);
 	}
 	
 	/**

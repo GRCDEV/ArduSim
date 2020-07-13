@@ -1,7 +1,5 @@
 package main.api.masterslavepattern.safeTakeOff;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import api.API;
 import main.Text;
 import main.api.ArduSim;
@@ -9,6 +7,8 @@ import main.api.GUI;
 import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.MSText;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Thread used by the master UAV to coordinate the safe take off.
@@ -42,8 +42,8 @@ public class TakeOffMasterDataTalkerThread extends Thread {
 		long waitingTime;
 		
 		while (state.get() == MSParam.STATE_SENDING_DATA) {
-			for (int i = 0; i < messages.length; i++) {
-				commLink.sendBroadcastMessage(messages[i]);
+			for (byte[] message : messages) {
+				commLink.sendBroadcastMessage(message);
 			}
 			
 			cicleTime = cicleTime + MSParam.SENDING_PERIOD;

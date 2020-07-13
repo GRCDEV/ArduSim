@@ -15,7 +15,7 @@ public class FormationMatrix extends FlightFormation {
 	@Override
 	protected void initializeFormation() {
 		int cols = (int)Math.ceil(Math.sqrt(this.numUAVs));
-		int rows = (int)Math.ceil(this.numUAVs / cols);
+		int rows = (int)Math.ceil(this.numUAVs/cols);
 		int prevColsCenter = (cols - 1) / 2;
 		int prevRowsCenter = rows / 2;
 		this.centerUAVPosition = prevRowsCenter * cols + prevColsCenter;

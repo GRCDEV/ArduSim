@@ -1,5 +1,17 @@
 package main.uavController;
 
+import api.API;
+import api.pojo.FlightMode;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Input;
+import main.ArduSimTools;
+import main.Param;
+import main.Param.SimulatorState;
+import main.Text;
+import main.api.Copter;
+import main.api.communications.CommLink;
+import main.pccompanion.logic.PCCompanionParam;
+
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -7,19 +19,6 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.esotericsoftware.kryo.KryoException;
-import com.esotericsoftware.kryo.io.Input;
-
-import api.API;
-import api.pojo.FlightMode;
-import main.ArduSimTools;
-import main.Param;
-import main.Param.SimulatorState;
-import main.api.Copter;
-import main.api.communications.CommLink;
-import main.pccompanion.logic.PCCompanionParam;
-import main.Text;
 
 /** 
  * Thread used to listen to commands sent from the PC Companion.
@@ -94,8 +93,6 @@ public class TestListener extends Thread {
 							if (copter.cancelRCOverride()) {
 								action = Text.RECOVER_CONTROL;
 								commandSuccess = true;
-							} else {
-
 							}
 						}
 						if (emergency == PCCompanionParam.ACTION_RTL) {
@@ -103,8 +100,6 @@ public class TestListener extends Thread {
 							if (copter.setFlightMode(FlightMode.RTL)) {
 								action = Text.RTL;
 								commandSuccess = true;
-							} else {
-								
 							}
 						}
 						if (emergency == PCCompanionParam.ACTION_LAND) {
@@ -112,8 +107,6 @@ public class TestListener extends Thread {
 							if (copter.setFlightMode(FlightMode.LAND)) {
 								action = Text.LAND;
 								commandSuccess = true;
-							} else {
-
 							}
 						}
 						if (commandFound) {
@@ -129,9 +122,9 @@ public class TestListener extends Thread {
 						}
 						break;
 					}
-				} catch (SocketTimeoutException e) {
-				} catch (KryoException e) {}
-			} catch (IOException e) {}
+				} catch (SocketTimeoutException | KryoException ignored) {
+				}
+			} catch (IOException ignored) {}
 			receivedBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 			receivedPacket.setData(receivedBuffer, 0, receivedBuffer.length);
 		}

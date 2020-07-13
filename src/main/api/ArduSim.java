@@ -22,31 +22,7 @@ public class ArduSim {
 	public static final int PCCOMPANION = 2;
 	/** ArduSim runs a simulation without a gui interface. */
 	public static final int SIMULATOR_CLI = 3;
-	
-	/**
-	 * Get the security distance used to assert that a collision between UAVs has happened.
-	 * @return The maximum ground distance between two UAVs to assert that a collision has happened.
-	 */
-	public double collisionGetHorizontalDistance() {
-		return UAVParam.collisionDistance;
-	}
-	
-	/**
-	 * Get the security vertical distance used to assert that a collision between UAVs has happened.
-	 * @return The maximum vertical distance between two UAVs to assert that a collision has happened.
-	 */
-	public double collisionGetVerticalDistance() {
-		return UAVParam.collisionAltitudeDifference;
-	}
-	
-	/**
-	 * Find out if UAV collisions are being detected.
-	 * @return true if the periodic UAV collision check is enabled.
-	 */
-	public boolean collisionIsCheckEnabled() {
-		return UAVParam.collisionCheckEnabled;
-	}
-	
+
 	/**
 	 * Find out if at least a collision between multicopters has happened.
 	 * @return true if a collision has happened.
@@ -118,15 +94,7 @@ public class ArduSim {
 				&& Param.simStatus != Param.SimulatorState.CONFIGURING_PROTOCOL
 				&& Param.simStatus != Param.SimulatorState.CONFIGURING;
 	}
-	
-	/**
-	 * Find out if the multicopter(s) is(are) ready to press the setup button.
-	 * @return true if the UAVs are available and ready for the setup step, which has not been started jet.
-	 */
-	public boolean isReadyForSetup() {
-		return Param.simStatus == Param.SimulatorState.UAVS_CONFIGURED;
-	}
-	
+
 	/**
 	 * Find out if the multicopter(s) is(are) performing the setup step.
 	 * @return true while the setup step is in progress.
@@ -150,15 +118,7 @@ public class ArduSim {
 	public boolean isExperimentInProgress() {
 		return Param.simStatus == Param.SimulatorState.TEST_IN_PROGRESS;
 	}
-	
-	/**
-	 * Find out if the multicopter(s) has(have) finished the experiment.
-	 * @return true if the experiment is finished (all UAVs running in the same machine have landed).
-	 */
-	public boolean isExperimentFinished() {
-		return Param.simStatus == Param.SimulatorState.TEST_FINISHED;
-	}
-	
+
 	/**
 	 * Find out if the verbose store feature is enabled.
 	 * <p>If set to true, the developer can store additional file(s) for non relevant information.</p>

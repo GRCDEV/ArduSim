@@ -1,7 +1,5 @@
 package api.pojo.location;
 
-import java.util.List;
-
 import es.upv.grc.mapper.Location3DUTM;
 
 /** This class generates simplified waypoints, including only UTM coordinates and the sequence number in the mission.
@@ -39,15 +37,6 @@ public class WaypointSimplified extends Location3DUTM {
 	public String toString() {
 		return "WP" + this.numSeq + "(" + this.x + "," + this.y + "," + this.z + ")";
 	}
-	
-	/** String representation of a simplified mission. */
-	public static String ListToString(List<WaypointSimplified> list) {
-		StringBuilder sb =new StringBuilder(500);
-		sb.append("Mission:");
-		for (int i = 0; i < list.size(); i++) {
-			sb.append("\n").append(list.get(i).toString());
-		}
-		return sb.toString();
-	}
+
 
 }

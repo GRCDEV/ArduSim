@@ -134,9 +134,13 @@ public class MuscopConfigDialogController {
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, "*."+Text.FILE_EXTENSION_KML);
         fileChooser.getExtensionFilters().add(extFilter);
         File missionPath = fileChooser.showOpenDialog(stage);
-        missionFile.setText(missionPath.getAbsolutePath());
-        File[] fileArray = {missionPath};
-        properties.storeMissionFile(fileArray);
+        if(missionPath != null) {
+            missionFile.setText(missionPath.getAbsolutePath());
+            File[] fileArray = {missionPath};
+            properties.storeMissionFile(fileArray);
+        }else{
+            missionFile.setText("");
+        }
 
     }
 

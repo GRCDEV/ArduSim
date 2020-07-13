@@ -1,5 +1,16 @@
 package main.pccompanion.logic;
 
+import api.pojo.StatusPacket;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Input;
+import main.ArduSimTools;
+import main.Param;
+import main.Param.SimulatorState;
+import main.Text;
+import main.api.communications.CommLink;
+import main.pccompanion.gui.PCCompanionGUI;
+
+import javax.swing.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -9,19 +20,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javax.swing.SwingUtilities;
-
-import com.esotericsoftware.kryo.KryoException;
-import com.esotericsoftware.kryo.io.Input;
-
-import api.pojo.StatusPacket;
-import main.ArduSimTools;
-import main.Param;
-import main.Param.SimulatorState;
-import main.api.communications.CommLink;
-import main.pccompanion.gui.PCCompanionGUI;
-import main.Text;
 
 /** 
  * Thread used to listen messages from the real UAVs.
@@ -73,8 +71,7 @@ public class PCCompanionListener extends Thread {
 							received.status = status;
 							receiving.put(id, received);
 							ip = receivedPacket.getAddress().getHostAddress();
-							int row = PCCompanionGUI.companion.insertRow(id, ip, status.name());
-							received.row = row;
+							received.row = PCCompanionGUI.companion.insertRow(id, ip, status.name());
 						}
 					}
 				}
@@ -94,24 +91,16 @@ public class PCCompanionListener extends Thread {
 						
 						boolean readyForSetup = PCCompanionGUI.companion.setupButton.isEnabled();
 						if (allConnected && !readyForSetup) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									PCCompanionGUI.companion.setupButton.setEnabled(true);
-								}
-							});
+							SwingUtilities.invokeLater(() -> PCCompanionGUI.companion.setupButton.setEnabled(true));
 						}
 						if (!allConnected && readyForSetup) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									PCCompanionGUI.companion.setupButton.setEnabled(false);
-								}
-							});
+							SwingUtilities.invokeLater(() -> PCCompanionGUI.companion.setupButton.setEnabled(false));
 						}
 					}
 					// 3. Have all UAVs finished the setup step?
 					if (Param.simStatus == SimulatorState.SETUP_IN_PROGRESS) {
 						Collection<StatusPacket> col = receiving.values();
-						PCCompanionParam.connectedUAVs.compareAndSet(null, col.toArray(new StatusPacket[col.size()]));
+						PCCompanionParam.connectedUAVs.compareAndSet(null, col.toArray(new StatusPacket[0]));
 						it = receiving.entrySet().iterator();
 						boolean allReady = true;
 						while (it.hasNext() && allReady) {
@@ -122,11 +111,7 @@ public class PCCompanionListener extends Thread {
 							}
 						}
 						if (allReady) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									PCCompanionGUI.companion.startButton.setEnabled(true);
-								}
-							});
+							SwingUtilities.invokeLater(() -> PCCompanionGUI.companion.startButton.setEnabled(true));
 							Param.simStatus = SimulatorState.READY_FOR_TEST;
 						}
 					}
@@ -146,7 +131,7 @@ public class PCCompanionListener extends Thread {
 					}
 					time = time + PCCompanionParam.STATUS_CHANGE_CHECK_TIMEOUT;
 				}
-			} catch (KryoException e) {} catch (IOException e) {}
+			} catch (KryoException | IOException e) {}
 			receivedBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 			receivedPacket.setData(receivedBuffer, 0, receivedBuffer.length);
 		}

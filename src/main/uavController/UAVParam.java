@@ -1,29 +1,18 @@
 package main.uavController;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
-
-import api.pojo.AtomicDoubleArray;
-import api.pojo.ConcurrentBoundedQueue;
-import api.pojo.CopterParam;
-import api.pojo.FlightMode;
-import api.pojo.RCValues;
+import api.pojo.*;
 import api.pojo.location.Waypoint;
 import api.pojo.location.WaypointSimplified;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DGeo;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.common.GlobalPositionInt;
-import io.dronefleet.mavlink.common.MissionCurrent;
-import io.dronefleet.mavlink.common.SysStatus;
 import main.api.CopterParamLoaded;
 import main.api.formations.FlightFormation;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.*;
 
 /** This class includes parameters specifically related to the communication with the flight controller.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -76,8 +65,8 @@ public class UAVParam {
 	public static ConcurrentBoundedQueue<Location2DUTM>[] lastUTMLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Flight formation (when used)
-	public static AtomicReference<FlightFormation.Formation> groundFormation = new AtomicReference<FlightFormation.Formation>(FlightFormation.Formation.LINEAR);
-	public static AtomicReference<FlightFormation.Formation> airFormation = new AtomicReference<FlightFormation.Formation>(FlightFormation.Formation.LINEAR);
+	public static AtomicReference<FlightFormation.Formation> groundFormation = new AtomicReference<>(FlightFormation.Formation.LINEAR);
+	public static AtomicReference<FlightFormation.Formation> airFormation = new AtomicReference<>(FlightFormation.Formation.LINEAR);
 	// Initial distance between UAV when they are on the ground (only in simulation)
 	public static volatile double groundDistanceBetweenUAV = 10.0;
 	// Minimum distance between UAVs while following the mission
@@ -91,7 +80,6 @@ public class UAVParam {
 	public static double minAltitude = 5.0;				// (m) Minimum waypoint relative altitude for KML missions
 	public static volatile boolean overrideAltitude = false;	// Whether to override or not the altitude in KML missions, with the following value
 	public static volatile double minFlyingAltitude = minAltitude;// (m) Waypoint relative altitude for KML missions, when stored values are overrided
-	public static final long ALTITUDE_WAIT = 500;		// (ms) Time between checks while take off
 	public static final double WIND_THRESHOLD = 0.5;	// (m/s) Minimum wind speed accepted by the simulator, when used
 	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
 	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
@@ -100,7 +88,6 @@ public class UAVParam {
 	public static final String[] YAW_VALUES = new String[] {"Fixed", "Face next waypoint", "Face next WP except RTL", "Face along GPS course"};
 	
 	public static AtomicIntegerArray mavId;				// ID of the multicopter in the MAVLink protocol
-	public static final int MAV_ID = 1;					// ID of the multicopter in the MAVLink protocol by default
 	public static AtomicIntegerArray gcsId;				// ID of the GCS authorized to send commands to the flight controller
 														//   255 for Mission Planner and DroidPlanner
 														//   252 for APM Planner 2
@@ -141,12 +128,7 @@ public class UAVParam {
 	public static volatile int lipoBatteryCapacity = 3300;	// (mAh) Standard battery capacity
 	// Virtual battery
 	public static final int VIRTUAL_BATTERY_CELLS = 3;		// Number of cells of the virtual battery on ArduSim
-	public static final double VIRT_BATTERY_CHARGED_VOLTAGE = VIRTUAL_BATTERY_CELLS * CHARGED_VOLTAGE;	// (V) Maximum charge (12.6V)
-	public static final double VIRT_BATTERY_NOMINAL_VOLTAGE = VIRTUAL_BATTERY_CELLS * NOMINAL_VOLTAGE;	// (V) Standard voltage (11.1V)
 	public static final double VIRT_BATTERY_ALARM_VOLTAGE = VIRTUAL_BATTERY_CELLS * ALARM_VOLTAGE;		// (V) Voltage on flight to rise an alarm (10.5V)
-	public static final double VIRT_BATTERY_FINAL_VOLTAGE = VIRTUAL_BATTERY_CELLS * FINAL_VOLTAGE;		// (V) Voltage at the end without load (11.25V)
-	public static final double VIRT_BATTERY_DISCHARGED_VOLTAGE = VIRTUAL_BATTERY_CELLS * FULLY_DISCHARGED_VOLTAGE;	// (V) Minimum to avoid damage (9.6V)
-	public static final double VIRT_BATTERY_STORAGE_VOLTAGE = VIRTUAL_BATTERY_CELLS * STORAGE_VOLTAGE;	// (V) Level for storage (11.4V)
 	public static final int VIRT_BATTERY_MAX_CAPACITY = 500000000;	// (mAh) Maximum initial battery capacity
 	// Real or virtual battery
 	public static int batteryCapacity;	// (mAh) Used battery capacity
@@ -154,12 +136,12 @@ public class UAVParam {
 
 	// MAVLink waiting parameters
 	public static AtomicInteger numMAVLinksOnline = new AtomicInteger();	// Number of MAVLink links stablished
-	public static final long MAVLINK_ONLINE_TIMEOUT = 60 * 1000000000l;		// (ns) Global timeout
+	public static final long MAVLINK_ONLINE_TIMEOUT = 60 * 1000000000L;		// (ns) Global timeout
 	public static final long MAVLINK_WAIT = 500;							// (ms) Passive waiting timeout
 
 	// GPS fix waiting parameters
 	public static AtomicInteger numGPSFixed = new AtomicInteger();	// Number of UAVs sending valid coordinates
-	public static final long GPS_FIX_TIMEOUT = 300 * 1000000000l;	// (ns) Global timeout while waiting GPS coordinates
+	public static final long GPS_FIX_TIMEOUT = 300 * 1000000000L;	// (ns) Global timeout while waiting GPS coordinates
 	public static final long GPS_FIX_WAIT = 500;					// (ms) Passively waiting GPS coordinates
 
 	// Command ACK waiting timeout (ms)
@@ -168,7 +150,7 @@ public class UAVParam {
 	// Stabilization parameters (when the UAV is stopping)
 	public static final double STABILIZATION_SPEED = 0.6;				// (m/s) When it is stopped
 	public static final long STABILIZATION_WAIT_TIME = 200;				// (ms) Passively waiting the UAV to stop
-	public static final long STABILIZATION_TIMEOUT = 5 * 1000000000l;	// (ns) Global timeout while waiting the UAV to stop
+	public static final long STABILIZATION_TIMEOUT = 5 * 1000000000L;	// (ns) Global timeout while waiting the UAV to stop
 
 	// Filter to compensate the acceleration oscillation, applied when a new location is received from the UAV
 	public static final double ACCELERATION_THRESHOLD = 0.2;	// [0, 1] 1=new value, 0=previous value
@@ -176,7 +158,7 @@ public class UAVParam {
 	public static final double MAX_ACCELERATION = 5;			// (m/s²) high pass filter
 
 	// Period between heartbeats sent to the flight controller (ns)
-	public static final long HEARTBEAT_PERIOD =  950000000l;
+	public static final long HEARTBEAT_PERIOD =  950000000L;
 	
 	// Minumum base mode to assert that the UAV is flying
 	public static final int MIN_MODE_TO_BE_FLYING = 209;
@@ -273,7 +255,7 @@ public class UAVParam {
 		{1361, 1425, 1490}, {1491, 1555, 1620}, {1621, 1685, 1749}, {1750, 1875, 2000}};
 	
 	public static Map<String, CopterParamLoaded>[] loadedParams;
-	public static int totParams[];
-	public static boolean paramLoaded[][];
+	public static int[] totParams;
+	public static boolean[][] paramLoaded;
 
 }

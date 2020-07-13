@@ -1,25 +1,20 @@
 package main.api.masterslavepattern.safeTakeOff;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.esotericsoftware.kryo.io.Input;
-
 import api.API;
+import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location3D;
 import main.Text;
-import main.api.ArduSim;
-import main.api.Copter;
-import main.api.GUI;
-import main.api.MoveToListener;
-import main.api.TakeOffListener;
+import main.api.*;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.MSText;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Thread used to perform a safe take off.
@@ -84,7 +79,7 @@ public class SafeTakeOffListenerThread extends Thread {
 		
 		new SafeTakeOffTalkerThread(numUAV, safeTakeOffInstance, state).start();
 		
-		/** WAIT TAKE OFF PHASE */
+		// WAIT TAKE OFF PHASE
 		if (state.get() == MSParam.STATE_WAIT_TAKE_OFF) {
 			gui.logVerboseUAV(MSText.LISTENER_WAITING_TAKE_OFF);
 			while (state.get() == MSParam.STATE_WAIT_TAKE_OFF) {
@@ -107,7 +102,7 @@ public class SafeTakeOffListenerThread extends Thread {
 			}
 		}
 		
-		/** TAKE OFF STEP 1 PHASE */
+		// TAKE OFF STEP 1 PHASE
 		if (state.get() == MSParam.STATE_TAKE_OFF_STEP_1) {
 			gui.logVerboseUAV(MSText.LISTENER_TAKING_OFF_1);
 			copter.takeOff(altitudeStep1, new TakeOffListener() {
@@ -127,7 +122,7 @@ public class SafeTakeOffListenerThread extends Thread {
 				commLink.receiveMessage(MSParam.RECEIVING_TIMEOUT);
 			}
 			
-			/** TAKE OFF STEP 2 PHASE */
+			// TAKE OFF STEP 2 PHASE
 			gui.logVerboseUAV(MSText.LISTENER_TAKING_OFF_2);
 			copter.moveTo(new Location3D(targetLocation, altitudeStep2),
 					new MoveToListener() {
@@ -150,13 +145,13 @@ public class SafeTakeOffListenerThread extends Thread {
 			commLink.receiveMessage(MSParam.RECEIVING_TIMEOUT);
 		}
 		
-		/** TARGET REACHED PHASE */
+		// TARGET REACHED PHASE
 		if (excluded) {
 			gui.logVerboseUAV(MSText.LISTENER_WAITING_ON_GROUND);
 		} else {
 			gui.logVerboseUAV(MSText.LISTENER_TARGET_REACHED);
 		}
-		Map<Long, Long> acks = new HashMap<Long, Long>((int)Math.ceil(numUAVs / 0.75) + 1);
+		Map<Long, Long> acks = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		long lastReceivedTakeoffEnd = 0;
 		if (isCenter) {
 			gui.logVerboseUAV(MSText.LISTENER_CENTER_WAITING_SLAVES);
@@ -193,7 +188,7 @@ public class SafeTakeOffListenerThread extends Thread {
 			}
 		}
 		
-		/** TAKE OFF CHECK PHASE */
+		// TAKE OFF CHECK PHASE
 		gui.logVerboseUAV(MSText.LISTENER_SYNCHRONIZING);
 		if (isCenter) {
 			gui.logVerboseUAV(MSText.CENTER_TAKEOFF_END_ACK_LISTENER);

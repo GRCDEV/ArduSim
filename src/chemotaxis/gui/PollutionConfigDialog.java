@@ -1,27 +1,12 @@
 package chemotaxis.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.border.TitledBorder;
-
 import api.API;
 import chemotaxis.logic.ChemotaxisParam;
 import es.upv.grc.mapper.Location2DGeo;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
 
 public class PollutionConfigDialog extends JDialog {
 
@@ -46,14 +31,14 @@ public class PollutionConfigDialog extends JDialog {
 	public PollutionConfigDialog() {
 		super();
 		
-		/** Set up dialog and main container **/
+		/* Set up dialog and main container */
 		Container contentPane = this.getContentPane();
 		BoxLayout mainLayout = new BoxLayout(contentPane, BoxLayout.PAGE_AXIS);
 		contentPane.setLayout(mainLayout);
 		((JComponent)this.getContentPane()).setBorder( 
 		        BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
-		/** Create components **/
+		/* Create components */
 		// Location components
 		JLabel startLatLabel = new JLabel("Start latitude: "); // TODO Add text helper file
 		JLabel startLongLabel = new JLabel("Start longitude: "); // TODO Add text helper file
@@ -77,27 +62,23 @@ public class PollutionConfigDialog extends JDialog {
 		isSimulationCheckBox = new JCheckBox("Simulation", true); // TODO Add text helper file
 		pollutionDataField = new JTextField("pollution.txt");
 		pollutionDataButton = new JButton("...");
-		pollutionDataButton.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser chooser = new JFileChooser();
-				chooser.setCurrentDirectory(API.getFileTools().getCurrentFolder());
-				chooser.setDialogTitle("Select pollution data file"); // TODO Add text helper file
-				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				chooser.setMultiSelectionEnabled(false);
-				chooser.setAcceptAllFileFilterUsed(false);
-				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-					pollutionDataField.setText(chooser.getSelectedFile().getPath());
-				}
-				
+		pollutionDataButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setCurrentDirectory(API.getFileTools().getCurrentFolder());
+			chooser.setDialogTitle("Select pollution data file"); // TODO Add text helper file
+			chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			chooser.setMultiSelectionEnabled(false);
+			chooser.setAcceptAllFileFilterUsed(false);
+			if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				pollutionDataField.setText(chooser.getSelectedFile().getPath());
 			}
+
 		});
 		
 		// Ok button
 		JButton okButton = new JButton("Ok");
 		
-		/** Layout components **/
+		/* Layout components **/
 		
 		// Location panel
 		JPanel startLocationPanel = new JPanel();
@@ -161,14 +142,10 @@ public class PollutionConfigDialog extends JDialog {
 		checkBoxPanel.add(isSimulationCheckBox, BorderLayout.WEST);
 		simulationPanel.add(checkBoxPanel);
 		setSimulation(isSimulationCheckBox.isSelected());
-		isSimulationCheckBox.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JCheckBox cb = (JCheckBox) e.getSource();
-				setSimulation(cb.isSelected());
-				
-			}
+		isSimulationCheckBox.addActionListener(e -> {
+			JCheckBox cb = (JCheckBox) e.getSource();
+			setSimulation(cb.isSelected());
+
 		});
 		contentPane.add(simulationPanel);
 		
@@ -185,28 +162,10 @@ public class PollutionConfigDialog extends JDialog {
 		contentPane.add(okButtonPanel);
 		
 		
-		/** Logic **/
-		okButton.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				okAction();
-			}
-		});
-		startLatField.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				okAction();
-			}
-		});
-		startLongField.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				okAction();
-			}
-		});
+		/* Logic */
+		okButton.addActionListener(e -> okAction());
+		startLatField.addActionListener(e -> okAction());
+		startLongField.addActionListener(e -> okAction());
 	}
 	
 	private void okAction() {
@@ -219,12 +178,7 @@ public class PollutionConfigDialog extends JDialog {
 			ChemotaxisParam.altitude = Double.parseDouble(altitudeField.getText());
 			ChemotaxisParam.pollutionDataFile = pollutionDataField.getText();
 			ChemotaxisParam.isSimulation = isSimulationCheckBox.isSelected();
-			SwingUtilities.invokeLater(new Runnable() {
-  			  @Override
-  			  public void run() {
-  				  dispose();
-  			  }
-  		  });
+			SwingUtilities.invokeLater(this::dispose);
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(this, "Longitude and latitude must be in decimal format.", "Format error", JOptionPane.ERROR_MESSAGE);
 		}

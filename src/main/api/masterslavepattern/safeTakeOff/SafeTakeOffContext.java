@@ -85,15 +85,7 @@ public class SafeTakeOffContext {
 	public double getInitialYaw() {
 		return initialYaw;
 	}
-	
-	/**
-	 * Get the ID of the next UAV in the take off sequence.
-	 * @return ID of the next UAV in the take off sequence, or <i>SafeTakeOffContext.BROADCAST_MAC_ID</i> if this is the last UAV in the take off sequence.
-	 */
-	public long getNextID() {
-		return this.nextID;
-	}
-	
+
 	/**
 	 * Get the number of UAVs coordinated for the take off process, even when some of them could remain on the ground after the process.
 	 * @return Number of UAVs coordinated for the take off process.
@@ -101,15 +93,7 @@ public class SafeTakeOffContext {
 	public int getNumUAVs() {
 		return numUAVs;
 	}
-	
-	/**
-	 * Get the ID of the previous UAV in the take off sequence.
-	 * @return ID of the previous UAV in the take off sequence, or <i>SafeTakeOffContext.BROADCAST_MAC_ID</i> if this is the first UAV in the take off sequence.
-	 */
-	public long getPrevID() {
-		return this.prevID;
-	}
-	
+
 	/**
 	 * Get the ID of the UAVs in the optimal order to assign any of the as master for master-slave pattern protocols.
 	 * #return list of IDs of the UAVs.

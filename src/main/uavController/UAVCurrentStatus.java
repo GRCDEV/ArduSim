@@ -39,11 +39,7 @@ public class UAVCurrentStatus {
 	public synchronized int getRemainingBattery() {
 		return this.remainingBattery;
 	}
-	/** Returns the CPU load (%) or -1 if unknown. */
-	public synchronized double getCPULoad() {
-		return this.cpuLoad;
-	}
-	
+
 	/** Gets the current status: voltage(V), current (mAh), cpu load (%), remaining battery (%). */
 	public synchronized Quartet<Double, Double, Integer, Double> getStatus() {
 		return Quartet.with(this.voltage, this.current, this.remainingBattery, this.cpuLoad);

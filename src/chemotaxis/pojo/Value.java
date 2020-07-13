@@ -14,17 +14,7 @@ public class Value {
 		this.y = y;
 		this.v = v;
 	}
-	
-	/**
-	 * Make a deep copy of Value
-	 * @param value Value to copy
-	 */
-	public Value(Value value) {
-		this.x = value.x;
-		this.y = value.y;
-		this.v = value.v;
-	}
-	
+
 	/**
 	 * @return The serialised data.
 	 */
@@ -32,26 +22,7 @@ public class Value {
 	public String toString() {
 		return "[" + x + ", " + y + "] = " + v;
 	}
-	
-	/**
-	 * Deep copy of another Point object onto this object.
-	 * @param p Object to copy from.
-	 */
-	public void copyFrom(Value p) {
-		x = p.x;
-		y = p.y;
-		v = p.v;
-	}
-	
-	/**
-	 * Calculate the distance vector to this Point from another Point.
-	 * @param p The Point from which to calculate the distance.
-	 * @return The distance vector as new Point object.
-	 */
-	public Point distVector(Point p) {
-		return new Point(x - p.x, y - p.y);
-	}
-	
+
 	public double distance(Point p) {
 		int a = this.x - p.x;
 		int b = this.y - p.y;
@@ -74,25 +45,14 @@ public class Value {
 	 * Adds to the x and y components of the Point.
 	 * @param x The x to add.
 	 * @param y The y to add.
-	 * @return
+	 * @return value
 	 */
 	public Value add(int x, int y) {
 		this.x += x;
 		this.y += y;
 		return this;
 	}
-	
-	/**
-	 * Checks if the point would be contained within a grid of specified size.
-	 * @param sizeX x axis size of the grid.
-	 * @param sizeY y axis size of the grid.
-	 * @return True if the point is in the grid, false otherwise.
-	 */
-	public boolean isInside(int sizeX, int sizeY) {
-		if (x < 0 || x >= sizeX || y < 0 || y >= sizeY) return false;
-		return true;
-	}
-	
+
 	/**
 	 * @return The x
 	 */
@@ -123,28 +83,5 @@ public class Value {
 	public double getV() {
 		return v;
 	}
-	/**
-	 * @param v The v to set
-	 */
-	public void setV(double v) {
-		this.v = v;
-	}
-	/**
-	 * Add to x
-	 * @param i Amount to add to x
-	 * @return Itself to allow chaining.
-	 */
-	public Value addX(int i) {
-		this.x += i;
-		return this;
-	}
-	/**
-	 * Add to y
-	 * @param i Amount to add to y
-	 * @return Itself to allow chaining.
-	 */
-	public Value addY(int i) {
-		this.y += i;
-		return this;
-	}
+
 }

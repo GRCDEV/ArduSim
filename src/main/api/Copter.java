@@ -318,14 +318,6 @@ public class Copter {
 	}
 
 	/**
-	 * Get the latest three axes components of the speed received from the flight controller.
-	 * @return (m/s) Current ground speed on the three axes [x, y, z].
-	 */
-	public double[] getSpeeds() {
-		return UAVParam.uavCurrentData[numUAV].getSpeeds();
-	}
-	
-	/**
 	 * Check if the UAV is flying.
 	 * @return Whether the UAV is flying or not.
 	 */
@@ -341,9 +333,7 @@ public class Copter {
 		FlightMode current = UAVParam.flightMode.get(numUAV);
 		if (current.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
 				&& current != FlightMode.LAND_ARMED) {
-			if (!this.setFlightMode(FlightMode.LAND)) {
-				return false;
-			}
+			return this.setFlightMode(FlightMode.LAND);
 		}
 		return true;
 	}

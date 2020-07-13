@@ -160,7 +160,7 @@ public enum CopterParam {
 	private final String id;
 	private final EnumValue<MavParamType> type;
 
-	private CopterParam(String id, EnumValue<MavParamType> type) {
+	CopterParam(String id, EnumValue<MavParamType> type) {
 		this.id = id;
 		this.type = type;
 	}
