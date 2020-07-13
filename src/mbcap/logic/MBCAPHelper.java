@@ -4,15 +4,20 @@ import api.API;
 import api.ProtocolHelper;
 import api.pojo.location.LogPoint;
 import api.pojo.location.Waypoint;
-import es.upv.grc.mapper.*;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
+import javafx.application.Platform;
+import javafx.stage.Stage;
+import main.ArduSimTools;
 import main.Param.SimulatorState;
+import main.Text;
 import main.api.ArduSim;
 import main.api.FileTools;
 import main.api.ValidationTools;
+import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
-import mbcap.gui.MBCAPConfigDialog;
-import mbcap.gui.MBCAPGUIParam;
-import mbcap.gui.MBCAPPCCompanionDialog;
+import mbcap.gui.*;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.ErrorPoint;
 import mbcap.pojo.MBCAPState;
@@ -22,8 +27,9 @@ import org.javatuples.Pair;
 import javax.swing.*;
 import java.awt.geom.Point2D;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,18 +50,30 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public JDialog openConfigurationDialog() {
-		return new MBCAPConfigDialog();
-	}
+	public JDialog openConfigurationDialog() {return null;}
 
 	@Override
 	public void openConfigurationDialogFX() {
-
+		Platform.runLater(()->new MBCAPConfigDialogApp().start(new Stage()));
 	}
 
 	@Override
 	public void configurationCLI() {
-
+		MBCAPSimProperties properties = new MBCAPSimProperties();
+		ResourceBundle resources;
+		try {
+			FileInputStream fis = new FileInputStream(SimParam.protocolParamFile);
+			resources = new PropertyResourceBundle(fis);
+			fis.close();
+			Properties p = new Properties();
+			for(String key: resources.keySet()){
+				p.setProperty(key,resources.getString(key));
+			}
+			properties.storeParameters(p,resources);
+		} catch (IOException e) {
+			ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.PROTOCOL_PARAMETERS_FILE_NOT_FOUND );
+			System.exit(0);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -65,7 +83,7 @@ public class MBCAPHelper extends ProtocolHelper {
 		int numUAVs = ardusim.getNumUAVs();
 		boolean isRealUAV = ardusim.getArduSimRole() == ArduSim.MULTICOPTER;
 		if (!isRealUAV) {
-			MBCAPGUIParam.predictedLocation = new AtomicReference[numUAVs];
+			MBCAPSimProperties.predictedLocation = new AtomicReference[numUAVs];
 		}
 
 		MBCAPParam.event = new AtomicInteger[numUAVs];
@@ -88,7 +106,7 @@ public class MBCAPHelper extends ProtocolHelper {
 
 		for (int i = 0; i < numUAVs; i++) {
 			if (!isRealUAV) {
-				MBCAPGUIParam.predictedLocation[i] = new AtomicReference<>();
+				MBCAPSimProperties.predictedLocation[i] = new AtomicReference<>();
 			}
 			MBCAPParam.event[i] = new AtomicInteger();
 			MBCAPParam.deadlockSolved[i] = new AtomicInteger();

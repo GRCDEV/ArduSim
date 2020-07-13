@@ -1,17 +1,15 @@
 package mbcap.logic;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-
-import com.esotericsoftware.kryo.io.Input;
-
 import api.API;
+import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.Location3DUTM;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.communications.CommLink;
 import mbcap.pojo.Beacon;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 /** This class receives data packets and stores them for later analysis of risk of collision.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -61,13 +59,7 @@ public class ReceiverThread extends Thread {
 			// Periodic cleanup of obsolete beacons to take into account UAVs that have gone far enough
 			long now = System.currentTimeMillis();
 			if (now > expirationCheckTime + MBCAPParam.BEACON_EXPIRATION_CHECK_PERIOD) {
-				Iterator<Map.Entry<Long, Beacon>> entries = beacons.entrySet().iterator();
-				while (entries.hasNext()) {
-					Map.Entry<Long, Beacon> entry = entries.next();
-					if (System.nanoTime() - entry.getValue().time >= MBCAPParam.beaconExpirationTime) {
-						entries.remove();
-					}
-				}
+				beacons.entrySet().removeIf(entry -> System.nanoTime() - entry.getValue().time >= MBCAPParam.beaconExpirationTime);
 				expirationCheckTime = now;
 			}
 			
@@ -106,7 +98,7 @@ public class ReceiverThread extends Thread {
 		res.speed = input.readFloat();
 		res.time = System.nanoTime() - input.readLong();
 		int size = input.readShort();
-		res.points = new ArrayList<Location3DUTM>(size);
+		res.points = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
 			res.points.add(new Location3DUTM(input.readDouble(), input.readDouble(), input.readDouble()));
 		}

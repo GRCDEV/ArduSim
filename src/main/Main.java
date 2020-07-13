@@ -125,7 +125,7 @@ public class Main {
 
 			if(Param.role == ArduSim.SIMULATOR_GUI) {
 				// Start the javafxml GUI configDialogApp
-				Platform.startup(() -> {new ConfigDialogApp().start(new Stage());});
+				Platform.startup(() -> new ConfigDialogApp().start(new Stage()));
 				while(Param.simStatus != SimulatorState.CONFIGURING_PROTOCOL){
 					API.getArduSim().sleep(SimParam.SHORT_WAITING_TIME);
 				}
@@ -146,17 +146,71 @@ public class Main {
 				final AtomicBoolean configurationOpened = new AtomicBoolean();
 				if(Param.role == ArduSim.SIMULATOR_GUI) {
 					ArduSimTools.selectedProtocolInstance.openConfigurationDialogFX();
+					// DEPRECATED
+					/*
+					try {
+						SwingUtilities.invokeAndWait(new Runnable() {
+							public void run() {
+								final JDialog configurationDialog = ArduSimTools.selectedProtocolInstance.openConfigurationDialog();
+								if (configurationDialog ==null) {
+									Param.simStatus = SimulatorState.STARTING_UAVS;
+								} else {
+									configurationDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+									configurationDialog.addWindowListener(new WindowAdapter() {
+										@Override
+										public void windowClosing(WindowEvent we) {
+											configurationDialog.dispose();
+											System.gc();
+											System.exit(0);
+										}
+
+										@Override
+										public void windowClosed(WindowEvent e) {
+											configurationOpened.set(false);
+										}
+									});
+
+									SimTools.addEscListener(configurationDialog, true);
+
+									configurationDialog.pack();
+									configurationDialog.setResizable(false);
+									configurationDialog.setLocationRelativeTo(null);
+									configurationDialog.setModal(true);
+									configurationDialog.setVisible(true);
+									configurationOpened.set(true);
+								}
+							}
+						});
+					} catch (InvocationTargetException | InterruptedException e) {
+						ArduSimTools.closeAll(Text.CONFIGURATION_ERROR);
+					}
+
+					// Waiting the protocol configuration to be finished
+					while (Param.simStatus == SimulatorState.CONFIGURING_PROTOCOL) {
+						ardusim.sleep(SimParam.SHORT_WAITING_TIME);
+
+						if (!configurationOpened.get()) {
+							Param.simStatus = SimulatorState.STARTING_UAVS;
+						}
+					}
+					if (Param.numUAVs != Param.numUAVsTemp.get()) {
+						Param.numUAVs = Param.numUAVsTemp.get();
+					}
+					// END DEPRECATED
+					*/
+
 					while(Param.simStatus != Param.SimulatorState.STARTING_UAVS){
 						API.getArduSim().sleep(SimParam.SHORT_WAITING_TIME);
 					}
 
-					if (Param.numUAVs != Param.numUAVsTemp.get()) {
-						Param.numUAVs = Param.numUAVsTemp.get();
-					}
 				}else if(Param.role == ArduSim.SIMULATOR_CLI){
 					ArduSimTools.selectedProtocolInstance.configurationCLI();
 					Param.simStatus = SimulatorState.STARTING_UAVS;
 				}
+			}
+
+			if (Param.numUAVs != Param.numUAVsTemp.get()) {
+				Param.numUAVs = Param.numUAVsTemp.get();
 			}
 
 			// 3. Launch the main window

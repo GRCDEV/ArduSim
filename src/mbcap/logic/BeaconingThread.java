@@ -10,15 +10,15 @@ import main.api.Copter;
 import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.communications.CommLink;
-import mbcap.gui.MBCAPGUIParam;
+import mbcap.gui.MBCAPSimProperties;
 import mbcap.pojo.Beacon;
 import mbcap.pojo.MBCAPState;
 import org.javatuples.Pair;
 import org.javatuples.Quintet;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -52,7 +52,7 @@ public class BeaconingThread extends Thread {
 
 	public BeaconingThread(int numUAV) {
 		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-			this.predictedLocations = MBCAPGUIParam.predictedLocation[numUAV];
+			this.predictedLocations = MBCAPSimProperties.predictedLocation[numUAV];
 		}
 		this.event = MBCAPParam.event[numUAV];
 		this.currentState = MBCAPParam.state[numUAV];
@@ -311,7 +311,6 @@ public class BeaconingThread extends Thread {
 				// May be the next waypoint is too far, so we add an additional waypoint
 				if (i<mission.size() && locations < MBCAPParam.MAX_BEACON_LOCATIONS) {
 					predictedPath.add(new Location3DUTM(mission.get(i).x, mission.get(i).y, mission.get(i).z));
-					locations++;
 				}
 				return predictedPath;
 			}

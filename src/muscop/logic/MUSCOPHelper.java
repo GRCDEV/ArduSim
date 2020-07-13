@@ -15,7 +15,6 @@ import main.api.GUI;
 import main.api.MissionHelper;
 import main.api.formations.FlightFormation;
 import main.sim.logic.SimParam;
-import muscop.gui.MUSCOPConfigDialog;
 import muscop.gui.MuscopConfigDialogApp;
 import org.javatuples.Pair;
 
@@ -44,9 +43,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public JDialog openConfigurationDialog() {
-		return new MUSCOPConfigDialog();
-	}
+	public JDialog openConfigurationDialog() {return null;}
 
 	@Override
 	public void openConfigurationDialogFX() {
@@ -56,7 +53,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 	@Override
 	public void configurationCLI() {
 		MuscopSimProperties properties = new MuscopSimProperties();
-		ResourceBundle resources =null;
+		ResourceBundle resources;
 		try {
 			FileInputStream fis = new FileInputStream(SimParam.protocolParamFile);
 			resources = new PropertyResourceBundle(fis);

@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import main.ArduSimTools;
@@ -24,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
 public class MuscopConfigDialogController {
 
@@ -59,14 +61,20 @@ public class MuscopConfigDialogController {
 
     @FXML
     public void initialize(){
+        missionFile.setDisable(true);
+        missionFileButton.setOnAction(e->searchMissionFile());
         groundFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         groundFormation.getSelectionModel().select(resources.getString("groundFormation"));
+
+        groundMinDistance.setTextFormatter(new TextFormatter<>(doubleFilter));
 
         takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
         takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
 
         flyingFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));
+
+        flyingMinDistance.setTextFormatter(new TextFormatter<>(doubleFilter));
 
         numberOfClusters.disableProperty().bind(Bindings.equal(flyingFormation.valueProperty(),FlightFormation.Formation.SPLITUP.getName()).not());
         ArrayList<String> nrClustersString = new ArrayList<>();
@@ -75,7 +83,8 @@ public class MuscopConfigDialogController {
         }
         numberOfClusters.setItems(FXCollections.observableArrayList(nrClustersString));
         numberOfClusters.getSelectionModel().select(resources.getString("numberOfClusters"));
-        missionFileButton.setOnAction(e->searchMissionFile());
+
+        landingMinDistance.setTextFormatter(new TextFormatter<>(doubleFilter));
         okButton.setOnAction(e->{
             if(ok()){
                 Platform.setImplicitExit(false); // so that the application does not close
@@ -130,6 +139,23 @@ public class MuscopConfigDialogController {
         properties.storeMissionFile(fileArray);
 
     }
+
+    private final UnaryOperator<TextFormatter.Change> doubleFilter = t -> {
+        if (t.isReplaced())
+            if(t.getText().matches("[^0-9]"))
+                t.setText(t.getControlText().substring(t.getRangeStart(), t.getRangeEnd()));
+
+        if (t.isAdded()) {
+            if (t.getControlText().contains(".")) {
+                if (t.getText().matches("[^0-9]")) {
+                    t.setText("");
+                }
+            } else if (t.getText().matches("[^0-9.]")) {
+                t.setText("");
+            }
+        }
+        return t;
+    };
 
 
 }
