@@ -182,7 +182,7 @@ public class Main {
 							}
 						});
 					} catch (InvocationTargetException | InterruptedException e) {
-						ArduSimTools.closeAll(Text.CONFIGURATION_ERROR);
+						ArduSimTools.closeAll("configuration error");
 					}
 
 					// Waiting the protocol configuration to be finished
@@ -198,7 +198,6 @@ public class Main {
 					}
 					// END DEPRECATED
 					*/
-
 					while(Param.simStatus != Param.SimulatorState.STARTING_UAVS){
 						API.getArduSim().sleep(SimParam.SHORT_WAITING_TIME);
 					}

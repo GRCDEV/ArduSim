@@ -1,12 +1,12 @@
 package followme.logic;
 
 import api.API;
-import api.pojo.FlightMode;
 import followme.pojo.RemoteInput;
 import main.Param;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
+import main.api.hiddenFunctions.HiddenFunctions;
 
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +22,7 @@ public class RemoteThread extends Thread {
 	private Copter copter;
 	private GUI gui;
 	private ArduSim ardusim;
+	private int numUAV;
 	
 	@SuppressWarnings("unused")
 	private RemoteThread() {}
@@ -31,6 +32,8 @@ public class RemoteThread extends Thread {
 		this.copter = API.getCopter(numUAV);
 		this.gui = API.getGUI(numUAV);
 		this.ardusim = API.getArduSim();
+		this.numUAV = numUAV;
+		gui.logUAV("I am the master");
 	}
 	
 
@@ -54,11 +57,6 @@ public class RemoteThread extends Thread {
 		}
 		
 		if (role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-			if (!copter.setFlightMode(FlightMode.LOITER)) {
-				gui.logUAV(FollowMeText.MASTER_LOITER_ERROR);
-				return;
-			}
-			
 			Queue<RemoteInput> path = FollowMeParam.masterData;
 			RemoteInput data;
 			
@@ -77,9 +75,9 @@ public class RemoteThread extends Thread {
 					if (!FollowMeTalkerThread.protocolStarted && altitude >= startingAltitude) {
 						FollowMeTalkerThread.protocolStarted = true;
 					}
-					
+
 					if (!FollowMeTalkerThread.protocolStarted || altitude >= finalAltitude) {
-						copter.channelsOverride(data.roll, data.pitch, data.throttle, data.yaw);
+						HiddenFunctions.channelsOverride(numUAV, data.roll, data.pitch, data.throttle, data.yaw);
 					} else {
 						currentState.set(LANDING);
 						landing = true;

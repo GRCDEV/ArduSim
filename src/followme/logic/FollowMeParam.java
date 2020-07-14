@@ -1,8 +1,9 @@
 package followme.logic;
 
+import followme.pojo.RemoteInput;
+
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
-import followme.pojo.RemoteInput;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -24,7 +25,6 @@ public class FollowMeParam {
 	// Timeouts
 	public static final long STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
 	public static final long SENDING_TIMEOUT = 200;			// (ms) Time between packets sent
-	public static final int RECEIVING_TIMEOUT = 50;			// (ms) The port is unlocked after this time when receiving messages
 	public static final long LAND_CHECK_TIMEOUT = 250;		// (ms) Between checks if the UAV has landed
 	
 }

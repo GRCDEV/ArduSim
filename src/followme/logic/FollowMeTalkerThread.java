@@ -1,19 +1,18 @@
 package followme.logic;
 
-import static followme.pojo.State.*;
-
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.esotericsoftware.kryo.io.Output;
-
 import api.API;
+import com.esotericsoftware.kryo.io.Output;
 import es.upv.grc.mapper.Location2DUTM;
 import followme.pojo.Message;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.communications.CommLink;
+
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static followme.pojo.State.*;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -52,8 +51,7 @@ public class FollowMeTalkerThread extends Thread {
 
 	@Override
 	public void run() {
-		
-		/** FOLLOWING PHASE */
+		/* FOLLOWING PHASE */
 		gui.logVerboseUAV(FollowMeText.MASTER_WAIT_ALTITUDE);
 		while (!protocolStarted) {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);

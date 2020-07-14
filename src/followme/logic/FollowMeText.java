@@ -26,6 +26,7 @@ public class FollowMeText {
 	public static final String SIMULATED_DATA = "Simulated flight data:";
 	public static final String SIMULATED_DATA_DIALOG_TITLE = "Select the .txt file with the real RC values";
 	public static final String DATA_TXT_FILE = "Data txt file";
+	public static final String DATA_TXT_EXTENSION = "txt";
 	public static final String SIMULATED_DATA_ERROR = "Invalid file contents.";
 	public static final String MASTER_UAV_SPEED = "Master UAV speed:";
 	public static final String MASTER_UAV_SPEED_ERROR = "The master UAV speed must be a positive integer";
@@ -43,10 +44,7 @@ public class FollowMeText {
 	
 	// General messages
 	public static final String ENABLING = "Enabling " + PROTOCOL_TEXT + " protocol...";
-	
-	// Progress messages
-	//   from master
-	public static final String MASTER_START_LISTENER = "Master listener detecting slaves.";
+
 	public static final String MASTER_DETECTED_UAVS = "Number of UAVs detected by master:";
 	public static final String MASTER_WAIT_ALTITUDE = "Master talker waiting to reach altitude before sending location.";
 	public static final String MASTER_SEND_LAND = "Master talker sending land order.";
@@ -55,7 +53,6 @@ public class FollowMeText {
 	public static final String SLAVE_WAIT_ORDER_LISTENER = "Slave listener waiting move to or land order.";
 	//   from master or slave
 	public static final String LISTENER_WAITING = "Listener waiting.";
-	public static final String TALKER_WAITING = "Talker waiting.";
 	public static final String LISTENER_FINISHED = "Listener finished.";
 	public static final String TALKER_FINISHED = "Talker finished.";
 	

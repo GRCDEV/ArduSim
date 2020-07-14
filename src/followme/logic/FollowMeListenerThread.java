@@ -1,29 +1,20 @@
 package followme.logic;
 
-import static followme.pojo.State.*;
-
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.esotericsoftware.kryo.io.Input;
 import api.API;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3D;
-import es.upv.grc.mapper.Location3DGeo;
-import es.upv.grc.mapper.LocationNotReadyException;
+import com.esotericsoftware.kryo.io.Input;
+import es.upv.grc.mapper.*;
 import followme.pojo.Message;
-import main.api.ArduSim;
-import main.api.Copter;
-import main.api.GUI;
-import main.api.MoveToListener;
-import main.api.SafeTakeOffHelper;
-import main.api.MoveTo;
+import main.api.*;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.MasterSlaveHelper;
 import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static followme.pojo.State.*;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
 
@@ -86,11 +77,7 @@ public class FollowMeListenerThread extends Thread {
 						gui.log(FollowMeText.MASTER_DETECTED_UAVS + numUAVs);
 					}
 					// We decide to continue when the setup button is pressed
-					if (ardusim.isSetupInProgress() || ardusim.isSetupFinished()) {
-						return true;
-					}
-					
-					return false;
+					return numUAVs == API.getArduSim().getNumUAVs() - 1;
 				}
 			});
 		} else {
@@ -98,7 +85,7 @@ public class FollowMeListenerThread extends Thread {
 			msHelper.DiscoverMaster();
 		}
 		
-		/** TAKE OFF PHASE */
+		/* TAKE OFF PHASE */
 		currentState.set(TAKE_OFF);
 		gui.logUAV(FollowMeText.SETUP);
 		gui.updateProtocolState(FollowMeText.SETUP);
@@ -111,7 +98,6 @@ public class FollowMeListenerThread extends Thread {
 			} else {
 				formationYaw = FollowMeParam.masterInitialYaw;
 			}
-			
 			takeOff = takeOffHelper.getMasterContext(UAVsDetected,
 					API.getFlightFormationTools().getFlyingFormation(UAVsDetected.size() + 1),
 					formationYaw, FollowMeParam.slavesStartingAltitude, true, true);
@@ -130,7 +116,7 @@ public class FollowMeListenerThread extends Thread {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
-		/** SETUP FINISHED PHASE */
+		/* SETUP FINISHED PHASE */
 		gui.logUAV(FollowMeText.SETUP_FINISHED);
 		gui.updateProtocolState(FollowMeText.SETUP_FINISHED);
 		gui.logVerboseUAV(FollowMeText.LISTENER_WAITING);
@@ -142,7 +128,7 @@ public class FollowMeListenerThread extends Thread {
 			}
 		}
 		
-		/** FOLLOWING PHASE */
+		/* FOLLOWING PHASE */
 		gui.logUAV(FollowMeText.FOLLOWING);
 		gui.updateProtocolState(FollowMeText.FOLLOWING);
 		long waitingTime;

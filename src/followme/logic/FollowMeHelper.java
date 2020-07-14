@@ -7,14 +7,25 @@ import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
-import followme.gui.FollowMeConfigDialog;
+import followme.gui.FollowMeConfigDialogApp;
+import followme.gui.FollowmeSimProperties;
+import javafx.application.Platform;
+import javafx.stage.Stage;
+import main.ArduSimTools;
+import main.Text;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.formations.FlightFormation;
+import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 import org.javatuples.Pair;
 
 import javax.swing.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static followme.pojo.State.SETUP_FINISHED;
@@ -34,18 +45,30 @@ public class FollowMeHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public JDialog openConfigurationDialog() {
-		return new FollowMeConfigDialog();
-	}
+	public JDialog openConfigurationDialog() { return null;}
 
 	@Override
 	public void openConfigurationDialogFX() {
-
+		Platform.runLater(()->new FollowMeConfigDialogApp().start(new Stage()));
 	}
 
 	@Override
 	public void configurationCLI() {
-
+		FollowmeSimProperties properties = new FollowmeSimProperties();
+		ResourceBundle resources;
+		try {
+			FileInputStream fis = new FileInputStream(SimParam.protocolParamFile);
+			resources = new PropertyResourceBundle(fis);
+			fis.close();
+			Properties p = new Properties();
+			for(String key: resources.keySet()){
+				p.setProperty(key,resources.getString(key));
+			}
+			properties.storeParameters(p,resources);
+		} catch (IOException e) {
+			ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.PROTOCOL_PARAMETERS_FILE_NOT_FOUND );
+			System.exit(0);
+		}
 	}
 
 	@Override
@@ -100,20 +123,14 @@ public class FollowMeHelper extends ProtocolHelper {
 		if (copter.getMasterSlaveHelper().isMaster()) {
 			String version = UAVParam.arducopterVersion.get();
 			if(version.contains("3.5")) {
-				if (!copter.setParameter(CopterParam.LOITER_SPEED_357,FollowMeParam.masterSpeed)) {
-					return false;
-				}
+				return copter.setParameter(CopterParam.LOITER_SPEED_357, FollowMeParam.masterSpeed);
 			}else if(version.contains("3.6")){
-				if (!copter.setParameter(CopterParam.LOITER_SPEED_36X, FollowMeParam.masterSpeed)) {	
-					return false;
-				}
+				return copter.setParameter(CopterParam.LOITER_SPEED_36X, FollowMeParam.masterSpeed);
 			}else {
-				System.out.println("this version is not checked yet,"
+				API.getGUI(0).log("this version is not checked yet,"
 						+ " if ardusim does not run as expected please check"
 						+ " src:followme:followmeHelper.java:sendInitialConfiguration");
-				if (!copter.setParameter(CopterParam.LOITER_SPEED_36X, FollowMeParam.masterSpeed)) {	
-					return false;
-				}
+				return copter.setParameter(CopterParam.LOITER_SPEED_36X, FollowMeParam.masterSpeed);
 			}
 		}
 		return true;
@@ -148,7 +165,6 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void startExperimentActionPerformed() {
-		
 		// The master UAV will always be in position 0 in a real UAV, so we also set it in the position 0 for simulations.
 		if (API.getCopter(0).getMasterSlaveHelper().isMaster()) {
 			new RemoteThread(0).start();
