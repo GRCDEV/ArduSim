@@ -93,13 +93,13 @@ public class ArduSimTools {
 	
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
-	public static boolean parseArgs(String[] args) {
+	public static void parseArgs(String[] args) {
 		String commandLine = "Command line:\n    java -jar ArduSim.jar <option>\nChoose option:\n" +
 				"    multicopter\n    simulator-gui\n    simulator-cli\n    pccompanion";
 		if (args.length != 1) {
 			System.out.println(commandLine);
 			System.out.flush();
-			return false;
+			System.exit(1);
 		}
 		if (args[0].equalsIgnoreCase("multicopter")) {
 			Param.role = ArduSim.MULTICOPTER;
@@ -112,9 +112,8 @@ public class ArduSimTools {
 		}else{
 			System.out.println(commandLine);
 			System.out.flush();
-			return false;
+			System.exit(1);
 		}
-		return true;
 	}
 	
 	/** Parses the ini file located beside the ArduSim executable file (Project folder in simulations). */
@@ -1300,12 +1299,16 @@ public class ArduSimTools {
 	
 	/** Loads the implemented protocols and retrieves the name of each one.
 	 * <p>Protocol names are case-sensitive. Returns null if no valid implementations were found.</p> */
-	public static String[] loadProtocols() {
-		// First store the identifier of None protocol
-		// TODO check why an error is given, I suppose the missionHelper was from the protocol mission
-		//MissionHelper noneInstance = new MissionHelper();
-		//noneInstance.setProtocol();
-		//ArduSimTools.noneProtocolName = noneInstance.protocolString;
+	public static void loadAndStoreProtocols() {
+		String[] existingProtocols = loadProtocols();
+		if (existingProtocols == null) {
+			ArduSimTools.warnGlobal(Text.VALIDATION_WARNING, Text.PROTOCOL_DUPLICATED);
+			System.exit(1);
+		}
+		ArduSimTools.ProtocolNames = existingProtocols;
+	}
+
+	private static String[] loadProtocols(){
 		ArduSimTools.noneProtocolName = "Mission";
 		String[] names = null;
 		Class<?>[] validImplementations = ArduSimTools.getAnyProtocolImplementations();

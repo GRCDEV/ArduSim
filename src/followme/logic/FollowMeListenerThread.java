@@ -4,12 +4,14 @@ import api.API;
 import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.*;
 import followme.pojo.Message;
+import main.Param;
 import main.api.*;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.MasterSlaveHelper;
 import main.api.masterslavepattern.discovery.DiscoveryProgressListener;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
+import main.sim.logic.SimParam;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -84,7 +86,11 @@ public class FollowMeListenerThread extends Thread {
 			gui.logVerboseUAV(FollowMeText.LISTENER_WAITING);
 			msHelper.DiscoverMaster();
 		}
-		
+
+		while(Param.simStatus != Param.SimulatorState.SETUP_IN_PROGRESS){
+			ardusim.sleep(SimParam.SHORT_WAITING_TIME);
+		}
+
 		/* TAKE OFF PHASE */
 		currentState.set(TAKE_OFF);
 		gui.logUAV(FollowMeText.SETUP);
@@ -104,6 +110,7 @@ public class FollowMeListenerThread extends Thread {
 		} else {
 			takeOff = takeOffHelper.getSlaveContext(false);
 		}
+		gui.logUAV("ready to takeOff");
 		// 2. Take off all the UAVs
 		takeOffHelper.start(takeOff, new SafeTakeOffListener() {
 			

@@ -310,7 +310,8 @@ public class PCCompanionGUI {
 		Param.simStatus = SimulatorState.STARTING_UAVS;
 		(new PCCompanionTalker()).start();
 	}
-	
+
+
 	/** Inserts a UAV in the table.
 	 * <p>Returns the row number, starting in 0. */
 	public int insertRow(long id, String IP, String status) {
