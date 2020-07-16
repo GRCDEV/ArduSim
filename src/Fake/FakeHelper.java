@@ -2,17 +2,13 @@ package Fake;
 
 import api.API;
 import api.ProtocolHelper;
-import api.pojo.FlightMode;
 import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location3DGeo;
-import main.ArduSimTools;
 import main.Param;
-import main.api.Copter;
-import main.api.TakeOff;
-import main.api.TakeOffListener;
 import org.javatuples.Pair;
 
 import javax.swing.*;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class FakeHelper extends ProtocolHelper{
 
@@ -71,48 +67,35 @@ public class FakeHelper extends ProtocolHelper{
 
 	@Override
 	public void setupActionPerformed() {
-		ArduSimTools.logGlobal("starting setup");
-		Copter copter = API.getCopter(0);
-		TakeOff takeOff = copter.takeOff(5, new TakeOffListener() {
-			
-			@Override
-			public void onFailure() {
-				
-			}
-			
-			@Override
-			public void onCompleteActionPerformed() {
-				// Waiting with Thread.join()
-			}
-		});
-		takeOff.start();
 		try {
-			takeOff.join();
-		} catch (InterruptedException ignored) {}
-		ArduSimTools.logGlobal("Setup finished");
+			FileWriter writer = new FileWriter("setup.txt");
+			writer.write("starting setup");
+			for(int i=0;i<10;i++){
+				writer.write(("doing the setup" + i));
+				API.getArduSim().sleep(1000);
+			}
+			writer.write("setup finished");
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void startExperimentActionPerformed() {
-		ArduSimTools.logGlobal("start experiment");
-		double diff = 2;
-		Copter copter = API.getCopter(0);
-		copter.setFlightMode(FlightMode.GUIDED);
-		double alt = copter.getAltitude();
-		Location3DGeo loc = new Location3DGeo(copter.getLocationGeo(), alt + diff);
-		ArduSimTools.logGlobal("UAV changing altitude with " + diff + " meters");
-		copter.moveTo(loc);
-		boolean reached = false;
-		do {
-			if(Math.abs(copter.getAltitude() - (alt + diff)) < 1) {
-				reached = true;
+		try {
+			FileWriter writer = new FileWriter("experiment.txt");
+			writer.write("starting experiment");
+			for(int i=0;i<10;i++){
+				writer.write(("doing the exeriment" + i));
+				API.getArduSim().sleep(1000);
 			}
-			API.getArduSim().sleep(100);
-		}while(!reached);
-		ArduSimTools.logGlobal("New altitude reached");
-		copter.setFlightMode(FlightMode.LAND);
-		ArduSimTools.logGlobal("Landing UAV");
-		copter.land();
+			writer.write("experiment finished");
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Param.simStatus = Param.SimulatorState.TEST_FINISHED;
 	}
 
 	@Override

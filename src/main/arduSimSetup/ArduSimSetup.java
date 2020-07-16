@@ -137,7 +137,6 @@ public class ArduSimSetup {
         closeVirtualCommunications();
         gatherResults();
         shutdown();
-        Param.simStatus = Param.SimulatorState.SHUTTING_DOWN;
     }
 
     protected void setUAVInSafeMode(){}
