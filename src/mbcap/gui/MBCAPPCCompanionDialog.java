@@ -40,7 +40,7 @@ public class MBCAPPCCompanionDialog extends JDialog {
 	public static volatile MBCAPPCCompanionDialog mbcap = null;
 
 	private StatusPacket[] connected;
-	private List<StatusPacket> adding = new ArrayList<>();
+	private final List<StatusPacket> adding = new ArrayList<>();
 	private volatile StatusPacket[] shown = null;
 
 	private JTable table;
@@ -58,7 +58,7 @@ public class MBCAPPCCompanionDialog extends JDialog {
 		getContentPane().setLayout(new BorderLayout());
 		{
 			tableModel = new DefaultTableModel(0, 0);
-			String header[] = new String[] { MBCAPText.ID, MBCAPText.EVENT, MBCAPText.FLIGHT_MODE,
+			String[] header = new String[] { MBCAPText.ID, MBCAPText.EVENT, MBCAPText.FLIGHT_MODE,
 					MBCAPText.ID_AVOIDING, MBCAPText.SPEED,
 					MBCAPText.X, MBCAPText.Y, MBCAPText.Z };
 			tableModel.setColumnIdentifiers(header);

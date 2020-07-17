@@ -1,18 +1,17 @@
 package shakeup.logic.state;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
+import api.API;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-
-import api.API;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.communications.CommLink;
 import shakeup.pojo.Param;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class State {
 	
@@ -74,8 +73,8 @@ public abstract class State {
 		executeContinously();
 		State currentState = transit(transit);
 		return currentState;	
-	};
-	
+	}
+
 	public abstract void inspect(Input message);
 	public abstract void executeOnce();
 	public abstract void executeContinously();
@@ -85,7 +84,7 @@ public abstract class State {
 	public byte[][] createMessage(){
 		if(isMaster) {
 			// The master sends in which state he is
-			byte message[][] = new byte[1][];
+			byte[][] message = new byte[1][];
 			output.reset();
 			output.writeShort(stateNr);
 			message[0] = Arrays.copyOf(outBuffer, output.position());
@@ -99,13 +98,13 @@ public abstract class State {
 				output.writeShort(stateNr);
 				output.writeLong(selfId);
 				output.flush();
-				byte message[][] = new byte[1][];
+				byte[][] message = new byte[1][];
 				message[0] = Arrays.copyOf(outBuffer, output.position());
 				return message;
 			}
 		}
 		return null;
-	};
-	
+	}
+
 	public int getStateNr() {return stateNr;}
 }

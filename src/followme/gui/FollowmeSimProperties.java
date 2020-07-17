@@ -181,7 +181,6 @@ public class FollowmeSimProperties {
         if(landingMinDistance <=0){return false;}
         if(masterUAVSpeed <=0){return false;}
         if(masterLocationAdvisePeriod <=0){return false;}
-        if(!simulatedFlightFile.exists()){return false;}
-        return true;
+        return simulatedFlightFile.exists();
     }
 }

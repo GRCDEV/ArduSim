@@ -8,7 +8,7 @@ import shakeup.pojo.Param;
 
 public class MoveZState extends State{
 
-	private Location3DUTM targetLocation;
+	private final Location3DUTM targetLocation;
 	
 	public MoveZState(int selfId, boolean isMaster, Location3DUTM targetLocation, int numUAVs) {
 		super(selfId, isMaster);

@@ -7,10 +7,10 @@ import shakeup.pojo.Param;
 
 public class ShakeupTalkerThread extends Thread{
 	
-	private ArduSim ardusim;
-	private CommLink link;
+	private final ArduSim ardusim;
+	private final CommLink link;
 	private volatile shakeup.logic.state.State currentState;
-	private int selfId;
+	private final int selfId;
 	
 	public ShakeupTalkerThread(int numUAV) {
 		this.ardusim = API.getArduSim();

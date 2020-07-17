@@ -15,7 +15,7 @@ public enum MBCAPState {
 	
 	private final short id;
 	private final String name;
-	private MBCAPState(short id, String name) {
+	MBCAPState(short id, String name) {
 		this.id = id;
 		this.name = name;
 	}

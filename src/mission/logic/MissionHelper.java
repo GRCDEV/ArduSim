@@ -16,7 +16,7 @@ import javax.swing.*;
 
 public class MissionHelper extends ProtocolHelper {
 	
-	private MBCAPHelper copy;
+	private final MBCAPHelper copy;
 	
 	public MissionHelper() {
 		this.copy = new MBCAPHelper();

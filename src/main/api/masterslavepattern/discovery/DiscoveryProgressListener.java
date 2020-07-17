@@ -10,6 +10,6 @@ public interface DiscoveryProgressListener {
 	 * @param numUAVs Number of UAVs detected until now.
 	 * @return You must return true to finish the UAV discovery process.
 	 */
-	abstract boolean onProgressCheckActionPerformed(int numUAVs);
+    boolean onProgressCheckActionPerformed(int numUAVs);
 	
 }

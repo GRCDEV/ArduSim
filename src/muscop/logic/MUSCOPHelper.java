@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MUSCOPHelper extends ProtocolHelper {
 
-	private List<MUSCOPListenerThread> threads = new ArrayList<>();
+	private final List<MUSCOPListenerThread> threads = new ArrayList<>();
 
 	@Override
 	public void setProtocol() {

@@ -16,8 +16,8 @@ public class ListeningServer implements Runnable{
 	
 	private volatile boolean running = false;
 	private visionParam.status status = visionParam.status.LOITER;
-	private uavNavigator navi;
-	private GUI gui;
+	private final uavNavigator navi;
+	private final GUI gui;
 	
 	/**
 	 * creates a listener to listen to the python messages at port 5764.

@@ -19,9 +19,9 @@ import shakeup.pojo.TargetFormation;
 
 public class DataState extends State{
 
-	private ArrayList<Quartet<Long, Double, Double, Double>> messageInfo;
+	private final ArrayList<Quartet<Long, Double, Double, Double>> messageInfo;
 	private Location3DUTM targetLocation;
-	private Map<Long,Location2DUTM> UAVLocations2D;
+	private final Map<Long,Location2DUTM> UAVLocations2D;
 	
 	public DataState(int selfId, boolean isMaster, Map<Long, Location2DUTM> UAVsDetected) {
 		super(selfId, isMaster);
@@ -114,7 +114,7 @@ public class DataState extends State{
 	public byte[][] createMessage(){
 		if(isMaster) {
 			// The master sends in which state he is and gives the target location
-			byte message[][] = new byte[numUAVs][];
+			byte[][] message = new byte[numUAVs][];
 			for(int i = 0 ;i< messageInfo.size();i++) {
 				Quartet<Long, Double, Double, Double> q = messageInfo.get(i);
 				output.reset();
@@ -134,7 +134,7 @@ public class DataState extends State{
 				output.writeShort(stateNr);
 				output.writeLong(selfId);
 				output.flush();
-				byte message[][] = new byte[1][];
+				byte[][] message = new byte[1][];
 				message[0] = Arrays.copyOf(outBuffer, output.position());
 				return message;
 			}

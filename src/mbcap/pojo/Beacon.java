@@ -1,8 +1,8 @@
 package mbcap.pojo;
 
-import java.util.List;
-
 import es.upv.grc.mapper.Location3DUTM;
+
+import java.util.List;
 
 /** This class generates and updates the beacons sent by MBCAP protocol to detect risks of collision.
  * <p>It also allows to convert the object to message and viceversa.</p>
@@ -52,11 +52,7 @@ public class Beacon implements Comparable<Beacon> {
 		if (obj == null || !(obj instanceof Beacon)) {
 			return false;
 		}
-		if (this.uavId == ((Beacon) obj).uavId) {
-			return true;
-		} else {
-			return false;
-		}
+		return this.uavId == ((Beacon) obj).uavId;
 	}
 
 	@Override

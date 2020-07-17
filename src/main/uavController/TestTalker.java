@@ -58,6 +58,7 @@ public class TestTalker extends Thread {
 				finish = false;
 			} else if (Param.simStatus == SimulatorState.TEST_IN_PROGRESS) {
 				// Inform that the experiment has started for some time before stopping the thread
+				// stop the tread after this because you cannot be sure that the UAV has finished the protocol or the communication is lost
 				finish = PCCompanionParam.lastStartCommandTime != null
 						&& (System.currentTimeMillis() - PCCompanionParam.lastStartCommandTime.get() > PCCompanionParam.MAX_TIME_SINCE_LAST_START_COMMAND);
 			} else {

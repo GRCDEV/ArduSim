@@ -1932,7 +1932,7 @@ public class ArduSimTools {
 			ArduSimTools.warnGlobal(Text.STORE_WARNING, Text.STORING_NOT_FINISHED);
 			return;
 		}
-		
+
 		// 1. Ask for confirmation if the experiment has not started or finished
 		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			boolean reallyClose = true;
@@ -1952,7 +1952,6 @@ public class ArduSimTools {
 			}
 			if (!reallyClose) return;
 		}
-
 		// 2. Change the status and close SITL
 		ArduSimTools.logGlobal(Text.CLOSING);
 		Param.simStatus = SimulatorState.SHUTTING_DOWN;
@@ -1965,29 +1964,29 @@ public class ArduSimTools {
 		if(Param.role == ArduSim.SIMULATOR_CLI || Param.role == ArduSim.SIMULATOR_GUI){
 			ArduSimTools.closeSITL();
 		}
-		
 		// 3. Close the application
 		ArduSimTools.logGlobal(Text.EXITING);
 		try {
 			FileDescriptor.out.sync();
 		} catch (SyncFailedException ignored) {}
 		API.getArduSim().sleep(SimParam.LONG_WAITING_TIME);
+
 		if (Param.role == ArduSim.MULTICOPTER) {
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
 				try {
-			    	Runtime.getRuntime().exec("shutdown.exe -s -t 0");
-			    } catch (IOException ignored) {}
+					Runtime.getRuntime().exec("shutdown.exe -s -t 0");
+				} catch (IOException ignored) {}
 			} else if (Param.runningOperatingSystem == Param.OS_LINUX || Param.runningOperatingSystem == Param.OS_MAC) {
 				try {
-			    	Runtime.getRuntime().exec("sudo shutdown -h now");
-			    } catch (IOException ignored) {}
+					Runtime.getRuntime().exec("sudo shutdown -h now");
+				} catch (IOException ignored) {}
 			} else {
 				ArduSimTools.logGlobal(Text.SHUTDOWN_ERROR);
 			}
 		} else if (Param.role == ArduSim.SIMULATOR_GUI) {
 			MainWindow.window.mainWindowFrame.dispose();
 		}
-	    
+
 		System.exit(0);
 	}
 	

@@ -23,7 +23,7 @@ public class MissionConfigDialog extends JDialog {
 
   private static final long serialVersionUID = 1L;
   private final JPanel contentPanel = new JPanel();
-  private MissionConfigDialogPanel panel;
+  private final MissionConfigDialogPanel panel;
 
   public MissionConfigDialog() {
     getContentPane().setLayout(new BorderLayout());

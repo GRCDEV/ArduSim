@@ -112,8 +112,8 @@ public class MuscopSimProperties {
         if(groundMinDistance<0){return false;}
         if(flyingMinDistance<0){return false;}
         if(landingMinDistance<0){return false;}
-        if(!missionFile.exists()){return false;}
-        return true;}
+        return missionFile.exists();
+    }
 
     private void setSimulationParameters(){
         File[] fileArray = {missionFile};

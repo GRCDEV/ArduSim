@@ -20,8 +20,8 @@ public class ChemotaxisThread extends Thread {
 	
 	int sizeX, sizeY;
 	
-	private Copter copter;
-	private GUI gui;
+	private final Copter copter;
+	private final GUI gui;
 	
 	public ChemotaxisThread() {
 		this.copter = API.getCopter(0);

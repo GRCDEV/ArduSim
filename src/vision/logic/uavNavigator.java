@@ -19,19 +19,19 @@ import vision.logic.visionParam.status;
 public class uavNavigator extends Thread {
 	private static uavNavigator instance; 
 	
-	private int numUAV;
+	private final int numUAV;
 //	private long id;
-	private ArduSim ardusim;
+	private final ArduSim ardusim;
 	private ClientSocket commandSocket;
-	private Copter copter;
-	private GUI gui;
+	private final Copter copter;
+	private final GUI gui;
 
 	private visionParam.status droneStatus = visionParam.status.LOITER;
 	
 	ListeningServer listeningServer;
 	private Thread listeningThread;
 	
-	private ReentrantLock lock = new ReentrantLock();
+	private final ReentrantLock lock = new ReentrantLock();
 	private volatile Boolean running;
 	
 	private long timeOutTime = java.lang.System.currentTimeMillis();
@@ -40,7 +40,7 @@ public class uavNavigator extends Thread {
 	private float dify = 0.0f;
 	private float difAlfa = 0.0f;
 	
-	private static File logFile = new File("experimentLog.csv");
+	private static final File logFile = new File("experimentLog.csv");
 	private static FileWriter logWriter = null;
 	
 	private double recoverTimer = -1;
@@ -195,8 +195,8 @@ public class uavNavigator extends Thread {
 		// wait until the uav is on the ground to stop the camera
 		while (copter.getFlightMode() != FlightMode.LAND) {
 			ardusim.sleep(100);
-		};
-		commandSocket.sendMessage("stop_camera");
+		}
+        commandSocket.sendMessage("stop_camera");
 		commandSocket.sendMessage("exit");
 	}
 	

@@ -7,6 +7,6 @@ public interface SafeTakeOffListener {
 	/**
 	 * Define here which action perform when the take off of this UAV finishes. For example, you can modify a shared variable to break a loop used to wait.
 	 */
-	abstract void onCompleteActionPerformed();
+    void onCompleteActionPerformed();
 	
 }

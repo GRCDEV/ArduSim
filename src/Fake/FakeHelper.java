@@ -7,8 +7,6 @@ import main.Param;
 import org.javatuples.Pair;
 
 import javax.swing.*;
-import java.io.FileWriter;
-import java.io.IOException;
 
 public class FakeHelper extends ProtocolHelper{
 
@@ -67,34 +65,22 @@ public class FakeHelper extends ProtocolHelper{
 
 	@Override
 	public void setupActionPerformed() {
-		try {
-			FileWriter writer = new FileWriter("setup.txt");
-			writer.write("starting setup");
-			for(int i=0;i<10;i++){
-				writer.write(("doing the setup" + i));
-				API.getArduSim().sleep(1000);
-			}
-			writer.write("setup finished");
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		System.out.println("starting setup");
+		for(int i=0;i<10;i++){
+			System.out.println("doing the setup" + i);
+			API.getArduSim().sleep(1000);
 		}
+		System.out.println("setup finished");
 	}
 
 	@Override
 	public void startExperimentActionPerformed() {
-		try {
-			FileWriter writer = new FileWriter("experiment.txt");
-			writer.write("starting experiment");
+		System.out.println("starting experiment");
 			for(int i=0;i<10;i++){
-				writer.write(("doing the exeriment" + i));
+				System.out.println("doing the exeriment" + i);
 				API.getArduSim().sleep(1000);
 			}
-			writer.write("experiment finished");
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		System.out.println("experiment finished");
 		Param.simStatus = Param.SimulatorState.TEST_FINISHED;
 	}
 
