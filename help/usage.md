@@ -12,9 +12,14 @@ We already explained that ArduSim can be used in two ways. First, it can be used
 
 ## 1 ArduSim on simulation
 
-A simulation can be performed directly in Eclipse or from a *.jar* executable file. You need to run ArduSim with the parameter *simulator* to avoid it to run as a PC Companion or in a real multicopter. If you run ArduSim from Eclipse IDE you will need to set the parameter in the "run configuration".
+A simulation can be performed directly in a IDE or from a *.jar* executable file. You need to run ArduSim with the parameter *simulator-gui* or *simulator-cli*. If you run ArduSim from an IDE you will need to set the parameter in the "run configuration".
 
-The file *ardusim.ini* is used to load some relevant parameters that can be modified later in the GUI.
+The file *ardusim.ini* is used to load some relevant parameters both in simulation as in real UAVs. The default parameters for the *simulator-gui* are set in the *SimulationParam.properties* file.
+While using the GUI version users can change several parameters, in the CLI version this is not possible and the *SimulationParam.properties* file should be updated (we recommend doing this via de GUI, using the save-button, to avoid any errors).
+Furthermore, several protocols have an additional configuration dialog. Those parameters are also read from a file. This file is simular to *SimulationParm.properties* but is unique for each protocol for instance *muscop.properties*.
+The developer of a protocol will have to create the GUI and CLI configuration dialog specific to his/her protocol and with it the *.properties* file. The *.properties* file is processed by a protocol specific class (we recommend the naming convention *protocolNameSimProperties.java*)
+IMPORTANT NOTE: in the *protocolNameSimProperties.java* you will likely set more parameters then a user can change in the GUI, if this is the case, make sure to give them a default value.
+If you forget to do this, and you run a real experiment the experiment will fail (or worst the UAV will crash) because those parameters have a null value! This is simple because all the *.properties* files are not read while doing real experiments only the *ardusim.ini* file is used in real experiments.
 
 We suggest to run ArduSim as Administrator (on Windows, and requires Imdisk Virtual Disk Driver) or sudoer (Linux or MacOS). In this mode, temporary files are stored in a virtual hard drive, which speeds up ArduSim when using a slow HHDD, as it could limit the number of virtual multicopters that can be run simultaneously.
 
@@ -46,7 +51,7 @@ This dialog allows to introduce several simulation parameters:
 * General parameters:
 
     * *Enable verbose logging*. The user may use this option to show additional information in the main window log and console only under certain circumstances. For example, using this option ArduSim provides additional information for debugging purposes.
-    * *Enable verbose storage*. Similar to the previous option, the user may store additional information related to the protocol in files only in some cases.
+    * *Store Data*. Stores that data (in CLI-mode) and ,in GUI-mode, it gives the user the option to save the data.
 
 * UAV synchronization protocol. This list is automatically populated with the protocols implemented in ArduSim. The user must select the protocol to be tested in simulation.
 
@@ -137,7 +142,8 @@ ArduSim can be executed with the following command line:
 
 , with the argument:
 
-* *simulator*. ArduSim runs as a multi-UAV simulator in a computer.
+* *simulator-gui*. ArduSim runs as a multi-UAV simulator in a computer with a graphical interface.
+* *simulator-cli*. ArduSim runs as a multi-UAV simulator in a computer without a graphical interface.
 * *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
 * *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution of a group of real multicopters, preferably in a laptop for mobility.
 
