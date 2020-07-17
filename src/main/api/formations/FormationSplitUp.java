@@ -3,7 +3,7 @@ package main.api.formations;
 import api.API;
 import main.api.ValidationTools;
 import main.api.formations.helpers.FormationPoint;
-import muscop.logic.MuscopSimProperties;
+import muscop.gui.MuscopSimProperties;
 
 public class FormationSplitUp extends FlightFormation{
 

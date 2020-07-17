@@ -174,8 +174,8 @@ public class SimProperties {
     private void setDefaultParameters(){
         // set default parameters intern so that a default.properties can be created
         arducopterFile = new File(API.getFileTools().getCurrentFolder(),"arducopter");
-        speedFile = new File(API.getFileTools().getCurrentFolder(), "speed.csv");
-        protocolParameterFile = new File(API.getFileTools().getCurrentFolder(),"protocolParameter.properties");
+        speedFile = new File(API.getFileTools().getSourceFolder(), "/resources/speed.csv");
+        protocolParameterFile = new File(API.getFileTools().getSourceFolder(),"/resources/protocolParameter.properties");
         startingAltitude = 0.0;
         numUAVs = 5;
         protocol = "shakeup";

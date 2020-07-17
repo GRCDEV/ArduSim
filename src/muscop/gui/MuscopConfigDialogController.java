@@ -16,7 +16,6 @@ import main.Param;
 import main.Text;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
-import muscop.logic.MuscopSimProperties;
 
 import java.io.File;
 import java.lang.reflect.Field;

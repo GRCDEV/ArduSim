@@ -9,6 +9,7 @@ import main.api.*;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.MasterSlaveHelper;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
+import muscop.gui.MuscopSimProperties;
 import muscop.pojo.Message;
 
 import java.util.*;

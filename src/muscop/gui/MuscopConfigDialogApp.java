@@ -7,7 +7,6 @@ import javafx.stage.Stage;
 import main.ArduSimTools;
 import main.Text;
 import main.sim.logic.SimParam;
-import muscop.logic.MuscopSimProperties;
 
 import java.io.FileInputStream;
 import java.io.IOException;

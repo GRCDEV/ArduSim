@@ -16,6 +16,7 @@ import main.api.MissionHelper;
 import main.api.formations.FlightFormation;
 import main.sim.logic.SimParam;
 import muscop.gui.MuscopConfigDialogApp;
+import muscop.gui.MuscopSimProperties;
 import org.javatuples.Pair;
 
 import javax.swing.*;

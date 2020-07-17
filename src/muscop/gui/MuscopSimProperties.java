@@ -1,4 +1,4 @@
-package muscop.logic;
+package muscop.gui;
 
 import api.API;
 import api.pojo.location.Waypoint;
@@ -20,25 +20,25 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MuscopSimProperties {
 
     // GUI parameters
-    public static File missionFile;
-    public static FlightFormation.Formation groundFormation;
-    public static int numberOfClusters;
-    public static double groundMinDistance;
-    public static TakeOffAlgorithm takeOffStrategy;
-    public static FlightFormation.Formation flyingFormation;
-    public static double flyingMinDistance;
-    public static double landingMinDistance;
+    public File missionFile;
+    public FlightFormation.Formation groundFormation;
+    public static int numberOfClusters = 3;
+    public double groundMinDistance;
+    public TakeOffAlgorithm takeOffStrategy;
+    public FlightFormation.Formation flyingFormation;
+    public double flyingMinDistance;
+    public double landingMinDistance;
 
     // Timeouts
-    public static int RECEIVING_TIMEOUT;			// (ms) The port is unlocked after this time when receiving messages
-    public static long SENDING_TIMEOUT;			// (ms) Time between packets sent
-    public static long LAND_CHECK_TIMEOUT;		// (ms) Between checks if the UAV has landed
-    public static long STATE_CHANGE_TIMEOUT; 	// (ms) Waiting time in sending messages or reading threads
-    public static long MISSION_TIMEOUT;		// (ms) Timeout to wait after the mission is received and the master UAV changes its state
-    public static long TTL;					// (ms) Time to life for a UAV.
-    public static int RECEIVETIMEOUT;			// (ms) Timeout for link.receiveMessage()
+    public static int RECEIVING_TIMEOUT = 50;        // (ms) The port is unlocked after this time when receiving messages
+    public static long SENDING_TIMEOUT = 200; 		// (ms) Time between packets sent
+    public static long LAND_CHECK_TIMEOUT = 250;  	// (ms) Between checks if the UAV has landed
+    public static long STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
+    public static long MISSION_TIMEOUT = 2000; 		// (ms) Timeout to wait after the mission is received and the master UAV changes its state
+    public static long TTL=5000; 					// (ms) Time to life for a UAV.
+    public static int RECEIVETIMEOUT = 200;			// (ms) Timeout for link.receiveMessage()
     // Maximum number of waypoints that fit in a datagram.
-    public static int MAX_WAYPOINTS;	// main.api.CommLink.DATAGRAM_MAX_LENGTH - 2 - 2 - 3x8xn >= 0
+    public static int MAX_WAYPOINTS = 61;	// main.api.CommLink.DATAGRAM_MAX_LENGTH - 2 - 2 - 3x8xn >= 0
 
     // (rad) Master UAV yaw or heading (first mission segment orientation in simulation).
     public static volatile double formationYaw;

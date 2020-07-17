@@ -8,6 +8,7 @@ import main.api.ArduSim;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.communications.CommLink;
+import muscop.gui.MuscopSimProperties;
 import muscop.pojo.Message;
 
 import java.util.Arrays;

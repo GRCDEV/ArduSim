@@ -32,6 +32,14 @@ public class FileTools {
 			return null;
 		}
 	}
+
+	/**
+	 * @return the folder ardusim/src
+	 */
+	public File getSourceFolder(){
+		File workingDirectory = getCurrentFolder();
+		return new File(workingDirectory.getParent(),"/src");
+	}
 	
 	/**
 	 * Get a file extension.
