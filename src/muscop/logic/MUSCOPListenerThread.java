@@ -396,7 +396,7 @@ public class MUSCOPListenerThread extends Thread {
 				}
 			}).start();
 
-			while (moveSemaphore.get() == currentWP) {	
+			while (moveSemaphore.get() == currentWP) {
 				// This loop is executed as long as the UAVs are moving towards a waypoint
 				// All the UAVs are broadcasting the messages with in interval of 200 ms
 				// Design decision is to use this message to check if the UAVs are still alive and not send additional messages like heartbeat 

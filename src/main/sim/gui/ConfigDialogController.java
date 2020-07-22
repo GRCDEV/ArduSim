@@ -202,14 +202,14 @@ public class ConfigDialogController {
 
         // disable textfields if boolean is false
         batteryCapacity.disableProperty().bind(restrictBattery.selectedProperty().not());
-        // TODO set this binding correctly
-        //fixedRangeDistance.disableProperty().bind(communicationModel.valueProperty().isNotEqualTo(WirelessModel.FIXED_RANGE));
+        fixedRangeDistance.disableProperty().bind(communicationModel.valueProperty().isNotEqualTo(WirelessModel.FIXED_RANGE.getName()));
         checkPeriod.disableProperty().bind(collisionDetection.selectedProperty().not());
         distanceThreshold.disableProperty().bind(collisionDetection.selectedProperty().not());
         altitudeThreshold.disableProperty().bind(collisionDetection.selectedProperty().not());
 
         windDirection.disableProperty().bind(windEnabled.selectedProperty().not());
         windSpeed.disableProperty().bind(windEnabled.selectedProperty().not());
+
 
     }
 

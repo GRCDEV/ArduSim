@@ -1,14 +1,14 @@
 package main;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import api.API;
 import api.pojo.CopterParam;
 import api.pojo.location.Waypoint;
 import main.api.Copter;
-import main.sim.gui.MissionKmlDialog;
+import main.sim.gui.MissionKmlSimProperties;
 import main.uavController.UAVParam;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** This class sends the initial configuration to all UAVs, asynchronously.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -42,7 +42,7 @@ public class InitialConfiguration2Thread extends Thread {
 				if (!copter.getMissionHelper().updateUAV(mission)) {
 					return;
 				}
-				if (MissionKmlDialog.waypointDelay != 0 && !copter.setParameter(CopterParam.WPNAV_RADIUS, MissionKmlDialog.waypointDistance)) {
+				if (MissionKmlSimProperties.inputMissionDelay != 0 && !copter.setParameter(CopterParam.WPNAV_RADIUS, MissionKmlSimProperties.distanceToWaypointReached)) {
 					return;
 				}
 				if (UAVParam.overrideYaw && !copter.setParameter(CopterParam.WP_YAW_BEHAVIOR, UAVParam.yawBehavior)) {

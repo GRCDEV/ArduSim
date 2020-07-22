@@ -3,20 +3,21 @@ package main.api;
 import api.API;
 import api.pojo.StatusPacket;
 import api.pojo.location.Waypoint;
+import javafx.stage.Stage;
 import main.ArduSimTools;
+import main.Param;
 import main.Text;
 import main.pccompanion.logic.PCCompanionParam;
-import main.sim.gui.MissionKmlDialog;
-import main.sim.gui.MissionWaypointsDialog;
-import main.sim.gui.ProgressDialog;
+import main.sim.gui.*;
 import main.sim.logic.SimParam;
 import org.javatuples.Pair;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 
 /** API to update the information shown on screen during simulations.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -123,9 +124,31 @@ public class GUI {
 		// kml file selected. All missions are loaded from one single file
 		if (correctExtension) {
 			// First, configure the missions
-			MissionKmlDialog.success = false;
-			new MissionKmlDialog(files[0].getName());
-			if (!MissionKmlDialog.success) {
+			MissionKmlSimProperties.success = false;
+			//new MissionKmlDialog(files[0].getName());
+			if(Param.role == ArduSim.SIMULATOR_GUI) {
+				new MissionKmlDialogApp().start(new Stage());
+				while (!MissionKmlSimProperties.success) {
+					API.getArduSim().sleep(200);
+				}
+			}else if(Param.role == ArduSim.SIMULATOR_CLI){
+				try {
+					MissionKmlSimProperties properties = new MissionKmlSimProperties();
+					FileInputStream fis = new FileInputStream(SimParam.missionParameterFile);
+					ResourceBundle resources = new PropertyResourceBundle(fis);
+					fis.close();
+					Properties p = new Properties();
+					for(String key: resources.keySet()){
+						p.setProperty(key,resources.getString(key));
+					}
+					properties.storeParameters(p,resources);
+					MissionKmlSimProperties.success = true;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+			if (!MissionKmlSimProperties.success) {
 				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
 				return null;
 			}

@@ -15,8 +15,12 @@ import es.upv.grc.mapper.LocationNotReadyException;
 import io.dronefleet.mavlink.common.MavCmd;
 import io.dronefleet.mavlink.common.MavFrame;
 import io.dronefleet.mavlink.util.EnumValue;
+import javafx.scene.control.TextFormatter;
 import main.Param.SimulatorState;
-import main.api.*;
+import main.api.ArduSim;
+import main.api.FileTools;
+import main.api.ValidationTools;
+import main.api.WaypointReachedListener;
 import main.api.communications.CommLinkObject;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.MSParam;
@@ -25,7 +29,7 @@ import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import main.cpuHelper.CPUData;
 import main.pccompanion.logic.PCCompanionParam;
 import main.sim.gui.MainWindow;
-import main.sim.gui.MissionKmlDialog;
+import main.sim.gui.MissionKmlSimProperties;
 import main.sim.logic.GPSEnableThread;
 import main.sim.logic.SimParam;
 import main.sim.pojo.PortScanResult;
@@ -57,6 +61,7 @@ import java.security.CodeSource;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.UnaryOperator;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
@@ -459,59 +464,59 @@ public class ArduSimTools {
 		}
 		param = parameters.get(Param.KML_MISSION_END);
 		if (param == null) {
-			ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlDialog.missionEnd);
+			ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlSimProperties.missionEnd);
 		} else {
-			if (param.equalsIgnoreCase(MissionKmlDialog.MISSION_END_UNMODIFIED)) {
-				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_UNMODIFIED;
-			} else if (param.equalsIgnoreCase(MissionKmlDialog.MISSION_END_LAND)) {
-				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_LAND;
-			} else if (param.equalsIgnoreCase(MissionKmlDialog.MISSION_END_RTL)) {
-				MissionKmlDialog.missionEnd = MissionKmlDialog.MISSION_END_RTL;
+			if (param.equalsIgnoreCase(MissionKmlSimProperties.MISSION_END_UNMODIFIED)) {
+				MissionKmlSimProperties.missionEnd = MissionKmlSimProperties.MISSION_END_UNMODIFIED;
+			} else if (param.equalsIgnoreCase(MissionKmlSimProperties.MISSION_END_LAND)) {
+				MissionKmlSimProperties.missionEnd = MissionKmlSimProperties.MISSION_END_LAND;
+			} else if (param.equalsIgnoreCase(MissionKmlSimProperties.MISSION_END_RTL)) {
+				MissionKmlSimProperties.missionEnd = MissionKmlSimProperties.MISSION_END_RTL;
 				
 				param = parameters.get(Param.KML_RTL_END_ALT);
 				if (param == null) {
-					ArduSimTools.logGlobal(Param.KML_RTL_END_ALT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlDialog.rtlFinalAltitude);
+					ArduSimTools.logGlobal(Param.KML_RTL_END_ALT + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlSimProperties.finalAltitudeForRTL);
 				} else {
 					if (!validationTools.isValidPositiveDouble(param)) {
 						ArduSimTools.logGlobal(Param.KML_RTL_END_ALT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 						System.exit(1);
 					} else {
-						MissionKmlDialog.rtlFinalAltitude = Double.parseDouble(param);
+						MissionKmlSimProperties.finalAltitudeForRTL = Double.parseDouble(param);
 					}
 				}
 			} else {
 				ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-				ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.missionEnd);
+				ArduSimTools.logGlobal(Param.KML_MISSION_END + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlSimProperties.missionEnd);
 			}
 		}
 		param = parameters.get(Param.KML_WAYPOINT_DELAY);
 		if (param == null) {
-			ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlDialog.waypointDelay);
+			ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlSimProperties.inputMissionDelay);
 		} else {
 			if (!validationTools.isValidNonNegativeInteger(param)) {
-				ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDelay);
+				ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlSimProperties.inputMissionDelay);
 			} else {
 				int delay = Integer.parseInt(param);
 				if (delay < 0 || delay > 65535) {
-					ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDelay);
+					ArduSimTools.logGlobal(Param.KML_WAYPOINT_DELAY + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlSimProperties.inputMissionDelay);
 				} else {
-					MissionKmlDialog.waypointDelay = delay;
+					MissionKmlSimProperties.finalAltitudeForRTL = delay;
 					if (delay > 0) {
 						param = parameters.get(Param.KML_WAYPOINT_DISTANCE);
 						if (param == null) {
-							ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlDialog.waypointDistance);
+							ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + MissionKmlSimProperties.distanceToWaypointReached);
 						} else {
 							try {
 								int distance = Integer.parseInt(param);
 								if (distance < 10 || distance > 1000) {
 									ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-									ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDistance);
+									ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlSimProperties.distanceToWaypointReached);
 								} else {
-									MissionKmlDialog.waypointDistance = distance;
+									MissionKmlSimProperties.distanceToWaypointReached = distance;
 								}
 							} catch (NumberFormatException e) {
 								ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
-								ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlDialog.waypointDistance);
+								ArduSimTools.logGlobal(Param.KML_WAYPOINT_DISTANCE + " " + Text.INI_FILE_PARAM_USING_DEFAULT + " " + MissionKmlSimProperties.distanceToWaypointReached);
 							}
 						}
 					}
@@ -2237,7 +2242,7 @@ public class ArduSimTools {
 					// Add a fake waypoint for the home position (essential but ignored by the flight controller)
 					wp = new Waypoint(0, true, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT, ArduSimTools.NAV_WAYPOINT_COMMAND, 0, 0, 0, 0, 0, 0, 0, 1);
 					missions[i].add(wp);
-					int delay = MissionKmlDialog.waypointDelay;
+					int delay = MissionKmlSimProperties.inputMissionDelay;
 					// Check the coordinate triplet format
 					for (int j=0; j<lines[i].length; j++) {
 						aux = lines[i][j].split(",");
@@ -2301,7 +2306,7 @@ public class ArduSimTools {
 				}
 				// Add a last waypoint to land or RTL depending on the input option
 				int numSeq = missions[i].get(missions[i].size() - 1).getNumSeq() + 1;
-				if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_LAND)) {
+				if (MissionKmlSimProperties.missionEnd.equals(MissionKmlSimProperties.MISSION_END_LAND)) {
 					wp = new Waypoint(numSeq, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 							ArduSimTools.NAV_LAND_COMMAND, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
@@ -2312,7 +2317,7 @@ public class ArduSimTools {
 						ArduSimTools.logVerboseGlobal(Text.XML_LAND_ADDED + i);
 					}
 				}
-				if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
+				if (MissionKmlSimProperties.missionEnd.equals(MissionKmlSimProperties.MISSION_END_RTL)) {
 					wp = new Waypoint(numSeq, false, MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT,
 							ArduSimTools.NAV_RETURN_TO_LAUNCH_COMMAND, 0, 0, 0, 0, 0, 0, 0, 0);
 					missions[i].add(wp);
@@ -2808,10 +2813,10 @@ public class ArduSimTools {
 		if(UAVParam.overrideAltitude) {
 			sb.append("\n\t").append(Param.KML_ALTITUDE).append("=").append(UAVParam.minFlyingAltitude);
 		}
-		sb.append("\n\t").append(Param.KML_MISSION_END).append("=").append(MissionKmlDialog.missionEnd);
-		sb.append("\n\t").append(Param.KML_WAYPOINT_DELAY).append("=").append(MissionKmlDialog.waypointDelay);
-		if (MissionKmlDialog.waypointDelay != 0) {
-			sb.append("\n\t").append(Param.KML_WAYPOINT_DISTANCE).append("=").append(MissionKmlDialog.waypointDistance);
+		sb.append("\n\t").append(Param.KML_MISSION_END).append("=").append(MissionKmlSimProperties.missionEnd);
+		sb.append("\n\t").append(Param.KML_WAYPOINT_DELAY).append("=").append(MissionKmlSimProperties.inputMissionDelay);
+		if (MissionKmlSimProperties.inputMissionDelay != 0) {
+			sb.append("\n\t").append(Param.KML_WAYPOINT_DISTANCE).append("=").append(MissionKmlSimProperties.distanceToWaypointReached);
 		}
 		
 		if (Param.role == ArduSim.MULTICOPTER) {
@@ -3463,5 +3468,22 @@ public class ArduSimTools {
 			JOptionPane.showMessageDialog(null, message, title, JOptionPane.WARNING_MESSAGE);
 		}
 	}
+
+	public static final UnaryOperator<TextFormatter.Change> doubleFilter = t -> {
+		if (t.isReplaced())
+			if(t.getText().matches("[^0-9]"))
+				t.setText(t.getControlText().substring(t.getRangeStart(), t.getRangeEnd()));
+
+		if (t.isAdded()) {
+			if (t.getControlText().contains(".")) {
+				if (t.getText().matches("[^0-9]")) {
+					t.setText("");
+				}
+			} else if (t.getText().matches("[^0-9.]")) {
+				t.setText("");
+			}
+		}
+		return t;
+	};
 
 }

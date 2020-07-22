@@ -101,18 +101,21 @@ public class MuscopSimProperties {
                 return false;
             }
         }
-        if(specificCheckVariables()){
+        String specificVariablesPassed = checkSpecificVariables();
+        if(specificVariablesPassed.equals(" ")){
             setSimulationParameters();
             return true;
         }else{
+            ArduSimTools.warnGlobal(Text.LOADING_ERROR,"Error in parameter: " + specificVariablesPassed);
             return false;
         }
     }
-    private boolean specificCheckVariables(){
-        if(groundMinDistance<0){return false;}
-        if(flyingMinDistance<0){return false;}
-        if(landingMinDistance<0){return false;}
-        return missionFile.exists();
+    private String checkSpecificVariables(){
+        if(groundMinDistance<0){return "groundMinDistance";}
+        if(flyingMinDistance<0){return "flyingMindistance";}
+        if(landingMinDistance<0){return "landingMinDistance";}
+        if(!missionFile.exists()){return "missionFile";}
+        return " ";
     }
 
     private void setSimulationParameters(){
@@ -126,7 +129,7 @@ public class MuscopSimProperties {
     }
 
     public void storeMissionFile(File[] selection) {
-        // TODO check why paco used a file array instead of a single file
+        // TODO check for mission files (not KML)
         final Pair<String, List<Waypoint>[]> missions = API.getGUI(0).loadMissions(selection);
         MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
         if (missions == null) {

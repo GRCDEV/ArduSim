@@ -24,7 +24,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.function.UnaryOperator;
 
 public class MuscopConfigDialogController {
 
@@ -52,6 +51,7 @@ public class MuscopConfigDialogController {
     @FXML
     private Button okButton;
 
+
     public MuscopConfigDialogController(ResourceBundle resources, MuscopSimProperties properties, Stage stage){
         this.resources = resources;
         this.properties = properties;
@@ -65,7 +65,7 @@ public class MuscopConfigDialogController {
         groundFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         groundFormation.getSelectionModel().select(resources.getString("groundFormation"));
 
-        groundMinDistance.setTextFormatter(new TextFormatter<>(doubleFilter));
+        groundMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 
         takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
         takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
@@ -73,7 +73,7 @@ public class MuscopConfigDialogController {
         flyingFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));
 
-        flyingMinDistance.setTextFormatter(new TextFormatter<>(doubleFilter));
+        flyingMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 
         numberOfClusters.disableProperty().bind(Bindings.equal(flyingFormation.valueProperty(),FlightFormation.Formation.SPLITUP.getName()).not());
         ArrayList<String> nrClustersString = new ArrayList<>();
@@ -83,7 +83,7 @@ public class MuscopConfigDialogController {
         numberOfClusters.setItems(FXCollections.observableArrayList(nrClustersString));
         numberOfClusters.getSelectionModel().select(resources.getString("numberOfClusters"));
 
-        landingMinDistance.setTextFormatter(new TextFormatter<>(doubleFilter));
+        landingMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
         okButton.setOnAction(e->{
             if(ok()){
                 Platform.setImplicitExit(false); // so that the application does not close
@@ -135,30 +135,10 @@ public class MuscopConfigDialogController {
         File missionPath = fileChooser.showOpenDialog(stage);
         if(missionPath != null) {
             missionFile.setText(missionPath.getAbsolutePath());
-            File[] fileArray = {missionPath};
-            properties.storeMissionFile(fileArray);
         }else{
             missionFile.setText("");
         }
 
     }
-
-    private final UnaryOperator<TextFormatter.Change> doubleFilter = t -> {
-        if (t.isReplaced())
-            if(t.getText().matches("[^0-9]"))
-                t.setText(t.getControlText().substring(t.getRangeStart(), t.getRangeEnd()));
-
-        if (t.isAdded()) {
-            if (t.getControlText().contains(".")) {
-                if (t.getText().matches("[^0-9]")) {
-                    t.setText("");
-                }
-            } else if (t.getText().matches("[^0-9.]")) {
-                t.setText("");
-            }
-        }
-        return t;
-    };
-
 
 }

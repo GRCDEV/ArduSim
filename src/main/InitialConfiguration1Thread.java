@@ -6,7 +6,7 @@ import api.pojo.FlightMode;
 import main.api.ArduSim;
 import main.api.Copter;
 import main.api.hiddenFunctions.HiddenFunctions;
-import main.sim.gui.MissionKmlDialog;
+import main.sim.gui.MissionKmlSimProperties;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 
@@ -361,11 +361,11 @@ public class InitialConfiguration1Thread extends Thread {
 		}
 		UAVParam.RTLAltitude[numUAV] = paramValue*0.01;			// Data received in centimeters
 		
-		if (MissionKmlDialog.missionEnd.equals(MissionKmlDialog.MISSION_END_RTL)) {
-			if (!copter.setParameter(CopterParam.RTL_ALTITUDE_FINAL, MissionKmlDialog.rtlFinalAltitude * 100)) {
+		if (MissionKmlSimProperties.missionEnd.equals(MissionKmlSimProperties.MISSION_END_RTL)) {
+			if (!copter.setParameter(CopterParam.RTL_ALTITUDE_FINAL, MissionKmlSimProperties.finalAltitudeForRTL * 100)) {
 				return;
 			}
-			UAVParam.RTLAltitudeFinal[numUAV] = MissionKmlDialog.rtlFinalAltitude;
+			UAVParam.RTLAltitudeFinal[numUAV] = MissionKmlSimProperties.finalAltitudeForRTL;
 		} else {
 			paramValue = copter.getParameter(CopterParam.RTL_ALTITUDE_FINAL);
 			if (paramValue == null) {
