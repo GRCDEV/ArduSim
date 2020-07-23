@@ -1,17 +1,9 @@
 package mission.gui;
 
-import api.API;
-import api.pojo.location.Waypoint;
-import main.api.MissionHelper;
 import mbcap.logic.MBCAPText;
-import org.javatuples.Pair;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.List;
 
 /** This class generates the panel to input the MBCAP protocol configuration in the corresponding dialog.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -60,7 +52,8 @@ public class MissionConfigDialogPanel extends JPanel {
 		gbc_missionsTextField.gridy = 1;
 		add(missionsTextField, gbc_missionsTextField);
 		missionsTextField.setColumns(25);
-		
+
+		/*
 		JButton missionsButton = new JButton(MBCAPText.BUTTON_SELECT);
 		missionsButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -99,6 +92,8 @@ public class MissionConfigDialogPanel extends JPanel {
 		gbc_missionsButton.gridx = 4;
 		gbc_missionsButton.gridy = 1;
 		add(missionsButton, gbc_missionsButton);
+
+		 */
 		
 		JLabel lblNumberOfUAVs = new JLabel(MBCAPText.UAV_NUMBER);
 		lblNumberOfUAVs.setFont(new Font("Dialog", Font.PLAIN, 12));

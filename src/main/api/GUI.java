@@ -75,10 +75,14 @@ public class GUI {
 
 	/**
 	 * Loads the mission files
-	 * @param selection array of files
+	 * @param missionFiles list with files
 	 * @return pair of string and waypoints
 	 */
-	public Pair<String, List<Waypoint>[]> loadMissions(File[] selection) {//TODO hacerlo con thread y callback listener para que no se ejecute en el hilo GUI
+	public Pair<String, List<Waypoint>[]> loadMissions(List<File> missionFiles) {//TODO hacerlo con thread y callback listener para que no se ejecute en el hilo GUI
+		File[] selection = new File[missionFiles.size()];
+		for(int i =0;i<missionFiles.size();i++){
+			selection[i] = missionFiles.get(i);
+		}
 		Pair<String, List<Waypoint>[]> missions = this.loadAndParseMissions(selection);
 		if (missions != null) {
 			if (missions.getValue0().equals(Text.FILE_EXTENSION_KML)) {
@@ -176,7 +180,6 @@ public class GUI {
 				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_8);
 				return null;
 			}
-			
 			List<Waypoint>[] missions = new ArrayList[files.length];
 			// Next, load each mission from one file
 			int j = 0;

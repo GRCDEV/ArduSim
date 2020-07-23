@@ -40,7 +40,7 @@ public class ArduSimSetupSimulatorGUI extends ArduSimSetupSimulator{
     @Override
     protected void loadProtocolConfiguration(){
         ArduSimTools.selectedProtocolInstance.openConfigurationDialogFX();
-        // startSwingconfigurationDialog();
+        //startSwingconfigurationDialog();
         while(Param.simStatus != Param.SimulatorState.STARTING_UAVS){
             API.getArduSim().sleep(SimParam.SHORT_WAITING_TIME);
         }

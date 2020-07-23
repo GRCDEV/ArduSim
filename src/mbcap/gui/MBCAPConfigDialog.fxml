@@ -31,7 +31,7 @@
                   <Insets left="10.0" right="10.0" />
                </HBox.margin>
             </Label>
-            <TextField fx:id="missionFile" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="29.0" prefWidth="461.0" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="missionFile" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="29.0" prefWidth="461.0" text="%missionFile" HBox.hgrow="ALWAYS" />
             <Button fx:id="missionFileButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false" prefHeight="29.0" prefWidth="24.0" text="...">
                <HBox.margin>
                   <Insets left="10.0" />

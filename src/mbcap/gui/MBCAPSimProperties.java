@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MBCAPSimProperties {
 
     // parameters set in GUI or file
-    private File missionFile;
+    private List<File> missionFile;
     private int numUAVs;
     private int beaconInterval;
     private int beaconRenewalRate;
@@ -79,8 +79,17 @@ public class MBCAPSimProperties {
                     var.setDouble(this,Double.parseDouble(value));
                 }else if(type.contains("java.lang.String")){
                     var.set(this,value);
-                }else if(type.contains("java.io.File")) {
-                    var.set(this, new File(value));
+                }else if(type.contains("java.util.List")) {
+                    String[] filesNames = value.split(";");
+                    List<File> files = new ArrayList<>();
+                    for (String filesName : filesNames) {
+                        File f = new File(filesName);
+                        String extension = filesName.substring(filesName.lastIndexOf('.') + 1);
+                        if (f.exists() && (extension.equals(Text.FILE_EXTENSION_WAYPOINTS) || extension.equals(Text.FILE_EXTENSION_KML))) {
+                            files.add(f);
+                        }
+                    }
+                    var.set(this, files);
                 }else{
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_STORE_PARAMETERS + type);
                     return false;
@@ -89,19 +98,19 @@ public class MBCAPSimProperties {
                 return false;
             }
         }
-        if(specificCheckVariables()){
+        String error = specificCheckVariables();
+        if(error.equals("")){
             setSimulationParameters();
             return true;
         }else{
+            ArduSimTools.warnGlobal(Text.LOADING_ERROR,"Error in parameter: " + error);
             return false;
         }
     }
 
     private void setSimulationParameters() {
         API.getArduSim().setNumUAVs(numUAVs);
-
-        File[] fileArray = {missionFile};
-        storeMissionFile(fileArray);
+        storeMissionFile(missionFile);
         // Beaconing parameters
         MBCAPParam.beaconingPeriod = beaconInterval;
         MBCAPParam.numBeacons = beaconRenewalRate;
@@ -125,28 +134,33 @@ public class MBCAPSimProperties {
         MBCAPParam.globalDeadlockTimeout = (deadlockBaseTimeout * 1000000000L);
     }
 
-    private boolean specificCheckVariables() {
-        if(numUAVs<=0){return false;}
-        if(beaconInterval<=0){return false;}
-        if(beaconRenewalRate<=0){return false;}
-        if(interSampleTime<=0){return false;}
-        if(minAdvertismentSpeed<=0){return false;}
-        if(beaconExpirationTime<=0){return false;}
-        if(collisionWarningDistance<=0){return false;}
-        if(collisionWarningAltitudeOffset<=0){return false;}
-        if(collisionWarningTimeOffset<=0){return false;}
-        if(riskCheckPeriod<=0){return false;}
-        if(maxNrExpectedConsecutivePacketsLost<=0){return false;}
-        if(GPSExpectedError<=0){return false;}
-        if(hoveringTimeout<=0){return false;}
-        if(overtakeDelayTimeout<=0){return false;}
-        if(defaultFlightModeResumeDelay<=0){return false;}
-        if(checkRiskSameUAVDelay<=0){return false;}
-        return deadlockBaseTimeout > 0;
+    private String specificCheckVariables() {
+        if(missionFile.size() > 0){
+            for(File f :missionFile){
+                if(!f.exists()){return "missionFile";}
+            }
+        }else{return "missionFile";}
+        if(numUAVs<=0){return "numUAVs";}
+        if(beaconInterval<=0){return "beaconInterval";}
+        if(beaconRenewalRate<=0){return "beaconRenewalRate";}
+        if(interSampleTime<=0){return "interSampleTime";}
+        if(minAdvertismentSpeed<=0){return "minAdvertismentSpeed";}
+        if(beaconExpirationTime<=0){return "beaconExpirationTime";}
+        if(collisionWarningDistance<=0){return "collisionWarningDistance";}
+        if(collisionWarningAltitudeOffset<=0){return "collisionWaringAltitudeOffset";}
+        if(collisionWarningTimeOffset<=0){return "collisionWarningTimeOffset";}
+        if(riskCheckPeriod<=0){return "riskCheckPeriod";}
+        if(maxNrExpectedConsecutivePacketsLost<=0){return "maxnrExpectedConsecutivePacketsLost";}
+        if(GPSExpectedError<=0){return "GPSExpectedError";}
+        if(hoveringTimeout<=0){return "hoveringTimeout";}
+        if(overtakeDelayTimeout<=0){return "overtakedelayTimeout";}
+        if(defaultFlightModeResumeDelay<=0){return "defaultFlightModeResumeDelay";}
+        if(checkRiskSameUAVDelay<=0){return "checkRiskSameUAVDelay";}
+        if(deadlockBaseTimeout < 0){return "deadlockBaseTimeout";}
+        return "";
     }
 
-    public boolean storeMissionFile(File[] selection) {
-        // TODO check why paco used a file array instead of a single file
+    public boolean storeMissionFile(List<File> selection) {
         final Pair<String, List<Waypoint>[]> missions = API.getGUI(0).loadMissions(selection);
         MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
         if (missions == null) {

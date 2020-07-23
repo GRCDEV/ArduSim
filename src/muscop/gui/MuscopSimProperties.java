@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MuscopSimProperties {
 
     // GUI parameters
-    public File missionFile;
+    public List<File> missionFile;
     public FlightFormation.Formation groundFormation;
     public static int numberOfClusters = 3;
     public double groundMinDistance;
@@ -87,8 +87,17 @@ public class MuscopSimProperties {
                     var.setLong(this,Long.parseLong(value));
                 }else if(type.contains("java.lang.String")){
                     var.set(this,value);
-                }else if(type.contains("java.io.File")) {
-                    var.set(this, new File(value));
+                }else if(type.contains("java.util.List")) {
+                    String[] filesNames = value.split(";");
+                    List<File> files = new ArrayList<>();
+                    for (String filesName : filesNames) {
+                        File f = new File(filesName);
+                        String extension = filesName.substring(filesName.lastIndexOf('.') + 1);
+                        if (f.exists() && (extension.equals(Text.FILE_EXTENSION_WAYPOINTS) || extension.equals(Text.FILE_EXTENSION_KML))) {
+                            files.add(f);
+                        }
+                    }
+                    var.set(this, files);
                 }else if(type.contains("FlightFormation")){
                     var.set(this,FlightFormation.Formation.getFormation(value));
                 }else if(type.contains("TakeOffAlgorithm")){
@@ -101,12 +110,12 @@ public class MuscopSimProperties {
                 return false;
             }
         }
-        String specificVariablesPassed = checkSpecificVariables();
-        if(specificVariablesPassed.equals(" ")){
+        String error = checkSpecificVariables();
+        if(error.equals(" ")){
             setSimulationParameters();
             return true;
         }else{
-            ArduSimTools.warnGlobal(Text.LOADING_ERROR,"Error in parameter: " + specificVariablesPassed);
+            ArduSimTools.warnGlobal(Text.LOADING_ERROR,"Error in parameter: " + error);
             return false;
         }
     }
@@ -114,13 +123,14 @@ public class MuscopSimProperties {
         if(groundMinDistance<0){return "groundMinDistance";}
         if(flyingMinDistance<0){return "flyingMindistance";}
         if(landingMinDistance<0){return "landingMinDistance";}
-        if(!missionFile.exists()){return "missionFile";}
+        for(File f :missionFile){
+            if(!f.exists()){return "missionFile";}
+        }
         return " ";
     }
 
     private void setSimulationParameters(){
-        File[] fileArray = {missionFile};
-        storeMissionFile(fileArray);
+        storeMissionFile(missionFile);
         FlightFormationTools f = API.getFlightFormationTools();
         f.setGroundFormation(groundFormation.getName(),groundMinDistance);
         API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(takeOffStrategy.getName());
@@ -128,8 +138,7 @@ public class MuscopSimProperties {
         f.setLandingFormationMinimumDistance(landingMinDistance);
     }
 
-    public void storeMissionFile(File[] selection) {
-        // TODO check for mission files (not KML)
+    public void storeMissionFile(List<File> selection) {
         final Pair<String, List<Waypoint>[]> missions = API.getGUI(0).loadMissions(selection);
         MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
         if (missions == null) {

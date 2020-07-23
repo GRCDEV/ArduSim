@@ -2362,7 +2362,7 @@ public class ArduSimTools {
 			ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_2);
 			return null;
 		}
-	
+
 		List<Waypoint> mission = new ArrayList<>(list.size()-1);
 		Waypoint wp;
 		String[] line;
@@ -2398,7 +2398,7 @@ public class ArduSimTools {
 					ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_6);
 					return null;
 				}
-				
+
 				EnumValue<MavCmd> c = EnumValue.create(MavCmd.class, command);
 				if (numSeq == 1) {
 					if ((frame != MavFrame.MAV_FRAME_GLOBAL_RELATIVE_ALT

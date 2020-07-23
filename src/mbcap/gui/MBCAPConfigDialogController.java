@@ -94,10 +94,8 @@ public class MBCAPConfigDialogController {
                 ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_LOADING_FXML);
             }
         });
-
+        setNumUAVsComboBox();
         missionFile.setDisable(true);
-        searchMissionFile();
-
     }
 
     private boolean ok() {
@@ -132,16 +130,24 @@ public class MBCAPConfigDialogController {
 
     private void searchMissionFile() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(API.getFileTools().getCurrentFolder());
+        fileChooser.setInitialDirectory(new File(API.getFileTools().getSourceFolder() + "/resources"));
         fileChooser.setTitle(Text.MISSIONS_DIALOG_TITLE_1);
-        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, "*."+Text.FILE_EXTENSION_KML);
-        fileChooser.getExtensionFilters().add(extFilter);
-        File missionPath = fileChooser.showOpenDialog(stage);
-        File[] fileArray = {missionPath};
-        boolean missionIsStored = properties.storeMissionFile(fileArray);
-        if(missionIsStored){
-            missionFile.setText(missionPath.getAbsolutePath());
+        FileChooser.ExtensionFilter extFilterKML = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, "*."+Text.FILE_EXTENSION_KML);
+        // waypoints don`t work in mbcap
+        //FileChooser.ExtensionFilter extFilterWaypoints = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, "*."+Text.FILE_EXTENSION_WAYPOINTS);
+        fileChooser.getExtensionFilters().addAll(extFilterKML);
+        List<File> missionPath = fileChooser.showOpenMultipleDialog(stage);
+        if(missionPath != null && missionPath.size()>0) {
+            String text = "";
+            if(missionPath.size() > 1){
+                for(File mission : missionPath){
+                    text = text + mission.getAbsolutePath() + ";";
+                }
+            }else{
+                text = missionPath.get(0).getAbsolutePath();
+            }
             setNumUAVsComboBox();
+            missionFile.setText(text);
         }else{
             missionFile.setText("");
             numUAVs.setDisable(true);

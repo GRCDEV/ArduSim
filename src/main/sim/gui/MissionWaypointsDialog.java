@@ -1,6 +1,8 @@
 package main.sim.gui;
 
+import main.Param;
 import main.Text;
+import main.api.ArduSim;
 import main.sim.logic.SimTools;
 import main.uavController.UAVParam;
 
@@ -29,6 +31,11 @@ public class MissionWaypointsDialog extends JDialog {
 	}
 
 	public MissionWaypointsDialog(String title) {
+		if(Param.role == ArduSim.SIMULATOR_CLI){
+			thisDialog = null;
+			setDefaultParameters();
+			return;
+		}
 		getContentPane().setLayout(new BorderLayout());
 		JPanel contentPanel = new JPanel();
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -122,6 +129,11 @@ public class MissionWaypointsDialog extends JDialog {
 		SimTools.addEscListener(this, false);
 		
 		this.setVisible(true);
+	}
+
+	private void setDefaultParameters() {
+		UAVParam.overrideYaw = false;
+		success = true;
 	}
 
 }

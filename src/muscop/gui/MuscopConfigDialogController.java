@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
@@ -128,13 +129,23 @@ public class MuscopConfigDialogController {
     private void searchMissionFile(){
 
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(API.getFileTools().getCurrentFolder());
+        fileChooser.setInitialDirectory(new File(API.getFileTools().getSourceFolder() + "/resources"));
         fileChooser.setTitle(Text.MISSIONS_DIALOG_TITLE_1);
-        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, "*."+Text.FILE_EXTENSION_KML);
-        fileChooser.getExtensionFilters().add(extFilter);
-        File missionPath = fileChooser.showOpenDialog(stage);
-        if(missionPath != null) {
-            missionFile.setText(missionPath.getAbsolutePath());
+        FileChooser.ExtensionFilter extFilterKML = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, "*."+Text.FILE_EXTENSION_KML);
+        FileChooser.ExtensionFilter extFilterWaypoints = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, "*."+Text.FILE_EXTENSION_WAYPOINTS);
+        fileChooser.getExtensionFilters().addAll(extFilterKML,extFilterWaypoints);
+
+        List<File> missionPath = fileChooser.showOpenMultipleDialog(stage);
+        if(missionPath != null && missionPath.size()>0) {
+            String text = "";
+            if(missionPath.size() > 1){
+                for(File mission : missionPath){
+                    text = text + mission.getAbsolutePath() + ";";
+                }
+            }else{
+                text = missionPath.get(0).getAbsolutePath();
+            }
+            missionFile.setText(text);
         }else{
             missionFile.setText("");
         }

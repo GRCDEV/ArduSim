@@ -222,7 +222,7 @@ public class ConfigDialogController {
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Property File", "*.properties");
         fileChooser.getExtensionFilters().add(extFilter);
-        fileChooser.setInitialDirectory(API.getFileTools().getCurrentFolder());
+        fileChooser.setInitialDirectory(new File(API.getFileTools().getSourceFolder() + "/resources"));
         fileChooser.setInitialFileName("SimulationParam.properties");
         File file = fileChooser.showSaveDialog(stage);
         String filePath = file.getAbsolutePath();
@@ -267,7 +267,7 @@ public class ConfigDialogController {
         // used when user presses button
         // Create a filechooser with some restrictions and invote updateSpeedFile
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(API.getFileTools().getCurrentFolder());
+        fileChooser.setInitialDirectory(new File(API.getFileTools().getSourceFolder() + "/resources"));
         fileChooser.setTitle(Text.PROTOCOL_DIALOG_TITLE);
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(Text.PROTOCOL_DIALOG_SELECTION , "*."+Text.PROPERITES_EXTENSTION);
         fileChooser.getExtensionFilters().add(extFilter);

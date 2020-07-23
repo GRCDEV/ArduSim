@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="665.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </VBox.margin>
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="315.0" text="Mission end:">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="missionEnd" prefHeight="26.0" prefWidth="200.0" />
+         </children>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="315.0" text="Final altitude for RTl:">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="finalAltitudeForRTL" prefHeight="26.0" prefWidth="200.0" text="%finalAltitudeForRTL" />
+            <Label maxHeight="1.7976931348623157E308" text="m">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="60.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="315.0" text="Minimum waypoints relative altitude:">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="minimumWaypointRelativeAltitude" prefWidth="200.0" text="%minimumWaypointRelativeAltitude" />
+            <Label maxHeight="1.7976931348623157E308" text="m">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="29.0" prefWidth="315.0" text="Input mission delay over each waypoint:">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="inputMissionDelay" prefWidth="200.0" text="%inputMissionDelay" />
+            <Label maxHeight="1.7976931348623157E308" text="s">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="140.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="315.0" text="Distance to waypoint to assert WP reached:">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="distanceToWaypointReached" prefWidth="200.0" text="%distanceToWaypointReached" />
+            <Label maxHeight="1.7976931348623157E308" text="cm">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <CheckBox fx:id="overrideIncludedAltitudeValues" maxHeight="1.7976931348623157E308" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefWidth="343.0" text="Override included altitude values: ">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+            </CheckBox>
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="180.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="315.0" text="Waypoints relative altitude:">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="waypointsRelativeAltitude" prefWidth="200.0" text="%waypointsRelativeAltitude" />
+            <Label maxHeight="1.7976931348623157E308" text="cm">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="220.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <CheckBox fx:id="overrideIncludedYawValues" maxHeight="1.7976931348623157E308" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefWidth="343.0" text="Override included yaw values: ">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+            </CheckBox>
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="315.0" text="Value:">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="yawValue" prefWidth="200.0" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Button fx:id="okButton" mnemonicParsing="false" prefHeight="26.0" prefWidth="55.0" text="OK" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+   </children>
+</VBox>
