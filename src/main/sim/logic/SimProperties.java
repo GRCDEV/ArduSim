@@ -178,7 +178,7 @@ public class SimProperties {
         protocolParameterFile = new File(API.getFileTools().getSourceFolder(),"/resources/protocolParameter.properties");
         startingAltitude = 0.0;
         numUAVs = 5;
-        protocol = "shakeup";
+        protocol = "protocols/shakeup";
         screenRefreshRate = 500;
         minScreenRedrawDistance = 5.0;
         arduCopterLogging = false;

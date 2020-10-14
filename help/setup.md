@@ -96,7 +96,7 @@ The first time, it will fail to run because you need to add the following argume
 
     simulator
 
-You can create a csv file with target speed for the multicopters (one row per speed m/s), and a mission file in *Google Earth* and test the simulator with the protocol *Mission* or *MBCAP* to be sure that the setup is correct.
+You can create a csv file with target speed for the multicopters (one row per speed m/s), and a protocols.mission file in *Google Earth* and test the simulator with the protocol *Mission* or *MBCAP* to be sure that the setup is correct.
 
 A protocol can be tested directly in the IDE or from a executable *.jar* file. In the second case, with the proper configuration (see next sections), we suggest to execute the *.jar* file as Administrator/root. This way, temporary files will be stored in a RAM drive, which will increase ArduSim scalability, on the number of virtual multicopters, when using a slow hard drive.
 

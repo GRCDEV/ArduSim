@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * API for mission based applications.
+ * API for protocols.mission based applications.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MissionHelper {
@@ -48,18 +48,18 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Get the current waypoint of the mission for a UAV.
-	 * <p>Use only when the UAV is performing a planned mission.</p>
-	 * @return The current waypoint of the mission, starting from 0.
+	 * Get the current waypoint of the protocols.mission for a UAV.
+	 * <p>Use only when the UAV is performing a planned protocols.mission.</p>
+	 * @return The current waypoint of the protocols.mission, starting from 0.
 	 */
 	public int getCurrentWaypoint() {
 		return UAVParam.currentWaypoint.get(numUAV);
 	}
 	
 	/**
-	 * Get the mission currently stored on the multicopter.
+	 * Get the protocols.mission currently stored on the multicopter.
 	 * <p>Mission only available if it is previously sent to the drone <i>updateUAV(List&lt;Waypoint&gt;)</i>.</p>
-	 * @return The mission currently stored in the UAV in geographic coordinates.
+	 * @return The protocols.mission currently stored in the UAV in geographic coordinates.
 	 */
 	public List<Waypoint> get() {
 		return UAVParam.currentGeoMission[numUAV];
@@ -74,17 +74,17 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Get the mission shown on screen.
+	 * Get the protocols.mission shown on screen.
 	 * <p>Mission only available if it is previously sent to the drone with <i>updateUAV(List&lt;Waypoint&gt;)</i>.</p>
-	 * @return The simplified mission shown in the screen in UTM coordinates.
+	 * @return The simplified protocols.mission shown in the screen in UTM coordinates.
 	 */
 	public List<WaypointSimplified> getSimplified() {
 		return UAVParam.missionUTMSimplified.get(numUAV);
 	}
 	
 	/**
-	 * Find out if the UAV has reached the last waypoint of the mission.
-	 * @return true if the last waypoint of the mission has been reached.
+	 * Find out if the UAV has reached the last waypoint of the protocols.mission.
+	 * @return true if the last waypoint of the protocols.mission has been reached.
 	 */
 	public boolean isLastWaypointReached() {
 		return UAVParam.lastWaypointReached[numUAV].get();
@@ -93,7 +93,7 @@ public class MissionHelper {
 	/**
 	 * Land the UAV if it is close enough to the last waypoint.
 	 * <p>This method can be launched periodically, it only informs that the last waypoint is reached once, and it only lands the UAV if it close enough to the last waypoint and not already landing or on the ground.</p>
-	 * @param distanceThreshold (meters) Horizontal distance from the last waypoint of the mission to assert that the UAV has to land.
+	 * @param distanceThreshold (meters) Horizontal distance from the last waypoint of the protocols.mission to assert that the UAV has to land.
 	 */
 	public void landIfEnded(double distanceThreshold) {
 		Waypoint lastWP = UAVParam.lastWP[numUAV];
@@ -122,7 +122,7 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Stops the mission and stabilizes the UAV in the current location, changing to brake flight mode.
+	 * Stops the protocols.mission and stabilizes the UAV in the current location, changing to brake flight mode.
 	 * <p>Blocking method until the UAV is almost stopped.</p>
 	 * @return true if all the commands were successful.
 	 */
@@ -145,7 +145,7 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Remove the current mission from the UAV.
+	 * Remove the current protocols.mission from the UAV.
 	 * @return true if the command was successful.
 	 */
 	private boolean remove() {
@@ -167,7 +167,7 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Resume the current mission previously paused.
+	 * Resume the current protocols.mission previously paused.
 	 * @return true if the command was successful.
 	 */
 	public boolean resume() {
@@ -177,9 +177,9 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Retrieve the mission stored on the UAV.
+	 * Retrieve the protocols.mission stored on the UAV.
 	 * <p>The new value available on <i>get()</i>.
-	 * The simplified version of the mission in UTM coordinates available on <i>getSimplified()</i>.</p>
+	 * The simplified version of the protocols.mission in UTM coordinates available on <i>getSimplified()</i>.</p>
 	 * @return true if the command was successful.
 	 */
 	private boolean retrieve() {
@@ -202,14 +202,14 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Create the simplified mission shown on screen, and forces view to re-scale.
+	 * Create the simplified protocols.mission shown on screen, and forces view to re-scale.
 	 */
 	private void simplify() {
 		List<WaypointSimplified> missionUTMSimplified = new ArrayList<>();
 	
 		// Hypothesis:
 		//   The first take off waypoint retrieved from the UAV is used as "home"
-		//   The "home" coordinates are no modified along the mission
+		//   The "home" coordinates are no modified along the protocols.mission
 		WaypointSimplified first = null;
 		boolean foundFirst = false;
 		Waypoint wp;
@@ -266,7 +266,7 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Modify the current waypoint of the mission stored on the UAV.
+	 * Modify the current waypoint of the protocols.mission stored on the UAV.
 	 * @return true if the command was successful.
 	 */
 	private boolean setCurrentWaypoint() {
@@ -289,8 +289,8 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Send a new mission to the UAV.
-	 * <p>The waypoint 0 of the mission should be the current coordinates retrieved from the controller, but it is ignored anyway.
+	 * Send a new protocols.mission to the UAV.
+	 * <p>The waypoint 0 of the protocols.mission should be the current coordinates retrieved from the controller, but it is ignored anyway.
 	 * The waypoint 1 must be take off.
 	 * The last waypoint can also be land or RTL.</p>
 	 * @param list Mission to be sent to the flight controller.
@@ -362,14 +362,14 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Take off a UAV and start the planned mission.
+	 * Take off a UAV and start the planned protocols.mission.
 	 * <p>Issues three commands: armEngines, setFlightMode --> AUTO, and stabilize.
 	 * Previously, on a real UAV you have to press the hardware switch for safety arm, if available.
 	 * The UAV must be on the ground and in an armable flight mode (STABILIZE, LOITER, ALT_HOLD, GUIDED).</p>
 	 * @return true if all the commands were successful.
 	 */
 	public boolean start() {
-		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the mission begins
+		// Documentation says: While on the ground, 1st arm, 2nd auto mode, 3rd some throttle, and the protocols.mission begins
 		// Since ardupilot v4.0.0 this doesn`t work anymore. however everything works if we first give some throttle and than go to auto mode 
 		
 		//    If the copter is flying, the take off waypoint will be considered to be completed, and the UAV goes to the next waypoint
@@ -379,10 +379,10 @@ public class MissionHelper {
 	}
 	
 	/**
-	 * Delete the current mission of the UAV, sends a new one, and gets it to be shown on the GUI.
+	 * Delete the current protocols.mission of the UAV, sends a new one, and gets it to be shown on the GUI.
 	 * <p>Blocking method.</p>
 	 * <p>Method automatically used by ArduSim on start to send available missions to the UAVs.
-	 * Must be used only if the UAV must follow a mission.</p>
+	 * Must be used only if the UAV must follow a protocols.mission.</p>
 	 * @param mission Mission to be sent to the flight controller.
 	 * @return true if all the commands were successful.
 	 */

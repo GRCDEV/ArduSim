@@ -13,9 +13,7 @@ public class DistanceCalculusThread extends Thread {
 
 	@Override
 	public void run() {
-		
 		ArduSim ardusim = API.getArduSim();
-		
 		long checkTime = System.currentTimeMillis();
 		long waitingTime;
 		while (Param.simStatus == Param.SimulatorState.STARTING_UAVS
@@ -39,6 +37,7 @@ public class DistanceCalculusThread extends Thread {
 			}
 		}
 		UAVParam.distanceCalculusIsOnline = false;
+
 	}
 
 }

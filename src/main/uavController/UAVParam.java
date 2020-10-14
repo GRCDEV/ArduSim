@@ -69,7 +69,7 @@ public class UAVParam {
 	public static AtomicReference<FlightFormation.Formation> airFormation = new AtomicReference<>(FlightFormation.Formation.LINEAR);
 	// Initial distance between UAV when they are on the ground (only in simulation)
 	public static volatile double groundDistanceBetweenUAV = 10.0;
-	// Minimum distance between UAVs while following the mission
+	// Minimum distance between UAVs while following the protocols.mission
 	public static volatile double airDistanceBetweenUAV = 50.0;
 	// Minimum distance between UAVs when they land on the ground
 	public static volatile double landDistanceBetweenUAV = 2.5;
@@ -83,7 +83,7 @@ public class UAVParam {
 	public static final double WIND_THRESHOLD = 0.5;	// (m/s) Minimum wind speed accepted by the simulator, when used
 	public static double[] RTLAltitude;					// (m) RTL altitude retrieved from the flight controller
 	public static double[] RTLAltitudeFinal;			// (m) Altitude to keep when reach home location when in RTL mode
-	public static volatile boolean overrideYaw = false;	// Whether to override or not the yaw behavior while following a mission, with the following value
+	public static volatile boolean overrideYaw = false;	// Whether to override or not the yaw behavior while following a protocols.mission, with the following value
 	public static volatile int yawBehavior = 2;			// 0=Fixed, 1=Face next waypoint, 2=Face next waypoint except RTL, 3=Face along GPS course
 	public static final String[] YAW_VALUES = new String[] {"Fixed", "Face next waypoint", "Face next WP except RTL", "Face along GPS course"};
 	
@@ -221,8 +221,8 @@ public class UAVParam {
 	public static List<Waypoint>[] missionGeoLoaded;	// Missions loaded from file(s), in Geographic coordinates
 	public static Waypoint[][] newGeoMission;			// Missions that are about to be sent to the UAV, in Geographic coordinates
 	public static List<Waypoint>[] currentGeoMission;	// Missions retrieved from the UAV, in Geographic coordinates
-	public static Waypoint[] lastWP;					// Last waypoint of the retrieved mission
-	public static Location2DUTM[] lastWPUTM;			// Coordinates of the last waypoint of the retrieved mission
+	public static Waypoint[] lastWP;					// Last waypoint of the retrieved protocols.mission
+	public static Location2DUTM[] lastWPUTM;			// Coordinates of the last waypoint of the retrieved protocols.mission
 	public static AtomicReferenceArray<List<WaypointSimplified>> missionUTMSimplified; // Missions simplified from the previous one for drawing, in UTM coordinates
 	public static final int MAV_STATUS_REQUEST_WP_LIST = 28;
 	public static final int MAV_STATUS_REQUEST_WP0 = 29;

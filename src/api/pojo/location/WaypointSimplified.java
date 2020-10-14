@@ -2,17 +2,17 @@ package api.pojo.location;
 
 import es.upv.grc.mapper.Location3DUTM;
 
-/** This class generates simplified waypoints, including only UTM coordinates and the sequence number in the mission.
+/** This class generates simplified waypoints, including only UTM coordinates and the sequence number in the protocols.mission.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class WaypointSimplified extends Location3DUTM {
 	private static final long serialVersionUID = 1L;
-	/** Sequence number of this waypoint in the mission it belongs to. */
-	public int numSeq;		// Waypoint position in the mission sequence
+	/** Sequence number of this waypoint in the protocols.mission it belongs to. */
+	public int numSeq;		// Waypoint position in the protocols.mission sequence
 
 	/**
 	 * Create a simplified version of a waypoint.
-	 * @param numSeq Sequence number of this waypoint in the mission (it starts always on 0).
+	 * @param numSeq Sequence number of this waypoint in the protocols.mission (it starts always on 0).
 	 * @param x (m) UTM easting.
 	 * @param y (m) UTM northing.
 	 * @param z (m) Altitude

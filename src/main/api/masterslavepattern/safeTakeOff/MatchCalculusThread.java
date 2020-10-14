@@ -45,6 +45,7 @@ public class MatchCalculusThread extends Thread {
 	 * @param formationYaw (rad) Yaw that will be set for the flight formation.
 	 * @param masterID The ID of the master UAV if it must be in the middle of the flight formation, null otherwise. The default implementation of this method searches which UAV should be in the middle of the formation to minimize the take off time. Setting the master UAV as the center UAV builds the flight formation around the current location of the master UAV.
 	 * @return An array containing the match for each of that UAVs included in the takeoff process, it is the position in the provided <i>flightFormation</i> array, the ID, and target flying coordinates. Return null if any error happens.
+	 * Quartet Integer IDofUAV, Long IDofUAV, Location2DUTM airlocation, Double error (distance2)
 	 */
 	private static Quartet<Integer, Long, Location2DUTM, Double>[] safeTakeOffGetMatch(Map<Long, Location2DUTM> groundLocations,
 			FlightFormation flightFormation, double formationYaw, Long masterID) {
@@ -62,6 +63,7 @@ public class MatchCalculusThread extends Thread {
 		Map<Integer, Location2DUTM> air = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		
 		Location2DUTM groundCenterLocation;
+
 		if (masterID != null) {
 			// The center of the flying formation will be over the current location of the master UAV on the ground
 			// Solution provided for Follow Me protocol, as the master UAV must take-off vertically always to the center of the flight formation
@@ -84,6 +86,9 @@ public class MatchCalculusThread extends Thread {
 			}
 			if (TakeOffMasterDataListenerThread.selectedAlgorithm == TakeOffAlgorithm.RANDOM) {
 				fit = MatchCalculusThread.getRandomMatch(ground, air);
+			}
+			if(TakeOffMasterDataListenerThread.selectedAlgorithm == TakeOffAlgorithm.HUNGARIAN){
+				fit = new HungarianTakeOff(groundLocations,air).getHungarianMatch();
 			}
 			// Now we include again the center UAV in the center of the flight formation
 			if(fit != null) {
@@ -131,13 +136,12 @@ public class MatchCalculusThread extends Thread {
 					y = y + location.y;
 				}
 				groundCenterLocation = new Location2DUTM(x / numUAVs, y / numUAVs);
-				
+
 				for (int j = 0; j < numUAVs; j++) {
 					air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
 				}
-				match = MatchCalculusThread.getSimplifiedMatch(ground, air,groundCenterLocation);
+				match = MatchCalculusThread.getSimplifiedMatch(ground, air, groundCenterLocation);
 			}
-			
 			if (TakeOffMasterDataListenerThread.selectedAlgorithm == TakeOffAlgorithm.RANDOM) {
 				// The center of the flying formation will be on  the mean coordinates of all the UAVs on the ground
 				double x = 0;
@@ -155,8 +159,12 @@ public class MatchCalculusThread extends Thread {
 				}
 				match = MatchCalculusThread.getRandomMatch(ground, air);
 			}
+			if(TakeOffMasterDataListenerThread.selectedAlgorithm == TakeOffAlgorithm.HUNGARIAN){
+				match = new HungarianTakeOff(groundLocations,air).getHungarianMatch();
+			}
 		}
-		
+
+
 		return match;
 	}
 	

@@ -157,4 +157,4 @@ Restart the Raspberry Pi and check the content of the file */home/pi/Desktop/Ard
 
     sudo systemctl enable ardusim.service
 
-Finally, restart the device and check the log file to be sure that ArduSim has started with the system. Don't forget to store a mission file beside ArduSim if the protocol under test requires it.
+Finally, restart the device and check the log file to be sure that ArduSim has started with the system. Don't forget to store a protocols.mission file beside ArduSim if the protocol under test requires it.

@@ -517,7 +517,7 @@ public class UAVControllerThread extends Thread {
 		}
 	}
 
-	/** Process the received message that gets the number of waypoints included in the UAV mission. */
+	/** Process the received message that gets the number of waypoints included in the UAV protocols.mission. */
 	private void processWaypointCount(MissionCount msg) {
 		if (UAVParam.MAVStatus.get(numUAV) == UAVParam.MAV_STATUS_REQUEST_WP0) {
 			int count = msg.count();
@@ -624,11 +624,11 @@ public class UAVControllerThread extends Thread {
 		}
 	}
 
-	/** Process a mission ACK. */
+	/** Process a protocols.mission ACK. */
 	private void processMissionAck(MissionAck msg) {
 		int type = msg.type().value();
 		switch (UAVParam.MAVStatus.get(numUAV)) {
-		// ACK received when removing the current mission
+		// ACK received when removing the current protocols.mission
 		case UAVParam.MAV_STATUS_ACK_CLEAR_WP_LIST:
 			if (type == 0) {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_OK);
@@ -653,7 +653,7 @@ public class UAVControllerThread extends Thread {
 			}
 			break;
 		//default:
-			// We must not print this, as sometimes the flight controller sends more than one ACK for the mission
+			// We must not print this, as sometimes the flight controller sends more than one ACK for the protocols.mission
 			//SimTools.println(Text.NOT_REQUESTED_ACK_ERROR + " " + message.toString());
 		}
 	}
@@ -1005,7 +1005,7 @@ public class UAVControllerThread extends Thread {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_CURRENT_WP);
 			}
 			break;
-		// Command to clear the mission stored in the UAV
+		// Command to clear the protocols.mission stored in the UAV
 		case UAVParam.MAV_STATUS_CLEAR_WP_LIST:
 			try {
 				connection.send1(UAVParam.gcsId.get(numUAV),
@@ -1020,7 +1020,7 @@ public class UAVControllerThread extends Thread {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_CLEAR_WP_LIST);
 			}
 			break;
-		// Command to send the number of waypoints of a new mission stored in UAVParam.currentGeoMission[numUAV]
+		// Command to send the number of waypoints of a new protocols.mission stored in UAVParam.currentGeoMission[numUAV]
 		case UAVParam.MAV_STATUS_SEND_WPS:
 			try {
 				connection.send1(UAVParam.gcsId.get(numUAV),
@@ -1036,10 +1036,10 @@ public class UAVControllerThread extends Thread {
 				UAVParam.MAVStatus.set(numUAV, UAVParam.MAV_STATUS_ERROR_SENDING_WPS);
 			}
 			break;
-		// Command to request the number of waypoints of the mission stored in the UAV
+		// Command to request the number of waypoints of the protocols.mission stored in the UAV
 		case UAVParam.MAV_STATUS_REQUEST_WP_LIST:
 			try {
-				// The mission type must be set if using Mavlink v2
+				// The protocols.mission type must be set if using Mavlink v2
 				connection.send1(UAVParam.gcsId.get(numUAV),
 						0,	// MavComponent.MAV_COMP_ID_ALL,
 						MissionRequestList.builder()

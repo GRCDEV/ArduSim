@@ -126,6 +126,7 @@ public class ArduSimSetupSimulator extends ArduSimSetup{
     }
     @Override
     protected void startDistanceAndRangeCalculusThread(){
+        // TODO: locationThread is temporally and needs his own function and boolean to select.
         // 10. Set communications online, and start collision detection if needed
         if (Param.numUAVs > 1) {
             // Calculus of the distance between UAVs

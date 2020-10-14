@@ -26,12 +26,12 @@ public enum FlightMode {
 	GUIDED_ARMED(EnumValue.of(MavMode.MAV_MODE_GUIDED_ARMED).value() + 
 			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			4, Text.GUIDED_ARMED),
-	/** Executes pre-defined mission. */
+	/** Executes pre-defined protocols.mission. */
 	AUTO(EnumValue.of(MavMode.MAV_MODE_AUTO_DISARMED).value() -
 			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_AUTO_ENABLED).value() +	// Not valid with Custom enabled
 			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),
 			3, Text.AUTO),
-	/** Executes pre-defined mission. Engines are spinning. */
+	/** Executes pre-defined protocols.mission. Engines are spinning. */
 	AUTO_ARMED(EnumValue.of(MavMode.MAV_MODE_AUTO_ARMED).value() -
 			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_AUTO_ENABLED).value() +	// Not valid with Custom enabled
 			EnumValue.of(MavModeFlag.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED).value(),

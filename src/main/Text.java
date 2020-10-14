@@ -115,7 +115,7 @@ public class Text {
 	public static final String MISSIONS_ERROR_2 = "kml or waypoints files could be selected, but not at the same time.";
 	public static final String MISSIONS_ERROR_3 = "The kml file is not valid.";
 	public static final String MISSIONS_ERROR_4 = "No valid files were found.";
-	public static final String MISSIONS_ERROR_5 = "The file(s) with the UAV(s) mission must be selected.";
+	public static final String MISSIONS_ERROR_5 = "The file(s) with the UAV(s) protocols.mission must be selected.";
 	public static final String MISSIONS_ERROR_8 = "Mission parameters must be accepted.";
 	public static final String SPEEDS_SELECTION_ERROR = "Speeds selection warning";
 	public static final String SPEEDS_ERROR_1 = "The csv file is not valid.\nOne value by row and without header.";
@@ -203,12 +203,12 @@ public class Text {
 	public static final String EXITING = "UAV(s) closed. Time to go...";
 	public static final String ALTITUDE_TEXT = "altitude";
 	
-	// Parsing mission(s) file(s)
-	public static final String MISSION_NOT_FOUND = "No valid mission file was found on current folder.";
+	// Parsing protocols.mission(s) file(s)
+	public static final String MISSION_NOT_FOUND = "No valid protocols.mission file was found on current folder.";
 	public static final String MISSIONS_ERROR_6 = "Only one kml file must be stored on the current folder.";
-	public static final String MISSION_XML_SELECTED = "Using first mission found on file:";
+	public static final String MISSION_XML_SELECTED = "Using first protocols.mission found on file:";
 	public static final String MISSIONS_ERROR_7 = "Only one waypoints file must be stored on the current folder.";
-	public static final String MISSION_WAYPOINTS_SELECTED = "Using mission found on file:";
+	public static final String MISSION_WAYPOINTS_SELECTED = "Using protocols.mission found on file:";
 	public static final String LINE_TAG = "LineString";
 	public static final String COORDINATES_TAG = "coordinates";
 	public static final String XML_PARSING_ERROR_1 = "No path lines found.";
@@ -216,8 +216,8 @@ public class Text {
 	public static final String XML_PARSING_ERROR_3 = "Wrong file format.";
 	public static final String XML_PARSING_ERROR_4 = "Error parsing line/point:";
 	public static final String XML_PARSING_WARNING = "Found a waypoint with not enough altitude over home location. Altitude set to (m):";
-	public static final String XML_LAND_ADDED = "Land waypoint added at the end of the mission of UAV: ";
-	public static final String XML_RTL_ADDED = "RTL waypoint added at the end of the mission of UAV: ";
+	public static final String XML_LAND_ADDED = "Land waypoint added at the end of the protocols.mission of UAV: ";
+	public static final String XML_RTL_ADDED = "RTL waypoint added at the end of the protocols.mission of UAV: ";
 	public static final String FILE_HEADER = "QGC WPL 110";
 	public static final String FILE_PARSING_ERROR_1 = "Waypoint file error: Nothing useful found.";
 	public static final String FILE_PARSING_ERROR_2 = "Waypoint file error: Format not valid.";
@@ -227,12 +227,12 @@ public class Text {
 	public static final String FILE_PARSING_ERROR_6 = "Waypoint file error: Waypoints are not in the propper sequence order.";
 	public static final String FILE_PARSING_ERROR_7 = "Waypoint file error: Waypoint command not compatible. Valid commands:\n"
 			+ "\twaypoint, spline waypoint, takeoff, land, RTL.";
-	// Loading mission(s) dialog
+	// Loading protocols.mission(s) dialog
 	public static final String EXTEND_MISSION = "Mission end:";
 	public static final String RTL_ALTITUDE = "Final altitude for RTL:";
 	public static final String RTL_ALTITUDE_ERROR = "The minimum altitude for RTL must be a positive number.";
 	public static final String MIN_TARGET_ALTITUDE = "Minimum waypoints relative altitude:";
-	public static final String XML_DELAY = "Input mission delay over each waypoint:";
+	public static final String XML_DELAY = "Input protocols.mission delay over each waypoint:";
 	public static final String TARGET_DISTANCE = "Distance to waypoint to assert WP reached:";
 	public static final String ALTITUDE_OVERRIDE = "Override included altitude values:";
 	public static final String TARGET_ALTITUDE = "Waypoints relative altitude:";
@@ -370,14 +370,14 @@ public class Text {
 	public static final String RETURN_RC_CONTROL = "Control returned to the remote controller.";
 	public static final String RETURN_RC_CONTROL_ERROR = "Error returning control to the remote controller.";
 	public static final String RC_CHANNELS_OVERRIDE_FORBIDEN_ERROR = "Overriding RC channels is not allowed.";
-	public static final String MISSION_DELETE = "Previous mission erased.";
-	public static final String MISSION_DELETE_ERROR = "Error erasing the current mission.";
+	public static final String MISSION_DELETE = "Previous protocols.mission erased.";
+	public static final String MISSION_DELETE_ERROR = "Error erasing the current protocols.mission.";
 	public static final String MISSION_SENT = "Mission sent.";
 	public static final String MISSION_SENT_ERROR_1 = "The waypoint list is null or empty.";
 	public static final String MISSION_SENT_ERROR_2 = "Takeoff altitude is lower than the minimum flying altitude";
-	public static final String MISSION_SENT_ERROR_3 = "Error sending the mission.";
+	public static final String MISSION_SENT_ERROR_3 = "Error sending the protocols.mission.";
 	public static final String MISSION_GET = "Mission retrieved from the UAV.";
-	public static final String MISSION_GET_ERROR = "Error retrieving the current mission from the UAV.";
+	public static final String MISSION_GET_ERROR = "Error retrieving the current protocols.mission from the UAV.";
 	public static final String SERIAL_ERROR = "Failed conecting to the serial port.";
 	public static final String TCP_ERROR = "Failed connecting to SITL through TCP.";
 	public static final String FLIGHT_MODE_ERROR_2 = "Reporting an unknown flying mode.";

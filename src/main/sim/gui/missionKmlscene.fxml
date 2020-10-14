@@ -69,7 +69,7 @@
       </HBox>
       <HBox prefHeight="30.0" prefWidth="200.0">
          <children>
-            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="29.0" prefWidth="315.0" text="Input mission delay over each waypoint:">
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="29.0" prefWidth="315.0" text="Input protocols.mission delay over each waypoint:">
                <font>
                   <Font name="System Bold Italic" size="13.0" />
                </font>

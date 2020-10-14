@@ -2336,7 +2336,7 @@ public class ArduSimTools {
 		return null;
 	}
 
-	/** Loads a mission from a standard QGroundControl file.
+	/** Loads a protocols.mission from a standard QGroundControl file.
 	 * <p>Returns null if the file is not valid or it is empty.</p> */
 	public static List<Waypoint> loadMissionFile(String path) {
 	
@@ -2351,7 +2351,7 @@ public class ArduSimTools {
 			e.printStackTrace();
 			return null;
 		}
-		// Check if there are at least take off and a waypoint to define a mission (first line is header, and wp0 is home)
+		// Check if there are at least take off and a waypoint to define a protocols.mission (first line is header, and wp0 is home)
 		// During simulation an additional waypoint is needed in order to stablish the starting location
 		if ((Param.role == ArduSim.MULTICOPTER && list.size()<4) || ((Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) && list.size()<5)) {
 			ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_1);
@@ -2374,7 +2374,10 @@ public class ArduSimTools {
 			// Tabular delimited line
 			line = list.get(i).split("\t");
 			if (line.length!=12) {
-				ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_3 + " " + i);
+				ArduSimTools.logGlobal(Text.FILE_PARSING_ERROR_3 + " " + i + " expected 12 tabs but found " + line.length);
+				for (String s : line) {
+					System.out.println(s);
+				}
 				return null;
 			}
 			int numSeq, command;
@@ -2456,9 +2459,9 @@ public class ArduSimTools {
 		return mission;
 	}
 
-	/** Loads the first mission found in a folder.
-	 * <p>Priority loading: 1st xml file, 2nd QGRoundControl file, 3rd txt file. Only the first valid file/mission found is used.
-	 * Returns null if no valid mission was found.</p> */
+	/** Loads the first protocols.mission found in a folder.
+	 * <p>Priority loading: 1st xml file, 2nd QGRoundControl file, 3rd txt file. Only the first valid file/protocols.mission found is used.
+	 * Returns null if no valid protocols.mission was found.</p> */
 	public static List<Waypoint> loadMission(File parentFolder) {
 		// 1. kml file case
 		File[] files = parentFolder.listFiles(pathname -> pathname.getName().toLowerCase().endsWith(Text.FILE_EXTENSION_KML) && pathname.isFile());
@@ -2543,7 +2546,7 @@ public class ArduSimTools {
 		}
 	}
 	
-	/** Sends the initial configuration: sends mission (if any), and lauches the protocol instance initial configuration. */
+	/** Sends the initial configuration: sends protocols.mission (if any), and lauches the protocol instance initial configuration. */
 	public static void sendBasicConfiguration2() {
 		
 		ArduSimTools.logGlobal(Text.SEND_BASIC_CONFIGURATION_2);
@@ -3297,7 +3300,7 @@ public class ArduSimTools {
 		ArduSimTools.storingResults = false;
 	}
 	
-	/** Logging to file the UAVs mission, in AutoCAD format. */
+	/** Logging to file the UAVs protocols.mission, in AutoCAD format. */
 	private static void logMission(String folder, String baseFileName) {
 		File file1;
 		StringBuilder sb1;

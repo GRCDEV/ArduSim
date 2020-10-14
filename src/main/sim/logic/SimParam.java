@@ -15,7 +15,7 @@ public class SimParam {
 
 	// path of top-level .properties
 	public static final File resourcesFile = new File(API.getFileTools().getSourceFolder(),"/resources/ardusim/SimulationParam.properties");
-	public static final File missionParameterFile = new File(API.getFileTools().getSourceFolder(),"/resources/ardusim/missionParam.properties");
+	public static final File missionParameterFile = new File(API.getFileTools().getSourceFolder(), "/resources/mission/missionParam.properties");
 	// path to protocol specific parameter file
 	public static File protocolParamFile;
 	// Detects when the communications are online

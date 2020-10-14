@@ -35,7 +35,7 @@ public class InitialConfiguration2Thread extends Thread {
 	public static void sendBasicConfiguration(int numUAV) {
 		Copter copter = API.getCopter(numUAV);
 		
-		// Load mission if needed
+		// Load protocols.mission if needed
 		if (UAVParam.missionGeoLoaded != null) {
 			List<Waypoint> mission = UAVParam.missionGeoLoaded[numUAV];
 			if (mission != null) {

@@ -374,7 +374,7 @@ public class InitialConfiguration1Thread extends Thread {
 			UAVParam.RTLAltitudeFinal[numUAV] = paramValue * 0.01;	// Data received in centimeters
 		}
 		
-		// Set the speed when following a mission
+		// Set the speed when following a protocols.mission
 		if (UAVParam.initialSpeeds[numUAV] != 0.0 && !copter.setPlannedSpeed(UAVParam.initialSpeeds[numUAV])) {
 			return;
 		}

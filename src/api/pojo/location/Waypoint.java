@@ -75,7 +75,7 @@ public class Waypoint {
 		this.autoContinue = wp.autoContinue;
 	}
 
-	/** Returns the sequence number of this waypoint in the mission, beginning in 0. */
+	/** Returns the sequence number of this waypoint in the protocols.mission, beginning in 0. */
 	public int getNumSeq() {
 		return this.numSeq;
 	}

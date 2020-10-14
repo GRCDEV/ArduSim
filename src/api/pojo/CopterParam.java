@@ -39,9 +39,9 @@ public enum CopterParam {
 	WIND_TURBULENCE("SIM_WIND_TURB", EnumValue.of(MavParamType.MAV_PARAM_TYPE_REAL32)),
 	
 	// Other failsafe types options
-	/** GCS failsafe action when using RC override: 0 (disabled), 1 (RTL), 2 (complete mission if flight mode is auto). */
+	/** GCS failsafe action when using RC override: 0 (disabled), 1 (RTL), 2 (complete protocols.mission if flight mode is auto). */
 	GCS_LOST_FAILSAFE("FS_GCS_ENABLE", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT8)),
-	/** Remote control failsafe: 0 (disabled), 1 (RTL), 2 (complete mission if flight mode is auto), 3 (Land). */
+	/** Remote control failsafe: 0 (disabled), 1 (RTL), 2 (complete protocols.mission if flight mode is auto), 3 (Land). */
 	REMOTE_LOST_FAILSAFE("FS_THR_ENABLE", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT8)),
 	/** Throttle value adopted for failsafe when connection lost with remote control. */
 	REMOTE_LOST_FAILSAFE_THROTTLE_VALUE("FS_THR_VALUE", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT16)),
@@ -150,7 +150,7 @@ public enum CopterParam {
 	RTL_ALTITUDE_FINAL("RTL_ALT_FINAL", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT16)),
 	/** (cm) Distance to a waypoint to assert that it has been reached. */
 	WPNAV_RADIUS("WPNAV_RADIUS", EnumValue.of(MavParamType.MAV_PARAM_TYPE_REAL32)),
-	/** Yaw behavior while following a mission: 0 (Fixed), 1 (Face next waypoint), 2 (Face next waypoint except RTL), 3 (Face along GPS course). */
+	/** Yaw behavior while following a protocols.mission: 0 (Fixed), 1 (Face next waypoint), 2 (Face next waypoint except RTL), 3 (Face along GPS course). */
 	WP_YAW_BEHAVIOR("WP_YAW_BEHAVIOR", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT8)),
 	/** (cm/s) Maximum ground speed while in Loiter mode (valid for ArduCopter 3.5.7 or lower). */
 	LOITER_SPEED_357("WPNAV_LOIT_SPEED", EnumValue.of(MavParamType.MAV_PARAM_TYPE_REAL32)),

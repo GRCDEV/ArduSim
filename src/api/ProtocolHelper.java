@@ -19,9 +19,9 @@ public abstract class ProtocolHelper {
 	public abstract void setProtocol();
 	
 	/**
-	 * Assert if it is needed to load a mission.
-	 * <p>This method is used when the protocol is deployed in a real multicopter (on simulations, the mission must be loaded in the dialog built in <i>openConfigurationDialog()</i> method).</p>
-	 * @return must return true if this UAV must follow a mission.
+	 * Assert if it is needed to load a protocols.mission.
+	 * <p>This method is used when the protocol is deployed in a real multicopter (on simulations, the protocols.mission must be loaded in the dialog built in <i>openConfigurationDialog()</i> method).</p>
+	 * @return must return true if this UAV must follow a protocols.mission.
 	 */
 	public abstract boolean loadMission();
 	
@@ -85,7 +85,7 @@ public abstract class ProtocolHelper {
 	
 	/**
 	 * Optional: Periodically issued to analyze if the experiment must be finished, and to apply measures to make the UAVs land.
-	 * <p>For example, it can be finished when the user presses a button, the UAV is approaching to a location, or ending a mission.
+	 * <p>For example, it can be finished when the user presses a button, the UAV is approaching to a location, or ending a protocols.mission.
 	 * ArduSim stops the experiment when all the UAVs have landed. Please, see an example in MBCAP protocol.</p>*/
 	public abstract void forceExperimentEnd();
 	

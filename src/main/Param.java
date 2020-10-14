@@ -60,7 +60,7 @@ public class Param {
 	// Unique UAV identifier that must be used on protocols, based on MAC address (simple enumeration while in simulator)
 	public static long[] id;
 	
-	// Number of UAVs that need a mission to be loaded
+	// Number of UAVs that need a protocols.mission to be loaded
 	public static AtomicInteger numMissionUAVs = new AtomicInteger();
 	
 	// Verbose logging?

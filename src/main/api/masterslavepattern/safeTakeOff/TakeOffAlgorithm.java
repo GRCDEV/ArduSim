@@ -4,8 +4,9 @@ public enum TakeOffAlgorithm {
 	
 	OPTIMAL(0, "Optimal"),
 	SIMPLIFIED(1, "Simplified"),
-	RANDOM(2, "Random");
-	
+	RANDOM(2, "Random"),
+	HUNGARIAN(3, "Hungarian");
+
 	private final int algorithmID;
 	private final String algorithmName;
 	

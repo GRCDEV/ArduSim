@@ -49,14 +49,14 @@ public class CollisionDetector extends Thread {
 					if (mode.getBaseMode() >= UAVParam.MIN_MODE_TO_BE_FLYING
 							&& mode.getCustomMode() != 9) {
 						boolean check = true;
-						// If there is a mission, avoid checking while landing
+						// If there is a protocols.mission, avoid checking while landing
 						selfLastWP = UAVParam.lastWP[i];
 						if (selfLastWP != null) {
 							lastWPUTM = UAVParam.lastWPUTM[i];
 							lastWP = selfLastWP.getNumSeq();
 							currentWP = UAVParam.currentWaypoint.get(i);
 							if (selfLastWP.getCommand().value() == NAV_LAND_COMMAND) {
-								// Landing when reaching the end of the mission (lastWaypoint - 1)
+								// Landing when reaching the end of the protocols.mission (lastWaypoint - 1)
 								if (currentWP >= lastWP - 1) {
 									check = false;
 								}
@@ -77,14 +77,14 @@ public class CollisionDetector extends Thread {
 									if (distance < UAVParam.collisionDistance
 											&& Math.abs(UAVParam.uavCurrentData[i].getZ()-UAVParam.uavCurrentData[j].getZ()) < UAVParam.collisionAltitudeDifference) {
 										check = true;
-										// If there is a mission, avoid checking while landing
+										// If there is a protocols.mission, avoid checking while landing
 										otherLastWP = UAVParam.lastWP[j];
 										if (otherLastWP != null) {
 											lastWPUTM = UAVParam.lastWPUTM[j];
 											lastWP = otherLastWP.getNumSeq();
 											currentWP = UAVParam.currentWaypoint.get(j);
 											if (otherLastWP.getCommand().value() == NAV_LAND_COMMAND) {
-												// Landing when reaching the end of the mission (lastWaypoint - 1)
+												// Landing when reaching the end of the protocols.mission (lastWaypoint - 1)
 												if (currentWP >= lastWP - 1) {
 													check = false;
 												}

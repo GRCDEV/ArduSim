@@ -1,13 +1,11 @@
 package main.sim.logic;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import api.API;
 import api.pojo.CopterParam;
-import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
-import io.dronefleet.mavlink.common.GlobalPositionInt;
 import main.api.hiddenFunctions.HiddenFunctions;
 import main.uavController.UAVParam;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** This class forces all UAVs to send their current location, asynchronously.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */

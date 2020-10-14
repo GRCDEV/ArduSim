@@ -10,13 +10,13 @@ import java.util.*;
 import static main.uavController.UAVParam.*;
 
 public class MissionKmlSimProperties {
-    /** Used to leave the mission as it is loaded from a Google Earth .kml file. */
+    /** Used to leave the protocols.mission as it is loaded from a Google Earth .kml file. */
     public static final String MISSION_END_UNMODIFIED = "unmodified";// If you change this text, also do it in ardusim.ini
-    /** Used to end the mission with a LAND command when it is loaded from a Google Earth .kml file. */
+    /** Used to end the protocols.mission with a LAND command when it is loaded from a Google Earth .kml file. */
     public static final String MISSION_END_LAND = "land";
-    /** Used to end the mission with a RTL command when it is loaded from a Google Earth .kml file. */
+    /** Used to end the protocols.mission with a RTL command when it is loaded from a Google Earth .kml file. */
     public static final String MISSION_END_RTL = "RTL";
-    /** Last waypoint behavior for a mission loaded from a Google Earth .kml file. Please, set the same default value in <i>ardusim.ini</i> file. */
+    /** Last waypoint behavior for a protocols.mission loaded from a Google Earth .kml file. Please, set the same default value in <i>ardusim.ini</i> file. */
     public static volatile String missionEnd = MISSION_END_UNMODIFIED;
     /** (m) Final altitude when performing RTL. */
     public static volatile double finalAltitudeForRTL = 5.0;
@@ -24,7 +24,7 @@ public class MissionKmlSimProperties {
     private double minimumWaypointRelativeAltitude;
     /**
      * (s) Hovering time over each waypoint before going on to the next waypoint.
-     * <p>Please, modify WPNAV_RADIUS [10-1000 cm] parameter if needed to change where the mission waypoint is reached.</p> */
+     * <p>Please, modify WPNAV_RADIUS [10-1000 cm] parameter if needed to change where the protocols.mission waypoint is reached.</p> */
     public static volatile int inputMissionDelay = 0;
     public static volatile int distanceToWaypointReached = 200;
     private boolean overrideIncludedAltitudeValues;

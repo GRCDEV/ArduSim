@@ -74,7 +74,7 @@ public class GUI {
 	}
 
 	/**
-	 * Loads the mission files
+	 * Loads the protocols.mission files
 	 * @param missionFiles list with files
 	 * @return pair of string and waypoints
 	 */
@@ -94,7 +94,6 @@ public class GUI {
 				return new Pair<>(selection[0].getAbsolutePath(), missions.getValue1());
 			}
 		}
-		
 		return null;
 	}
 	
@@ -181,7 +180,7 @@ public class GUI {
 				return null;
 			}
 			List<Waypoint>[] missions = new ArrayList[files.length];
-			// Next, load each mission from one file
+			// Next, load each protocols.mission from one file
 			int j = 0;
 			for (File file : files) {
 				List<Waypoint> current = ArduSimTools.loadMissionFile(file.getAbsolutePath());
