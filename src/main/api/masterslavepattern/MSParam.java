@@ -19,17 +19,16 @@ public class MSParam {
 	
 	// Safe take off sending data states
 	public static final short STATE_EXCLUDE = 0;
-	public static final short STATE_SENDING_DATA = 1;
-	public static final short STATE_SENDING_FINISHED = 2;
+	public static final short STATE_SENDING_TAKEOFFDATA = 1;
+	public static final short STATE_SENDING_LIDERORDER = 2;
+	public static final short STATE_SENDING_FINISHED = 3;
 	
 	// Safe take off taking off states
-	public static final short STATE_WAIT_TAKE_OFF = 3;
-	public static final short STATE_TAKE_OFF_STEP_1 = 4;
-	public static final short STATE_TAKE_OFF_STEP_2 = 5;
-	public static final short STATE_TARGET_REACHED = 6;
-	public static final short STATE_TAKE_OFF_CHECK = 7;
-	public static final short STATE_TAKE_OFF_FINISHED = 8;
-	
-	
-	
+	public static final short STATE_WAIT_TAKE_OFF = 4;
+	public static final short STATE_TAKE_OFF_STEP_1 = 5;
+	public static final short STATE_TAKE_OFF_STEP_2 = 6;
+	public static final short STATE_TARGET_REACHED = 7;
+	public static final short STATE_TAKE_OFF_CHECK = 8;
+	public static final short STATE_TAKE_OFF_FINISHED = 9;
+
 }

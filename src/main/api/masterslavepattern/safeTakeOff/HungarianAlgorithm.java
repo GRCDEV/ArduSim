@@ -36,11 +36,10 @@ public class HungarianAlgorithm {
     }
     private void initMask() {
         ArrayList<Pair<Integer,Integer>> zeros = getAllZeros();
-        for(int i =0;i<zeros.size();i++) {
-            Pair<Integer,Integer> p = zeros.get(i);
+        for (Pair<Integer, Integer> p : zeros) {
             int row = p.getValue0();
             int column = p.getValue1();
-            if(!existStarInRowOrColumn(row,column)) {
+            if (!existStarInRowOrColumn(row, column)) {
                 mask[row][column] = Element.STAR;
             }
         }
@@ -52,10 +51,7 @@ public class HungarianAlgorithm {
     }
     private void coverColumnsOfStarredZeroes() {
         initializeCoverColumn();
-        if(getNumberOfColumnsCovered() == dimension) {
-            System.out.println("DONE");
-            return;
-        }else {
+        if(getNumberOfColumnsCovered() != dimension){
             primeSomeUncoveredZero();
         }
     }
@@ -135,20 +131,18 @@ public class HungarianAlgorithm {
     }
     private boolean checkSquareMatrix(double[][] costMatrix) {
         int rows = costMatrix.length;
-        for(int i=0;i<rows;i++) {
-            int columns = costMatrix[i].length;
-            if(columns != rows) {
+        for (double[] matrix : costMatrix) {
+            int columns = matrix.length;
+            if (columns != rows) {
                 return false;
             }
         }
         return true;
     }
     private boolean checkPositive(double[][] costMatrix) {
-        int rows = costMatrix.length;
-        for(int i=0;i<rows;i++) {
-            int columns = costMatrix[i].length;
-            for(int j=0;j<columns;j++) {
-                if(costMatrix[i][j] < 0) {
+        for (double[] matrix : costMatrix) {
+            for (double v : matrix) {
+                if (v < 0) {
                     return false;
                 }
             }
@@ -227,8 +221,7 @@ public class HungarianAlgorithm {
         return null;
     }
     private void unstarEachStarredZeroInSeries(ArrayList<Pair<Integer,Integer>> starsOfSeries) {
-        for(int i = 0;i<starsOfSeries.size();i++) {
-            Pair<Integer,Integer> p = starsOfSeries.get(i);
+        for (Pair<Integer, Integer> p : starsOfSeries) {
             mask[p.getValue0()][p.getValue1()] = null;
         }
     }
@@ -243,8 +236,7 @@ public class HungarianAlgorithm {
         return null;
     }
     private void starAllPrimesInSeries(ArrayList<Pair<Integer,Integer>> primesOfSeries) {
-        for(int i = 0;i<primesOfSeries.size();i++) {
-            Pair<Integer,Integer> p = primesOfSeries.get(i);
+        for (Pair<Integer, Integer> p : primesOfSeries) {
             mask[p.getValue0()][p.getValue1()] = Element.STAR;
         }
     }
@@ -311,7 +303,7 @@ public class HungarianAlgorithm {
     private int getNumberOfColumnsCovered() {
         int nr = 0;
         for(int i = 0;i<dimension;i++) {
-            if(coveredColumns[i] == true) {
+            if(coveredColumns[i]) {
                 nr++;
             }
         }
@@ -322,7 +314,16 @@ public class HungarianAlgorithm {
         coveredRows = new boolean[dimension];
     }
 
-    public Element[][] getMask() {
+    public  Element[][] getMask() {
         return mask;
+    }
+
+    public ArrayList<Pair<Integer,Integer>> getAssignment(){
+        ArrayList<Pair<Integer,Integer>> assignment = new ArrayList<>();
+        for(int row = 0; row< dimension; row++){
+            Pair<Integer,Integer> p = findFirstStarInRow(row);
+            assignment.add(p);
+        }
+        return assignment;
     }
 }

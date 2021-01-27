@@ -8,7 +8,6 @@ import api.pojo.location.Waypoint;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortInvalidPortException;
 import es.upv.grc.mapper.*;
-import io.dronefleet.mavlink.Mavlink2Message;
 import io.dronefleet.mavlink.MavlinkConnection;
 import io.dronefleet.mavlink.MavlinkMessage;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
@@ -45,16 +44,15 @@ public class UAVControllerThread extends Thread {
 	private static final float[] DASHING_PATTERN = { 2f, 2f };
 	private static final Stroke STROKE_WP_LIST = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f,
 			DASHING_PATTERN, 2.0f);
-	private Color color;
+	private final Color color;
 	
-	private int numUAV;			// Id of the UAV
+	private final int numUAV;	// Id of the UAV
 	private boolean isStarting; // Used to wait until the first valid coordinates set is received
 	private int numTests;		// It allows to check several times if the waypoint has been sent well.
 								// Several updates of the previous waypoint can be received after the current one
 
 	/** Connection parameters */
 	private Socket socket = null;
-	private int port;
 	private SerialPort serialPort = null;
 	private MavlinkConnection connection;
 	
@@ -70,14 +68,11 @@ public class UAVControllerThread extends Thread {
 	private DrawableCircleGeo collisionRadius = null;
 	private DrawableImageGeo uav = null;
 	
-	private ValidationTools round = null;
+	private final ValidationTools round;
 	
 	private static final int SET_MODE_COMMAND = SetMode.class.getAnnotation(MavlinkMessageInfo.class).id();
 	private static final int NAV_LAND_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LAND).value();
 	private static final int NAV_RETURN_TO_LAUNCH_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_RETURN_TO_LAUNCH).value();
-	
-	@SuppressWarnings("unused")
-	private UAVControllerThread() {}
 
 	public UAVControllerThread(int numUAV) {
 		this.numUAV = numUAV;
@@ -105,9 +100,9 @@ public class UAVControllerThread extends Thread {
 			}
 		} else if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			// Connection through TCP in the simulator
-			this.port = UAVParam.mavPort[numUAV];
+			int port = UAVParam.mavPort[numUAV];
 			try {
-				socket = new Socket(UAVParam.MAV_NETWORK_IP, this.port);
+				socket = new Socket(UAVParam.MAV_NETWORK_IP, port);
 				socket.setTcpNoDelay(true);
 				connection = MavlinkConnection.create(socket.getInputStream(), socket.getOutputStream());
 			} catch (IOException e) {
@@ -125,36 +120,26 @@ public class UAVControllerThread extends Thread {
 	public void run() {
 		MavlinkMessage<?> inMsg;
 		// Periodically sending a heartbeat to keep control over the UAV, while reading received MAVLink messages
+		int trying = 0;
 		long prevTime = System.nanoTime();
-		long posTime;
-		
 		while (true) {
 			try {
 				inMsg = this.connection.next();
 				if (inMsg != null) {
 					// Identify and process the received message
 					identifyMessage(inMsg);
-					
 					// When all UAVs are connected, start to process commands and sending heartbeat
 					if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
-						posTime = System.nanoTime();
-						if (posTime - prevTime > UAVParam.HEARTBEAT_PERIOD) {
-							try {
-								this.connection.send1(UAVParam.gcsId.get(numUAV),
-										0,	// MavComponent.MAV_COMP_ID_ALL
-										Heartbeat.builder()
-											.type(MavType.MAV_TYPE_GCS)
-											.autopilot(MavAutopilot.MAV_AUTOPILOT_INVALID)
-											.systemStatus(MavState.MAV_STATE_UNINIT)
-											.mavlinkVersion(3)
-											.build());
-								prevTime = posTime;
-							} catch (IOException ignored) {}
-						}
+						prevTime = sendHeartBeatPeriodically(prevTime);
 						processCommand();
 					}
 				}
 			} catch(EOFException e) {
+				if(main.Param.simStatus != SimulatorState.SHUTTING_DOWN){
+					ArduSimTools.warnGlobal("MavLink closing" , "UAV " + numUAV +
+							" mavlink connection closing before the protocol is ending due to end of stream");
+				}
+				// TODO check why the mavlink is not sending messages
 				break;
 			} catch(IOException ignored) {}
 		}
@@ -168,19 +153,40 @@ public class UAVControllerThread extends Thread {
 		}
 	}
 
+	private long sendHeartBeatPeriodically(long prevTime){
+		long posTime = System.nanoTime();
+		if (posTime - prevTime > UAVParam.HEARTBEAT_PERIOD) {
+			try {
+				this.connection.send1(UAVParam.gcsId.get(numUAV),
+						0,    // MavComponent.MAV_COMP_ID_ALL
+						Heartbeat.builder()
+								.type(MavType.MAV_TYPE_GCS)
+								.autopilot(MavAutopilot.MAV_AUTOPILOT_INVALID)
+								.systemStatus(MavState.MAV_STATE_UNINIT)
+								.mavlinkVersion(3)
+								.build());
+
+			} catch (IOException ignored) {
+				ignored.printStackTrace();
+			}
+			prevTime = posTime;
+		}
+		return prevTime;
+	}
+
 	/** Message identification to process it. */
 	private void identifyMessage(MavlinkMessage<?> inMsg) {
+		/*
 		if (inMsg instanceof Mavlink2Message) {
 			// Mavlink v2 message
 			Mavlink2Message<?> msg = (Mavlink2Message<?>) inMsg;
 			if (msg.isSigned()) {
-//				if (msg.validateSignature(secretKey)) {
-//					// TODO implement v2 signed messages
-//					
-//				} else {
-//					// ignore suspicious message
-//				}
-				
+				if (msg.validateSignature(secretKey)) {
+					// TODO implement v2 signed messages
+
+				} else {
+					// ignore suspicious message
+				}
 			} else {
 				// TODO implement v2 messages
 				
@@ -188,18 +194,17 @@ public class UAVControllerThread extends Thread {
 			}
 		} else {
 			// mavlink v1 message
-			
-			
-			
 		}
-		
+		*/
+
 		Object payload = inMsg.getPayload();
 		if (payload instanceof Heartbeat) {
 			// Detect when the UAV has connected (first heartbeat received)
-			if (!this.uavConnected) {
-				UAVParam.mavId.set(numUAV, inMsg.getOriginSystemId());
+			if (!uavConnected) {
+				int id = inMsg.getOriginSystemId();
+				UAVParam.mavId.set(numUAV, id);
 				UAVParam.numMAVLinksOnline.incrementAndGet();
-				this.uavConnected = true;
+				uavConnected = true;
 			}
 			processMode((Heartbeat) payload);
 		} else if (payload instanceof GlobalPositionInt) {

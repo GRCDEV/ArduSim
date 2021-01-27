@@ -438,7 +438,7 @@ public class Text {
 	public static final String SEND_NOT_PERMITTED = "You cannot send messages to the UAVs from the PC Companion.";
 	
 	// Thread names
-	public static final String TAKEOFF_THREAD = "TakeOff thread ";
+	public static final String TAKEOFF_THREAD = "TakeOffThread thread ";
 	public static final String DISCOVERY_MASTER_LISTENER = "Discovery master listener: ";
 	public static final String DISCOVERY_MASTER_TALKER = "Discovery master talker: ";
 	public static final String DISCOVERY_SLAVE_LISTENER = "Discovery slave listener: ";

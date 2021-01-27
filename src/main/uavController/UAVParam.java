@@ -21,7 +21,8 @@ public class UAVParam {
 
 	// ArduSim-flight controller connection parameters
 	// TCP (on virtual UAVs)
-	public static final int MAX_SITL_INSTANCES = 515;	// Maximum number of SITL instances allowed (only limited by hardware capabilities)
+	//TODO check max sitl instances
+	public static final int MAX_SITL_INSTANCES = 1001;	// Maximum number of SITL instances allowed (only limited by hardware capabilities)
 	public static final String MAV_NETWORK_IP = "127.0.0.1";
 	public static final int MAX_PORT = 65535;			// Maximum port value
 	public static final int MAV_INITIAL_PORT = 5760;	// SITL initial listening port

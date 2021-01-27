@@ -3,10 +3,13 @@ package test.main.api.masterslavepattern.safeTakeOff;
 
 import main.api.masterslavepattern.safeTakeOff.HungarianAlgorithm;
 import main.api.masterslavepattern.safeTakeOff.HungarianAlgorithm.Element;
+import org.javatuples.Pair;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -101,5 +104,22 @@ public class TestHungarianAlgorithm {
         for(int i=0;i<expected.length;i++) {
             assertArrayEquals(expected[i],solution[i]);
         }
+    }
+
+    @Test
+    public void testGetAssignement(){
+        HungarianAlgorithm smallMatrix = new HungarianAlgorithm(3);
+        double[][] smallCostMatrix = {{25,40,35},{40,60,35},{20,40,25}};
+        smallMatrix.fillWithCostmatrix(smallCostMatrix);
+        smallMatrix.solve();
+        ArrayList<Pair<Integer,Integer>> actual = smallMatrix.getAssignment();
+        assertEquals(0, actual.get(0).getValue0());
+        assertEquals(1, actual.get(0).getValue1());
+
+        assertEquals(1, actual.get(1).getValue0());
+        assertEquals(2, actual.get(1).getValue1());
+
+        assertEquals(2, actual.get(2).getValue0());
+        assertEquals(0, actual.get(2).getValue1());
     }
 }

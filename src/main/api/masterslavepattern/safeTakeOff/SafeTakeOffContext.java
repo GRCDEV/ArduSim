@@ -101,5 +101,9 @@ public class SafeTakeOffContext {
 	public long[] getMasterOrder() {
 		return this.masterOrder;
 	}
-	
+
+	/**
+	 * return the target location
+	 */
+	public Location2DGeo getTargetLocation(){ return this.targetLocation;}
 }

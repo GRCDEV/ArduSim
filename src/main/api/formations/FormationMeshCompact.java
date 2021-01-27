@@ -9,18 +9,22 @@ import java.awt.geom.Point2D;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.TimeoutException;
 
 /** The formation numbering starts in 0 in the center of the formation and increases with the distance to the center of the formation.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class FormationMeshCompact extends FlightFormation {
-	
+
+	private long start;
+	private final long TIMEOUT = 3000; //after 3000 ms throw timeoutException
 	protected FormationMeshCompact(int numUAVs, double minDistance, Formation formation) {
 		super(numUAVs, minDistance, formation);
 	}
 
 	@Override
-	protected void initializeFormation() {
+	protected void initializeFormation() throws TimeoutException {
+		start = System.currentTimeMillis();
 		this.centerUAVPosition = 0;
 		
 		// 1. Get the number of layers around the center UAV to contain all the UAVs
@@ -29,6 +33,9 @@ public class FormationMeshCompact extends FlightFormation {
 		boolean minFound = false;
 		int layer = 1;
 		while (!minFound) {
+			if(timedOut()){
+				throw new TimeoutException();
+			}
 			n = n + layer * 6;
 			if (n >= this.numUAVs) {
 				minFound = true;
@@ -43,6 +50,9 @@ public class FormationMeshCompact extends FlightFormation {
 		double minDistance;
 		boolean found = false;
 		while (!found) {
+			if(timedOut()){
+				throw new TimeoutException();
+			}
 			if (layer + 1 % 2 == 0) {
 				minDistance = (layer + 1) * sin60;
 			} else {
@@ -153,11 +163,17 @@ public class FormationMeshCompact extends FlightFormation {
 		}
 		// For each distance
 		while (i < n && p < this.numUAVs) {
+			if(timedOut()){
+				throw new TimeoutException();
+			}
 			FormationPointHelper[] set = this.getSet(point, i);
 			i = i + set.length;
 			j = 0;
 			// For each layer
 			while (j < set.length && p < this.numUAVs) {
+				if(timedOut()){
+					throw new TimeoutException();
+				}
 				FormationPointHelper[] subSet = this.getSubSet(set, j);
 				j = j + subSet.length;
 				for (FormationPointHelper formationPointHelper : subSet) {
@@ -167,6 +183,9 @@ public class FormationMeshCompact extends FlightFormation {
 				int k = 0;
 				int side = 0;
 				while (k < subSet.length && p < this.numUAVs) {
+					if(timedOut()){
+						throw new TimeoutException();
+					}
 					side = (side + 1) % 7;
 					extracted = ordered[side].poll();
 					if (extracted != null) {
@@ -178,13 +197,20 @@ public class FormationMeshCompact extends FlightFormation {
 			}
 		}
 	}
-	
+
+	private boolean timedOut() {
+		return (System.currentTimeMillis() - start) > TIMEOUT;
+	}
+
 	// Get set of points with the same distance
-	private FormationPointHelper[] getSet(FormationPointHelper[] point, int startIndex) {
+	private FormationPointHelper[] getSet(FormationPointHelper[] point, int startIndex) throws TimeoutException {
 		double distance = point[startIndex].distance;
 		boolean found = false;
 		int endIndex = startIndex + 1;
 		while (endIndex < point.length && !found) {
+			if(timedOut()){
+				throw new TimeoutException();
+			}
 			if (point[endIndex].distance == distance) {
 				endIndex++;
 			} else {
@@ -195,11 +221,14 @@ public class FormationMeshCompact extends FlightFormation {
 	}
 	
 	// Get subset of points with the same distance and in the same layer
-	private FormationPointHelper[] getSubSet(FormationPointHelper[] point, int startIndex) {
+	private FormationPointHelper[] getSubSet(FormationPointHelper[] point, int startIndex) throws TimeoutException {
 		int layer = point[startIndex].layer;
 		boolean found = false;
 		int endIndex = startIndex + 1;
 		while (endIndex < point.length && !found) {
+			if(timedOut()){
+				throw new TimeoutException();
+			}
 			if (point[endIndex].layer == layer) {
 				endIndex++;
 			} else {

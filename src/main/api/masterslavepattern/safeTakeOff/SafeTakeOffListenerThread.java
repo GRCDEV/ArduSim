@@ -66,7 +66,6 @@ public class SafeTakeOffListenerThread extends Thread {
 	
 	@Override
 	public void run() {
-		
 		final AtomicInteger state = new AtomicInteger(MSParam.STATE_WAIT_TAKE_OFF);
 		
 		if (prevID == SafeTakeOffContext.BROADCAST_MAC_ID) {

@@ -1,10 +1,14 @@
 package main.api;
 
 import api.API;
+import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3D;
 import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.MSParam;
+import main.api.masterslavepattern.MSText;
 import main.api.masterslavepattern.safeTakeOff.*;
+import protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -16,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SafeTakeOffHelper {
 	
 	private int numUAV;
+	private double totalDistance = -1;
 	
 	@SuppressWarnings("unused")
 	private SafeTakeOffHelper() {}
@@ -54,6 +59,7 @@ public class SafeTakeOffHelper {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		totalDistance = listener.getTotalErrorInMatch();
 		API.getArduSim().sleep(MSParam.TAKE_OFF_DATA_TIMEOUT);	//Wait slaves timeout
 		return result.get();
 	}
@@ -67,7 +73,7 @@ public class SafeTakeOffHelper {
 
 		AtomicReference<SafeTakeOffContext> result = new AtomicReference<>();
 
-		TakeOffSlaveDataListenerThread listener = new TakeOffSlaveDataListenerThread(numUAV, exclude, result);
+		TakeOffSlaveDataThread listener = new TakeOffSlaveDataThread(numUAV, exclude, result);
 		listener.start();
 		try {
 			listener.join();
@@ -99,9 +105,57 @@ public class SafeTakeOffHelper {
 	 * @param takeOffListener Listener that can be used to detect when the take off finishes.
 	 */
 	public void start(SafeTakeOffContext safeTakeOffContext, SafeTakeOffListener takeOffListener) {
+		//TODO refactor code !! this is just quick code so that I can run the experiments
+		if(CompareTakeOffSimProperties.takeOffIsSequential) {
+			new SafeTakeOffListenerThread(numUAV, safeTakeOffContext, takeOffListener).start();
+		}else{
+			Copter copter = API.getCopter(numUAV);
+			GUI gui = API.getGUI(numUAV);
+			// take off the UAVs to 5 meters
+			TakeOff takeOff = copter.takeOff(5, new TakeOffListener() {
 
-		new SafeTakeOffListenerThread(numUAV, safeTakeOffContext, takeOffListener).start();
+				@Override
+				public void onFailure() {
+					gui.exit(MSText.TAKE_OFF_ERROR + " " + numUAV);
+				}
 
+				@Override
+				public void onCompleteActionPerformed() {}
+			});
+			takeOff.start();
+			try {
+				takeOff.join();
+			} catch (InterruptedException e1) {}
+
+			// let them move to their targetLocation
+			Location2DGeo targetLocation = safeTakeOffContext.getTargetLocation();
+			MoveTo moveTo = copter.moveTo(new Location3D(targetLocation, CompareTakeOffSimProperties.altitude),
+					new MoveToListener() {
+
+						@Override
+						public void onFailure() {
+							gui.exit(MSText.MOVE_ERROR + numUAV);
+						}
+
+						@Override
+						public void onCompleteActionPerformed() {}
+					});
+			moveTo.start();
+			try {
+				moveTo.join();
+			} catch (InterruptedException e) {}
+
+			// wait until all UAVs are there before landing
+			takeOffListener.onCompleteActionPerformed();
+		}
+	}
+
+	/**
+	 * Getter of TotalDistance
+	 * @return totalDistance = total error in match produced by TakeOffmasterListnerThread;
+	 */
+	public double getTotalDistance() {
+		return totalDistance;
 	}
 	
 }

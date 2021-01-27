@@ -5,6 +5,7 @@ import main.Text;
 import main.api.formations.helpers.FormationPoint;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
 /** 
  * The base flight formation that must be extended by any new flight formation.
@@ -149,12 +150,16 @@ public abstract class FlightFormation {
 		this.minDistance = minDistance;
 		this.formation = formation;
 		this.point = new FormationPoint[numUAVs];
-		this.initializeFormation();
+		try {
+			this.initializeFormation();
+		} catch (TimeoutException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/** Calculate the centerUAV (located in [0,0] coordinates), and the offset of the remaining UAVs to the centerUAV.
 	 * <p>Don't call this method. It is automatically used when the formation object is created.</p> */
-	protected abstract void initializeFormation();
+	protected abstract void initializeFormation() throws TimeoutException;
 	
 	/** Get the position of the center UAV in the formation. */
 	public int getCenterUAVPosition() {

@@ -73,7 +73,7 @@ import java.util.zip.ZipOutputStream;
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class ArduSimTools {
-	
+
 	// Used to avoid the exit dialog to be opened more than once at the same time.
 	private static final AtomicBoolean exiting = new AtomicBoolean();
 	
@@ -99,13 +99,16 @@ public class ArduSimTools {
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
 	public static void parseArgs(String[] args) {
-		String commandLine = "Command line:\n    java -jar ArduSim.jar <option>\nChoose option:\n" +
-				"    multicopter\n    simulator-gui\n    simulator-cli\n    pccompanion";
-		if (args.length != 1) {
+		String commandLine = "Command line:\n    java -jar ArduSim.jar <mode> <filePath>\nChoose mode:\n" +
+				"    multicopter\n    simulator-gui\n    simulator-cli\n    pccompanion\n" +
+				" select a File path to the ardusim.properties file " +
+				" default is currentDirectory/resources/ardusim/SimulationParam.properties";
+		if (args.length < 1) {
 			System.out.println(commandLine);
 			System.out.flush();
 			System.exit(1);
 		}
+
 		if (args[0].equalsIgnoreCase("multicopter")) {
 			Param.role = ArduSim.MULTICOPTER;
 		}else if (args[0].equalsIgnoreCase("simulator-gui")) {
@@ -118,6 +121,11 @@ public class ArduSimTools {
 			System.out.println(commandLine);
 			System.out.flush();
 			System.exit(1);
+		}
+		if(args.length == 2){
+			SimParam.resourcesFile = new File(args[1]);
+		}else{
+			SimParam.resourcesFile = new File(API.getFileTools().getSourceFolder(),"/resources/ardusim/SimulationParam.properties");
 		}
 	}
 	
@@ -726,6 +734,7 @@ public class ArduSimTools {
 	
 	/** Auxiliary method to check the available TCP and UDP ports needed by SITL instances and calculate the number of possible instances. */
 	public static Integer[] getSITLPorts() throws InterruptedException, ExecutionException {
+		final int PORT_OFFSET = 12;
 		// SITL starts using TCP5760 and UDP5501,5502,5503
 		ExecutorService es = Executors.newFixedThreadPool(20);
 		List<Integer> reservedPort = new ArrayList<>();
@@ -751,11 +760,11 @@ public class ArduSimTools {
 	    		while (reservedPort.contains(tcpPort) || reservedPort.contains(udp1Port)
 	    				|| reservedPort.contains(udp2Port) || reservedPort.contains(udp3Port)
 	    				|| reservedPort.contains(irLockPort)) {
-	    			tcpPort = tcpPort + 10;
-			    	udp1Port = udp1Port + 10;
-			    	udp2Port = udp2Port + 10;
-			    	udp3Port = udp3Port + 10;
-			    	irLockPort = irLockPort + 10;
+	    			tcpPort = tcpPort + PORT_OFFSET;
+			    	udp1Port = udp1Port + PORT_OFFSET;
+			    	udp2Port = udp2Port + PORT_OFFSET;
+			    	udp3Port = udp3Port + PORT_OFFSET;
+			    	irLockPort = irLockPort + PORT_OFFSET;
 	    		}
 	    		if (irLockPort <= UAVParam.MAX_PORT) {
 	    			tcpMain.add(portIsAvailable(es, tcpPort));
@@ -763,11 +772,11 @@ public class ArduSimTools {
 			    	udpAux2.add(portIsAvailable(es, udp2Port));
 			    	udpAux3.add(portIsAvailable(es, udp3Port));
 			    	irLockAux.add(portIsAvailable(es, irLockPort));
-			    	tcpPort = tcpPort + 10;
-			    	udp1Port = udp1Port + 10;
-			    	udp2Port = udp2Port + 10;
-			    	udp3Port = udp3Port + 10;
-			    	irLockPort = irLockPort + 10;
+			    	tcpPort = tcpPort + PORT_OFFSET;
+			    	udp1Port = udp1Port + PORT_OFFSET;
+			    	udp2Port = udp2Port + PORT_OFFSET;
+			    	udp3Port = udp3Port + PORT_OFFSET;
+			    	irLockPort = irLockPort + PORT_OFFSET;
 	    		}
 	    	}
 	    	es.awaitTermination(UAVParam.PORT_CHECK_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -1659,7 +1668,6 @@ public class ArduSimTools {
 					pb.directory(new File(SimParam.tempFolderBasePath, SimParam.TEMP_FOLDER_PREFIX + i));
 				}
 				SimParam.processes[i] = pb.start();
-
 				// Waiting for SITL to be prepared for a TCP connection
 				input = new BufferedReader(new InputStreamReader(SimParam.processes[i].getInputStream()));
 				success = false;
@@ -2084,7 +2092,6 @@ public class ArduSimTools {
 			if (UAVParam.numMAVLinksOnline.get() == Param.numUAVs) {
 				allReady = true;
 			}
-
 			// On simulation, stop if error happens and they are not online
 			if (System.nanoTime() - time > UAVParam.MAVLINK_ONLINE_TIMEOUT) {
 				if (Param.role == ArduSim.MULTICOPTER) {

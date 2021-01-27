@@ -11,13 +11,15 @@ public class MSMessageID {
 	
 	public static final short EXCLUDE = 2;
 	public static final short TAKE_OFF_DATA = 3;
-	public static final short LIDER_ORDER = 4;
-	public static final short LIDER_ORDER_FRAG = 5;
-	public static final short TAKE_OFF_DATA_ACK = 6;
+	public static final short TAKE_OFF_DATA_ACK = 4;
+	public static final short LIDER_ORDER = 5;
+	public static final short LIDER_ORDER_FRAG = 6;
+	public static final short LIDER_ORDER_ACK = 7;
+
 	
-	public static final short TAKE_OFF_NOW = 7;
-	public static final short REACHED_ACK = 8;
-	public static final short TAKE_OFF_END = 9;
-	public static final short TAKE_OFF_END_ACK = 10;
+	public static final short TAKE_OFF_NOW = 8;
+	public static final short REACHED_ACK = 9;
+	public static final short TAKE_OFF_END = 10;
+	public static final short TAKE_OFF_END_ACK = 11;
 	
 }

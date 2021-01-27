@@ -68,6 +68,7 @@ public class MatchCalculusThread extends Thread {
 			// The center of the flying formation will be over the current location of the master UAV on the ground
 			// Solution provided for Follow Me protocol, as the master UAV must take-off vertically always to the center of the flight formation
 			// We arrange all the UAVs but the center UAV (not included in ground nor airLocations for the calculus)
+			Location2DUTM masterLocation = ground.get(masterID);
 			ground.remove(masterID);
 			groundCenterLocation = groundLocations.get(masterID);
 			int flyingCenterPosition = flightFormation.getCenterUAVPosition();
@@ -88,7 +89,9 @@ public class MatchCalculusThread extends Thread {
 				fit = MatchCalculusThread.getRandomMatch(ground, air);
 			}
 			if(TakeOffMasterDataListenerThread.selectedAlgorithm == TakeOffAlgorithm.HUNGARIAN){
-				fit = new HungarianTakeOff(groundLocations,air).getHungarianMatch();
+				//fit = new HungarianTakeOff(ground,air).getHungarianMatch();
+				//TODO hungarianTakeOff with master in the center
+				fit = null;
 			}
 			// Now we include again the center UAV in the center of the flight formation
 			if(fit != null) {
@@ -140,6 +143,7 @@ public class MatchCalculusThread extends Thread {
 				for (int j = 0; j < numUAVs; j++) {
 					air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
 				}
+
 				match = MatchCalculusThread.getSimplifiedMatch(ground, air, groundCenterLocation);
 			}
 			if (TakeOffMasterDataListenerThread.selectedAlgorithm == TakeOffAlgorithm.RANDOM) {
@@ -160,7 +164,22 @@ public class MatchCalculusThread extends Thread {
 				match = MatchCalculusThread.getRandomMatch(ground, air);
 			}
 			if(TakeOffMasterDataListenerThread.selectedAlgorithm == TakeOffAlgorithm.HUNGARIAN){
-				match = new HungarianTakeOff(groundLocations,air).getHungarianMatch();
+				// The center of the flying formation will be on  the mean coordinates of all the UAVs on the ground
+				double x = 0;
+				double y = 0;
+				Location2DUTM location;
+				for (int i = 0; i < numUAVs; i++) {
+					location = groundLocations.get(ids[i]);
+					x = x + location.x;
+					y = y + location.y;
+				}
+				groundCenterLocation = new Location2DUTM(x / numUAVs, y / numUAVs);
+
+				for (int j = 0; j < numUAVs; j++) {
+					air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
+				}
+
+				match = new HungarianTakeOff(ground,air).getHungarianMatch();
 			}
 		}
 
