@@ -153,7 +153,7 @@ public class ShakeupListenerThread extends Thread{
 				formationYaw = Param.masterInitialYaw;
 			}
 			takeOff = takeOffHelper.getMasterContext(UAVsDetected, 
-					API.getFlightFormationTools().getFlyingFormation(UAVsDetected.size() + 1),
+					UAVParam.airFormation.get(),
 					formationYaw, Param.altitude, true, false);
 		}else {
 			takeOff = takeOffHelper.getSlaveContext(false);

@@ -3,6 +3,7 @@ package protocols.followme.logic;
 import api.API;
 import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.*;
+import main.uavController.UAVParam;
 import protocols.followme.pojo.Message;
 import main.Param;
 import main.api.*;
@@ -105,7 +106,7 @@ public class FollowMeListenerThread extends Thread {
 				formationYaw = FollowMeParam.masterInitialYaw;
 			}
 			takeOff = takeOffHelper.getMasterContext(UAVsDetected,
-					API.getFlightFormationTools().getFlyingFormation(UAVsDetected.size() + 1),
+					UAVParam.airFormation.get(),
 					formationYaw, FollowMeParam.slavesStartingAltitude, true, true);
 		} else {
 			takeOff = takeOffHelper.getSlaveContext(false);
@@ -160,6 +161,7 @@ public class FollowMeListenerThread extends Thread {
 						masterLocation = new Location2DUTM(input.readDouble(), input.readDouble());
 						double relAltitude = input.readDouble();
 						double yaw = input.readDouble();
+						/*
 						try {
 							targetLocation = takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), masterLocation, yaw).getGeo();
 							copter.moveTo(new Location3DGeo(targetLocation, relAltitude));
@@ -169,12 +171,13 @@ public class FollowMeListenerThread extends Thread {
 							// Fatal error. It lands
 							currentState.set(LANDING);
 						}
-						
+						*/
 					}
 					
 					if (type == Message.LAND) {
 						Location2DUTM centerUAVFinalLocation = new Location2DUTM(input.readDouble(), input.readDouble());
 						double yaw = input.readDouble();
+						/*
 						Location2DUTM landingLocationUTM = takeOff.getFormationLanding().getLocation(takeOff.getFormationPosition(), centerUAVFinalLocation, yaw);
 						try {
 							targetLocationLanding = new Location3D(landingLocationUTM, copter.getAltitudeRelative());
@@ -185,6 +188,7 @@ public class FollowMeListenerThread extends Thread {
 							// Fatal error. It lands
 							currentState.set(LANDING);
 						}
+						 */
 					}
 				}
 			}

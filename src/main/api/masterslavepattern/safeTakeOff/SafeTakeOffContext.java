@@ -2,7 +2,7 @@ package main.api.masterslavepattern.safeTakeOff;
 
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 
 /**
  * Object that contains all the information needed to perform a safe take off.
@@ -21,7 +21,7 @@ public class SafeTakeOffContext {
 	
 	private Location2DUTM centerLocation;
 	protected int numUAVs;
-	private FlightFormation flightFormation, landFormation;
+	private Formation flightFormation, landFormation;
 	private int formationPosition;
 	private double initialYaw;
 	
@@ -30,7 +30,7 @@ public class SafeTakeOffContext {
 	
 	public SafeTakeOffContext(long prevID, long nextID, Location2DGeo targetLocation, double altitudeStep1, double altitudeStep2,
 			boolean excluded, long[] masterOrder, Location2DUTM centerLocation, int numUAVs,
-			FlightFormation flightFormation, FlightFormation landFormation, int formationPosition, double initialYaw) {
+			Formation flightFormation, Formation landFormation, int formationPosition, double initialYaw) {
 		this.prevID = prevID;
 		this.nextID = nextID;
 		this.targetLocation = targetLocation;
@@ -58,7 +58,7 @@ public class SafeTakeOffContext {
 	 * Get the formation to be used during flight.
 	 * @return Flight formation to be used during flight.
 	 */
-	public FlightFormation getFormationFlying() {
+	public Formation getFormationFlying() {
 		return flightFormation;
 	}
 
@@ -66,7 +66,7 @@ public class SafeTakeOffContext {
 	 * Get the formation to be used during landing. It is the same Formation used during flight, but the UAVs get closer to the center UAV in order to land in a reduced area.
 	 * @return Flight formation to be used during landing.
 	 */
-	public FlightFormation getFormationLanding() {
+	public Formation getFormationLanding() {
 		return landFormation;
 	}
 	

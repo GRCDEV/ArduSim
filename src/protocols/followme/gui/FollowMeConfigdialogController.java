@@ -14,7 +14,6 @@ import javafx.stage.Stage;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
-import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 
 import java.io.File;
@@ -87,13 +86,13 @@ public class FollowMeConfigdialogController {
             }
         });
 
-        groundFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
+        //groundFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         groundFormation.getSelectionModel().select(resources.getString("groundFormation"));
 
         takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
         takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
 
-        flyingFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
+        //flyingFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));
     }
 

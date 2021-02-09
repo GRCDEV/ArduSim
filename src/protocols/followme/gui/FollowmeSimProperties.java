@@ -1,13 +1,12 @@
 package protocols.followme.gui;
 
 import api.API;
-import protocols.followme.logic.FollowMeParam;
-import protocols.followme.pojo.RemoteInput;
 import main.ArduSimTools;
 import main.Text;
-import main.api.FlightFormationTools;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import protocols.followme.logic.FollowMeParam;
+import protocols.followme.pojo.RemoteInput;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,10 +20,10 @@ public class FollowmeSimProperties {
     private double latitude;
     private double longitude;
     private double yaw;
-    private FlightFormation.Formation groundFormation;
+    private Formation groundFormation;
     private double groundMinDistance;
     private TakeOffAlgorithm takeOffStrategy;
-    private FlightFormation.Formation  flyingFormation;
+    private Formation  flyingFormation;
     private double flyingMinDistance;
     private double initialAltitude;
     private double landingMinDistance;
@@ -69,8 +68,8 @@ public class FollowmeSimProperties {
                     var.set(this,value);
                 }else if(type.contains("java.io.File")) {
                     var.set(this, new File(value));
-                }else if(type.contains("FlightFormation")){
-                    var.set(this,FlightFormation.Formation.getFormation(value));
+                }else if(type.contains("Formation")){
+                    //var.set(this,Formation.getFormation(value));
                 }else if(type.contains("TakeOffAlgorithm")){
                     var.set(this,TakeOffAlgorithm.getAlgorithm(value));
                 }else{
@@ -164,10 +163,11 @@ public class FollowmeSimProperties {
         FollowMeParam.masterInitialLatitude = latitude;
         FollowMeParam.masterInitialLongitude = longitude;
         FollowMeParam.masterInitialYaw = yaw * Math.PI / 180.0;
-        FlightFormationTools formationTools = API.getFlightFormationTools();
-        formationTools.setGroundFormation(groundFormation.getName(),groundMinDistance);
-        formationTools.setFlyingFormation(flyingFormation.getName(),flyingMinDistance);
-        formationTools.setLandingFormationMinimumDistance(landingMinDistance);
+        //TODO fix again
+
+        // formationTools.setGroundFormation(groundFormation.getLayout(),groundMinDistance);
+        // formationTools.setFlyingFormation(flyingFormation.getLayout(),flyingMinDistance);
+        // formationTools.setLandingFormationMinimumDistance(landingMinDistance);
         API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(takeOffStrategy.getName());
         FollowMeParam.slavesStartingAltitude = initialAltitude;
         FollowMeParam.masterSpeed = masterUAVSpeed;

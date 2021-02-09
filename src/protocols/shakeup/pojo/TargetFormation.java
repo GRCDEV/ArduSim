@@ -1,20 +1,19 @@
 package protocols.shakeup.pojo;
 
-import main.api.formations.FlightFormation;
-import main.api.formations.FlightFormation.Formation;
+import main.api.formations.Formation;
 
 public class TargetFormation {
 
 	private String name;
 	private double minDistance;
 	private double heading;
-	private FlightFormation f;
+	private Formation f;
 	
 	public TargetFormation(String name, int numUAVs, double minDistance, double heading) {
 		this.name = name;
 		this.minDistance = minDistance;
 		this.heading = heading;
-		this.f = FlightFormation.getFormation(Formation.getFormation(name), numUAVs, this.minDistance);
+		this.f = null; // FlightFormation.getFormation(Formation.getFormation(name), numUAVs, this.minDistance);
 	}
 	
 	public String getName() {
@@ -35,10 +34,10 @@ public class TargetFormation {
 	public void setHeading(double heading) {
 		this.heading = heading;
 	}
-	public FlightFormation getFlightFormation() {
+	public Formation getFlightFormation() {
 		return this.f;
 	}
-	public void setFlightFormation(FlightFormation ff) {
+	public void setFlightFormation(Formation ff) {
 		this.f = ff;
 	}
 }

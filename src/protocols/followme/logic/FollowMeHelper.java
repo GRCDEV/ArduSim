@@ -15,7 +15,6 @@ import main.ArduSimTools;
 import main.Text;
 import main.api.ArduSim;
 import main.api.Copter;
-import main.api.formations.FlightFormation;
 import main.sim.logic.SimParam;
 import main.uavController.UAVParam;
 import org.javatuples.Pair;
@@ -93,16 +92,16 @@ public class FollowMeHelper extends ProtocolHelper {
 		
 		//   As this is simulation, ID and position on the ground are the same for all the UAVs
 		int numUAVs = API.getArduSim().getNumUAVs();
-		FlightFormation groundFormation = API.getFlightFormationTools().getGroundFormation(numUAVs);
+		// FlightFormation groundFormation = API.getFlightFormationTools().getGroundFormation(numUAVs);
 		@SuppressWarnings("unchecked")
 		Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
 		Location2DUTM locationUTM;
 		// We put the master UAV in the position 0 of the formation
 		// Another option would be to put the master UAV in the center of the ground formation, and the remaining UAVs surrounding it
 		startingLocation[0] = Pair.with(masterLocation.getGeoLocation(), FollowMeParam.masterInitialYaw);
-		Location2DUTM offsetMasterToCenterUAV = groundFormation.getOffset(0, FollowMeParam.masterInitialYaw);
+		Location2DUTM offsetMasterToCenterUAV = null; // groundFormation.getOffset(0, FollowMeParam.masterInitialYaw);
 		for (int i = 1; i < numUAVs; i++) {
-			Location2DUTM offsetToCenterUAV = groundFormation.getOffset(i, FollowMeParam.masterInitialYaw);
+			Location2DUTM offsetToCenterUAV = null; //groundFormation.getOffset(i, FollowMeParam.masterInitialYaw);
 			locationUTM = new Location2DUTM(masterLocation.getUTMLocation().x - offsetMasterToCenterUAV.x + offsetToCenterUAV.x,
 					masterLocation.getUTMLocation().y - offsetMasterToCenterUAV.y + offsetToCenterUAV.y);
 			try {

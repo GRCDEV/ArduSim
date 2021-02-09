@@ -1,6 +1,6 @@
 package protocols.shakeup.pojo;
 
-import main.api.formations.FlightFormation.Formation;
+import main.api.formations.Formation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 
 public class Param {
@@ -11,10 +11,10 @@ public class Param {
 	public static volatile double altitude = 5;					 // (m) Relative altitude where the UAVs finish the take off process
 	
 	//Place the formations you want in this string
-	public static Formation startFormation = Formation.LINEAR;
-	public static Formation endFormation = Formation.CIRCLE;
+	public static Formation.Layout startLayout = Formation.Layout.LINEAR;
+	public static Formation.Layout endLayout = Formation.Layout.CIRCLE;
 	public static String[] formations = {
-			Formation.REGULAR_MATRIX.getName()
+			Formation.Layout.REGULAR_MATRIX.name()
 	};
 	public static volatile TargetFormation[] flightFormations = null; // List of Flightformations 
 	

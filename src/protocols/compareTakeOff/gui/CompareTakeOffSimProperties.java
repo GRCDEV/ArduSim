@@ -1,24 +1,26 @@
 package protocols.compareTakeOff.gui;
 
-import api.API;
 import main.ArduSimTools;
 import main.Text;
-import main.api.FlightFormationTools;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
+import main.api.formations.FormationFactory;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import main.uavController.UAVParam;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static main.Param.numUAVs;
+
 public class CompareTakeOffSimProperties {
 
     //GUI parameters
-    public static FlightFormation.Formation groundFormation;
+    public static Formation groundFormation;
     public static int numberOfClusters = 3;
     public double groundMinDistance;
     public static TakeOffAlgorithm takeOffStrategy;
-    public static FlightFormation.Formation flyingFormation;
+    public static Formation flyingFormation;
     public double flyingMinDistance;
     public double landingMinDistance;
 
@@ -27,7 +29,7 @@ public class CompareTakeOffSimProperties {
     public static double altitude = 5.0;
     public static double masterInitialLatitude = 39.482615; // (degrees) Latitude for simulations
     public static double masterInitialLongitude = -0.34629; // (degrees) Longitude for simulations
-    public static boolean takeOffIsSequential = true; // taking off sequential or parallel
+    public static boolean takeOffIsSequential = false; // taking off sequential or parallel
 
     public static String outputFile = "compareTakeOff.csv";
 
@@ -83,8 +85,8 @@ public class CompareTakeOffSimProperties {
                         }
                     }
                     var.set(this, files);
-                }else if(type.contains("FlightFormation")){
-                    var.set(this,FlightFormation.Formation.getFormation(value));
+                }else if(type.contains("Formation")){
+                    var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
                 }else if(type.contains("TakeOffAlgorithm")){
                     var.set(this,TakeOffAlgorithm.getAlgorithm(value));
                 }else{
@@ -114,10 +116,17 @@ public class CompareTakeOffSimProperties {
     }
 
     private void setSimulationParameters(){
+        UAVParam.groundFormation.set(groundFormation);
+        groundFormation.init(numUAVs,groundMinDistance);
+
+        UAVParam.airFormation.set(flyingFormation);
+        flyingFormation.init(numUAVs,flyingMinDistance);
+        /*
         FlightFormationTools f = API.getFlightFormationTools();
-        f.setGroundFormation(groundFormation.getName(),groundMinDistance);
+        f.setGroundFormation(groundFormation.getLayout(),groundMinDistance);
         API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(takeOffStrategy.getName());
-        f.setFlyingFormation(flyingFormation.getName(),flyingMinDistance);
+        f.setFlyingFormation(flyingFormation.getLayout(),flyingMinDistance);
         f.setLandingFormationMinimumDistance(landingMinDistance);
+         */
     }
 }

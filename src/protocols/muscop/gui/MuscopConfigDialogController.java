@@ -2,7 +2,6 @@ package protocols.muscop.gui;
 
 import api.API;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -14,7 +13,6 @@ import javafx.stage.Stage;
 import main.ArduSimTools;
 import main.Param;
 import main.Text;
-import main.api.formations.FlightFormation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 
 import java.io.File;
@@ -63,7 +61,7 @@ public class MuscopConfigDialogController {
     public void initialize(){
         missionFile.setDisable(true);
         missionFileButton.setOnAction(e->searchMissionFile());
-        groundFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
+        //groundFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         groundFormation.getSelectionModel().select(resources.getString("groundFormation"));
 
         groundMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
@@ -71,12 +69,12 @@ public class MuscopConfigDialogController {
         takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
         takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
 
-        flyingFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
+        //flyingFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));
 
         flyingMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 
-        numberOfClusters.disableProperty().bind(Bindings.equal(flyingFormation.valueProperty(),FlightFormation.Formation.SPLITUP.getName()).not());
+        //numberOfClusters.disableProperty().bind(Bindings.equal(flyingFormation.valueProperty(),FlightFormation.Formation.SPLITUP.getName()).not());
         ArrayList<String> nrClustersString = new ArrayList<>();
         for(int i=0;i<Integer.parseInt(resources.getString("numberOfClusters"));i++){
             nrClustersString.add("" + (i+1));

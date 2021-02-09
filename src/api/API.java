@@ -22,9 +22,7 @@ public class API {
 	private static final Object lockCopter = new Object();
 	
 	private static final FileTools fileTools = new FileTools();
-	
-	private static final FlightFormationTools flightTools = new FlightFormationTools();
-	
+
 	private static volatile AtomicReferenceArray<GUI> gui = null;
 	private static final Object lockGUI = new Object();
 	
@@ -89,17 +87,7 @@ public class API {
 		return API.fileTools;
 		
 	}
-	
-	/**
-	 * Get tools to build and manage flight formations.
-	 * @return Tools to manage flight formations.
-	 */
-	public static FlightFormationTools getFlightFormationTools() {
-		
-		return API.flightTools;
-		
-	}
-	
+
 	/**
 	 * Get the GUI to interact with it.
 	 * @param numUAV This specific UAV position in the data arrays (see documentation).

@@ -38,7 +38,7 @@ public class DataState extends State{
 			TargetFormation targetFormation = Param.flightFormations[ShakeupListenerThread.getFormationIndex()];
 			UAVLocations2D.put((long) selfId, copter.getLocationUTM());
 			
-			gui.log("new flight formation: " + targetFormation.getFlightFormation().getFormationName());
+			// gui.log("new flight formation: " + targetFormation.getFlightFormation().getFormationName());
 			
 			// calculate the next position of all the UAVs with the use of the safeTakeOff algorithm
 			// set to takeoff algorithm to RANDOM or to SIMPLIFIED

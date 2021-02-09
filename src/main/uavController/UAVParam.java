@@ -8,7 +8,7 @@ import es.upv.grc.mapper.Location3DGeo;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.common.GlobalPositionInt;
 import main.api.CopterParamLoaded;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 
 import java.util.List;
 import java.util.Map;
@@ -66,8 +66,8 @@ public class UAVParam {
 	public static ConcurrentBoundedQueue<Location2DUTM>[] lastUTMLocations;	// Each UAV has an object with the last received locations sorted
 	
 	// Flight formation (when used)
-	public static AtomicReference<FlightFormation.Formation> groundFormation = new AtomicReference<>(FlightFormation.Formation.LINEAR);
-	public static AtomicReference<FlightFormation.Formation> airFormation = new AtomicReference<>(FlightFormation.Formation.LINEAR);
+	public static AtomicReference<Formation> groundFormation = new AtomicReference<>();
+	public static AtomicReference<Formation> airFormation = new AtomicReference<>();
 	// Initial distance between UAV when they are on the ground (only in simulation)
 	public static volatile double groundDistanceBetweenUAV = 10.0;
 	// Minimum distance between UAVs while following the protocols.mission

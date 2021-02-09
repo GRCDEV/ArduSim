@@ -1,8 +1,7 @@
 package main.api.masterslavepattern.safeTakeOff;
 
 import es.upv.grc.mapper.Location2DUTM;
-import main.api.formations.FlightFormation;
-import main.api.formations.helpers.Permutation;
+import main.api.formations.Formation;
 import org.javatuples.Pair;
 import org.javatuples.Quartet;
 
@@ -14,7 +13,7 @@ public class MatchCalculusThread extends Thread {
 	private volatile Quartet<Integer, Long, Location2DUTM, Double>[] result = null;
 	
 	private Map<Long, Location2DUTM> groundLocations;
-	private FlightFormation flightFormation;
+	private Formation flightFormation;
 	private double formationYaw;
 	private Long masterID;
 	
@@ -22,7 +21,7 @@ public class MatchCalculusThread extends Thread {
 	private MatchCalculusThread() {}
 	
 	public MatchCalculusThread(Map<Long, Location2DUTM> groundLocations,
-			FlightFormation flightFormation, double formationYaw, Long masterID) {
+			Formation flightFormation, double formationYaw, Long masterID) {
 		this.groundLocations = groundLocations;
 		this.flightFormation = flightFormation;
 		this.formationYaw = formationYaw;
@@ -48,8 +47,8 @@ public class MatchCalculusThread extends Thread {
 	 * Quartet Integer IDofUAV, Long IDofUAV, Location2DUTM airlocation, Double error (distance2)
 	 */
 	private static Quartet<Integer, Long, Location2DUTM, Double>[] safeTakeOffGetMatch(Map<Long, Location2DUTM> groundLocations,
-			FlightFormation flightFormation, double formationYaw, Long masterID) {
-		
+																					   Formation flightFormation, double formationYaw, Long masterID) {
+
 		if (groundLocations == null || groundLocations.size() == 0
 				|| flightFormation == null || groundLocations.size() != flightFormation.getNumUAVs()) {
 			return null;
@@ -71,10 +70,10 @@ public class MatchCalculusThread extends Thread {
 			Location2DUTM masterLocation = ground.get(masterID);
 			ground.remove(masterID);
 			groundCenterLocation = groundLocations.get(masterID);
-			int flyingCenterPosition = flightFormation.getCenterUAVPosition();
+			int flyingCenterPosition = flightFormation.getCenterIndex();
 			for (int j = 0; j < flightFormation.getNumUAVs(); j++) {
 				if (j != flyingCenterPosition) {
-					air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
+					air.put(j,flightFormation.get2DUTMLocation(groundCenterLocation,j));
 				}
 			}
 			Quartet<Integer, Long, Location2DUTM, Double>[] fit = null;
@@ -114,7 +113,7 @@ public class MatchCalculusThread extends Thread {
 					// 2. For the selected center UAV, get the formation in the air
 					air.clear();
 					for (int j = 0; j < numUAVs; j++) {
-						air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
+						air.put(j, flightFormation.get2DUTMLocation(groundCenterLocation,j));
 					}
 					
 					// 3. We check all possible permutations of the UAVs IDs looking for the combination that better fits
@@ -141,7 +140,7 @@ public class MatchCalculusThread extends Thread {
 				groundCenterLocation = new Location2DUTM(x / numUAVs, y / numUAVs);
 
 				for (int j = 0; j < numUAVs; j++) {
-					air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
+					air.put(j, flightFormation.get2DUTMLocation(groundCenterLocation,j));
 				}
 
 				match = MatchCalculusThread.getSimplifiedMatch(ground, air, groundCenterLocation);
@@ -159,7 +158,7 @@ public class MatchCalculusThread extends Thread {
 				groundCenterLocation = new Location2DUTM(x / numUAVs, y / numUAVs);
 				
 				for (int j = 0; j < numUAVs; j++) {
-					air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
+					air.put(j, flightFormation.get2DUTMLocation(groundCenterLocation,j));
 				}
 				match = MatchCalculusThread.getRandomMatch(ground, air);
 			}
@@ -176,7 +175,7 @@ public class MatchCalculusThread extends Thread {
 				groundCenterLocation = new Location2DUTM(x / numUAVs, y / numUAVs);
 
 				for (int j = 0; j < numUAVs; j++) {
-					air.put(j, flightFormation.getLocation(j, groundCenterLocation, formationYaw));
+					air.put(j, flightFormation.get2DUTMLocation(groundCenterLocation,j));
 				}
 
 				match = new HungarianTakeOff(ground,air).getHungarianMatch();

@@ -10,10 +10,8 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 import main.ArduSimTools;
 import main.Text;
-import main.api.FlightFormationTools;
 import main.api.GUI;
 import main.api.MissionHelper;
-import main.api.formations.FlightFormation;
 import main.sim.logic.SimParam;
 import protocols.muscop.gui.MuscopConfigDialogApp;
 import protocols.muscop.gui.MuscopSimProperties;
@@ -148,11 +146,11 @@ public class MUSCOPHelper extends ProtocolHelper {
 		//   As this is simulation, ID and position on the ground are the same for all the UAVs.
 		int numUAVs = API.getArduSim().getNumUAVs();
 		
-		FlightFormationTools formationTools = API.getFlightFormationTools();
-		FlightFormation groundFormation = formationTools.getGroundFormation(numUAVs);
+		// FlightFormationTools formationTools = API.getFlightFormationTools();
+		// FlightFormation groundFormation = formationTools.getGroundFormation(numUAVs);
 		
 		
-		int groundCenterUAVPosition = groundFormation.getCenterUAVPosition();
+		int groundCenterUAVPosition = 0; //groundFormation.getCenterUAVPosition();
 		Map<Long, Location2DUTM> groundLocations = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		Location2DUTM locationUTM;
 		Location2DUTM groundCenterUTMLocation = waypoint1.getUTM();
@@ -160,13 +158,13 @@ public class MUSCOPHelper extends ProtocolHelper {
 			if (i == groundCenterUAVPosition) {
 				groundLocations.put((long)i, groundCenterUTMLocation);
 			} else {
-				locationUTM = groundFormation.getLocation(i, groundCenterUTMLocation, MuscopSimProperties.formationYaw);
+				locationUTM = null; //groundFormation.getLocation(i, groundCenterUTMLocation, MuscopSimProperties.formationYaw);
 				groundLocations.put((long)i, locationUTM);
 			}
 		}
 		
 		// 3. Get the ID of the UAV that will be center in the flight formation
-		Pair<Long, Location2DUTM> flightCenterUAV = formationTools.getCenterUAV(groundLocations, MuscopSimProperties.formationYaw, false);
+		Pair<Long, Location2DUTM> flightCenterUAV = null; //formationTools.getCenterUAV(groundLocations, MuscopSimProperties.formationYaw, false);
 		
 		// 4. Copy the protocols.mission to the location where the UAV in the center of the flight formation will be
 		//   We do this to show the real path followed by the swarm as a protocols.mission for the flight center UAV, as it will follow this protocols.mission coordinating the remaining UAVs.

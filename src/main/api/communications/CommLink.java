@@ -85,5 +85,4 @@ public class CommLink {
 		return CommLink.publicCommLink.toString();
 		
 	}
-	
 }

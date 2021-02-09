@@ -4,13 +4,13 @@ import api.API;
 import api.ProtocolHelper;
 import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import main.ArduSimTools;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 import main.sim.logic.SimParam;
+import main.uavController.UAVParam;
 import org.javatuples.Pair;
 import protocols.compareTakeOff.gui.CompareTakeOffDialogApp;
 import protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
@@ -70,31 +70,24 @@ public class CompareTakeOffHelper extends ProtocolHelper {
 
     @Override
     public Pair<Location2DGeo, Double>[] setStartingLocation() {
-        Location2D masterLocation = new Location2D(CompareTakeOffSimProperties.masterInitialLatitude, CompareTakeOffSimProperties.masterInitialLongitude);
+        int numUAVs = API.getArduSim().getNumUAVs();
 
-		//   As this is simulation, ID and position on the ground are the same for all the UAVs
-		int numUAVs = API.getArduSim().getNumUAVs();
-		FlightFormation groundFormation = API.getFlightFormationTools().getGroundFormation(numUAVs);
-		@SuppressWarnings("unchecked")
-		Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
-		Location2DUTM locationUTM;
-		// We put the master UAV in the position 0 of the formation
-		// Another option would be to put the master UAV in the center of the ground formation, and the remaining UAVs surrounding it
-		startingLocation[0] = Pair.with(masterLocation.getGeoLocation(), CompareTakeOffSimProperties.masterInitialYaw);
-		Location2DUTM offsetMasterToCenterUAV = groundFormation.getOffset(0, CompareTakeOffSimProperties.masterInitialYaw);
-		for (int i = 1; i < numUAVs; i++) {
-			Location2DUTM offsetToCenterUAV = groundFormation.getOffset(i, CompareTakeOffSimProperties.masterInitialYaw);
-			locationUTM = new Location2DUTM(masterLocation.getUTMLocation().x - offsetMasterToCenterUAV.x + offsetToCenterUAV.x,
-					masterLocation.getUTMLocation().y - offsetMasterToCenterUAV.y + offsetToCenterUAV.y);
-			try {
-				startingLocation[i] = Pair.with(locationUTM.getGeo(), CompareTakeOffSimProperties.masterInitialYaw);
-			} catch (LocationNotReadyException e) {
-				e.printStackTrace();
-				API.getGUI(0).exit(e.getMessage());
-			}
-		}
+        // get center location
+        Location2D centerLocation = new Location2D(CompareTakeOffSimProperties.masterInitialLatitude, CompareTakeOffSimProperties.masterInitialLongitude);
+        double yaw = CompareTakeOffSimProperties.masterInitialYaw;
+        Pair[] startingLocations = new Pair[numUAVs];
 
-		return startingLocation;
+        // set the location of all the UAVs based on position of master and type of Formation
+        Formation groundFormation = UAVParam.groundFormation.get();
+        for(int i = 0;i<numUAVs;i++){
+            try {
+                startingLocations[i] = Pair.with(groundFormation.get2DUTMLocation(centerLocation.getUTMLocation(),i).getGeo(), yaw);
+            } catch (LocationNotReadyException e) {
+                e.printStackTrace();
+            }
+        }
+
+		return startingLocations;
     }
 
     @Override

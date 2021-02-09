@@ -8,7 +8,7 @@ import es.upv.grc.mapper.LocationNotReadyException;
 import main.api.ArduSim;
 import main.api.GUI;
 import main.api.communications.CommLink;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
@@ -35,7 +35,7 @@ public class TakeOffMasterDataTalkerThread extends Thread{
     private Location2DUTM centerUAVLocationUTM;
     private long[] ids;
     private double targetAltitude;
-    private FlightFormation flightFormation;
+    private Formation flightFormation;
     private double formationYaw;
     private boolean exclude;
     private Set<Long> UAVSet = new HashSet<>();
@@ -173,19 +173,19 @@ public class TakeOffMasterDataTalkerThread extends Thread{
 
             // Master UAV
             formationPos = match[i].getValue0();
+            System.out.println("formationpos set " + formationPos);
             if (curID == selfID) {
                 pID = prevID;
                 nID = nextID;
                 try {
-                    targetLocation = flightFormation.getLocation(formationPos, centerUAVLocationUTM, formationYaw).getGeo();
+                    targetLocation = flightFormation.get2DUTMLocation(centerUAVLocationUTM,formationPos).getGeo();
                 } catch (LocationNotReadyException e) {
                     e.printStackTrace();
                     gui.exit(e.getMessage());
                 }
-                FlightFormation landFormation = FlightFormation.getFormation(FlightFormation.Formation.getFormation(flightFormation.getFormationId()),
-                        numUAVs, UAVParam.landDistanceBetweenUAV);
+                UAVParam.groundFormation.get().init(numUAVs,UAVParam.landDistanceBetweenUAV);
                 data = new SafeTakeOffContext(pID, nID, targetLocation, takeOffAltitudeStep1, targetAltitude, exclude, ids, centerUAVLocationUTM,
-                        numUAVs, flightFormation, landFormation, formationPos, formationYaw);
+                        numUAVs, flightFormation, UAVParam.groundFormation.get(), formationPos, formationYaw);
             } else {
                 output.reset();
                 output.writeShort(MSMessageID.TAKE_OFF_DATA);
@@ -196,9 +196,10 @@ public class TakeOffMasterDataTalkerThread extends Thread{
                 output.writeLong(prevID);
                 output.writeLong(nextID);
                 output.writeInt(numUAVs);
-                output.writeShort(flightFormation.getFormationId());
-                output.writeDouble(flightFormation.getFormationMinimumDistance());
-                output.writeDouble(UAVParam.landDistanceBetweenUAV);
+                output.writeString(flightFormation.getLayout().name());
+                output.writeDouble(UAVParam.airDistanceBetweenUAV);
+                //output.writeDouble(UAVParam.landDistanceBetweenUAV);
+                System.out.println("sending formationPos " + formationPos);
                 output.writeInt(formationPos);
                 output.writeDouble(formationYaw);
                 output.writeDouble(takeOffAltitudeStep1);
@@ -259,7 +260,7 @@ public class TakeOffMasterDataTalkerThread extends Thread{
 
     public void setDataParameters(Quartet<Integer, Long, Location2DUTM, Double>[] match, long centerUAVID,
                                   Location2DUTM centerUAVLocationUTM, long[] ids, double targetAltitude,
-                                  FlightFormation flightFormation, double formationYaw, boolean exclude) {
+                                  Formation flightFormation, double formationYaw, boolean exclude) {
         //TODO update this to many arguments
         this.match = match;
         this.centerUAVID = centerUAVID;

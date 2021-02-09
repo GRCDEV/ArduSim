@@ -22,7 +22,8 @@ import main.api.FileTools;
 import main.api.ValidationTools;
 import main.api.WaypointReachedListener;
 import main.api.communications.CommLinkObject;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
+import main.api.formations.FormationFactory;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import main.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
@@ -330,7 +331,7 @@ public class ArduSimTools {
 		
 		param = parameters.get(Param.AIR_FORMATION);
 		if (param == null) {
-			ArduSimTools.logGlobal(Param.AIR_FORMATION + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + UAVParam.airFormation.get().getName());
+			ArduSimTools.logGlobal(Param.AIR_FORMATION + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + UAVParam.airFormation.get().getLayout());
 			// Check if the minimum distance is also included (meters)
 			param = parameters.get(Param.AIR_DISTANCE);
 			if (param == null) {
@@ -338,18 +339,14 @@ public class ArduSimTools {
 			}
 		} else {
 			// Check if it is included in the list
-			FlightFormation.Formation[] formations = FlightFormation.Formation.values();
-			FlightFormation.Formation formation = null;
-			for (int i = 0; i < formations.length && formation == null; i++) {
-				if (formations[i].getName().equalsIgnoreCase(param)) {
-					formation = formations[i];
-				}
-			}
-			if (formation == null) {
+			try {
+				Formation airformation = FormationFactory.newFormation(Formation.Layout.valueOf(param.toUpperCase()));
+				UAVParam.airFormation.set(airformation);
+			}catch(IllegalArgumentException | NullPointerException e ){
 				ArduSimTools.logGlobal(Param.AIR_FORMATION + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
-			UAVParam.airFormation.set(formation);
+
 			// Check if the minimum distance is also included (meters)
 			param = parameters.get(Param.AIR_DISTANCE);
 			if (param == null) {
@@ -2846,10 +2843,10 @@ public class ArduSimTools {
 		}
 		sb.append("\n\t").append(Text.FORMATION_PARAMETERS);
 		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-			sb.append("\n\t\t").append(Param.GROUND_FORMATION).append("=").append(UAVParam.groundFormation.get().getName());
+			sb.append("\n\t\t").append(Param.GROUND_FORMATION).append("=").append(UAVParam.groundFormation.get().getLayout());
 			sb.append("\n\t\t").append(Param.GROUND_DISTANCE).append("=").append(UAVParam.groundDistanceBetweenUAV);
 		}
-		sb.append("\n\t\t").append(Param.AIR_FORMATION).append("=").append(UAVParam.airFormation.get().getName());
+		sb.append("\n\t\t").append(Param.AIR_FORMATION).append("=").append(UAVParam.airFormation.get().getLayout());
 		sb.append("\n\t\t").append(Param.AIR_DISTANCE).append("=").append(UAVParam.airDistanceBetweenUAV);
 		sb.append("\n\t\t").append(Param.LAND_DISTANCE).append("=").append(UAVParam.landDistanceBetweenUAV);
 		

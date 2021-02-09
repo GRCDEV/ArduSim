@@ -9,6 +9,7 @@ import main.api.*;
 import main.api.communications.CommLink;
 import main.api.masterslavepattern.MasterSlaveHelper;
 import main.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
+import main.uavController.UAVParam;
 import protocols.muscop.gui.MuscopSimProperties;
 import protocols.muscop.pojo.Message;
 
@@ -160,7 +161,7 @@ public class MUSCOPListenerThread extends Thread {
 				gui.exit(MUSCOPText.MAX_WP_REACHED);
 			}
 			takeOff = takeOffHelper.getMasterContext(UAVsDetected,
-					API.getFlightFormationTools().getFlyingFormation(UAVsDetected.size() + 1),
+					UAVParam.airFormation.get(),
 					formationYaw, screenMission.get(0).z, false, false);
 		} else {
 			takeOff = takeOffHelper.getSlaveContext(false);
@@ -204,12 +205,15 @@ public class MUSCOPListenerThread extends Thread {
 			Location3DUTM centerLocation;
 			for (int i = 0; i < selfMission.length; i++) {
 				centerLocation = centerMission[i];
+				/*
 				try {
 					selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), centerLocation, takeOff.getInitialYaw()).getGeo(), centerLocation.z);
 				} catch (LocationNotReadyException e) {
 					e.printStackTrace();
 					gui.exit(e.getMessage());
 				}
+				 */
+				//TODO fix
 			}
 			// Share data with the talker thread
 			missionReceived.set(true);
@@ -255,12 +259,15 @@ public class MUSCOPListenerThread extends Thread {
 								centerLocation.x = input.readDouble();
 								centerLocation.y = input.readDouble();
 								centerLocation.z = input.readDouble();
+								/*
 								try {
 									selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), centerLocation, takeOff.getInitialYaw()).getGeo(), centerLocation.z);
 								} catch (LocationNotReadyException e) {
 									e.printStackTrace();
 									gui.exit(e.getMessage());
 								}
+								 */
+								// TODO fix
 							}
 							
 							missionReceived.set(true);

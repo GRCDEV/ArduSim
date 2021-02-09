@@ -8,7 +8,8 @@ import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import main.api.GUI;
 import main.api.communications.CommLink;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
+import main.api.formations.FormationFactory;
 import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
@@ -25,7 +26,7 @@ public class TakeOffSlaveDataThread extends Thread{
     private final boolean exclude;
     private final AtomicReference<SafeTakeOffContext> result;
     private Location2DUTM centerUAVLocation = null;
-    private FlightFormation flightFormation, landFormation;
+    private Formation flightFormation, landFormation;
     private int formationPos;
     private double formationYaw, altitudeStep1, altitudeStep2;
     private long[] masterOrder;
@@ -65,11 +66,12 @@ public class TakeOffSlaveDataThread extends Thread{
     private void setSafeTakeOffContext(AtomicInteger state) {
         Location2DGeo target = null;
         try {
-            target = flightFormation.getLocation(formationPos, centerUAVLocation, formationYaw).getGeo();
+            target = flightFormation.get2DUTMLocation(centerUAVLocation,formationPos).getGeo();
         } catch (LocationNotReadyException e) {
             e.printStackTrace();
             gui.exit(e.getMessage());
         }
+        System.out.println(target);
         SafeTakeOffContext data = new SafeTakeOffContext(prevID, nextID, target, altitudeStep1, altitudeStep2, exclude,
                 this.masterOrder, centerUAVLocation, numUAVs, flightFormation, landFormation, formationPos, formationYaw);
         this.result.set(data);
@@ -146,9 +148,9 @@ public class TakeOffSlaveDataThread extends Thread{
                         numUAVs = input.readInt();
                         this.masterOrder = new long[numUAVs];
                         Arrays.fill(this.masterOrder,-1);
-                        FlightFormation.Formation formation = FlightFormation.Formation.getFormation(input.readShort());
-                        flightFormation = FlightFormation.getFormation(formation, numUAVs, input.readDouble());
-                        landFormation = FlightFormation.getFormation(formation, numUAVs, input.readDouble());
+                        String formationName = input.readString();
+                        flightFormation = FormationFactory.newFormation(Formation.Layout.valueOf(formationName));
+                        flightFormation.init(numUAVs,input.readDouble());
                         formationPos = input.readInt();
                         formationYaw = input.readDouble();
                         altitudeStep1 = input.readDouble();

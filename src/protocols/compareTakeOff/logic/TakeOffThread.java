@@ -36,8 +36,8 @@ public class TakeOffThread extends Thread{
         this.arduSim = API.getArduSim();
         this.gui = API.getGUI(numUAV);
         this.copter = API.getCopter(numUAV);
-        experimentOutput += arduSim.getNumUAVs() + ";" + CompareTakeOffSimProperties.groundFormation.getName() + ";"
-                + CompareTakeOffSimProperties.flyingFormation.getName() + ";" +
+        experimentOutput += arduSim.getNumUAVs() + ";" + CompareTakeOffSimProperties.groundFormation.getLayout() + ";"
+                + CompareTakeOffSimProperties.flyingFormation.getLayout() + ";" +
                 CompareTakeOffSimProperties.takeOffStrategy.getName() + ";" + CompareTakeOffSimProperties.altitude + ";";
     }
 
@@ -111,7 +111,7 @@ public class TakeOffThread extends Thread{
                 formationYaw = CompareTakeOffSimProperties.masterInitialYaw;
             }
             takeOff = takeOffHelper.getMasterContext(UAVsDetected,
-                    API.getFlightFormationTools().getFlyingFormation(UAVsDetected.size() + 1),
+                    UAVParam.airFormation.get(),
                     formationYaw, CompareTakeOffSimProperties.altitude, false, false);
             experimentOutput += System.currentTimeMillis() - startCalculateFit + ";";
         }else {

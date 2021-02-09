@@ -5,9 +5,8 @@ import api.pojo.location.Waypoint;
 import es.upv.grc.mapper.Location3DUTM;
 import main.ArduSimTools;
 import main.Text;
-import main.api.FlightFormationTools;
 import main.api.MissionHelper;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 import main.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import org.javatuples.Pair;
 
@@ -21,11 +20,11 @@ public class MuscopSimProperties {
 
     // GUI parameters
     public List<File> missionFile;
-    public FlightFormation.Formation groundFormation;
+    public Formation groundFormation;
     public static int numberOfClusters = 3;
     public double groundMinDistance;
     public TakeOffAlgorithm takeOffStrategy;
-    public FlightFormation.Formation flyingFormation;
+    public Formation flyingFormation;
     public double flyingMinDistance;
     public double landingMinDistance;
 
@@ -98,8 +97,8 @@ public class MuscopSimProperties {
                         }
                     }
                     var.set(this, files);
-                }else if(type.contains("FlightFormation")){
-                    var.set(this,FlightFormation.Formation.getFormation(value));
+                }else if(type.contains("Formation")){
+                    //var.set(this,FlightFormation.Formation.getFormation(value));
                 }else if(type.contains("TakeOffAlgorithm")){
                     var.set(this,TakeOffAlgorithm.getAlgorithm(value));
                 }else{
@@ -131,11 +130,13 @@ public class MuscopSimProperties {
 
     private void setSimulationParameters(){
         storeMissionFile(missionFile);
+        /*
         FlightFormationTools f = API.getFlightFormationTools();
         f.setGroundFormation(groundFormation.getName(),groundMinDistance);
         API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(takeOffStrategy.getName());
         f.setFlyingFormation(flyingFormation.getName(),flyingMinDistance);
         f.setLandingFormationMinimumDistance(landingMinDistance);
+        */
     }
 
     public void storeMissionFile(List<File> selection) {

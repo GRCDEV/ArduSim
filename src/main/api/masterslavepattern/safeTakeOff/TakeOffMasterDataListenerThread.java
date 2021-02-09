@@ -8,11 +8,12 @@ import main.Text;
 import main.api.Copter;
 import main.api.GUI;
 import main.api.communications.CommLink;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 import main.api.masterslavepattern.InternalCommLink;
 import main.api.masterslavepattern.MSMessageID;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.MSText;
+import main.uavController.UAVParam;
 import org.javatuples.Pair;
 import org.javatuples.Quartet;
 
@@ -28,7 +29,7 @@ public class TakeOffMasterDataListenerThread extends Thread{
     private final Map<Long, Location2DUTM> groundLocations;
     private int numSlaves;
     private final int numUAVs;
-    private final FlightFormation flightFormation;
+    private final Formation flightFormation;
     private final double formationYaw;
     private final double targetAltitude;
     private final boolean isCenterUAV;
@@ -47,8 +48,8 @@ public class TakeOffMasterDataListenerThread extends Thread{
     private volatile Map<Long,Boolean> ackMap = new HashMap<>((int)Math.ceil(numSlaves/0.75) + 1);
 
     public TakeOffMasterDataListenerThread(int numUAV, Map<Long, Location2DUTM> groundLocations,
-               FlightFormation flightFormation, double formationYaw, double targetAltitude, boolean isCenterUAV,
-               boolean exclude, AtomicReference<SafeTakeOffContext> result){
+                                           Formation flightFormation, double formationYaw, double targetAltitude, boolean isCenterUAV,
+                                           boolean exclude, AtomicReference<SafeTakeOffContext> result){
 
         super(Text.SAFE_TAKE_OFF_MASTER_CONTEXT_LISTENER + numUAV);
         this.copter = API.getCopter(numUAV);
@@ -187,7 +188,7 @@ public class TakeOffMasterDataListenerThread extends Thread{
     }
 
     private Quartet<Integer, Long, Location2DUTM, Double> getCenter(Quartet<Integer, Long, Location2DUTM, Double>[] match) {
-        int centerUAVAirPos = flightFormation.getCenterUAVPosition();
+        int centerUAVAirPos = flightFormation.getCenterIndex();
         Quartet<Integer, Long, Location2DUTM, Double> centerMatch = null;
         for (int i = 0; i < numUAVs && centerMatch == null; i++) {
             if (match[i].getValue0() == centerUAVAirPos) {
@@ -216,7 +217,7 @@ public class TakeOffMasterDataListenerThread extends Thread{
             masterID = API.getCopter(0).getID();
         }
         int numUAVs = groundLocations.size();
-        FlightFormation flightFormation = API.getFlightFormationTools().getFlyingFormation(numUAVs);
+        Formation flightFormation = UAVParam.airFormation.get();
         MatchCalculusThread calculus = new MatchCalculusThread(groundLocations, flightFormation, formationYaw, masterID);
         calculus.start();
         try {
@@ -227,7 +228,7 @@ public class TakeOffMasterDataListenerThread extends Thread{
         Quartet<Integer, Long, Location2DUTM, Double>[] match = calculus.getResult();
 
         // 2. Get the target location of the UAV that should be in the center of the formation
-        int centerUAVAirPos = flightFormation.getCenterUAVPosition();
+        int centerUAVAirPos = flightFormation.getCenterIndex();
         Quartet<Integer, Long, Location2DUTM, Double> centerMatch = null;
         for (int i = 0; i < numUAVs && centerMatch == null; i++) {
             if (match[i].getValue0() == centerUAVAirPos) {

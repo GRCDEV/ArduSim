@@ -4,7 +4,7 @@ import api.API;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3D;
-import main.api.formations.FlightFormation;
+import main.api.formations.Formation;
 import main.api.masterslavepattern.MSParam;
 import main.api.masterslavepattern.MSText;
 import main.api.masterslavepattern.safeTakeOff.*;
@@ -48,7 +48,7 @@ public class SafeTakeOffHelper {
 	 * @return Context with useful information related to the take off process, and that allows to perform the take off with the method <i>start</i>.
 	 */
 	public SafeTakeOffContext getMasterContext(Map<Long, Location2DUTM> groundLocations,
-			FlightFormation flightFormation, double formationYaw, double targetAltitude, boolean isCenterUAV, boolean exclude) {
+											   Formation flightFormation, double formationYaw, double targetAltitude, boolean isCenterUAV, boolean exclude) {
 
 		AtomicReference<SafeTakeOffContext> result = new AtomicReference<>();
 
