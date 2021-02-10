@@ -30,6 +30,9 @@ public class Linear extends Formation {
      */
     @Override
     public void init(int numUAVs, double minDistance) {
+        if(numUAVs < 1 | minDistance <= 0){
+            throw new Error("Input parameters invalid");
+        }
         this.positions = calculateFormation(numUAVs, minDistance);
     }
 
@@ -41,9 +44,8 @@ public class Linear extends Formation {
      */
     @Override
     public Location2DUTM get2DUTMLocation(Location2DUTM centerLocation, int index) {
-        if(index < 0 | index >= positions.length){
-            //TODO add error handeling
-            return null;
+        if(index < 0 | index >= positions.length | centerLocation == null){
+            throw new Error("input parameters invalid");
         }
         double x = centerLocation.x + positions[index].offsetX;
         double y = centerLocation.y;

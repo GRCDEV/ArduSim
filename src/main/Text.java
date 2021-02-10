@@ -9,16 +9,6 @@ public class Text {
 	
 	// Application name
 	public static final String APP_NAME = "ArduSim";
-
-	// Flight formations
-	public static final String LINEAR_FORMATION = "Linear";
-	public static final String MATRIX_REGULAR_FORMATION = "Regular matrix";
-	public static final String MATRIX_COMPACT_FORMATION = "Compact matrix";
-	public static final String CIRCLE_FORMATION = "Circle";
-	public static final String MESH_COMPACT_FORMATION = "Compact mesh";
-	public static final String RANDOM = "Random";
-	public static final String SPLITUP = "Split-up";
-
 	public static final String INI_FILE_NAME = "ardusim.ini";
 	public static final String INI_FILE_NOT_FOUND = INI_FILE_NAME + " file not found. Using default parameters values.";
 	public static final String INI_FILE_EMPTY = INI_FILE_NAME + " file is invalid or empty. Using default parameters values.";
