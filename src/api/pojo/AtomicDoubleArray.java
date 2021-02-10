@@ -25,7 +25,7 @@ import static java.lang.Double.longBitsToDouble;
  * java.util.concurrent.atomic} package specification for description of the properties of atomic
  * variables.
  *
- * <p><a name="bitEquals"></a>This class compares primitive {@code double} values in methods
+ * This class compares primitive {@code double} values in methods
  * y comparing their bitwise representation using {@link
  * Double#doubleToRawLongBits}, which differs from both the primitive double {@code ==} operator and
  * from {@link Double#equals}, as if implemented by:

@@ -17,10 +17,10 @@ public class ConcurrentBoundedQueue<T> {
 	
 	/**
 	 * Creates a bounded FIFO queue of the provided size. Example with Integers:
-	 * <p>LastElements&lt;Integer&gt; elements = new LastElements<>(Integer.class, 5);</p>
 	 * @param c Class of objects to include in the queue.
 	 * @param size Size of the queue.
 	 */
+	// <p>LastElements&lt;Integer&gt; elements = new LastElements<>(Integer.class, 5);</p>
 	@SuppressWarnings("unchecked")
 	public ConcurrentBoundedQueue(Class<T> c, int size) {
 		this.c = c;

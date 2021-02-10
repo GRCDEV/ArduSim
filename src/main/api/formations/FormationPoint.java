@@ -13,7 +13,6 @@ public class FormationPoint {
      * @param offsetX Offset of the UAV in x axes from the center UAV.
      * @param offsetY Offset of the UAV in y axes from the center UAV.
      */
-
     public FormationPoint(int position, double offsetX, double offsetY) {
         this.position = position;
         this.offsetX = offsetX;

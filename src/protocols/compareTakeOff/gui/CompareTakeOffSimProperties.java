@@ -121,12 +121,5 @@ public class CompareTakeOffSimProperties {
 
         UAVParam.airFormation.set(flyingFormation);
         flyingFormation.init(numUAVs,flyingMinDistance);
-        /*
-        FlightFormationTools f = API.getFlightFormationTools();
-        f.setGroundFormation(groundFormation.getLayout(),groundMinDistance);
-        API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(takeOffStrategy.getName());
-        f.setFlyingFormation(flyingFormation.getLayout(),flyingMinDistance);
-        f.setLandingFormationMinimumDistance(landingMinDistance);
-         */
     }
 }

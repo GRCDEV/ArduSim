@@ -131,7 +131,7 @@ public enum CopterParam {
 	MIN_RC8("RC8_MIN", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT16)),
 	/** (us) Dead zone around trim or bottom. */
 	DZ_RC8("RC8_DZ", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT16)),
-	/** Flight custom mode for RC level 1 (x<=1230). */
+	/** Flight custom mode for RC level 1 (x &#8804; 1230). */
 	FLTMODE1("FLTMODE1", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT8)),
 	/** Flight custom mode for RC level 2 (1230<x<=1360). */
 	FLTMODE2("FLTMODE2", EnumValue.of(MavParamType.MAV_PARAM_TYPE_INT8)),
