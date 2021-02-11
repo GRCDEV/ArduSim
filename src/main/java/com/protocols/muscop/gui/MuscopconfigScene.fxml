@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="455.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox prefHeight="30.0" prefWidth="600.0">
+         <children>
+            <Label maxHeight="1.7976931348623157E308" text="Flight main.java.com.api.protocols.mission:">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+               <HBox.margin>
+                  <Insets left="10.0" right="10.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="missionFile" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="34.0" text="%missionFile" HBox.hgrow="ALWAYS" />
+            <Button fx:id="missionFileButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false" prefHeight="34.0" prefWidth="41.0" text="...">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Button>
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+         <children>
+            <Label maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="163.0" text="Ground Formation:" HBox.hgrow="ALWAYS">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+            </Label>
+         </children>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" />
+         </VBox.margin>
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="200.0" text="Formation:">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="groundFormation" prefWidth="175.0">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </ChoiceBox>
+         </children>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" />
+         </VBox.margin>
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="200.0" text="Min. distance between UAVs:">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="groundMinDistance" prefHeight="26.0" prefWidth="175.0" text="%groundMinDistance">
+               <HBox.margin>
+                  <Insets left="10.0" right="10.0" />
+               </HBox.margin>
+            </TextField>
+            <Label maxHeight="1.7976931348623157E308" text="m" />
+         </children>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="200.0" text="Take off strategy:">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="takeOffStrategy" prefWidth="175.0">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </ChoiceBox>
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+         <children>
+            <Label maxHeight="1.7976931348623157E308" text="Flying formation:">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="90.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="200.0" text="Formation:">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="flyingFormation" prefWidth="175.0">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </ChoiceBox>
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="150.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="200.0" text="Min. distance between UAVs:">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="flyingMinDistance" text="%flyingMinDistance">
+               <HBox.margin>
+                  <Insets left="10.0" right="10.0" />
+               </HBox.margin>
+            </TextField>
+            <Label maxHeight="1.7976931348623157E308" text="m" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox prefHeight="30.0" prefWidth="200.0">
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" />
+         </VBox.margin>
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="200.0" text="Number of clusters:">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="numberOfClusters" disable="true" prefWidth="175.0">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </ChoiceBox>
+         </children>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="210.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label maxHeight="1.7976931348623157E308" text="Landing:">
+               <font>
+                  <Font name="System Bold Italic" size="13.0" />
+               </font>
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+         </VBox.margin>
+      </HBox>
+      <HBox layoutX="20.0" layoutY="270.0" prefHeight="30.0" prefWidth="200.0">
+         <children>
+            <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="200.0" text="Min. distance between UAVs:">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="landingMinDistance" text="%landingMinDistance">
+               <HBox.margin>
+                  <Insets left="10.0" right="10.0" />
+               </HBox.margin>
+            </TextField>
+            <Label maxHeight="1.7976931348623157E308" text="m" />
+         </children>
+         <VBox.margin>
+            <Insets bottom="5.0" left="10.0" right="10.0" />
+         </VBox.margin>
+      </HBox>
+      <Pane prefHeight="30.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+         <children>
+            <Button fx:id="okButton" layoutX="549.0" layoutY="1.0" mnemonicParsing="false" text="OK" />
+         </children>
+      </Pane>
+   </children>
+</VBox>

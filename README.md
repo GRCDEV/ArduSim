@@ -1,6 +1,6 @@
 # ArduSim
 
-ArduSim is a novel real-time flight simulator, oriented to the development of flight coordination protocols for multicopters, performing planned missions or forming a swarm. It is able to simulate up to 500 UAVs (aka. drones) simultaneously, if a high-end PC is used. ArduSim simulates a wireless Ad-hoc network for UAV-to-UAV communications. Among many information, ArduSim generates the path followed by each UAV in OMNeT++ and NS2 format to provide mobility traces, performing a simulation or even when running ArduSim in a real multicopter.
+ArduSim is a novel real-time flight simulator, oriented to the development of flight coordination main.java.com.api.protocols for multicopters, performing planned missions or forming a swarm. It is able to simulate up to 500 UAVs (aka. drones) simultaneously, if a high-end PC is used. ArduSim simulates a wireless Ad-hoc network for UAV-to-UAV communications. Among many information, ArduSim generates the path followed by each UAV in OMNeT++ and NS2 format to provide mobility traces, performing a simulation or even when running ArduSim in a real multicopter.
 
 The communication with multicopters uses the MAVLink protocol, a *de facto* standard for current open flight controllers, which makes the deployment of a new protocol on real UAVs a trivial task.
 

@@ -16,7 +16,7 @@ A simulation can be performed directly in a IDE or from a *.jar* executable file
 
 The file *ardusim.ini* is used to load some relevant parameters both in simulation as in real UAVs. The default parameters for the *simulator-gui* are set in the *SimulationParam.properties* file.
 While using the GUI version users can change several parameters, in the CLI version this is not possible and the *SimulationParam.properties* file should be updated (we recommend doing this via de GUI, using the save-button, to avoid any errors).
-Furthermore, several protocols have an additional configuration dialog. Those parameters are also read from a file. This file is simular to *SimulationParm.properties* but is unique for each protocol for instance *protocols.muscop.properties*.
+Furthermore, several main.java.com.api.protocols have an additional configuration dialog. Those parameters are also read from a file. This file is simular to *SimulationParm.properties* but is unique for each protocol for instance *main.java.com.protocols.muscop.properties*.
 The developer of a protocol will have to create the GUI and CLI configuration dialog specific to his/her protocol and with it the *.properties* file. The *.properties* file is processed by a protocol specific class (we recommend the naming convention *protocolNameSimProperties.java*)
 IMPORTANT NOTE: in the *protocolNameSimProperties.java* you will likely set more parameters then a user can change in the GUI, if this is the case, make sure to give them a default value.
 If you forget to do this, and you run a real experiment the experiment will fail (or worst the UAV will crash) because those parameters have a null value! This is simple because all the *.properties* files are not read while doing real experiments only the *ardusim.ini* file is used in real experiments.
@@ -53,7 +53,7 @@ This dialog allows to introduce several simulation parameters:
     * *Enable verbose logging*. The user may use this option to show additional information in the main window log and console only under certain circumstances. For example, using this option ArduSim provides additional information for debugging purposes.
     * *Store Data*. Stores that data (in CLI-mode) and ,in GUI-mode, it gives the user the option to save the data.
 
-* UAV synchronization protocol. This list is automatically populated with the protocols implemented in ArduSim. The user must select the protocol to be tested in simulation.
+* UAV synchronization protocol. This list is automatically populated with the main.java.com.api.protocols implemented in ArduSim. The user must select the protocol to be tested in simulation.
 
 * UAV to UAV communications parameters:
 
@@ -80,15 +80,15 @@ This dialog allows to introduce several simulation parameters:
 
 If the developer chooses to implement a dialog to input protocol parameters, it would open once the general configuration options are accepted. Otherwise, the main window of ArduSim is opened.
 
-This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one protocols.mission per file, but in the later case the same file can contain several missions. Follows a list of general rules:
+This dialog is the right place to set protocol parameters, and to load missions if needed by the protocol. You can load missions in two formats: QGroundControl *.txt* file and Google Earth *.kml* files. In the former case, there is one main.java.com.protocols.mission per file, but in the later case the same file can contain several missions. Follows a list of general rules:
 
 * QGroundControl files:
     * The waypoint in the first line (0) is ignored and used for the current location, as usual on real multicopters.
     * The first real waypoint as provided by APM Planner 2 (second line, waypoint 1) must always be a takeoff command.
-    * The following waypoints must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the protocols.mission.
+    * The following waypoints must be of type waypoint or spline waypoint. At this moment, ArduSim supports this two kind of waypoints through the main.java.com.protocols.mission.
     * The las waypoint can be of type waypoint, spline waypoint, land, or RTL. If the command is not of type land or RTL, the multicopter will remain flying over the last waypoint until the user takes control of it. Alternatively, the protocol implemented can force the UAV to land as in the protocol MBCAP, or it can also perform any other action just detecting when the UAV is close enough to the last waypoint.
 * Google Earth file:
-    * The user can add a land or RTL command at the end of the protocols.mission. Also, a hovering time over each waypoint can be set. If the hovering time is set to 0, the multicopter follows the normal behavior (cutting corners while passing through waypoints). This options are controlled with *MISSIONEND* and *WAYPOINTDELAY* parameters from *ardusim.ini* file, and can be modified through the GUI when running simulations.
+    * The user can add a land or RTL command at the end of the main.java.com.protocols.mission. Also, a hovering time over each waypoint can be set. If the hovering time is set to 0, the multicopter follows the normal behavior (cutting corners while passing through waypoints). This options are controlled with *MISSIONEND* and *WAYPOINTDELAY* parameters from *ardusim.ini* file, and can be modified through the GUI when running simulations.
     * If a waypoint has an altitude lower than the specified in the file *ardusim.ini*, it is set to that default for security reasons (when you create a *.kml* in Google Earth, by default the altitude is 0. The default altitude is applied if you don't modify that file manually to set new altitude values).
 
 ### 1.3 Main window
@@ -120,8 +120,8 @@ The user decides whether to store this information or not. In the former case, a
 * *name_mobility_OMNeT-INET-BoonMotionModel_3D.txt*. This file includes the same information plus the altitude of the multicopter over the time.
 * *name_X_mobility_NS2.txt*. One file for each multicopter stores the mobility model to be used in the communications simulator NS2. This file format is compatible with NS3.
 * *name_X_mobility_NS2_3D.txt*. In this case, the altitude of the multicopter is also included.
-* *name_X_mission_AutoCAD.scr*. This file includes the simplified protocols.mission shown on screen, and it is stored in AutoCAD format as a single poliline.
-* *name_X_mission_Google_Earth.kmz*. It includes the simplifed protocols.mission planned for all the UAVs, ready to be shown on Google Earth.
+* *name_X_mission_AutoCAD.scr*. This file includes the simplified main.java.com.protocols.mission shown on screen, and it is stored in AutoCAD format as a single poliline.
+* *name_X_mission_Google_Earth.kmz*. It includes the simplifed main.java.com.protocols.mission planned for all the UAVs, ready to be shown on Google Earth.
 * *name_X_path_test.csv*. In this case, we include the 3D location, heading, speed, acceleration, and distance to origin over time. We think that this file may be the most useful to mathematically analyze the behavior of the multicopters.
 * *name_X_path_setup.csv*. Same file, but incluiding the path followed during the setup phase. This file could be empty or not present at all if the UAV does nothing during the setup phase.
 * *name_X_path_Google_Earth.kmz*. It includes the path followed by all the UAVs, ready to be shown on Google Earth.
@@ -145,7 +145,7 @@ ArduSim can be executed with the following command line:
 * *simulator-gui*. ArduSim runs as a multi-UAV simulator in a computer with a graphical interface.
 * *simulator-cli*. ArduSim runs as a multi-UAV simulator in a computer without a graphical interface.
 * *multicopter*. ArduSim runs in a Raspberry Pi 3 B+ attached to the flight controller of a real multicopter.
-* *pccompanion*. ArduSim runs as a PC Companion to coordinate the execution of a group of real multicopters, preferably in a laptop for mobility.
+* *com.api.pccompanion*. ArduSim runs as a PC Companion to coordinate the execution of a group of real multicopters, preferably in a laptop for mobility.
 
 To deploy a protocol, ArduSim must be run in the real multicopters and in a computer, all connected in the same WiFi ad-hoc network. ArduSim will run as a PC Companion in the computer, which will control the experiment, sending the multicopters the required commands to setup and start the experiment.
 
@@ -170,7 +170,7 @@ Of course, a protocol could start automatically without a PC Companion, but we r
 
 The command line must be:
 
-    java -jar ArduSim.jar pccompanion
+    java -jar ArduSim.jar com.api.pccompanion
 
 The file *ardusim.ini* must be located beside *ArduSim.jar* to load parameters, and then the following windows opens:
 
@@ -204,13 +204,13 @@ The list of parameters is:
     * *MEASURECPU*. Measure CPU usage during the experiment.
     * *VERBOSELOGGING*. Verbose logging to ArduSim window and console.
     * *VERBOSESTORE*. Allows to store additional files at will.
-    * *YAWOVERRIDE*. Allows to modify the yaw behavior while following a protocols.mission, with the next parameter value.
+    * *YAWOVERRIDE*. Allows to modify the yaw behavior while following a main.java.com.protocols.mission, with the next parameter value.
     * *YAWVALUE*. 0=Fixed, 1=Face next waypoint, 2=Face next waypoint except RTL, 3=Face along GPS course.
 * KML files parameters:
     * *KMLMINALTITUDE*.Minimum relative altitude for any waypoint.
-    * *KMLOVERRIDEALTITUDE*. Whether to override the altitude values included in the protocols.mission or not.
+    * *KMLOVERRIDEALTITUDE*. Whether to override the altitude values included in the main.java.com.protocols.mission or not.
     * *KMLALTITUDE*. If the altitude values are overriden, the relative altitude for all of them.
-    * *KMLMISSIONEND*. Whether to add a land or RTL command at the end of the protocols.mission. Valid values: unmodified, land, or RTL.
+    * *KMLMISSIONEND*. Whether to add a land or RTL command at the end of the main.java.com.protocols.mission. Valid values: unmodified, land, or RTL.
     * *KMLRTLENDALTITUDE*. Altitude where to stop the UAV when KMLMISSIONEND is assigned RTL value. If set to 0, it lands.
     * *KMLWAYPOINTDELAY*. Mission delay over each waypoint (seconds).
     * *KMLWAYPOINTDISTANCE*. Distance to waypoint to assert that it has been reached (centimeters), used only when WAYPOINTDELAY is greater than 0.
@@ -222,10 +222,10 @@ The list of parameters is:
 * **MANDATORY** parameters when running in real UAVs:
     * *UAVPROTOCOL*. Protocol to be deployed.
     * *UAVSPEED*. Maximum planned speed of the multicopter.
-* Optional parameter for protocols that use the master-slave pattern.
+* Optional parameter for main.java.com.api.protocols that use the master-slave pattern.
     * *MACS*. MAC addresses of the adapters of the master UAV (colon notation, and comma separated). This parameter is only used on real UAVs.
     * *TAKEOFFALGORITHM*. Safety strategy used for a safe takeoff (Optimal, Simplified, or Random). Optimal used an NP-hard solution that any hardware is able to solve, so it should only be used for simulations, and with a reduced number of UAVs, tipically less than 13. Simplified proposes a safe takeoff strategy that avoids collisions, and that can be calculated in limited hardware in an acceptable amount of time. Finally, Random provides a random definition to the takeoff sequence, so NEVER use in on real UAVs or they could collide durint takeoff!!!
-* Optional parameters for protocols that use flight formations:
+* Optional parameters for main.java.com.api.protocols that use flight formations:
     * *AIRFORMATION*. UAV flying formation. Used to set the flying layout.
     * *AIRDISTANCE*. Minimum distance between contiguous UAVs in the flying formation. It must be an integer value in meters.
     * *LANDDISTANCE*. Minimum distance between contiguous UAVs for the landing phase.
