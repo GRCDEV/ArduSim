@@ -19,7 +19,6 @@ class FormationTest {
     @EnumSource(Formation.Layout.class)
     void getLayout(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
-        assert formation != null;
         Formation.Layout l = formation.getLayout();
         assertEquals(l.name(), layout.name());
     }
@@ -32,22 +31,13 @@ class FormationTest {
     void init(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         // Error case: invalid numUAVs
-        assertThrows(java.lang.Error.class, () -> {
-            assert formation != null;
-            formation.init(0, 10);
-        });
+        assertThrows(java.lang.Error.class, () -> formation.init(0, 10));
 
         // Error case: invalid minDistance
-        assertThrows(java.lang.Error.class, () -> {
-            assert formation != null;
-            formation.init(5, 0);
-        });
+        assertThrows(java.lang.Error.class, () -> formation.init(5, 0));
 
         // Error case: invalid numUAVs and minDistance
-        assertThrows(java.lang.Error.class, () -> {
-            assert formation != null;
-            formation.init(0, 0);
-        });
+        assertThrows(java.lang.Error.class, () -> formation.init(0, 0));
     }
 
     /**
@@ -80,7 +70,6 @@ class FormationTest {
     void getNumUAVs(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         // Error case: not initialized
-        assert formation != null;
         assertThrows(java.lang.Error.class, formation::getNumUAVs);
 
         // general case

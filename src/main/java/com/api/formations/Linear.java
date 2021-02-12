@@ -13,7 +13,7 @@ import static com.api.formations.Formation.Layout.LINEAR;
  * And use the function {@link #init(int, double)} to instantiate the formation
  * use the function {@link #get2DUTMLocation(Location2DUTM, int)} to get the 2D UTM coordinate of a specific UAV
  */
-public class Linear extends Formation {
+class Linear extends Formation {
 
     /**
      * @return the layout (enum: LINEAIR)

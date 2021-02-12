@@ -24,7 +24,6 @@ class CircleTest {
     @Test
     void getCenterIndex() {
         // centerIndex = 0
-        assert formation != null;
         formation.init(10,10);
         assertEquals(0,formation.getCenterIndex());
 
@@ -54,7 +53,6 @@ class CircleTest {
     @ParameterizedTest
     @MethodSource("inputCalculateFormation")
     void calculateFormation(int numUAVs, FormationPoint[] expected) {
-        assert formation != null;
         FormationPoint[] actual = formation.calculateFormation(numUAVs,10);
         assertEquals(actual.length, expected.length);
         for(int i = 0 ; i< actual.length;i++){

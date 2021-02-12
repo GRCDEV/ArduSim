@@ -24,7 +24,6 @@ class RandomTest {
      */
     @Test
     void getCenterIndex() {
-        assert formation != null;
         formation.init(12,35);
         assertEquals(0,formation.getCenterIndex());
     }
@@ -47,7 +46,6 @@ class RandomTest {
     @ParameterizedTest
     @MethodSource("inputCalculateFormation")
     void calculateFormation(int numUAVs, double minDistance) {
-        assert formation != null;
         FormationPoint[] points = formation.calculateFormation(numUAVs,minDistance);
 
         for(int i = 0;i< points.length;i++){

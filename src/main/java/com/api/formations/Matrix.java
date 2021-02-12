@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * all UAVs are on a grid with a certain distance between them, last row might be incomplete
  * Use {@link com.api.formations.FormationFactory} to get and intract with this layout
  */
-public class Matrix extends Formation{
+class Matrix extends Formation{
     /**
      * @return the layout (enum: MATRIX)
      */

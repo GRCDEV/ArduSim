@@ -24,7 +24,6 @@ class MatrixTest {
      */
     @Test
     public void getCenterIndex() {
-        assert formation != null;
         formation.init(5,minDistance);
         assertEquals(0,formation.getCenterIndex());
         formation.init(11,minDistance);
@@ -59,7 +58,6 @@ class MatrixTest {
     @ParameterizedTest
     @MethodSource("inputCalculateFormation")
     void calculateFormation(int numUAVs, FormationPoint[] expected) {
-        assert formation != null;
         FormationPoint[] actual = formation.calculateFormation(numUAVs,minDistance);
         assertEquals(actual.length, expected.length);
         for(int i = 0 ; i< actual.length;i++){

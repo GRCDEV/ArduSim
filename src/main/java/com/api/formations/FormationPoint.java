@@ -1,15 +1,11 @@
 package com.api.formations;
 
-import com.api.API;
-import com.api.ValidationTools;
-
-public class FormationPoint {
+class FormationPoint {
 
 
     public int position;
     public double offsetX;
     public double offsetY;
-    ValidationTools validationTools = API.getValidationTools();
 
     /**
      * Build an object for a point in the formation.

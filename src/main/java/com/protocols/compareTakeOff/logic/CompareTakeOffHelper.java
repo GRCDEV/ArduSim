@@ -1,20 +1,20 @@
 package com.protocols.compareTakeOff.logic;
 
 import com.api.API;
+import com.api.ArduSimTools;
 import com.api.ProtocolHelper;
+import com.api.formations.Formation;
+import com.protocols.compareTakeOff.gui.CompareTakeOffDialogApp;
+import com.protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
+import com.protocols.compareTakeOff.pojo.Text;
+import com.setup.sim.logic.SimParam;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.LocationNotReadyException;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import com.api.ArduSimTools;
-import com.api.formations.Formation;
-import com.setup.sim.logic.SimParam;
-import com.uavController.UAVParam;
 import org.javatuples.Pair;
-import com.protocols.compareTakeOff.gui.CompareTakeOffDialogApp;
-import com.protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
-import com.protocols.compareTakeOff.pojo.Text;
 
 import javax.swing.*;
 import java.io.FileInputStream;
@@ -75,7 +75,7 @@ public class CompareTakeOffHelper extends ProtocolHelper {
         // get center location
         Location2D centerLocation = new Location2D(CompareTakeOffSimProperties.masterInitialLatitude, CompareTakeOffSimProperties.masterInitialLongitude);
         double yaw = CompareTakeOffSimProperties.masterInitialYaw;
-        Pair[] startingLocations = new Pair[numUAVs];
+        Pair<Location2DGeo, Double>[] startingLocations = new Pair[numUAVs];
 
         // set the location of all the UAVs based on position of master and type of Formation
         Formation groundFormation = UAVParam.groundFormation.get();

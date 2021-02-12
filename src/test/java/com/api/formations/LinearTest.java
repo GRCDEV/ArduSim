@@ -27,7 +27,6 @@ class LinearTest {
     void testGetCenterIndex() {
         // centerIndex = numUAVs/2 (integer division)
 
-        assert formation != null;
         formation.init(6,minDistance);
         assertEquals(3,formation.getCenterIndex());
 
@@ -59,7 +58,6 @@ class LinearTest {
     @ParameterizedTest
     @MethodSource("inputCalculateFormation")
     void testCalculateFormation(int numUAVs, FormationPoint[] expected) {
-        assert formation != null;
         FormationPoint[] actual = formation.calculateFormation(numUAVs,minDistance);
         assertEquals(actual.length, expected.length);
         for(int i = 0 ; i< actual.length;i++){

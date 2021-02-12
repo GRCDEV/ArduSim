@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import static com.api.formations.Formation.Layout.RANDOM;
 
-public class Random extends Formation{
+class Random extends Formation{
     @Override
     public Layout getLayout() {
         return RANDOM;
