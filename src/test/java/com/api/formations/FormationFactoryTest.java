@@ -16,7 +16,7 @@ class FormationFactoryTest {
      * Test {@link FormationFactory#newFormation(Formation.Layout)} }
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX"})
+    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
     void newFormation(Formation.Layout layout) {
         Formation f = FormationFactory.newFormation(layout);
         assertNotNull(f);

@@ -17,7 +17,7 @@ class FormationTest {
      * Tests {@link Formation#getLayout()}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX"})
+    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
     void getLayout(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         assert formation != null;
@@ -29,7 +29,7 @@ class FormationTest {
      * Tests {@link Formation#init(int, double)}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX"})
+    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
     void init(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         // Error case: invalid numUAVs
@@ -55,7 +55,7 @@ class FormationTest {
      * Tests {@link Formation#get2DUTMLocation(Location2DUTM, int)}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX"})
+    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
     void get2DUTMLocation(Formation.Layout layout) {
         Location2DUTM centralLocation = new Location2DUTM(39.725064, -0.733661);
         Formation formation = FormationFactory.newFormation(layout);
@@ -76,7 +76,7 @@ class FormationTest {
      * Tests {@link Formation#getNumUAVs()}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX"})
+    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
     void getNumUAVs(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         // Error case: not initialized

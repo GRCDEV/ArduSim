@@ -18,6 +18,8 @@ public class FormationFactory {
                 return new Linear();
             case MATRIX:
                 return new Matrix();
+            case CIRCLE:
+                return new Circle();
             default:
                 return null;
         }

@@ -1,5 +1,7 @@
 package com.api.formations;
 
+import java.util.ArrayList;
+
 /**
  * Matrix formation
  * all UAVs are on a grid with a certain distance between them, last row might be incomplete
@@ -20,38 +22,86 @@ public class Matrix extends Formation{
      */
     @Override
     public int getCenterIndex() {
-        int numUAVs = positions.length;
-        int cols = (int)Math.ceil(Math.sqrt(numUAVs));
-        int rows = (int)Math.ceil(numUAVs/cols);
-        int prevColsCenter = (cols -1)/2;
-        int prevRowscenter = rows /2;
-        int centerIndex = prevRowscenter * cols + prevColsCenter;
-        //int n = (int)Math.ceil(Math.sqrt(positions.length));
-        return centerIndex;
+        return 0;
     }
 
-    @Override
     /**
-     * Place all UAVs in a grid, UAV 0 top left corner with spaces of minDistance between them
-     * last row might be incomplete
+     * Place all UAVs in a grid, UAV 0 in the center, then the cross is filled then the corners, etc.
      * @param numUAVs: number of UAVs in the formation
      * @param minDistance: distance (x) between each UAV
      * @return array of FormationPoints
      */
+    @Override
     protected FormationPoint[] calculateFormation(int numUAVs, double minDistance) {
         FormationPoint[] positions = new FormationPoint[numUAVs];
-        // N*N matrix where the last row might be incomplete
-        int n = (int)Math.ceil(Math.sqrt(numUAVs));
+        // Center UAV
+        positions[0] = new FormationPoint(0, 0, 0);
 
-        for(int index = 0;index<numUAVs;index++){
-            int row = index/n;
-            int col = index%n;
-            double x = col * minDistance;
-            double y = row * minDistance;
-            positions[index] = new FormationPoint(index,x,y);
+        ArrayList<Double> startAngles = getStartAngles(19);
+
+        int distance = 0;
+        for(int i=0;i<numUAVs-1;i++){
+            boolean currentEven = (Math.floor(Math.sqrt(i)) %2 == 0);
+            boolean nextOdd = (Math.floor(Math.sqrt(i+1)) %2 == 1);
+            if(currentEven && nextOdd){
+                distance +=1;
+            }
+
+            // place point on (1,0)
+            double x=1,y;
+            // Turn it until its in the right position
+            double theta = i*Math.PI/2 + startAngles.get(i/4);
+            y = x*Math.sin(theta); // + y*Math.cos(theta) but y = 0
+            x = x*Math.cos(theta); // - y*Math.sin(theta) but y = 0
+            // Scale the point outwards
+            x *= distance;
+            y *= distance;
+            // Round to integers and multiply by mindistance
+            double offsetX = ceilAbs(x) * minDistance;
+            double offsetY = ceilAbs(y) * minDistance;
+            FormationPoint p = new FormationPoint(i+1,offsetX,offsetY);
+            positions[i+1] = p;
         }
+
         return positions;
     }
 
+    /**
+     * Ceil a double if it is positive, otherwise floor it.
+     * @param value: to be ceiled/floored
+     * @return Integer
+     */
+    private int ceilAbs(double value){
+        if(Math.abs(value) < 0.00001){
+            value = 0;
+        }
+        if(value >= 0){
+            return (int)Math.ceil(value);
+        }else{
+            return (int)Math.floor(value);
+        }
+    }
 
+    /**
+     * Returns the list of angles to rotate the UAVs over {0,PI/4,0,PI/4,PI/8,3PI/8,0,....}
+     * @param numUAVs: number of UAVs
+     * @return ArrayList with angles (in rad)
+     */
+    private ArrayList<Double> getStartAngles(int numUAVs){
+        numUAVs--;
+        ArrayList<Double> angles = new ArrayList<>();
+        if(numUAVs < 8){
+            angles.add(0.0);
+            angles.add(Math.PI/4);
+        }else{
+            while(numUAVs > 0){
+                numUAVs -= 8;
+                angles.addAll(getStartAngles(numUAVs));
+            }
+            int length = angles.size();
+            angles.add(Math.PI/(4*length));
+            angles.add( ((4*length/2)-1) * Math.PI/(4*length));
+        }
+        return angles;
+    }
 }

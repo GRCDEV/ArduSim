@@ -2,6 +2,11 @@ package com.api.formations;
 
 import es.upv.grc.mapper.Location2DUTM;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static com.api.formations.Formation.Layout.LINEAR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class LinearTest {
 
     private final Formation formation = FormationFactory.newFormation(LINEAR);
+    private static final double minDistance = 10;
 
     /**
      * Tests {@link Linear#getCenterIndex()}
@@ -21,47 +27,44 @@ class LinearTest {
     void testGetCenterIndex() {
         // centerIndex = numUAVs/2 (integer division)
 
-        formation.init(6,10);
+        assert formation != null;
+        formation.init(6,minDistance);
         assertEquals(3,formation.getCenterIndex());
 
-        formation.init(5,10);
+        formation.init(5,minDistance);
         assertEquals(2,formation.getCenterIndex());
     }
 
+    private static Stream<Arguments> inputCalculateFormation(){
+        //index is not tested to reuse formationPoints
+        FormationPoint p1  = new FormationPoint(0, 0, 0);
+        FormationPoint p2  = new FormationPoint(1, -minDistance, 0);
+        FormationPoint p3  = new FormationPoint(2, minDistance, 0);
+        FormationPoint p4  = new FormationPoint(2, -2*minDistance, 0);
+        FormationPoint p5  = new FormationPoint(2, 2*minDistance, 0);
+
+
+        return Stream.of(
+                Arguments.of(1, new FormationPoint[]{p1}),
+                Arguments.of(2, new FormationPoint[]{p2,p1}),
+                Arguments.of(3, new FormationPoint[]{p2,p1,p3}),
+                Arguments.of(4, new FormationPoint[]{p4,p2,p1,p3}),
+                Arguments.of(5, new FormationPoint[]{p4,p2,p1,p3,p5})
+        );
+    }
     /**
-     * Specific Tests for {@link Linear#get2DUTMLocation(Location2DUTM, int)}
+     * Tests for {@link Linear#get2DUTMLocation(Location2DUTM, int)}
      * General Tests can be found in
      */
-    @Test
-    void testCalculateFormation() {
-        formation.init(5,10);
-        Location2DUTM centralLocation = new Location2DUTM(39.725064, -0.733661);
-
-        testCenterUAVLocation(centralLocation);
-        testFirstUAVLocation(centralLocation);
-        testlastUAVLocation(centralLocation);
-    }
-
-    private void testCenterUAVLocation(Location2DUTM centralLocation) {
-        Location2DUTM actual = formation.get2DUTMLocation(centralLocation,2);
-        assertEquals(centralLocation,actual);
-    }
-
-    private void testFirstUAVLocation(Location2DUTM centralLocation) {
-        Location2DUTM actual;
-        double x = centralLocation.x - (2*10);
-        double y = centralLocation.y;
-        Location2DUTM expected = new Location2DUTM(x,y);
-        actual = formation.get2DUTMLocation(centralLocation,0);
-        assertEquals(expected,actual);
-    }
-
-    private void testlastUAVLocation(Location2DUTM centralLocation) {
-        Location2DUTM actual;
-        double x = centralLocation.x + (2*10);
-        double y = centralLocation.y;
-        Location2DUTM expected = new Location2DUTM(x,y);
-        actual = formation.get2DUTMLocation(centralLocation,4);
-        assertEquals(expected,actual);
+    @ParameterizedTest
+    @MethodSource("inputCalculateFormation")
+    void testCalculateFormation(int numUAVs, FormationPoint[] expected) {
+        assert formation != null;
+        FormationPoint[] actual = formation.calculateFormation(numUAVs,minDistance);
+        assertEquals(actual.length, expected.length);
+        for(int i = 0 ; i< actual.length;i++){
+            assertEquals(expected[i].offsetX , actual[i].offsetX,"offsetX");
+            assertEquals(expected[i].offsetY , actual[i].offsetY,"offsetY");
+        }
     }
 }
