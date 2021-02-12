@@ -24,6 +24,7 @@ class MatrixTest {
      */
     @Test
     public void getCenterIndex() {
+        assert formation != null;
         formation.init(5,minDistance);
         assertEquals(0,formation.getCenterIndex());
         formation.init(11,minDistance);

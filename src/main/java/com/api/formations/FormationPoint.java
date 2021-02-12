@@ -22,17 +22,4 @@ public class FormationPoint {
         this.offsetX = offsetX;
         this.offsetY = offsetY;
     }
-
-    /**
-     * Rotate the point over a specific Angle with center (0,0)
-     * @param theta: angle used: counterclockwise radians
-     */
-    public void rotate(double theta){
-        double x = offsetX;
-        double y = offsetY;
-        double cosTheta = Math.cos(theta);
-        double sinTheta = Math.sin(theta);
-        offsetX = validationTools.roundDouble(x*cosTheta - y*sinTheta,6);
-        offsetY = validationTools.roundDouble(y*cosTheta + x*sinTheta,6);
-    }
 }

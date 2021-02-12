@@ -13,7 +13,7 @@ public abstract class Formation {
      * All possible layouts
      */
     public enum Layout {
-        LINEAR,MATRIX,CIRCLE,MESH,RANDOM,SPLITUP
+        LINEAR,MATRIX,CIRCLE,RANDOM
     }
 
     /**
@@ -52,7 +52,7 @@ public abstract class Formation {
         double x = centerLocation.x + positions[index].offsetX;
         double y = centerLocation.y + positions[index].offsetY;
         return new Location2DUTM(x,y);
-    };
+    }
 
     /**
      * @return index of the UAV in the center of the formation

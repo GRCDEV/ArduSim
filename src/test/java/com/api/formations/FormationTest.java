@@ -4,8 +4,7 @@ import es.upv.grc.mapper.Location2DUTM;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for {@link Formation}
@@ -17,7 +16,7 @@ class FormationTest {
      * Tests {@link Formation#getLayout()}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
+    @EnumSource(Formation.Layout.class)
     void getLayout(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         assert formation != null;
@@ -29,7 +28,7 @@ class FormationTest {
      * Tests {@link Formation#init(int, double)}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
+    @EnumSource(Formation.Layout.class)
     void init(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         // Error case: invalid numUAVs
@@ -55,11 +54,10 @@ class FormationTest {
      * Tests {@link Formation#get2DUTMLocation(Location2DUTM, int)}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
+    @EnumSource(Formation.Layout.class)
     void get2DUTMLocation(Formation.Layout layout) {
         Location2DUTM centralLocation = new Location2DUTM(39.725064, -0.733661);
         Formation formation = FormationFactory.newFormation(layout);
-        assert formation != null;
         formation.init(5,10);
 
         // Error case: index out of bound (lower end)
@@ -70,13 +68,15 @@ class FormationTest {
         assertThrows(java.lang.Error.class, () -> formation.get2DUTMLocation(null, 2));
         // Error case: centerlocation null and index out of bound
         assertThrows(java.lang.Error.class, () -> formation.get2DUTMLocation(null, 5));
+        // correct case: UTMLocation is not null
+        assertNotNull(formation.get2DUTMLocation(centralLocation,3));
     }
 
     /**
      * Tests {@link Formation#getNumUAVs()}
      */
     @ParameterizedTest
-    @EnumSource(value = Formation.Layout.class, names = {"LINEAR","MATRIX","CIRCLE"})
+    @EnumSource(Formation.Layout.class)
     void getNumUAVs(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         // Error case: not initialized

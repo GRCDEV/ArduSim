@@ -20,8 +20,10 @@ public class FormationFactory {
                 return new Matrix();
             case CIRCLE:
                 return new Circle();
+            case RANDOM:
+                return new Random();
             default:
-                return null;
+                throw new IllegalStateException("Unexpected value: " + formation);
         }
     }
 }
