@@ -2,7 +2,7 @@ package com.api.masterslavepattern.safeTakeOff;
 
 import com.api.*;
 import com.api.communications.CommLink;
-import com.api.masterslavepattern.InternalCommLink;
+import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;

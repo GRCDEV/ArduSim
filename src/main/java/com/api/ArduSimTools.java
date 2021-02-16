@@ -1,6 +1,5 @@
 package com.api;
 
-import com.api.communications.CommLinkObject;
 import com.api.cpuHelper.CPUData;
 import com.api.formations.Formation;
 import com.api.formations.FormationFactory;
@@ -709,19 +708,6 @@ public class ArduSimTools {
 			
 			SimParam.prefix[i] = Text.UAV_ID + " " + Param.id[i] + ": ";
 		}
-		
-		// Collision and communication range parameters
-		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-			UAVParam.distances = new AtomicReference[Param.numUAVs][Param.numUAVs];
-			CommLinkObject.isInRange = new AtomicBoolean[Param.numUAVs][Param.numUAVs];
-			for (int i = 0; i < Param.numUAVs; i++) {
-				for (int j = 0; j < Param.numUAVs; j++) {
-					UAVParam.distances[i][j] = new AtomicReference<>();
-					CommLinkObject.isInRange[i][j] = new AtomicBoolean();
-				}
-			}
-		}
-		
 	}
 	
 	/** Auxiliary method to check the available TCP and UDP ports needed by SITL instances and calculate the number of possible instances. */

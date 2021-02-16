@@ -3,7 +3,7 @@ package com.api.masterslavepattern.discovery;
 import com.api.communications.CommLink;
 import com.esotericsoftware.kryo.io.Input;
 import com.setup.Text;
-import com.api.masterslavepattern.InternalCommLink;
+import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 

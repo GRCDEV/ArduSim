@@ -10,7 +10,7 @@ import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import com.api.GUI;
 import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.InternalCommLink;
+import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;

@@ -9,7 +9,7 @@ import com.api.ArduSimTools;
 import com.setup.Text;
 import com.api.Copter;
 import com.api.GUI;
-import com.api.masterslavepattern.InternalCommLink;
+import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;

@@ -14,6 +14,7 @@ import com.uavController.UAVParam;
 public class RangeCalculusThread extends Thread {
 	
 	private final ArduSim ardusim;
+	public static final long RANGE_CHECK_PERIOD = 1000; // (ms) Time between UAVs range check
 	
 	public RangeCalculusThread() {
 		this.ardusim = API.getArduSim();
@@ -39,7 +40,7 @@ public class RangeCalculusThread extends Thread {
 					}
 				}
 			}
-			checkTime = checkTime + CommLinkObject.RANGE_CHECK_PERIOD;
+			checkTime = checkTime + RANGE_CHECK_PERIOD;
 			waitingTime = checkTime - System.currentTimeMillis();
 			if (waitingTime > 0) {
 				ardusim.sleep(waitingTime);

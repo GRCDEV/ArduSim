@@ -1,19 +1,19 @@
 package com.setup.arduSimSetup;
 
-import es.upv.grc.mapper.Location2DGeo;
+import com.api.ArduSim;
 import com.api.ArduSimTools;
+import com.api.communications.CommLink;
+import com.api.communications.RangeCalculusThread;
 import com.setup.InitialConfiguration2Thread;
 import com.setup.Param;
 import com.setup.Text;
-import com.api.ArduSim;
-import com.api.communications.CommLinkObject;
-import com.api.communications.RangeCalculusThread;
 import com.setup.sim.gui.MainWindow;
 import com.setup.sim.logic.CollisionDetector;
 import com.setup.sim.logic.DistanceCalculusThread;
 import com.setup.sim.logic.SimParam;
 import com.setup.sim.logic.SimTools;
 import com.uavController.UAVParam;
+import es.upv.grc.mapper.Location2DGeo;
 import org.javatuples.Pair;
 
 import javax.swing.*;
@@ -159,14 +159,7 @@ public class ArduSimSetupSimulator extends ArduSimSetup{
     protected void closeVirtualCommunications(){
         if (Param.numUAVs > 1) {
             ArduSimTools.logGlobal(Text.SHUTTING_DOWN_COMM);
-            int numThreads = 2 * Param.numUAVs;
-            long now = System.currentTimeMillis();
-            // Maybe the communications were not used at all
-            while (CommLinkObject.communicationsClosed != null
-                    && CommLinkObject.communicationsClosed.size() < numThreads
-                    && System.currentTimeMillis() - now < CommLinkObject.CLOSSING_WAITING_TIME) {
-                ardusim.sleep(SimParam.SHORT_WAITING_TIME);
-            }
+            CommLink.close();
         }
         if (Param.role == ArduSim.SIMULATOR_GUI) {
             ArduSimTools.logGlobal(Text.WAITING_FOR_USER);

@@ -1,19 +1,17 @@
 package com.protocols.muscop.logic;
 
-import com.api.API;
-import com.api.pojo.FlightMode;
-import com.api.pojo.location.WaypointSimplified;
-import com.esotericsoftware.kryo.io.Input;
-import es.upv.grc.mapper.*;
 import com.api.*;
 import com.api.communications.CommLink;
 import com.api.masterslavepattern.MasterSlaveHelper;
 import com.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
-import com.uavController.UAVParam;
+import com.api.pojo.FlightMode;
+import com.api.pojo.location.WaypointSimplified;
+import com.esotericsoftware.kryo.io.Input;
 import com.protocols.muscop.gui.MuscopSimProperties;
 import com.protocols.muscop.pojo.Message;
+import com.uavController.UAVParam;
+import es.upv.grc.mapper.*;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -80,8 +78,8 @@ public class MUSCOPListenerThread extends Thread {
 		this.takeOffHelper = this.copter.getSafeTakeOffHelper();
 
 		try {
-			this.atWaypointFile = new FileWriter(new File("atWaypoint.csv"),true);
-			this.goingToWaypointFile = new FileWriter(new File("goingToWaypoint.csv"), true);
+			this.atWaypointFile = new FileWriter(("atWaypoint.csv"),true);
+			this.goingToWaypointFile = new FileWriter(("goingToWaypoint.csv"), true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -181,7 +179,7 @@ public class MUSCOPListenerThread extends Thread {
 	}
 	
 	private Location3DGeo[] shareMission() {
-		// The main.java.com.protocols.mission could be sent when  they are in the air, but it is better to do it now
+		// The mission could be sent when  they are in the air, but it is better to do it now
 		//   because the are closer and messages are less prone to be lost.
 		currentState.set(SHARE_MISSION);
 		talker = new MUSCOPTalkerThread(numUAV, isMaster, masterOrder.get(0) == this.selfId, missionReceived, wpReachedSemaphore, moveSemaphore);
@@ -192,7 +190,7 @@ public class MUSCOPListenerThread extends Thread {
 		Location3DGeo[] selfMission = null;
 		
 		if (this.isMaster) {
-			// 1. Calculus of the main.java.com.protocols.mission for the UAV in the center of the formation
+			// 1. Calculus of the mission for the UAV in the center of the formation
 			Location3DUTM[] centerMission = new Location3DUTM[screenMission.size()];
 			centerMission[0] = new Location3DUTM(takeOff.getCenterUAVLocation(), screenMission.get(0).z);
 			for (int i = 1; i < screenMission.size(); i++) {
@@ -200,24 +198,21 @@ public class MUSCOPListenerThread extends Thread {
 				centerMission[i] = new Location3DUTM(wp.x, wp.y, wp.z);
 			}
 			
-			// 2. Calculate the main.java.com.protocols.mission for the master
+			// 2. Calculate the mission for the master
 			selfMission = new Location3DGeo[centerMission.length];
 			Location3DUTM centerLocation;
 			for (int i = 0; i < selfMission.length; i++) {
 				centerLocation = centerMission[i];
-				/*
 				try {
-					selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), centerLocation, takeOff.getInitialYaw()).getGeo(), centerLocation.z);
+					selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().get2DUTMLocation(centerLocation, numUAV).getGeo(), centerLocation.z);
 				} catch (LocationNotReadyException e) {
 					e.printStackTrace();
 					gui.exit(e.getMessage());
 				}
-				 */
-				//TODO fix
 			}
 			// Share data with the talker thread
 			missionReceived.set(true);
-			// Store the main.java.com.protocols.mission of the center UAV to allow the talker thread to send it
+			// Store the mission of the center UAV to allow the talker thread to send it
 			MuscopSimProperties.missionSent.set(centerMission);
 			
 			// 3. Wait for data ack from all the slaves
@@ -259,15 +254,12 @@ public class MUSCOPListenerThread extends Thread {
 								centerLocation.x = input.readDouble();
 								centerLocation.y = input.readDouble();
 								centerLocation.z = input.readDouble();
-								/*
 								try {
-									selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), centerLocation, takeOff.getInitialYaw()).getGeo(), centerLocation.z);
+									selfMission[i] = new Location3DGeo(takeOff.getFormationFlying().get2DUTMLocation(centerLocation, numUAV).getGeo(), centerLocation.z);
 								} catch (LocationNotReadyException e) {
 									e.printStackTrace();
 									gui.exit(e.getMessage());
 								}
-								 */
-								// TODO fix
 							}
 							
 							missionReceived.set(true);

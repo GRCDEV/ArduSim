@@ -1,6 +1,7 @@
 package com.protocols.muscop.gui;
 
 import com.api.API;
+import com.api.formations.Formation;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -61,7 +62,10 @@ public class MuscopConfigDialogController {
     public void initialize(){
         missionFile.setDisable(true);
         missionFileButton.setOnAction(e->searchMissionFile());
-        //groundFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
+        for(Formation.Layout l: Formation.Layout.values()){
+            groundFormation.getItems().add(l.name());
+            flyingFormation.getItems().add(l.name());
+        }
         groundFormation.getSelectionModel().select(resources.getString("groundFormation"));
 
         groundMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
@@ -69,7 +73,6 @@ public class MuscopConfigDialogController {
         takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
         takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
 
-        //flyingFormation.setItems(FXCollections.observableArrayList(FlightFormation.Formation.getAllFormations()));
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));
 
         flyingMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));

@@ -70,6 +70,8 @@ public class TakeOffThread extends Thread{
         }
     }
 
+
+
     private Map<Long, Location2DUTM> setup() {
         long startSetup = System.currentTimeMillis();
         // DISCOVER MASTER AND SLAVES
@@ -145,6 +147,7 @@ public class TakeOffThread extends Thread{
             }
         }
         experimentOutput += System.currentTimeMillis() - startTakeoff + ";" + collisionList.size() + ";";
+
     }
 
     private void land() {

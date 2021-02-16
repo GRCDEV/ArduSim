@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Virtual communications message.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-public class IncomingMessage implements Comparable<IncomingMessage> {
+class IncomingMessage implements Comparable<IncomingMessage> {
 	public long start, end;				// (ns) Starting and ending time of the transmission period
 	public int senderPos;				// Position of the UAV on the Simulator internal arrays
 	public byte[] message;				// Message to be sent

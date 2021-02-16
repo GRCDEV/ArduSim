@@ -5,7 +5,7 @@ import java.util.ArrayDeque;
 /** This implementation is used for the virtual wireless link, and it is thread-safe.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-public class IncomingMessageQueue {
+class IncomingMessageQueue {
 	
 	private final ArrayDeque<IncomingMessage> queue;
 	private int byteSize;

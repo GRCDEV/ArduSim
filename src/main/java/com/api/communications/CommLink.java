@@ -1,9 +1,14 @@
 package com.api.communications;
 
 import com.api.API;
+import com.api.ArduSim;
 import com.setup.Param;
 import com.setup.Text;
-import com.api.ArduSim;
+import com.setup.sim.logic.SimParam;
+import com.uavController.UAVParam;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * UAV-to-UAV communications link.
@@ -27,13 +32,42 @@ public class CommLink {
 	
 	public CommLink(int numUAV, int numUAVs, int port) {
 		this.numUAV = numUAV;
-		
 		synchronized(PUBLIC_LOCK) {
 			if (CommLink.publicCommLink == null) {
 				CommLink.publicCommLink = new CommLinkObject(numUAVs, port);
 			}
 		}
-		
+	}
+
+	public static void init(int numUAVs,boolean carrierSensing, boolean packetCollisionDetection, int bufferSize){
+		CommLinkObject.carrierSensingEnabled = carrierSensing;
+		CommLinkObject.pCollisionEnabled = packetCollisionDetection;
+		CommLinkObject.receivingBufferSize = bufferSize;
+		CommLinkObject.receivingvBufferSize = CommLinkObject.V_BUFFER_SIZE_FACTOR * CommLinkObject.receivingBufferSize;
+		CommLinkObject.receivingvBufferTrigger = (int)Math.rint(CommLinkObject.BUFFER_FULL_THRESHOLD * CommLinkObject.receivingvBufferSize);
+
+		// Collision and communication range parameters
+		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
+			UAVParam.distances = new AtomicReference[numUAVs][numUAVs];
+			CommLinkObject.isInRange = new AtomicBoolean[numUAVs][numUAVs];
+			for (int i = 0; i < numUAVs; i++) {
+				for (int j = 0; j < numUAVs; j++) {
+					UAVParam.distances[i][j] = new AtomicReference<>();
+					CommLinkObject.isInRange[i][j] = new AtomicBoolean();
+				}
+			}
+		}
+	}
+
+	public static void close(){
+		int numThreads = 2 * Param.numUAVs;
+		long now = System.currentTimeMillis();
+		// Maybe the communications were not used at all
+		while (CommLinkObject.communicationsClosed != null
+				&& CommLinkObject.communicationsClosed.size() < numThreads
+				&& System.currentTimeMillis() - now < CommLinkObject.CLOSSING_WAITING_TIME) {
+			API.getArduSim().sleep(SimParam.SHORT_WAITING_TIME);
+		}
 	}
 	
 	/**
@@ -42,7 +76,6 @@ public class CommLink {
 	 * @param message Message to be sent, and encoded by the protocol.
 	 */
 	public void sendBroadcastMessage(byte[] message) {
-		
 		if (Param.role == ArduSim.PCCOMPANION) {
 			if (!advertised) {
 				API.getGUI(0).log(Text.SEND_NOT_PERMITTED);
@@ -59,9 +92,7 @@ public class CommLink {
 	 * @return The message received, or null if a fatal error with the socket happens.
 	 */
 	public byte[] receiveMessage() {
-		
 		return CommLink.publicCommLink.receiveMessage(numUAV, 0);
-		
 	}
 	
 	/**
@@ -71,9 +102,7 @@ public class CommLink {
 	 * @return The message received, or null if a fatal error with the socket happens or the timeout is reached.
 	 */
 	public byte[] receiveMessage(int socketTimeout) {
-		
 		return CommLink.publicCommLink.receiveMessage(numUAV, socketTimeout);
-		
 	}
 
 	/** 
@@ -81,8 +110,6 @@ public class CommLink {
 	 */
 	@Override
 	public String toString() {
-		
 		return CommLink.publicCommLink.toString();
-		
 	}
 }

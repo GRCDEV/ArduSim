@@ -7,7 +7,7 @@ public class MUSCOPText {
 	
 	// Configuration dialog
 	public static final String CONFIGURATION_DIALOG_TITLE_SWARM = "MUSCOP Protocol Configuration";
-	public static final String MISSION_SELECT = "Flight main.java.com.protocols.mission:";
+	public static final String MISSION_SELECT = "Flight mission:";
 	public static final String BUTTON_SELECT = "...";
 	public static final String GROUND_TEXT = "Ground formation:";
 	public static final String FORMATION_TEXT = "Formation";
@@ -23,7 +23,7 @@ public class MUSCOPText {
 	// Protocol states
 	public static final String START = "Start";						// Master UAV detects slaves
 	public static final String SETUP = "Setup";						// Data sharing to coordinate the take off
-	public static final String SEND_MISSION = "Sending main.java.com.protocols.mission";	// Blocking slaves until all have the main.java.com.protocols.mission
+	public static final String SEND_MISSION = "Sending mission";	// Blocking slaves until all have the mission
 	public static final String TAKING_OFF = "Taking off";			// Performing the take off
 	public static final String SETUP_FINISHED = "Setup finished";	// Waiting for the experiment to start
 	public static final String MOVE_TO_WP = "Moving to WP";			// Moving to a waypoint
@@ -36,7 +36,7 @@ public class MUSCOPText {
 	//   from master
 	public static final String MASTER_START_LISTENER = "Master listener detecting slaves.";
 	public static final String MASTER_DETECTED_UAVS = "Number of UAVs detected by master:";
-	public static final String MASTER_DATA_TALKER = "Master talker sending data with main.java.com.protocols.mission.";
+	public static final String MASTER_DATA_TALKER = "Master talker sending data with mission.";
 	public static final String MASTER_DATA_ACK_LISTENER = "Master listener waiting for data ack.";
 	
 	public static final String CENTER_WP_REACHED_ACK_LISTENER = "Center listener waiting for waypoint reached ack.";

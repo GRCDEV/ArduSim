@@ -1,15 +1,16 @@
 package com.api;
 
-import com.setup.Param;
-import com.setup.Text;
 import com.api.pojo.StatusPacket;
 import com.api.pojo.location.Waypoint;
-import javafx.stage.Stage;
-import com.api.ArduSimTools;
+import com.setup.Param;
 import com.setup.Text;
 import com.setup.pccompanion.logic.PCCompanionParam;
-import com.setup.sim.gui.*;
+import com.setup.sim.gui.MissionKmlDialogApp;
+import com.setup.sim.gui.MissionKmlSimProperties;
+import com.setup.sim.gui.MissionWaypointsDialog;
+import com.setup.sim.gui.ProgressDialog;
 import com.setup.sim.logic.SimParam;
+import javafx.stage.Stage;
 import org.javatuples.Pair;
 
 import javax.swing.*;
@@ -104,26 +105,24 @@ public class GUI {
 		if (files == null || files.length == 0) {
 			return null;
 		}
-		
 		FileTools fileTools = API.getFileTools();
 		String extension = fileTools.getFileExtension(files[0]);
 		// Only one "kml" file is accepted
-		boolean correctExtension = extension.toUpperCase().equals(Text.FILE_EXTENSION_KML.toUpperCase());
+		boolean correctExtension = extension.equalsIgnoreCase(Text.FILE_EXTENSION_KML);
 		if (correctExtension && files.length > 1) {
 			ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_1);
 			return null;
 		}
 		// waypoints files can not be mixed with kml files
-		boolean correctWaypointExtension = extension.toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase());
+		boolean correctWaypointExtension = extension.equalsIgnoreCase(Text.FILE_EXTENSION_WAYPOINTS);
 		if (correctWaypointExtension) {
 			for (int i = 1; i < files.length; i++) {
-				if (!fileTools.getFileExtension(files[i]).toUpperCase().equals(Text.FILE_EXTENSION_WAYPOINTS.toUpperCase())) {
+				if (!fileTools.getFileExtension(files[i]).equalsIgnoreCase(Text.FILE_EXTENSION_WAYPOINTS)) {
 					ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_2);
 					return null;
 				}
 			}
 		}
-		
 		// kml file selected. All missions are loaded from one single file
 		if (correctExtension) {
 			// First, configure the missions
@@ -161,6 +160,7 @@ public class GUI {
 				ArduSimTools.warnGlobal(Text.MISSIONS_SELECTION_ERROR, Text.MISSIONS_ERROR_3);
 				return null;
 			}
+
 			return new Pair<>(Text.FILE_EXTENSION_KML, missions);
 		}
 		

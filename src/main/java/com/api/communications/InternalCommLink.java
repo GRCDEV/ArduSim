@@ -1,6 +1,5 @@
-package com.api.masterslavepattern;
+package com.api.communications;
 
-import com.api.communications.CommLinkObject;
 import com.setup.Param;
 import com.uavController.UAVParam;
 
@@ -24,7 +23,7 @@ public class InternalCommLink {
 		
 		synchronized (lockComm) {
 			if (InternalCommLink.privateCommLink == null) {
-				InternalCommLink.privateCommLink = new AtomicReferenceArray<InternalCommLink>(Param.numUAVs);
+				InternalCommLink.privateCommLink = new AtomicReferenceArray<>(Param.numUAVs);
 				for (int i = 0; i < Param.numUAVs; i++) {
 					InternalCommLink.privateCommLink.set(i, new InternalCommLink(i, Param.numUAVs, UAVParam.broadcastInternalPort));
 				}

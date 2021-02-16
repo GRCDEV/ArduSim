@@ -2,7 +2,9 @@ package com.protocols.muscop.logic;
 
 import com.api.API;
 import com.api.ProtocolHelper;
+import com.api.formations.Formation;
 import com.api.pojo.location.Waypoint;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
@@ -37,7 +39,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public boolean loadMission() {
-		// In a real multicopter, the UAV is always in position 0. The master UAV is which has a main.java.com.protocols.mission to load.
+		// In a real multicopter, the UAV is always in position 0. The master UAV is which has a mission to load.
 		return API.getCopter(0).getMasterSlaveHelper().isMaster();
 	}
 
@@ -63,6 +65,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 			}
 			properties.storeParameters(p,resources);
 		} catch (IOException e) {
+			e.printStackTrace();
 			ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.PROTOCOL_PARAMETERS_FILE_NOT_FOUND );
 			System.exit(0);
 		}
@@ -90,20 +93,20 @@ public class MUSCOPHelper extends ProtocolHelper {
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
 		// As a design decision:
-		// The ground formation will appear with the UAV in the center in the first waypoint of the main.java.com.protocols.mission from the master
-		// The main.java.com.protocols.mission to be followed will start in the location where the flight center UAV will be after taking off
-		// We overlap the original master main.java.com.protocols.mission with the center UAV main.java.com.protocols.mission for visualization
+		// The ground formation will appear with the UAV in the center in the first waypoint of the mission from the master
+		// The ission to be followed will start in the location where the flight center UAV will be after taking off
+		// We overlap the original master mission with the center UAV mission for visualization
 		
-		// 1. Get the yaw of the master given the current main.java.com.protocols.mission
+		// 1. Get the yaw of the master given the current mission
 		//    We only can set yaw if at least two points with valid coordinates are found
-		// 1.1. Check if master main.java.com.protocols.mission exists
+		// 1.1. Check if master mission exists
 		Waypoint waypoint1, waypoint2;
 		waypoint1 = waypoint2 = null;
 		int waypoint1pos = 0;
 		boolean waypointFound;
 		GUI gui = API.getGUI(0);
 		MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
-		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();	// Simplified main.java.com.protocols.mission would be better, but it is not ready jet
+		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();	// Simplified mission would be better, but it is not ready jet
 		// The master UAV is always in the position 0 of arrays
 		List<Waypoint> masterMission = null;
 		if (missions == null || missions[0] == null) {
@@ -140,17 +143,15 @@ public class MUSCOPHelper extends ProtocolHelper {
 				gui.exit(MUSCOPText.UAVS_START_ERROR_2);
 			}
 		}
-		
-		// 2. With the ground formation centered on the main.java.com.protocols.mission beginning, get ground coordinates.
-		//   The UAVs appear with the center UAV in the first waypoint of the initial main.java.com.protocols.mission.
+
+		// 2. With the ground formation centered on the mission beginning, get ground coordinates.
+		//   The UAVs appear with the center UAV in the first waypoint of the initial mission.
 		//   As this is simulation, ID and position on the ground are the same for all the UAVs.
 		int numUAVs = API.getArduSim().getNumUAVs();
-		
-		// FlightFormationTools formationTools = API.getFlightFormationTools();
-		// FlightFormation groundFormation = formationTools.getGroundFormation(numUAVs);
-		
-		
-		int groundCenterUAVPosition = 0; //groundFormation.getCenterUAVPosition();
+
+		Formation groundFormation = UAVParam.groundFormation.get();
+		System.out.println(groundFormation.getLayout().toString());
+		int groundCenterUAVPosition = groundFormation.getCenterIndex(); //groundFormation.getCenterUAVPosition();
 		Map<Long, Location2DUTM> groundLocations = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		Location2DUTM locationUTM;
 		Location2DUTM groundCenterUTMLocation = waypoint1.getUTM();
@@ -158,17 +159,18 @@ public class MUSCOPHelper extends ProtocolHelper {
 			if (i == groundCenterUAVPosition) {
 				groundLocations.put((long)i, groundCenterUTMLocation);
 			} else {
-				locationUTM = null; //groundFormation.getLocation(i, groundCenterUTMLocation, MuscopSimProperties.formationYaw);
+				locationUTM = groundFormation.get2DUTMLocation(groundCenterUTMLocation,i);
+				System.out.println(locationUTM.toString());
 				groundLocations.put((long)i, locationUTM);
 			}
 		}
 		
 		// 3. Get the ID of the UAV that will be center in the flight formation
-		Pair<Long, Location2DUTM> flightCenterUAV = null; //formationTools.getCenterUAV(groundLocations, MuscopSimProperties.formationYaw, false);
+		Pair<Long, Location2DUTM> flightCenterUAV = new Pair<>((long)groundFormation.getCenterIndex(),groundCenterUTMLocation);
 		
-		// 4. Copy the main.java.com.protocols.mission to the location where the UAV in the center of the flight formation will be
-		//   We do this to show the real path followed by the swarm as a main.java.com.protocols.mission for the flight center UAV, as it will follow this main.java.com.protocols.mission coordinating the remaining UAVs.
-		//   First, we copy the main.java.com.protocols.mission as is
+		// 4. Copy the mission to the location where the UAV in the center of the flight formation will be
+		//   We do this to show the real path followed by the swarm as a mission for the flight center UAV, as it will follow this mission coordinating the remaining UAVs.
+		//   First, we copy the mission as is
 		List<Waypoint> centerMission = new ArrayList<>(masterMission.size());
 		int p = -1;
 		for (int i = 0; i < masterMission.size(); i++) {
@@ -184,7 +186,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 			movedGeo = flightCenterUAV.getValue1().getGeo();
 			moved.setLatitude(movedGeo.latitude);
 			moved.setLongitude(movedGeo.longitude);
-			// Finally, we set the main.java.com.protocols.mission in the center UAV. As this is simulation, position and ID always match.
+			// Finally, we set the mission in the center UAV. As this is simulation, position and ID always match.
 			missions[flightCenterUAV.getValue0().intValue()] = centerMission;
 			missionHelper.setMissionsLoaded(missions);
 			
@@ -235,7 +237,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 
 	@Override
 	public boolean sendInitialConfiguration(int numUAV) {
-		// No need of specific configuration, as the main.java.com.protocols.mission is automatically loaded
+		// No need of specific configuration, as the mission is automatically loaded
 		return true;
 	}
 

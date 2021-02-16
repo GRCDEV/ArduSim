@@ -1,15 +1,15 @@
 package com.setup.sim.logic;
 
 import com.api.API;
-import javafx.stage.FileChooser;
 import com.api.ArduSimTools;
-import com.setup.Param;
-import com.setup.Text;
 import com.api.communications.CommLink;
-import com.api.communications.CommLinkObject;
+import com.api.communications.RangeCalculusThread;
 import com.api.communications.WirelessModel;
 import com.api.cpuHelper.CPUUsageThread;
+import com.setup.Param;
+import com.setup.Text;
 import com.uavController.UAVParam;
+import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -242,12 +242,9 @@ public class SimProperties {
         }
         Param.verboseLogging = verboseLogging;
         Param.storeData = storeData;
-        CommLinkObject.carrierSensingEnabled = carrierSensing;
-        CommLinkObject.pCollisionEnabled = packetCollisionDetection;
-        CommLinkObject.receivingBufferSize = bufferSize;
-        CommLinkObject.receivingvBufferSize = CommLinkObject.V_BUFFER_SIZE_FACTOR * CommLinkObject.receivingBufferSize;
-        CommLinkObject.receivingvBufferTrigger = (int)Math.rint(CommLinkObject.BUFFER_FULL_THRESHOLD * CommLinkObject.receivingvBufferSize);
+        CommLink.init(numUAVs,carrierSensing,packetCollisionDetection,bufferSize);
         Param.selectedWirelessModel = communicationModel;
+
         if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
             Param.fixedRange = fixedRangeDistance;
         }
@@ -261,9 +258,9 @@ public class SimProperties {
             // altitude threshold
             UAVParam.collisionAltitudeDifference = altitudeThreshold;
             // Distance calculus slightly faster than the collision check frequency
-            UAVParam.distanceCalculusPeriod = Math.min(CommLinkObject.RANGE_CHECK_PERIOD / 2, Math.round(UAVParam.collisionCheckPeriod * 950));
+            UAVParam.distanceCalculusPeriod = Math.min(RangeCalculusThread.RANGE_CHECK_PERIOD / 2, Math.round(UAVParam.collisionCheckPeriod * 950));
         }else {
-            UAVParam.distanceCalculusPeriod = CommLinkObject.RANGE_CHECK_PERIOD / 2;
+            UAVParam.distanceCalculusPeriod = RangeCalculusThread.RANGE_CHECK_PERIOD / 2;
         }
         if (windEnabled) {
             Param.windDirection = windDirection;

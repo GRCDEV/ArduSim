@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Communications link object.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-public class CommLinkObject {
+class CommLinkObject {
 	
 	private ArduSim ardusim;
 	
@@ -36,7 +36,7 @@ public class CommLinkObject {
 	private DatagramPacket receivePacket;	// Receiving packet
 	
 	// Virtual communication parameters:
-	public static final long RANGE_CHECK_PERIOD = 1000;				// (ms) Time between UAVs range check
+
 	public static AtomicBoolean[][] isInRange;						// Matrix containing the range check result
 	private AtomicReferenceArray<IncomingMessage> prevSentMessage;	// Stores the last sent message for each UAV in the current channel (CC)
 	public static boolean pCollisionEnabled = true;					// Whether the packet collision detection is enabled or not
@@ -495,6 +495,6 @@ public class CommLinkObject {
 		}
 		return sb.toString();
 	}
-	
+
 	
 }

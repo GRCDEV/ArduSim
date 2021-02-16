@@ -15,7 +15,7 @@ public class SimParam {
 
 	// path of top-level .properties
 	public static File resourcesFile;
-	public static final File missionParameterFile = new File(API.getFileTools().getSourceFolder(), "/main/resources/mission/missionParam.properties");
+	public static final File missionParameterFile = new File(API.getFileTools().getSourceFolder(), "/main/resources/protocols/mission/missionParam.properties");
 	// path to protocol specific parameter file
 	public static File protocolParamFile;
 	// Detects when the communications are online

@@ -4,7 +4,7 @@ import com.api.API;
 import com.api.ArduSim;
 import com.api.Copter;
 import com.api.communications.CommLink;
-import com.api.masterslavepattern.InternalCommLink;
+import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.esotericsoftware.kryo.io.Output;
