@@ -63,7 +63,7 @@ public class ShakeupListenerThread extends Thread{
 		talker.start();
 		byte[] inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		Input input = new Input(inBuffer);
-		CommLink link = API.getCommLink(numUAV);
+		CommLink link = CommLink.getCommLink(numUAV);
 
 		long time = System.currentTimeMillis();
 		long distanceTimer = System.currentTimeMillis();

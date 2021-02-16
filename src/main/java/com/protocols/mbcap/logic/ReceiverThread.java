@@ -30,7 +30,7 @@ public class ReceiverThread extends Thread {
 	public ReceiverThread(int numUAV) {
 		this.beacons = MBCAPParam.beacons[numUAV];
 		this.numUAV = numUAV;
-		this.link = API.getCommLink(numUAV);
+		this.link = CommLink.getCommLink(numUAV);
 		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 		this.copter = API.getCopter(numUAV);

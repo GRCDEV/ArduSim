@@ -22,23 +22,43 @@ public class CommLink {
 	public static final int DATAGRAM_MAX_LENGTH = 1472; 		// (bytes) 1500-20-8 (MTU - IP - UDP)
 	
 	private int numUAV;
-	private static volatile CommLinkObject publicCommLink = null;
+
+	private static volatile CommLinkObject commLinkObject = null;
 	private static final Object PUBLIC_LOCK = new Object();
 	
 	private volatile boolean advertised = false;
-	
-	@SuppressWarnings("unused")
-	private CommLink() {}
-	
-	public CommLink(int numUAV, int numUAVs, int port) {
+
+	/**
+	 * Get the communication link needed for UAV-to-UAV communications.
+	 * @param numUAV This specific UAV position in the data arrays (see documentation).
+	 * @return Communication link used by the UAV to communicate with the other UAVs.
+	 */
+	public static CommLink getCommLink(int numUAV) {
+		return new CommLink(numUAV,Param.numUAVs,UAVParam.broadcastPort);
+	}
+
+	/**
+	 * Private constructor of CommLink in order to facilitate the singletonPattern
+	 * @param numUAV: the number of the current UAV (identifier)
+	 * @param numUAVs: total number of UAVs
+	 * @param port: port used while sending messages
+	 */
+	private CommLink(int numUAV, int numUAVs, int port) {
 		this.numUAV = numUAV;
 		synchronized(PUBLIC_LOCK) {
-			if (CommLink.publicCommLink == null) {
-				CommLink.publicCommLink = new CommLinkObject(numUAVs, port);
+			if (commLinkObject == null) {
+				commLinkObject = new CommLinkObject(numUAVs, port);
 			}
 		}
 	}
 
+	/**
+	 * Method to initialize various parameters
+	 * @param numUAVs: number of UAVs
+	 * @param carrierSensing: boolean to turn on carrier sensing
+	 * @param packetCollisionDetection: boolean to turn on packet Collision Detection
+	 * @param bufferSize: size of the buffer
+	 */
 	public static void init(int numUAVs,boolean carrierSensing, boolean packetCollisionDetection, int bufferSize){
 		CommLinkObject.carrierSensingEnabled = carrierSensing;
 		CommLinkObject.pCollisionEnabled = packetCollisionDetection;
@@ -59,6 +79,9 @@ public class CommLink {
 		}
 	}
 
+	/**
+	 * Method to close all the communicationLinks
+	 */
 	public static void close(){
 		int numThreads = 2 * Param.numUAVs;
 		long now = System.currentTimeMillis();
@@ -82,7 +105,7 @@ public class CommLink {
 				advertised = true;
 			}
 		} else {
-			CommLink.publicCommLink.sendBroadcastMessage(numUAV, message);
+			commLinkObject.sendBroadcastMessage(numUAV, message);
 		}
 	}
 	
@@ -92,7 +115,7 @@ public class CommLink {
 	 * @return The message received, or null if a fatal error with the socket happens.
 	 */
 	public byte[] receiveMessage() {
-		return CommLink.publicCommLink.receiveMessage(numUAV, 0);
+		return commLinkObject.receiveMessage(numUAV, 0);
 	}
 	
 	/**
@@ -102,7 +125,7 @@ public class CommLink {
 	 * @return The message received, or null if a fatal error with the socket happens or the timeout is reached.
 	 */
 	public byte[] receiveMessage(int socketTimeout) {
-		return CommLink.publicCommLink.receiveMessage(numUAV, socketTimeout);
+		return commLinkObject.receiveMessage(numUAV, socketTimeout);
 	}
 
 	/** 
@@ -110,6 +133,6 @@ public class CommLink {
 	 */
 	@Override
 	public String toString() {
-		return CommLink.publicCommLink.toString();
+		return commLinkObject.toString();
 	}
 }

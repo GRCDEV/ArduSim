@@ -1,18 +1,17 @@
 package com.protocols.followme.logic;
 
-import com.api.API;
-import com.esotericsoftware.kryo.io.Input;
-import es.upv.grc.mapper.*;
-import com.uavController.UAVParam;
-import com.protocols.followme.pojo.Message;
-import com.setup.Param;
 import com.api.*;
 import com.api.communications.CommLink;
 import com.api.masterslavepattern.MasterSlaveHelper;
-import com.api.masterslavepattern.discovery.DiscoveryProgressListener;
 import com.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
-import com.api.masterslavepattern.safeTakeOff.SafeTakeOffListener;
+import com.esotericsoftware.kryo.io.Input;
+import com.protocols.followme.pojo.Message;
+import com.setup.Param;
 import com.setup.sim.logic.SimParam;
+import com.uavController.UAVParam;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3D;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,7 +50,7 @@ public class FollowMeListenerThread extends Thread {
 		this.isMaster = this.msHelper.isMaster();
 		this.takeOffHelper = this.copter.getSafeTakeOffHelper();
 		this.gui = API.getGUI(numUAV);
-		this.link = API.getCommLink(numUAV);
+		this.link = CommLink.getCommLink(numUAV);
 		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 		this.ardusim = API.getArduSim();
@@ -63,25 +62,21 @@ public class FollowMeListenerThread extends Thread {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
-		/** START PHASE */
+		// START PHASE
 		gui.logUAV(FollowMeText.START);
 		// Let the master detect slaves until the setup button is pressed
 		Map<Long, Location2DUTM> UAVsDetected = null;
 		if (this.isMaster) {
 			gui.logVerboseUAV(FollowMeText.SLAVE_START_LISTENER);
 			final AtomicInteger totalDetected = new AtomicInteger();
-			UAVsDetected = msHelper.DiscoverSlaves(new DiscoveryProgressListener() {
-				
-				@Override
-				public boolean onProgressCheckActionPerformed(int numUAVs) {
-					// Just for logging purposes
-					if (numUAVs > totalDetected.get()) {
-						totalDetected.set(numUAVs);
-						gui.log(FollowMeText.MASTER_DETECTED_UAVS + numUAVs);
-					}
-					// We decide to continue when the setup button is pressed
-					return numUAVs == API.getArduSim().getNumUAVs() - 1;
+			UAVsDetected = msHelper.DiscoverSlaves(numUAVs -> {
+				// Just for logging purposes
+				if (numUAVs > totalDetected.get()) {
+					totalDetected.set(numUAVs);
+					gui.log(FollowMeText.MASTER_DETECTED_UAVS + numUAVs);
 				}
+				// We decide to continue when the setup button is pressed
+				return numUAVs == API.getArduSim().getNumUAVs() - 1;
 			});
 		} else {
 			gui.logVerboseUAV(FollowMeText.LISTENER_WAITING);
@@ -113,13 +108,7 @@ public class FollowMeListenerThread extends Thread {
 		}
 		gui.logUAV("ready to takeOff");
 		// 2. Take off all the UAVs
-		takeOffHelper.start(takeOff, new SafeTakeOffListener() {
-			
-			@Override
-			public void onCompleteActionPerformed() {
-				currentState.set(SETUP_FINISHED);
-			}
-		});
+		takeOffHelper.start(takeOff, () -> currentState.set(SETUP_FINISHED));
 		while (currentState.get() < SETUP_FINISHED) {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
@@ -193,7 +182,7 @@ public class FollowMeListenerThread extends Thread {
 				}
 			}
 			
-			/** MOVE TO LAND PHASE */
+			// MOVE TO LAND PHASE
 			if (currentState.get() == MOVE_TO_LAND) {
 				gui.logUAV(FollowMeText.MOVE_TO_LAND);
 				gui.updateProtocolState(FollowMeText.MOVE_TO_LAND);
@@ -213,12 +202,12 @@ public class FollowMeListenerThread extends Thread {
 				moveTo.start();
 				try {
 					moveTo.join();
-				} catch (InterruptedException e) {}
+				} catch (InterruptedException ignored) {}
 				currentState.set(LANDING);
 			}
 		}
 		
-		/** LANDING PHASE */
+		// LANDING PHASE
 		if (!copter.land()) {
 			gui.exit(FollowMeText.LAND_ERROR + " " + selfId);
 		}
@@ -238,7 +227,7 @@ public class FollowMeListenerThread extends Thread {
 			}
 		}
 		
-		/** FINISH PHASE */
+		// FINISH PHASE
 		gui.logUAV(FollowMeText.FINISH);
 		gui.updateProtocolState(FollowMeText.FINISH);
 		gui.logVerboseUAV(FollowMeText.LISTENER_FINISHED);

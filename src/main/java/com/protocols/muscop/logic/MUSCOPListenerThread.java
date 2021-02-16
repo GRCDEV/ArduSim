@@ -71,7 +71,7 @@ public class MUSCOPListenerThread extends Thread {
 		this.gui = API.getGUI(numUAV);
 		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
-		this.link = API.getCommLink(numUAV);
+		this.link = CommLink.getCommLink(numUAV);
 		this.ardusim = API.getArduSim();
 		this.msHelper = this.copter.getMasterSlaveHelper();
 		this.isMaster = this.msHelper.isMaster();

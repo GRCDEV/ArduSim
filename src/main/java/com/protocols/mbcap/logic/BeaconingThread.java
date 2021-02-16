@@ -64,7 +64,7 @@ public class BeaconingThread extends Thread {
 		this.impactLocationUTM = MBCAPParam.impactLocationUTM[numUAV];
 		
 		this.numUAV = numUAV;
-		this.link = API.getCommLink(numUAV);
+		this.link = CommLink.getCommLink(numUAV);
 		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		this.copter = API.getCopter(numUAV);

@@ -1,5 +1,6 @@
 package com.api;
 
+import com.api.communications.CommLink;
 import com.api.cpuHelper.CPUData;
 import com.api.formations.Formation;
 import com.api.formations.FormationFactory;
@@ -2769,7 +2770,7 @@ public class ArduSimTools {
 		}
 		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ArduSimTools.selectedProtocol);
 		sb.append("\n").append(Text.COMMUNICATIONS);
-		sb.append(API.getCommLink(0).toString());
+		sb.append(CommLink.getCommLink(0).toString());
 		
 		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			sb.append("\n").append(Text.COLLISION_PARAMETERS);

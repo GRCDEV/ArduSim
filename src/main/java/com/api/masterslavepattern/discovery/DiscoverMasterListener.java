@@ -1,12 +1,12 @@
 package com.api.masterslavepattern.discovery;
 
 import com.api.communications.CommLink;
-import com.esotericsoftware.kryo.io.Input;
-import es.upv.grc.mapper.Location2DUTM;
-import com.setup.Text;
 import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
+import com.esotericsoftware.kryo.io.Input;
+import com.setup.Text;
+import es.upv.grc.mapper.Location2DUTM;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,7 +18,7 @@ public class DiscoverMasterListener extends Thread {
 
 	private ConcurrentHashMap<Long, Location2DUTM> UAVsDetected;
 	private DiscoveryProgressListener listener;
-	
+
 	private InternalCommLink commLink;
 	
 	@SuppressWarnings("unused")

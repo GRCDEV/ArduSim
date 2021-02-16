@@ -1,9 +1,7 @@
 package com.protocols.mbcap.logic;
 
-import com.esotericsoftware.kryo.io.Input;
-
-import com.api.API;
 import com.api.communications.CommLink;
+import com.esotericsoftware.kryo.io.Input;
 import com.protocols.mbcap.gui.MBCAPPCCompanionDialog;
 import com.protocols.mbcap.pojo.Beacon;
 
@@ -24,7 +22,7 @@ public class MBCAPPCCompanionListener extends Thread {
 	
 	public MBCAPPCCompanionListener(MBCAPPCCompanionDialog dialog) {
 		this.dialog = dialog;
-		this.link = API.getCommLink(0);
+		this.link = CommLink.getCommLink(0);
 		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 	}

@@ -2,7 +2,6 @@ package com.api;
 
 import com.api.communications.CommLink;
 import com.setup.Param;
-import com.uavController.UAVParam;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
@@ -38,26 +37,7 @@ public class API {
 		return API.ardusim;
 
 	}
-	
-	/**
-	 * Get the communication link needed for UAV-to-UAV communications.
-	 * @param numUAV This specific UAV position in the data arrays (see documentation).
-	 * @return Communication link used by the UAV to communicate with the other UAVs.
-	 */
-	public static CommLink getCommLink(int numUAV) {
-		
-		synchronized (lockComm) {
-			if (API.publicCommLink == null) {
-				API.publicCommLink = new AtomicReferenceArray<>(Param.numUAVs);
-				for (int i = 0; i < Param.numUAVs; i++) {
-					API.publicCommLink.set(i, new CommLink(i, Param.numUAVs, UAVParam.broadcastPort));
-				}
-			}
-		}
-		
-		return API.publicCommLink.get(numUAV);
-	}
-	
+
 	/**
 	 * Get the Copter instance to control the multicopter.
 	 * @param numUAV This specific UAV position in the data arrays (see documentation).

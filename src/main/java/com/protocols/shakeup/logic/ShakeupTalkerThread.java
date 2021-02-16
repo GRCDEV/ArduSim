@@ -14,7 +14,7 @@ public class ShakeupTalkerThread extends Thread{
 	
 	public ShakeupTalkerThread(int numUAV) {
 		this.ardusim = API.getArduSim();
-		this.link = API.getCommLink(numUAV);
+		this.link = CommLink.getCommLink(numUAV);
 		this.selfId = numUAV;
 	}
 	
@@ -25,8 +25,8 @@ public class ShakeupTalkerThread extends Thread{
 			
 			byte[][] message = currentState.createMessage();
 			try {
-				for(int i = 0; i< message.length; i++) {
-						link.sendBroadcastMessage(message[i]);
+				for (byte[] bytes : message) {
+					link.sendBroadcastMessage(bytes);
 				}
 			}catch(NullPointerException e) {/* do nothing the message was just empty */ }
 			

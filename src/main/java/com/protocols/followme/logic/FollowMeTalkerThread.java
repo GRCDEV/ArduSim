@@ -42,7 +42,7 @@ public class FollowMeTalkerThread extends Thread {
 		this.ardusim = API.getArduSim();
 		this.copter = API.getCopter(numUAV);
 		this.gui = API.getGUI(numUAV);
-		this.link = API.getCommLink(numUAV);
+		this.link = CommLink.getCommLink(numUAV);
 		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		
@@ -86,7 +86,7 @@ public class FollowMeTalkerThread extends Thread {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
-		/** LANDING PHASE */
+		// LANDING PHASE
 		gui.logVerboseUAV(FollowMeText.MASTER_SEND_LAND);
 		output.reset();
 		output.writeShort(Message.LAND);
@@ -112,7 +112,7 @@ public class FollowMeTalkerThread extends Thread {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
 		
-		/** FINISH PHASE */
+		// FINISH PHASE
 		gui.logVerboseUAV(FollowMeText.TALKER_FINISHED);
 	}
 	
