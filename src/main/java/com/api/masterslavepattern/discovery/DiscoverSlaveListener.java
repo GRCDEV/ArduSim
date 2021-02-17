@@ -1,26 +1,25 @@
 package com.api.masterslavepattern.discovery;
 
 import com.api.communications.CommLink;
-import com.esotericsoftware.kryo.io.Input;
-import com.setup.Text;
-import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
+import com.esotericsoftware.kryo.io.Input;
+import com.setup.Text;
 
 /**
  * Thread used by slave UAVs to detect the master UAV.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class DiscoverSlaveListener extends Thread {
-	
-	private InternalCommLink commLink;
+
+	private CommLink commLink;
 	
 	@SuppressWarnings("unused")
 	private DiscoverSlaveListener() {}
 	
 	public DiscoverSlaveListener(int numUAV) {
 		super(Text.DISCOVERY_SLAVE_LISTENER + numUAV);
-		this.commLink = InternalCommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV);
 	}
 	
 	@Override

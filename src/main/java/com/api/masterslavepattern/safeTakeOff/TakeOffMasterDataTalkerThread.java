@@ -1,19 +1,18 @@
 package com.api.masterslavepattern.safeTakeOff;
 
 import com.api.API;
-import com.api.communications.CommLink;
-import com.api.formations.Formation;
-import com.esotericsoftware.kryo.io.Output;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.LocationNotReadyException;
 import com.api.ArduSim;
 import com.api.GUI;
-import com.api.communications.InternalCommLink;
+import com.api.communications.CommLink;
+import com.api.formations.Formation;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;
+import com.esotericsoftware.kryo.io.Output;
 import com.uavController.UAVParam;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.LocationNotReadyException;
 import org.javatuples.Quartet;
 
 import java.util.*;
@@ -23,7 +22,8 @@ public class TakeOffMasterDataTalkerThread extends Thread{
     TakeOffMasterDataListenerThread listener;
     int numUAVs;
     Long selfID;
-    private InternalCommLink commLink;
+    //private InternalCommLink commLink;
+    private CommLink commLink;
     private byte[] outBuffer;
     private Output output;
     private ArduSim arduSim;
@@ -44,7 +44,8 @@ public class TakeOffMasterDataTalkerThread extends Thread{
         this.listener = listener;
         this.numUAVs = numUAVs;
         this.selfID = selfID;
-        this.commLink = InternalCommLink.getCommLink(selfID.intValue());
+        //this.commLink = InternalCommLink.getCommLink(selfID.intValue());
+        this.commLink = CommLink.getCommLink(selfID.intValue());
         this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
         this.output = new Output(outBuffer);
         this.arduSim = API.getArduSim();

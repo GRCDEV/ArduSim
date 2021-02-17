@@ -1,19 +1,18 @@
 package com.api.masterslavepattern.safeTakeOff;
 
 import com.api.API;
+import com.api.GUI;
 import com.api.communications.CommLink;
 import com.api.formations.Formation;
+import com.api.formations.FormationFactory;
+import com.api.masterslavepattern.MSMessageID;
+import com.api.masterslavepattern.MSParam;
+import com.api.masterslavepattern.MSText;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
-import com.api.GUI;
-import com.api.formations.FormationFactory;
-import com.api.communications.InternalCommLink;
-import com.api.masterslavepattern.MSMessageID;
-import com.api.masterslavepattern.MSParam;
-import com.api.masterslavepattern.MSText;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,8 +30,7 @@ public class TakeOffSlaveDataThread extends Thread{
     private double formationYaw, altitudeStep1, altitudeStep2;
     private long[] masterOrder;
     private long prevID, nextID;
-
-    private final InternalCommLink commLink;
+    private final CommLink commLink;
     private byte[] inBuffer;
     private final Input input;
     private final byte[] outBuffer;
@@ -44,8 +42,7 @@ public class TakeOffSlaveDataThread extends Thread{
         this.exclude = exclude;
         this.result = result;
         this.gui = API.getGUI(numUAV);
-
-        this.commLink = InternalCommLink.getCommLink(numUAV);
+        this.commLink = CommLink.getCommLink(numUAV);
         this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
         this.input = new Input(inBuffer);
         this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];

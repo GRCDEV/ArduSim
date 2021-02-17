@@ -3,7 +3,6 @@ package com.api.masterslavepattern.discovery;
 import com.api.API;
 import com.api.ArduSim;
 import com.api.communications.CommLink;
-import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.esotericsoftware.kryo.io.Output;
@@ -20,8 +19,8 @@ public class DiscoverMasterTalker extends Thread {
 	
 	private AtomicBoolean finished;
 	private ArduSim ardusim;
-	private InternalCommLink commLink;
-	
+	private CommLink commLink;
+
 	@SuppressWarnings("unused")
 	private DiscoverMasterTalker() {}
 	
@@ -29,7 +28,7 @@ public class DiscoverMasterTalker extends Thread {
 		super(Text.DISCOVERY_MASTER_TALKER + numUAV);
 		this.finished = finished;
 		this.ardusim = API.getArduSim();
-		this.commLink = InternalCommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV);
 	}
 
 	@Override

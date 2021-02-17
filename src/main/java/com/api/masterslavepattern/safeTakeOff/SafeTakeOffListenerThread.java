@@ -2,7 +2,6 @@ package com.api.masterslavepattern.safeTakeOff;
 
 import com.api.*;
 import com.api.communications.CommLink;
-import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;
@@ -32,7 +31,7 @@ public class SafeTakeOffListenerThread extends Thread {
 	private SafeTakeOffContext safeTakeOffInstance;
 	private SafeTakeOffListener listener;
 	private GUI gui;
-	private InternalCommLink commLink;
+	private CommLink commLink;
 	private byte[] inBuffer;
 	private Input input;
 	private Copter copter;
@@ -54,7 +53,7 @@ public class SafeTakeOffListenerThread extends Thread {
 		this.numUAVs = safeTakeOffInstance.numUAVs;
 		this.listener = listener;
 		this.gui = API.getGUI(numUAV);
-		this.commLink = InternalCommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV);
 		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 		this.copter = API.getCopter(numUAV);

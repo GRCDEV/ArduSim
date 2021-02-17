@@ -1,16 +1,15 @@
 package com.api.masterslavepattern.safeTakeOff;
 
 import com.api.API;
-import com.api.communications.CommLink;
-import com.esotericsoftware.kryo.io.Output;
-import com.setup.Text;
 import com.api.ArduSim;
 import com.api.Copter;
 import com.api.GUI;
-import com.api.communications.InternalCommLink;
+import com.api.communications.CommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;
+import com.esotericsoftware.kryo.io.Output;
+import com.setup.Text;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,7 +25,8 @@ public class SafeTakeOffTalkerThread extends Thread {
 	private boolean excluded;
 	private boolean isCenter;
 	private GUI gui;
-	private InternalCommLink commLink;
+	//private InternalCommLink commLink;
+	private CommLink commLink;
 	private byte[] outBuffer;
 	private Output output;
 	private ArduSim ardusim;
@@ -40,7 +40,8 @@ public class SafeTakeOffTalkerThread extends Thread {
 		this.nextID = safeTakeOffInstance.nextID;
 		this.excluded = safeTakeOffInstance.excluded;
 		this.gui = API.getGUI(numUAV);
-		this.commLink = InternalCommLink.getCommLink(numUAV);
+		//this.commLink = InternalCommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV);
 		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		Copter copter = API.getCopter(numUAV);

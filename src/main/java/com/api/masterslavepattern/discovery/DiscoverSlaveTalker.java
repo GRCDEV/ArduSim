@@ -4,7 +4,6 @@ import com.api.API;
 import com.api.ArduSim;
 import com.api.Copter;
 import com.api.communications.CommLink;
-import com.api.communications.InternalCommLink;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.esotericsoftware.kryo.io.Output;
@@ -23,7 +22,7 @@ public class DiscoverSlaveTalker extends Thread {
 	private AtomicBoolean finished;
 	private ArduSim ardusim;
 	private Copter copter;
-	private InternalCommLink commLink;
+	private CommLink commLink;
 	
 	@SuppressWarnings("unused")
 	private DiscoverSlaveTalker() {}
@@ -33,7 +32,7 @@ public class DiscoverSlaveTalker extends Thread {
 		this.finished = finished;
 		this.ardusim = API.getArduSim();
 		this.copter = API.getCopter(numUAV);
-		this.commLink = InternalCommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV);
 	}
 	
 	@Override

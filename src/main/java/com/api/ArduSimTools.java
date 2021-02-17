@@ -173,12 +173,7 @@ public class ArduSimTools {
 					ArduSimTools.logGlobal(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 					System.exit(1);
 				}
-				int port = Integer.parseInt(param);
-				if (port == UAVParam.broadcastInternalPort) {
-					ArduSimTools.logGlobal(Param.BROADCAST_PORT + " " + Text.INI_FILE_PARAM_PORT_IN_USE);
-					System.exit(1);
-				}
-				UAVParam.broadcastPort = port;
+				UAVParam.broadcastPort = Integer.parseInt(param);
 			}
 		}
 
@@ -718,7 +713,6 @@ public class ArduSimTools {
 		ExecutorService es = Executors.newFixedThreadPool(20);
 		List<Integer> reservedPort = new ArrayList<>();
 		reservedPort.add(UAVParam.broadcastPort);
-		reservedPort.add(UAVParam.broadcastInternalPort);
 		reservedPort.add(PCCompanionParam.computerPort);
 		reservedPort.add(PCCompanionParam.uavPort);
 	    List<Future<PortScanResult>> tcpMain = new ArrayList<>();

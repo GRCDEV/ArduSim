@@ -40,7 +40,6 @@ public class UAVParam {
 	// UAV-UAV TCP connection parameters (on real UAVs)
 	public static volatile String broadcastIP = "192.168.1.255";// Broadcast IP
 	public static volatile int broadcastPort = 14650;			// Broadcast port
-	public static volatile int broadcastInternalPort = 14750;	// Broadcast port used for ArduSim internal communications
 	
 	// UAVs collision detection parameters
 	public static volatile long distanceCalculusPeriod;						// (ms) Distance calculus between UAVs period

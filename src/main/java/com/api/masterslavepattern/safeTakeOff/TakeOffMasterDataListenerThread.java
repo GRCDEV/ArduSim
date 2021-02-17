@@ -1,19 +1,18 @@
 package com.api.masterslavepattern.safeTakeOff;
 
 import com.api.API;
-import com.api.communications.CommLink;
-import com.api.formations.Formation;
-import com.esotericsoftware.kryo.io.Input;
-import es.upv.grc.mapper.Location2DUTM;
 import com.api.ArduSimTools;
-import com.setup.Text;
 import com.api.Copter;
 import com.api.GUI;
-import com.api.communications.InternalCommLink;
+import com.api.communications.CommLink;
+import com.api.formations.Formation;
 import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;
+import com.esotericsoftware.kryo.io.Input;
+import com.setup.Text;
 import com.uavController.UAVParam;
+import es.upv.grc.mapper.Location2DUTM;
 import org.javatuples.Pair;
 import org.javatuples.Quartet;
 
@@ -35,7 +34,8 @@ public class TakeOffMasterDataListenerThread extends Thread{
     private final boolean isCenterUAV;
     private final boolean exclude;
     private final AtomicReference<SafeTakeOffContext> result;
-    private final InternalCommLink commLink;
+    //private final InternalCommLink commLink;
+    private final CommLink commLink;
     private byte[] inBuffer;
     private final Input input;
     private final GUI gui;
@@ -63,7 +63,8 @@ public class TakeOffMasterDataListenerThread extends Thread{
         this.isCenterUAV = isCenterUAV;
         this.exclude = exclude;
         this.result = result;
-        this.commLink = InternalCommLink.getCommLink(numUAV);
+        //this.commLink = InternalCommLink.getCommLink(numUAV);
+        this.commLink = CommLink.getCommLink(numUAV);
         this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
         this.input = new Input(inBuffer);
         this.gui = API.getGUI(numUAV);
