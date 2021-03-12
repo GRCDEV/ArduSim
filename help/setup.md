@@ -1,8 +1,8 @@
 # ArduSim setup
 
-This Eclipse Oxygen project includes the ArduSim simulator implementation, and a few protocol examples. Once the project is cloned locally, and the protocol is developed and tested, you can generate the .jar executable file to perform simulations outside Eclipse, or even deploy the protocol on real multicopters.
+The ArduSim simulator includes a few protocol examples. Once the project is cloned locally, and the protocol is developed and tested, you can generate the .jar executable file to perform simulations outside an IDE, or even deploy the protocol on real multicopters.
 
-ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) as an internal module, a program oriented to simulate a single drone. It is already included in this repository for Linux computers, but it is recommeded to install SITL in order to compile an executable multicopter optimized for your computer. Once finished the compilation (see instructions below), just copy the executable multicopter inside the target folder of the project, or next to the generated java file, and ArduSim will automatically notice the multicopter file.
+ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html) as an internal module, a program oriented to simulate a single drone. It is already included in this repository for Linux computers, but if preferred you can install SITL in order to compile an executable multicopter optimized for your computer. Once finished the compilation (see instructions below), just copy the executable multicopter inside the target folder of the project, or next to the generated java file, and ArduSim will automatically notice the multicopter file.
 
 ## Table of contents
 
@@ -51,7 +51,7 @@ If your favorite IDE is not included, the guides can still help you since import
 
 ### 2.1.1 Eclipse IDE integration
 
-ArduSim and the included main.java.com.api.protocols have been developed with Eclipse IDE. This section explains how to prepare the developing environment, once Eclipse and Java JDK are correctly installed.
+ArduSim and the included protocols have been developed with Eclipse IDE. This section explains how to prepare the developing environment, once Eclipse and Java JDK are correctly installed.
 
 Open Git perspective: *Window --> Perspective --> Open Perspective --> Other... --> Git*.
 
@@ -61,7 +61,7 @@ Use the button of the picture to start clonning the repository:
 
 Now copy the following URI in the configuration window and enter your user name and password:
 
-    https://jamieWubben@bitbucket.org/frafabco/ardusim.git
+    https://github.com/GRCDEV/ArduSim.git
 
 Then, select the master branch, also "Import all existing Eclipse projects after clone finishes", and leave all the remaining options untouched. Please, take note where the repository is going to be cloned.
 
@@ -79,32 +79,36 @@ Now copy the following URI in the configuration window.
 
     https://jamieWubben@bitbucket.org/frafabco/ardusim.git
 
-IntelliJ will find two project configurations (Eclipse project and Maven project), select Maven project. Give IntelliJ some time to import everything continue with this guide before running Main.java
+If asked for a project configuration open as Maven project. Give IntelliJ some time to import everything continue with this guide before running Main.java
 
 
-## 2.2 Copy necessary files
+## 2.2 Check necessary files
 
-ArduSim uses SITL to simulate multicopters. Follow the steps in the next sections in order to get two files: *arducopter* and *copter.parm*. These files must be put in a place easy to find in order to execute simulations when running ArduSim. If you put them in the target folder (ardusim/target*), ArduSim will automatically find them when running from the IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder. This repository provides binaries for Windows (arducopter.exe) and Ubuntu (arducopter) 64bits, so you only need to compile them (see below) if you plan to use other systems.
+ArduSim uses SITL to simulate multicopters. If everything went right the two files: *arducopter* and *copter.parm* should be include in the project (inside of the folder ArduSim/target). However, if prefered (it might increase performance) the SITL can be installed and new files can be compiled (explained in section 4). If you put them in the target folder (ardusim/target*), ArduSim will automatically find them when running from the IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder. This repository provides binaries for Windows (arducopter.exe) and Ubuntu (arducopter) 64bits, so you only need to compile them (see below) if you plan to use other systems.
 
 Several temporary files are generated when using ArduSim for simulations. Please, close ArduSim with the application button and not from the *Console* tab of Eclipse to force ArduSim to remove the temporary files before exiting.
 
-Remember that ArduSim is a highly asynchronous application, and running in Eclipse in debugging mode could lead to an unexpected behavior of the application.
+Remember that ArduSim is a highly asynchronous application, and running it with a IDE in debugging mode could lead to an unexpected behavior of the application.
 
-Finally, In Eclipse IDE right-click over *src/main/Main.java* class on the *Package Explorer* and select *Run as...*, and *1 Java Application*. In IntelliJ right-click over *src/main/Main.java* class on the *Project Files* and select *Run Main.main()*
+Also make sure to have at least Java-11 installed.
 
-The first time, it will fail to run because you need to add the following argument to the command line to be able to run a simulation, but not a PC Companion or a real multicopter, roles that are explained in other sections. To this aim, edit the run configuration automatically created.
+Finally, In your IDE right-click over *src/main/java/com/setup/Main.java* class and select Run as Java Application (or similar).
 
-    simulator
+The first time, it will fail to run because you need to add some program arguments. There exist four options: *multicopter*, *pccompanion*, *simulator-gui*, and *simulator-cli*. The first two are used in real experiments and the last two are used for simulations. We advise to use the *simulator-gui* for developping and to use the *simulator-cli* to perform automatic testing. 
 
-You can create a csv file with target speed for the multicopters (one row per speed m/s), and a main.java.com.protocols.mission file in *Google Earth* and test the simulator with the protocol *Mission* or *MBCAP* to be sure that the setup is correct.
+Edit the run configuration in your IDE and change the program arguments to *simulator-gui*
 
-A protocol can be tested directly in the IDE or from a executable *.jar* file. In the second case, with the proper configuration (see next sections), we suggest to execute the *.jar* file as Administrator/root. This way, temporary files will be stored in a RAM drive, which will increase ArduSim scalability, on the number of virtual multicopters, when using a slow hard drive.
+A csv file called speed.csv (inside ArduSim/target) should also be present. This csv file contains the target speed for the multicopters (one row per speed m/s). 
+
+Once you have checked that all the necesarry files (*arducopter*, *copter.parm* and *speed.csv*) are inside the folder *ArduSim/target* and you have changed the program arguments to *simulator-gui* you can start Ardusim (if you are using Linux. Otherwise go to section 3, execute the necesarry things for Windows and come back then come back).
+A configuration Dialog should pop up. For now, leave all the parameters as they are, and press the OK button. Using the default parameters ArduSim will start a certain protocol (FollowMe in this case). Most of the protocols have there own grafical interface to changes some arguments. For now, leave all the parameters as they are, and press the OK button. Most likely ArduSim will give you a pop-up that no bing key was found. This Bing key is used for rendering, and if it is not found open-street maps will be used. Press the *Ok* button to continue and a full-sized screen should appear. In the upper-left corner you can see that ArduSim is setting everything up in the background. It will pause for a bit while it is waiting for a GPS fix. Finnaly, the button *setup* should be enabled. Press that button. Observe how *UAV 1* is taking off. Once that is done, the *start test* button should be enabled. Press that button and observe how UAV 0 is taking off, starts moving, and is followed by UAV 1. Wait until both UAVs are landed, and press the *exit* button. You now performed your first simulation with ArduSim, congratulations! We now advise to repeat the last steps changing protocols and/or parameters. If you change the protocol make sure to also change the protocol parameters path.      
+
 
 ### 2.2 Compilation
 
-The project has been prepared to be compiled both as Java application, or as Maven project. The straightforward solution is to compile and export a runnable Jar file like any other Java project. You can also compile and deploy ArduSim with Maven, but we do not recommend that approach for two reasons: i) it requires advanced knowlegde, and ii) the contents of the folder target will be cleaned, removing the *arducopter* application instance that should be there for simulations, and even the *ardusim.ini* file provided. In order to avoid further problems, we suggest to store a copy of those files anywhere else (*arducopter* or *arducopter.exe*, depending on the running platform, *copter.parm*, and *ardusim.ini*).
+If you want to use ArduSim outside of the IDE, you have to complied a *.jar*. The project has been prepared to be compiled both as Java application, or as Maven project. The straightforward solution is to compile and export a runnable Jar file like any other Java project. You can also compile and deploy ArduSim with Maven, but we do not recommend that approach for two reasons: i) it requires advanced knowlegde, and ii) the contents of the folder target will be cleaned, removing the *arducopter* application instance that should be there for simulations, and even the *ardusim.ini* file provided. In order to avoid further problems, we suggest to store a copy of those files anywhere else (*arducopter* or *arducopter.exe*, depending on the running platform, *copter.parm*, and *ardusim.ini*).
 
-## 3 SITL setup in Windows
+## 3 setup for Windows
 
 The next steps must be followed in order to compile a multicopter. Alternatively you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/sitl-native-on-windows.html), possibly more updated, but it suggest to install JSBSim simulator that is not needed for the correct functioning of ArduSim. This is the reason why we suggest to not use the script mentioned in the web page to install SITL, it is better to do it manually.
 
@@ -149,7 +153,13 @@ The next steps must be followed in order to compile a multicopter. Alternatively
         python -m pip install --user lxml
         python -m pip install --user uavcan
 
-6. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
+## 4 Compile your own SITL files
+
+ArduSim uses SITL to simulate multicopters. You can if prefered compile your own SITL files *arducopter* and *copter.parm* and possibly gain some performance. This is however, only for advanced users and not necesarry to run ArduSim. Below we give a guide on how to do so. We try to be up-to-date. If you have some problems, you can always go to (http://ardupilot.org/dev/docs/sitl-native-on-windows.html) for the newest information.
+
+### 4.1 Windows
+
+1. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
 
         git clone https://github.com/ArduPilot/ardupilot.git
         cd ardupilot
@@ -158,7 +168,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
     
     The first command clones the project in the local folder *ardupilot*. The last uploaded version of ArduPilot is usually unstable, and we highly recommend to downgrade to the latest stable version for ArduCopter. In the cloned webpage open de *Branch* drop-down list, select the tab *Tags*, look for the most up-to-date version of *Copter*, and put in the third line the tag found. ArduSim has been tested with ArduCopter version 3.5.7, and we suggest to use it, as the copter parameters have been modified since then. The last command downloads modules needed by the target ArduPilot compilation.
 
-7. Make the multicopter. In the same *Cygwin terminal* and already within the *ardupilot* folder type:
+2. Make the multicopter. In the same *Cygwin terminal* go to the *ardupilot* folder and type:
 
         cd ArduCopter
         make sitl -j4
@@ -169,7 +179,7 @@ The next steps must be followed in order to compile a multicopter. Alternatively
 8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters. This setup speeds up the execution when running ArduSim on a computer with a slow hard drive.
 
 
-## 4 SITL setup in Linux
+### 4.2 Linux
 
 The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal. The process is explained for Debian based sistems (Ubuntu, Mint...). For RPM based systems (CentOS, Fedora...) use *yum* installer and install manually the dependencies included in the script mentioned later on.
 The following steps are tested on Ubuntu 16.04 or Ubuntu 18.04. There are some (yet unsolved) bugs for Ubuntu 20.04, while we are working on sloving them we suggest to just use the binary files given in the repository (ArduCopter 3.5.7) and skip the following steps.  
@@ -236,7 +246,7 @@ The following steps are tested on Ubuntu 16.04 or Ubuntu 18.04. There are some (
 
     The command will start the compilation process, and when it finishes it should show a message like "IMU1 is using GPS", which means that the virtual copter is running. Then, use "Ctrl+C" to close the running program. The multicopter runnable file *arducopter* is located in *ardupilot/build/sitl/bin*. Copy that file, and also the file *ardupilot/Tools/autotest/default_params/copter.parm* to the target folder of the Eclipse project to finish the basic setup process. If you plan to execute ArduSim in a real multicopter, copy these two files and *ardusim.ini* from the root of the Eclipse project beside the *.jar* file.
 
-## 5 SITL setup in MacOS
+### 4.3 SITL setup in MacOS
 
 The next steps must be followed in order to compile a multicopter in MacOS. Provided instructions use [Macports](https://www.macports.org/) or [Homebrew](https://brew.sh/) software repository systems to install dependencies. You have to chose which to use and install the corresponding package manager.
 
