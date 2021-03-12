@@ -1,15 +1,17 @@
 package com.protocols.mbcap.gui;
 
+import com.api.ArduSimTools;
+import com.setup.Text;
+import com.setup.sim.logic.SimParam;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import com.api.ArduSimTools;
-import com.setup.Text;
-import com.setup.sim.logic.SimParam;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
@@ -27,7 +29,16 @@ public class MBCAPConfigDialogApp extends Application {
             System.exit(0);
         }
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("MBCAPConfigDialog.fxml"));
+
+        //load the fxml and the controller
+        FXMLLoader loader = null;
+        try {
+            URL url = new File("src/main/resources/protocols/mbcap/MBCAPConfigDialog.fxml").toURI().toURL();
+            loader = new FXMLLoader(url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         MBCAPConfigDialogController controller = new MBCAPConfigDialogController(resources,properties,stage);
         loader.setController(controller);
         loader.setResources(resources);

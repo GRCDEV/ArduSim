@@ -10,6 +10,7 @@ import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;
 import com.esotericsoftware.kryo.io.Output;
 import com.setup.Text;
+import com.uavController.UAVParam;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +26,6 @@ public class SafeTakeOffTalkerThread extends Thread {
 	private boolean excluded;
 	private boolean isCenter;
 	private GUI gui;
-	//private InternalCommLink commLink;
 	private CommLink commLink;
 	private byte[] outBuffer;
 	private Output output;
@@ -40,8 +40,7 @@ public class SafeTakeOffTalkerThread extends Thread {
 		this.nextID = safeTakeOffInstance.nextID;
 		this.excluded = safeTakeOffInstance.excluded;
 		this.gui = API.getGUI(numUAV);
-		//this.commLink = InternalCommLink.getCommLink(numUAV);
-		this.commLink = CommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV, UAVParam.internalBroadcastPort);
 		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		Copter copter = API.getCopter(numUAV);

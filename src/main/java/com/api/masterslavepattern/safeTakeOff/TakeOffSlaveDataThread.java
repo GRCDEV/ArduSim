@@ -10,6 +10,7 @@ import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
@@ -42,7 +43,7 @@ public class TakeOffSlaveDataThread extends Thread{
         this.exclude = exclude;
         this.result = result;
         this.gui = API.getGUI(numUAV);
-        this.commLink = CommLink.getCommLink(numUAV);
+        this.commLink = CommLink.getCommLink(numUAV, UAVParam.internalBroadcastPort);
         this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
         this.input = new Input(inBuffer);
         this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];

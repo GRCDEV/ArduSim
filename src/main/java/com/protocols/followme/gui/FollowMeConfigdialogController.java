@@ -1,8 +1,12 @@
 package com.protocols.followme.gui;
 
 import com.api.API;
+import com.api.ArduSimTools;
 import com.api.formations.Formation;
+import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import com.protocols.followme.logic.FollowMeText;
+import com.setup.Param;
+import com.setup.Text;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -12,15 +16,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import com.api.ArduSimTools;
-import com.setup.Param;
-import com.setup.Text;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.function.UnaryOperator;
@@ -101,13 +103,15 @@ public class FollowMeConfigdialogController {
 
     private void searchSimulatedFlightFile() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(API.getFileTools().getCurrentFolder());
+        fileChooser.setInitialDirectory(new File(API.getFileTools().getResourceFolder().toString()));
         fileChooser.setTitle(FollowMeText.SIMULATED_DATA_DIALOG_TITLE);
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(FollowMeText.DATA_TXT_FILE, "*."+FollowMeText.DATA_TXT_EXTENSION);
         fileChooser.getExtensionFilters().add(extFilter);
         File f = fileChooser.showOpenDialog(stage);
         if(f != null){
-            simulatedFlightFile.setText(f.getAbsolutePath());
+            Path absolute = Paths.get(f.getAbsolutePath());
+            Path base = API.getFileTools().getResourceFolder();
+            simulatedFlightFile.setText(base.relativize(absolute).toString());
         }else{
             simulatedFlightFile.setText("");
         }

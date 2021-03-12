@@ -47,6 +47,7 @@ public class MissionKmlDialogApp extends Application {
         try {
             stage.setScene(new Scene(loader.load()));
         } catch (IOException e) {
+            e.printStackTrace();
             ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_LOADING_FXML);
         }
         stage.setOnCloseRequest(event -> System.exit(0));

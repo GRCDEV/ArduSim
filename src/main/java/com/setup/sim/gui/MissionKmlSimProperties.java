@@ -57,7 +57,7 @@ public class MissionKmlSimProperties {
             String key = itr.next().toString();
             String value = parameters.getProperty(key);
             if(!variablesDict.containsKey(key)){
-                ArduSimTools.warnGlobal(Text.LOADING_ERROR, key + " not recognized");
+                //ArduSimTools.warnGlobal(Text.LOADING_ERROR, key + " not recognized");
                 continue;
             }
             Field var = variablesDict.get(key);

@@ -2,6 +2,7 @@ package com.protocols.followme.logic;
 
 import com.api.API;
 import com.api.ProtocolHelper;
+import com.api.formations.Formation;
 import com.api.pojo.CopterParam;
 import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
@@ -99,9 +100,11 @@ public class FollowMeHelper extends ProtocolHelper {
 		// We put the master UAV in the position 0 of the formation
 		// Another option would be to put the master UAV in the center of the ground formation, and the remaining UAVs surrounding it
 		startingLocation[0] = Pair.with(masterLocation.getGeoLocation(), FollowMeParam.masterInitialYaw);
-		Location2DUTM offsetMasterToCenterUAV = null; // groundFormation.getOffset(0, FollowMeParam.masterInitialYaw);
+		Formation groundFormation = UAVParam.groundFormation.get();
+		System.out.println(groundFormation.getLayout().toString());
+		Location2DUTM offsetMasterToCenterUAV = groundFormation.get2DUTMLocation(masterLocation.getUTMLocation(),0);
 		for (int i = 1; i < numUAVs; i++) {
-			Location2DUTM offsetToCenterUAV = null; //groundFormation.getOffset(i, FollowMeParam.masterInitialYaw);
+			Location2DUTM offsetToCenterUAV = groundFormation.get2DUTMLocation(masterLocation.getUTMLocation(),i);
 			locationUTM = new Location2DUTM(masterLocation.getUTMLocation().x - offsetMasterToCenterUAV.x + offsetToCenterUAV.x,
 					masterLocation.getUTMLocation().y - offsetMasterToCenterUAV.y + offsetToCenterUAV.y);
 			try {

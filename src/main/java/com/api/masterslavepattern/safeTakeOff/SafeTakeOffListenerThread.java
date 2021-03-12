@@ -7,6 +7,7 @@ import com.api.masterslavepattern.MSParam;
 import com.api.masterslavepattern.MSText;
 import com.esotericsoftware.kryo.io.Input;
 import com.setup.Text;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location3D;
 
@@ -53,7 +54,7 @@ public class SafeTakeOffListenerThread extends Thread {
 		this.numUAVs = safeTakeOffInstance.numUAVs;
 		this.listener = listener;
 		this.gui = API.getGUI(numUAV);
-		this.commLink = CommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV, UAVParam.internalBroadcastPort);
 		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 		this.copter = API.getCopter(numUAV);

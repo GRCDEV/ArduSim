@@ -1,10 +1,11 @@
 package com.api.communications;
 
 import com.api.API;
-import com.setup.Param;
 import com.api.ArduSim;
+import com.api.ArduSimTools;
+import com.setup.Param;
+import com.setup.Text;
 import com.setup.sim.logic.SimParam;
-import com.setup.sim.logic.SimTools;
 import com.uavController.UAVParam;
 
 /** 
@@ -34,9 +35,9 @@ public class RangeCalculusThread extends Thread {
 				SimParam.communicationsOnline = true;
 				for (int i = 0; i < Param.numUAVs - 1; i++) {
 					for (int j = i + 1; j < Param.numUAVs; j++) {
-						isInRange = SimTools.isInRange(UAVParam.distances[i][j].get());
-						CommLinkObject.isInRange[i][j].set(isInRange);
-						CommLinkObject.isInRange[j][i].set(isInRange);
+						isInRange = isInRange(UAVParam.distances[i][j].get());
+						CommLinkObjectSimulation.isInRange[i][j].set(isInRange);
+						CommLinkObjectSimulation.isInRange[j][i].set(isInRange);
 					}
 				}
 			}
@@ -46,6 +47,21 @@ public class RangeCalculusThread extends Thread {
 				ardusim.sleep(waitingTime);
 			}
 		}
+	}
+
+	/** Checks if the data packet must arrive to the destination depending on distance and the wireless model used (only used on simulation). */
+	private boolean isInRange(double distance) {
+		switch (Param.selectedWirelessModel) {
+			case NONE:
+				return true;
+			case FIXED_RANGE:
+				return distance <= Param.fixedRange;
+			case DISTANCE_5GHZ:
+				return Math.random() >= (5.335*Math.pow(10, -7)*distance*distance + 3.395*Math.pow(10, -5)*distance);
+		}
+		// Point never reached if the selection structure is enlarged when adding new wireless models
+		ArduSimTools.logGlobal(Text.WIRELESS_ERROR);
+		return false;
 	}
 
 }

@@ -4,7 +4,6 @@ import com.api.*;
 import com.api.communications.CommLink;
 import com.api.masterslavepattern.MasterSlaveHelper;
 import com.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
-import com.api.pojo.FlightMode;
 import com.api.pojo.location.WaypointSimplified;
 import com.esotericsoftware.kryo.io.Input;
 import com.protocols.muscop.gui.MuscopSimProperties;
@@ -417,6 +416,7 @@ public class MUSCOPListenerThread extends Thread {
 				
 				@Override
 				public void onCompleteActionPerformed() {
+					gui.logUAV("move To action is completed");
 					moveSemaphore.incrementAndGet();
 				}
 			}).start();
@@ -439,6 +439,7 @@ public class MUSCOPListenerThread extends Thread {
 						lastTimeUAV.put(id, System.currentTimeMillis());
 					}
 				}
+				/*
 				if( (currentWP == 1 && iAmCenter && (destinationGeo.distance(copter.getLocationUTM()) < 200))){
 					System.out.println("kill master UAV with ID " + selfId);
 					copter.setFlightMode(FlightMode.LAND);
@@ -452,6 +453,7 @@ public class MUSCOPListenerThread extends Thread {
 					}
 					return -1;
 				}
+				 */
 			}
 			try {
 				goingToWaypointFile.write(selfId + ";" + currentWP + ";" + (System.currentTimeMillis()-start) + "\n");

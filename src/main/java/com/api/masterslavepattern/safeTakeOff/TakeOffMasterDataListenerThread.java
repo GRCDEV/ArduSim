@@ -34,7 +34,6 @@ public class TakeOffMasterDataListenerThread extends Thread{
     private final boolean isCenterUAV;
     private final boolean exclude;
     private final AtomicReference<SafeTakeOffContext> result;
-    //private final InternalCommLink commLink;
     private final CommLink commLink;
     private byte[] inBuffer;
     private final Input input;
@@ -63,8 +62,7 @@ public class TakeOffMasterDataListenerThread extends Thread{
         this.isCenterUAV = isCenterUAV;
         this.exclude = exclude;
         this.result = result;
-        //this.commLink = InternalCommLink.getCommLink(numUAV);
-        this.commLink = CommLink.getCommLink(numUAV);
+        this.commLink = CommLink.getCommLink(numUAV,UAVParam.internalBroadcastPort);
         this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
         this.input = new Input(inBuffer);
         this.gui = API.getGUI(numUAV);

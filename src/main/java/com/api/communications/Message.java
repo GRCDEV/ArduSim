@@ -7,19 +7,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Virtual communications message.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
-class IncomingMessage implements Comparable<IncomingMessage> {
-	public long start, end;				// (ns) Starting and ending time of the transmission period
-	public int senderPos;				// Position of the UAV on the Simulator internal arrays
-	public byte[] message;				// Message to be sent
+class Message implements Comparable<Message> {
+	/**
+	 * Start time of the transmission period (ns)
+	 */
+	public long start;
+	/**
+	 * End time of the transmission Period (ns)
+	 */
+	public long	end;
+	/**
+	 * Position of the UAV on the Simulator internal arrays
+	 */
+	public int senderPos;
+	/**
+	 * Message to be sent (in bytes)
+	 */
+	public byte[] message;
+
 	public AtomicBoolean checked = new AtomicBoolean();	// Variables used to check if there are collisions on the receiving buffer
 	public AtomicBoolean overlapped = new AtomicBoolean();
 	public AtomicBoolean alreadyOverlapped = new AtomicBoolean();
-	
-	@SuppressWarnings("unused")
-	private IncomingMessage() {}
-	
+
 	/** Creates a just sent message from the UAV on senderPos, generated on startTime and with message content. */
-	public IncomingMessage(int senderPos, long startTime, byte[] message) {
+	public Message(int senderPos, long startTime, byte[] message) {
 		this.senderPos = senderPos;
 		this.message = message;
 		this.start = startTime;
@@ -30,7 +41,7 @@ class IncomingMessage implements Comparable<IncomingMessage> {
 	 * Not full deep copy of a message. This function is only used to send the same message to different UAVs, and the message content is not copied, as it is no modified later.
 	 * @param message Message to copy
 	 */
-	public IncomingMessage(IncomingMessage message) {
+	public Message(Message message) {
 		this.start = message.start;
 		this.end = message.end;
 		this.senderPos = message.senderPos;
@@ -48,10 +59,10 @@ class IncomingMessage implements Comparable<IncomingMessage> {
 			return true;
 		}
 		
-		if (!(obj instanceof IncomingMessage)) {
+		if (!(obj instanceof Message)) {
 			return false;
 		}
-		IncomingMessage m = (IncomingMessage)obj;
+		Message m = (Message)obj;
 		return this.senderPos == m.senderPos && this.start == m.start;
 	}
 	
@@ -62,7 +73,7 @@ class IncomingMessage implements Comparable<IncomingMessage> {
 
 	/** This incoming message is less than o if it starts before o. */
 	@Override
-	public int compareTo(IncomingMessage o) {
+	public int compareTo(Message o) {
 		int res = (int)(this.start - o.start);
 		if (res == 0) {
 			return this.senderPos - o.senderPos;

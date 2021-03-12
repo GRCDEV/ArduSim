@@ -26,7 +26,7 @@
       </HBox>
       <HBox prefHeight="30.0" prefWidth="600.0">
          <children>
-            <Label maxHeight="1.7976931348623157E308" text="Flight main.java.com.api.protocols.mission:">
+            <Label maxHeight="1.7976931348623157E308" text="Flight mission:">
                <HBox.margin>
                   <Insets left="10.0" right="10.0" />
                </HBox.margin>

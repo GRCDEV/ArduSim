@@ -118,21 +118,4 @@ public class SimTools {
 		};
 		new Timer(SimParam.screenUpdatePeriod, taskPerformer).start();
 	}
-	
-	/** Checks if the data packet must arrive to the destination depending on distance and the wireless model used (only used on simulation). */
-	public static boolean isInRange(double distance) {
-		switch (Param.selectedWirelessModel) {
-		case NONE:
-			return true;
-		case FIXED_RANGE:
-			return distance <= Param.fixedRange;
-		case DISTANCE_5GHZ:
-			return Math.random() >= (5.335*Math.pow(10, -7)*distance*distance + 3.395*Math.pow(10, -5)*distance);
-		}
-		// Point never reached if the selection structure is enlarged when adding new wireless models
-		ArduSimTools.logGlobal(Text.WIRELESS_ERROR);
-		return false;
-	}
-
-
 }

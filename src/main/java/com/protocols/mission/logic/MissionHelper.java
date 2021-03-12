@@ -1,25 +1,30 @@
 package com.protocols.mission.logic;
 
-import com.api.API;
-import com.api.ProtocolHelper;
+import com.api.*;
+import com.api.formations.Formation;
+import com.api.pojo.location.Waypoint;
+import com.protocols.mission.gui.MissionDialogApp;
+import com.protocols.mission.gui.MissionSimProperties;
+import com.setup.Text;
+import com.setup.sim.logic.SimParam;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DGeo;
-import com.protocols.mbcap.logic.MBCAPHelper;
-import com.protocols.mission.gui.MissionConfigDialog;
-import com.protocols.mission.gui.MissionConfigDialogPanel;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3D;
+import es.upv.grc.mapper.LocationNotReadyException;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import org.javatuples.Pair;
 
 import javax.swing.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 
 /** Implementation of the protocol Mission to allow the user to simply follow missions. It is based on MBCAP implementation.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
 
 public class MissionHelper extends ProtocolHelper {
-	
-	private final MBCAPHelper copy;
-	
-	public MissionHelper() {
-		this.copy = new MBCAPHelper();
-	}
 
 	@Override
 	public void setProtocol() {
@@ -32,16 +37,31 @@ public class MissionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public JDialog openConfigurationDialog() { return new MissionConfigDialog();}
+	public JDialog openConfigurationDialog() { return null;}
 
 	@Override
 	public void openConfigurationDialogFX() {
-		//TODO make new Dialog
+		Platform.runLater(()->new MissionDialogApp().start(new Stage()));
 	}
 
 	@Override
 	public void configurationCLI() {
-
+		MissionSimProperties properties = new MissionSimProperties();
+		ResourceBundle resources;
+		try {
+			FileInputStream fis = new FileInputStream(SimParam.protocolParamFile);
+			resources = new PropertyResourceBundle(fis);
+			fis.close();
+			Properties p = new Properties();
+			for(String key: resources.keySet()){
+				p.setProperty(key,resources.getString(key));
+			}
+			properties.storeParameters(p,resources);
+		} catch (IOException e) {
+			e.printStackTrace();
+			ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.PROTOCOL_PARAMETERS_FILE_NOT_FOUND );
+			System.exit(0);
+		}
 	}
 
 	@Override
@@ -54,28 +74,109 @@ public class MissionHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		return this.copy.setStartingLocation();
+		int numUAVs = API.getArduSim().getNumUAVs();
+		Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
+
+		com.api.MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
+		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();
+		// missions[0].get(0) is somewhere in Africa
+		Location2DUTM start = missions[0].get(1).getUTM();
+		Formation f = UAVParam.groundFormation.get();
+		double yaw = 0;
+		for(int i = 0;i<numUAVs;i++){
+			try {
+				startingLocation[i] = new Pair<>(f.get2DUTMLocation(start,i).getGeo(),yaw);
+			} catch (LocationNotReadyException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return startingLocation;
 	}
 
 	@Override
-	public boolean sendInitialConfiguration(int numUAV) {
-		return this.copy.sendInitialConfiguration(numUAV);
-	}
+	public boolean sendInitialConfiguration(int numUAV) { return true; }
 
 	@Override
 	public void startThreads() {}
 
 	@Override
-	public void setupActionPerformed() {}
+	public void setupActionPerformed() {
+		int numUAVs = API.getArduSim().getNumUAVs();
+		List<Thread> threads = new ArrayList<>();
+		for(int i = 0;i<numUAVs;i++){
+			Thread t = API.getCopter(i).takeOff(10, new TakeOffListener() {
+				@Override
+				public void onCompleteActionPerformed() {
+
+				}
+
+				@Override
+				public void onFailure() {
+
+				}
+			});
+			threads.add(t);
+			t.start();
+		}
+		//wait for take off to be finished
+		for(Thread t:threads){
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
 
 	@Override
 	public void startExperimentActionPerformed() {
-		this.copy.startExperimentActionPerformed();
+		int numUAVs = API.getArduSim().getNumUAVs();
+		com.api.MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
+		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();
+		List<Thread> threads = new ArrayList<>();
+		Formation f = UAVParam.groundFormation.get();
+		for (int wp_index =2;wp_index<missions[0].size();wp_index++) {
+			Waypoint wp = missions[0].get(wp_index);
+			for(int numUAV=0;numUAV<numUAVs;numUAV++) {
+				API.getGUI(numUAV).logUAV("Moving to WP: " + (wp_index-1));
+				try {
+					Location2DUTM locInSwarm = f.get2DUTMLocation(wp.getUTM(),numUAV);
+					Location3D loc = new Location3D(locInSwarm.getGeo(),10);
+					Thread t = API.getCopter(numUAV).moveTo(loc, new MoveToListener() {
+						@Override
+						public void onCompleteActionPerformed() {
+
+						}
+
+						@Override
+						public void onFailure() {
+
+						}
+					});
+					threads.add(t);
+					t.start();
+				} catch (LocationNotReadyException e) {
+					e.printStackTrace();
+				}
+			}
+			for(Thread t:threads){
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		for(int numUAV=0;numUAV<numUAVs;numUAV++){
+			API.getCopter(numUAV).land();
+		}
 	}
 
 	@Override
 	public void forceExperimentEnd() {
-		this.copy.forceExperimentEnd();
+
 	}
 
 	@Override
@@ -90,23 +191,6 @@ public class MissionHelper extends ProtocolHelper {
 
 	@Override
 	public void logData(String folder, String baseFileName, long baseNanoTime) {}
-
-	/** Checks the validity of the configuration of the protocol. */
-	public static boolean isValidProtocolConfiguration(MissionConfigDialogPanel panel) {
-		// Simulation parameters
-		String validating = panel.missionsTextField.getText();
-		if (API.getValidationTools().isEmpty(validating)) {
-			API.getGUI(0).warn(com.setup.Text.VALIDATION_WARNING, com.setup.Text.MISSIONS_ERROR_5);
-			return false;
-		}
-		return true;
-	}
-	
-	/** Stores the configuration of the protocol in variables. */
-	public static void storeProtocolConfiguration(MissionConfigDialogPanel panel) {
-		// Simulation parameters
-		API.getArduSim().setNumUAVs(Integer.parseInt((String)panel.UAVsComboBox.getSelectedItem()));
-	}
 
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {}

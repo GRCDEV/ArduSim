@@ -1,13 +1,11 @@
-package com.protocols.muscop.gui;
+package com.protocols.mission.gui;
 
 import com.api.API;
 import com.api.ArduSimTools;
 import com.api.formations.Formation;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import com.setup.Param;
 import com.setup.Text;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -22,72 +20,43 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
-public class MuscopConfigDialogController {
+public class MissionDialogController {
 
     private final ResourceBundle resources;
     private final Stage stage;
-    private final MuscopSimProperties properties;
+    private final MissionSimProperties properties;
+
     @FXML
     private TextField missionFile;
-    @FXML
-    private ChoiceBox<String> groundFormation;
-    @FXML
-    private ChoiceBox<String> numberOfClusters;
-    @FXML
-    private TextField groundMinDistance;
-    @FXML
-    private ChoiceBox<String> takeOffStrategy;
-    @FXML
-    private ChoiceBox<String> flyingFormation;
-    @FXML
-    private TextField flyingMinDistance;
-    @FXML
-    private TextField landingMinDistance;
     @FXML
     private Button missionFileButton;
     @FXML
     private Button okButton;
+    @FXML
+    private TextField minDistance;
+    @FXML
+    private ChoiceBox<String> formation;
 
-
-    public MuscopConfigDialogController(ResourceBundle resources, MuscopSimProperties properties, Stage stage){
+    public MissionDialogController(ResourceBundle resources, MissionSimProperties properties, Stage stage){
         this.resources = resources;
         this.properties = properties;
         this.stage = stage;
     }
 
     @FXML
-    public void initialize(){
+    public void initialize() {
         missionFile.setDisable(true);
-        missionFileButton.setOnAction(e->searchMissionFile());
         for(Formation.Layout l: Formation.Layout.values()){
-            groundFormation.getItems().add(l.name());
-            flyingFormation.getItems().add(l.name());
+            formation.getItems().add(l.name());
         }
-        groundFormation.getSelectionModel().select(resources.getString("groundFormation"));
+        formation.getSelectionModel().select(resources.getString("formation").toUpperCase());
+        minDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 
-        groundMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
-
-        takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
-        takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
-
-        flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));
-
-        flyingMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
-
-        //numberOfClusters.disableProperty().bind(Bindings.equal(flyingFormation.valueProperty(),FlightFormation.Formation.SPLITUP.getName()).not());
-        ArrayList<String> nrClustersString = new ArrayList<>();
-        for(int i=0;i<Integer.parseInt(resources.getString("numberOfClusters"));i++){
-            nrClustersString.add("" + (i+1));
-        }
-        numberOfClusters.setItems(FXCollections.observableArrayList(nrClustersString));
-        numberOfClusters.getSelectionModel().select(resources.getString("numberOfClusters"));
-
-        landingMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
+        missionFileButton.setOnAction(e -> searchMissionFile());
         okButton.setOnAction(e->{
             if(ok()){
                 Platform.setImplicitExit(false); // so that the application does not close
@@ -114,8 +83,6 @@ public class MuscopConfigDialogController {
                     Method getValue = null;
                     if (annotation.contains("TextField")) {
                         getValue = var.get(this).getClass().getMethod("getCharacters");
-                    }else if(annotation.contains("ChoiceBox")){
-                        getValue = var.get(this).getClass().getMethod("getValue");
                     }
                     if(getValue != null) {
                         String value = String.valueOf(getValue.invoke(var.get(this)));

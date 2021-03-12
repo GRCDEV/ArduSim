@@ -2,11 +2,14 @@ package com.protocols.followme.gui;
 
 import com.api.API;
 import com.api.ArduSimTools;
+import com.api.formations.FormationFactory;
+import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import com.setup.Text;
 import com.api.formations.Formation;
 import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
 import com.protocols.followme.logic.FollowMeParam;
 import com.protocols.followme.pojo.RemoteInput;
+import com.uavController.UAVParam;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,6 +17,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+
+import static com.setup.Param.numUAVs;
 
 public class FollowmeSimProperties {
 
@@ -67,9 +72,9 @@ public class FollowmeSimProperties {
                 }else if(type.contains("java.lang.String")){
                     var.set(this,value);
                 }else if(type.contains("java.io.File")) {
-                    var.set(this, new File(value));
+                    var.set(this, new File(API.getFileTools().getResourceFolder() + File.separator + value));
                 }else if(type.contains("Formation")){
-                    //var.set(this,Formation.getFormation(value));
+                    var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
                 }else if(type.contains("TakeOffAlgorithm")){
                     var.set(this,TakeOffAlgorithm.getAlgorithm(value));
                 }else{
@@ -163,11 +168,13 @@ public class FollowmeSimProperties {
         FollowMeParam.masterInitialLatitude = latitude;
         FollowMeParam.masterInitialLongitude = longitude;
         FollowMeParam.masterInitialYaw = yaw * Math.PI / 180.0;
-        //TODO fix again
 
-        // formationTools.setGroundFormation(groundFormation.getLayout(),groundMinDistance);
-        // formationTools.setFlyingFormation(flyingFormation.getLayout(),flyingMinDistance);
-        // formationTools.setLandingFormationMinimumDistance(landingMinDistance);
+        UAVParam.groundFormation.set(groundFormation);
+        groundFormation.init(numUAVs,groundMinDistance);
+        UAVParam.airFormation.set(flyingFormation);
+        flyingFormation.init(numUAVs,flyingMinDistance);
+        TakeOffMasterDataListenerThread.selectedAlgorithm = takeOffStrategy;
+
         API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(takeOffStrategy.getName());
         FollowMeParam.slavesStartingAltitude = initialAltitude;
         FollowMeParam.masterSpeed = masterUAVSpeed;

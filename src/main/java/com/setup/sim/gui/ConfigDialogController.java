@@ -21,6 +21,8 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
@@ -222,7 +224,9 @@ public class ConfigDialogController {
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Property File", "*.properties");
         fileChooser.getExtensionFilters().add(extFilter);
-        fileChooser.setInitialDirectory(new File(API.getFileTools().getSourceFolder() + "/main/resources/setup"));
+        String fs = File.separator;
+        fileChooser.setInitialDirectory(new File(API.getFileTools().getSourceFolder().toString() + fs + "main" + fs +
+                "resources" + fs + "setup"));
         fileChooser.setInitialFileName("SimulationParam.properties");
         File file = fileChooser.showSaveDialog(stage);
         String filePath = file.getAbsolutePath();
@@ -246,7 +250,9 @@ public class ConfigDialogController {
         }
         File sitlPath = fileChooser.showOpenDialog(stage);
         if(properties.validateArduCopterPath(sitlPath)) {
-            arducopterFile.setText(sitlPath.getAbsolutePath());
+            Path absolute = Paths.get(sitlPath.getAbsolutePath());
+            Path base = API.getFileTools().getArdusimFolder();
+            arducopterFile.setText(base.relativize(absolute).toString());
         }else{
             arducopterFile.setText("");
         }
@@ -273,7 +279,9 @@ public class ConfigDialogController {
         fileChooser.getExtensionFilters().add(extFilter);
         File parameterFile = fileChooser.showOpenDialog(stage);
         if(parameterFile.exists()){
-            protocolParameterFile.setText(parameterFile.getAbsolutePath());
+            Path absolute = Paths.get(parameterFile.getAbsolutePath());
+            Path base = API.getFileTools().getArdusimFolder();
+            protocolParameterFile.setText(base.relativize(absolute).toString());
         }else{
             protocolParameterFile.setText("");
         }
@@ -283,7 +291,6 @@ public class ConfigDialogController {
         // Use properties.speedFile to do the logic
         // If that went well set the text and update the combobox numUAVs
         if(properties.validateSpeedFile(speedPath)){
-            speedFile.setText(speedPath.getAbsolutePath());
             // set the combo box for number of UAVs
             int n = -1;
             if (SimParam.sitlPath != null) {

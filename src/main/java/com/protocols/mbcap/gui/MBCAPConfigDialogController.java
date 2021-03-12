@@ -1,6 +1,9 @@
 package com.protocols.mbcap.gui;
 
 import com.api.API;
+import com.api.ArduSimTools;
+import com.setup.Param;
+import com.setup.Text;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,14 +14,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import com.api.ArduSimTools;
-import com.setup.Param;
-import com.setup.Text;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -147,7 +149,9 @@ public class MBCAPConfigDialogController {
                 text = missionPath.get(0).getAbsolutePath();
             }
             setNumUAVsComboBox();
-            missionFile.setText(text);
+            Path absolute = Paths.get(text);
+            Path base = API.getFileTools().getResourceFolder();
+            missionFile.setText(base.relativize(absolute).toString());
         }else{
             missionFile.setText("");
             numUAVs.setDisable(true);

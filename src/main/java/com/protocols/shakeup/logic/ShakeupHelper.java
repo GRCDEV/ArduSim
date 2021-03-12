@@ -3,21 +3,19 @@ package com.protocols.shakeup.logic;
 
 import com.api.API;
 import com.api.ProtocolHelper;
-import es.upv.grc.mapper.Location2D;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import com.api.ArduSimTools;
-import com.api.FileTools;
 import com.api.formations.Formation;
+import com.api.formations.FormationFactory;
 import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
-import org.javatuples.Pair;
 import com.protocols.shakeup.pojo.Param;
 import com.protocols.shakeup.pojo.TargetFormation;
 import com.protocols.shakeup.pojo.Text;
+import com.uavController.UAVParam;
+import es.upv.grc.mapper.Location2D;
+import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.LocationNotReadyException;
+import org.javatuples.Pair;
 
 import javax.swing.*;
-import java.io.File;
-import java.util.Map;
 
 public class ShakeupHelper extends ProtocolHelper {
 
@@ -42,20 +40,23 @@ public class ShakeupHelper extends ProtocolHelper {
 
 	@Override
 	public void initializeDataStructures() {
-		readIniFile("Shakeup_settings.ini");
-
-		//TODO fix again
-		//set formation: groundformation random, airformation linear
-		// formationTools.setGroundFormation(Formation.Layout.COMPACT_MESH.getName(), 10);
-		API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(TakeOffAlgorithm.SIMPLIFIED.getName());
-		// formationTools.setFlyingFormation(Param.startLayout.getName(), 10);
-		//set target formations
+		//readIniFile("Shakeup_settings.ini");
 		int numUAVs = API.getArduSim().getNumUAVs();
+		Formation ground = FormationFactory.newFormation(Param.startLayout);
+		ground.init(numUAVs,Param.minDistance);
+		UAVParam.groundFormation.set(ground);
+		// Air and ground formation are the same
+		UAVParam.airFormation.set(ground);
+
+		API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(TakeOffAlgorithm.SIMPLIFIED.getName());
 		TargetFormation[] formations = new TargetFormation[Param.formations.length];
-		//TODO change so that it works for multiple formations
+		formations[0] = new TargetFormation(Param.endLayout.name(),numUAVs,Param.minDistance,0);
+		//TODO set for more formations
+		/*
 		for(int i = 0;i < Param.formations.length;i++) {
 			// formations[i] = new TargetFormation(Param.endLayout.getName(), numUAVs, 10, 0);
 		}
+		 */
 		Param.flightFormations = formations;
 	}
 
@@ -65,32 +66,19 @@ public class ShakeupHelper extends ProtocolHelper {
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
 		Location2D masterLocation = new Location2D(Param.masterInitialLatitude, Param.masterInitialLongitude);
-		
-		//   As this is simulation, ID and position on the ground are the same for all the UAVs
 		int numUAVs = API.getArduSim().getNumUAVs();
-
 		@SuppressWarnings("unchecked")
 		Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
-		Location2DUTM locationUTM;
-		// We put the master UAV in the position 0 of the formation
-		// Another option would be to put the master UAV in the center of the ground formation, and the remaining UAVs surrounding it
-		startingLocation[0] = Pair.with(masterLocation.getGeoLocation(), Param.masterInitialYaw);
-		// TODO fix again
-		/*
-		Location2DUTM offsetMasterToCenterUAV = UAVParam.groundFormation.get().getOffset(0, Param.masterInitialYaw);
-		for (int i = 1; i < numUAVs; i++) {
-			 Location2DUTM offsetToCenterUAV = groundFormation.getOffset(i, Param.masterInitialYaw);
-			 locationUTM = new Location2DUTM(masterLocation.getUTMLocation().x - offsetMasterToCenterUAV.x + offsetToCenterUAV.x,
-			 		masterLocation.getUTMLocation().y - offsetMasterToCenterUAV.y + offsetToCenterUAV.y);
+		Formation f = UAVParam.groundFormation.get();
+		double yaw = 0;
+		for(int i = 0;i<numUAVs;i++){
 			try {
-				startingLocation[i] = Pair.with(locationUTM.getGeo(), Param.masterInitialYaw);
+				startingLocation[i] = new Pair<>(f.get2DUTMLocation(masterLocation.getUTMLocation(),i).getGeo(),yaw);
 			} catch (LocationNotReadyException e) {
 				e.printStackTrace();
-				API.getGUI(0).exit(e.getMessage());
+				return null;
 			}
 		}
-		 */
-		
 		return startingLocation;
 	}
 
@@ -133,38 +121,4 @@ public class ShakeupHelper extends ProtocolHelper {
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {}
 
-	public static void readIniFile(String filename) {
-		FileTools fileTools = API.getFileTools();
-		File iniFile = new File(fileTools.getCurrentFolder() + "/" + filename);
-
-		if(iniFile.exists()) {
-			Map<String, String> params = fileTools.parseINIFile(iniFile);
-			Param.ALTITUDE_DIFF_SECTORS = Integer.parseInt(params.get("ALTITUDE_DIFF_SECTORS"));
-			Param.NUMBER_OF_SECTORS = Integer.parseInt(params.get("NUMBER_OF_SECTORS"));
-			
-			String algo = params.get("TAKE_OFF_ALGORITHM");
-			if(algo.equalsIgnoreCase("RANDOM")) {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.RANDOM;}
-			else if(algo.equalsIgnoreCase("SIMPLIFIED")) {Param.TAKE_OFF_ALGORITHM = TakeOffAlgorithm.SIMPLIFIED;}
-			
-			String startFormation = params.get("START_FORMATION");
-			Param.startLayout = stringToFormation(startFormation);
-			String endFormation = params.get("END_FORMATION");
-			Param.endLayout = stringToFormation(endFormation);
-			
-			Param.ALTITUDE_MARGIN = Double.parseDouble(params.get("ALTITUDE_MARGIN"));
-			ArduSimTools.logGlobal("settings set from shakeupsettings.ini");
-		}
-	}
-	
-	private static Formation.Layout stringToFormation(String formation) {
-		Formation.Layout f;
-		if(formation.equalsIgnoreCase("LINEAR")) {
-			f = Formation.Layout.LINEAR;
-		}else if(formation.equalsIgnoreCase("CIRCLE")) {
-			f = Formation.Layout.CIRCLE;
-		}else {
-			f = null;
-		}
-		return f;
-	}
 }

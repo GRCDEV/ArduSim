@@ -22,7 +22,6 @@ public class TakeOffMasterDataTalkerThread extends Thread{
     TakeOffMasterDataListenerThread listener;
     int numUAVs;
     Long selfID;
-    //private InternalCommLink commLink;
     private CommLink commLink;
     private byte[] outBuffer;
     private Output output;
@@ -44,8 +43,7 @@ public class TakeOffMasterDataTalkerThread extends Thread{
         this.listener = listener;
         this.numUAVs = numUAVs;
         this.selfID = selfID;
-        //this.commLink = InternalCommLink.getCommLink(selfID.intValue());
-        this.commLink = CommLink.getCommLink(selfID.intValue());
+        this.commLink = CommLink.getCommLink(selfID.intValue(),UAVParam.internalBroadcastPort);
         this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
         this.output = new Output(outBuffer);
         this.arduSim = API.getArduSim();

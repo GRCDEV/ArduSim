@@ -40,7 +40,9 @@ public class MBCAPSimProperties {
     // List of the predicted positions of each UAV in Geographic coordinates
     public static AtomicReference<DrawableCirclesGeo>[] predictedLocation;
     // Parameters needed to draw the warning image when a collision risk is detected
-    public static final String EXCLAMATION_IMAGE_PATH = "/main/resources/mbcap/Exclamation.png";	// Warning image file path
+    static String fs = File.separator;
+    public static final String EXCLAMATION_IMAGE_PATH = API.getFileTools().getResourceFolder().toString() + fs +
+            "protocols" + fs + "mbcap" + fs + "Exclamation.png"; // Warning image file path
     public static BufferedImage exclamationImage; // Warning image
     public static final int EXCLAMATION_PX_SIZE = 25; // (px) Size of the image when it is drawn
 
@@ -82,9 +84,10 @@ public class MBCAPSimProperties {
                 }else if(type.contains("java.util.List")) {
                     String[] filesNames = value.split(";");
                     List<File> files = new ArrayList<>();
-                    for (String filesName : filesNames) {
-                        File f = new File(filesName);
-                        String extension = filesName.substring(filesName.lastIndexOf('.') + 1);
+                    for (String fileName : filesNames) {
+                        fileName = API.getFileTools().getResourceFolder().toString() + File.separator + fileName;
+                        File f = new File(fileName);
+                        String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
                         if (f.exists() && (extension.equals(Text.FILE_EXTENSION_WAYPOINTS) || extension.equals(Text.FILE_EXTENSION_KML))) {
                             files.add(f);
                         }

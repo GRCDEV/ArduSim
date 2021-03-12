@@ -1,56 +1,25 @@
-package com.protocols.muscop.gui;
+package com.protocols.mission.gui;
 
 import com.api.API;
-import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
-import com.api.pojo.location.Waypoint;
-import com.uavController.UAVParam;
-import es.upv.grc.mapper.Location3DUTM;
 import com.api.ArduSimTools;
-import com.setup.Text;
 import com.api.MissionHelper;
 import com.api.formations.Formation;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import com.api.formations.FormationFactory;
+import com.api.pojo.location.Waypoint;
+import com.setup.Text;
+import com.uavController.UAVParam;
 import org.javatuples.Pair;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
-import static com.setup.Param.numUAVs;
-
-public class MuscopSimProperties {
+public class MissionSimProperties {
 
     // GUI parameters
     public List<File> missionFile;
-    public Formation groundFormation;
-    public static int numberOfClusters = 3;
-    public double groundMinDistance;
-    public TakeOffAlgorithm takeOffStrategy;
-    public Formation flyingFormation;
-    public double flyingMinDistance;
-    public double landingMinDistance;
-
-    // Timeouts
-    public static int RECEIVING_TIMEOUT = 50;        // (ms) The port is unlocked after this time when receiving messages
-    public static long SENDING_TIMEOUT = 200; 		// (ms) Time between packets sent
-    public static long LAND_CHECK_TIMEOUT = 250;  	// (ms) Between checks if the UAV has landed
-    public static long STATE_CHANGE_TIMEOUT = 250; 	// (ms) Waiting time in sending messages or reading threads
-    public static long MISSION_TIMEOUT = 2000; 		// (ms) Timeout to wait after the mission is received and the master UAV changes its state
-    public static long TTL=5000; 					// (ms) Time to life for a UAV.
-    public static int RECEIVETIMEOUT = 200;			// (ms) Timeout for link.receiveMessage()
-    // Maximum number of waypoints that fit in a datagram.
-    public static int MAX_WAYPOINTS = 61;	// main.java.main.java.api.CommLink.DATAGRAM_MAX_LENGTH - 2 - 2 - 3x8xn >= 0
-
-    // (rad) Master UAV yaw or heading (first mission segment orientation in simulation).
-    public static volatile double formationYaw;
-    // Mission sent from master to slaves (center mission).
-    public static AtomicReference<Location3DUTM[]> missionSent = new AtomicReference<>();// Array containing the mission sent to the slaves
-
-    public static AtomicInteger[] state;
-
+    public Formation formation;
+    public double minDistance;
 
     public boolean storeParameters(Properties guiParams, ResourceBundle fileParams){
         // First check if there are parameters set in the file who are not accessed by the gui
@@ -83,21 +52,12 @@ public class MuscopSimProperties {
             // set the value of the variable
             try {
                 String type = var.getType().toString();
-                if(type.equals("int")){
-                    var.setInt(this,Integer.parseInt(value));
-                }else if(type.equals("double")){
-                    var.setDouble(this,Double.parseDouble(value));
-                }else if(type.equals("long")){
-                    var.setLong(this,Long.parseLong(value));
-                }else if(type.contains("java.lang.String")){
-                    var.set(this,value);
-                }else if(type.contains("java.util.List")) {
+                if(type.contains("java.util.List")) {
                     String[] filesNames = value.split(";");
                     List<File> files = new ArrayList<>();
-                    for (String fileName : filesNames) {
-                        fileName = API.getFileTools().getResourceFolder() + File.separator + fileName;
-                        File f = new File(fileName);
-                        String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
+                    for (String filesName : filesNames) {
+                        File f = new File(API.getFileTools().getResourceFolder().toString(), filesName);
+                        String extension = filesName.substring(filesName.lastIndexOf('.') + 1);
                         if (f.exists() && (extension.equals(Text.FILE_EXTENSION_WAYPOINTS) || extension.equals(Text.FILE_EXTENSION_KML))) {
                             files.add(f);
                         }
@@ -105,8 +65,8 @@ public class MuscopSimProperties {
                     var.set(this, files);
                 }else if(type.contains("Formation")){
                     var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
-                }else if(type.contains("TakeOffAlgorithm")){
-                    var.set(this,TakeOffAlgorithm.getAlgorithm(value));
+                }else if(type.equals("double")){
+                    var.setDouble(this,Double.parseDouble(value));
                 }else{
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_STORE_PARAMETERS + type);
                     return false;
@@ -119,15 +79,16 @@ public class MuscopSimProperties {
         if(error.equals(" ")){
             setSimulationParameters();
             return true;
-        }else{
+        }
+        else{
             ArduSimTools.warnGlobal(Text.LOADING_ERROR,"Error in parameter: " + error);
             return false;
         }
     }
+
     private String checkSpecificVariables(){
-        if(groundMinDistance<0){return "groundMinDistance";}
-        if(flyingMinDistance<0){return "flyingMindistance";}
-        if(landingMinDistance<0){return "landingMinDistance";}
+        if(missionFile.size() == 0 ){
+            return "missionFile";}
         for(File f :missionFile){
             if(!f.exists()){return "missionFile";}
         }
@@ -136,13 +97,9 @@ public class MuscopSimProperties {
 
     private void setSimulationParameters(){
         storeMissionFile(missionFile);
-        UAVParam.groundFormation.set(groundFormation);
-        groundFormation.init(numUAVs,groundMinDistance);
+        UAVParam.groundFormation.set(formation);
+        formation.init(API.getArduSim().getNumUAVs(),minDistance);
 
-        UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance);
-
-        TakeOffMasterDataListenerThread.selectedAlgorithm = takeOffStrategy;
     }
 
     public void storeMissionFile(List<File> selection) {

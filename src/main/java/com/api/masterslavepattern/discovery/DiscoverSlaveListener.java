@@ -5,6 +5,7 @@ import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.esotericsoftware.kryo.io.Input;
 import com.setup.Text;
+import com.uavController.UAVParam;
 
 /**
  * Thread used by slave UAVs to detect the master UAV.
@@ -19,7 +20,7 @@ public class DiscoverSlaveListener extends Thread {
 	
 	public DiscoverSlaveListener(int numUAV) {
 		super(Text.DISCOVERY_SLAVE_LISTENER + numUAV);
-		this.commLink = CommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV, UAVParam.internalBroadcastPort);
 	}
 	
 	@Override

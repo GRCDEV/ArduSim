@@ -5,6 +5,7 @@ import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.esotericsoftware.kryo.io.Input;
 import com.setup.Text;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DUTM;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +27,7 @@ public class DiscoverMasterListener extends Thread {
 		super(Text.DISCOVERY_MASTER_LISTENER + numUAV);
 		this.UAVsDetected = UAVsDetected;
 		this.listener = listener;
-		this.commLink = CommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV, UAVParam.internalBroadcastPort);
 	}
 	
 	@Override

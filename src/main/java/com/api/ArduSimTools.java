@@ -121,7 +121,9 @@ public class ArduSimTools {
 		if(args.length == 2){
 			SimParam.resourcesFile = new File(args[1]);
 		}else{
-			SimParam.resourcesFile = new File(API.getFileTools().getSourceFolder(), "/main/resources/setup/SimulationParam.properties");
+			String fs = File.separator;
+			SimParam.resourcesFile = new File(API.getFileTools().getSourceFolder().toString() +
+					fs + "main" + fs + "resources" + fs + "setup" + fs + "SimulationParam.properties");
 		}
 	}
 	

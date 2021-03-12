@@ -67,7 +67,6 @@ public class MatchCalculusThread extends Thread {
 			// The center of the flying formation will be over the current location of the master UAV on the ground
 			// Solution provided for Follow Me protocol, as the master UAV must take-off vertically always to the center of the flight formation
 			// We arrange all the UAVs but the center UAV (not included in ground nor airLocations for the calculus)
-			Location2DUTM masterLocation = ground.get(masterID);
 			ground.remove(masterID);
 			groundCenterLocation = groundLocations.get(masterID);
 			int flyingCenterPosition = flightFormation.getCenterIndex();

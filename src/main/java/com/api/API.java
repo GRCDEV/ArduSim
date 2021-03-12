@@ -62,9 +62,7 @@ public class API {
 	 * @return Tools to manage files.
 	 */
 	public static FileTools getFileTools() {
-		
 		return API.fileTools;
-		
 	}
 
 	/**

@@ -1,20 +1,16 @@
 package com.protocols.shakeup.logic;
 
-import com.api.API;
-import com.esotericsoftware.kryo.io.Input;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3DUTM;
-import com.api.ArduSim;
-import com.api.Copter;
-import com.api.GUI;
-import com.api.SafeTakeOffHelper;
+import com.api.*;
 import com.api.communications.CommLink;
 import com.api.masterslavepattern.MasterSlaveHelper;
 import com.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
-import com.uavController.UAVParam;
+import com.esotericsoftware.kryo.io.Input;
 import com.protocols.shakeup.logic.state.DataState;
 import com.protocols.shakeup.pojo.Param;
 import com.protocols.shakeup.pojo.Text;
+import com.uavController.UAVParam;
+import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 
 import java.io.FileWriter;
 import java.io.IOException;

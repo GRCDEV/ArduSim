@@ -8,6 +8,7 @@ import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.esotericsoftware.kryo.io.Output;
 import com.setup.Text;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DUTM;
 
 import java.util.Arrays;
@@ -32,7 +33,7 @@ public class DiscoverSlaveTalker extends Thread {
 		this.finished = finished;
 		this.ardusim = API.getArduSim();
 		this.copter = API.getCopter(numUAV);
-		this.commLink = CommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV, UAVParam.internalBroadcastPort);
 	}
 	
 	@Override

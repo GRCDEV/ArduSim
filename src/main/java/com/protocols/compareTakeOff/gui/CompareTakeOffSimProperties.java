@@ -1,6 +1,7 @@
 package com.protocols.compareTakeOff.gui;
 
 import com.api.ArduSimTools;
+import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import com.setup.Text;
 import com.api.formations.Formation;
 import com.api.formations.FormationFactory;
@@ -29,7 +30,6 @@ public class CompareTakeOffSimProperties {
     public static double altitude = 5.0;
     public static double masterInitialLatitude = 39.482615; // (degrees) Latitude for simulations
     public static double masterInitialLongitude = -0.34629; // (degrees) Longitude for simulations
-    public static boolean takeOffIsSequential = false; // taking off sequential or parallel
 
     public static String outputFile = "compareTakeOff.csv";
 
@@ -121,5 +121,7 @@ public class CompareTakeOffSimProperties {
 
         UAVParam.airFormation.set(flyingFormation);
         flyingFormation.init(numUAVs,flyingMinDistance);
+
+        TakeOffMasterDataListenerThread.selectedAlgorithm = takeOffStrategy;
     }
 }

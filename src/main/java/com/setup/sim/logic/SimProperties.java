@@ -3,6 +3,7 @@ package com.setup.sim.logic;
 import com.api.API;
 import com.api.ArduSimTools;
 import com.api.communications.CommLink;
+import com.api.communications.CommLinkObjectSimulation;
 import com.api.communications.RangeCalculusThread;
 import com.api.communications.WirelessModel;
 import com.api.cpuHelper.CPUUsageThread;
@@ -55,7 +56,7 @@ public class SimProperties {
         /* return the resource file
             1 Try to load the default resource file SimParam.resourcesFile
             2 If SimParm.resourcesFile does not exist open a filechooser to select another .properties file
-            3 If the user presses cancel or opens a file that is not a .properties file a default.properties is created and loaded
+            3 If the user presses cancel or opens a file that is not a .properties file a SimulationParam.properties is created and loaded
         */
         // 1
         File resourceFile = SimParam.resourcesFile;
@@ -65,7 +66,7 @@ public class SimProperties {
             if (!resourceFile.exists()) {
                 // 2
                 FileChooser fileChooser = new FileChooser();
-                fileChooser.setInitialDirectory(API.getFileTools().getCurrentFolder());
+                fileChooser.setInitialDirectory(new File(API.getFileTools().getResourceFolder() + File.separator + "setup"));
                 fileChooser.setTitle("Select a property file");
                 FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Property File", "*.properties");
                 fileChooser.getExtensionFilters().add(extFilter);
@@ -74,8 +75,10 @@ public class SimProperties {
                 if (resourceFile == null || !resourceFile.exists() || !resourceFile.getAbsolutePath().endsWith("properties")) {
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.FILE_NOT_FOUND);
                     setDefaultParameters();
-                    createPropertiesFile(new File(API.getFileTools().getCurrentFolder(),"default.properties"));
-                    resourceFile = new File(API.getFileTools().getCurrentFolder(),"default.properties");
+                    File defaultProperties = new File(API.getFileTools().getResourceFolder() + File.separator +
+                            "setup" + File.separator + "SimulationParam.properties");
+                    createPropertiesFile(defaultProperties);
+                    resourceFile = defaultProperties;
                 }
             }
             // load the resource file and store them in this object
@@ -172,13 +175,15 @@ public class SimProperties {
         return null;
     }
     private void setDefaultParameters(){
-        // set default parameters intern so that a default.properties can be created
-        arducopterFile = new File(API.getFileTools().getCurrentFolder(),"arducopter");
-        speedFile = new File(API.getFileTools().getSourceFolder(), "/main/resources/speed.csv");
-        protocolParameterFile = new File(API.getFileTools().getSourceFolder(), "/main/resources/protocolParameter.properties");
+        // set default parameters intern so that a SimulationParam.properties can be created
+        String fs = File.separator;
+        arducopterFile = new File("target" + fs + "arducopter");
+        speedFile = new File("target" + fs + "speed.csv");
+        protocolParameterFile = new File( "src" + fs + "main" + fs + "resources" + fs + "protocols" + fs +
+                "mission" + fs + "missionParam.properties");
         startingAltitude = 0.0;
         numUAVs = 5;
-        protocol = "main/java/com.api.protocols/shakeup";
+        protocol = "Mission";
         screenRefreshRate = 500;
         minScreenRedrawDistance = 5.0;
         arduCopterLogging = false;
@@ -242,7 +247,7 @@ public class SimProperties {
         }
         Param.verboseLogging = verboseLogging;
         Param.storeData = storeData;
-        CommLink.init(numUAVs,carrierSensing,packetCollisionDetection,bufferSize);
+        CommLinkObjectSimulation.init(numUAVs,carrierSensing,packetCollisionDetection,bufferSize);
         Param.selectedWirelessModel = communicationModel;
 
         if (Param.selectedWirelessModel == WirelessModel.FIXED_RANGE) {
@@ -271,16 +276,16 @@ public class SimProperties {
         }
     }
     public boolean validateSpeedFile(File f){
-        if(!f.exists() || !f.getAbsolutePath().endsWith(Text.FILE_EXTENSION_CSV)) {
+        String path = f.getAbsolutePath();
+        if(!new File(path).exists() || !path.endsWith(Text.FILE_EXTENSION_CSV)) {
             ArduSimTools.warnGlobal(Text.SPEEDS_SELECTION_ERROR, Text.SPEEDS_ERROR_2);
             return false;
         }
-        UAVParam.initialSpeeds = SimTools.loadSpeedsFile(f.getAbsolutePath());
+        UAVParam.initialSpeeds = SimTools.loadSpeedsFile(path);
         if (UAVParam.initialSpeeds == null) {
             ArduSimTools.warnGlobal(Text.SPEEDS_SELECTION_ERROR, Text.SPEEDS_ERROR_1);
             return false;
         }
-
         return true;
     }
     public boolean validateArduCopterPath(File sitlPath){

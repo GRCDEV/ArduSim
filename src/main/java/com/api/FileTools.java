@@ -9,6 +9,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,13 +36,28 @@ public class FileTools {
 	}
 
 	/**
+	 * @return the folder ardusim/
+	 */
+	public Path getArdusimFolder(){
+		File workingDirectory = getCurrentFolder();
+		return Paths.get(workingDirectory.getParent());
+	}
+	/**
 	 * @return the folder ardusim/src
 	 */
-	public File getSourceFolder(){
-		File workingDirectory = getCurrentFolder();
-		return new File(workingDirectory.getParent(),"/src");
+	public Path getSourceFolder(){
+		return Paths.get(getArdusimFolder() + File.separator + "src");
 	}
-	
+
+	/**
+	 * @return the folder ardusim/src/main/resources
+	 */
+	public Path getResourceFolder(){
+		String fs = File.separator;
+		return Paths.get(getSourceFolder() + fs + "main" + fs + "resources");
+	}
+
+
 	/**
 	 * Get a file extension.
 	 * @param file The file to be checked.
@@ -131,7 +148,7 @@ public class FileTools {
 		} else {
 			//url = MainWindow.class.getResource(absolutePath);
 			try {
-				url = new File(this.getSourceFolder(),contentRootPath).toURI().toURL();
+				url = new File(this.getSourceFolder().toString(),contentRootPath).toURI().toURL();
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}

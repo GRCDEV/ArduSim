@@ -7,6 +7,7 @@ import com.api.masterslavepattern.MSMessageID;
 import com.api.masterslavepattern.MSParam;
 import com.esotericsoftware.kryo.io.Output;
 import com.setup.Text;
+import com.uavController.UAVParam;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,7 +29,7 @@ public class DiscoverMasterTalker extends Thread {
 		super(Text.DISCOVERY_MASTER_TALKER + numUAV);
 		this.finished = finished;
 		this.ardusim = API.getArduSim();
-		this.commLink = CommLink.getCommLink(numUAV);
+		this.commLink = CommLink.getCommLink(numUAV, UAVParam.internalBroadcastPort);
 	}
 
 	@Override

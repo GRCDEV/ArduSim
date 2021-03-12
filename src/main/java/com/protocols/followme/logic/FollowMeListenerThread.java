@@ -9,9 +9,7 @@ import com.protocols.followme.pojo.Message;
 import com.setup.Param;
 import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3D;
+import es.upv.grc.mapper.*;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -150,9 +148,8 @@ public class FollowMeListenerThread extends Thread {
 						masterLocation = new Location2DUTM(input.readDouble(), input.readDouble());
 						double relAltitude = input.readDouble();
 						double yaw = input.readDouble();
-						/*
 						try {
-							targetLocation = takeOff.getFormationFlying().getLocation(takeOff.getFormationPosition(), masterLocation, yaw).getGeo();
+							targetLocation = takeOff.getFormationFlying().get2DUTMLocation(masterLocation,takeOff.getFormationPosition()).getGeo();
 							copter.moveTo(new Location3DGeo(targetLocation, relAltitude));
 						} catch (LocationNotReadyException e) {
 							gui.log(e.getMessage());
@@ -160,14 +157,12 @@ public class FollowMeListenerThread extends Thread {
 							// Fatal error. It lands
 							currentState.set(LANDING);
 						}
-						*/
 					}
 					
 					if (type == Message.LAND) {
 						Location2DUTM centerUAVFinalLocation = new Location2DUTM(input.readDouble(), input.readDouble());
 						double yaw = input.readDouble();
-						/*
-						Location2DUTM landingLocationUTM = takeOff.getFormationLanding().getLocation(takeOff.getFormationPosition(), centerUAVFinalLocation, yaw);
+						Location2DUTM landingLocationUTM = UAVParam.groundFormation.get().get2DUTMLocation(centerUAVFinalLocation,takeOff.getFormationPosition());
 						try {
 							targetLocationLanding = new Location3D(landingLocationUTM, copter.getAltitudeRelative());
 							currentState.set(MOVE_TO_LAND);
@@ -177,7 +172,6 @@ public class FollowMeListenerThread extends Thread {
 							// Fatal error. It lands
 							currentState.set(LANDING);
 						}
-						 */
 					}
 				}
 			}

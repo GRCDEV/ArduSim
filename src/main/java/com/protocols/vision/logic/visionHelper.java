@@ -1,15 +1,12 @@
 package com.protocols.vision.logic;
 
-import com.api.API;
-import com.api.ProtocolHelper;
+import com.api.*;
+import com.setup.Param;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location3D;
-import com.api.*;
 import org.javatuples.Pair;
 
 import javax.swing.*;
-import java.io.File;
-import java.util.Map;
 
 /** Developed by: Jamie Wubben, from GRC research group in Universitat Politècnica de València (Valencia, Spain). */
 public class visionHelper extends ProtocolHelper {
@@ -25,7 +22,8 @@ public class visionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void openConfigurationDialogFX() {}
+	public void openConfigurationDialogFX() {
+		Param.simStatus = Param.SimulatorState.STARTING_UAVS;}
 
 	@Override
 	public void configurationCLI() {
@@ -53,9 +51,7 @@ public class visionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public boolean sendInitialConfiguration(int numUAV) {
-		readIniFile("location.ini");
-		return true;}
+	public boolean sendInitialConfiguration(int numUAV) { return true;}
 
 	@Override
 	public void startThreads() {}
@@ -178,13 +174,7 @@ public class visionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void forceExperimentEnd() {
-		// When the UAVs are close to the last waypoint a LAND command is issued
-//		int numUAVs = Tools.getNumUAVs();
-//		for (int i = 0; i < numUAVs; i++) {
-//			Copter.landIfMissionEnded(i, visionParam.LAST_WP_THRESHOLD);
-//		}
-	}
+	public void forceExperimentEnd() {	}
 
 	@Override
 	public String getExperimentResults() {return null;}
@@ -199,18 +189,4 @@ public class visionHelper extends ProtocolHelper {
 	@Override
 	public void openPCCompanionDialog(JFrame PCCompanionFrame) {}
 
-	public static void readIniFile(String filename) {
-		FileTools fileTools = API.getFileTools();
-		File iniFile = new File(fileTools.getCurrentFolder() + "/" + filename);
-		
-		if(iniFile.exists()) {
-			Map<String, String> params = fileTools.parseINIFile(iniFile);
-			visionParam.LATITUDE = Double.parseDouble(params.get("LATITUDE"));
-			visionParam.LONGITUDE = Double.parseDouble(params.get("LONGITUDE"));
-			visionParam.ALTITUDE = Double.parseDouble(params.get("ALTITUDE"));
-			API.getGUI(0).log("landing location set from location.ini");
-		}
-	}
-	
-	
 }

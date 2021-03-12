@@ -1,13 +1,9 @@
 package com.api;
 
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3D;
 import com.api.formations.Formation;
 import com.api.masterslavepattern.MSParam;
-import com.api.masterslavepattern.MSText;
 import com.api.masterslavepattern.safeTakeOff.*;
-import com.protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
+import es.upv.grc.mapper.Location2DUTM;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -104,49 +100,7 @@ public class SafeTakeOffHelper {
 	 * @param takeOffListener Listener that can be used to detect when the take off finishes.
 	 */
 	public void start(SafeTakeOffContext safeTakeOffContext, SafeTakeOffListener takeOffListener) {
-		//TODO refactor code !! this is just quick code so that I can run the experiments
-		if(CompareTakeOffSimProperties.takeOffIsSequential) {
-			new SafeTakeOffListenerThread(numUAV, safeTakeOffContext, takeOffListener).start();
-		}else{
-			Copter copter = API.getCopter(numUAV);
-			GUI gui = API.getGUI(numUAV);
-			// take off the UAVs to 5 meters
-			TakeOff takeOff = copter.takeOff(5, new TakeOffListener() {
-
-				@Override
-				public void onFailure() {
-					gui.exit(MSText.TAKE_OFF_ERROR + " " + numUAV);
-				}
-
-				@Override
-				public void onCompleteActionPerformed() {}
-			});
-			takeOff.start();
-			try {
-				takeOff.join();
-			} catch (InterruptedException e1) {}
-
-			// let them move to their targetLocation
-			Location2DGeo targetLocation = safeTakeOffContext.getTargetLocation();
-			MoveTo moveTo = copter.moveTo(new Location3D(targetLocation, CompareTakeOffSimProperties.altitude),
-					new MoveToListener() {
-
-						@Override
-						public void onFailure() {
-							gui.exit(MSText.MOVE_ERROR + numUAV);
-						}
-
-						@Override
-						public void onCompleteActionPerformed() {}
-					});
-			moveTo.start();
-			try {
-				moveTo.join();
-			} catch (InterruptedException e) {}
-
-			// wait until all UAVs are there before landing
-			takeOffListener.onCompleteActionPerformed();
-		}
+		new SafeTakeOffListenerThread(numUAV, safeTakeOffContext, takeOffListener).start();
 	}
 
 	/**
