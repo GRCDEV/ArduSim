@@ -47,8 +47,8 @@ It is highly recommended to run ArduSim on Linux, as performance is significantl
 
 ## 2 IDE integration
 
-While not mandatory a IDE will aid any developer, therefore we give a guide on how to correctly import ArduSim into an IDE. We have chosen for Eclipse and IntelliJ because of their popularity and personal preferences. 
-If your favorite IDE is not included, the guides can still help you since importing source from git is similar in the various IDEs. 
+While not mandatory an IDE will aid any developer, therefore we give a guide on how to correctly import ArduSim into an IDE. We have chosen for Eclipse and IntelliJ because of their popularity and personal preferences. 
+If your favourite IDE is not included, the guides can still help you since importing source from git is similar in the various IDEs. 
 
 ### 2.1 Eclipse IDE integration
 
@@ -60,7 +60,7 @@ Use the button of the picture to start clonning the repository:
 
 ![clone button](clonebutton.png)
 
-Now copy the following URI in the configuration window and enter your user name and password:
+Now copy the following URI in the configuration window and enter your username and password:
 
     https://github.com/GRCDEV/ArduSim.git
 
@@ -72,6 +72,8 @@ We recommend to show packages in hierarchical order in *Package explorer* tab. O
 
 *Git Staging* and *Git Repositories* tabs can also be shown to check periodically if a new version of ArduSim has been released.
 
+Continue with this guide before running Main.java
+
 ### 2.2 IntelliJ IDE integration
 
 In IntelliJ go to File --> New --> Project from Version Control.
@@ -80,20 +82,24 @@ Now copy the following URI in the configuration window.
 
     https://jamieWubben@bitbucket.org/frafabco/ardusim.git
 
-If asked for a project configuration open as Maven project. Give IntelliJ some time to import everything continue with this guide before running Main.java
+If asked for a project configuration open as Maven project. Give IntelliJ some time to import everything. 
+
+Continue with this guide before running Main.java
 
 
 ## 3 Running ArduSim
         
 ### 3.1 Checking necesarry files
 
-ArduSim uses SITL to simulate multicopters. If everything went right the two files: *arducopter* and *copter.parm* should be include in the project (inside of the folder ArduSim/target). However, if prefered (it might increase performance) the SITL can be installed and new files can be compiled (explained in section 4). If you put them in the target folder (ardusim/target*), ArduSim will automatically find them when running from the IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder. This repository provides binaries for Windows (arducopter.exe) and Ubuntu (arducopter) 64bits, so you only need to compile them (see below) if you plan to use other systems.
+ArduSim uses SITL to simulate multicopters. If everything went right the two files: *arducopter* and *copter.parm* should be include in the project (inside of the folder ArduSim/target). However, if prefered (it might increase performance) the SITL can be installed and new files can be compiled (explained in section 4). If you run ArduSim from an executable *.jar* file, put both files in the same folder. This repository provides binaries for Windows (arducopter.exe) and Ubuntu (arducopter) 64bits, so you only need to compile them (see below) if you plan to use other systems.
+
+A csv file called speed.csv (inside ArduSim/target) should also be present. This csv file contains the target speed for the multicopters (one row per speed m/s). If not presented created it yourself.
 
 ### 3.2 Setup for Windows
 
 The next steps must only be followed if you want to run ArduSim on Windows.
 
-If any errors occur, please let us know and we will update this section. Possibly, more updated instructions can be found on the [official web page](http://ardupilot.org/dev/docs/sitl-native-on-windows.html) of ArduCopter, but it suggest to install JSBSim simulator, and to compile the SITL yourself. This is not needed for the correct functioning of ArduSim. For those reasons, we suggest to not use the script mentioned in the web page to install SITL, it is better to do it manually.
+If any errors occur, please let us know and we will update this section. Possibly, more updated instructions can be found on the [official web page](http://ardupilot.org/dev/docs/sitl-native-on-windows.html) of ArduCopter, but it suggest installing JSBSim simulator, and to compile the SITL yourself. This is not needed for the correct functioning of ArduSim. For those reasons, we suggest to not use the script mentioned in the web page to install SITL, it is better to do it manually.
 
 1. Install [Java JDK 11 or 13](https://www.oracle.com/java/technologies/javase-downloads.html) if not present.
 
@@ -138,29 +144,52 @@ If any errors occur, please let us know and we will update this section. Possibl
 
 
 ### 3.3 Starting Ardusim for the first time
-If you are running on windows please first go to section 5.  
+* Make sure to have at least Java-11 installed.
 
-Make sure to have at least Java-11 installed.
-
-In your IDE right-click over *src/main/java/com/setup/Main.java* class and select Run as Java Application (or similar).
+* In your IDE right-click over *src/main/java/com/setup/Main.java* class and select Run as Java Application (or similar).
 
 The first time, it will fail to run because you need to add some program arguments. There exist four options: *multicopter*, *pccompanion*, *simulator-gui*, and *simulator-cli*. The first two are used in real experiments and the last two are used for simulations. We advise to use the *simulator-gui* for developping and to use the *simulator-cli* to perform automatic testing. 
 
-Edit the run configuration in your IDE and change the program arguments to *simulator-gui*
+* Edit the run configuration in your IDE and change the program arguments to *simulator-gui*
 
-A csv file called speed.csv (inside ArduSim/target) should also be present. This csv file contains the target speed for the multicopters (one row per speed m/s). 
+Once you have checked that all the necesarry files (*arducopter*, *copter.parm* and *speed.csv*) are inside the folder *ArduSim/target* and you have changed the program arguments to *simulator-gui* you can start Ardusim.
 
-Once you have checked that all the necesarry files (*arducopter*, *copter.parm* and *speed.csv*) are inside the folder *ArduSim/target* and you have changed the program arguments to *simulator-gui* you can start Ardusim (if you are using Linux. Otherwise go to section 3, execute the necesarry things for Windows and come back then come back).
-A configuration Dialog should pop up. For now, leave all the parameters as they are, and press the OK button. Using the default parameters ArduSim will start a certain protocol (FollowMe in this case). Most of the protocols have there own grafical interface to changes some arguments. For now, leave all the parameters as they are, and press the OK button. Most likely ArduSim will give you a pop-up that no bing key was found. This Bing key is used for rendering, and if it is not found open-street maps will be used. Press the *Ok* button to continue and a full-sized screen should appear. In the upper-left corner you can see that ArduSim is setting everything up in the background. It will pause for a bit while it is waiting for a GPS fix. Finnaly, the button *setup* should be enabled. Press that button. Observe how *UAV 1* is taking off. Once that is done, the *start test* button should be enabled. Press that button and observe how UAV 0 is taking off, starts moving, and is followed by UAV 1. Wait until both UAVs are landed, and press the *exit* button. You now performed your first simulation with ArduSim, congratulations! We now advise to repeat the last steps changing protocols and/or parameters. If you change the protocol make sure to also change the protocol parameters path.
+* Run ArduSim
 
-Several temporary files are generated when using ArduSim for simulations. Please, close ArduSim with the application button and not from the *Console* tab of Eclipse to force ArduSim to remove the temporary files before exiting.
+A configuration Dialog should pop up. For now, leave all the parameters as they are.
 
-Remember that ArduSim is a highly asynchronous application, and running it with a IDE in debugging mode could lead to an unexpected behavior of the application.
+* press the OK button.
+ 
+Using the default parameters ArduSim will start a certain protocol (FollowMe in this case). Most of the protocols have their own grafical interface to changes some arguments. For now, leave all the parameters as they are.
+
+* press the OK button.
+
+Most likely ArduSim will give you a pop-up that no bing key was found. This Bing key is used for rendering, and if it is not found open-street maps will be used.
+
+* Press the Ok button
+
+A full-sized screen should appear. In the upper-left corner you can see that ArduSim is setting everything up in the background. It will pause for a bit while it is waiting for a GPS fix. Finnaly, the button *setup* should be enabled. 
+
+* Press the Setup button.
+
+Observe how *UAV 1* is taking off. Once that is done, the *start test* button should be enabled. 
+
+* Press the Start test button
+
+Observe how UAV 0 is taking off, starts moving, and is followed by UAV 1. Wait until both UAVs are landed.
+
+* Press the *exit* button.
+
+You now performed your first simulation with ArduSim, congratulations! We now advise to repeat the last steps changing protocols and/or parameters. If you change the protocol make sure to also change the protocol parameters path.
+
+Several temporary files are generated when using ArduSim for simulations. Please, close ArduSim with the application button and not from the *Console* tab of your IDE to force ArduSim to remove the temporary files before exiting.
+
+Remember that ArduSim is a highly asynchronous application, and running it with an IDE in debugging mode could lead to an unexpected behavior of the application.
 
 
 ## 4 Compilation to jar
 
-If you want to use ArduSim outside of the IDE, you have to complied a *.jar*. The project has been prepared to be compiled both as Java application, or as Maven project. The straightforward solution is to compile and export a runnable Jar file like any other Java project. You can also compile and deploy ArduSim with Maven, but we do not recommend that approach for two reasons: i) it requires advanced knowlegde, and ii) the contents of the folder target will be cleaned, removing the *arducopter* application instance that should be there for simulations, and even the *ardusim.ini* file provided. In order to avoid further problems, we suggest to store a copy of those files anywhere else (*arducopter* or *arducopter.exe*, depending on the running platform, *copter.parm*, and *ardusim.ini*).
+If you want to use ArduSim outside of the IDE, you have to compiled a *.jar*. The project has been prepared to be compiled both as Java application, or as Maven project. The straightforward solution is to compile and export a runnable Jar file like any other Java project. You can also compile and deploy ArduSim with Maven, but we do not recommend that approach for two reasons: i) it requires advanced knowlegde, and ii) the contents of the folder target will be cleaned, removing the *arducopter* application instance that should be there for simulations, and even the *ardusim.ini* file provided. In order to avoid further problems, we suggest storing a copy of those files anywhere else (*arducopter* or *arducopter.exe*, depending on the running platform, *copter.parm*, and *ardusim.ini*).
 
 ## 5 Compile your own SITL files
 
@@ -168,14 +197,14 @@ ArduSim uses SITL to simulate multicopters. You can if prefered compile your own
 
 ### 5.1 Windows
 
-1. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
+1. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input these lines:
 
         git clone https://github.com/ArduPilot/ardupilot.git
         cd ardupilot
         git checkout tags/Copter-3.5.7
         git submodule update --init --recursive
     
-    The first command clones the project in the local folder *ardupilot*. The last uploaded version of ArduPilot is usually unstable, and we highly recommend to downgrade to the latest stable version for ArduCopter. In the cloned webpage open de *Branch* drop-down list, select the tab *Tags*, look for the most up-to-date version of *Copter*, and put in the third line the tag found. ArduSim has been tested with ArduCopter version 3.5.7, and we suggest to use it, as the copter parameters have been modified since then. The last command downloads modules needed by the target ArduPilot compilation.
+    The first command clones the project in the local folder *ardupilot*. The last uploaded version of ArduPilot is usually unstable, and we highly recommend downgrading to the latest stable version for ArduCopter. In the cloned webpage open de *Branch* drop-down list, select the tab *Tags*, look for the most up-to-date version of *Copter*, and put in the third line the tag found. ArduSim has been tested with ArduCopter version 3.5.7, and we suggest using it, as the copter parameters have been modified since then. The last command downloads modules needed by the target ArduPilot compilation.
 
 2. Make the multicopter. In the same *Cygwin terminal* go to the *ardupilot* folder and type:
 
