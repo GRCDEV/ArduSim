@@ -109,7 +109,7 @@ public class ArduSimTools {
 			Param.role = ArduSim.MULTICOPTER;
 		}else if (args[0].equalsIgnoreCase("simulator-gui")) {
 			Param.role = ArduSim.SIMULATOR_GUI;
-		}else if (args[0].equalsIgnoreCase("com/api/pccompanion")) {
+		}else if (args[0].equalsIgnoreCase("pccompanion")) {
 			Param.role = ArduSim.PCCOMPANION;
 		}else if(args[0].equalsIgnoreCase("simulator-cli")){
 			Param.role = ArduSim.SIMULATOR_CLI;

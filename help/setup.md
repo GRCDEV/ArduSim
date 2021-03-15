@@ -6,19 +6,20 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 ## Table of contents
 
-[1 System requirements](#markdown-header-1-system-requirements)
+[1. System requirements] (#1-system-requirements)
 
-[2 IDE integration](#markdown-header-2-ide-integration)
+[2. IDE integration] (#2-ide-integration)
 
-[3 Running ArduSim](#markdown-header-3-Running-ArduSim)
+[3. running arduSim] (#3-running-arduSim)
 
-[4 Compilation to .jar](#markdown-header-4-Compilation-to-.jar)
+[4. Compilation to .jar] (#4-compilation-to-.jar)
 
-[5 Compile your own SITL files](#markdown-header-5-Compile-your-own-SITL-files)
+[5. Compile your own SITL files] (#5-compile-your-own-sitl-files)
 
-## 1 System requirements
 
-###### Minimal:
+##1 System Requirements
+
+######Minimal:
 
 * Intel core i5 (four cores version)
 
@@ -30,7 +31,7 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 * Cygwin and ImDisk Virtual Disk Driver (Windows only)
 
-###### Recommended:
+######Recommended:
 
 * Intel core i7 (four cores with Hyper-Threading)
 
@@ -44,12 +45,12 @@ ArduSim uses [SITL](http://ardupilot.org/dev/docs/sitl-simulator-software-in-the
 
 It is highly recommended to run ArduSim on Linux, as performance is significantly reduced on Windows, and may be on MacOS.
 
-## 2 IDE integration
+##2 IDE integration
 
 While not mandatory a IDE will aid any developer, therefore we give a guide on how to correctly import ArduSim into an IDE. We have chosen for Eclipse and IntelliJ because of their popularity and personal preferences. 
 If your favorite IDE is not included, the guides can still help you since importing source from git is similar in the various IDEs. 
 
-## 2.1 Eclipse IDE integration
+###2.1 Eclipse IDE integration
 
 ArduSim and the included protocols have been developed with Eclipse IDE. This section explains how to prepare the developing environment, once Eclipse and Java JDK are correctly installed.
 
@@ -71,7 +72,7 @@ We recommend to show packages in hierarchical order in *Package explorer* tab. O
 
 *Git Staging* and *Git Repositories* tabs can also be shown to check periodically if a new version of ArduSim has been released.
 
-## 2.2 IntelliJ IDE integration
+###2.2 IntelliJ IDE integration
 
 In IntelliJ go to File --> New --> Project from Version Control.
 
@@ -82,13 +83,13 @@ Now copy the following URI in the configuration window.
 If asked for a project configuration open as Maven project. Give IntelliJ some time to import everything continue with this guide before running Main.java
 
 
-## 3 Running ArduSim
+##3 running arduSim
         
-### 3.1 Checking necesarry files
+###3.1 Checking necesarry files
 
 ArduSim uses SITL to simulate multicopters. If everything went right the two files: *arducopter* and *copter.parm* should be include in the project (inside of the folder ArduSim/target). However, if prefered (it might increase performance) the SITL can be installed and new files can be compiled (explained in section 4). If you put them in the target folder (ardusim/target*), ArduSim will automatically find them when running from the IDE, avoiding to manually select the *arducopter* file each time it is launched. On the other hand, if you run ArduSim from an executable *.jar* file, put both files in the same folder. This repository provides binaries for Windows (arducopter.exe) and Ubuntu (arducopter) 64bits, so you only need to compile them (see below) if you plan to use other systems.
 
-### 3.2 Setup for Windows
+###3.2 Setup for Windows
 
 The next steps must only be followed if you want to run ArduSim on Windows.
 
@@ -136,7 +137,7 @@ If any errors occur, please let us know and we will update this section. Possibl
         python -m pip install --user uavcan
 
 
-### 3.3 Starting Ardusim for the first time
+###3.3 Starting Ardusim for the first time
 If you are running on windows please first go to section 5.  
 
 Make sure to have at least Java-11 installed.
@@ -157,15 +158,15 @@ Several temporary files are generated when using ArduSim for simulations. Please
 Remember that ArduSim is a highly asynchronous application, and running it with a IDE in debugging mode could lead to an unexpected behavior of the application.
 
 
-## 4 Compilation to .jar
+##4 Compilation to .jar
 
 If you want to use ArduSim outside of the IDE, you have to complied a *.jar*. The project has been prepared to be compiled both as Java application, or as Maven project. The straightforward solution is to compile and export a runnable Jar file like any other Java project. You can also compile and deploy ArduSim with Maven, but we do not recommend that approach for two reasons: i) it requires advanced knowlegde, and ii) the contents of the folder target will be cleaned, removing the *arducopter* application instance that should be there for simulations, and even the *ardusim.ini* file provided. In order to avoid further problems, we suggest to store a copy of those files anywhere else (*arducopter* or *arducopter.exe*, depending on the running platform, *copter.parm*, and *ardusim.ini*).
 
-## 5 Compile your own SITL files
+##5 Compile your own SITL files
 
 ArduSim uses SITL to simulate multicopters. You can if prefered compile your own SITL files *arducopter* and *copter.parm* and possibly gain some performance. This is however, only for advanced users and not necesarry to run ArduSim. Below we give a guide on how to do so. We try to be up-to-date. If you have some problems, you can always go to (http://ardupilot.org/dev/docs/sitl-native-on-windows.html) for the newest information. Finally, ArduSim does not support all the versions of the ArduCopter SITL. At this moment we support up to version 4.0.0.
 
-### 5.1 Windows
+###5.1 Windows
 
 1. Download ArduPilot. This is the project which enables the user to compile a multicopter or other kinds of UAVs. In the terminal, input this lines:
 
@@ -187,7 +188,7 @@ ArduSim uses SITL to simulate multicopters. You can if prefered compile your own
 8. It is suggested (optional) to install [ImDisk Virtual Disk Driver](https://sourceforge.net/projects/imdisk-toolkit/) and run ArduCopter as Administrator in order to use a RAM Drive to store temporary files from the virtual multicopters. This setup speeds up the execution when running ArduSim on a computer with a slow hard drive.
 
 
-### 5.2 Linux
+###5.2 Linux
 
 The next steps must be followed in order to compile a multicopter. Alternatively, you can follow the instructions included in the [official web page](http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html), possibly more updated. All steps are done in the same terminal. The process is explained for Debian based sistems (Ubuntu, Mint...). For RPM based systems (CentOS, Fedora...) use *yum* installer and install manually the dependencies included in the script mentioned later on.
 The following steps are tested on Ubuntu 16.04 or Ubuntu 18.04. There are some (yet unsolved) bugs for Ubuntu 20.04, while we are working on sloving them we suggest to just use the binary files given in the repository (ArduCopter 3.5.7) and skip the following steps.  
@@ -254,7 +255,7 @@ The following steps are tested on Ubuntu 16.04 or Ubuntu 18.04. There are some (
 
     The command will start the compilation process, and when it finishes it should show a message like "IMU1 is using GPS", which means that the virtual copter is running. Then, use "Ctrl+C" to close the running program. The multicopter runnable file *arducopter* is located in *ardupilot/build/sitl/bin*. Copy that file, and also the file *ardupilot/Tools/autotest/default_params/copter.parm* to the target folder of the Eclipse project to finish the basic setup process. If you plan to execute ArduSim in a real multicopter, copy these two files and *ardusim.ini* from the root of the Eclipse project beside the *.jar* file.
 
-### 5.3 SITL setup in MacOS
+###5.3 SITL setup in MacOS
 
 The next steps must be followed in order to compile a multicopter in MacOS. Provided instructions use [Macports](https://www.macports.org/) or [Homebrew](https://brew.sh/) software repository systems to install dependencies. You have to chose which to use and install the corresponding package manager.
 
