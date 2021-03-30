@@ -50,6 +50,8 @@ public class ConfigDialogController {
     @FXML
     private TextField minScreenRedrawDistance;
     @FXML
+    private TextField simSpeedup;
+    @FXML
     private CheckBox arduCopterLogging;
     @FXML
     private CheckBox measureCPU;
@@ -180,6 +182,7 @@ public class ConfigDialogController {
         distanceThreshold.setTextFormatter(new TextFormatter<>(doubleFilter));
         altitudeThreshold.setTextFormatter(new TextFormatter<>(doubleFilter));
         windSpeed.setTextFormatter(new TextFormatter<>(doubleFilter));
+        simSpeedup.setTextFormatter(new TextFormatter<>(doubleFilter));
 
         minScreenRedrawDistance.setTextFormatter(new TextFormatter<>(integerFilter));
         bufferSize.setTextFormatter(new TextFormatter<>(integerFilter));

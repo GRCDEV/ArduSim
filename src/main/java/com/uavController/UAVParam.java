@@ -250,6 +250,7 @@ public class UAVParam {
 	public static final long ALL_PARAM_TIMEOUT = 3000;	// (ms) Timeout waiting all parameters to be loaded
 	public static final long VERSION_TIMEOUT = 5000; 	// (ms) Timeout waiting ArduCopter version to be read
 	public static AtomicReference<String> arducopterVersion = new AtomicReference<>();
+	public static double SIM_SPEEDUP = 1; // Speedup for ArduCopter 1 = realtime, 2 = 2x faster then realtime, 0.5 = 2x slower then realtime.
 	
 	// Potentiometer levels for the six flight modes configurable in the remote control (min, used, max)
 	public static final int[][] RC5_MODE_LEVEL = new int[][] {{0, 1000, 1230}, {1231, 1295, 1360},

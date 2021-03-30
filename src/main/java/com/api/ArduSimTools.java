@@ -91,6 +91,10 @@ public class ArduSimTools {
 	private static final EnumValue<MavCmd> NAV_LAND_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LAND);
 	private static final EnumValue<MavCmd> NAV_RETURN_TO_LAUNCH_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_RETURN_TO_LAUNCH);
 	private static final EnumValue<MavCmd> NAV_SPLINE_WAYPOINT_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_SPLINE_WAYPOINT);
+	/**
+	 * Arducopter Sim_speedup parameter: 1 = normal wall-clock time. e.g 5 = 5x realtime or 0.1 = 1/10th realtime
+	 */
+	private static String SIM_SPEEDUP;
 	
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
@@ -1515,7 +1519,7 @@ public class ArduSimTools {
 	public static void startVirtualUAVs(Pair<Location2DGeo, Double>[] location) {
 		
 		ArduSimTools.logGlobal(Text.STARTING_UAVS);
-		
+		SIM_SPEEDUP = Double.toString(UAVParam.SIM_SPEEDUP);
 		try {
 			// 1. Under Windows, first close the possible running SITL processes
 			if (Param.runningOperatingSystem == Param.OS_WINDOWS) {
@@ -1600,7 +1604,7 @@ public class ArduSimTools {
 								+ " --com.setup.sim-port-in " + udp1Port + " --com.setup.sim-port-out " + udp2Port + " --rc-in-port " + udp3Port
 								+ " --irlock-port " + irLockPort + " --disable-fgview --home "
 								+ location[i].getValue0().latitude + "," + location[i].getValue0().longitude
-								+ "," + UAVParam.initialAltitude + "," + (location[i].getValue1() / Math.PI * 180) + " --model + --speedup 1 --defaults "
+								+ "," + UAVParam.initialAltitude + "," + (location[i].getValue1() / Math.PI * 180) + " --model + --speedup " + SIM_SPEEDUP +" --defaults "
 								+ "/cygdrive/" + SimParam.paramPath.replace("\\", "/").replace(":", ""));
 					}
 				}
@@ -1629,7 +1633,7 @@ public class ArduSimTools {
 					commandLine.add("--model");
 					commandLine.add("+");
 					commandLine.add("--speedup");
-					commandLine.add("1");
+					commandLine.add(SIM_SPEEDUP);
 					commandLine.add("--defaults");
 					if (SimParam.usingRAMDrive) {
 						commandLine.add((new File(tempFolder, (new File(SimParam.paramPath)).getName())).getAbsolutePath());

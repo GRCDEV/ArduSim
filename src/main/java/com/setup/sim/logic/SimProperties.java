@@ -50,6 +50,7 @@ public class SimProperties {
     private boolean windEnabled;
     private int windDirection;
     private double windSpeed;
+    private double simSpeedup;
 
 
     public ResourceBundle readResourceGUI(){
@@ -155,6 +156,7 @@ public class SimProperties {
         if(distanceThreshold < 0){return false;}
         if(altitudeThreshold < 0){return false;}
         if(windDirection < 0){return false;}
+        if(simSpeedup <= 0){return false;}
         return !(windSpeed < UAVParam.WIND_THRESHOLD);
     }
     public Properties readResourceCLI(){
@@ -204,6 +206,7 @@ public class SimProperties {
         windEnabled = false;
         windDirection = 90;
         windSpeed = 0.5;
+        simSpeedup = 1.0;
     }
     public void createPropertiesFile(File f){
         // take the current parameters (intern in SimProperties) and write them to a file
@@ -274,6 +277,7 @@ public class SimProperties {
             Param.windDirection = Param.DEFAULT_WIND_DIRECTION;
             Param.windSpeed = Param.DEFAULT_WIND_SPEED;
         }
+        UAVParam.SIM_SPEEDUP = simSpeedup;
     }
     public boolean validateSpeedFile(File f){
         String path = f.getAbsolutePath();
