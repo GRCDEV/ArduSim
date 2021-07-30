@@ -1,24 +1,17 @@
 package com.protocols.muscop.logic;
 
 import com.api.*;
-import com.api.communications.CommLink;
-import com.api.masterslavepattern.MasterSlaveHelper;
-import com.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
+import com.api.communications.LowLevelCommLink;
 import com.api.pojo.location.WaypointSimplified;
 import com.esotericsoftware.kryo.io.Input;
 import com.protocols.muscop.gui.MuscopSimProperties;
-import com.protocols.muscop.pojo.Message;
-import com.uavController.UAVParam;
 import es.upv.grc.mapper.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.protocols.muscop.pojo.State.*;
 
 /** 
  * Thread used to listen for messages sent by other UAVs.
@@ -35,10 +28,8 @@ public class MUSCOPListenerThread extends Thread {
 	private GUI gui;
 	private byte[] inBuffer;
 	private Input input;
-	private CommLink link;
+	private LowLevelCommLink link;
 	private ArduSim ardusim;
-	private MasterSlaveHelper msHelper;
-	private SafeTakeOffHelper takeOffHelper;
 	private MUSCOPTalkerThread talker;
 	private Map<Long, Long> lastTimeUAV;
 	private List<Long> masterOrder;
@@ -46,7 +37,6 @@ public class MUSCOPListenerThread extends Thread {
 	private int numUAVs;
 	private boolean iAmCenter;
 	private Set<Long> reached;
-	private SafeTakeOffContext takeOff;
 	private List<WaypointSimplified> screenMission = null;
 	private final AtomicBoolean missionReceived = new AtomicBoolean();
 	private final AtomicInteger wpReachedSemaphore = new AtomicInteger();	// We start in waypoint 0
@@ -68,13 +58,10 @@ public class MUSCOPListenerThread extends Thread {
 		this.copter = API.getCopter(numUAV);
 		this.selfId = this.copter.getID();
 		this.gui = API.getGUI(numUAV);
-		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.inBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
-		this.link = CommLink.getCommLink(numUAV);
+		this.link = LowLevelCommLink.getCommLink(numUAV);
 		this.ardusim = API.getArduSim();
-		this.msHelper = this.copter.getMasterSlaveHelper();
-		this.isMaster = this.msHelper.isMaster();
-		this.takeOffHelper = this.copter.getSafeTakeOffHelper();
 
 		try {
 			this.atWaypointFile = new FileWriter(("atWaypoint.csv"),true);
@@ -86,6 +73,7 @@ public class MUSCOPListenerThread extends Thread {
 
 	@Override
 	public void run() {
+		/*
 		while (!ardusim.isAvailable()) {ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);}
 		while(!startSetup){ardusim.sleep(MuscopSimProperties.STATE_CHANGE_TIMEOUT);}
 		Location3DGeo[] selfMission = setup();
@@ -97,28 +85,31 @@ public class MUSCOPListenerThread extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		 */
 	}
 
 	
 	/** SETUP PHASE */
 	private Location3DGeo[] setup() {
 		/* START PHASE */
-		Map<Long, Location2DUTM> UAVsDetected = startPhase();
+		//Map<Long, Location2DUTM> UAVsDetected = startPhase();
 		
 		/* SHARE TAKE OFF DATA PHASE */
-		shareTakeOffDataPhase(UAVsDetected);
+		//shareTakeOffDataPhase(UAVsDetected);
 		
 		/* SHARE MISSION PHASE */
-		Location3DGeo[] selfMission = shareMission();
+		//Location3DGeo[] selfMission = shareMission();
 
 		/* TAKING OFF PHASE */
-		takingOff(takeOff);
+		//takingOff(takeOff);
 		
 		/* SETUP FINISHED PHASE */
-		setupFinishedPhase();
-		return selfMission;
+		//setupFinishedPhase();
+		//return selfMission;
+		return null;
 	}
-	
+
+	/*
 	private Map<Long, Location2DUTM> startPhase() {
 		gui.logUAV(MUSCOPText.START);
 		Map<Long, Location2DUTM> UAVsDetected = null;
@@ -299,12 +290,12 @@ public class MUSCOPListenerThread extends Thread {
 			}
 		}
 	}
+
 	
-	
-	/** FLY PHASE */
+	// FLY PHASE
 	
 	private Location2DUTM fly(Location3DGeo[] selfMission) {
-		/* COMBINED PHASE MOVE_TO_WP & WP_REACHED */
+		// COMBINED PHASE MOVE_TO_WP & WP_REACHED
 		iAmCenter = (masterOrder.get(0) == this.selfId);
 		if (iAmCenter) {
 			StringBuilder text = new StringBuilder("Master order: ");
@@ -325,10 +316,10 @@ public class MUSCOPListenerThread extends Thread {
 		}
 		
 		while (currentState.get() == FOLLOWING_MISSION) {
-			/* WP_REACHED PHASE */
+			// WP_REACHED PHASE
 			centerUAVFinalLocation = wpReached(selfMission, currentWP, centerUAVFinalLocation);
 			
-			/* MOVE_TO_WP PHASE */
+			// MOVE_TO_WP PHASE
 			currentWP = moveToWP(selfMission, currentWP);
 		}
 		return centerUAVFinalLocation;
@@ -439,7 +430,6 @@ public class MUSCOPListenerThread extends Thread {
 						lastTimeUAV.put(id, System.currentTimeMillis());
 					}
 				}
-				/*
 				if( (currentWP == 1 && iAmCenter && (destinationGeo.distance(copter.getLocationUTM()) < 200))){
 					System.out.println("kill master UAV with ID " + selfId);
 					copter.setFlightMode(FlightMode.LAND);
@@ -453,7 +443,7 @@ public class MUSCOPListenerThread extends Thread {
 					}
 					return -1;
 				}
-				 */
+
 			}
 			try {
 				goingToWaypointFile.write(selfId + ";" + currentWP + ";" + (System.currentTimeMillis()-start) + "\n");
@@ -492,16 +482,16 @@ public class MUSCOPListenerThread extends Thread {
 	}
 	
 	
-	/* LAND PHASE */
+	// LAND PHASE
 	
 	private void landProcedure(Location2DUTM centerUAVFinalLocation) {
-		/* MOVE TO LAND PHASE */
+		// MOVE TO LAND PHASE
 		moveToLand(takeOff, centerUAVFinalLocation);
 		
-		/* LANDING PHASE */
+		// LANDING PHASE
 		land();
 		
-		/* FINISH PHASE */
+		// FINISH PHASE
 		gui.logUAV(MUSCOPText.FINISH);
 		gui.updateProtocolState(MUSCOPText.FINISH);
 		gui.logVerboseUAV(MUSCOPText.LISTENER_FINISHED);
@@ -514,10 +504,10 @@ public class MUSCOPListenerThread extends Thread {
 			gui.logUAV(MUSCOPText.MOVE_TO_LAND);
 			gui.updateProtocolState(MUSCOPText.MOVE_TO_LAND);
 			gui.logVerboseUAV(MUSCOPText.LISTENER_WAITING);
-			/*
+			//
 			Location2DUTM landingLocation = takeOff.getFormationLanding().getLocation(takeOff.getFormationPosition(),
 					centerUAVFinalLocation, takeOff.getInitialYaw());
-					*/
+					//
 			//TODO never run this in real experiment
 			Location2DUTM landingLocation = centerUAVFinalLocation;
 
@@ -576,5 +566,5 @@ public class MUSCOPListenerThread extends Thread {
 		}
 	}
 
-	
+	*/
 }

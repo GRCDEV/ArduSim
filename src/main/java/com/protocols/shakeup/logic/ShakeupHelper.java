@@ -3,15 +3,15 @@ package com.protocols.shakeup.logic;
 
 import com.api.API;
 import com.api.ProtocolHelper;
-import com.api.formations.Formation;
-import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import com.api.swarm.formations.Formation;
+import com.api.swarm.formations.FormationFactory;
 import com.protocols.shakeup.pojo.Param;
 import com.protocols.shakeup.pojo.TargetFormation;
 import com.protocols.shakeup.pojo.Text;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2D;
 import es.upv.grc.mapper.Location2DGeo;
+import es.upv.grc.mapper.Location3D;
 import es.upv.grc.mapper.LocationNotReadyException;
 import org.javatuples.Pair;
 
@@ -43,12 +43,12 @@ public class ShakeupHelper extends ProtocolHelper {
 		//readIniFile("Shakeup_settings.ini");
 		int numUAVs = API.getArduSim().getNumUAVs();
 		Formation ground = FormationFactory.newFormation(Param.startLayout);
-		ground.init(numUAVs,Param.minDistance);
+		ground.init(numUAVs,Param.minDistance,10);
 		UAVParam.groundFormation.set(ground);
 		// Air and ground formation are the same
 		UAVParam.airFormation.set(ground);
 
-		API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(TakeOffAlgorithm.SIMPLIFIED.getName());
+		//API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(TakeOffAlgorithm.SIMPLIFIED.getName());
 		TargetFormation[] formations = new TargetFormation[Param.formations.length];
 		formations[0] = new TargetFormation(Param.endLayout.name(),numUAVs,Param.minDistance,0);
 		//TODO set for more formations
@@ -65,7 +65,7 @@ public class ShakeupHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		Location2D masterLocation = new Location2D(Param.masterInitialLatitude, Param.masterInitialLongitude);
+		Location3D masterLocation = new Location3D(Param.masterInitialLatitude, Param.masterInitialLongitude,0);
 		int numUAVs = API.getArduSim().getNumUAVs();
 		@SuppressWarnings("unchecked")
 		Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
@@ -73,7 +73,7 @@ public class ShakeupHelper extends ProtocolHelper {
 		double yaw = 0;
 		for(int i = 0;i<numUAVs;i++){
 			try {
-				startingLocation[i] = new Pair<>(f.get2DUTMLocation(masterLocation.getUTMLocation(),i).getGeo(),yaw);
+				startingLocation[i] = new Pair<>(f.get3DUTMLocation(masterLocation.getUTMLocation3D(),i).getGeo(),yaw);
 			} catch (LocationNotReadyException e) {
 				e.printStackTrace();
 				return null;

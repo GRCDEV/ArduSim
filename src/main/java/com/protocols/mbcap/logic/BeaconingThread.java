@@ -9,7 +9,7 @@ import com.api.ArduSim;
 import com.api.Copter;
 import com.api.GUI;
 import com.api.MissionHelper;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.protocols.mbcap.gui.MBCAPSimProperties;
 import com.protocols.mbcap.pojo.Beacon;
 import com.protocols.mbcap.pojo.MBCAPState;
@@ -39,7 +39,7 @@ public class BeaconingThread extends Thread {
 	private Map<Long, Location3DUTM> impactLocationUTM;
 	
 	private int numUAV; // UAV identifier, beginning from 0
-	private CommLink link;
+	private LowLevelCommLink link;
 	private byte[] outBuffer;
 	private Output output;
 	private byte[] message;
@@ -64,8 +64,8 @@ public class BeaconingThread extends Thread {
 		this.impactLocationUTM = MBCAPParam.impactLocationUTM[numUAV];
 		
 		this.numUAV = numUAV;
-		this.link = CommLink.getCommLink(numUAV);
-		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.link = LowLevelCommLink.getCommLink(numUAV);
+		this.outBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		this.copter = API.getCopter(numUAV);
 		this.selfID = this.copter.getID();

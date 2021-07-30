@@ -74,6 +74,8 @@ public class RemoteThread extends Thread {
 					altitude = copter.getAltitudeRelative();
 					if (!FollowMeTalkerThread.protocolStarted && altitude >= startingAltitude) {
 						FollowMeTalkerThread.protocolStarted = true;
+					}else{
+						System.out.println(altitude + ":" + startingAltitude);
 					}
 
 					if (!FollowMeTalkerThread.protocolStarted || altitude >= finalAltitude) {

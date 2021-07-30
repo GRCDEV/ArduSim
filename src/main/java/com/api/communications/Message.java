@@ -81,5 +81,4 @@ class Message implements Comparable<Message> {
 			return res;
 		}
 	}
-	
 }

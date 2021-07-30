@@ -1,16 +1,16 @@
 package com.protocols.muscop.gui;
 
 import com.api.API;
-import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
+import com.api.swarm.SwarmParam;
+import com.api.swarm.assignement.AssignmentAlgorithm;
+import com.api.swarm.formations.FormationFactory;
 import com.api.pojo.location.Waypoint;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location3DUTM;
 import com.api.ArduSimTools;
 import com.setup.Text;
 import com.api.MissionHelper;
-import com.api.formations.Formation;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import com.api.swarm.formations.Formation;
 import org.javatuples.Pair;
 
 import java.io.File;
@@ -28,7 +28,7 @@ public class MuscopSimProperties {
     public Formation groundFormation;
     public static int numberOfClusters = 3;
     public double groundMinDistance;
-    public TakeOffAlgorithm takeOffStrategy;
+    public AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgorithm;
     public Formation flyingFormation;
     public double flyingMinDistance;
     public double landingMinDistance;
@@ -105,8 +105,8 @@ public class MuscopSimProperties {
                     var.set(this, files);
                 }else if(type.contains("Formation")){
                     var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
-                }else if(type.contains("TakeOffAlgorithm")){
-                    var.set(this,TakeOffAlgorithm.getAlgorithm(value));
+                }else if(type.contains("assignmentStrategy")){
+                    var.set(this,AssignmentAlgorithm.AssignmentAlgorithms.valueOf(value));
                 }else{
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_STORE_PARAMETERS + type);
                     return false;
@@ -137,12 +137,12 @@ public class MuscopSimProperties {
     private void setSimulationParameters(){
         storeMissionFile(missionFile);
         UAVParam.groundFormation.set(groundFormation);
-        groundFormation.init(numUAVs,groundMinDistance);
+        groundFormation.init(numUAVs,groundMinDistance,0);
 
         UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance);
+        flyingFormation.init(numUAVs,flyingMinDistance,10);
 
-        TakeOffMasterDataListenerThread.selectedAlgorithm = takeOffStrategy;
+        SwarmParam.assignmentAlgorithm = assignmentAlgorithm;
     }
 
     public void storeMissionFile(List<File> selection) {

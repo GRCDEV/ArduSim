@@ -3,8 +3,8 @@ package com.protocols.mission.gui;
 import com.api.API;
 import com.api.ArduSimTools;
 import com.api.MissionHelper;
-import com.api.formations.Formation;
-import com.api.formations.FormationFactory;
+import com.api.swarm.formations.Formation;
+import com.api.swarm.formations.FormationFactory;
 import com.api.pojo.location.Waypoint;
 import com.setup.Text;
 import com.uavController.UAVParam;
@@ -98,7 +98,7 @@ public class MissionSimProperties {
     private void setSimulationParameters(){
         storeMissionFile(missionFile);
         UAVParam.groundFormation.set(formation);
-        formation.init(API.getArduSim().getNumUAVs(),minDistance);
+        formation.init(API.getArduSim().getNumUAVs(),minDistance,10);
 
     }
 

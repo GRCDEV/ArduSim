@@ -6,7 +6,7 @@ import com.esotericsoftware.kryo.io.Output;
 import com.api.ArduSim;
 import com.api.Copter;
 import com.api.GUI;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.protocols.shakeup.pojo.Param;
 
 import java.util.Arrays;
@@ -40,7 +40,7 @@ public abstract class State {
 		this.ardusim = API.getArduSim(); 
 		
 		acknowledged = new HashSet<Long>();
-		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.outBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 	}
 	

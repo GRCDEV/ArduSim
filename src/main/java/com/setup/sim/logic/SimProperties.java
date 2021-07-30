@@ -2,7 +2,7 @@ package com.setup.sim.logic;
 
 import com.api.API;
 import com.api.ArduSimTools;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.api.communications.CommLinkObjectSimulation;
 import com.api.communications.RangeCalculusThread;
 import com.api.communications.WirelessModel;
@@ -150,7 +150,7 @@ public class SimProperties {
                 screenRefreshRate > SimParam.MAX_SCREEN_UPDATE_PERIOD){return false;}
         if(minScreenRedrawDistance < 0 || minScreenRedrawDistance >= SimParam.MIN_SCREEN_MOVEMENT_UPPER_THRESHOLD){return false;}
         if(batteryCapacity <0 || batteryCapacity > UAVParam.VIRT_BATTERY_MAX_CAPACITY){return false;}
-        if(bufferSize < 0 || bufferSize < CommLink.DATAGRAM_MAX_LENGTH){return false;}
+        if(bufferSize < 0 || bufferSize < LowLevelCommLink.DATAGRAM_MAX_LENGTH){return false;}
         if(fixedRangeDistance < 0 || fixedRangeDistance >= Param.FIXED_MAX_RANGE){return false;}
         if(checkPeriod < 0){return false;}
         if(distanceThreshold < 0){return false;}

@@ -8,7 +8,7 @@ import es.upv.grc.mapper.Location3DGeo;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.common.GlobalPositionInt;
 import com.api.CopterParamLoaded;
-import com.api.formations.Formation;
+import com.api.swarm.formations.Formation;
 
 import java.util.List;
 import java.util.Map;

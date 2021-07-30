@@ -1,7 +1,7 @@
 package com.protocols.shakeup.pojo;
 
-import com.api.formations.Formation;
-import com.api.formations.FormationFactory;
+import com.api.swarm.formations.Formation;
+import com.api.swarm.formations.FormationFactory;
 
 public class TargetFormation {
 
@@ -15,7 +15,7 @@ public class TargetFormation {
 		this.minDistance = minDistance;
 		this.heading = heading;
 		this.f = FormationFactory.newFormation(Formation.Layout.valueOf(name));
-		this.f.init(numUAVs,this.minDistance);
+		this.f.init(numUAVs,this.minDistance,10);
 	}
 	
 	public String getName() {

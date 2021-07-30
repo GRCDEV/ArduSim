@@ -1,19 +1,15 @@
 package com.protocols.followme.logic;
 
 import com.api.*;
-import com.api.communications.CommLink;
-import com.api.masterslavepattern.MasterSlaveHelper;
-import com.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
+import com.api.communications.LowLevelCommLink;
+import com.api.swarm.Swarm;
+import com.api.swarm.SwarmParam;
+import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.esotericsoftware.kryo.io.Input;
 import com.protocols.followme.pojo.Message;
-import com.setup.Param;
-import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.*;
-
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import static com.protocols.followme.pojo.State.*;
 
 /** Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain). */
@@ -26,12 +22,10 @@ public class FollowMeListenerThread extends Thread {
 	private long selfId;
 	private boolean isMaster;
 	private Copter copter;
-	private MasterSlaveHelper msHelper;
-	private SafeTakeOffHelper takeOffHelper;
 	private GUI gui;
 	private ArduSim ardusim;
 	
-	private CommLink link;
+	private LowLevelCommLink link;
 	byte[] inBuffer;
 	Input input;
 
@@ -44,99 +38,62 @@ public class FollowMeListenerThread extends Thread {
 		this.numUAV = numUAV;
 		this.copter = API.getCopter(numUAV);
 		this.selfId = this.copter.getID();
-		this.msHelper = this.copter.getMasterSlaveHelper();
-		this.isMaster = this.msHelper.isMaster();
-		this.takeOffHelper = this.copter.getSafeTakeOffHelper();
 		this.gui = API.getGUI(numUAV);
-		this.link = CommLink.getCommLink(numUAV);
-		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.link = LowLevelCommLink.getCommLink(numUAV);
+		this.inBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 		this.ardusim = API.getArduSim();
+		this.isMaster = numUAV == SwarmParam.masterId;
 	}
 
 	@Override
 	public void run() {
-		while (!ardusim.isAvailable()) {
+		while (!(ardusim.isAvailable() && ardusim.isSetupInProgress())) {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
-		
-		// START PHASE
+
 		gui.logUAV(FollowMeText.START);
-		// Let the master detect slaves until the setup button is pressed
-		Map<Long, Location2DUTM> UAVsDetected = null;
-		if (this.isMaster) {
-			gui.logVerboseUAV(FollowMeText.SLAVE_START_LISTENER);
-			final AtomicInteger totalDetected = new AtomicInteger();
-			UAVsDetected = msHelper.DiscoverSlaves(numUAVs -> {
-				// Just for logging purposes
-				if (numUAVs > totalDetected.get()) {
-					totalDetected.set(numUAVs);
-					gui.log(FollowMeText.MASTER_DETECTED_UAVS + numUAVs);
-				}
-				// We decide to continue when the setup button is pressed
-				return numUAVs == API.getArduSim().getNumUAVs() - 1;
-			});
-		} else {
-			gui.logVerboseUAV(FollowMeText.LISTENER_WAITING);
-			msHelper.DiscoverMaster();
-		}
+		Swarm swarm =  new Swarm.Builder(copter.getID())
+				.assignmentAlgorithm(SwarmParam.assignmentAlgorithm)
+				.airFormationLayout(UAVParam.airFormation.get().getLayout(),30)
+				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUSLY)
+				.build();
 
-		while(Param.simStatus != Param.SimulatorState.SETUP_IN_PROGRESS){
-			ardusim.sleep(SimParam.SHORT_WAITING_TIME);
-		}
-
-		/* TAKE OFF PHASE */
-		currentState.set(TAKE_OFF);
-		gui.logUAV(FollowMeText.SETUP);
-		gui.updateProtocolState(FollowMeText.SETUP);
-		// 1. Synchronize master with slaves to get the takeoff sequence in the take off context object
-		SafeTakeOffContext takeOff;
-		if (this.isMaster) {
-			double formationYaw;
-			if (ardusim.getArduSimRole() == ArduSim.MULTICOPTER) {
-				formationYaw = copter.getHeading();
-			} else {
-				formationYaw = FollowMeParam.masterInitialYaw;
-			}
-			takeOff = takeOffHelper.getMasterContext(UAVsDetected,
-					UAVParam.airFormation.get(),
-					formationYaw, FollowMeParam.slavesStartingAltitude, true, true);
-		} else {
-			takeOff = takeOffHelper.getSlaveContext(false);
-		}
-		gui.logUAV("ready to takeOff");
-		// 2. Take off all the UAVs
-		takeOffHelper.start(takeOff, () -> currentState.set(SETUP_FINISHED));
-		while (currentState.get() < SETUP_FINISHED) {
+		while (!ardusim.isExperimentInProgress()){
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
-		
-		/* SETUP FINISHED PHASE */
+
+		// TAKE OFF PHASE
+		currentState.set(TAKE_OFF);
+		gui.logUAV(FollowMeText.TAKE_OFF);
+		gui.updateProtocolState(FollowMeText.TAKE_OFF);
+		swarm.takeOff(numUAV);
+		currentState.set(SETUP_FINISHED);
+
+		// SETUP FINISHED PHASE
 		gui.logUAV(FollowMeText.SETUP_FINISHED);
 		gui.updateProtocolState(FollowMeText.SETUP_FINISHED);
 		gui.logVerboseUAV(FollowMeText.LISTENER_WAITING);
-		while (currentState.get() == SETUP_FINISHED) {
-			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
-			// Coordination with ArduSim
-			if (ardusim.isExperimentInProgress()) {
-				currentState.set(FOLLOWING);
-			}
-		}
-		
-		/* FOLLOWING PHASE */
+
+		// FOLLOWING PHASE
+		currentState.set(FOLLOWING);
 		gui.logUAV(FollowMeText.FOLLOWING);
 		gui.updateProtocolState(FollowMeText.FOLLOWING);
 		long waitingTime;
+
 		if (this.isMaster) {
+			Thread remote = new RemoteThread(numUAV);
+			remote.start();
 			new FollowMeTalkerThread(numUAV).start();
-			// Wait until the master UAV descends below a threshold (in the remote thread)
-			while (currentState.get() == FOLLOWING) {
-				ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
+			try {
+				remote.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		} else {
 			gui.logVerboseUAV(FollowMeText.SLAVE_WAIT_ORDER_LISTENER);
-			Location2DUTM masterLocation;
-			Location2DGeo targetLocation = null;
+			Location3DUTM masterLocation;
+			Location3DGeo targetLocation = null;
 			Location3D targetLocationLanding = null;
 			while (currentState.get() == FOLLOWING) {
 				inBuffer = link.receiveMessage();
@@ -145,12 +102,11 @@ public class FollowMeListenerThread extends Thread {
 					short type = input.readShort();
 					
 					if (type == Message.I_AM_HERE){
-						masterLocation = new Location2DUTM(input.readDouble(), input.readDouble());
-						double relAltitude = input.readDouble();
+						masterLocation = new Location3DUTM(new Location2DUTM(input.readDouble(), input.readDouble()),input.readDouble());
 						double yaw = input.readDouble();
 						try {
-							targetLocation = takeOff.getFormationFlying().get2DUTMLocation(masterLocation,takeOff.getFormationPosition()).getGeo();
-							copter.moveTo(new Location3DGeo(targetLocation, relAltitude));
+							targetLocation = UAVParam.airFormation.get().get3DUTMLocation(masterLocation,numUAV).getGeo3D();
+							copter.moveTo(targetLocation);
 						} catch (LocationNotReadyException e) {
 							gui.log(e.getMessage());
 							e.printStackTrace();
@@ -160,9 +116,9 @@ public class FollowMeListenerThread extends Thread {
 					}
 					
 					if (type == Message.LAND) {
-						Location2DUTM centerUAVFinalLocation = new Location2DUTM(input.readDouble(), input.readDouble());
+						Location3DUTM centerUAVFinalLocation = new Location3DUTM(new Location2DUTM(input.readDouble(), input.readDouble()),0);//TODO send z
 						double yaw = input.readDouble();
-						Location2DUTM landingLocationUTM = UAVParam.groundFormation.get().get2DUTMLocation(centerUAVFinalLocation,takeOff.getFormationPosition());
+						Location2DUTM landingLocationUTM = UAVParam.groundFormation.get().get3DUTMLocation(centerUAVFinalLocation,numUAV);
 						try {
 							targetLocationLanding = new Location3D(landingLocationUTM, copter.getAltitudeRelative());
 							currentState.set(MOVE_TO_LAND);
@@ -226,6 +182,5 @@ public class FollowMeListenerThread extends Thread {
 		gui.updateProtocolState(FollowMeText.FINISH);
 		gui.logVerboseUAV(FollowMeText.LISTENER_FINISHED);
 	}
-	
-	
+
 }

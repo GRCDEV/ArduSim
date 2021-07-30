@@ -2,19 +2,19 @@ package com.protocols.shakeup.logic;
 
 import com.api.API;
 import com.api.ArduSim;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.protocols.shakeup.pojo.Param;
 
 public class ShakeupTalkerThread extends Thread{
 	
 	private final ArduSim ardusim;
-	private final CommLink link;
+	private final LowLevelCommLink link;
 	private volatile com.protocols.shakeup.logic.state.State currentState;
 	private final int selfId;
 	
 	public ShakeupTalkerThread(int numUAV) {
 		this.ardusim = API.getArduSim();
-		this.link = CommLink.getCommLink(numUAV);
+		this.link = LowLevelCommLink.getCommLink(numUAV);
 		this.selfId = numUAV;
 	}
 	

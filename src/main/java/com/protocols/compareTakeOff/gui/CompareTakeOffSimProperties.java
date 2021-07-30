@@ -1,11 +1,11 @@
 package com.protocols.compareTakeOff.gui;
 
 import com.api.ArduSimTools;
-import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
+import com.api.swarm.SwarmParam;
+import com.api.swarm.assignement.AssignmentAlgorithm;
 import com.setup.Text;
-import com.api.formations.Formation;
-import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import com.api.swarm.formations.Formation;
+import com.api.swarm.formations.FormationFactory;
 import com.uavController.UAVParam;
 
 import java.io.File;
@@ -20,7 +20,7 @@ public class CompareTakeOffSimProperties {
     public static Formation groundFormation;
     public static int numberOfClusters = 3;
     public double groundMinDistance;
-    public static TakeOffAlgorithm takeOffStrategy;
+    public static AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgorithm;
     public static Formation flyingFormation;
     public double flyingMinDistance;
     public double landingMinDistance;
@@ -87,8 +87,8 @@ public class CompareTakeOffSimProperties {
                     var.set(this, files);
                 }else if(type.contains("Formation")){
                     var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
-                }else if(type.contains("TakeOffAlgorithm")){
-                    var.set(this,TakeOffAlgorithm.getAlgorithm(value));
+                }else if(type.contains("AssignmentAlgorithms")){
+                    var.set(this, AssignmentAlgorithm.AssignmentAlgorithms.valueOf(value));
                 }else{
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_STORE_PARAMETERS + type);
                     return false;
@@ -117,11 +117,11 @@ public class CompareTakeOffSimProperties {
 
     private void setSimulationParameters(){
         UAVParam.groundFormation.set(groundFormation);
-        groundFormation.init(numUAVs,groundMinDistance);
+        groundFormation.init(numUAVs,groundMinDistance,0);
 
         UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance);
+        flyingFormation.init(numUAVs,flyingMinDistance,altitude);
 
-        TakeOffMasterDataListenerThread.selectedAlgorithm = takeOffStrategy;
+        SwarmParam.assignmentAlgorithm = assignmentAlgorithm;
     }
 }

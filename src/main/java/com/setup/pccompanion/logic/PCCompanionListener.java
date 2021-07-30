@@ -7,7 +7,7 @@ import com.api.ArduSimTools;
 import com.setup.Param;
 import com.setup.Param.SimulatorState;
 import com.setup.Text;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.setup.pccompanion.gui.PCCompanionGUI;
 
 import javax.swing.*;
@@ -30,7 +30,7 @@ public class PCCompanionListener extends Thread {
 	@Override
 	public void run() {
 		DatagramSocket receiveSocket = null;
-		byte[] receivedBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		byte[] receivedBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		DatagramPacket receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
 		Input input = new Input(receivedBuffer);
 		try {
@@ -132,7 +132,7 @@ public class PCCompanionListener extends Thread {
 					time = time + PCCompanionParam.STATUS_CHANGE_CHECK_TIMEOUT;
 				}
 			} catch (KryoException | IOException e) {}
-			receivedBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+			receivedBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 			receivedPacket.setData(receivedBuffer, 0, receivedBuffer.length);
 		}
 		input.close();

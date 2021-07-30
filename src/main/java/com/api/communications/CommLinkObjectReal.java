@@ -47,13 +47,13 @@ public class CommLinkObjectReal implements InterfaceCommLinkObject {
         try {
             sendSocket = new DatagramSocket();
             sendSocket.setBroadcast(true);
-            sendPacket = new DatagramPacket(new byte[CommLink.DATAGRAM_MAX_LENGTH],
-                    CommLink.DATAGRAM_MAX_LENGTH,
+            sendPacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH],
+                    LowLevelCommLink.DATAGRAM_MAX_LENGTH,
                     InetAddress.getByName(UAVParam.broadcastIP),
                     port);
             receiveSocket = new DatagramSocket(port);
             receiveSocket.setBroadcast(true);
-            receivePacket = new DatagramPacket(new byte[CommLink.DATAGRAM_MAX_LENGTH], CommLink.DATAGRAM_MAX_LENGTH);
+            receivePacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH], LowLevelCommLink.DATAGRAM_MAX_LENGTH);
         } catch (SocketException | UnknownHostException e) {
             ArduSimTools.closeAll(Text.THREAD_START_ERROR);
         }
@@ -81,7 +81,7 @@ public class CommLinkObjectReal implements InterfaceCommLinkObject {
      */
     @Override
     public byte[] receiveMessage(int numUAV,int socketTimeout) {
-        receivePacket.setData(new byte[CommLink.DATAGRAM_MAX_LENGTH], 0, CommLink.DATAGRAM_MAX_LENGTH);
+        receivePacket.setData(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH], 0, LowLevelCommLink.DATAGRAM_MAX_LENGTH);
         try {
             if (socketTimeout > 0) {
                 receiveSocket.setSoTimeout(socketTimeout);

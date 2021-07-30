@@ -2,7 +2,7 @@ package com.setup.arduSimSetup;
 
 import com.api.ArduSim;
 import com.api.ArduSimTools;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.api.communications.RangeCalculusThread;
 import com.setup.InitialConfiguration2Thread;
 import com.setup.Param;
@@ -159,7 +159,7 @@ public class ArduSimSetupSimulator extends ArduSimSetup{
     protected void closeVirtualCommunications(){
         if (Param.numUAVs > 1) {
             ArduSimTools.logGlobal(Text.SHUTTING_DOWN_COMM);
-            CommLink.close();
+            LowLevelCommLink.close();
         }
         if (Param.role == ArduSim.SIMULATOR_GUI) {
             ArduSimTools.logGlobal(Text.WAITING_FOR_USER);

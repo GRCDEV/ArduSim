@@ -4,7 +4,7 @@ import com.api.API;
 import com.api.ArduSim;
 import com.api.Copter;
 import com.api.GUI;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.esotericsoftware.kryo.io.Output;
 import com.protocols.followme.pojo.Message;
 import es.upv.grc.mapper.Location2DUTM;
@@ -23,7 +23,7 @@ public class FollowMeTalkerThread extends Thread {
 	private Copter copter;
 	private GUI gui;
 	private ArduSim ardusim;
-	private CommLink link;
+	private LowLevelCommLink link;
 	private byte[] outBuffer;
 	private Output output;
 	private byte[] message;
@@ -42,8 +42,8 @@ public class FollowMeTalkerThread extends Thread {
 		this.ardusim = API.getArduSim();
 		this.copter = API.getCopter(numUAV);
 		this.gui = API.getGUI(numUAV);
-		this.link = CommLink.getCommLink(numUAV);
-		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.link = LowLevelCommLink.getCommLink(numUAV);
+		this.outBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
 		
 		this.cicleTime = 0;

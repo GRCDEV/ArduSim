@@ -2,8 +2,8 @@ package com.protocols.muscop.gui;
 
 import com.api.API;
 import com.api.ArduSimTools;
-import com.api.formations.Formation;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import com.api.swarm.assignement.AssignmentAlgorithm;
+import com.api.swarm.formations.Formation;
 import com.setup.Param;
 import com.setup.Text;
 import javafx.application.Platform;
@@ -72,7 +72,7 @@ public class MuscopConfigDialogController {
 
         groundMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 
-        takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
+        takeOffStrategy.setItems(FXCollections.observableArrayList(FXCollections.observableArrayList(AssignmentAlgorithm.AssignmentAlgorithms.values().toString())));
         takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
 
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));

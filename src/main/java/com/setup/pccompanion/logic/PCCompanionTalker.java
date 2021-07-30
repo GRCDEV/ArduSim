@@ -8,7 +8,7 @@ import com.setup.Param;
 import com.setup.Param.SimulatorState;
 import com.setup.Text;
 import com.api.ArduSim;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.setup.pccompanion.gui.PCCompanionGUI;
 import com.uavController.UAVParam;
 
@@ -31,7 +31,7 @@ public class PCCompanionTalker extends Thread {
 		listener.start();
 		
 		DatagramSocket sendSocket = null;
-		byte[] sendBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		byte[] sendBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		String broadcastAddress;
 		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			broadcastAddress = UAVParam.MAV_NETWORK_IP;

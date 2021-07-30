@@ -1,6 +1,6 @@
 package com.api;
 
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.setup.Param;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -13,7 +13,7 @@ public class API {
 	
 	private static final ArduSim ardusim = new ArduSim();
 	
-	private static volatile AtomicReferenceArray<CommLink> publicCommLink = null;
+	private static volatile AtomicReferenceArray<LowLevelCommLink> publicCommLink = null;
 	private static final Object lockComm = new Object();
 	
 	private static volatile AtomicReferenceArray<Copter> copter = null;

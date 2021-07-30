@@ -1,7 +1,9 @@
 package com.protocols.compareTakeOff.gui;
 
+import com.api.swarm.assignement.AssignmentAlgorithm;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -11,9 +13,7 @@ import javafx.stage.Stage;
 import com.api.ArduSimTools;
 import com.setup.Param;
 import com.setup.Text;
-import com.api.formations.Formation;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
-
+import com.api.swarm.formations.Formation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -31,7 +31,7 @@ public class CompareTakeOffDialogController {
     @FXML
     private TextField groundMinDistance;
     @FXML
-    private ChoiceBox<String> takeOffStrategy;
+    private ChoiceBox<String> assignmentAlgorithm;
     @FXML
     private ChoiceBox<String> flyingFormation;
     @FXML
@@ -57,8 +57,12 @@ public class CompareTakeOffDialogController {
 
         groundMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 
-        takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
-        takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
+        ObservableList<String> list = FXCollections.observableArrayList();
+        for(AssignmentAlgorithm.AssignmentAlgorithms algo: AssignmentAlgorithm.AssignmentAlgorithms.values()){
+            list.add(algo.name());
+        }
+        assignmentAlgorithm.setItems(list);
+        assignmentAlgorithm.getSelectionModel().select(resources.getString("assignmentAlgorithm"));
 
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation").toUpperCase());
 

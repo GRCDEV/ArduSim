@@ -1,7 +1,6 @@
 package com.api;
 
 import com.api.hiddenFunctions.HiddenFunctions;
-import com.api.masterslavepattern.MasterSlaveHelper;
 import com.setup.Param;
 import com.setup.Text;
 import org.javatuples.Quintet;
@@ -13,9 +12,6 @@ import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3D;
 import es.upv.grc.mapper.Location3DGeo;
-import com.api.ArduSimTools;
-import com.setup.Param;
-import com.setup.Text;
 import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
 
@@ -27,8 +23,6 @@ public class Copter {
 	private ArduSim ardusim;
 	private int numUAV;
 	private MissionHelper missionHelper;
-	private MasterSlaveHelper msHelper;
-	private SafeTakeOffHelper takeOffHelper;
 	
 	@SuppressWarnings("unused")
 	private Copter() {}
@@ -37,8 +31,6 @@ public class Copter {
 		this.numUAV = numUAV;
 		this.ardusim = API.getArduSim();
 		this.missionHelper = new MissionHelper(numUAV, this);
-		this.msHelper = new MasterSlaveHelper(numUAV);
-		this.takeOffHelper = new SafeTakeOffHelper(numUAV);
 	}
 	
 	/**
@@ -248,15 +240,7 @@ public class Copter {
 			return 2.5;
 		}
 	}
-	
-	/**
-	 * Get additional functions to use the master-slave pattern in the coordination protocol.
-	 * @return Context needed to interact using the master-slave pattern.
-	 */
-	public MasterSlaveHelper getMasterSlaveHelper() {
-		return this.msHelper;
-	}
-	
+
 	/**
 	 * Get additional functions to interact with the UAV to follow planned missions.
 	 * @return Context needed to use commands related to missions.
@@ -301,15 +285,7 @@ public class Copter {
 	public double getPlannedSpeed() {
 		return UAVParam.initialSpeeds[numUAV];
 	}
-	
-	/**
-	 * Get additional functions to perform a coordinated take off that avoids collisions among multicopters. The take off strategy is based on the master-slave pattern, where the master UAV gathers data and coordinates the process. Later, the UAVs take off one by one avoiding collisions when possible.
-	 * @return Context needed to perform a safe take off.
-	 */
-	public SafeTakeOffHelper getSafeTakeOffHelper() {
-		return this.takeOffHelper;
-	}
-	
+
 	/**
 	 * Get the latest ground speed received from the flight controller.
 	 * @return (m/s) Current ground speed.

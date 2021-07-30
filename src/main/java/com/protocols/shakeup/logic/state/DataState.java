@@ -3,8 +3,6 @@ package com.protocols.shakeup.logic.state;
 import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DUTM;
-import com.api.masterslavepattern.safeTakeOff.MatchCalculusThread;
-import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
 import org.javatuples.Quartet;
 import com.protocols.shakeup.logic.ShakeupListenerThread;
 import com.protocols.shakeup.pojo.Param;
@@ -42,12 +40,12 @@ public class DataState extends State{
 			
 			// calculate the next position of all the UAVs with the use of the safeTakeOff algorithm
 			// set to takeoff algorithm to RANDOM or to SIMPLIFIED
-			TakeOffMasterDataListenerThread.selectedAlgorithm = Param.TAKE_OFF_ALGORITHM;
-			MatchCalculusThread mCT = new MatchCalculusThread(UAVLocations2D, targetFormation.getFlightFormation(),targetFormation.getHeading(), (long)selfId);	
-			mCT.start();
-			while (mCT.isAlive()) {ardusim.sleep(Param.WAITING_TIME);}
-			Quartet<Integer, Long, Location2DUTM, Double>[] calculateData = mCT.getResult();
-			
+			// TakeOffMasterDataListenerThread.selectedAlgorithm = Param.TAKE_OFF_ALGORITHM;
+			// MatchCalculusThread mCT = new MatchCalculusThread(UAVLocations2D, targetFormation.getFlightFormation(),targetFormation.getHeading(), (long)selfId);
+			// mCT.start();
+			// while (mCT.isAlive()) {ardusim.sleep(Param.WAITING_TIME);}
+			//Quartet<Integer, Long, Location2DUTM, Double>[] calculateData = mCT.getResult();
+			Quartet<Integer, Long, Location2DUTM, Double>[] calculateData = null;
 			
 			for (int i = 0; i < calculateData.length; i++) {
 				long id = calculateData[i].getValue1();

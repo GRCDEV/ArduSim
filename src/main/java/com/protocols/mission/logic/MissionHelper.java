@@ -1,17 +1,14 @@
 package com.protocols.mission.logic;
 
 import com.api.*;
-import com.api.formations.Formation;
+import com.api.swarm.formations.Formation;
 import com.api.pojo.location.Waypoint;
 import com.protocols.mission.gui.MissionDialogApp;
 import com.protocols.mission.gui.MissionSimProperties;
 import com.setup.Text;
 import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.Location2DUTM;
-import es.upv.grc.mapper.Location3D;
-import es.upv.grc.mapper.LocationNotReadyException;
+import es.upv.grc.mapper.*;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.javatuples.Pair;
@@ -80,12 +77,12 @@ public class MissionHelper extends ProtocolHelper {
 		com.api.MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
 		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();
 		// missions[0].get(0) is somewhere in Africa
-		Location2DUTM start = missions[0].get(1).getUTM();
+		Location3DUTM start = new Location3DUTM(missions[0].get(1).getUTM(),0);
 		Formation f = UAVParam.groundFormation.get();
 		double yaw = 0;
 		for(int i = 0;i<numUAVs;i++){
 			try {
-				startingLocation[i] = new Pair<>(f.get2DUTMLocation(start,i).getGeo(),yaw);
+				startingLocation[i] = new Pair<>(f.get3DUTMLocation(start,i).getGeo(),yaw);
 			} catch (LocationNotReadyException e) {
 				e.printStackTrace();
 				return null;
@@ -142,7 +139,7 @@ public class MissionHelper extends ProtocolHelper {
 			for(int numUAV=0;numUAV<numUAVs;numUAV++) {
 				API.getGUI(numUAV).logUAV("Moving to WP: " + (wp_index-1));
 				try {
-					Location2DUTM locInSwarm = f.get2DUTMLocation(wp.getUTM(),numUAV);
+					Location2DUTM locInSwarm = f.get3DUTMLocation(new Location3DUTM(wp.getUTM(),0),numUAV);
 					Location3D loc = new Location3D(locInSwarm.getGeo(),10);
 					Thread t = API.getCopter(numUAV).moveTo(loc, new MoveToListener() {
 						@Override

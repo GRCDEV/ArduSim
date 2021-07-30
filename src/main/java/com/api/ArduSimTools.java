@@ -1,12 +1,11 @@
 package com.api;
 
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.api.cpuHelper.CPUData;
-import com.api.formations.Formation;
-import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.MSParam;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
-import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
+import com.api.swarm.SwarmParam;
+import com.api.swarm.assignement.AssignmentAlgorithm;
+import com.api.swarm.formations.Formation;
+import com.api.swarm.formations.FormationFactory;
 import com.api.pojo.AtomicDoubleArray;
 import com.api.pojo.ConcurrentBoundedQueue;
 import com.api.pojo.CopterParam;
@@ -238,10 +237,10 @@ public class ArduSimTools {
 			// Master-slave parameters
 			param = parameters.get(Param.MACS);
 			if (param == null) {
-				ArduSimTools.logGlobal(Param.MACS + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + Arrays.toString(MSParam.macAddresses) + " / " + Arrays.toString(MSParam.macIDs));
+				ArduSimTools.logGlobal(Param.MACS + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + Arrays.toString(SwarmParam.macAddresses) + " / " + Arrays.toString(SwarmParam.macIDs));
 			} else {
 				String[] macs = param.split(",");
-				MSParam.macAddresses = macs;
+				SwarmParam.macAddresses = macs;
 				
 				long[] ids = new long[macs.length];
 				for (int i = 0; i < macs.length; i++) {
@@ -252,7 +251,7 @@ public class ArduSimTools {
 					}
 					ids[i] = Long.parseUnsignedLong(macs[i], 16);
 				}
-				MSParam.macIDs = ids;
+				SwarmParam.macIDs = ids;
 			}
 			
 			// ArduSim-UAV communication parameters
@@ -307,22 +306,21 @@ public class ArduSimTools {
 		// Parse remaining parameters, for real UAV or simulation
 		
 		// Master-slave parameters
-		param = parameters.get(Param.TAKEOFF_ALGORITHM);
+		param = parameters.get(Param.ASSIGNMENT_ALGORITHM);
 		if (param == null) {
-			ArduSimTools.logGlobal(Param.TAKEOFF_ALGORITHM + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + TakeOffMasterDataListenerThread.selectedAlgorithm.getName());
+			ArduSimTools.logGlobal(Param.ASSIGNMENT_ALGORITHM + " " + Text.INI_FILE_PARAM_NOT_FOUND_ERROR_1 + " " + SwarmParam.assignmentAlgorithm);
 		} else {
-			TakeOffAlgorithm[] algorithms = TakeOffAlgorithm.values();
-			TakeOffAlgorithm algorithm = null;
-			for (int i = 0; i < algorithms.length && algorithm == null; i++) {
-				if (param.equalsIgnoreCase(algorithms[i].getName())) {
-					algorithm = algorithms[i];
+			AssignmentAlgorithm.AssignmentAlgorithms algorithm = null;
+			for(AssignmentAlgorithm.AssignmentAlgorithms algo: AssignmentAlgorithm.AssignmentAlgorithms.values()){
+				if (param.equalsIgnoreCase(algo.name())) {
+					algorithm = algo;
 				}
 			}
 			if (algorithm == null) {
-				ArduSimTools.logGlobal(Param.TAKEOFF_ALGORITHM + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
+				ArduSimTools.logGlobal(Param.ASSIGNMENT_ALGORITHM + " " + Text.INI_FILE_PARAM_NOT_VALID_ERROR + " " + param);
 				System.exit(1);
 			}
-			TakeOffMasterDataListenerThread.selectedAlgorithm = algorithm;
+			SwarmParam.assignmentAlgorithm = algorithm;
 		}
 		
 		param = parameters.get(Param.AIR_FORMATION);
@@ -2770,7 +2768,7 @@ public class ArduSimTools {
 		}
 		sb.append("\n").append(Text.UAV_PROTOCOL_USED).append(" ").append(ArduSimTools.selectedProtocol);
 		sb.append("\n").append(Text.COMMUNICATIONS);
-		sb.append(CommLink.getCommLink(0).toString());
+		sb.append(LowLevelCommLink.getCommLink(0).toString());
 		
 		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			sb.append("\n").append(Text.COLLISION_PARAMETERS);

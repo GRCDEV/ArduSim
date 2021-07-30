@@ -2,11 +2,11 @@ package com.protocols.followme.gui;
 
 import com.api.API;
 import com.api.ArduSimTools;
-import com.api.formations.FormationFactory;
-import com.api.masterslavepattern.safeTakeOff.TakeOffMasterDataListenerThread;
+import com.api.swarm.SwarmParam;
+import com.api.swarm.assignement.AssignmentAlgorithm;
+import com.api.swarm.formations.FormationFactory;
 import com.setup.Text;
-import com.api.formations.Formation;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import com.api.swarm.formations.Formation;
 import com.protocols.followme.logic.FollowMeParam;
 import com.protocols.followme.pojo.RemoteInput;
 import com.uavController.UAVParam;
@@ -27,7 +27,7 @@ public class FollowmeSimProperties {
     private double yaw;
     private Formation groundFormation;
     private double groundMinDistance;
-    private TakeOffAlgorithm takeOffStrategy;
+    private AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgorithm;
     private Formation  flyingFormation;
     private double flyingMinDistance;
     private double initialAltitude;
@@ -75,8 +75,8 @@ public class FollowmeSimProperties {
                     var.set(this, new File(API.getFileTools().getResourceFolder() + File.separator + value));
                 }else if(type.contains("Formation")){
                     var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
-                }else if(type.contains("TakeOffAlgorithm")){
-                    var.set(this,TakeOffAlgorithm.getAlgorithm(value));
+                }else if(type.contains("AssignmentAlgorithms")){
+                    var.set(this, AssignmentAlgorithm.AssignmentAlgorithms.valueOf(value));
                 }else{
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_STORE_PARAMETERS + type);
                     return false;
@@ -170,12 +170,11 @@ public class FollowmeSimProperties {
         FollowMeParam.masterInitialYaw = yaw * Math.PI / 180.0;
 
         UAVParam.groundFormation.set(groundFormation);
-        groundFormation.init(numUAVs,groundMinDistance);
+        groundFormation.init(numUAVs,groundMinDistance,initialAltitude);
         UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance);
-        TakeOffMasterDataListenerThread.selectedAlgorithm = takeOffStrategy;
+        flyingFormation.init(numUAVs,flyingMinDistance,10);
+        SwarmParam.assignmentAlgorithm = assignmentAlgorithm;
 
-        API.getCopter(0).getSafeTakeOffHelper().setTakeOffAlgorithm(takeOffStrategy.getName());
         FollowMeParam.slavesStartingAltitude = initialAltitude;
         FollowMeParam.masterSpeed = masterUAVSpeed;
         FollowMeParam.sendPeriod = masterLocationAdvisePeriod;

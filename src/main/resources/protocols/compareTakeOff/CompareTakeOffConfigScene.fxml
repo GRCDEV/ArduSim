@@ -64,12 +64,12 @@
         </HBox>
         <HBox prefHeight="30.0" prefWidth="200.0">
             <children>
-                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="200.0" text="Take off strategy:">
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefWidth="200.0" text="assignment Algorithm:">
                     <HBox.margin>
                         <Insets left="20.0" />
                     </HBox.margin>
                 </Label>
-                <ChoiceBox fx:id="takeOffStrategy" prefWidth="175.0">
+                <ChoiceBox fx:id="assignmentAlgorithm" prefWidth="175.0">
                     <HBox.margin>
                         <Insets left="10.0" />
                     </HBox.margin>

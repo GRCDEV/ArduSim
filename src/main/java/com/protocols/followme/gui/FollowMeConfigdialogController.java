@@ -2,13 +2,14 @@ package com.protocols.followme.gui;
 
 import com.api.API;
 import com.api.ArduSimTools;
-import com.api.formations.Formation;
-import com.api.masterslavepattern.safeTakeOff.TakeOffAlgorithm;
+import com.api.swarm.assignement.AssignmentAlgorithm;
+import com.api.swarm.formations.Formation;
 import com.protocols.followme.logic.FollowMeText;
 import com.setup.Param;
 import com.setup.Text;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -44,7 +45,7 @@ public class FollowMeConfigdialogController {
     @FXML
     private TextField groundMinDistance;
     @FXML
-    private ChoiceBox<String> takeOffStrategy;
+    private ChoiceBox<String> assignmentAlgorithm;
     @FXML
     private ChoiceBox<String> flyingFormation;
     @FXML
@@ -95,8 +96,12 @@ public class FollowMeConfigdialogController {
         }
         groundFormation.getSelectionModel().select(resources.getString("groundFormation").toUpperCase());
 
-        takeOffStrategy.setItems(FXCollections.observableArrayList(TakeOffAlgorithm.getAvailableAlgorithms()));
-        takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
+        ObservableList<String> list = FXCollections.observableArrayList();
+        for(AssignmentAlgorithm.AssignmentAlgorithms algo: AssignmentAlgorithm.AssignmentAlgorithms.values()){
+            list.add(algo.name());
+        }
+        assignmentAlgorithm.setItems(list);
+        assignmentAlgorithm.getSelectionModel().select(resources.getString("assignmentAlgorithm"));
 
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation").toUpperCase());
     }

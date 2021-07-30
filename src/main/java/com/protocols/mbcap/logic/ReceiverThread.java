@@ -5,7 +5,7 @@ import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.Location3DUTM;
 import com.api.ArduSim;
 import com.api.Copter;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.protocols.mbcap.pojo.Beacon;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import java.util.Map;
 public class ReceiverThread extends Thread {
 	
 	private int numUAV; // UAV identifier, beginning from 0
-	private CommLink link;
+	private LowLevelCommLink link;
 	byte[] inBuffer;
 	Input input;
 	private Copter copter;
@@ -30,8 +30,8 @@ public class ReceiverThread extends Thread {
 	public ReceiverThread(int numUAV) {
 		this.beacons = MBCAPParam.beacons[numUAV];
 		this.numUAV = numUAV;
-		this.link = CommLink.getCommLink(numUAV);
-		this.inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.link = LowLevelCommLink.getCommLink(numUAV);
+		this.inBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
 		this.copter = API.getCopter(numUAV);
 		this.ardusim = API.getArduSim();

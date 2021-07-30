@@ -35,7 +35,7 @@ public class FollowMeText {
 	
 	// Protocol states
 	public static final String START = "Start";							// Master UAV detects slaves
-	public static final String SETUP = "Setup";							// Safe take off of all the UAVs
+	public static final String TAKE_OFF = "Take off";						// Safe take off of all the UAVs
 	public static final String SETUP_FINISHED = "Setup finished";		// Waiting for the experiment to start
 	public static final String FOLLOWING = "Following";					// Master UAV manually controlled, and slaves following master UAV
 	public static final String MOVE_TO_LAND = "Move to land";			// Moving to the final land location

@@ -9,7 +9,7 @@ import com.setup.Param;
 import com.setup.Param.SimulatorState;
 import com.setup.Text;
 import com.api.Copter;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.setup.pccompanion.logic.PCCompanionParam;
 
 import java.io.FileDescriptor;
@@ -32,7 +32,7 @@ public class TestListener extends Thread {
 	private static Input input;
 	
 	public TestListener() throws SocketException {
-		receivedBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		receivedBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		receivedPacket = new DatagramPacket(receivedBuffer, receivedBuffer.length);
 		input = new Input(receivedBuffer);
 		receiveSocket = new DatagramSocket(PCCompanionParam.uavPort);
@@ -53,7 +53,7 @@ public class TestListener extends Thread {
 					receiveSocket.setSoTimeout(PCCompanionParam.RECEIVE_TIMEOUT);
 				}
 				try {
-					receivedPacket.setData(new byte[CommLink.DATAGRAM_MAX_LENGTH]);
+					receivedPacket.setData(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH]);
 					receiveSocket.receive(receivedPacket);
 					input.setBuffer(receivedPacket.getData());
 					command = input.readInt();
@@ -125,7 +125,7 @@ public class TestListener extends Thread {
 				} catch (SocketTimeoutException | KryoException ignored) {
 				}
 			} catch (IOException ignored) {}
-			receivedBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+			receivedBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 			receivedPacket.setData(receivedBuffer, 0, receivedBuffer.length);
 		}
 		

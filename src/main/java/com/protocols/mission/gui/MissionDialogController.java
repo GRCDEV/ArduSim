@@ -2,7 +2,7 @@ package com.protocols.mission.gui;
 
 import com.api.API;
 import com.api.ArduSimTools;
-import com.api.formations.Formation;
+import com.api.swarm.formations.Formation;
 import com.setup.Param;
 import com.setup.Text;
 import javafx.application.Platform;

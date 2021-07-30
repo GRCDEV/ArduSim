@@ -231,7 +231,6 @@ public class CommLinkObjectSimulation implements InterfaceCommLinkObject {
         if (Param.simStatus == Param.SimulatorState.TEST_FINISHED) {
             blockCommunication(numUAV, "r");
         }
-
         long start = System.currentTimeMillis();
         long elapsedTime = 0;
         byte[] receivedBuffer = null;

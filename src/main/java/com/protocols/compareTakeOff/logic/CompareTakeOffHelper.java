@@ -3,15 +3,16 @@ package com.protocols.compareTakeOff.logic;
 import com.api.API;
 import com.api.ArduSimTools;
 import com.api.ProtocolHelper;
-import com.api.formations.Formation;
+import com.api.swarm.Swarm;
+import com.api.swarm.assignement.AssignmentAlgorithm;
+import com.api.swarm.formations.Formation;
+import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.protocols.compareTakeOff.gui.CompareTakeOffDialogApp;
 import com.protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
 import com.protocols.compareTakeOff.pojo.Text;
 import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
-import es.upv.grc.mapper.Location2D;
-import es.upv.grc.mapper.Location2DGeo;
-import es.upv.grc.mapper.LocationNotReadyException;
+import es.upv.grc.mapper.*;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.javatuples.Pair;
@@ -22,12 +23,12 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CompareTakeOffHelper extends ProtocolHelper {
 
-    static AtomicInteger isTakeOffFinished = new AtomicInteger();
-
+    TakeOffThread master;
     @Override
     public void setProtocol() {this.protocolString = Text.PROTOCOL_TEXT;}
     @Override
@@ -61,9 +62,7 @@ public class CompareTakeOffHelper extends ProtocolHelper {
     }
 
     @Override
-    public void initializeDataStructures() {
-
-    }
+    public void initializeDataStructures() { }
 
     @Override
     public String setInitialState() {return null;}
@@ -73,7 +72,7 @@ public class CompareTakeOffHelper extends ProtocolHelper {
         int numUAVs = API.getArduSim().getNumUAVs();
 
         // get center location
-        Location2D centerLocation = new Location2D(CompareTakeOffSimProperties.masterInitialLatitude, CompareTakeOffSimProperties.masterInitialLongitude);
+        Location3D centerLocation = new Location3D(CompareTakeOffSimProperties.masterInitialLatitude, CompareTakeOffSimProperties.masterInitialLongitude,0);
         double yaw = CompareTakeOffSimProperties.masterInitialYaw;
         Pair<Location2DGeo, Double>[] startingLocations = new Pair[numUAVs];
 
@@ -81,7 +80,8 @@ public class CompareTakeOffHelper extends ProtocolHelper {
         Formation groundFormation = UAVParam.groundFormation.get();
         for(int i = 0;i<numUAVs;i++){
             try {
-                startingLocations[i] = Pair.with(groundFormation.get2DUTMLocation(centerLocation.getUTMLocation(),i).getGeo(), yaw);
+                Location3DUTM loc = groundFormation.get3DUTMLocation(centerLocation.getUTMLocation3D(),i);
+                startingLocations[i] = Pair.with(loc.getGeo(), yaw);
             } catch (LocationNotReadyException e) {
                 e.printStackTrace();
             }
@@ -95,14 +95,24 @@ public class CompareTakeOffHelper extends ProtocolHelper {
 
     @Override
     public void startThreads() {
-        for (int i = 0; i < API.getArduSim().getNumUAVs(); i++) {
+        master = new TakeOffThread(0);
+        master.start();
+        for (int i = 1; i < API.getArduSim().getNumUAVs(); i++) {
             TakeOffThread t = new TakeOffThread(i);
             t.start();
         }
     }
 
     @Override
-    public void setupActionPerformed() { }
+    public void setupActionPerformed() {
+        while(!master.isSetupDone()){
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     @Override
     public void startExperimentActionPerformed() { }

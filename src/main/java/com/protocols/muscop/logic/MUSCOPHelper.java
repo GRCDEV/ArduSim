@@ -2,11 +2,12 @@ package com.protocols.muscop.logic;
 
 import com.api.API;
 import com.api.ProtocolHelper;
-import com.api.formations.Formation;
+import com.api.swarm.formations.Formation;
 import com.api.pojo.location.Waypoint;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
+import es.upv.grc.mapper.Location3DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -40,7 +41,9 @@ public class MUSCOPHelper extends ProtocolHelper {
 	@Override
 	public boolean loadMission() {
 		// In a real multicopter, the UAV is always in position 0. The master UAV is which has a mission to load.
-		return API.getCopter(0).getMasterSlaveHelper().isMaster();
+		//TODO check
+		//return API.getCopter(0).getMasterSlaveHelper().isMaster();
+		return true;
 	}
 
 	@Override
@@ -154,12 +157,12 @@ public class MUSCOPHelper extends ProtocolHelper {
 		int groundCenterUAVPosition = groundFormation.getCenterIndex(); //groundFormation.getCenterUAVPosition();
 		Map<Long, Location2DUTM> groundLocations = new HashMap<>((int)Math.ceil(numUAVs / 0.75) + 1);
 		Location2DUTM locationUTM;
-		Location2DUTM groundCenterUTMLocation = waypoint1.getUTM();
+		Location3DUTM groundCenterUTMLocation = new Location3DUTM(waypoint1.getUTM(),0);
 		for (int i = 0; i < numUAVs; i++) {
 			if (i == groundCenterUAVPosition) {
 				groundLocations.put((long)i, groundCenterUTMLocation);
 			} else {
-				locationUTM = groundFormation.get2DUTMLocation(groundCenterUTMLocation,i);
+				locationUTM = groundFormation.get3DUTMLocation(groundCenterUTMLocation,i);
 				System.out.println(locationUTM.toString());
 				groundLocations.put((long)i, locationUTM);
 			}

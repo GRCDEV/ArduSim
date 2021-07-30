@@ -1,13 +1,10 @@
 package com.protocols.shakeup.logic;
 
 import com.api.*;
-import com.api.communications.CommLink;
-import com.api.masterslavepattern.MasterSlaveHelper;
-import com.api.masterslavepattern.safeTakeOff.SafeTakeOffContext;
+import com.api.communications.LowLevelCommLink;
 import com.esotericsoftware.kryo.io.Input;
 import com.protocols.shakeup.logic.state.DataState;
 import com.protocols.shakeup.pojo.Param;
-import com.protocols.shakeup.pojo.Text;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DUTM;
@@ -17,8 +14,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ShakeupListenerThread extends Thread{
 
@@ -57,9 +52,9 @@ public class ShakeupListenerThread extends Thread{
 		com.protocols.shakeup.logic.state.State currentState = new DataState(numUAV,isMaster, UAVsDetected);
 		talker.setState(currentState);
 		talker.start();
-		byte[] inBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		byte[] inBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		Input input = new Input(inBuffer);
-		CommLink link = CommLink.getCommLink(numUAV);
+		LowLevelCommLink link = LowLevelCommLink.getCommLink(numUAV);
 
 		long time = System.currentTimeMillis();
 		long distanceTimer = System.currentTimeMillis();
@@ -111,6 +106,7 @@ public class ShakeupListenerThread extends Thread{
 	}
 
 	private Map<Long, Location2DUTM> setup() {
+		/*
 		// DISCOVER MASTER AND SLAVES
 		gui.logUAV(Text.START);
 		// Let the master detect slaves until the setup button is pressed
@@ -132,9 +128,12 @@ public class ShakeupListenerThread extends Thread{
 			msHelper.DiscoverMaster();
 		}
 		return UAVsDetected;
+		 */
+		return null;
 	}
 	
 	private void takeOff(Map<Long, Location2DUTM> UAVsDetected) {
+		/*
 		// TAKE OFF PHASE
 		gui.logUAV(Text.START_TAKE_OFF);
 		gui.updateProtocolState(Text.TAKE_OFF);
@@ -158,6 +157,7 @@ public class ShakeupListenerThread extends Thread{
 		AtomicBoolean isTakeOffFinished = new AtomicBoolean(false);
 		takeOffHelper.start(takeOff, () -> isTakeOffFinished.set(true));
 		while (!isTakeOffFinished.get()) {ardusim.sleep(Param.TIMEOUT);}
+		 */
 	}
 	
 	public static int getFormationIndex() {

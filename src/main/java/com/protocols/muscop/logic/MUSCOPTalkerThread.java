@@ -7,7 +7,7 @@ import es.upv.grc.mapper.Location3DUTM;
 import com.api.ArduSim;
 import com.api.Copter;
 import com.api.GUI;
-import com.api.communications.CommLink;
+import com.api.communications.LowLevelCommLink;
 import com.protocols.muscop.gui.MuscopSimProperties;
 import com.protocols.muscop.pojo.Message;
 
@@ -35,7 +35,7 @@ public class MUSCOPTalkerThread extends Thread {
 	private byte[] outBuffer;
 	private Output output;
 	private byte[] message;
-	private CommLink link;
+	private LowLevelCommLink link;
 	// Concurrency variables:
 	private AtomicBoolean missionReceived;
 	private AtomicBoolean running;
@@ -58,9 +58,9 @@ public class MUSCOPTalkerThread extends Thread {
 		this.ardusim = API.getArduSim();
 		this.copter = API.getCopter(numUAV);
 		this.gui = API.getGUI(numUAV);
-		this.outBuffer = new byte[CommLink.DATAGRAM_MAX_LENGTH];
+		this.outBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
-		this.link = CommLink.getCommLink(numUAV);
+		this.link = LowLevelCommLink.getCommLink(numUAV);
 		this.missionReceived = missionReceived;
 		this.wpReachedSemaphore = wpReachedSemaphore;
 		this.moveSemaphore = moveSemaphore;

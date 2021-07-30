@@ -58,10 +58,10 @@ public class RangeCalculusThread extends Thread {
 				return distance <= Param.fixedRange;
 			case DISTANCE_5GHZ:
 				return Math.random() >= (5.335*Math.pow(10, -7)*distance*distance + 3.395*Math.pow(10, -5)*distance);
+			default:
+				ArduSimTools.logGlobal("Selected WirelessModel does not exist");
+				return false;
 		}
-		// Point never reached if the selection structure is enlarged when adding new wireless models
-		ArduSimTools.logGlobal(Text.WIRELESS_ERROR);
-		return false;
 	}
 
 }
