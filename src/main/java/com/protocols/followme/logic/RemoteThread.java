@@ -1,6 +1,7 @@
 package com.protocols.followme.logic;
 
 import com.api.API;
+import com.api.pojo.FlightMode;
 import com.protocols.followme.pojo.RemoteInput;
 import com.setup.Param;
 import com.api.ArduSim;
@@ -23,6 +24,7 @@ public class RemoteThread extends Thread {
 	private GUI gui;
 	private ArduSim ardusim;
 	private int numUAV;
+	double startingAltitude;
 	
 	@SuppressWarnings("unused")
 	private RemoteThread() {}
@@ -33,66 +35,60 @@ public class RemoteThread extends Thread {
 		this.gui = API.getGUI(numUAV);
 		this.ardusim = API.getArduSim();
 		this.numUAV = numUAV;
-		gui.logUAV("I am the master");
+		startingAltitude = FollowMeParam.slavesStartingAltitude;
 	}
 	
 
 	@Override
 	public void run() {
-		double startingAltitude = FollowMeParam.slavesStartingAltitude;
-		double finalAltitude = startingAltitude * 0.5;
-		double altitude;
-		
 		int role = API.getArduSim().getArduSimRole();
 		if (role == ArduSim.MULTICOPTER) {
-			
-			while (copter.getAltitudeRelative() < startingAltitude) {
-				ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
-			}
-			FollowMeTalkerThread.protocolStarted = true;
-			while (copter.getAltitudeRelative() >= finalAltitude) {
-				ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
-			}
-			currentState.set(LANDING);
+			remoteRealFlight(startingAltitude);
 		}
-		
+
 		if (role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			Queue<RemoteInput> path = FollowMeParam.masterData;
 			RemoteInput data;
-			
 			boolean landing = false;
 			long start = System.nanoTime();
-			long wait;
-			
+			while(copter.getAltitudeRelative() <= startingAltitude){
+				ardusim.sleep(200);
+			}
+			FollowMeTalkerThread.protocolStarted = true;
+			copter.setFlightMode(FlightMode.STABILIZE_ARMED);
 			do {
 				data = path.poll();
-				if (data != null) {
-					wait = (data.time - (System.nanoTime() - start)) / 1000000L;
-					if (wait > 0) {
-						ardusim.sleep(wait);
-					}
-					altitude = copter.getAltitudeRelative();
-					if (!FollowMeTalkerThread.protocolStarted && altitude >= startingAltitude) {
-						FollowMeTalkerThread.protocolStarted = true;
-					}else{
-						System.out.println(altitude + ":" + startingAltitude);
-					}
+				if (data != null && FollowMeTalkerThread.protocolStarted) {
+					wait(data.time, start);
+					HiddenFunctions.channelsOverride(numUAV, data.roll, data.pitch, data.throttle, data.yaw);
 
-					if (!FollowMeTalkerThread.protocolStarted || altitude >= finalAltitude) {
-						HiddenFunctions.channelsOverride(numUAV, data.roll, data.pitch, data.throttle, data.yaw);
-					} else {
-						currentState.set(LANDING);
-						landing = true;
+					if(copter.getAltitudeRelative() <= 3){
+						break;
 					}
 				}
-			} while (data != null && !landing);
-			
-			// In case the path depletes before reaching that altitude
-			if (!landing) {
-				currentState.set(LANDING);
-			}
+			} while (data != null);
+			currentState.set(LANDING);
 		}
 
+	}
+
+	private void wait(long remoteTime, long start) {
+		long wait;
+		wait = (remoteTime - (System.nanoTime() - start)) / 1000000L;
+		if (wait > 0) {
+			ardusim.sleep(wait);
+		}
+	}
+
+	private void remoteRealFlight(double startingAltitude) {
+		while (copter.getAltitudeRelative() < startingAltitude) {
+			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
+		}
+		FollowMeTalkerThread.protocolStarted = true;
+		while (copter.getAltitudeRelative() >= startingAltitude * 0.5) {
+			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
+		}
+		currentState.set(LANDING);
 	}
 
 }

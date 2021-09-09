@@ -172,7 +172,7 @@ public class FollowmeSimProperties {
         UAVParam.groundFormation.set(groundFormation);
         groundFormation.init(numUAVs,groundMinDistance,initialAltitude);
         UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance,10);
+        flyingFormation.init(numUAVs,flyingMinDistance,FollowMeParam.altitude);
         SwarmParam.assignmentAlgorithm = assignmentAlgorithm;
 
         FollowMeParam.slavesStartingAltitude = initialAltitude;

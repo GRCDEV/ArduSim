@@ -32,12 +32,12 @@ class simultaneously extends TakeoffAlgorithm {
             setOwnTargetLocation();
             setSlaveTargetLocation();
             moveUAVToTargetLocation(sendOrderToTakeOff());
-            System.out.println("master done");
+            System.out.println("master done taking off");
         }else{
             targetLocation = waitForTargetLocation();
             sendLocACKAndWaitUntilTakeOffMsg();
             moveUAVToTargetLocation(ACKOrderToTakeOff());
-            System.out.println(numUAV + " slave done");
+            System.out.println(numUAV + " slave done taking off");
         }
     }
 

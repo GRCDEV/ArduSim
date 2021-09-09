@@ -21,6 +21,7 @@ public class Discover{
     private final HighlevelCommLink commLink;
 
     public Discover(int numUAV){
+        System.out.println("creating discover object");
         this.numUAV = numUAV;
         this.numUAVs = API.getArduSim().getNumUAVs();
         setTempMasterId();
@@ -28,8 +29,10 @@ public class Discover{
     }
 
     public void start() {
+        System.out.println("starting discovery");
         if (isTempMaster(numUAV)) {
             masterDiscovering();
+            System.out.println("DISCOVERY DONE");
         } else {
             slaveDiscovering();
         }

@@ -18,6 +18,7 @@ public class FollowMeParam {
 	public static volatile double masterInitialLatitude = 39.482594;	// (degrees) Latitude for simulations
 	public static volatile double masterInitialLongitude = -0.346265;	// (degrees) Longitude for simulations
 	public static volatile double masterInitialYaw = 0.0;				// (rad) Initial heading of the master UAV for simulations
+	public static double altitude = 60;
 	
 	/** Current protocol state for each UAV. */
 	public static AtomicInteger[] state;

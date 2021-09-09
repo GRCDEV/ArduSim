@@ -38,6 +38,7 @@ public class Swarm {
         private TakeoffAlgorithm.TakeoffAlgorithms takeoffAlgo;
         private Formation.Layout airFormationLayout;
         private double airMinDistance;
+        private double altitude;
 
         public Builder(long numUAV){
             this.numUAV = (int) numUAV;
@@ -53,9 +54,10 @@ public class Swarm {
             return this;
         }
 
-        public Builder airFormationLayout(Formation.Layout f, double minDistance){
+        public Builder airFormationLayout(Formation.Layout f, double minDistance, double altitude){
             this.airFormationLayout = f;
             this.airMinDistance = minDistance;
+            this.altitude = altitude;
             return this;
         }
 
@@ -66,6 +68,7 @@ public class Swarm {
             if(d.getMasterUAVId() == numUAV) {
                 assignment = getAssignment(numUAVs, d.getUAVsDiscovered(), d.getCenterLocation());
             }
+
             TakeoffAlgorithm takeoff = TakeoffAlgorithmFactory.newTakeoffAlgorithm(takeoffAlgo, assignment);
             return new Swarm(takeoff, d.getMasterUAVId());
         }
@@ -73,7 +76,7 @@ public class Swarm {
         private Map<Long, Location3DUTM> getAssignment(int numUAVs, Map<Long, Location3DUTM> groundLocations, Location3DUTM centerUAVLocation) {
             Map<Long, Location3DUTM> assignment;
             Formation f = FormationFactory.newFormation(airFormationLayout);
-            f.init(numUAVs, airMinDistance,10);
+            f.init(numUAVs, airMinDistance,altitude);
             Map<Long, Location3DUTM> airLocations = new HashMap<>();
             for(int i = 0; i< numUAVs; i++){
                 airLocations.put((long)i,f.get3DUTMLocation(centerUAVLocation,i));

@@ -26,11 +26,8 @@ public class FollowMeTalkerThread extends Thread {
 	private LowLevelCommLink link;
 	private byte[] outBuffer;
 	private Output output;
-	private byte[] message;
-	
-	private long cicleTime;		// Cicle time used for sending messages
-	private long waitingTime;	// (ms) Time to wait between two sent messages
-	
+	private long selfId;
+
 	protected static volatile boolean protocolStarted = false;
 
 	@SuppressWarnings("unused")
@@ -45,48 +42,65 @@ public class FollowMeTalkerThread extends Thread {
 		this.link = LowLevelCommLink.getCommLink(numUAV);
 		this.outBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.output = new Output(outBuffer);
-		
-		this.cicleTime = 0;
+		this.selfId = numUAV;
 	}
 
 	@Override
 	public void run() {
-		/* FOLLOWING PHASE */
+		waitUntilProtocolStarted();
+		follow();
+		waitForLanding();
+		land();
+		waitForFinish();
+		finish();
+	}
+
+	private void waitUntilProtocolStarted() {
 		gui.logVerboseUAV(FollowMeText.MASTER_WAIT_ALTITUDE);
 		while (!protocolStarted) {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
-		
-		Location2DUTM here;
-		double z, yaw;
-		cicleTime = System.currentTimeMillis();
+	}
+
+	private void follow() {
 		while (currentState.get() == FOLLOWING) {
-			here = copter.getLocationUTM();
-			z = copter.getAltitudeRelative();
-			yaw = copter.getHeading();
-			output.reset();
-			output.writeShort(Message.I_AM_HERE);
-//			output.writeLong(selfId);
-			output.writeDouble(here.x);
-			output.writeDouble(here.y);
-			output.writeDouble(z);
-			output.writeDouble(yaw);
-			output.flush();
-			message = Arrays.copyOf(outBuffer, output.position());
-			link.sendBroadcastMessage(message);
-			
-			// Timer
-			cicleTime = cicleTime + FollowMeParam.sendPeriod;
-			waitingTime = cicleTime - System.currentTimeMillis();
-			if (waitingTime > 0) {
-				ardusim.sleep(waitingTime);
-			}
+			sendPosition();
+			ardusim.sleep(FollowMeParam.sendPeriod);
 		}
+	}
+
+	private void sendPosition() {
+		Location2DUTM here = copter.getLocationUTM();
+		double z = copter.getAltitudeRelative();
+		double yaw = copter.getHeading();
+
+		output.reset();
+		output.writeShort(Message.I_AM_HERE);
+		output.writeDouble(here.x);
+		output.writeDouble(here.y);
+		output.writeDouble(z);
+		output.writeDouble(yaw);
+		output.flush();
+		byte[] message = Arrays.copyOf(outBuffer, output.position());
+		link.sendBroadcastMessage(message);
+	}
+
+	private void waitForLanding() {
 		while (currentState.get() < LANDING) {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
-		
-		// LANDING PHASE
+	}
+
+	private void land() {
+		byte[] message = createMasterSendLandMessage();
+		while (currentState.get() == LANDING) {
+			link.sendBroadcastMessage(message);
+			ardusim.sleep(FollowMeParam.SENDING_TIMEOUT);
+		}
+	}
+
+	private byte[] createMasterSendLandMessage() {
+		Location2DUTM here;
 		gui.logVerboseUAV(FollowMeText.MASTER_SEND_LAND);
 		output.reset();
 		output.writeShort(Message.LAND);
@@ -95,27 +109,20 @@ public class FollowMeTalkerThread extends Thread {
 		output.writeDouble(here.y);
 		output.writeDouble(copter.getHeading());
 		output.flush();
-		message = Arrays.copyOf(outBuffer, output.position());
-		
-		cicleTime = System.currentTimeMillis();
-		while (currentState.get() == LANDING) {
-			link.sendBroadcastMessage(message);
-			
-			// Timer
-			cicleTime = cicleTime + FollowMeParam.SENDING_TIMEOUT;
-			waitingTime = cicleTime - System.currentTimeMillis();
-			if (waitingTime > 0) {
-				ardusim.sleep(waitingTime);
-			}
-		}
+		byte[] message = Arrays.copyOf(outBuffer, output.position());
+		return message;
+	}
+
+	private void waitForFinish() {
 		while (currentState.get() < FINISH) {
 			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
 		}
-		
-		// FINISH PHASE
+	}
+
+	private void finish() {
 		gui.logVerboseUAV(FollowMeText.TALKER_FINISHED);
 	}
-	
-	
-	
+
+
+
 }
