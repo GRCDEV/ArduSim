@@ -219,9 +219,7 @@ public class MBCAPHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void setupActionPerformed() {
-		
-	}
+	public void setupActionPerformed() { }
 
 	@Override
 	public void startExperimentActionPerformed() {

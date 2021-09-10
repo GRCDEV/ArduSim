@@ -144,7 +144,7 @@ public class FileTools {
 		//TODO check from jar
 		URL url = null;
 		if (ArduSimTools.isRunningFromJar()) {
-			url = MainWindow.class.getResource(File.separator + "src" + contentRootPath);
+			url = MainWindow.class.getResource(contentRootPath);
 		} else {
 			//url = MainWindow.class.getResource(absolutePath);
 			try {

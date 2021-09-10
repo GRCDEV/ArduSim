@@ -73,7 +73,7 @@ public class SimParam {
 	public static final int PATH_INITIAL_SIZE = 1000; // Initial size of the lists
 
 	// UAV drawing parameters
-	public static final String UAV_IMAGE_PATH = "main/resources/setup/UAV.png"; // UAV image path
+	public static final String UAV_IMAGE_PATH = "main" + fs + "resources" + fs + "setup" + fs + "UAV.png";// "main/resources/setup/UAV.png"; // UAV image path
 	public static BufferedImage uavImage; // UAV image
 	public static final int UAV_PX_SIZE = 25; // (px) UAV screen size
 

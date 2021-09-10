@@ -94,6 +94,7 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 		
 		// Load the image used to show the risk location
 		if (ardusim.getArduSimRole() == ArduSim.SIMULATOR_GUI) {
+			System.out.println(MBCAPSimProperties.EXCLAMATION_IMAGE_PATH);
 			MBCAPSimProperties.exclamationImage = API.getFileTools().loadImage(MBCAPSimProperties.EXCLAMATION_IMAGE_PATH);
 			if (MBCAPSimProperties.exclamationImage == null) {
 				API.getGUI(0).exit(MBCAPText.WARN_IMAGE_LOAD_ERROR);

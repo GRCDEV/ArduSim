@@ -41,8 +41,7 @@ public class MBCAPSimProperties {
     public static AtomicReference<DrawableCirclesGeo>[] predictedLocation;
     // Parameters needed to draw the warning image when a collision risk is detected
     static String fs = File.separator;
-    public static final String EXCLAMATION_IMAGE_PATH = API.getFileTools().getResourceFolder().toString() + fs +
-            "protocols" + fs + "mbcap" + fs + "Exclamation.png"; // Warning image file path
+    public static final String EXCLAMATION_IMAGE_PATH =  "main" + fs + "resources" + fs + "protocols" + fs + "mbcap" + fs + "Exclamation.png"; // Warning image file path
     public static BufferedImage exclamationImage; // Warning image
     public static final int EXCLAMATION_PX_SIZE = 25; // (px) Size of the image when it is drawn
 

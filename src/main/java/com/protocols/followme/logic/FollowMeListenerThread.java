@@ -133,7 +133,7 @@ public class FollowMeListenerThread extends Thread {
 
 	private Location3D processLandingMessage() {
 		Location3D targetLocationLanding = null;
-		Location3DUTM centerUAVFinalLocation = new Location3DUTM(input.readDouble(), input.readDouble(),0);//TODO send z
+		Location3DUTM centerUAVFinalLocation = new Location3DUTM(input.readDouble(), input.readDouble(),0);
 		double yaw = input.readDouble();
 		Location2DUTM landingLocationUTM = UAVParam.groundFormation.get().get3DUTMLocation(centerUAVFinalLocation,numUAV);
 		try {

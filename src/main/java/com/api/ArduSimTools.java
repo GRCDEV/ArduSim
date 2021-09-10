@@ -2821,15 +2821,16 @@ public class ArduSimTools {
 			sb.append("\n\t\t").append(Param.BATTERY_CELLS).append("=").append(UAVParam.lipoBatteryCells);
 			sb.append("\n\t\t").append(Param.BATTERY_CAPACITY).append("=").append(UAVParam.lipoBatteryCapacity);
 		}
-		sb.append("\n\t").append(Text.FORMATION_PARAMETERS);
-		if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-			sb.append("\n\t\t").append(Param.GROUND_FORMATION).append("=").append(UAVParam.groundFormation.get().getLayout());
-			sb.append("\n\t\t").append(Param.GROUND_DISTANCE).append("=").append(UAVParam.groundDistanceBetweenUAV);
+		if(UAVParam.groundFormation.get() != null) {
+			sb.append("\n\t").append(Text.FORMATION_PARAMETERS);
+			if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
+				sb.append("\n\t\t").append(Param.GROUND_FORMATION).append("=").append(UAVParam.groundFormation.get().getLayout());
+				sb.append("\n\t\t").append(Param.GROUND_DISTANCE).append("=").append(UAVParam.groundDistanceBetweenUAV);
+			}
+			sb.append("\n\t\t").append(Param.AIR_FORMATION).append("=").append(UAVParam.airFormation.get().getLayout());
+			sb.append("\n\t\t").append(Param.AIR_DISTANCE).append("=").append(UAVParam.airDistanceBetweenUAV);
+			sb.append("\n\t\t").append(Param.LAND_DISTANCE).append("=").append(UAVParam.landDistanceBetweenUAV);
 		}
-		sb.append("\n\t\t").append(Param.AIR_FORMATION).append("=").append(UAVParam.airFormation.get().getLayout());
-		sb.append("\n\t\t").append(Param.AIR_DISTANCE).append("=").append(UAVParam.airDistanceBetweenUAV);
-		sb.append("\n\t\t").append(Param.LAND_DISTANCE).append("=").append(UAVParam.landDistanceBetweenUAV);
-		
 		return sb.toString();
 	}
 
