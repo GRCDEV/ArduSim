@@ -117,10 +117,10 @@ public class CompareTakeOffSimProperties {
 
     private void setSimulationParameters(){
         UAVParam.groundFormation.set(groundFormation);
-        groundFormation.init(numUAVs,groundMinDistance,0);
+        groundFormation.init(numUAVs,groundMinDistance);
 
         UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance,altitude);
+        flyingFormation.init(numUAVs,flyingMinDistance);
 
         SwarmParam.assignmentAlgorithm = assignmentAlgorithm;
     }

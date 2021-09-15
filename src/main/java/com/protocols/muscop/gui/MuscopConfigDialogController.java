@@ -41,7 +41,7 @@ public class MuscopConfigDialogController {
     @FXML
     private TextField groundMinDistance;
     @FXML
-    private ChoiceBox<String> takeOffStrategy;
+    private ChoiceBox<String> assignmentAlgorithm;
     @FXML
     private ChoiceBox<String> flyingFormation;
     @FXML
@@ -68,12 +68,15 @@ public class MuscopConfigDialogController {
             groundFormation.getItems().add(l.name());
             flyingFormation.getItems().add(l.name());
         }
+
+        for(AssignmentAlgorithm.AssignmentAlgorithms a: AssignmentAlgorithm.AssignmentAlgorithms.values()){
+            assignmentAlgorithm.getItems().add(a.name());
+        }
         groundFormation.getSelectionModel().select(resources.getString("groundFormation"));
 
         groundMinDistance.setTextFormatter(new TextFormatter<>(ArduSimTools.doubleFilter));
 
-        takeOffStrategy.setItems(FXCollections.observableArrayList(FXCollections.observableArrayList(AssignmentAlgorithm.AssignmentAlgorithms.values().toString())));
-        takeOffStrategy.getSelectionModel().select(resources.getString("takeOffStrategy"));
+        assignmentAlgorithm.getSelectionModel().select(resources.getString("assignmentAlgorithm"));
 
         flyingFormation.getSelectionModel().select(resources.getString("flyingFormation"));
 

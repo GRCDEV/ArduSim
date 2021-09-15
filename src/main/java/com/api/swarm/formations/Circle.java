@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * Circle formation
  * all UAVs are on a Circle with UAV0 in the center
  * Use {@link FormationFactory} to get this layout
- * And use the function {@link #init(int, double, double)} to instantiate the formation
+ * And use the function {@link #init(int, double)} to instantiate the formation
  * use the function {@link #get3DUTMLocation(Location3DUTM, int)} to get the 3DUTM coordinate of a specific UAV
  */
 class Circle extends Formation{
@@ -53,7 +53,7 @@ class Circle extends Formation{
         for (int i = 1; i < numUAVs; i++) {
             x = validationTools.roundDouble(radius * Math.cos((i -1) * 2 * Math.PI / (numUAVs - 1)), 6);
             y = validationTools.roundDouble(radius * Math.sin((i -1) * 2 * Math.PI / (numUAVs - 1)), 6);
-            positions.add(new FormationPoint(i, x, y, altitude));
+            positions.add(new FormationPoint(i, x, y, 0));
         }
 
         return positions;

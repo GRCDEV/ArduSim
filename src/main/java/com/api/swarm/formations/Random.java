@@ -42,7 +42,7 @@ class Random extends Formation{
             int column = (cellNumber%lengthSide)- halfLength;
             double x = getRandomPlaceInCell(row);
             double y = getRandomPlaceInCell(column);
-            positions.add(new FormationPoint(i,x,y,altitude));
+            positions.add(new FormationPoint(i,x,y,0));
         }
         return positions;
     }

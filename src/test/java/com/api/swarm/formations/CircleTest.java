@@ -25,10 +25,10 @@ class CircleTest {
     @Test
     void getCenterIndex() {
         // centerIndex = 0
-        formation.init(10,10,0);
+        formation.init(10,10);
         assertEquals(0,formation.getCenterIndex());
 
-        formation.init(5,10,0);
+        formation.init(5,10);
         assertEquals(0,formation.getCenterIndex());
     }
 

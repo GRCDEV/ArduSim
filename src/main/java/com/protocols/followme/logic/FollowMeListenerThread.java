@@ -6,6 +6,7 @@ import com.api.swarm.Swarm;
 import com.api.swarm.SwarmParam;
 import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.esotericsoftware.kryo.io.Input;
+import com.protocols.followme.gui.FollowmeSimProperties;
 import com.protocols.followme.pojo.Message;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.*;
@@ -71,8 +72,8 @@ public class FollowMeListenerThread extends Thread {
 	private Swarm getSwarm() {
 		Swarm swarm =  new Swarm.Builder(copter.getID())
 				.assignmentAlgorithm(SwarmParam.assignmentAlgorithm)
-				.airFormationLayout(UAVParam.airFormation.get().getLayout(),30,FollowMeParam.altitude)
-				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUSLY)
+				.airFormationLayout(UAVParam.airFormation.get().getLayout(),30)
+				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUSLY,30) //TODO use parameter altitude
 				.build();
 		return swarm;
 	}

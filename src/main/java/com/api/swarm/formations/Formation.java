@@ -38,19 +38,18 @@ public abstract class Formation {
      * @param numUAVs: number of UAVs in the formation
      * @param minDistance: minimal (guaranteed) distance between the UAVs
      */
-    public void init(int numUAVs, double minDistance,double altitude){
+    public void init(int numUAVs, double minDistance){
         if(numUAVs < 1 | minDistance <= 0 | altitude < 0){
             throw new Error("Input parameters invalid");
         }
-        this.altitude = altitude;
         this.positions = calculateFormation(numUAVs, minDistance);
     }
 
     /**
-     * calculates the (real) 2DUTM location of the UAV in a formation
-     * @param centerLocation: 2DUTM coordinates of the center of the formation
+     * calculates the (real) 3DUTM location of the UAV in a formation
+     * @param centerLocation: 3DUTM coordinates of the center of the formation
      * @param index: index of the UAV (in {@link #positions}, 0-based
-     * @return 2DUTM location
+     * @return 3DUTM location
      */
     public Location3DUTM get3DUTMLocation(Location3DUTM centerLocation, int index){
         if(index < 0 | index >= positions.size() | centerLocation == null){

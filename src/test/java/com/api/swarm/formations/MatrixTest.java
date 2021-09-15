@@ -25,9 +25,9 @@ class MatrixTest {
      */
     @Test
     public void getCenterIndex() {
-        formation.init(5,minDistance,0);
+        formation.init(5,minDistance);
         assertEquals(0,formation.getCenterIndex());
-        formation.init(11,minDistance,0);
+        formation.init(11,minDistance);
         assertEquals(0,formation.getCenterIndex());
     }
 

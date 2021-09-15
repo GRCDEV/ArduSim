@@ -20,4 +20,9 @@ class FormationPoint {
         this.offsetY = offsetY;
         this.offsetZ = offsetZ;
     }
+
+    @Override
+    public String toString(){
+        return position + ":{" + offsetX + ";" + offsetY + ";" + offsetZ + "}";
+    }
 }

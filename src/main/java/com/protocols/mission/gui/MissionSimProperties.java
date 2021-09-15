@@ -98,7 +98,7 @@ public class MissionSimProperties {
     private void setSimulationParameters(){
         storeMissionFile(missionFile);
         UAVParam.groundFormation.set(formation);
-        formation.init(API.getArduSim().getNumUAVs(),minDistance,10);
+        formation.init(API.getArduSim().getNumUAVs(),minDistance);
 
     }
 

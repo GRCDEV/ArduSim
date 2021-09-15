@@ -25,7 +25,7 @@ class RandomTest {
      */
     @Test
     void getCenterIndex() {
-        formation.init(12,35,0);
+        formation.init(12,35);
         assertEquals(0,formation.getCenterIndex());
     }
 

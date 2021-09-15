@@ -15,7 +15,7 @@ public class TargetFormation {
 		this.minDistance = minDistance;
 		this.heading = heading;
 		this.f = FormationFactory.newFormation(Formation.Layout.valueOf(name));
-		this.f.init(numUAVs,this.minDistance,10);
+		this.f.init(numUAVs,this.minDistance);
 	}
 	
 	public String getName() {

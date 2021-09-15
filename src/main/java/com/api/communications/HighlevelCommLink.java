@@ -1,4 +1,5 @@
 package com.api.communications;
+import com.api.API;
 import org.json.JSONObject;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -22,6 +23,12 @@ public class HighlevelCommLink {
     public HighlevelCommLink(int numUAV){
         this.numUAV = numUAV;
         this.commLink = LowLevelCommLink.getCommLink(numUAV);
+        this.timeout = 50;
+    }
+
+    public HighlevelCommLink(int numUAV, int portnumber){
+        this.numUAV = numUAV;
+        this.commLink = LowLevelCommLink.getCommLink(numUAV,portnumber);
         this.timeout = 50;
     }
 
@@ -73,8 +80,8 @@ public class HighlevelCommLink {
         JSONObject message = null;
         while(message == null){
             message = receiveMessage(mandatoryFields);
-        }
 
+        }
         JSONObject finalMessage = message;
         for(int i=0;i<nrOfRepliesSend;i++) {
             sendACK(finalMessage);

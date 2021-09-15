@@ -7,6 +7,7 @@ import com.api.communications.HighlevelCommLink;
 import com.api.communications.HighlevelCommLink.Keywords;
 import com.api.swarm.SwarmParam;
 import com.setup.Param;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location3DUTM;
 import org.json.JSONObject;
 import java.util.*;
@@ -25,7 +26,7 @@ public class Discover{
         this.numUAV = numUAV;
         this.numUAVs = API.getArduSim().getNumUAVs();
         setTempMasterId();
-        commLink = new HighlevelCommLink(numUAV);
+        commLink = new HighlevelCommLink(numUAV, UAVParam.internalBroadcastPort);
     }
 
     public void start() {
@@ -60,6 +61,75 @@ public class Discover{
 
     private void setMasterUAVId() {
         masterUAVId = tempMasterId;
+    }
+    //TODO find a good place to set the update master id
+    /*
+    private void setMasterUAVId() {
+        if(numUAV == tempMasterId){
+            Location3DUTM centerLocation = calculateCenterOfDiscoveredUAVs();
+            long centerId = getCenterId(centerLocation);
+            masterUAVId = (int) centerId;
+            JSONObject msg = createMsgWithLocationsOfAllUAVs();
+            commLink.sendJSONUntilACKReceived(msg,masterUAVId,2);
+        }else{
+            JSONObject msg = null;
+            while(msg == null){
+                Map<String,Object> mandatoryFields = new HashMap<>();
+                mandatoryFields.put(Keywords.MESSAGEID,"setMaster");
+                msg = commLink.receiveMessage(mandatoryFields);
+                if(msg != null){
+                    masterUAVId = msg.getInt(Keywords.RECEIVERID);
+                    System.out.println(numUAV + ": the new master Id is:" + masterUAVId);
+                }
+            }
+        }
+    }
+
+    private JSONObject createMsgWithLocationsOfAllUAVs() {
+        JSONObject msg = new JSONObject();
+        msg.put(Keywords.SENDERID,numUAV);
+        msg.put(Keywords.RECEIVERID,masterUAVId);
+        msg.put(Keywords.MESSAGEID,"setMaster");
+
+        JSONObject locations = new JSONObject();
+        for(Map.Entry<Long,Location3DUTM> e: UAVsDiscovered.entrySet()){
+            JSONObject loc = new JSONObject();
+            loc.put("x",e.getValue().x);
+            loc.put("y",e.getValue().y);
+            loc.put("z",e.getValue().z);
+            locations.put(e.getKey().toString(),loc);
+        }
+        msg.put("locations",locations);
+        return msg;
+    }
+
+    private long getCenterId(Location3DUTM centerLocation) {
+        double smallestDistance = Double.MAX_VALUE;
+        long centerId = -1;
+        for(Map.Entry<Long,Location3DUTM> e: UAVsDiscovered.entrySet()){
+            double dist = centerLocation.distance3D(e.getValue());
+            if(dist < smallestDistance){
+                smallestDistance = dist;
+                centerId = e.getKey();
+            }
+        }
+        return centerId;
+    }
+     */
+
+    private Location3DUTM calculateCenterOfDiscoveredUAVs() {
+        double x=0,y=0,z=0;
+        double numUAVs = UAVsDiscovered.size();
+        for(Location3DUTM loc: UAVsDiscovered.values()){
+            x += loc.x;
+            y += loc.y;
+            z += loc.z;
+        }
+        x /= numUAVs;
+        y /= numUAVs;
+        z /= numUAVs;
+        Location3DUTM centerLocation = new Location3DUTM(x,y,z);
+        return centerLocation;
     }
 
     private void masterDiscovering(){

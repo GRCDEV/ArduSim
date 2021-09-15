@@ -27,13 +27,11 @@ class LinearTest {
      */
     @Test
     void testGetCenterIndex() {
-        // centerIndex = numUAVs/2 (integer division)
+        formation.init(6,minDistance);
+        assertEquals(0,formation.getCenterIndex());
 
-        formation.init(6,minDistance,0);
-        assertEquals(3,formation.getCenterIndex());
-
-        formation.init(5,minDistance,0);
-        assertEquals(2,formation.getCenterIndex());
+        formation.init(5,minDistance);
+        assertEquals(0,formation.getCenterIndex());
     }
 
     private static Stream<Arguments> inputCalculateFormation(){
@@ -47,10 +45,10 @@ class LinearTest {
 
         return Stream.of(
                 Arguments.of(1, new FormationPoint[]{p1}),
-                Arguments.of(2, new FormationPoint[]{p2,p1}),
-                Arguments.of(3, new FormationPoint[]{p2,p1,p3}),
-                Arguments.of(4, new FormationPoint[]{p4,p2,p1,p3}),
-                Arguments.of(5, new FormationPoint[]{p4,p2,p1,p3,p5})
+                Arguments.of(2, new FormationPoint[]{p1,p2}),
+                Arguments.of(3, new FormationPoint[]{p1,p2,p3}),
+                Arguments.of(4, new FormationPoint[]{p1,p2,p3,p4}),
+                Arguments.of(5, new FormationPoint[]{p1,p2,p3,p4,p5})
         );
     }
     /**

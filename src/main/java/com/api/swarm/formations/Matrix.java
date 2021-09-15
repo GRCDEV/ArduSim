@@ -59,7 +59,7 @@ class Matrix extends Formation{
             // Round to integers and multiply by mindistance
             double offsetX = ceilAbs(x) * minDistance;
             double offsetY = ceilAbs(y) * minDistance;
-            positions.add(new FormationPoint(i+1,offsetX,offsetY,altitude));
+            positions.add(new FormationPoint(i+1,offsetX,offsetY,0));
         }
 
         return positions;

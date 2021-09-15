@@ -28,10 +28,11 @@ public class MuscopSimProperties {
     public Formation groundFormation;
     public static int numberOfClusters = 3;
     public double groundMinDistance;
-    public AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgorithm;
-    public Formation flyingFormation;
+    public static AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgorithm;
+    public static Formation flyingFormation;
     public double flyingMinDistance;
     public double landingMinDistance;
+    public static double altitude = 10;
 
     // Timeouts
     public static int RECEIVING_TIMEOUT = 50;        // (ms) The port is unlocked after this time when receiving messages
@@ -105,8 +106,8 @@ public class MuscopSimProperties {
                     var.set(this, files);
                 }else if(type.contains("Formation")){
                     var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
-                }else if(type.contains("assignmentStrategy")){
-                    var.set(this,AssignmentAlgorithm.AssignmentAlgorithms.valueOf(value));
+                }else if(type.contains("AssignmentAlgorithms")){
+                    var.set(this, AssignmentAlgorithm.AssignmentAlgorithms.valueOf(value));
                 }else{
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_STORE_PARAMETERS + type);
                     return false;
@@ -137,10 +138,10 @@ public class MuscopSimProperties {
     private void setSimulationParameters(){
         storeMissionFile(missionFile);
         UAVParam.groundFormation.set(groundFormation);
-        groundFormation.init(numUAVs,groundMinDistance,0);
+        groundFormation.init(numUAVs,groundMinDistance);
 
         UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance,10);
+        flyingFormation.init(numUAVs,flyingMinDistance);
 
         SwarmParam.assignmentAlgorithm = assignmentAlgorithm;
     }

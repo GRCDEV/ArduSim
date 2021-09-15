@@ -32,13 +32,13 @@ class FormationTest {
     void init(Formation.Layout layout) {
         Formation formation = FormationFactory.newFormation(layout);
         // Error case: invalid numUAVs
-        assertThrows(java.lang.Error.class, () -> formation.init(0, 10,0));
+        assertThrows(java.lang.Error.class, () -> formation.init(0, 10));
 
         // Error case: invalid minDistance
-        assertThrows(java.lang.Error.class, () -> formation.init(5, 0,0));
+        assertThrows(java.lang.Error.class, () -> formation.init(5, 0));
 
         // Error case: invalid numUAVs and minDistance
-        assertThrows(java.lang.Error.class, () -> formation.init(0, 0,0));
+        assertThrows(java.lang.Error.class, () -> formation.init(0, 0));
     }
 
     /**
@@ -49,7 +49,7 @@ class FormationTest {
     void get2DUTMLocation(Formation.Layout layout) {
         Location3DUTM centralLocation = new Location3DUTM(39.725064, -0.733661,0);
         Formation formation = FormationFactory.newFormation(layout);
-        formation.init(5,10,0);
+        formation.init(5,10);
 
         // Error case: index out of bound (lower end)
         assertThrows(java.lang.Error.class, () -> formation.get3DUTMLocation(centralLocation, -1));
@@ -75,7 +75,7 @@ class FormationTest {
 
         // general case
         int expected = 6;
-        formation.init(expected, 10,0);
+        formation.init(expected, 10);
         assertEquals(expected, formation.getNumUAVs());
     }
 }

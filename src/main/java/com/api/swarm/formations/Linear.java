@@ -1,8 +1,5 @@
 package com.api.swarm.formations;
 
-import com.api.API;
-import es.upv.grc.mapper.Location2DUTM;
-import com.api.ValidationTools;
 import es.upv.grc.mapper.Location3DUTM;
 
 import java.util.ArrayList;
@@ -13,7 +10,7 @@ import static com.api.swarm.formations.Formation.Layout.LINEAR;
  * Linear formation
  * all UAVs are on a line with a certain distance between them
  * Use {@link FormationFactory} to get this layout
- * And use the function {@link #init(int, double, double)} to instantiate the formation
+ * And use the function {@link #init(int, double)} to instantiate the formation
  * use the function {@link #get3DUTMLocation(Location3DUTM, int)} to get the 3DUTM coordinate of a specific UAV
  */
 class Linear extends Formation {
@@ -32,8 +29,7 @@ class Linear extends Formation {
      */
     @Override
     public int getCenterIndex() {
-        int numUAVs = positions.size();
-        return numUAVs /2;
+        return 0;
     }
 
     /**
@@ -45,13 +41,16 @@ class Linear extends Formation {
     @Override
     protected ArrayList<FormationPoint> calculateFormation(int numUAVs, double minDistance){
         ArrayList<FormationPoint> positions = new ArrayList<>();
-        int centerUAVIndex = numUAVs / 2;
-
-        double x;
-        ValidationTools validationTools = API.getValidationTools();
-        for (int i = 0; i < numUAVs; i++) {
-            x = validationTools.roundDouble((i - centerUAVIndex) * minDistance, 6);
-            positions.add(new FormationPoint(i, x, 0,altitude));
+        double x = 0;
+        double temp_x = 0;
+        for(int i=0;i<numUAVs;i++){
+            if(i%2 == 0){
+                x = temp_x;
+            }else{
+                temp_x += minDistance;
+                x = -temp_x;
+            }
+            positions.add(new FormationPoint(i,x,0,0));
         }
         return positions;
     }

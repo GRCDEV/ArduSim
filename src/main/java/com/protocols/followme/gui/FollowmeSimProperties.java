@@ -30,7 +30,7 @@ public class FollowmeSimProperties {
     private AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgorithm;
     private Formation  flyingFormation;
     private double flyingMinDistance;
-    private double initialAltitude;
+    private static double initialAltitude;
     private double landingMinDistance;
     private File simulatedFlightFile;
     private int masterUAVSpeed;
@@ -170,9 +170,9 @@ public class FollowmeSimProperties {
         FollowMeParam.masterInitialYaw = yaw * Math.PI / 180.0;
 
         UAVParam.groundFormation.set(groundFormation);
-        groundFormation.init(numUAVs,groundMinDistance,initialAltitude);
+        groundFormation.init(numUAVs,groundMinDistance);
         UAVParam.airFormation.set(flyingFormation);
-        flyingFormation.init(numUAVs,flyingMinDistance,FollowMeParam.altitude);
+        flyingFormation.init(numUAVs,flyingMinDistance);
         SwarmParam.assignmentAlgorithm = assignmentAlgorithm;
 
         FollowMeParam.slavesStartingAltitude = initialAltitude;

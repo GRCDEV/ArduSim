@@ -43,7 +43,7 @@ public class ShakeupHelper extends ProtocolHelper {
 		//readIniFile("Shakeup_settings.ini");
 		int numUAVs = API.getArduSim().getNumUAVs();
 		Formation ground = FormationFactory.newFormation(Param.startLayout);
-		ground.init(numUAVs,Param.minDistance,10);
+		ground.init(numUAVs,Param.minDistance);
 		UAVParam.groundFormation.set(ground);
 		// Air and ground formation are the same
 		UAVParam.airFormation.set(ground);
