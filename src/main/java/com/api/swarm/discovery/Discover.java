@@ -2,7 +2,7 @@ package com.api.swarm.discovery;
 
 import com.api.API;
 import com.api.ArduSim;
-import com.api.Copter;
+import com.api.copter.Copter;
 import com.api.communications.HighlevelCommLink;
 import com.api.communications.HighlevelCommLink.Keywords;
 import com.api.swarm.SwarmParam;

@@ -2,6 +2,7 @@ package com.protocols.muscop.logic;
 
 import com.api.API;
 import com.api.ProtocolHelper;
+import com.api.MissionHelper;
 import com.api.swarm.formations.Formation;
 import com.api.pojo.location.Waypoint;
 import com.uavController.UAVParam;
@@ -79,7 +80,7 @@ public class MUSCOPHelper extends ProtocolHelper {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		Pair<Location2DGeo, Double>[] startingLocation = new Pair[numUAVs];
 
-		com.api.MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
+		MissionHelper missionHelper = API.getCopter(0).getMissionHelper();
 		List<Waypoint>[] missions = missionHelper.getMissionsLoaded();
 		// missions[0].get(0) is somewhere in Africa
 		Location3DUTM start = new Location3DUTM(missions[0].get(1).getUTM(),0);

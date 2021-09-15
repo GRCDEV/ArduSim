@@ -1,6 +1,6 @@
 package com.protocols.mbcap.logic;
 
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.esotericsoftware.kryo.io.Input;
 import com.protocols.mbcap.gui.MBCAPPCCompanionDialog;
 import com.protocols.mbcap.pojo.Beacon;

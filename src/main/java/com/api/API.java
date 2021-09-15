@@ -1,6 +1,7 @@
 package com.api;
 
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
+import com.api.copter.Copter;
 import com.setup.Param;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;

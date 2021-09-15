@@ -7,7 +7,7 @@ import com.api.ArduSimTools;
 import com.setup.Param;
 import com.setup.Param.SimulatorState;
 import com.setup.Text;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.setup.pccompanion.gui.PCCompanionGUI;
 
 import javax.swing.*;

@@ -1,9 +1,8 @@
 package com.api.communications;
-import com.api.API;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import org.json.JSONObject;
 import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

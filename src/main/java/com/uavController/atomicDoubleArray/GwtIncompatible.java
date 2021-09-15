@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.api.atomicDoubleArrayHelpers;
+package com.uavController.atomicDoubleArray;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

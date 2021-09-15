@@ -1,5 +1,8 @@
-package com.api.communications;
+package com.api.communications.lowLevel;
 
+import com.api.communications.lowLevel.CommLinkObjectSimulation;
+import com.api.communications.lowLevel.Message;
+import com.api.communications.lowLevel.MessageQueue;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;

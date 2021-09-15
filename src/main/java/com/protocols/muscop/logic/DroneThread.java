@@ -2,6 +2,9 @@ package com.protocols.muscop.logic;
 
 import com.api.*;
 import com.api.communications.HighlevelCommLink;
+import com.api.copter.Copter;
+import com.api.MissionHelper;
+import com.api.copter.MoveToListener;
 import com.api.pojo.location.Waypoint;
 import com.api.swarm.Swarm;
 import com.api.swarm.formations.Formation;
@@ -10,7 +13,6 @@ import com.protocols.muscop.gui.MuscopSimProperties;
 
 import static com.protocols.muscop.logic.Message.*;
 
-import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location3D;
 import es.upv.grc.mapper.Location3DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
@@ -90,7 +92,7 @@ class DroneThread extends Thread{
 
     private ArrayList<Location3DUTM> getWaypointsFromMissionHelper() {
         ArrayList<Location3DUTM> waypoints = new ArrayList<>();
-        com.api.MissionHelper missionHelper = API.getCopter(numUAV).getMissionHelper();
+        MissionHelper missionHelper = API.getCopter(numUAV).getMissionHelper();
         List<Waypoint>[] missions = missionHelper.getMissionsLoaded();
         for (int wp_index =1;wp_index<missions[0].size();wp_index++) {
             Waypoint wp = missions[0].get(wp_index);

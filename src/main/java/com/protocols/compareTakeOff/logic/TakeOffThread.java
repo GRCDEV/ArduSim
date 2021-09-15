@@ -2,11 +2,9 @@ package com.protocols.compareTakeOff.logic;
 import com.api.API;
 import com.api.pojo.FlightMode;
 import com.api.swarm.Swarm;
-import com.api.swarm.assignement.AssignmentAlgorithm;
-import com.api.swarm.formations.Formation;
 import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.api.ArduSim;
-import com.api.Copter;
+import com.api.copter.Copter;
 import com.protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
 
 public class TakeOffThread extends Thread{

@@ -1,4 +1,4 @@
-package com.api.pojo;
+package com.api.copter;
 
 import io.dronefleet.mavlink.common.MavParamType;
 import io.dronefleet.mavlink.util.EnumValue;

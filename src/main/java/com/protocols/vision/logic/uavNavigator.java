@@ -3,7 +3,7 @@ package com.protocols.vision.logic;
 
 import com.api.API;
 import com.api.ArduSim;
-import com.api.Copter;
+import com.api.copter.Copter;
 import com.api.GUI;
 import com.api.pojo.FlightMode;
 import com.protocols.vision.logic.visionParam.status;

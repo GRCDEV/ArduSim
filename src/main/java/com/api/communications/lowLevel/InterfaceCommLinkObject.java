@@ -1,4 +1,4 @@
-package com.api.communications;
+package com.api.communications.lowLevel;
 
 /**
  * Communications link object.

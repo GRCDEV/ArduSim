@@ -1,10 +1,10 @@
-package com.api;
+package com.api.copter;
 
+import com.api.*;
 import com.api.hiddenFunctions.HiddenFunctions;
 import com.setup.Param;
 import com.setup.Text;
 import org.javatuples.Quintet;
-import com.api.pojo.CopterParam;
 import com.api.pojo.FlightMode;
 import com.api.pojo.RCValues;
 import es.upv.grc.mapper.Location2D;

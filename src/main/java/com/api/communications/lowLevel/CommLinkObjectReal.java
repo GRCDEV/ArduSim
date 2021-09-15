@@ -1,4 +1,4 @@
-package com.api.communications;
+package com.api.communications.lowLevel;
 
 import com.api.API;
 import com.api.ArduSimTools;
@@ -8,7 +8,7 @@ import com.uavController.UAVParam;
 import java.io.IOException;
 import java.net.*;
 
-public class CommLinkObjectReal implements InterfaceCommLinkObject {
+class CommLinkObjectReal implements InterfaceCommLinkObject {
 
     /**
      * Port used for the sockets

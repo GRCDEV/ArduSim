@@ -1,4 +1,4 @@
-package com.api.communications;
+package com.api.communications.lowLevel;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;

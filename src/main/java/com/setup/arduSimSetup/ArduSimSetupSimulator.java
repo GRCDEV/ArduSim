@@ -2,7 +2,7 @@ package com.setup.arduSimSetup;
 
 import com.api.ArduSim;
 import com.api.ArduSimTools;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.api.communications.RangeCalculusThread;
 import com.setup.InitialConfiguration2Thread;
 import com.setup.Param;

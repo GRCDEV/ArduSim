@@ -1,14 +1,14 @@
 package com.api;
 
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.api.cpuHelper.CPUData;
 import com.api.swarm.SwarmParam;
 import com.api.swarm.assignement.AssignmentAlgorithm;
 import com.api.swarm.formations.Formation;
 import com.api.swarm.formations.FormationFactory;
-import com.api.pojo.AtomicDoubleArray;
+import com.uavController.atomicDoubleArray.AtomicDoubleArray;
 import com.api.pojo.ConcurrentBoundedQueue;
-import com.api.pojo.CopterParam;
+import com.api.copter.CopterParam;
 import com.api.pojo.FlightMode;
 import com.api.pojo.location.LogPoint;
 import com.api.pojo.location.Waypoint;

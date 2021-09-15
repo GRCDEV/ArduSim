@@ -5,7 +5,7 @@ import com.api.pojo.FlightMode;
 import com.protocols.followme.pojo.RemoteInput;
 import com.setup.Param;
 import com.api.ArduSim;
-import com.api.Copter;
+import com.api.copter.Copter;
 import com.api.GUI;
 import com.api.hiddenFunctions.HiddenFunctions;
 

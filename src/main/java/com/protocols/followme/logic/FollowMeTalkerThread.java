@@ -2,9 +2,9 @@ package com.protocols.followme.logic;
 
 import com.api.API;
 import com.api.ArduSim;
-import com.api.Copter;
+import com.api.copter.Copter;
 import com.api.GUI;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.esotericsoftware.kryo.io.Output;
 import com.protocols.followme.pojo.Message;
 import es.upv.grc.mapper.Location2DUTM;

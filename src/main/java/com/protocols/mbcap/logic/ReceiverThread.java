@@ -4,8 +4,8 @@ import com.api.API;
 import com.esotericsoftware.kryo.io.Input;
 import es.upv.grc.mapper.Location3DUTM;
 import com.api.ArduSim;
-import com.api.Copter;
-import com.api.communications.LowLevelCommLink;
+import com.api.copter.Copter;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.protocols.mbcap.pojo.Beacon;
 
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package com.setup.sim.logic;
 
 import com.api.API;
-import com.api.pojo.CopterParam;
+import com.api.copter.CopterParam;
 import com.api.hiddenFunctions.HiddenFunctions;
 import com.uavController.UAVParam;
 

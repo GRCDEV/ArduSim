@@ -1,7 +1,7 @@
 package com.api.swarm.discovery;
 
 import com.api.ArduSim;
-import com.api.communications.CommLinkObjectSimulation;
+import com.api.communications.lowLevel.CommLinkObjectSimulation;
 import com.api.communications.RangeCalculusThread;
 import com.api.communications.WirelessModel;
 import com.setup.Param;

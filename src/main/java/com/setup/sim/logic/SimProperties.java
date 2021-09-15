@@ -2,8 +2,8 @@ package com.setup.sim.logic;
 
 import com.api.API;
 import com.api.ArduSimTools;
-import com.api.communications.LowLevelCommLink;
-import com.api.communications.CommLinkObjectSimulation;
+import com.api.communications.lowLevel.LowLevelCommLink;
+import com.api.communications.lowLevel.CommLinkObjectSimulation;
 import com.api.communications.RangeCalculusThread;
 import com.api.communications.WirelessModel;
 import com.api.cpuHelper.CPUUsageThread;

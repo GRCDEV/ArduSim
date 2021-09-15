@@ -4,9 +4,9 @@ import com.api.API;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.api.ArduSim;
-import com.api.Copter;
+import com.api.copter.Copter;
 import com.api.GUI;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.protocols.shakeup.pojo.Param;
 
 import java.util.Arrays;

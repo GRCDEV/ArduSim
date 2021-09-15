@@ -1,7 +1,8 @@
 package com.protocols.shakeup.logic;
 
 import com.api.*;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
+import com.api.copter.Copter;
 import com.esotericsoftware.kryo.io.Input;
 import com.protocols.shakeup.logic.state.DataState;
 import com.protocols.shakeup.pojo.Param;

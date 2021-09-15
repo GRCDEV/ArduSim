@@ -1,4 +1,4 @@
-package com.api.communications;
+package com.api.communications.lowLevel;
 
 import com.api.API;
 import com.api.ArduSim;

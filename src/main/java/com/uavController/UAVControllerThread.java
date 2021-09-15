@@ -18,7 +18,7 @@ import com.setup.Param;
 import com.setup.Param.SimulatorState;
 import com.setup.Text;
 import com.api.ArduSim;
-import com.api.CopterParamLoaded;
+import com.api.copter.CopterParamLoaded;
 import com.api.ValidationTools;
 import com.setup.sim.logic.SimParam;
 import com.setup.sim.logic.SimTools;

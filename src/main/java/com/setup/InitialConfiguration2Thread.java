@@ -2,11 +2,9 @@ package com.setup;
 
 import com.api.API;
 import com.api.ArduSimTools;
-import com.api.Copter;
-import com.api.API;
-import com.api.pojo.CopterParam;
+import com.api.copter.Copter;
+import com.api.copter.CopterParam;
 import com.api.pojo.location.Waypoint;
-import com.api.Copter;
 import com.setup.sim.gui.MissionKmlSimProperties;
 import com.uavController.UAVParam;
 

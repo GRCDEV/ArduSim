@@ -2,10 +2,10 @@ package com.setup;
 
 import com.api.*;
 import com.api.API;
-import com.api.pojo.CopterParam;
+import com.api.copter.CopterParam;
 import com.api.pojo.FlightMode;
 import com.api.ArduSim;
-import com.api.Copter;
+import com.api.copter.Copter;
 import com.api.hiddenFunctions.HiddenFunctions;
 import com.setup.sim.gui.MissionKmlSimProperties;
 import com.setup.sim.logic.SimParam;

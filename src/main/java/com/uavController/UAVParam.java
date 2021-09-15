@@ -1,5 +1,7 @@
 package com.uavController;
 
+import com.uavController.atomicDoubleArray.AtomicDoubleArray;
+import com.api.copter.CopterParam;
 import com.api.pojo.*;
 import com.api.pojo.location.Waypoint;
 import com.api.pojo.location.WaypointSimplified;
@@ -7,7 +9,7 @@ import es.upv.grc.mapper.Location2DUTM;
 import es.upv.grc.mapper.Location3DGeo;
 import io.dronefleet.mavlink.annotations.MavlinkMessageInfo;
 import io.dronefleet.mavlink.common.GlobalPositionInt;
-import com.api.CopterParamLoaded;
+import com.api.copter.CopterParamLoaded;
 import com.api.swarm.formations.Formation;
 
 import java.util.List;

@@ -1,12 +1,14 @@
 package com.protocols.followme.logic;
 
 import com.api.*;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
+import com.api.copter.Copter;
+import com.api.copter.MoveTo;
+import com.api.copter.MoveToListener;
 import com.api.swarm.Swarm;
 import com.api.swarm.SwarmParam;
 import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.esotericsoftware.kryo.io.Input;
-import com.protocols.followme.gui.FollowmeSimProperties;
 import com.protocols.followme.pojo.Message;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.*;

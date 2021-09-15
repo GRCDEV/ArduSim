@@ -2,7 +2,7 @@ package com.protocols.shakeup.logic;
 
 import com.api.API;
 import com.api.ArduSim;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.protocols.shakeup.pojo.Param;
 
 public class ShakeupTalkerThread extends Thread{

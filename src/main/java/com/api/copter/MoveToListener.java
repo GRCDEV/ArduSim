@@ -1,4 +1,4 @@
-package com.api;
+package com.api.copter;
 
 /**
  * Interface that must be implemented in order to apply actions when a UAV reaches a target location.

@@ -11,9 +11,7 @@
  * to use AtomicLongArray instead of sun.misc.Unsafe)
  */
 
-package com.api.pojo;
-
-import com.api.atomicDoubleArrayHelpers.GwtIncompatible;
+package com.uavController.atomicDoubleArray;
 
 import java.util.concurrent.atomic.AtomicLongArray;
 

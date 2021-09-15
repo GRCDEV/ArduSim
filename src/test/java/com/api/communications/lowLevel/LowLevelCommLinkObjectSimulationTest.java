@@ -1,6 +1,7 @@
-package com.api.communications;
+package com.api.communications.lowLevel;
 
 import com.api.ArduSim;
+import com.api.communications.lowLevel.CommLinkObjectSimulation;
 import com.setup.Param;
 import com.uavController.UAVParam;
 import org.junit.jupiter.params.ParameterizedTest;

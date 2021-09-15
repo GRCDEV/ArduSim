@@ -1,5 +1,6 @@
 package com.api;
 
+import com.api.copter.Copter;
 import com.setup.Param;
 import com.setup.Text;
 import com.api.pojo.FlightMode;
@@ -9,8 +10,6 @@ import es.upv.grc.mapper.Location2DGeo;
 import es.upv.grc.mapper.Location2DUTM;
 import io.dronefleet.mavlink.common.MavCmd;
 import io.dronefleet.mavlink.util.EnumValue;
-import com.api.ArduSimTools;
-import com.setup.Text;
 import com.api.hiddenFunctions.HiddenFunctions;
 import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
@@ -41,7 +40,7 @@ public class MissionHelper {
 	@SuppressWarnings("unused")
 	private MissionHelper() {}
 	
-	protected MissionHelper(int numUAV, Copter copter) {
+	public MissionHelper(int numUAV, Copter copter) {
 		this.numUAV = numUAV;
 		this.ardusim = API.getArduSim();
 		this.copter = copter;

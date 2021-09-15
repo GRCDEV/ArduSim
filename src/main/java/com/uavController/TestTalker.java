@@ -8,7 +8,7 @@ import com.setup.Param;
 import com.setup.Param.SimulatorState;
 import com.setup.Text;
 import com.api.ArduSim;
-import com.api.communications.LowLevelCommLink;
+import com.api.communications.lowLevel.LowLevelCommLink;
 import com.setup.pccompanion.logic.PCCompanionParam;
 
 import java.io.IOException;

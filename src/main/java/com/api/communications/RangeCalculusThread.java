@@ -3,8 +3,8 @@ package com.api.communications;
 import com.api.API;
 import com.api.ArduSim;
 import com.api.ArduSimTools;
+import com.api.communications.lowLevel.CommLinkObjectSimulation;
 import com.setup.Param;
-import com.setup.Text;
 import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
 

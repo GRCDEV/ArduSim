@@ -1,8 +1,9 @@
-package com.api.communications;
+package com.api.communications.lowLevel;
 
 import com.api.API;
 import com.api.ArduSim;
 import com.api.ValidationTools;
+import com.api.communications.WirelessModel;
 import com.setup.Param;
 import com.setup.Text;
 import com.setup.sim.logic.SimParam;

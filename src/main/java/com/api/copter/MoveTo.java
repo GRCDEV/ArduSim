@@ -1,5 +1,8 @@
-package com.api;
+package com.api.copter;
 
+import com.api.API;
+import com.api.ArduSim;
+import com.api.GUI;
 import com.setup.Text;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location3D;
