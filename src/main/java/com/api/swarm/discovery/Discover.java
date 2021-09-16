@@ -72,6 +72,7 @@ public class Discover {
     }
 
     private void logVerboseUAVsDiscovered() {
+        gui.log("Locations of UAVs discovered");
         for(Map.Entry<Long,Location3DUTM> e:UAVsDiscovered.entrySet()){
             gui.logVerbose(e.getKey() + "\t" + e.getValue());
         }
@@ -80,10 +81,9 @@ public class Discover {
     private void slaveDiscovering() {
         Location3DUTM loc = getLocation3DUTM();
         JSONObject locationMsg = Message.location(numUAV,tempMasterId,loc);
-        commLink.sendJSONUntilACKReceived(locationMsg,tempMasterId,1);
+        commLink.sendJSONUntilACKReceived(locationMsg,tempMasterId,2);
         gui.logVerbose(numUAV + " done");
     }
-
 
     private Location3DUTM getLocation3DUTM() {
         Copter copter = API.getCopter(numUAV);

@@ -4,12 +4,10 @@ import com.api.communications.HighlevelCommLink;
 import es.upv.grc.mapper.Location3DUTM;
 import org.javatuples.Pair;
 import org.json.JSONObject;
-
-import java.awt.image.Kernel;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Message {
+class Message {
 
     private final static int LOCATION  = 1;
     private final static int DONE = 2;

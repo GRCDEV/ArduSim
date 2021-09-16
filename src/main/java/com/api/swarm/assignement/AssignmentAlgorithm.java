@@ -32,7 +32,6 @@ public abstract class AssignmentAlgorithm {
             Location3DUTM airLocation = entry.getValue();
             totalDist += Math.pow(groundLocation.distance3D(airLocation),2);
         }
-
         return totalDist;
     }
 

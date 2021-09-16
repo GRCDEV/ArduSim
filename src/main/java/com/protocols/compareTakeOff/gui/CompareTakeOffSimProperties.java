@@ -22,7 +22,7 @@ public class CompareTakeOffSimProperties {
     public double groundMinDistance;
     public static AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgorithm;
     public static Formation flyingFormation;
-    public double flyingMinDistance;
+    public static double flyingMinDistance;
     public double landingMinDistance;
 
     public static int timeout = 200;

@@ -2,202 +2,168 @@ package com.api.swarm.takeoff;
 
 import com.api.*;
 import com.api.communications.HighlevelCommLink;
-import com.api.communications.HighlevelCommLink.Keywords;
-import com.api.copter.Copter;
-import com.api.copter.MoveToListener;
-import com.api.copter.TakeOffListener;
-import com.api.swarm.SwarmParam;
+import com.api.copter.*;
 import es.upv.grc.mapper.Location3D;
 import es.upv.grc.mapper.Location3DUTM;
 import es.upv.grc.mapper.LocationNotReadyException;
 import org.json.JSONObject;
-
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 class simultaneously extends TakeoffAlgorithm {
-    HighlevelCommLink commLink;
+
+    private final boolean isMaster;
+    private int masterId;
+    private HighlevelCommLink commLink;
+    private Copter copter;
 
     public simultaneously(Map<Long, Location3DUTM> assignment) {
         this.assignment = assignment;
+        this.isMaster = assignment != null;
     }
 
     @Override
     public void takeOff(int numUAV) {
-        System.out.println(numUAV + " start takeoff process");
-        this.numUAV = numUAV;
         this.commLink = new HighlevelCommLink(numUAV);
-        boolean isMaster = assignment!=null;
+        this.numUAV = numUAV;
+        this.copter = API.getCopter(numUAV);
+        if(isMaster){this.masterId = numUAV;}
+        GUI gui = API.getGUI(numUAV);
+
+        gui.updateProtocolState("Take off");
+        obtainTargetLocation();
+        gui.logVerbose("UAV:" + numUAV + "\t target location: " + targetLocation);
+
+        moveToTarget();
+        waitUntilEverybodyHasReachedTarget();
+    }
+
+    private void obtainTargetLocation() {
         if(isMaster){
-            setOwnTargetLocation();
-            setSlaveTargetLocation();
-            moveUAVToTargetLocation(sendOrderToTakeOff());
-            System.out.println("master done taking off");
+            setMasterTargetLocation();
+            sendTargetLocationsToSlaves();
         }else{
-            targetLocation = waitForTargetLocation();
-            sendLocACKAndWaitUntilTakeOffMsg();
-            moveUAVToTargetLocation(ACKOrderToTakeOff());
-            System.out.println(numUAV + " slave done taking off");
+            receiveTargetLocationFromMaster();
         }
     }
 
-    private void moveUAVToTargetLocation(Thread thread) {
-        thread.start();
-        moveToTargetLocation();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    private void setMasterTargetLocation() {
+        targetLocation = assignment.get((long)numUAV);
+    }
+
+    private void sendTargetLocationsToSlaves() {
+        for(Map.Entry<Long,Location3DUTM> e:assignment.entrySet()){
+            int id = e.getKey().intValue();
+            if(id == numUAV){continue;}
+            JSONObject msg = Message.location(numUAV,id,e.getValue());
+            commLink.sendJSONUntilACKReceived(msg,id,1);
         }
     }
 
-    private void setOwnTargetLocation() {
-        targetLocation = assignment.get((long) numUAV);
+    private void receiveTargetLocationFromMaster() {
+        JSONObject msg = commLink.receiveMessageReplyACK(Message.location(numUAV),1);
+        targetLocation = Message.processLocation(msg);
+        masterId = msg.getInt(HighlevelCommLink.Keywords.SENDERID);
     }
 
-    private void setSlaveTargetLocation() {
-        Set<Integer> yetToSendLocation = createSlavesIDSet();
-        while(yetToSendLocation.size()>0){
-            sendLocation(yetToSendLocation);
-            Set<Integer> acks = receiveAckLocation();
-            yetToSendLocation.removeAll(acks);
+    private void moveToTarget() {
+        if(isMaster){
+            sendMoveMsgToSlaves();
+        }else{
+            commLink.receiveMessageReplyACK(Message.move(numUAV),1);
         }
-    }
-
-    private Set<Integer> createSlavesIDSet() {
-        Set<Integer> yetToSendLocation = new HashSet<>();
-        for(int i=0;i<assignment.size();i++){
-            if(i==numUAV){continue;}
-            yetToSendLocation.add(i);
-        }
-        return yetToSendLocation;
-    }
-
-    private void sendLocation(Set<Integer> yetToSendLocation) {
-        JSONObject locationMsg = new JSONObject();
-        locationMsg.put(Keywords.SENDERID,numUAV);
-        locationMsg.put(Keywords.MESSAGEID,SwarmParam.MSG_TAKEOFFLOC);
-        for(long slaveId:yetToSendLocation){
-            locationMsg.put(Keywords.RECEIVERID,slaveId);
-            Location3DUTM loc = assignment.get(slaveId);
-            locationMsg.put("x",loc.x);
-            locationMsg.put("y",loc.y);
-            locationMsg.put("z",loc.z);
-            commLink.sendJSON(locationMsg);
-        }
-    }
-
-    private Set<Integer> receiveAckLocation() {
-        Map<String,Object> mandatoryFields = new HashMap<>();
-        mandatoryFields.put(Keywords.MESSAGEID,-SwarmParam.MSG_TAKEOFFLOC);
-        Set<Integer> acks = new HashSet<>();
-        for(int i=0;i<5;i++) {
-            JSONObject msg = commLink.receiveMessage(mandatoryFields);
-            if (msg != null) {
-                acks.add(msg.getInt(Keywords.SENDERID));
-            }
-        }
-        return acks;
-    }
-
-    private Thread sendOrderToTakeOff() {
-        JSONObject takeOffOrder = new JSONObject();
-        takeOffOrder.put(Keywords.MESSAGEID,SwarmParam.MSG_TAKEOFF);
-        takeOffOrder.put(Keywords.SENDERID,numUAV);
-        return new Thread(()->{
-            commLink.sendJSONUntilACKsReceived(takeOffOrder,createSlavesIDSet());
-        });
-    }
-
-    private Thread ACKOrderToTakeOff() {
-        Map<String,Object> mandatoryFields = new HashMap<>();
-        mandatoryFields.put(Keywords.MESSAGEID,SwarmParam.MSG_TAKEOFF);
-        return new Thread(() ->{
-            commLink.receiveMessageReplyACK(mandatoryFields,10);
-        });
-    }
-
-    private Location3DUTM waitForTargetLocation() {
-        Map<String,Object> mandatoryFields = new HashMap<>();
-        mandatoryFields.put(Keywords.MESSAGEID,SwarmParam.MSG_TAKEOFFLOC);
-        mandatoryFields.put(Keywords.RECEIVERID,numUAV);
-        while(true){
-            JSONObject msg = commLink.receiveMessage(mandatoryFields);
-            if(msg != null){
-                return new Location3DUTM(msg.getDouble("x"), msg.getDouble("y"), msg.getDouble("z"));
-            }
-        }
-    }
-
-    private void sendLocACKAndWaitUntilTakeOffMsg() {
-        Map<String,Object> mandatoryFields = new HashMap<>();
-        mandatoryFields.put(Keywords.MESSAGEID,SwarmParam.MSG_TAKEOFF);
-        while(true){
-            sendLocACK();
-            JSONObject msg = commLink.receiveMessage(mandatoryFields);
-            if(msg != null){
-                break;
-            }
-        }
-    }
-
-    private void sendLocACK() {
-        JSONObject locACK = new JSONObject();
-        locACK.put(Keywords.SENDERID,numUAV);
-        locACK.put(Keywords.MESSAGEID,-SwarmParam.MSG_TAKEOFFLOC);
-        commLink.sendJSON(locACK);
-    }
-
-    private void moveToTargetLocation() {
-        ascend(SwarmParam.minimalTakeoffAltitude);
+        ascend(5);
         moveDiagonallyToTarget();
     }
 
-    private void ascend(double altitude) {
-        AtomicBoolean altitudeReached = new AtomicBoolean(false);
-        Copter copter = API.getCopter(numUAV);
-        copter.takeOff(altitude, new TakeOffListener() {
-            @Override
-            public void onCompleteActionPerformed() {
-                altitudeReached.set(true);
-            }
-
-            @Override
-            public void onFailure() {
-            }
-        }).start();
-
-        while(!altitudeReached.get()){
-            API.getArduSim().sleep(200);
+    private void sendMoveMsgToSlaves() {
+        for(Long idl:assignment.keySet()){
+            int id = idl.intValue();
+            if(id == numUAV){continue;}
+            JSONObject msg = Message.move(numUAV,id);
+            commLink.sendJSONUntilACKReceived(msg,id,1);
         }
     }
 
     private void moveDiagonallyToTarget() {
-        AtomicBoolean locationReached = new AtomicBoolean(false);
         try {
-            Location3D airLocation = new Location3D(targetLocation);
-            Copter copter = API.getCopter(numUAV);
-            copter.moveTo(airLocation, new MoveToListener() {
+            MoveTo t = copter.moveTo(new Location3D(targetLocation), new MoveToListener() {
                 @Override
                 public void onCompleteActionPerformed() {
-                    locationReached.set(true);
+
                 }
 
                 @Override
                 public void onFailure() {
 
                 }
-            }).start();
+            });
+            t.start();
+            join(t);
         } catch (LocationNotReadyException e) {
             e.printStackTrace();
         }
+    }
 
-        while(!locationReached.get()){
-            API.getArduSim().sleep(500);
+    private void ascend(int altitude) {
+        TakeOff t = copter.takeOff(altitude, new TakeOffListener() {
+            @Override
+            public void onCompleteActionPerformed() {}
+            @Override
+            public void onFailure() { }
+        });
+        t.start();
+        join(t);
+    }
+
+    private void waitUntilEverybodyHasReachedTarget() {
+        if(isMaster){
+            waitForSlaveToReachTarget();
+            sendDone();
+        }else{
+            sendReachedTarget();
+            waitForMsgDone();
         }
     }
 
+    private void waitForSlaveToReachTarget() {
+        Set<Integer> UAVsReachedTarget = new HashSet<>();
+        while(UAVsReachedTarget.size() < assignment.size()-1) {
+            JSONObject msg = commLink.receiveMessage(Message.targetReached(numUAV));
+            if(msg != null){
+                int senderId = msg.getInt(HighlevelCommLink.Keywords.SENDERID);
+                if(!UAVsReachedTarget.contains(senderId)){
+                    UAVsReachedTarget.add(senderId);
+                    commLink.sendACK(msg);
+                    commLink.sendACK(msg);
+                }
+            }
+        }
+    }
+
+    private void sendDone() {
+        Set<Integer> slaveIds = assignment.keySet().stream().map(Long::intValue).collect(Collectors.toSet());
+        slaveIds.remove(numUAV);
+        commLink.sendJSONUntilACKsReceived(Message.done(numUAV),slaveIds);
+    }
+
+    private void sendReachedTarget() {
+        commLink.sendJSONUntilACKReceived(Message.targetReached(numUAV,masterId),masterId,1);
+    }
+
+    private void waitForMsgDone() {
+        while(commLink.receiveMessageReplyACK(Message.done(),2) == null){
+            API.getArduSim().sleep(200);
+        }
+    }
+
+    private void join(Thread t){
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }
