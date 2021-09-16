@@ -11,7 +11,8 @@ public class HighlevelCommLink {
 
     private final int numUAV;
     private final LowLevelCommLink commLink;
-    private final int timeout;
+    private final int sendingTimeout;
+    private final int readingTimeout;
 
     public static class Keywords{
         public static final String MESSAGEID = "msgID";
@@ -22,28 +23,30 @@ public class HighlevelCommLink {
     public HighlevelCommLink(int numUAV){
         this.numUAV = numUAV;
         this.commLink = LowLevelCommLink.getCommLink(numUAV);
-        this.timeout = 50;
+        this.sendingTimeout = 200;
+        this.readingTimeout = 50;
     }
 
     public HighlevelCommLink(int numUAV, int portnumber){
         this.numUAV = numUAV;
         this.commLink = LowLevelCommLink.getCommLink(numUAV,portnumber);
-        this.timeout = 50;
+        this.sendingTimeout = 200;
+        this.readingTimeout = 50;
     }
 
     public void sendJSON(JSONObject message){
         String s = message.toString();
         commLink.sendBroadcastMessage(s.getBytes());
-        sleep();
+        sleep(sendingTimeout);
     }
 
     public JSONObject receiveMessage(){
         JSONObject message = null;
-        byte[] inBuffer = commLink.receiveMessage(timeout);
+        byte[] inBuffer = commLink.receiveMessage(readingTimeout);
         if (inBuffer != null) {
             String msg = new String(inBuffer, Charset.defaultCharset());
             message = new JSONObject(msg);
-            sleep();
+            sleep(readingTimeout);
         }
         return message;
     }
@@ -51,7 +54,7 @@ public class HighlevelCommLink {
     public JSONObject receiveMessage(Map<String,Object> mandatoryFields){
         JSONObject message = receiveMessage();
         if(doesMessageContainAllMandatoryFields(mandatoryFields,message)){
-            sleep();
+            sleep(readingTimeout);
             return message;
         }
         sleep(5);
@@ -117,7 +120,7 @@ public class HighlevelCommLink {
         }
     }
 
-    private void sendACK(JSONObject message){
+    public void sendACK(JSONObject message){
         int msgID = message.getInt(Keywords.MESSAGEID);
         int receiverID = message.getInt(Keywords.SENDERID);
         JSONObject ackMessage = new JSONObject();
@@ -125,10 +128,6 @@ public class HighlevelCommLink {
         ackMessage.put(Keywords.RECEIVERID,receiverID);
         ackMessage.put(Keywords.MESSAGEID,-msgID);
         sendJSON(ackMessage);
-    }
-
-    private void sleep() {
-       sleep(timeout);
     }
 
     private void sleep(int millies){

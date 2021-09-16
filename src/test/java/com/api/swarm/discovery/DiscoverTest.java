@@ -16,6 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
+
 class DiscoverTest {
 
     final Location2D[] startingLocations = new Location2D[]{
@@ -47,9 +51,9 @@ class DiscoverTest {
         Param.selectedWirelessModel = WirelessModel.NONE;
         Param.numUAVs = numUAVs;
         Param.simStatus = Param.SimulatorState.STARTING_UAVS;
-        Param.verboseLogging = false;
+        Param.verboseLogging = true;
         UAVParam.uavCurrentData = new UAVCurrentData[Param.numUAVs];
-        CommLinkObjectSimulation.init(numUAVs,true,true,100);
+        CommLinkObjectSimulation.init(numUAVs,true,true,163840);
 
         double[] speed = new double[]{2,2,2};
         for(int numUAV=0;numUAV<numUAVs;numUAV++){
@@ -73,23 +77,16 @@ class DiscoverTest {
     @Test
     void start(){
         Discover master = new Discover(0);
-        new Thread(master::start).start();
+        Thread masterThread = new Thread(master::start);
+        masterThread.start();
         startSlaves();
-        waitUntilDone(10000);
-        Assertions.assertEquals(4, Thread.activeCount(), "The discovery has not ended in time");
+        try {
+            masterThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         Map<Long, Location3DUTM> discovered = master.getUAVsDiscovered();
         Assertions.assertEquals(numUAVs, discovered.size());
-    }
-
-    private void waitUntilDone(int timeout) {
-        long timeStamp = System.currentTimeMillis();
-        while (Thread.activeCount() > 4 && (System.currentTimeMillis() - timeStamp < timeout)) {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private void startSlaves() {

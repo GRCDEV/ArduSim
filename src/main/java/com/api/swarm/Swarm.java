@@ -31,6 +31,7 @@ public class Swarm {
     }
 
     public void takeOff(int numUAV){
+        API.getGUI(numUAV).updateProtocolState("TAKE_OFF");
         takeoff.takeOff(numUAV);
     }
 
@@ -76,7 +77,6 @@ public class Swarm {
         }
 
         public Swarm build(){
-            System.out.println("START BUILING SWARM");
             Discover d = new Discover(numUAV);
             d.start();
             Map<Long, Location3DUTM> assignment = null;
@@ -93,6 +93,7 @@ public class Swarm {
         }
 
         private Map<Long, Location3DUTM> getAssignment(int numUAVs, Map<Long, Location3DUTM> groundLocations, Location3DUTM centerUAVLocation) {
+            API.getGUI(numUAV).updateProtocolState("ASSIGNMENT");
             Map<Long, Location3DUTM> assignment;
             Map<Long, Location3DUTM> airLocations = new HashMap<>();
             for(int i = 0; i< numUAVs; i++){

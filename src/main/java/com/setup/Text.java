@@ -429,16 +429,6 @@ public class Text {
 	
 	// Thread names
 	public static final String TAKEOFF_THREAD = "TakeOffThread thread ";
-	public static final String DISCOVERY_MASTER_LISTENER = "Discovery master listener: ";
-	public static final String DISCOVERY_MASTER_TALKER = "Discovery master talker: ";
-	public static final String DISCOVERY_SLAVE_LISTENER = "Discovery slave listener: ";
-	public static final String DISCOVERY_SLAVE_TALKER = "Discovery slave talker: ";
-	public static final String SAFE_TAKE_OFF_MASTER_CONTEXT_LISTENER = "Safe take off master context retrieval listener";
-	public static final String SAFE_TAKE_OFF_MASTER_CONTEXT_TALKER = "Safe take off master context retrieval talker";
-	public static final String SAFE_TAKE_OFF_SLAVE_CONTEXT_LISTENER = "Safe take off slave context retrieval listener";
-	public static final String SAFE_TAKE_OFF_SLAVE_CONTEXT_TALKER = "Safe take off slave context retrieval talker";
-	public static final String SAFE_TAKE_OFF_LISTENER = "Safe take off listener: ";
-	public static final String SAFE_TAKE_OFF_TAKER = "Safe take off talker: ";
 
 	// New GUI
 	public static final String LOADING_ERROR = "Loading error";

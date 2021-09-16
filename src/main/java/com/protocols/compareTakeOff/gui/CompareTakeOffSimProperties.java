@@ -27,7 +27,7 @@ public class CompareTakeOffSimProperties {
 
     public static int timeout = 200;
     public static double masterInitialYaw = 0.0;
-    public static double altitude = 5.0;
+    public static double altitude = 15;
     public static double masterInitialLatitude = 39.482615; // (degrees) Latitude for simulations
     public static double masterInitialLongitude = -0.34629; // (degrees) Longitude for simulations
 
