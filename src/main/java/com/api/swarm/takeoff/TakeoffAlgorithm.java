@@ -6,7 +6,7 @@ import java.util.Map;
 public abstract class TakeoffAlgorithm {
 
     public enum TakeoffAlgorithms{
-        SEQUENTIAL,SEMI_SEQUENTIAL,SIMULTANEOUSLY
+        SEQUENTIAL,SEMI_SEQUENTIAL,SEMI_SIMULTANEOUS, SIMULTANEOUS
     }
 
     protected Map<Long, Location3DUTM> assignment;

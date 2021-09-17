@@ -39,7 +39,7 @@ public class TakeOffThread extends Thread{
 		swarm =  new Swarm.Builder(copter.getID())
                 .assignmentAlgorithm(CompareTakeOffSimProperties.assignmentAlgorithm)
                 .airFormationLayout(CompareTakeOffSimProperties.flyingFormation.getLayout(),CompareTakeOffSimProperties.flyingMinDistance)
-                .takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SEQUENTIAL,CompareTakeOffSimProperties.altitude)
+                .takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SEMI_SIMULTANEOUS,CompareTakeOffSimProperties.altitude)
                 .build();
     }
 

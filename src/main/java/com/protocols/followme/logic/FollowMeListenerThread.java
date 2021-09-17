@@ -75,7 +75,7 @@ public class FollowMeListenerThread extends Thread {
 		Swarm swarm =  new Swarm.Builder(copter.getID())
 				.assignmentAlgorithm(SwarmParam.assignmentAlgorithm)
 				.airFormationLayout(UAVParam.airFormation.get().getLayout(),30)
-				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUSLY,30) //TODO use parameter altitude
+				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUS,30) //TODO use parameter altitude
 				.build();
 		return swarm;
 	}

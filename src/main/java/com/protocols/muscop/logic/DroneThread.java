@@ -70,7 +70,7 @@ class DroneThread extends Thread{
         swarm =  new Swarm.Builder(numUAV)
                 .assignmentAlgorithm(MuscopSimProperties.assignmentAlgorithm)
                 .airFormationLayout(MuscopSimProperties.flyingFormation.getLayout(),10)
-                .takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUSLY,MuscopSimProperties.altitude)
+                .takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUS,MuscopSimProperties.altitude)
                 .build();
     }
 

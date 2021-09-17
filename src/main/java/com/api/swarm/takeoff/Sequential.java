@@ -16,14 +16,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class sequential extends TakeoffAlgorithm {
+class Sequential extends TakeoffAlgorithm {
 
     private final boolean isMaster;
     private int masterId;
     private HighlevelCommLink commLink;
     private Copter copter;
 
-    public sequential(Map<Long, Location3DUTM> assignment) {
+    public Sequential(Map<Long, Location3DUTM> assignment) {
         this.assignment = assignment;
         this.isMaster = assignment != null;
     }

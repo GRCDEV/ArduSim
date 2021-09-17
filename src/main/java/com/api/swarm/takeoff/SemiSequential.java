@@ -4,9 +4,9 @@ import es.upv.grc.mapper.Location3DUTM;
 
 import java.util.Map;
 
-class semiSequential extends TakeoffAlgorithm {
+class SemiSequential extends TakeoffAlgorithm {
 
-    public semiSequential(Map<Long, Location3DUTM> assignment) {
+    public SemiSequential(Map<Long, Location3DUTM> assignment) {
         this.assignment = assignment;
     }
 

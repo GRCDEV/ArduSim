@@ -20,6 +20,11 @@ public abstract class AssignmentAlgorithm {
         return assignment;
     }
 
+    public Map<Long, Location3DUTM> getGroundLocations(){
+        return groundLocations;
+    }
+
+
     public abstract AssignmentAlgorithms getAssignmentAlgorithm();
 
     public float getTotalDistanceSquared(){

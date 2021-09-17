@@ -79,29 +79,27 @@ public class Swarm {
         public Swarm build(){
             Discover d = new Discover(numUAV);
             d.start();
-            Map<Long, Location3DUTM> assignment = null;
+            AssignmentAlgorithm assignment = null;
             Set<Long> IDs = new HashSet<>();
             if(d.getMasterUAVId() == numUAV) {
                 Location3DUTM airCenterLoc = d.getCenterLocation();
                 airCenterLoc.z = altitude;
-                assignment = getAssignment(numUAVs, d.getUAVsDiscovered(), airCenterLoc);
-                IDs = assignment.keySet();
+                Map<Long, Location3DUTM> groundLocations = d.getUAVsDiscovered();
+                assignment = getAssignment(numUAVs, groundLocations, airCenterLoc);
+                IDs = groundLocations.keySet();
             }
 
             TakeoffAlgorithm takeoff = TakeoffAlgorithmFactory.newTakeoffAlgorithm(takeoffAlgo, assignment);
             return new Swarm(takeoff, d.getMasterUAVId(),IDs,airFormation);
         }
 
-        private Map<Long, Location3DUTM> getAssignment(int numUAVs, Map<Long, Location3DUTM> groundLocations, Location3DUTM centerUAVLocation) {
+        private AssignmentAlgorithm getAssignment(int numUAVs, Map<Long, Location3DUTM> groundLocations, Location3DUTM centerUAVLocation) {
             API.getGUI(numUAV).updateProtocolState("ASSIGNMENT");
-            Map<Long, Location3DUTM> assignment;
             Map<Long, Location3DUTM> airLocations = new HashMap<>();
             for(int i = 0; i< numUAVs; i++){
                 airLocations.put((long)i, airFormation.get3DUTMLocation(centerUAVLocation,i));
             }
-            AssignmentAlgorithm a = AssignmentAlgorithmFactory.newAssignmentAlgorithm(assignmentAlgo, groundLocations, airLocations);
-            assignment = a.getAssignment();
-            return assignment;
+            return AssignmentAlgorithmFactory.newAssignmentAlgorithm(assignmentAlgo, groundLocations, airLocations);
         }
 
     }
