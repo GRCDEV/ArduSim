@@ -10,8 +10,6 @@ import java.util.Map;
 class Message {
 
     private final static int LOCATION  = 1;
-    private final static int DONE = 2;
-
 
     public static JSONObject location(int numUAV,int receiver, Location3DUTM loc){
         JSONObject msg = new JSONObject();

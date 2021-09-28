@@ -9,20 +9,18 @@ import com.api.swarm.SwarmParam;
 import com.setup.Param;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location3DUTM;
-import org.javatuples.Pair;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Discover {
+public abstract class Discover {
 
-    private int tempMasterId;
-    private final int numUAV;
-    private final int numUAVs;
-    private final Map<Long, Location3DUTM> UAVsDiscovered = new HashMap<>();
-    private final HighlevelCommLink commLink;
-    private final GUI gui;
+    protected int masterId;
+    protected final int numUAV;
+    protected final int numUAVs;
+    protected final Map<Long, Location3DUTM> UAVsDiscovered = new HashMap<>();
+    protected final HighlevelCommLink commLink;
+    protected final GUI gui;
 
     public Discover(int numUAV){
         this.numUAV = numUAV;
@@ -34,74 +32,49 @@ public class Discover {
 
     public void start() {
         gui.updateProtocolState("DISCOVERING");
-        if (numUAV == tempMasterId) {
+        if (numUAV == masterId) {
             masterDiscovering();
         } else {
             slaveDiscovering();
         }
-    }
-
-    public int getMasterUAVId(){return tempMasterId;}
-
-    public Location3DUTM getCenterLocation(){
-        if(numUAV == tempMasterId){
-            return getLocation3DUTM();
-        }
-        return null;
+        //TODO change the master UAV afterwards so that it is the center UAV and not just UAV 0
     }
 
     public Map<Long, Location3DUTM> getUAVsDiscovered(){
         return UAVsDiscovered;
     }
 
-    private void masterDiscovering() {
-        Location3DUTM loc = getLocation3DUTM();
-        UAVsDiscovered.put((long)numUAV,loc);
-        while(UAVsDiscovered.size() != numUAVs){
-            JSONObject msg = commLink.receiveMessage(Message.location(numUAV));
-            if(msg != null){
-                Pair<Long, Location3DUTM> p = Message.processLocation(msg);
-                if(!UAVsDiscovered.containsKey(p.getValue0())) {
-                    UAVsDiscovered.put(p.getValue0(), p.getValue1());
-                    commLink.sendACK(msg);
-                    gui.logVerbose("Discovered UAV: "  + p.getValue0() + "\t UAVs discovered: " + UAVsDiscovered.size() + "/" + numUAVs);
-                }
-            }
+    public int getMasterUAVId(){return masterId;}
+
+    public Location3DUTM getCenterLocation(){
+        if(numUAV == masterId){
+            return getLocation3DUTM();
         }
-        logVerboseUAVsDiscovered();
+        return null;
     }
 
-    private void logVerboseUAVsDiscovered() {
-        gui.log("Locations of UAVs discovered");
-        for(Map.Entry<Long,Location3DUTM> e:UAVsDiscovered.entrySet()){
-            gui.logVerbose(e.getKey() + "\t" + e.getValue());
-        }
-    }
-
-    private void slaveDiscovering() {
-        Location3DUTM loc = getLocation3DUTM();
-        JSONObject locationMsg = Message.location(numUAV,tempMasterId,loc);
-        commLink.sendJSONUntilACKReceived(locationMsg,tempMasterId,2);
-        gui.logVerbose(numUAV + " done");
-    }
-
-    private Location3DUTM getLocation3DUTM() {
-        Copter copter = API.getCopter(numUAV);
-        return new Location3DUTM(copter.getLocation().getUTMLocation(), copter.getAltitude());
-    }
-
-    private void setTempMasterId() {
+    protected void setTempMasterId() {
         int role = Param.role;
         if (role == ArduSim.MULTICOPTER) {
             /* You get the id = f(MAC addresses) for real drone */
             long thisUAVID = Param.id[0];
             for (int i = 0; i < SwarmParam.macIDs.length; i++) {
                 if (thisUAVID == SwarmParam.macIDs[i]) {
-                    tempMasterId = i;
+                    masterId = i;
                 }
             }
         } else if (role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-            tempMasterId = 0;
+            masterId = 0;
         }
     }
+
+    protected Location3DUTM getLocation3DUTM() {
+        //TODO update this method because now it only works if it is invoked by the master
+        Copter copter = API.getCopter(numUAV);
+        return new Location3DUTM(copter.getLocation().getUTMLocation(), copter.getAltitude());
+    }
+
+
+    abstract void masterDiscovering();
+    abstract void slaveDiscovering();
 }

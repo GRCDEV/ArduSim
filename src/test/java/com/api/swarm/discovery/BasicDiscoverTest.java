@@ -16,11 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
-import static org.junit.jupiter.api.Assertions.assertTimeout;
 
-class DiscoverTest {
+class BasicDiscoverTest {
 
     final Location2D[] startingLocations = new Location2D[]{
             new Location2D(-0.34700,39.48070),
@@ -76,7 +73,7 @@ class DiscoverTest {
 
     @Test
     void start(){
-        Discover master = new Discover(0);
+        Discover master = new BasicDiscover(0);
         Thread masterThread = new Thread(master::start);
         masterThread.start();
         startSlaves();
@@ -95,7 +92,7 @@ class DiscoverTest {
             UAVs.add(numUAV);
         }
         UAVs.forEach(numUAV -> new Thread(() -> {
-            Discover d = new Discover(numUAV);
+            BasicDiscover d = new BasicDiscover(numUAV);
             d.start();
         }).start());
     }

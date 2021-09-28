@@ -7,8 +7,10 @@ import com.api.copter.MoveTo;
 import com.api.copter.MoveToListener;
 import com.api.swarm.Swarm;
 import com.api.swarm.SwarmParam;
+import com.api.swarm.discovery.BasicDiscover;
 import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.esotericsoftware.kryo.io.Input;
+import com.protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
 import com.protocols.followme.pojo.Message;
 import com.uavController.UAVParam;
 import es.upv.grc.mapper.*;
@@ -26,7 +28,8 @@ public class FollowMeListenerThread extends Thread {
 	private boolean isMaster;
 	private Copter copter;
 	private GUI gui;
-	private ArduSim ardusim;
+	private ArduSim arduSim;
+	private boolean setupDone=false;
 	
 	private LowLevelCommLink link;
 	byte[] inBuffer;
@@ -45,13 +48,16 @@ public class FollowMeListenerThread extends Thread {
 		this.link = LowLevelCommLink.getCommLink(numUAV);
 		this.inBuffer = new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH];
 		this.input = new Input(inBuffer);
-		this.ardusim = API.getArduSim();
+		this.arduSim = API.getArduSim();
 		this.isMaster = numUAV == SwarmParam.masterId;
 	}
 
 	@Override
 	public void run() {
+		while (!arduSim.isSetupInProgress()) { arduSim.sleep(CompareTakeOffSimProperties.timeout);}
 		Swarm swarm = setup();
+		setupDone = true;
+		while (!arduSim.isExperimentInProgress()){arduSim.sleep(CompareTakeOffSimProperties.timeout);}
 		takeoff(swarm);
 		follow();
 		land();
@@ -59,20 +65,8 @@ public class FollowMeListenerThread extends Thread {
 	}
 
 	private Swarm setup() {
-		waitUntilArdusimIsAvailable();
-		Swarm swarm = getSwarm();
-		waitUntilExperimentIsInProcess();
-		return swarm;
-	}
-
-	private void waitUntilExperimentIsInProcess() {
-		while (!ardusim.isExperimentInProgress()){
-			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
-		}
-	}
-
-	private Swarm getSwarm() {
 		Swarm swarm =  new Swarm.Builder(copter.getID())
+				.discover(new BasicDiscover(numUAV))
 				.assignmentAlgorithm(SwarmParam.assignmentAlgorithm)
 				.airFormationLayout(UAVParam.airFormation.get().getLayout(),30)
 				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUS,30) //TODO use parameter altitude
@@ -80,11 +74,8 @@ public class FollowMeListenerThread extends Thread {
 		return swarm;
 	}
 
-	private void waitUntilArdusimIsAvailable() {
-		do{
-			ardusim.sleep(FollowMeParam.STATE_CHANGE_TIMEOUT);
-		} while (!(ardusim.isAvailable() && ardusim.isSetupInProgress()));
-		gui.logUAV(FollowMeText.START);
+	public boolean isSetupDone(){
+		return setupDone;
 	}
 
 	private void follow() {
@@ -210,7 +201,7 @@ public class FollowMeListenerThread extends Thread {
 				cicleTime = cicleTime + FollowMeParam.LAND_CHECK_TIMEOUT;
 				waitingTime = cicleTime - System.currentTimeMillis();
 				if (waitingTime > 0) {
-					ardusim.sleep(waitingTime);
+					arduSim.sleep(waitingTime);
 				}
 			}
 		}

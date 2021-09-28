@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class FollowMeHelper extends ProtocolHelper {
 
+	FollowMeListenerThread master;
+
 	@Override
 	public void setProtocol() {
 		this.protocolString = FollowMeText.PROTOCOL_TEXT;
@@ -135,7 +137,9 @@ public class FollowMeHelper extends ProtocolHelper {
 	@Override
 	public void startThreads() {
 		int numUAVs = API.getArduSim().getNumUAVs();
-		for (int i = 0; i < numUAVs; i++) {
+		master = new FollowMeListenerThread(0);
+		master.start();
+		for (int i = 1; i < numUAVs; i++) {
 			new FollowMeListenerThread(i).start();
 		}
 		API.getGUI(0).log(FollowMeText.ENABLING);
@@ -143,6 +147,13 @@ public class FollowMeHelper extends ProtocolHelper {
 
 	@Override
 	public void setupActionPerformed() {
+		while(!master.isSetupDone()){
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override

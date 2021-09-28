@@ -3,6 +3,7 @@ package com.api.swarm;
 import com.api.API;
 import com.api.swarm.assignement.AssignmentAlgorithm;
 import com.api.swarm.assignement.AssignmentAlgorithmFactory;
+import com.api.swarm.discovery.BasicDiscover;
 import com.api.swarm.discovery.Discover;
 import com.api.swarm.formations.Formation;
 import com.api.swarm.formations.FormationFactory;
@@ -52,12 +53,18 @@ public class Swarm {
         private final int numUAVs;
         private AssignmentAlgorithm.AssignmentAlgorithms assignmentAlgo;
         private TakeoffAlgorithm.TakeoffAlgorithms takeoffAlgo;
+        private Discover d;
         private double altitude;
         private Formation airFormation;
 
         public Builder(long numUAV){
             this.numUAV = (int) numUAV;
             this.numUAVs = API.getArduSim().getNumUAVs();
+        }
+
+        public Builder discover(Discover discover){
+            this.d = discover;
+            return this;
         }
         public Builder assignmentAlgorithm(AssignmentAlgorithm.AssignmentAlgorithms algo){
             this.assignmentAlgo = algo;
@@ -77,7 +84,6 @@ public class Swarm {
         }
 
         public Swarm build(){
-            Discover d = new Discover(numUAV);
             d.start();
             AssignmentAlgorithm assignment = null;
             Set<Long> IDs = new HashSet<>();

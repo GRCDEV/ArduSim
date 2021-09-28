@@ -2,6 +2,7 @@ package com.protocols.compareTakeOff.logic;
 import com.api.API;
 import com.api.pojo.FlightMode;
 import com.api.swarm.Swarm;
+import com.api.swarm.discovery.BasicDiscover;
 import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.api.ArduSim;
 import com.api.copter.Copter;
@@ -37,9 +38,10 @@ public class TakeOffThread extends Thread{
 
     private void setup() {
 		swarm =  new Swarm.Builder(copter.getID())
+                .discover(new BasicDiscover(numUAV))
                 .assignmentAlgorithm(CompareTakeOffSimProperties.assignmentAlgorithm)
                 .airFormationLayout(CompareTakeOffSimProperties.flyingFormation.getLayout(),CompareTakeOffSimProperties.flyingMinDistance)
-                .takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SEMI_SIMULTANEOUS,CompareTakeOffSimProperties.altitude)
+                .takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUS,CompareTakeOffSimProperties.altitude)
                 .build();
     }
 

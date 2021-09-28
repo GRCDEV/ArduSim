@@ -7,6 +7,7 @@ import com.api.MissionHelper;
 import com.api.copter.MoveToListener;
 import com.api.pojo.location.Waypoint;
 import com.api.swarm.Swarm;
+import com.api.swarm.discovery.BasicDiscover;
 import com.api.swarm.formations.Formation;
 import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.protocols.muscop.gui.MuscopSimProperties;
@@ -68,6 +69,7 @@ class DroneThread extends Thread{
     private void buildSwarm() {
         gui.updateProtocolState(State.SETUP.name());
         swarm =  new Swarm.Builder(numUAV)
+                .discover(new BasicDiscover(numUAV))
                 .assignmentAlgorithm(MuscopSimProperties.assignmentAlgorithm)
                 .airFormationLayout(MuscopSimProperties.flyingFormation.getLayout(),10)
                 .takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUS,MuscopSimProperties.altitude)
