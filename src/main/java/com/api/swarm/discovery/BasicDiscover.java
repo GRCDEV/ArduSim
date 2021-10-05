@@ -21,6 +21,7 @@ public class BasicDiscover extends Discover {
                 if(!UAVsDiscovered.containsKey(p.getValue0())) {
                     UAVsDiscovered.put(p.getValue0(), p.getValue1());
                     commLink.sendACK(msg);
+                    commLink.sendACK(msg);
                     gui.logVerbose("Discovered UAV: "  + p.getValue0() + "\t UAVs discovered: " + UAVsDiscovered.size() + "/" + numUAVs);
                 }
             }
@@ -38,7 +39,7 @@ public class BasicDiscover extends Discover {
     void slaveDiscovering() {
         Location3DUTM loc = getLocation3DUTM();
         JSONObject locationMsg = Message.location(numUAV, masterId,loc);
-        commLink.sendJSONUntilACKReceived(locationMsg, masterId,2);
+        commLink.sendJSONUntilACKReceived(locationMsg, masterId,1);
         gui.logVerbose(numUAV + " done");
     }
 

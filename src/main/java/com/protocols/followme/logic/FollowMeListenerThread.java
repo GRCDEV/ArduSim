@@ -65,13 +65,12 @@ public class FollowMeListenerThread extends Thread {
 	}
 
 	private Swarm setup() {
-		Swarm swarm =  new Swarm.Builder(copter.getID())
+		return new Swarm.Builder(copter.getID())
 				.discover(new BasicDiscover(numUAV))
 				.assignmentAlgorithm(SwarmParam.assignmentAlgorithm)
 				.airFormationLayout(UAVParam.airFormation.get().getLayout(),30)
-				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUS,30) //TODO use parameter altitude
+				.takeOffAlgorithm(TakeoffAlgorithm.TakeoffAlgorithms.SIMULTANEOUS,70) //do not change the altitude or the drones will fall
 				.build();
-		return swarm;
 	}
 
 	public boolean isSetupDone(){

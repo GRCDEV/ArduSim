@@ -49,7 +49,6 @@ public class RemoteThread extends Thread {
 		if (role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 			Queue<RemoteInput> path = FollowMeParam.masterData;
 			RemoteInput data;
-			boolean landing = false;
 			long start = System.nanoTime();
 			while(copter.getAltitudeRelative() <= startingAltitude){
 				ardusim.sleep(200);
