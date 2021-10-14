@@ -38,7 +38,6 @@ class KMA extends AssignmentAlgorithm {
             for(int j = 0;j<numUAVs;j++){
                 Location3DUTM airLocation = airLocations.get((long)j);
                 float distanceSquared = (float) Math.pow(groundLocation.distance3D(airLocation), 2);
-                distanceSquared = Math.round(distanceSquared*100)/100f;
                 costmatrix[i][j] = distanceSquared;
             }
         }
