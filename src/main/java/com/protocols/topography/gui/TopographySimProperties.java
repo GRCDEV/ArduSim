@@ -21,6 +21,9 @@ public class TopographySimProperties {
     public Formation formation;
     public double minDistance;
     public static File ascFile;
+    public static float kp;
+    public static float kd;
+    public static float lookAhead;
 
     public boolean storeParameters(Properties guiParams, ResourceBundle fileParams){
         // First check if there are parameters set in the file who are not accessed by the gui
@@ -68,6 +71,8 @@ public class TopographySimProperties {
                     var.set(this, FormationFactory.newFormation(Formation.Layout.valueOf(value.toUpperCase())));
                 }else if(type.equals("double")) {
                     var.setDouble(this, Double.parseDouble(value));
+                }else if(type.equals("float")){
+                    var.setFloat(this,Float.parseFloat(value));
                 }else if(type.contains("File")){
                     File f = new File(API.getFileTools().getResourceFolder().toString(), value);
                     String extension = value.substring(value.lastIndexOf('.') + 1);

@@ -1417,11 +1417,12 @@ public class ArduSimTools {
 			if ((jarEntry.getName().endsWith(".class"))) {
 				String className = jarEntry.getName().replaceAll("/", "\\.");
 				if (!className.startsWith("smile.") && !className.startsWith("ch.ethz")
-						&& !className.startsWith("com") && !className.startsWith("org.objenesis")
+						&& !className.startsWith("org.objenesis")
 						&& !className.startsWith("org.javatuples") && !className.startsWith("gnu.io")
 						&& !className.startsWith("org.apache") && !className.startsWith("org.mavlink")
 						&& !className.startsWith("org.objectweb") && !className.startsWith("org.hyperic")
 						&& !className.startsWith("javafx")
+						//used to include && !className.startsWith("com")
 				) {
 					res.add(className.substring(0, className.lastIndexOf('.')));
 				}
@@ -1465,8 +1466,16 @@ public class ArduSimTools {
 			className = existingClass;
 			try {
 				// Ignore special case
+				/*
 				if (!className.toUpperCase().endsWith("WINREGISTRY")
 						&& !className.equals("module-info") ) {
+					currentClass = Class.forName(className);
+					if (ProtocolHelper.class.isAssignableFrom(currentClass) && !ProtocolHelper.class.equals(currentClass)) {
+						classesMap.put(existingClass, currentClass);
+					}
+				}
+				 */
+				if(className.startsWith("com.protocols.")){
 					currentClass = Class.forName(className);
 					if (ProtocolHelper.class.isAssignableFrom(currentClass) && !ProtocolHelper.class.equals(currentClass)) {
 						classesMap.put(existingClass, currentClass);

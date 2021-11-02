@@ -136,7 +136,12 @@ public class GUI {
 			}else if(Param.role == ArduSim.SIMULATOR_CLI){
 				try {
 					MissionKmlSimProperties properties = new MissionKmlSimProperties();
-					FileInputStream fis = new FileInputStream(SimParam.missionParameterFile);
+					FileInputStream fis;
+					if(!ArduSimTools.isRunningFromJar()) {
+						fis = new FileInputStream(SimParam.missionParameterFile);
+					}else{
+						fis = new FileInputStream(API.getFileTools().getResourceFolder() + File.separator + "missionParam.properties");
+					}
 					ResourceBundle resources = new PropertyResourceBundle(fis);
 					fis.close();
 					Properties p = new Properties();

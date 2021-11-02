@@ -95,7 +95,6 @@ public class TopographyHelper extends ProtocolHelper {
      */
     @Override
     public void initializeDataStructures() {
-
         //Create DEM object
         dem = new DEM(TopographySimProperties.ascFile.getAbsolutePath());
 
@@ -123,12 +122,9 @@ public class TopographyHelper extends ProtocolHelper {
         List<Waypoint>[] missions = API.getCopter(0).getMissionHelper().getMissionsLoaded();
 
         // missions[0].get(0) is somewhere in Africa
-        Location2DUTM start = missions[0].get(1).getUTM();
-        Formation f = UAVParam.groundFormation.get();
-
         for(int i = 0; i < numUAVs; i++) {
             try {
-                startingLocation[i] = new Pair<>(f.get3DUTMLocation(new Location3DUTM(start,0), i).getGeo(), 0.0);
+                startingLocation[i] = new Pair<>(missions[0].get(1).getUTM().getGeo(), 0.0);
             } catch (LocationNotReadyException e) {
                 e.printStackTrace();
                 return null;
@@ -167,7 +163,7 @@ public class TopographyHelper extends ProtocolHelper {
 
         for(int i = 0;i<numUAVs;i++){
             Copter copter = API.getCopter(i);
-            Thread t = copter.takeOff(copter.getMissionHelper().getMissionsLoaded()[0].get(1).getAltitude(), null);
+            Thread t = copter.takeOff(10, null);
             threads.add(t);
             t.start();
         }

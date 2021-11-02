@@ -53,8 +53,12 @@ public class FileTools {
 	 * @return the folder ardusim/src/main/resources
 	 */
 	public Path getResourceFolder(){
-		String fs = File.separator;
-		return Paths.get(getSourceFolder() + fs + "main" + fs + "resources");
+		if(!ArduSimTools.isRunningFromJar()) {
+			String fs = File.separator;
+			return Paths.get(getSourceFolder() + fs + "main" + fs + "resources");
+		}else{
+			return Paths.get(getCurrentFolder().getAbsolutePath());
+		}
 	}
 
 

@@ -302,7 +302,7 @@ public class SimProperties {
                 return false;
             }
             // Automatically select the parameter file (copter.parm)
-            File paramPath = new File(sitlPath.getParent() + File.separator + SimParam.PARAM_FILE_NAME);
+            File paramPath = new File(getParent(sitlPath) + SimParam.PARAM_FILE_NAME);
             if (!paramPath.exists()) {
                 ArduSimTools.logGlobal(Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
                 ArduSimTools.warnGlobal(Text.SITL_SELECTION_ERROR, Text.SITL_ERROR_2 + "\n" + SimParam.PARAM_FILE_NAME);
@@ -316,6 +316,15 @@ public class SimProperties {
 
             return true;
         }else{return false;}
+    }
+
+    private String getParent(File sitlPath) {
+        //File paramPath = new File(sitlPath.getParent() + File.separator + SimParam.PARAM_FILE_NAME);
+        // for some reason the above does not work so implemented it myself
+        String oldValue = sitlPath.getAbsolutePath();
+        int lastIndex = oldValue.lastIndexOf(File.separator, oldValue.length() - 2);
+        String newValue = oldValue.substring(0, lastIndex + 1);
+        return newValue;
     }
 
 
