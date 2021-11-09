@@ -3,7 +3,6 @@ package com.api.communications.lowLevel;
 import com.api.API;
 import com.api.ArduSimTools;
 import com.setup.Text;
-import com.uavController.UAVParam;
 
 import java.io.IOException;
 import java.net.*;
@@ -38,26 +37,55 @@ class CommLinkObjectReal implements InterfaceCommLinkObject {
      * For the statistics: Total number of packages received
      */
     private int totalPackagesReceived;
+
+    private String ip;
     /**
      * Constructor for CommLinkObject used only for real UAVs
      * @param port: port used for communication
      */
-    public CommLinkObjectReal(int port) {
+    public CommLinkObjectReal(String ip, int port, boolean broadcast) {
         this.port = port;
+        this.ip = ip;
+
+        if(broadcast){
+            initForAdHocUse(ip,port);
+        }else{
+            initForUPServerUse(ip,port);
+        }
+    }
+
+    private void initForAdHocUse(String ip, int port) {
         try {
-            sendSocket = new DatagramSocket();
-            sendSocket.setBroadcast(true);
-            sendPacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH],
-                    LowLevelCommLink.DATAGRAM_MAX_LENGTH,
-                    InetAddress.getByName(UAVParam.broadcastIP),
-                    port);
-            receiveSocket = new DatagramSocket(port);
-            receiveSocket.setBroadcast(true);
-            receivePacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH], LowLevelCommLink.DATAGRAM_MAX_LENGTH);
+        sendSocket = new DatagramSocket();
+        sendPacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH],
+                LowLevelCommLink.DATAGRAM_MAX_LENGTH,
+                InetAddress.getByName(ip),
+                port);
+        receiveSocket = new DatagramSocket(port);
+        sendSocket.setBroadcast(true);
+        receiveSocket.setBroadcast(true);
+        receivePacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH], LowLevelCommLink.DATAGRAM_MAX_LENGTH);
         } catch (SocketException | UnknownHostException e) {
+            e.printStackTrace();
             ArduSimTools.closeAll(Text.THREAD_START_ERROR);
         }
     }
+
+    private void initForUPServerUse(String ip, int port) {
+        try {
+            sendSocket = new DatagramSocket();
+            sendPacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH],
+                    LowLevelCommLink.DATAGRAM_MAX_LENGTH,
+                    InetAddress.getByName(ip),
+                    port);
+            receiveSocket = new DatagramSocket(port+1);
+            receivePacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH], LowLevelCommLink.DATAGRAM_MAX_LENGTH);
+        } catch (SocketException | UnknownHostException e) {
+            e.printStackTrace();
+            ArduSimTools.closeAll(Text.THREAD_START_ERROR);
+        }
+    }
+
     /**
      * Method used to send a broadcast message in the ether.
      * @param numUAV: identifier of the UAV sending the message
@@ -96,7 +124,7 @@ class CommLinkObjectReal implements InterfaceCommLinkObject {
      */
     @Override
     public String toString() {
-        return  "\n\t" + Text.BROADCAST_IP + " " + UAVParam.broadcastIP +
+        return  "\n\t" + Text.BROADCAST_IP + " " + ip +
                 "\n\t" + Text.BROADCAST_PORT + " " + port +
                 "\n\t" + Text.TOT_SENT_PACKETS + " " + totalPackagesSend +
                 "\n\t" + Text.TOT_PROCESSED + " " + totalPackagesReceived;

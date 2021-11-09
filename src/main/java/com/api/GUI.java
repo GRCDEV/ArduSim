@@ -75,7 +75,7 @@ public class GUI {
 	}
 
 	/**
-	 * Loads the main.java.com.protocols.mission files
+	 * Loads the mission files
 	 * @param missionFiles list with files
 	 * @return pair of string and waypoints
 	 */

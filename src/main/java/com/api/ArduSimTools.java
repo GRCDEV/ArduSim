@@ -76,7 +76,7 @@ public class ArduSimTools {
 	
 	private static volatile boolean storingResults = false;
 	
-	// Available main.java.com.api.protocols (Internal use by ArduSim)
+	// Available protocols (Internal use by ArduSim)
 	public static Class<?>[] ProtocolClasses;
 	public static volatile String[] ProtocolNames = null;
 	public static volatile String noneProtocolName = null;
@@ -1288,7 +1288,7 @@ public class ArduSimTools {
 		return protocolLaunched;
 	}
 	
-	/** Loads the implemented main.java.com.api.protocols and retrieves the name of each one.
+	/** Loads the implemented protocols and retrieves the name of each one.
 	 * <p>Protocol names are case-sensitive. Returns null if no valid implementations were found.</p> */
 	public static void loadAndStoreProtocols() {
 		String[] existingProtocols = loadProtocols();
@@ -2329,7 +2329,7 @@ public class ArduSimTools {
 		return null;
 	}
 
-	/** Loads a main.java.com.protocols.mission from a standard QGroundControl file.
+	/** Loads a mission from a standard QGroundControl file.
 	 * <p>Returns null if the file is not valid or it is empty.</p> */
 	public static List<Waypoint> loadMissionFile(String path) {
 	

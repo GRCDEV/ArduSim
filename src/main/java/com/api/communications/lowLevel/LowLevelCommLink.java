@@ -57,6 +57,10 @@ public class LowLevelCommLink {
 	public static LowLevelCommLink getCommLink(int numUAV, int portNumber) {
 		return new LowLevelCommLink(numUAV,Param.numUAVs,portNumber);
 	}
+
+	public static LowLevelCommLink getExternalCommLink(int numUAV){
+		return new LowLevelCommLink(numUAV);
+	}
 	/**
 	 * Private constructor of CommLink in order to facilitate the singletonPattern
 	 * @param numUAV: the number of the current UAV (identifier)
@@ -71,8 +75,18 @@ public class LowLevelCommLink {
 				if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
 					links.put(port, new CommLinkObjectSimulation(numUAVs, port));
 				}else{
-					links.put(port, new CommLinkObjectReal(port));
+					links.put(port, new CommLinkObjectReal(UAVParam.broadcastIP,port,true));
 				}
+			}
+		}
+	}
+
+	private LowLevelCommLink(int numUAV){
+		this.port = 1505;
+		this.numUAV = numUAV;
+		synchronized(LOCK) {
+			if(!links.containsKey(port)) {
+				links.put(port, new CommLinkObjectReal("192.168.111.206",port, false));
 			}
 		}
 	}
@@ -92,7 +106,7 @@ public class LowLevelCommLink {
 				errorMessageShown = true;
 			}
 		} else {
-			links.get(port).sendBroadcastMessage(numUAV,message);
+			links.get(port).sendBroadcastMessage(numUAV, message);
 		}
 	}
 	/**
