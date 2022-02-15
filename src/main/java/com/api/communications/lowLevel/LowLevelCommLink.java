@@ -82,11 +82,11 @@ public class LowLevelCommLink {
 	}
 
 	private LowLevelCommLink(int numUAV){
-		this.port = 1505;
+		this.port = UAVParam.broadcastPort;
 		this.numUAV = numUAV;
 		synchronized(LOCK) {
 			if(!links.containsKey(port)) {
-				links.put(port, new CommLinkObjectReal("192.168.111.206",port, false));
+				links.put(port, new CommLinkObjectReal(UAVParam.broadcastIP,port, false));
 			}
 		}
 	}

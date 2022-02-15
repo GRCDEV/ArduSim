@@ -128,7 +128,7 @@ public class MissionHelper {
 	public boolean pause() {
 		if (HiddenFunctions.stabilize(numUAV) && this.copter.setFlightMode(FlightMode.BRAKE)) {
 			long time = System.nanoTime();
-			while (UAVParam.uavCurrentData[numUAV].getSpeed() > UAVParam.STABILIZATION_SPEED) {
+			while (UAVParam.uavCurrentData[numUAV].getHorizontalSpeed() > UAVParam.STABILIZATION_SPEED) {
 				ardusim.sleep(UAVParam.STABILIZATION_WAIT_TIME);
 				if (System.nanoTime() - time > UAVParam.STABILIZATION_TIMEOUT) {
 					ArduSimTools.logGlobal(SimParam.prefix[numUAV] + Text.STOP_ERROR_1);

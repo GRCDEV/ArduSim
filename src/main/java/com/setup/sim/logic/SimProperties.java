@@ -44,6 +44,7 @@ public class SimProperties {
     private WirelessModel communicationModel;
     private double fixedRangeDistance;
     private boolean collisionDetection;
+    private boolean stopAtCollision;
     private double checkPeriod;
     private double distanceThreshold;
     private double altitudeThreshold;
@@ -51,6 +52,8 @@ public class SimProperties {
     private int windDirection;
     private double windSpeed;
     private double simSpeedup;
+    private String updServerIP;
+    private int udpServerPort;
 
 
     public ResourceBundle readResourceGUI(){
@@ -122,8 +125,10 @@ public class SimProperties {
                     var.set(this,value);
                 }else if(type.contains("java.io.File")){
                     var.set(this,new File(value));
-                }else if(type.split(" ")[1].contains("WirelessModel")){
-                    var.set(this,WirelessModel.getModelByName(value));
+                }else if(type.split(" ")[1].contains("WirelessModel")) {
+                    var.set(this, WirelessModel.getModelByName(value));
+                }else if(type.contains("String")){
+                    var.set(this,value);
                 }else{
                     ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_STORE_PARAMETERS + type);
                     return false;
@@ -200,6 +205,7 @@ public class SimProperties {
         communicationModel = WirelessModel.NONE;
         fixedRangeDistance = 800;
         collisionDetection = false;
+        stopAtCollision = false;
         checkPeriod = 0.5;
         distanceThreshold = 5.0;
         altitudeThreshold = 20.0;
@@ -207,6 +213,8 @@ public class SimProperties {
         windDirection = 90;
         windSpeed = 0.5;
         simSpeedup = 1.0;
+        updServerIP="192.168.111.206";
+        udpServerPort=1505;
     }
     public void createPropertiesFile(File f){
         // take the current parameters (intern in SimProperties) and write them to a file
@@ -257,6 +265,7 @@ public class SimProperties {
             Param.fixedRange = fixedRangeDistance;
         }
         UAVParam.collisionCheckEnabled= collisionDetection;
+        UAVParam.stopAtCollision = stopAtCollision;
         if (UAVParam.collisionCheckEnabled) {
             // check period
             UAVParam.collisionCheckPeriod = checkPeriod;
@@ -278,6 +287,8 @@ public class SimProperties {
             Param.windSpeed = Param.DEFAULT_WIND_SPEED;
         }
         UAVParam.SIM_SPEEDUP = simSpeedup;
+        UAVParam.broadcastIP = updServerIP;
+        UAVParam.broadcastPort = udpServerPort;
     }
     public boolean validateSpeedFile(File f){
         String path = f.getAbsolutePath();

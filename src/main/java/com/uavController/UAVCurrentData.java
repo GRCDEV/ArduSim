@@ -102,8 +102,13 @@ public class UAVCurrentData {
 	}
 
 	/** Returns the current ground speed (m/s). */
-	public synchronized double getSpeed() {
+	public synchronized double getHorizontalSpeed() {
 		return this.groundSpeed;
+	}
+	
+	/** Returns array of speeds x,y,z */
+	public synchronized double[] getSpeedComponents(){
+		return this.speed;
 	}
 
 	/** Returns the current heading (rad). */

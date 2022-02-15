@@ -163,7 +163,7 @@ public class TopographyHelper extends ProtocolHelper {
 
         for(int i = 0;i<numUAVs;i++){
             Copter copter = API.getCopter(i);
-            Thread t = copter.takeOff(10, null);
+            Thread t = copter.takeOff(DroneThread.desiredAltitude, null);
             threads.add(t);
             t.start();
         }

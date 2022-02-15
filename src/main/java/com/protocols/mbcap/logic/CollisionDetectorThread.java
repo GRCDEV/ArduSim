@@ -468,13 +468,13 @@ public class CollisionDetectorThread extends Thread implements WaypointReachedLi
 												} catch (InterruptedException ignored) {}
 												// Even when the UAV is close to destination, we also wait for it to be almost still
 												long time = System.nanoTime();
-												double speed = copter.getSpeed();
+												double speed = copter.getHorizontalSpeed();
 												while (speed > MBCAPParam.STABILIZATION_SPEED) {
 													ardusim.sleep(MBCAPParam.STABILIZATION_WAIT_TIME);
 													if (System.nanoTime() - time > MBCAPParam.STABILIZATION_TIMEOUT) {
 														break;
 													}
-													speed = copter.getSpeed();
+													speed = copter.getHorizontalSpeed();
 												}
 												if (speed > MBCAPParam.STABILIZATION_SPEED) {
 													gui.logUAV(MBCAPText.MOVING_ERROR_2);

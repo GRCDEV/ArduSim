@@ -91,7 +91,7 @@ public class Text {
 	public static final String COLLISION_ALTITUDE = "Altitude difference threshold:";
 	public static final String COLLISION_DETECTED = "Collision detected!";
 	public static final String COLLISION_TITLE = "Collision detected";
-	public static final String COLLISION_DETECTED_ERROR_1 = "Emergency landing due to the collision between the UAVs";
+	public static final String COLLISION_DETECTED_ERROR_1 = "collision between the UAVs";
 	public static final String COLLISION_DETECTED_ERROR_2 = "It is suggested to close the application.\nCollision detected between the UAVs";
 	public static final String WIND = "Wind:";
 	public static final String WIND_DIRECTION = "Direction:";

@@ -50,6 +50,7 @@ public class UAVParam {
 	public static volatile boolean distanceCalculusIsOnline = false;		// Whether the distance calculus service is online or not
 	public static AtomicReference<Double>[][] distances;					// (m) Stored distances between UAVs
 	public static volatile boolean collisionCheckEnabled = false;	// Whether the collision check is enabled or not
+	public static volatile boolean stopAtCollision;					// stop the experiment if collision detected. Note collisioncheck enable must be true
 	public static volatile double collisionCheckPeriod = 0.5;		// (s) Between two checks
 	public static long appliedCollisionCheckPeriod;					// (ms) The same parameter but in milliseconds
 	public static volatile double collisionDistance = 5;			// (m) Distance to assert that a collision has happened (UTM coordinates)
@@ -261,5 +262,4 @@ public class UAVParam {
 	public static Map<String, CopterParamLoaded>[] loadedParams;
 	public static int[] totParams;
 	public static boolean[][] paramLoaded;
-
 }

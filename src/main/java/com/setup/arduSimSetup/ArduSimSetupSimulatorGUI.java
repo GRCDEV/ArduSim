@@ -1,8 +1,6 @@
 package com.setup.arduSimSetup;
 
 import com.api.API;
-import javafx.application.Platform;
-import javafx.stage.Stage;
 import com.api.ArduSimTools;
 import com.setup.Param;
 import com.setup.Text;
@@ -12,7 +10,11 @@ import com.setup.sim.gui.ProgressDialog;
 import com.setup.sim.gui.ResultsDialog;
 import com.setup.sim.logic.SimParam;
 import com.setup.sim.logic.SimTools;
-
+import javafx.application.Platform;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -37,6 +39,7 @@ public class ArduSimSetupSimulatorGUI extends ArduSimSetupSimulator{
     protected void lauchMainWindow(){
         SwingUtilities.invokeLater(() -> MainWindow.window = new MainWindow());
     }
+
     @Override
     protected void loadProtocolConfiguration(){
         ArduSimTools.selectedProtocolInstance.openConfigurationDialogFX();

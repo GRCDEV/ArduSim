@@ -12,6 +12,11 @@ import com.setup.Text;
 import com.api.ArduSim;
 import com.uavController.UAVParam;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 /** 
  * Thread used to detect possible collisions among UAVs in simulations.
  * <p>Developed by: Francisco Jos&eacute; Fabra Collado, from GRC research group in Universitat Polit&egrave;cnica de Val&egrave;ncia (Valencia, Spain).</p> */
@@ -31,6 +36,11 @@ public class CollisionDetector extends Thread {
 				|| Param.simStatus == Param.SimulatorState.SETUP_IN_PROGRESS
 				|| Param.simStatus == Param.SimulatorState.READY_FOR_TEST) {
 			ardusim.sleep(SimParam.LONG_WAITING_TIME);
+		}
+
+		Map<Integer, Set<Integer>> collisionMap = new HashMap<>();
+		for(int i=0;i<Param.numUAVs;i++){
+			collisionMap.put(i,new HashSet<>());
 		}
 
 		long checkTime = System.currentTimeMillis();
@@ -77,7 +87,7 @@ public class CollisionDetector extends Thread {
 									if (distance < UAVParam.collisionDistance
 											&& Math.abs(UAVParam.uavCurrentData[i].getZ()-UAVParam.uavCurrentData[j].getZ()) < UAVParam.collisionAltitudeDifference) {
 										check = true;
-										// If there is a main.java.com.protocols.mission, avoid checking while landing
+										// If there is a mission, avoid checking while landing
 										otherLastWP = UAVParam.lastWP[j];
 										if (otherLastWP != null) {
 											lastWPUTM = UAVParam.lastWPUTM[j];
@@ -99,12 +109,14 @@ public class CollisionDetector extends Thread {
 										if (check) {
 											ArduSimTools.logGlobal(Text.COLLISION_DETECTED_ERROR_1 + " " + i + " - " + j + "(d=" + API.getValidationTools().roundDouble(distance, 2) + ").");
 											ArduSimTools.updateGlobalInformation(Text.COLLISION_DETECTED);
-											
-											// The main.java.com.api.protocols must be stopped
-											UAVParam.collisionDetected = true;
-											this.landAll();
-											// Advising the user
-											ArduSimTools.warnGlobal(Text.COLLISION_TITLE, Text.COLLISION_DETECTED_ERROR_2 + " " + i + " - " + j);
+											collisionMap.get(i).add(j);
+											if(UAVParam.stopAtCollision){
+												UAVParam.collisionDetected = true;
+												this.landAll();
+												//Advising the user
+												ArduSimTools.warnGlobal(Text.COLLISION_TITLE, Text.COLLISION_DETECTED_ERROR_2 + " " + i + " - " + j);
+											}
+
 										}
 									}
 								}
@@ -119,8 +131,30 @@ public class CollisionDetector extends Thread {
 				ardusim.sleep(waitingTime);
 			}
 		}
+
+		if(!UAVParam.stopAtCollision) {
+			writeMapToCSV(collisionMap);
+		}
 	}
-	
+
+	private void writeMapToCSV(Map<Integer, Set<Integer>> collisionMap) {
+		String timeStamp = new SimpleDateFormat("yyyyMMddHHmm'.txt'").format(new Date());
+		String filename = "Collisions"+timeStamp;
+		try {
+			FileWriter fw = new FileWriter(filename);
+			for(int i=0;i<Param.numUAVs;i++){
+				fw.write(i + ":");
+				fw.write(collisionMap.get(i).toString());
+				fw.write("\n");
+			}
+			fw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+
+	}
+
 	/**
 	 * Land all the UAVs that are flying.
 	 */

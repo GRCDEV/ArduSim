@@ -76,6 +76,8 @@ public class ConfigDialogController {
     @FXML
     private CheckBox collisionDetection;
     @FXML
+    private CheckBox stopAtCollision;
+    @FXML
     private TextField checkPeriod;
     @FXML
     private TextField distanceThreshold;
@@ -150,6 +152,7 @@ public class ConfigDialogController {
             carrierSensing.setSelected(Boolean.parseBoolean(resources.getString("carrierSensing")));
             packetCollisionDetection.setSelected(Boolean.parseBoolean(resources.getString("packetCollisionDetection")));
             collisionDetection.setSelected(Boolean.parseBoolean(resources.getString("collisionDetection")));
+            stopAtCollision.setSelected(Boolean.parseBoolean(resources.getString("stopAtCollision")));
             windEnabled.setSelected(Boolean.parseBoolean(resources.getString("windEnabled")));
         }catch(MissingResourceException e){
             ArduSimTools.warnGlobal(Text.LOADING_ERROR, Text.ERROR_LOADING_FXML);
@@ -211,6 +214,7 @@ public class ConfigDialogController {
         checkPeriod.disableProperty().bind(collisionDetection.selectedProperty().not());
         distanceThreshold.disableProperty().bind(collisionDetection.selectedProperty().not());
         altitudeThreshold.disableProperty().bind(collisionDetection.selectedProperty().not());
+        stopAtCollision.disableProperty().bind(collisionDetection.selectedProperty().not());
 
         windDirection.disableProperty().bind(windEnabled.selectedProperty().not());
         windSpeed.disableProperty().bind(windEnabled.selectedProperty().not());

@@ -290,8 +290,16 @@ public class Copter {
 	 * Get the latest ground speed received from the flight controller.
 	 * @return (m/s) Current ground speed.
 	 */
-	public double getSpeed() {
-		return UAVParam.uavCurrentData[numUAV].getSpeed();
+	public double getHorizontalSpeed() {
+		return UAVParam.uavCurrentData[numUAV].getHorizontalSpeed();
+	}
+
+	/**
+	 * Get the latest speed, as an array x,y,z speeds
+	 * @return (m/s) speed for every axis
+	 */
+	public double[] getSpeedComponents(){
+		return UAVParam.uavCurrentData[numUAV].getSpeedComponents();
 	}
 
 	/**

@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="709.0" prefWidth="702.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <HBox layoutX="20.0" layoutY="20.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label maxHeight="1.7976931348623157E308" text="Beaconing parameters:">
+                    <font>
+                        <Font name="System Bold Italic" size="13.0" />
+                    </font>
+                    <HBox.margin>
+                        <Insets />
+                    </HBox.margin>
+                </Label>
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Beacon interval">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="beaconInterval" prefHeight="26.0" prefWidth="175.0" text="%beaconInterval" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="m" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="20.0" layoutY="165.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Beacon renwal rate:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="beaconRenewalRate" prefHeight="26.0" prefWidth="175.0" text="%beaconRenewalRate" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label prefWidth="35.0" />
+                <Label maxHeight="1.7976931348623157E308" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="195.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Intersample time">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="interSampleTime" prefHeight="26.0" prefWidth="175.0" text="%interSampleTime" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="225.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Minimum advertisment speed:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="minAdvertismentSpeed" prefHeight="26.0" prefWidth="175.0" text="%minAdvertismentSpeed" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="35.0" text="m/s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="255.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Beacon expiration time:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="beaconExpirationTime" prefHeight="26.0" prefWidth="175.0" text="%beaconExpirationTime" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="20.0" layoutY="135.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label maxHeight="1.7976931348623157E308" text="Collision avoidance protocol Parameters:">
+                    <font>
+                        <Font name="System Bold Italic" size="13.0" />
+                    </font>
+                    <HBox.margin>
+                        <Insets />
+                    </HBox.margin>
+                </Label>
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="20.0" layoutY="285.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Collision warning distance:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="collisionWarningDistance" prefHeight="26.0" prefWidth="175.0" text="%collisionWarningDistance" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="m" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="355.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Collision warning altitude offset:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="collisionWarningAltitudeOffset" prefHeight="26.0" prefWidth="175.0" text="%collisionWarningAltitudeOffset" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="m" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="385.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Collision warning time offset:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="collisionWarningTimeOffset" prefHeight="26.0" prefWidth="175.0" text="%collisionWarningTimeOffset" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="415.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Risk check period:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="riskCheckPeriod" prefHeight="26.0" prefWidth="175.0" text="%riskCheckPeriod" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="445.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Maximum number of expected consecutive packets lost:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="maxNrExpectedConsecutivePacketsLost" prefHeight="26.0" prefWidth="175.0" text="%maxNrExpectedConsecutivePacketsLost" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label prefWidth="35.0" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="475.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="GPS expected error:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="GPSExpectedError" prefHeight="26.0" prefWidth="175.0" text="%GPSExpectedError" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="m" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="505.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Hovering timeout:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="hoveringTimeout" prefHeight="26.0" prefWidth="175.0" text="%hoveringTimeout" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="535.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Overtake delay timeout:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="overtakeDelayTimeout" prefHeight="26.0" prefWidth="175.0" text="%overtakeDelayTimeout" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="553.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Default flight mode resume delay:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="defaultFlightModeResumeDelay" prefHeight="26.0" prefWidth="175.0" text="%defaultFlightModeResumeDelay" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="555.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Check again risk with the same UAV delay:">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="checkRiskSameUAVDelay" prefHeight="26.0" prefWidth="175.0" text="%checkRiskSameUAVDelay" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <HBox layoutX="10.0" layoutY="556.0" prefHeight="30.0" prefWidth="200.0">
+            <children>
+                <Label alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" prefHeight="30.0" prefWidth="400.0" text="Deadlock base timeout">
+                    <HBox.margin>
+                        <Insets left="20.0" />
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="deadlockBaseTimeout" prefHeight="26.0" prefWidth="175.0" text="%deadlockBaseTimeout" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </HBox.margin>
+                </TextField>
+                <Label maxHeight="1.7976931348623157E308" prefWidth="35.0" text="s" />
+            </children>
+            <VBox.margin>
+                <Insets left="10.0" right="20.0" />
+            </VBox.margin>
+        </HBox>
+        <Pane prefHeight="73.0" prefWidth="660.0">
+            <children>
+                <Button fx:id="okButton" layoutX="589.0" layoutY="24.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="57.0" text="OK" />
+            </children>
+        </Pane>
+    </children>
+</VBox>

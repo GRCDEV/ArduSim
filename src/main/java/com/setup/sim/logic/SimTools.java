@@ -101,7 +101,7 @@ public class SimTools {
 						SimParam.xUTM[i] = locationUTM.x;
 						SimParam.yUTM[i] = locationUTM.y;
 						SimParam.z[i] = UAVParam.uavCurrentData[i].getZ();
-						SimParam.speed[i] = UAVParam.uavCurrentData[i].getSpeed();
+						SimParam.speed[i] = UAVParam.uavCurrentData[i].getHorizontalSpeed();
 					}
 				}
 				if(Param.role == ArduSim.SIMULATOR_GUI) {
