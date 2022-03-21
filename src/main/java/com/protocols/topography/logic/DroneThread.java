@@ -26,7 +26,7 @@ class DroneThread extends Thread{
     private final Copter copter;
     private final float initialTerrainLevel;
     private final double lookAheadDistance;
-    public static final double desiredAltitude = 40;
+    public static final double desiredAltitude = 10;
     private long startTimeFlight;
 
     DroneThread(int numUAV, DEM dem, CyclicBarrier barrier){
@@ -41,7 +41,8 @@ class DroneThread extends Thread{
     @Override
     public void run(){
         copter.setFlightMode(FlightMode.GUIDED);
-        //impulseResonse();
+        impulseResonse();
+        /*
         List<Waypoint> wps = copter.getMissionHelper().getMissionsLoaded()[0];
         for(int index = 2; index < wps.size(); index++) {
             Waypoint wp = getWaypoint(wps, index);
@@ -52,12 +53,13 @@ class DroneThread extends Thread{
             }
             //waitAtWp();
         }
+         */
         API.getGUI((int) copter.getID()).logUAV("Done");
     }
 
     private void impulseResonse() {
         try {
-            FileWriter fb = new FileWriter("/home/jamiewubben/Downloads/pidExperiment/optimal.csv");
+            FileWriter fb = new FileWriter("/home/jamiewubben/Downloads/pidExperiment/new.csv");
             fb.write("time,altitude,setpoint\n");
 
             API.getArduSim().sleep(3000);

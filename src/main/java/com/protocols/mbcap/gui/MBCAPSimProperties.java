@@ -128,7 +128,7 @@ public class MBCAPSimProperties {
         MBCAPParam.riskCheckPeriod = (long)  (riskCheckPeriod *1000000000L);
         MBCAPParam.packetLossThreshold = maxNrExpectedConsecutivePacketsLost;
         MBCAPParam.gpsError = GPSExpectedError;
-        MBCAPParam.safePlaceDistance = 2 * MBCAPParam.gpsError + MBCAPParam.EXTRA_ERROR + MBCAPParam.PRECISION_MARGIN;
+        MBCAPParam.safePlaceDistance = 20;//2 * MBCAPParam.gpsError + MBCAPParam.EXTRA_ERROR + MBCAPParam.PRECISION_MARGIN;
         MBCAPParam.standStillTimeout = (long) (hoveringTimeout * 1000000000L);
         MBCAPParam.passingTimeout = (long) (overtakeDelayTimeout * 1000000000L);
         MBCAPParam.resumeTimeout = (long) (defaultFlightModeResumeDelay * 1000000000L);

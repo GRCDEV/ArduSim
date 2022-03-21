@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>UAV1.kml</name>
+	<Style id="s_ylw-pushpin">
+		<IconStyle>
+			<scale>1.1</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+			</Icon>
+			<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+		</IconStyle>
+	</Style>
+	<StyleMap id="m_ylw-pushpin">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#s_ylw-pushpin</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#s_ylw-pushpin_hl</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Style id="s_ylw-pushpin_hl">
+		<IconStyle>
+			<scale>1.3</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+			</Icon>
+			<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+		</IconStyle>
+	</Style>
+    <Placemark>
+        <name>uav1</name>
+        <styleUrl>#m_ylw-pushpin</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -0.3417782030306915,39.48603108074253,0 -0.3417902983910748,39.48242372233139,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+    <Placemark>
+        <name>uav2</name>
+        <styleUrl>#m_ylw-pushpin</styleUrl>
+        <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                -0.3394635586238393,39.48429696734176,0 -0.3443166628148953,39.4841766430161,0
+            </coordinates>
+        </LineString>
+    </Placemark>
+</Document>
+</kml>

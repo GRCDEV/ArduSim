@@ -1,8 +1,10 @@
 package com.protocols.mbcap.logic;
 
 import com.api.API;
+import com.api.pojo.FlightMode;
 import com.api.pojo.location.WaypointSimplified;
 import com.esotericsoftware.kryo.io.Output;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.*;
 import com.setup.Param;
 import com.api.ArduSim;
@@ -17,6 +19,7 @@ import org.javatuples.Pair;
 import org.javatuples.Quintet;
 
 import java.awt.*;
+import java.sql.SQLOutput;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,6 +49,7 @@ public class BeaconingThread extends Thread {
 	private Copter copter;
 	private long selfID;
 	private GUI gui;
+	double minDistance = Double.MAX_VALUE;
 
 	@SuppressWarnings("unused")
 	private BeaconingThread() {}
@@ -81,9 +85,27 @@ public class BeaconingThread extends Thread {
 		// Send beacons while the UAV is flying during the experiment
 		// The protocol is stopped when two UAVs collide
 		long cicleTime = System.currentTimeMillis();
+		long startTime = Long.MIN_VALUE;
+		long stopTime = Long.MIN_VALUE;
 		ArduSim ardusim = API.getArduSim();
+		boolean timestarted = false;
+		boolean timestopped = false;
 		while (ardusim.isExperimentInProgress() && copter.isFlying()
 				&& !ardusim.collisionIsDetected()) {
+
+			if(copter.getAltitude() > 4.8 && !timestarted){
+				timestarted = true;
+				startTime = System.currentTimeMillis();
+				System.out.println("START TIME");
+			}
+
+			if(copter.getFlightMode() == FlightMode.LAND_ARMED && !timestopped){
+				stopTime = System.currentTimeMillis() - startTime;
+				timestopped = true;
+				System.out.println("STOP TIME");
+			}
+
+			logMinDistance();
 			// Each beacon is sent a number of times before renewing the predicted positions
 			for (long i = 0; i < MBCAPParam.numBeacons; i++) {
 				
@@ -128,7 +150,7 @@ public class BeaconingThread extends Thread {
 				}
 			}
 		}
-		
+		System.out.println("DATA: " + minDistance + ";" + stopTime);
 		// Stop sending and drawing future positions when the UAV lands
 		if (Param.role == ArduSim.SIMULATOR_GUI) {
 			DrawableCirclesGeo current = predictedLocations.getAndSet(null);
@@ -139,6 +161,13 @@ public class BeaconingThread extends Thread {
 					e.printStackTrace();
 				}
 			}
+		}
+	}
+
+	private void logMinDistance() {
+		double distance = UAVParam.distances[0][1].get();
+		if(distance < minDistance){
+			minDistance = distance;
 		}
 	}
 	

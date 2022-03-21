@@ -34,6 +34,13 @@ public class HighlevelCommLink {
         this.readingTimeout = 50;
     }
 
+    public HighlevelCommLink(int numUAV, int sendingTimeout, int readingTimeout){
+        this.numUAV = numUAV;
+        this.commLink = LowLevelCommLink.getCommLink(numUAV);
+        this.sendingTimeout = sendingTimeout;
+        this.readingTimeout = readingTimeout;
+    }
+
     public void sendJSON(JSONObject message){
         String s = message.toString();
         commLink.sendBroadcastMessage(s.getBytes());
@@ -54,7 +61,7 @@ public class HighlevelCommLink {
     public JSONObject receiveMessage(Map<String,Object> mandatoryFields){
         JSONObject message = receiveMessage();
         if(doesMessageContainAllMandatoryFields(mandatoryFields,message)){
-            sleep(readingTimeout);
+            //sleep(readingTimeout);
             return message;
         }
         sleep(5);

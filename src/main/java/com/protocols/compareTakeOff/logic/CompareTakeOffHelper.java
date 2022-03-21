@@ -3,10 +3,7 @@ package com.protocols.compareTakeOff.logic;
 import com.api.API;
 import com.api.ArduSimTools;
 import com.api.ProtocolHelper;
-import com.api.swarm.Swarm;
-import com.api.swarm.assignement.AssignmentAlgorithm;
 import com.api.swarm.formations.Formation;
-import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.protocols.compareTakeOff.gui.CompareTakeOffDialogApp;
 import com.protocols.compareTakeOff.gui.CompareTakeOffSimProperties;
 import com.protocols.compareTakeOff.pojo.Text;
@@ -23,8 +20,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class CompareTakeOffHelper extends ProtocolHelper {
 
