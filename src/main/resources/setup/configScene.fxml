@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="832.0" prefWidth="849.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="832.0" prefWidth="849.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label maxWidth="1.7976931348623157E308" prefHeight="20.0" text="Simulation Parameters">
          <VBox.margin>
@@ -224,6 +224,7 @@
          <children>
             <CheckBox fx:id="verboseLogging" mnemonicParsing="false" prefHeight="20.0" prefWidth="216.0" text="Verbose Logging" />
             <CheckBox fx:id="storeData" mnemonicParsing="false" prefHeight="19.0" prefWidth="118.0" selected="true" text="Store Data" />
+            <CheckBox fx:id="usingOmnetpp" mnemonicParsing="false" text="Omnet++" />
          </children>
          <VBox.margin>
             <Insets bottom="5.0" left="20.0" right="20.0" top="10.0" />

@@ -52,8 +52,10 @@ public class SimProperties {
     private int windDirection;
     private double windSpeed;
     private double simSpeedup;
-    private String updServerIP;
-    private int udpServerPort;
+    private boolean usingOmnetpp;
+    private String tcpServerIP;
+    private int tcpServerPort;
+
 
 
     public ResourceBundle readResourceGUI(){
@@ -213,8 +215,9 @@ public class SimProperties {
         windDirection = 90;
         windSpeed = 0.5;
         simSpeedup = 1.0;
-        updServerIP="192.168.111.206";
-        udpServerPort=1505;
+        usingOmnetpp = true;
+        tcpServerIP="127.0.0.1";
+        tcpServerPort=4242;
     }
     public void createPropertiesFile(File f){
         // take the current parameters (intern in SimProperties) and write them to a file
@@ -287,8 +290,12 @@ public class SimProperties {
             Param.windSpeed = Param.DEFAULT_WIND_SPEED;
         }
         UAVParam.SIM_SPEEDUP = simSpeedup;
-        UAVParam.broadcastIP = updServerIP;
-        UAVParam.broadcastPort = udpServerPort;
+        UAVParam.usingOmnetpp = usingOmnetpp;
+        if(usingOmnetpp){
+            //TODO get from properties file
+            UAVParam.broadcastIP = "127.0.0.1";
+            UAVParam.broadcastPort = 4242;
+        }
     }
     public boolean validateSpeedFile(File f){
         String path = f.getAbsolutePath();

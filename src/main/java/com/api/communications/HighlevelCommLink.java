@@ -1,5 +1,6 @@
 package com.api.communications;
 import com.api.communications.lowLevel.LowLevelCommLink;
+import com.uavController.UAVParam;
 import org.json.JSONObject;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -42,6 +43,9 @@ public class HighlevelCommLink {
     }
 
     public void sendJSON(JSONObject message){
+        if(UAVParam.usingOmnetpp){
+            message.put("OMNETPP_TYPE","ARDUSIMMSG");
+        }
         String s = message.toString();
         commLink.sendBroadcastMessage(s.getBytes());
         sleep(sendingTimeout);

@@ -38,7 +38,7 @@ class CommLinkObjectReal implements InterfaceCommLinkObject {
      */
     private int totalPackagesReceived;
 
-    private String ip;
+    private final String ip;
     /**
      * Constructor for CommLinkObject used only for real UAVs
      * @param port: port used for communication
@@ -50,7 +50,7 @@ class CommLinkObjectReal implements InterfaceCommLinkObject {
         if(broadcast){
             initForAdHocUse(ip,port);
         }else{
-            initForUPServerUse(ip,port);
+            initForUDPServerUse(ip,port);
         }
     }
 
@@ -71,7 +71,7 @@ class CommLinkObjectReal implements InterfaceCommLinkObject {
         }
     }
 
-    private void initForUPServerUse(String ip, int port) {
+    private void initForUDPServerUse(String ip, int port) {
         try {
             sendSocket = new DatagramSocket();
             sendPacket = new DatagramPacket(new byte[LowLevelCommLink.DATAGRAM_MAX_LENGTH],

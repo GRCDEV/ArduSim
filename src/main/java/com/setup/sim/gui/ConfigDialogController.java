@@ -64,6 +64,8 @@ public class ConfigDialogController {
     @FXML
     private CheckBox storeData;
     @FXML
+    private CheckBox usingOmnetpp;
+    @FXML
     private CheckBox carrierSensing;
     @FXML
     private CheckBox packetCollisionDetection;
@@ -149,6 +151,7 @@ public class ConfigDialogController {
             restrictBattery.setSelected(Boolean.parseBoolean(resources.getString("restrictBattery")));
             verboseLogging.setSelected(Boolean.parseBoolean(resources.getString("verboseLogging")));
             storeData.setSelected(Boolean.parseBoolean(resources.getString("storeData")));
+            usingOmnetpp.setSelected(Boolean.parseBoolean(resources.getString("usingOmnetpp")));
             carrierSensing.setSelected(Boolean.parseBoolean(resources.getString("carrierSensing")));
             packetCollisionDetection.setSelected(Boolean.parseBoolean(resources.getString("packetCollisionDetection")));
             collisionDetection.setSelected(Boolean.parseBoolean(resources.getString("collisionDetection")));

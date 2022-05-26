@@ -73,7 +73,11 @@ public class LowLevelCommLink {
 		synchronized(LOCK) {
 			if(!links.containsKey(port)) {
 				if (Param.role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-					links.put(port, new CommLinkObjectSimulation(numUAVs, port));
+					if(UAVParam.usingOmnetpp){
+						links.put(port, new CommLinkObjectOmnetpp(UAVParam.broadcastIP,port));
+					}else{
+						links.put(port, new CommLinkObjectSimulation(numUAVs, port));
+					}
 				}else{
 					links.put(port, new CommLinkObjectReal(UAVParam.broadcastIP,port,true));
 				}
@@ -109,6 +113,7 @@ public class LowLevelCommLink {
 			links.get(port).sendBroadcastMessage(numUAV, message);
 		}
 	}
+
 	/**
 	 * Receive a message from another UAV.
 	 * Blocking method.

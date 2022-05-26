@@ -6,7 +6,6 @@ import com.api.ProtocolHelper;
 import com.api.pojo.location.Waypoint;
 import com.protocols.magnetics.gui.MagneticsDialogApp;
 import com.protocols.magnetics.gui.MagneticsSimProperties;
-import com.protocols.mbcapUPDServer.gui.MBCAPSimProperties;
 import com.setup.Text;
 import com.setup.sim.logic.SimParam;
 import es.upv.grc.mapper.*;

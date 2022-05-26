@@ -74,6 +74,8 @@ public class UAVControllerThread extends Thread {
 	private static final int NAV_LAND_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_LAND).value();
 	private static final int NAV_RETURN_TO_LAUNCH_COMMAND = EnumValue.of(MavCmd.MAV_CMD_NAV_RETURN_TO_LAUNCH).value();
 
+	private OmnetppTalker omnetTalker;
+
 	public UAVControllerThread(int numUAV) {
 		this.numUAV = numUAV;
 		this.isStarting = true;
@@ -105,6 +107,7 @@ public class UAVControllerThread extends Thread {
 				socket = new Socket(UAVParam.MAV_NETWORK_IP, port);
 				socket.setTcpNoDelay(true);
 				connection = MavlinkConnection.create(socket.getInputStream(), socket.getOutputStream());
+				this.omnetTalker = new OmnetppTalker(numUAV);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -118,6 +121,7 @@ public class UAVControllerThread extends Thread {
 
 	@Override
 	public void run() {
+		omnetTalker.start();
 		MavlinkMessage<?> inMsg;
 		// Periodically sending a heartbeat to keep control over the UAV, while reading received MAVLink messages
 		int trying = 0;

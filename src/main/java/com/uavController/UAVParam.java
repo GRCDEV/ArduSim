@@ -38,7 +38,9 @@ public class UAVParam {
 	// Serial port (on real UAVs)
 	public static volatile String serialPort = "/dev/ttyAMA0";
 	public static volatile int baudRate = 57600;
-	
+
+	public static boolean usingOmnetpp;
+
 	// UAV-UAV TCP connection parameters (on real UAVs)
 	public static volatile String broadcastIP = "192.168.1.255";// Broadcast IP
 	public static volatile int broadcastPort = 14650;			// Broadcast port
