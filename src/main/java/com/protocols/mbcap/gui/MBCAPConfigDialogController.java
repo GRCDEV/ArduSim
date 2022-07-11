@@ -135,7 +135,7 @@ public class MBCAPConfigDialogController {
         fileChooser.setInitialDirectory(new File(API.getFileTools().getSourceFolder() + "/main/resources"));
         fileChooser.setTitle(Text.MISSIONS_DIALOG_TITLE_1);
         FileChooser.ExtensionFilter extFilterKML = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_1, "*."+Text.FILE_EXTENSION_KML);
-        // waypoints don`t work in main.java.com.protocols.mbcap
+        // waypoints don`t work in mbcap
         //FileChooser.ExtensionFilter extFilterWaypoints = new FileChooser.ExtensionFilter(Text.MISSIONS_DIALOG_SELECTION_2, "*."+Text.FILE_EXTENSION_WAYPOINTS);
         fileChooser.getExtensionFilters().addAll(extFilterKML);
         List<File> missionPath = fileChooser.showOpenMultipleDialog(stage);

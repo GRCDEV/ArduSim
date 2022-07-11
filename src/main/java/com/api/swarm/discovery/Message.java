@@ -11,10 +11,9 @@ class Message {
 
     private final static int LOCATION  = 1;
 
-    public static JSONObject location(int numUAV,int receiver, Location3DUTM loc){
+    public static JSONObject location(int numUAV, Location3DUTM loc){
         JSONObject msg = new JSONObject();
         msg.put(HighlevelCommLink.Keywords.SENDERID,numUAV);
-        msg.put(HighlevelCommLink.Keywords.RECEIVERID,receiver);
         msg.put(HighlevelCommLink.Keywords.MESSAGEID,LOCATION);
         JSONObject location = new JSONObject();
         location.put("x",loc.x);
@@ -24,9 +23,8 @@ class Message {
         return msg;
     }
 
-    public static Map<String,Object> location(int numUAV){
+    public static Map<String,Object> location(){
         Map<String,Object> mandatoryFields = new HashMap<>();
-        mandatoryFields.put(HighlevelCommLink.Keywords.RECEIVERID,numUAV);
         mandatoryFields.put(HighlevelCommLink.Keywords.MESSAGEID,LOCATION);
         return mandatoryFields;
     }

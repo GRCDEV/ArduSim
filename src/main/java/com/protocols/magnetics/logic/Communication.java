@@ -34,7 +34,7 @@ class Communication extends Thread{
 
             long timeDif = System.currentTimeMillis() - start;
             JSONObject msg = commLink.receiveMessage(Message.location(numUAV));
-            while(msg != null && timeDif < 200){
+            while(msg != null && timeDif < 1000){
                 int senderId = (Integer) msg.get(HighlevelCommLink.Keywords.SENDERID);
                 Location3DUTM obstacle = Message.processLocation(msg);
                 long timeStamp = System.currentTimeMillis();
@@ -44,8 +44,8 @@ class Communication extends Thread{
                 timeDif = System.currentTimeMillis() - start;
             }
 
-            if(timeDif < 200) {
-                API.getArduSim().sleep(200 - timeDif);
+            if(timeDif < 1000) {
+                API.getArduSim().sleep(1000 - timeDif);
             }
         }
     }

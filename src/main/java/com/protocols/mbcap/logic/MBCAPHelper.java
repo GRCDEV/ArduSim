@@ -140,7 +140,7 @@ public class MBCAPHelper extends ProtocolHelper {
 
 	@Override
 	public Pair<Location2DGeo, Double>[] setStartingLocation() {
-		// Gets the current coordinates from the main.java.com.protocols.mission when it is loaded, and the heading pointing towards the next waypoint
+		// Gets the current coordinates from the mission when it is loaded, and the heading pointing towards the next waypoint
 		int numUAVs = API.getArduSim().getNumUAVs();
 		@SuppressWarnings("unchecked")
 		Pair<Location2DGeo, Double>[] startingLocations = new Pair[numUAVs];

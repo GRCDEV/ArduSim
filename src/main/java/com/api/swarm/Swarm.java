@@ -9,6 +9,7 @@ import com.api.swarm.formations.Formation;
 import com.api.swarm.formations.FormationFactory;
 import com.api.swarm.takeoff.TakeoffAlgorithm;
 import com.api.swarm.takeoff.TakeoffAlgorithmFactory;
+import com.uavController.UAVParam;
 import es.upv.grc.mapper.Location3DUTM;
 
 import java.util.HashMap;
@@ -56,6 +57,7 @@ public class Swarm {
         private Discover d;
         private double altitude;
         private Formation airFormation;
+        private double minDistanceAir;
 
         public Builder(long numUAV){
             this.numUAV = (int) numUAV;
@@ -79,19 +81,20 @@ public class Swarm {
 
         public Builder airFormationLayout(Formation.Layout layout, double minDistance){
             this.airFormation = FormationFactory.newFormation(layout);
-            airFormation.init(API.getArduSim().getNumUAVs(),minDistance);
+            this.minDistanceAir = minDistance;
             return this;
         }
 
         public Swarm build(){
             d.start();
+
             AssignmentAlgorithm assignment = null;
             Set<Long> IDs = new HashSet<>();
             if(d.getMasterUAVId() == numUAV) {
-                Location3DUTM airCenterLoc = d.getCenterLocation();
+                Location3DUTM airCenterLoc = d.getMasterLocation();
                 airCenterLoc.z = altitude;
                 Map<Long, Location3DUTM> groundLocations = d.getUAVsDiscovered();
-                assignment = getAssignment(numUAVs, groundLocations, airCenterLoc);
+                assignment = getAssignment(groundLocations, airCenterLoc);
                 IDs = groundLocations.keySet();
             }
 
@@ -99,11 +102,14 @@ public class Swarm {
             return new Swarm(takeoff, d.getMasterUAVId(),IDs,airFormation);
         }
 
-        private AssignmentAlgorithm getAssignment(int numUAVs, Map<Long, Location3DUTM> groundLocations, Location3DUTM centerUAVLocation) {
+        private AssignmentAlgorithm getAssignment( Map<Long, Location3DUTM> groundLocations, Location3DUTM centerUAVLocation) {
             API.getGUI(numUAV).updateProtocolState("ASSIGNMENT");
+            airFormation.init(d.getUAVsDiscovered().size(),minDistanceAir);
             Map<Long, Location3DUTM> airLocations = new HashMap<>();
-            for(int i = 0; i< numUAVs; i++){
-                airLocations.put((long)i, airFormation.get3DUTMLocation(centerUAVLocation,i));
+            int i=0;
+            for(long id: groundLocations.keySet()){
+                airLocations.put(id, airFormation.get3DUTMLocation(centerUAVLocation,i));
+                i++;
             }
             return AssignmentAlgorithmFactory.newAssignmentAlgorithm(assignmentAlgo, groundLocations, airLocations);
         }

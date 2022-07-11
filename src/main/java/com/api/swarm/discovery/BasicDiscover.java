@@ -11,22 +11,37 @@ public class BasicDiscover extends Discover {
         super(numUAV);
     }
 
-    void masterDiscovering() {
-        Location3DUTM loc = getLocation3DUTM();
-        UAVsDiscovered.put((long)numUAV,loc);
-        while(UAVsDiscovered.size() != numUAVs){
-            JSONObject msg = commLink.receiveMessage(Message.location(numUAV));
-            if(msg != null){
-                Pair<Long, Location3DUTM> p = Message.processLocation(msg);
-                if(!UAVsDiscovered.containsKey(p.getValue0())) {
-                    UAVsDiscovered.put(p.getValue0(), p.getValue1());
-                    commLink.sendACK(msg);
-                    commLink.sendACK(msg);
-                    gui.logVerbose("Discovered UAV: "  + p.getValue0() + "\t UAVs discovered: " + UAVsDiscovered.size() + "/" + numUAVs);
-                }
-            }
+    @Override
+    public void start() {
+        discoverUAVs(10000l);
+    }
+
+    private void discoverUAVs(long time) {
+        UAVsDiscovered.put((long) numUAV,getLocation3DUTM());
+        long start = System.currentTimeMillis();
+
+        while(System.currentTimeMillis() - start < time){
+            sendLocation();
+            receiveLocationFromOthersAndUpdateUAVsDiscovered();
         }
-        logVerboseUAVsDiscovered();
+    }
+
+    private void receiveLocationFromOthersAndUpdateUAVsDiscovered() {
+        JSONObject msg = commLink.receiveMessage(Message.location());
+        while(msg != null){
+            Pair<Long, Location3DUTM> p = Message.processLocation(msg);
+            if(!UAVsDiscovered.containsKey(p.getValue0())) {
+                UAVsDiscovered.put(p.getValue0(), p.getValue1());
+                gui.logVerbose("Discovered UAV: "  + p.getValue0() + "\t UAVs discovered: " + UAVsDiscovered.size() + "/" + numUAVs);
+            }
+            msg = commLink.receiveMessage(Message.location());
+        }
+    }
+
+    private void sendLocation() {
+        Location3DUTM loc = getLocation3DUTM();
+        JSONObject locationMsg = Message.location(numUAV,loc);
+        commLink.sendJSON(locationMsg);
     }
 
     private void logVerboseUAVsDiscovered() {
@@ -34,13 +49,6 @@ public class BasicDiscover extends Discover {
         for(Map.Entry<Long,Location3DUTM> e:UAVsDiscovered.entrySet()){
             gui.logVerbose(e.getKey() + "\t" + e.getValue());
         }
-    }
-
-    void slaveDiscovering() {
-        Location3DUTM loc = getLocation3DUTM();
-        JSONObject locationMsg = Message.location(numUAV, masterId,loc);
-        commLink.sendJSONUntilACKReceived(locationMsg, masterId,1);
-        gui.logVerbose(numUAV + " done");
     }
 
 }

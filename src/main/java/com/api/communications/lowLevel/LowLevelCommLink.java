@@ -69,6 +69,9 @@ public class LowLevelCommLink {
 	 */
 	private LowLevelCommLink(int numUAV, int numUAVs, int port) {
 		this.numUAV = numUAV;
+		if(UAVParam.usingOmnetpp){
+			port = 5000+numUAV;
+		}
 		this.port = port;
 		synchronized(LOCK) {
 			if(!links.containsKey(port)) {

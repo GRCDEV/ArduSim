@@ -15,7 +15,7 @@ import java.util.Map;
 
 public abstract class Discover {
 
-    protected int masterId;
+    protected int masterId = -1;
     protected final int numUAV;
     protected final int numUAVs;
     protected final Map<Long, Location3DUTM> UAVsDiscovered = new HashMap<>();
@@ -26,55 +26,60 @@ public abstract class Discover {
         this.numUAV = numUAV;
         this.gui = API.getGUI(numUAV);
         this.numUAVs = API.getArduSim().getNumUAVs();
-        setTempMasterId();
         commLink = new HighlevelCommLink(numUAV, UAVParam.internalBroadcastPort);
     }
 
-    public void start() {
-        gui.updateProtocolState("DISCOVERING");
-        if (numUAV == masterId) {
-            masterDiscovering();
-        } else {
-            slaveDiscovering();
-        }
-        //TODO change the master UAV afterwards so that it is the center UAV and not just UAV 0
-    }
+    abstract public void start();
 
     public Map<Long, Location3DUTM> getUAVsDiscovered(){
         return UAVsDiscovered;
     }
 
-    public int getMasterUAVId(){return masterId;}
-
-    public Location3DUTM getCenterLocation(){
-        if(numUAV == masterId){
-            return getLocation3DUTM();
+    public int getMasterUAVId(){
+        if(masterId == -1) {
+            masterId = getCenterUAV();
         }
-        return null;
+        return masterId;
     }
 
-    protected void setTempMasterId() {
-        int role = Param.role;
-        if (role == ArduSim.MULTICOPTER) {
-            /* You get the id = f(MAC addresses) for real drone */
-            long thisUAVID = Param.id[0];
-            for (int i = 0; i < SwarmParam.macIDs.length; i++) {
-                if (thisUAVID == SwarmParam.macIDs[i]) {
-                    masterId = i;
-                }
+    public Location3DUTM getMasterLocation(){
+        long master = getMasterUAVId();
+        return UAVsDiscovered.get(master);
+    }
+
+    private int getCenterUAV(){
+        Location3DUTM centre = calculateCentreOfUAVsDiscovered();
+        return getUAVClosedToCentre(centre);
+    }
+
+    private int getUAVClosedToCentre(Location3DUTM centre) {
+        long centreId = -1;
+        double closestDistance = Double.MAX_VALUE;
+        for(Map.Entry<Long, Location3DUTM> e: UAVsDiscovered.entrySet()){
+            double d = e.getValue().distance3D(centre);
+            if(d < closestDistance){
+                closestDistance = d;
+                centreId = e.getKey();
             }
-        } else if (role == ArduSim.SIMULATOR_GUI || Param.role == ArduSim.SIMULATOR_CLI) {
-            masterId = 0;
         }
+        return (int) centreId;
+    }
+
+    private Location3DUTM calculateCentreOfUAVsDiscovered() {
+        int x = 0;
+        int y = 0;
+        int z = 0;
+        for(Location3DUTM loc: UAVsDiscovered.values()){
+            x += loc.x;
+            y += loc.y;
+            z += loc.z;
+        }
+        int n = UAVsDiscovered.size();
+        return new Location3DUTM(x/n,y/n,z/n);
     }
 
     protected Location3DUTM getLocation3DUTM() {
-        //TODO update this method because now it only works if it is invoked by the master
         Copter copter = API.getCopter(numUAV);
         return new Location3DUTM(copter.getLocation().getUTMLocation(), copter.getAltitude());
     }
-
-
-    abstract void masterDiscovering();
-    abstract void slaveDiscovering();
 }

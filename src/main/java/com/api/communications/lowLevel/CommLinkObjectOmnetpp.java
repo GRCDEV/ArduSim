@@ -29,7 +29,7 @@ public class CommLinkObjectOmnetpp implements InterfaceCommLinkObject{
                     InetAddress.getByName(ip),
                     port);
 
-            listeningSocket =  new DatagramSocket(4445);
+            listeningSocket =  new DatagramSocket(1000+port);
         } catch (SocketException | UnknownHostException e) {
             e.printStackTrace();
             ArduSimTools.closeAll(Text.THREAD_START_ERROR);
