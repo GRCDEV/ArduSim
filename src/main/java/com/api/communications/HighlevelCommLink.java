@@ -24,14 +24,14 @@ public class HighlevelCommLink {
     public HighlevelCommLink(int numUAV){
         this.numUAV = numUAV;
         this.commLink = LowLevelCommLink.getCommLink(numUAV);
-        this.sendingTimeout = 200;
+        this.sendingTimeout = 0; //200
         this.readingTimeout = 50;
     }
 
     public HighlevelCommLink(int numUAV, int portnumber){
         this.numUAV = numUAV;
         this.commLink = LowLevelCommLink.getCommLink(numUAV,portnumber);
-        this.sendingTimeout = 200;
+        this.sendingTimeout = 0; //200
         this.readingTimeout = 50;
     }
 
