@@ -21,6 +21,8 @@ public class FormationFactory {
                 return new Circle();
             case RANDOM:
                 return new Random();
+            case CIRCLE2:
+                return new Circle2();
             default:
                 throw new IllegalStateException("Unexpected value: " + formation);
         }

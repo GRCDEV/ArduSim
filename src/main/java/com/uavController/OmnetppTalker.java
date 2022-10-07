@@ -29,6 +29,8 @@ public class OmnetppTalker extends Thread{
 
     private double centerX, centerY, centerZ;
     private int lastX, lastY, lastZ;
+
+    private boolean loggingPos = false;
     BufferedWriter writer;
     public OmnetppTalker(int numUAV){
         if(UAVParam.usingOmnetpp){
@@ -46,11 +48,13 @@ public class OmnetppTalker extends Thread{
             centerY = 4374173.90; //4374246.00;
 
             centerZ = 0;
-            try {
-                String filename = "outputPos" + numUAV + ".csv";
-                writer = new BufferedWriter(new FileWriter(filename));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if(loggingPos) {
+                try {
+                    String filename = "outputPos" + numUAV + ".csv";
+                    writer = new BufferedWriter(new FileWriter(filename));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
@@ -64,10 +68,12 @@ public class OmnetppTalker extends Thread{
             while (running) {
                 sendPositionData();
             }
-            try {
-                writer.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if(loggingPos) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
@@ -90,11 +96,13 @@ public class OmnetppTalker extends Thread{
                     lastY = y;
                     lastZ = z;
                     String msg = x + "," + y + "," + z;
-                    try {
-                        writer.write(numUAV + "," + msg + "\n");
-                        writer.flush();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    if(loggingPos) {
+                        try {
+                            writer.write(numUAV + "," + msg + "\n");
+                            writer.flush();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     byte[] buf = msg.getBytes(StandardCharsets.UTF_8);
                     int port = 8000 + numUAV;

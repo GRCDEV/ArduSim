@@ -47,11 +47,13 @@ public class OmnetTestHelper extends ProtocolHelper {
         int numUAVs = API.getArduSim().getNumUAVs();
         Pair<Location2DGeo, Double>[] startingLocations = new Pair[numUAVs];
 
-        Location3DUTM center1 = new Location3DUTM(new Location2DGeo(39.48271345905396, -0.3467886203790445).getUTM(),0);
-        Formation f = FormationFactory.newFormation(Formation.Layout.LINEAR);
+        Location2DGeo centerGeo = new Location2DGeo(39.48271345905396, -0.3467886203790445);
+        Location3DUTM center1 = new Location3DUTM(centerGeo.getUTM(),0);
+        Formation f = FormationFactory.newFormation(Formation.Layout.CIRCLE2);
         f.init(numUAVs,100);
 
-        for(int i=0;i<numUAVs;i++ ){
+        startingLocations[0] = Pair.with(centerGeo,0.0);
+        for(int i=1;i<numUAVs;i++ ){
             Location3DUTM locUTM = f.get3DUTMLocation(center1,i);
             try {
                 Location2DGeo locGeo = new Location2DUTM(locUTM.x,locUTM.y).getGeo();
@@ -75,7 +77,7 @@ public class OmnetTestHelper extends ProtocolHelper {
         int numUAVs = API.getArduSim().getNumUAVs();
         List<Thread> threads = new ArrayList<>();
         for(int i=0;i<numUAVs;i++){
-            threads.add(API.getCopter(i).takeOff(40, new TakeOffListener() {
+            threads.add(API.getCopter(i).takeOff(10, new TakeOffListener() {
                 @Override
                 public void onCompleteActionPerformed() {}
 

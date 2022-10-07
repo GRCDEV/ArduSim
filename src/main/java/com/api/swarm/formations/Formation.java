@@ -14,7 +14,7 @@ public abstract class Formation {
      * All possible layouts
      */
     public enum Layout {
-        LINEAR,MATRIX,CIRCLE,RANDOM
+        LINEAR,MATRIX,CIRCLE, CIRCLE2, RANDOM
     }
 
     /**
