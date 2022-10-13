@@ -6,7 +6,6 @@ import org.json.JSONObject;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Random;
 
 public class OmnetTestThread extends Thread{
@@ -15,39 +14,43 @@ public class OmnetTestThread extends Thread{
     private HighlevelCommLink commLink;
     private int frequency = 1;
 
+    private Random random;
+
     public OmnetTestThread(int numUAV){
         this.numUAV = numUAV;
         this.commLink = new HighlevelCommLink(numUAV);
+        random = new Random(numUAV * 19L);
     }
 
     public void run(){
         if(numUAV == 0){
             receiveMessages();
         }else{
-            Random r = new Random(System.currentTimeMillis());
-            int delay = (int) (r.nextFloat()*100);
+            int delay = (int) (random.nextFloat()*1000);
             API.getArduSim().sleep(delay);
+            System.out.println(delay);
             sendMessages();
         }
     }
 
     private void sendMessages() {
-        for(int msgNr=0;msgNr<10;msgNr++){
+        for(int msgNr=0;msgNr<100;msgNr++){
             JSONObject msg = new JSONObject();
             msg.put(HighlevelCommLink.Keywords.SENDERID,numUAV);
+            msg.put(HighlevelCommLink.Keywords.RECEIVERID,0);
             msg.put("status","sending");
             msg.put("frequency",1);
             msg.put("msgNr",msgNr);
             msg.put("sendTime",System.currentTimeMillis());
             commLink.sendJSON(msg);
-            API.getArduSim().sleep(1000/frequency);
+            API.getArduSim().sleep(1000/frequency + (int) (random.nextFloat()*100));
         }
         API.getCopter(numUAV).land();
     }
 
     private void receiveMessages() {
         int numUAVs = API.getArduSim().getNumUAVs();
-        long[][] packetInfo = new long[numUAVs-1][10];
+        long[][] packetInfo = new long[numUAVs-1][100];
 
         boolean receivingMessages = false;
         long lastMessageTime = System.currentTimeMillis();
