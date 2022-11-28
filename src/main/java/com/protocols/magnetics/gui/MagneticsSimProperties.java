@@ -24,13 +24,13 @@ public class MagneticsSimProperties {
     public static double NElon;
     public static double minFlightDistance;
     public static double altitude = 40;
-    public static double maxspeed;
     public static double frd; //full repulsion distance
     public static double a;
     public static String repulsionMagnitude;
     public static boolean randomPath;
     public static List<File> missionFile;
     public static int seed;
+    public static int beaconingTime; //ms
 
     private Random random;
 

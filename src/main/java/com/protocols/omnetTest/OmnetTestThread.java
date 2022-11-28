@@ -12,7 +12,7 @@ public class OmnetTestThread extends Thread{
 
     private int numUAV;
     private HighlevelCommLink commLink;
-    private int frequency = 1;
+    private int frequency = 10;
 
     private Random random;
 

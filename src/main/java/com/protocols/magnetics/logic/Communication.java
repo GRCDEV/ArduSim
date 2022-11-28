@@ -3,6 +3,7 @@ package com.protocols.magnetics.logic;
 import com.api.API;
 import com.api.communications.HighlevelCommLink;
 import com.api.copter.Copter;
+import com.protocols.magnetics.gui.MagneticsSimProperties;
 import com.protocols.magnetics.pojo.Message;
 import es.upv.grc.mapper.Location3DUTM;
 import org.javatuples.Pair;
@@ -34,7 +35,7 @@ class Communication extends Thread{
 
             long timeDif = System.currentTimeMillis() - start;
             JSONObject msg = commLink.receiveMessage(Message.location(numUAV));
-            while(msg != null && timeDif < 1000){
+            while(msg != null && timeDif < MagneticsSimProperties.beaconingTime){
                 int senderId = (Integer) msg.get(HighlevelCommLink.Keywords.SENDERID);
                 Location3DUTM obstacle = Message.processLocation(msg);
                 long timeStamp = System.currentTimeMillis();
@@ -44,8 +45,8 @@ class Communication extends Thread{
                 timeDif = System.currentTimeMillis() - start;
             }
 
-            if(timeDif < 1000) {
-                API.getArduSim().sleep(1000 - timeDif);
+            if(timeDif < MagneticsSimProperties.beaconingTime) {
+                API.getArduSim().sleep(MagneticsSimProperties.beaconingTime - timeDif);
             }
         }
     }

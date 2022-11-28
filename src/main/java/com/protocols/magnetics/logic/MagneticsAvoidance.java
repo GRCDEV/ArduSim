@@ -1,6 +1,7 @@
 package com.protocols.magnetics.logic;
 
 import com.api.API;
+import com.api.ArduSim;
 import com.api.copter.Copter;
 import com.api.copter.TakeOff;
 import com.api.copter.TakeOffListener;
@@ -13,6 +14,7 @@ import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -30,6 +32,8 @@ class MagneticsAvoidance extends Thread{
     double minDistance = Double.MAX_VALUE;
     DrawVectors drawer;
 
+    double maxspeed;
+
     public MagneticsAvoidance(int numUAV){
         this.numUAV = numUAV;
         this.numUAVs = API.getArduSim().getNumUAVs();
@@ -37,6 +41,7 @@ class MagneticsAvoidance extends Thread{
         setWaypoints(numUAV);
         communication = new Communication(numUAV);
         drawer = new DrawVectors(copter);
+        maxspeed = copter.getPlannedSpeed();
     }
 
     private void setWaypoints(int numUAV) {
@@ -65,15 +70,15 @@ class MagneticsAvoidance extends Thread{
                 resulting = reduceToMaxSpeed(resulting);
                 moveUAV(resulting);
                 logMinDistance();
-                drawer.update(attraction,totalRepulsion,resulting);
+                //drawer.update(attraction,totalRepulsion,resulting);
                 API.getArduSim().sleep(200);
             }
             waypoints.poll();
         }
         long protocolTime = System.currentTimeMillis() - start;
         communication.stopCommunication();
-        saveData(protocolTime);
         land();
+        saveData(protocolTime);
     }
 
     private Vector calculateRepulsion() {
@@ -111,26 +116,11 @@ class MagneticsAvoidance extends Thread{
     private Vector getAttractionVector() {
         Vector attraction = new Vector(getCopterLocation(), waypoints.peek());
         attraction.normalize();
-        double scalar = 0;
-
-        // to create the takeover case, UAV 1 will always take over.
-        double speed = MagneticsSimProperties.maxspeed;
-        /*
-        if(MagneticsSimProperties.missionFile.get(0).getName().contains("takeover.kml")){
-            if(numUAV == 0){
-                speed = 5;
-            }else {
-                speed = 10;
-            }
-        }
-         */
-
         if(getCopterLocation().distance3D(waypoints.peek()) > 50) {
-            scalar = speed;
+            attraction.scalarProduct(maxspeed);
         }else{
-            scalar = MagneticsSimProperties.maxspeed/2;
+            attraction.scalarProduct(maxspeed/2);
         }
-        attraction.scalarProduct(scalar);
         return attraction;
     }
 
@@ -167,9 +157,9 @@ class MagneticsAvoidance extends Thread{
 
     private Vector reduceToMaxSpeed(Vector v_) {
         Vector v = new Vector(v_);
-        if(v.magnitude() > MagneticsSimProperties.maxspeed){
+        if(v.magnitude() > maxspeed){
             v.normalize();
-            v.scalarProduct(MagneticsSimProperties.maxspeed);
+            v.scalarProduct(maxspeed);
         }
         return v;
     }
@@ -194,8 +184,15 @@ class MagneticsAvoidance extends Thread{
         protocol = protocol.substring(protocol.lastIndexOf("/") + 1);
         protocol = protocol.substring(0, protocol.length() - 4);
         String repulsion = createStringRepulsionFunction();
+        int battery = copter.getBattery();
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(protocol, true));
+            File f = new File(protocol);
+            boolean includeHeader = !f.exists();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(f,true));
+            if(includeHeader){
+                writer.append("numUAV,numUAVs,repulsion,minDistance(m),protocolTime(ms),battery(%),beaconingTime(ms)\n");
+            }
+
             writer.append(String.valueOf(numUAV))
                     .append(",")
                     .append(String.valueOf(API.getArduSim().getNumUAVs())) //protocol
@@ -205,6 +202,10 @@ class MagneticsAvoidance extends Thread{
                     .append(String.valueOf(minDistance))
                     .append(",")
                     .append(String.valueOf(protocolTime))
+                    .append(",")
+                    .append(String.valueOf(battery))
+                    .append(",")
+                    .append(String.valueOf(MagneticsSimProperties.beaconingTime))
                     .append("\n");
             writer.close();
         } catch (IOException e) {
